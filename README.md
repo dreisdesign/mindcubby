@@ -11,9 +11,9 @@ A collection of tools and utilities for 3D printing, starting with **GECODER**.
 A lightweight, browser-based tool that automatically extracts print specifications from 3D printer G-code files and formats them as ready-to-paste Markdown tables for Printables.com listings.
 
 ### Quick Links
-- **Live App:** https://dreisdesign.github.io/MindCubby/GECODER/
-- **Documentation:** [GECODER README](./GECODER/README.md)
-- **Privacy Policy:** [Privacy Policy](./GECODER/PRIVACY.md)
+- **Live App:** https://dreisdesign.github.io/MindCubby/3d/apps/gecoder/
+- **Documentation:** [GECODER README](./3d/apps/gecoder/README.md)
+- **Privacy Policy:** [Privacy Policy](./3d/apps/gecoder/PRIVACY.md)
 
 ### Features
 ✅ **No Installation Required** – Runs entirely in your browser  
@@ -23,7 +23,7 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 ✅ **No Data Upload** – All processing happens locally  
 
 ### How to Use
-1. Visit https://dreisdesign.github.io/MindCubby/GECODER/
+1. Visit https://dreisdesign.github.io/MindCubby/3d/apps/gecoder/
 2. Select your `.gcode` file
 3. Copy the generated specs for Printables
 
