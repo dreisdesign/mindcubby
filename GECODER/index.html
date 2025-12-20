@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GECODER - G-Code to Printables Specs</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>GECODER</h1>
+            <p>Instantly generate Printables.com specification tables from your G-code files.</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <label for="fileInput" class="file-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        style="display: inline; margin-right: 8px; vertical-align: middle;">
+                        <mask id="mask0_809_46" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
+                            width="24" height="24">
+                            <rect width="24" height="24" fill="#D9D9D9" />
+                        </mask>
+                        <g mask="url(#mask0_809_46)">
+                            <path
+                                d="M12.0002 21.8C11.6335 21.8 11.321 21.6708 11.0627 21.4125C10.8044 21.1542 10.6752 20.8417 10.6752 20.475V13.35H3.5252C3.15853 13.35 2.84603 13.2208 2.5877 12.9625C2.32936 12.7042 2.2002 12.3917 2.2002 12.025C2.2002 11.6583 2.32936 11.3458 2.5877 11.0875C2.84603 10.8292 3.15853 10.7 3.5252 10.7H10.6502V3.52501C10.6502 3.15835 10.7794 2.84585 11.0377 2.58751C11.296 2.32918 11.6085 2.20001 11.9752 2.20001C12.3419 2.20001 12.6544 2.32918 12.9127 2.58751C13.171 2.84585 13.3002 3.15835 13.3002 3.52501V10.675H20.4752C20.8419 10.675 21.1544 10.8042 21.4127 11.0625C21.671 11.3208 21.8002 11.6333 21.8002 12C21.8002 12.3667 21.671 12.6792 21.4127 12.9375C21.1544 13.1958 20.8419 13.325 20.4752 13.325H13.3252V20.475C13.3252 20.8417 13.196 21.1542 12.9377 21.4125C12.6794 21.6708 12.3669 21.8 12.0002 21.8Z"
+                                fill="currentColor" />
+                        </g>
+                    </svg>
+                    Select G-Code File
+                    <input type="file" id="fileInput" accept=".gcode">
+                </label>
+                <p id="fileName" class="file-name"></p>
+            </div>
+
+            <div id="statusMessage" class="status hidden"></div>
+
+            <div id="resultsSection" class="results hidden">
+                <div class="actions">
+                    <button id="btnCopyRich" class="primary-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                            style="display: inline; margin-right: 8px; vertical-align: middle;">
+                            <mask id="mask0_790_10" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
+                                width="24" height="24">
+                                <rect width="24" height="24" fill="#D9D9D9" />
+                            </mask>
+                            <g mask="url(#mask0_790_10)">
+                                <path
+                                    d="M9.2248 18.75C8.49597 18.75 7.87214 18.4905 7.35331 17.9715C6.83431 17.4527 6.5748 16.8288 6.5748 16.1V3.9C6.5748 3.17133 6.83431 2.5475 7.35331 2.0285C7.87214 1.5095 8.49597 1.25 9.2248 1.25H18.4248C19.1535 1.25 19.7773 1.5095 20.2963 2.0285C20.8153 2.5475 21.0748 3.17133 21.0748 3.9V16.1C21.0748 16.8288 20.8153 17.4527 20.2963 17.9715C19.7773 18.4905 19.1535 18.75 18.4248 18.75H9.2248ZM4.5748 23.4C3.84597 23.4 3.22214 23.1405 2.7033 22.6215C2.1843 22.1025 1.9248 21.4787 1.9248 20.75V7.225C1.9248 6.85833 2.05397 6.54583 2.3123 6.2875C2.57064 6.02917 2.88314 5.9 3.2498 5.9C3.61647 5.9 3.92897 6.02917 4.1873 6.2875C4.44564 6.54583 4.5748 6.85833 4.5748 7.225V20.75H15.0998C15.4665 20.75 15.779 20.8792 16.0373 21.1375C16.2956 21.3958 16.4248 21.7083 16.4248 22.075C16.4248 22.4417 16.2956 22.7542 16.0373 23.0125C15.779 23.2708 15.4665 23.4 15.0998 23.4H4.5748Z"
+                                    fill="currentColor" />
+                            </g>
+                        </svg>
+                        Copy for Printables (Rich Text)
+                    </button>
+                    <button id="btnCopyMd" class="secondary-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                            style="display: inline; margin-right: 8px; vertical-align: middle;">
+                            <mask id="mask0_790_10_md" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
+                                width="24" height="24">
+                                <rect width="24" height="24" fill="#D9D9D9" />
+                            </mask>
+                            <g mask="url(#mask0_790_10_md)">
+                                <path
+                                    d="M9.2248 18.75C8.49597 18.75 7.87214 18.4905 7.35331 17.9715C6.83431 17.4527 6.5748 16.8288 6.5748 16.1V3.9C6.5748 3.17133 6.83431 2.5475 7.35331 2.0285C7.87214 1.5095 8.49597 1.25 9.2248 1.25H18.4248C19.1535 1.25 19.7773 1.5095 20.2963 2.0285C20.8153 2.5475 21.0748 3.17133 21.0748 3.9V16.1C21.0748 16.8288 20.8153 17.4527 20.2963 17.9715C19.7773 18.4905 19.1535 18.75 18.4248 18.75H9.2248ZM4.5748 23.4C3.84597 23.4 3.22214 23.1405 2.7033 22.6215C2.1843 22.1025 1.9248 21.4787 1.9248 20.75V7.225C1.9248 6.85833 2.05397 6.54583 2.3123 6.2875C2.57064 6.02917 2.88314 5.9 3.2498 5.9C3.61647 5.9 3.92897 6.02917 4.1873 6.2875C4.44564 6.54583 4.5748 6.85833 4.5748 7.225V20.75H15.0998C15.4665 20.75 15.779 20.8792 16.0373 21.1375C16.2956 21.3958 16.4248 21.7083 16.4248 22.075C16.4248 22.4417 16.2956 22.7542 16.0373 23.0125C15.779 23.2708 15.4665 23.4 15.0998 23.4H4.5748Z"
+                                    fill="currentColor" />
+                            </g>
+                        </svg>
+                        Copy Markdown
+                    </button>
+                    <button id="btnDownload" class="secondary-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                            style="display: inline; margin-right: 8px; vertical-align: middle;">
+                            <mask id="mask0_780_11" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
+                                width="24" height="24">
+                                <rect width="24" height="24" fill="#D9D9D9" />
+                            </mask>
+                            <g mask="url(#mask0_780_11)">
+                                <path
+                                    d="M4.5252 20.175H19.5002C19.8669 20.175 20.1752 20.3 20.4252 20.55C20.6752 20.8 20.8002 21.1083 20.8002 21.475C20.8002 21.8417 20.671 22.1542 20.4127 22.4125C20.1544 22.6708 19.8419 22.8 19.4752 22.8H4.5002C4.13353 22.8 3.8252 22.6708 3.5752 22.4125C3.3252 22.1542 3.2002 21.8417 3.2002 21.475C3.2002 21.1083 3.32936 20.8 3.5877 20.55C3.84603 20.3 4.15853 20.175 4.5252 20.175ZM12.0002 17.375C11.8169 17.375 11.6335 17.3333 11.4502 17.25C11.2669 17.1667 11.1085 17.0417 10.9752 16.875L5.4752 9.975C5.1252 9.54166 5.0752 9.075 5.3252 8.575C5.5752 8.075 5.9752 7.825 6.5252 7.825H8.3502V2.525C8.3502 2.15833 8.47936 1.84583 8.7377 1.5875C8.99603 1.32916 9.30853 1.2 9.6752 1.2H14.3252C14.6919 1.2 15.0044 1.32916 15.2627 1.5875C15.521 1.84583 15.6502 2.15833 15.6502 2.525V7.825H17.4752C18.0252 7.825 18.4252 8.075 18.6752 8.575C18.9252 9.075 18.8752 9.54166 18.5252 9.975L13.0252 16.875C12.8919 17.0417 12.7335 17.1667 12.5502 17.25C12.3669 17.3333 12.1835 17.375 12.0002 17.375Z"
+                                    fill="currentColor" />
+                            </g>
+                        </svg>
+                        Download .md
+                    </button>
+                </div>
+
+                <div class="preview-container">
+                    <h3>Preview</h3>
+                    <div id="previewArea" class="preview-box"></div>
+                </div>
+
+                <!-- Hidden element for raw markdown storage -->
+                <textarea id="rawMarkdown" class="hidden"></textarea>
+            </div>
+        </main>
+
+        <footer>
+            <p>Runs entirely in your browser. No data is uploaded. <a
+                    href="https://github.com/dreisdesign/MindCubby-3D/blob/main/APPS/GECODER/README.md#gecoder"
+                    target="_blank">Learn More</a></p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
