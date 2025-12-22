@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return "<p style='color: #999;'>No additional settings found.</p>";
         }
 
-        let html = `<table style="width: 100%; border-collapse: collapse; font-size: 0.9em;"><thead><tr style="background: #f5f5f5;"><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Setting</th><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Value</th></tr></thead><tbody>`;
+        let html = `<table style="width: 100%; border-collapse: collapse; font-size: 0.9em; table-layout: fixed;"><thead><tr style="background: #f5f5f5;"><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd; width: 35%; word-break: break-word;">Setting</th><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd; width: 65%; word-break: break-word;">Value</th></tr></thead><tbody>`;
 
         // Sort settings alphabetically
         const sortedKeys = Object.keys(specs.all_settings).sort();
@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const value = specs.all_settings[key];
             const displayValue = value && value.length > 150 ? value.substring(0, 150) + '...' : value;
 
-            html += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${displayName}</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-family: monospace; color: #666;">${displayValue}</td></tr>`;
+            html += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; word-break: break-word;">${displayName}</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-family: monospace; color: #666; word-break: break-word;">${displayValue}</td></tr>`;
         }
 
         html += "</tbody></table>";
