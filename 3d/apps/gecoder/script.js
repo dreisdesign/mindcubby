@@ -115,12 +115,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Download All Settings as JSON
     btnCopySettings.addEventListener('click', () => {
-        if (!currentSpecs || !currentSpecs.settings) {
+        if (!currentSpecs) {
             alert('No settings available. Parse a G-code file first.');
             return;
         }
 
-        const settingsJSON = JSON.stringify(currentSpecs, null, 2);
+        const settingsJSON = JSON.stringify({
+            file: currentFileName,
+            extracted_at: new Date().toISOString(),
+            print_specs: {
+                estimated_print_time: formatTime(currentSpecs.print_time_s),
+                filament_used_g: currentSpecs.filament_used_g,
+                layer_height: currentSpecs.layer_height,
+                nozzle_temp: currentSpecs.nozzle_temp,
+                bed_temp: currentSpecs.bed_temp,
+                printer_model: currentSpecs.printer_model,
+                slicer: currentSpecs.slicer
+            },
+            all_gcode_settings: currentSpecs.all_settings || {}
+        }, null, 2);
+
         const blob = new Blob([settingsJSON], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -177,6 +191,34 @@ document.addEventListener('DOMContentLoaded', () => {
             support_material: null
         };
 
+        // Extract ALL settings from G-code comments dynamically
+        const settingsRegex = /; ([\w_]+) = (.+?)(?=\n|$)/g;
+        let match;
+        const allSettings = {};
+
+        while ((match = settingsRegex.exec(content)) !== null) {
+            const key = match[1];
+            const value = match[2].trim();
+            allSettings[key] = value;
+
+            // Map key settings to specs object for Printables output
+            if (key === 'printer_model') specs.printer_model = value === 'ENDER3V2' ? 'Ender 3 V2' : value;
+            if (key === 'printer_vendor') specs.printer_vendor = value;
+            if (key === 'layer_height') specs.layer_height = parseFloat(value);
+            if (key === 'nozzle_diameter') specs.nozzle_diameter = parseFloat(value);
+            if (key === 'fill_density') specs.infill_density = parseFloat(value);
+            if (key === 'infill_pattern') specs.infill_pattern = value;
+            if (key === 'perimeters') specs.perimeters = parseInt(value);
+            if (key === 'first_layer_temperature') specs.nozzle_temp = parseInt(value);
+            if (key === 'bed_temperature') specs.bed_temp = parseInt(value);
+            if (key === 'spiral_vase') specs.spiral_vase = value === '1';
+            if (key === 'variable_layer_height') specs.variable_layer_height = value === '1';
+            if (key === 'support_material') specs.support_material = value === '1';
+        }
+
+        // Store all extracted settings for the settings display
+        specs.all_settings = allSettings;
+
         // Detect Slicer
         if (content.includes('PrusaSlicer') || content.includes('SuperSlicer')) {
             specs.slicer = 'PrusaSlicer';
@@ -190,61 +232,18 @@ document.addEventListener('DOMContentLoaded', () => {
             specs.filament_material = materialMatch[2].toUpperCase();
         }
 
-        // --- REGEX PATTERNS ---
+        // Fallback patterns for older/different formats
+        const nozzleTempMatch = content.match(/;Nozzle Temp:\s*(\d+)/) || content.match(/M104 S(\d+)/);
+        if (nozzleTempMatch && !specs.nozzle_temp) specs.nozzle_temp = parseInt(nozzleTempMatch[1]);
 
-        // Printer Model
-        const modelMatch = content.match(/; printer_model = ([\w\d]+)/);
-        if (modelMatch) {
-            specs.printer_model = modelMatch[1] === 'ENDER3V2' ? 'Ender 3 V2' : modelMatch[1];
-        }
-
-        // Printer Vendor
-        const vendorMatch = content.match(/; printer_vendor = ([\w\s]+)/);
-        if (vendorMatch) specs.printer_vendor = vendorMatch[1].trim();
-
-        // Layer Height
-        const layerMatch = content.match(/; layer_height = ([\d.]+)/) || content.match(/;Layer height: ([\d.]+)/);
-        if (layerMatch) specs.layer_height = parseFloat(layerMatch[1]);
-
-        // Nozzle Diameter
-        const nozzleDiamMatch = content.match(/; nozzle_diameter = ([\d.]+)/) || content.match(/;Nozzle diameter: ([\d.]+)/);
-        if (nozzleDiamMatch) specs.nozzle_diameter = parseFloat(nozzleDiamMatch[1]);
-
-        // Infill
-        const infillMatch = content.match(/; fill_density = ([\d.]+)%/);
-        if (infillMatch) specs.infill_density = parseFloat(infillMatch[1]);
-
-        const infillPatMatch = content.match(/; infill_pattern = (\w+)/);
-        if (infillPatMatch) specs.infill_pattern = infillPatMatch[1];
-
-        // Perimeters
-        const perimMatch = content.match(/; perimeters = (\d+)/);
-        if (perimMatch) specs.perimeters = parseInt(perimMatch[1]);
-
-        // Temps
-        const nozzleTempMatch = content.match(/; first_layer_temperature = (\d+)/) || content.match(/;Nozzle Temp:\s*(\d+)/) || content.match(/M104 S(\d+)/);
-        if (nozzleTempMatch) specs.nozzle_temp = parseInt(nozzleTempMatch[1]);
-
-        const bedTempMatch = content.match(/; bed_temperature = (\d+)/) || content.match(/;Bed Temp:\s*(\d+)/) || content.match(/M140 S(\d+)/);
-        if (bedTempMatch) specs.bed_temp = parseInt(bedTempMatch[1]);
-
-        // Modes
-        const spiralMatch = content.match(/; spiral_vase = ([01])/);
-        if (spiralMatch) specs.spiral_vase = spiralMatch[1] === '1';
-
-        const varLayerMatch = content.match(/; variable_layer_height = ([01])/);
-        if (varLayerMatch) specs.variable_layer_height = varLayerMatch[1] === '1';
-
-        const supportMatch = content.match(/; support_material = ([01])/);
-        if (supportMatch) specs.support_material = supportMatch[1] === '1';
+        const bedTempMatch = content.match(/;Bed Temp:\s*(\d+)/) || content.match(/M140 S(\d+)/);
+        if (bedTempMatch && !specs.bed_temp) specs.bed_temp = parseInt(bedTempMatch[1]);
 
         // Filament Used (Weight)
-        // Try Prusa grams first
         const weightMatch = content.match(/; filament used \[g\] = ([\d.]+)/);
         if (weightMatch) {
             specs.filament_used_g = parseFloat(weightMatch[1]);
         } else {
-            // Fallback to Cura meters * 1.25
             const metersMatch = content.match(/;Filament used: ([\d.]+)\s*m(?!\w)/);
             if (metersMatch) {
                 specs.filament_used_g = parseFloat(metersMatch[1]) * 1.25;
@@ -252,12 +251,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Print Time
-        // Try Cura seconds first (;TIME:12345)
         const timeMatch = content.match(/;TIME:(\d+)/);
         if (timeMatch) {
             specs.print_time_s = parseInt(timeMatch[1]);
         } else {
-            // Try Prusa format (32m 29s)
             const prusaTimeMatch = content.match(/; estimated printing time \(normal mode\) = (\d+)m (\d+)s/);
             if (prusaTimeMatch) {
                 specs.print_time_s = (parseInt(prusaTimeMatch[1]) * 60) + parseInt(prusaTimeMatch[2]);
@@ -386,28 +383,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function generateSettingsHTML(specs) {
-        // Generate HTML table for all settings (for display in the app)
-        if (!specs || Object.keys(specs).length === 0) {
-            return "<p style='color: #999;'>No settings extracted.</p>";
+        // Generate HTML table for all extracted settings
+        if (!specs || !specs.all_settings || Object.keys(specs.all_settings).length === 0) {
+            return "<p style='color: #999;'>No additional settings found.</p>";
         }
 
         let html = `<table style="width: 100%; border-collapse: collapse; font-size: 0.9em;"><thead><tr style="background: #f5f5f5;"><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Setting</th><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Value</th></tr></thead><tbody>`;
 
         // Sort settings alphabetically
-        const sortedKeys = Object.keys(specs).sort();
+        const sortedKeys = Object.keys(specs.all_settings).sort();
         for (const key of sortedKeys) {
-            if (key === 'filename' || key === 'slicer' || key === 'printer_model' || key === 'printer_vendor' || key === 'nozzle_temp' || key === 'bed_temp' || key === 'layer_height' || key === 'nozzle_diameter' || key === 'filament_material' || key === 'infill_density' || key === 'infill_pattern' || key === 'perimeters' || key === 'filament_used_g' || key === 'print_time_s' || key === 'spiral_vase' || key === 'variable_layer_height' || key === 'support_material') {
-                continue; // Skip the basic specs already shown above
-            }
-
             const displayName = key
                 .replace(/_/g, ' ')
                 .split(' ')
                 .map(w => w.charAt(0).toUpperCase() + w.slice(1))
                 .join(' ');
 
-            const value = specs[key];
-            const displayValue = value && value.length > 100 ? value.substring(0, 100) + '...' : value;
+            const value = specs.all_settings[key];
+            const displayValue = value && value.length > 150 ? value.substring(0, 150) + '...' : value;
 
             html += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${displayName}</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-family: monospace; color: #666;">${displayValue}</td></tr>`;
         }
