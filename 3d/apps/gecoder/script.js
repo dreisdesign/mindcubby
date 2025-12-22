@@ -3,14 +3,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileNameDisplay = document.getElementById('fileName');
     const resultsSection = document.getElementById('resultsSection');
     const previewArea = document.getElementById('previewArea');
+    const settingsArea = document.getElementById('settingsArea');
     const rawMarkdown = document.getElementById('rawMarkdown');
     const statusMessage = document.getElementById('statusMessage');
 
     const btnCopyRich = document.getElementById('btnCopyRich');
-    const btnCopyMd = document.getElementById('btnCopyMd');
+    const btnCopySettings = document.getElementById('btnCopySettings');
     const btnDownload = document.getElementById('btnDownload');
 
     let currentFileName = '';
+    let currentSpecs = null;
 
     // === RESTORE STATE FROM LOCALSTORAGE ===
     function restoreSession() {
@@ -32,11 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === DISPLAY RESULTS ===
     function displayResults(specs) {
+        currentSpecs = specs;  // Store specs globally
         const markdown = generateMarkdown(specs);
         const html = generateHTML(specs);
+        const settingsHTML = generateSettingsHTML(specs);
 
         rawMarkdown.value = markdown;
         previewArea.innerHTML = html;
+        settingsArea.innerHTML = settingsHTML;
 
         statusMessage.classList.add('hidden');
         resultsSection.classList.remove('hidden');
@@ -108,11 +113,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Copy Markdown
-    btnCopyMd.addEventListener('click', () => {
-        rawMarkdown.select();
-        document.execCommand('copy'); // Fallback or use navigator.clipboard
-        showToast(btnCopyMd, 'Copied MD!');
+    // Download All Settings as JSON
+    btnCopySettings.addEventListener('click', () => {
+        if (!currentSpecs || !currentSpecs.settings) {
+            alert('No settings available. Parse a G-code file first.');
+            return;
+        }
+
+        const settingsJSON = JSON.stringify(currentSpecs, null, 2);
+        const blob = new Blob([settingsJSON], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentFileName.replace(/\.gcode$/i, '') + '_SETTINGS.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(btnCopySettings, 'Downloaded!');
     });
 
     // Download .md file
@@ -364,6 +382,37 @@ document.addEventListener('DOMContentLoaded', () => {
         html += "<li>Recommended: Test on a small print first before large jobs</li>";
         html += "</ul>";
 
+        return html;
+    }
+
+    function generateSettingsHTML(specs) {
+        // Generate HTML table for all settings (for display in the app)
+        if (!specs || Object.keys(specs).length === 0) {
+            return "<p style='color: #999;'>No settings extracted.</p>";
+        }
+
+        let html = `<table style="width: 100%; border-collapse: collapse; font-size: 0.9em;"><thead><tr style="background: #f5f5f5;"><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Setting</th><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Value</th></tr></thead><tbody>`;
+
+        // Sort settings alphabetically
+        const sortedKeys = Object.keys(specs).sort();
+        for (const key of sortedKeys) {
+            if (key === 'filename' || key === 'slicer' || key === 'printer_model' || key === 'printer_vendor' || key === 'nozzle_temp' || key === 'bed_temp' || key === 'layer_height' || key === 'nozzle_diameter' || key === 'filament_material' || key === 'infill_density' || key === 'infill_pattern' || key === 'perimeters' || key === 'filament_used_g' || key === 'print_time_s' || key === 'spiral_vase' || key === 'variable_layer_height' || key === 'support_material') {
+                continue; // Skip the basic specs already shown above
+            }
+
+            const displayName = key
+                .replace(/_/g, ' ')
+                .split(' ')
+                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' ');
+
+            const value = specs[key];
+            const displayValue = value && value.length > 100 ? value.substring(0, 100) + '...' : value;
+
+            html += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${displayName}</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-family: monospace; color: #666;">${displayValue}</td></tr>`;
+        }
+
+        html += "</tbody></table>";
         return html;
     }
 });
