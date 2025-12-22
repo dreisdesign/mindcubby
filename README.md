@@ -8,7 +8,7 @@ A collection of tools and utilities for 3D printing, starting with **GECODER**.
 
 **Generate Printables Specifications from G-Code Files**
 
-A lightweight, browser-based tool that automatically extracts print specifications from 3D printer G-code files and formats them as ready-to-paste Markdown tables for Printables.com listings.
+A lightweight, browser-based tool that automatically extracts print specifications from 3D printer G-code files and formats them as ready-to-paste Markdown tables for Printables.com listings. Works with Cura, PrusaSlicer, and SuperSlicer exports.
 
 ### Quick Links
 - **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/gecoder/
