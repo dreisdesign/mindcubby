@@ -19,13 +19,17 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 ✅ **No Installation Required** – Runs entirely in your browser  
 ✅ **Fast Processing** – Parse G-code files instantly  
 ✅ **Multi-Slicer Support** – Works with Cura and PrusaSlicer  
-✅ **Smart Copy** – Copy as Markdown or formatted HTML  
+✅ **Curated Printables Output** – Copy formatted specs directly to Printables listings  
+✅ **Complete Settings Export** – Download ALL 360+ extracted G-code settings as JSON  
 ✅ **No Data Upload** – All processing happens locally  
 
 ### How to Use
 1. Visit https://dreisdesign.github.io/mindcubby/3d/apps/gecoder/
 2. Select your `.gcode` file
-3. Copy the generated specs for Printables
+3. Choose an action:
+   - **Copy for Printables (Rich Text)** – Paste into Printables description
+   - **All Settings (JSON)** – Download complete G-code settings for analysis
+   - **Download .md** – Save curated specs as Markdown
 
 ---
 
