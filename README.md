@@ -1,19 +1,19 @@
 # mindcubby
 
-A collection of tools and utilities for 3D printing, starting with **GECODER**.
+A collection of tools and utilities for 3D printing, starting with **gcoder**.
 
 ---
 
-## 🚀 GECODER
+## 🚀 gcoder
 
 **Generate Printables Specifications from G-Code Files**
 
 A lightweight, browser-based tool that automatically extracts print specifications from 3D printer G-code files and formats them as ready-to-paste Markdown tables for Printables.com listings. Works with Cura, PrusaSlicer, and SuperSlicer exports.
 
 ### Quick Links
-- **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/gecoder/
-- **Documentation:** [GECODER README](./3d/apps/gecoder/README.md)
-- **Privacy Policy:** [Privacy Policy](./3d/apps/gecoder/PRIVACY.md)
+- **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
+- **Documentation:** [gcoder README](./3d/apps/gcoder/README.md)
+- **Privacy Policy:** [Privacy Policy](./3d/apps/gcoder/PRIVACY.md)
 
 ### Features
 ✅ **No Installation Required** – Runs entirely in your browser  
@@ -24,7 +24,7 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 ✅ **No Data Upload** – All processing happens locally  
 
 ### How to Use
-1. Visit https://dreisdesign.github.io/mindcubby/3d/apps/gecoder/
+1. Visit https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
 2. Select your `.gcode` file
 3. Choose an action:
    - **Copy for Printables (Rich Text)** – Paste into Printables description

@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // === RESTORE STATE FROM LOCALSTORAGE ===
     function restoreSession() {
         try {
-            const savedSpecs = localStorage.getItem('gecoder_specs');
-            const savedFilename = localStorage.getItem('gecoder_filename');
+            const savedSpecs = localStorage.getItem('gcoder_specs');
+            const savedFilename = localStorage.getItem('gcoder_filename');
 
             if (savedSpecs && savedFilename) {
                 const specs = JSON.parse(savedSpecs);
@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // === SAVE STATE TO LOCALSTORAGE ===
     function saveSession(specs, filename) {
         try {
-            localStorage.setItem('gecoder_specs', JSON.stringify(specs));
-            localStorage.setItem('gecoder_filename', filename);
+            localStorage.setItem('gcoder_specs', JSON.stringify(specs));
+            localStorage.setItem('gcoder_filename', filename);
         } catch (e) {
             console.error('Failed to save session:', e);
         }
@@ -59,8 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === CLEAR SESSION ===
     function clearSession() {
-        localStorage.removeItem('gecoder_specs');
-        localStorage.removeItem('gecoder_filename');
+        localStorage.removeItem('gcoder_specs');
+        localStorage.removeItem('gcoder_filename');
     }
 
     // Restore on load
