@@ -1,4 +1,4 @@
-# g-coder
+# G-coder
 
 **Generate Printables Specifications from G-Code Files**
 
@@ -22,7 +22,7 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 
 ## Supported Specifications
 
-g-coder automatically extracts and formats:
+G-coder automatically extracts and formats:
 
 - **Print Time** – Calculated from G-code metadata and converted to human-readable format
 - **Filament Used** – Weight in grams (calculated from filament length × 1.25g/m standard)
@@ -114,7 +114,7 @@ The tool automatically detects the slicer and parses the appropriate metadata co
 
 ## Privacy
 
-g-coder processes all files **locally in your browser**. No data is sent to any server. Your G-code files never leave your computer.
+G-coder processes all files **locally in your browser**. No data is sent to any server. Your G-code files never leave your computer.
 
 For detailed information about how your data is handled, see the [Privacy Policy](./PRIVACY.md).
 
@@ -172,7 +172,7 @@ See [LICENSE](../../LICENSE) in the repository root.
 ## Related Projects
 
 - **[MindCubby-3D](../../)** – Parent repository with 3D printing automation workflows
-- **[gcode_specs.py](../../scripts/gcode_specs.py)** – Original Python script that inspired g-coder
+- **[gcode_specs.py](../../scripts/gcode_specs.py)** – Original Python script that inspired G-coder
 
 ---
 

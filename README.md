@@ -1,10 +1,10 @@
 # mindcubby
 
-A collection of tools and utilities for 3D printing, starting with **g-coder**.
+A collection of tools and utilities for 3D printing, starting with **G-coder**.
 
 ---
 
-## 🚀 g-coder
+## 🚀 G-coder
 
 **Generate Printables Specifications from G-Code Files**
 
@@ -12,7 +12,7 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 
 ### Quick Links
 - **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/g-coder/
-- **Documentation:** [g-coder README](./3d/apps/g-coder/README.md)
+- **Documentation:** [G-coder README](./3d/apps/g-coder/README.md)
 - **Privacy Policy:** [Privacy Policy](./3d/apps/g-coder/PRIVACY.md)
 
 ### Features

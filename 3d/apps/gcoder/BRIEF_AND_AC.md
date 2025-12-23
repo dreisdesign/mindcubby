@@ -1,7 +1,7 @@
-# g-coder - Project Brief & Acceptance Criteria
+# G-coder - Project Brief & Acceptance Criteria
 
 ## 1. Project Overview
-**App Name:** g-coder  
+**App Name:** G-coder  
 **Purpose:** A browser-based tool that parses 3D printer G-code files to automatically generate formatted specification tables for Printables.com descriptions.  
 **Platform:** Web (Hosted on GitHub Pages)  
 **Tech Stack:** Vanilla HTML, CSS, JavaScript (No build steps, no frameworks).
