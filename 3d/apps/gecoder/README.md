@@ -4,7 +4,7 @@
 
 A lightweight, browser-based tool that automatically extracts print specifications from 3D printer G-code files and formats them as ready-to-paste Markdown tables for Printables.com listings.
 
-🔗 **Live App:** [https://dreisdesign.github.io/mindCubby/3D/APPS/GECODER/](https://dreisdesign.github.io/mindcubby/3d/apps/gecoder/)
+🔗 **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/gecoder/
 
 ---
 
