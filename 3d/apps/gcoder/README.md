@@ -1,10 +1,10 @@
-# GECODER
+# gcoder
 
 **Generate Printables Specifications from G-Code Files**
 
 A lightweight, browser-based tool that automatically extracts print specifications from 3D printer G-code files and formats them as ready-to-paste Markdown tables for Printables.com listings.
 
-🔗 **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/gecoder/
+🔗 **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
 
 ---
 
@@ -22,7 +22,7 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 
 ## Supported Specifications
 
-GECODER automatically extracts and formats:
+gcoder automatically extracts and formats:
 
 - **Print Time** – Calculated from G-code metadata and converted to human-readable format
 - **Filament Used** – Weight in grams (calculated from filament length × 1.25g/m standard)
@@ -39,7 +39,7 @@ GECODER automatically extracts and formats:
 
 ## How to Use
 
-1. **Visit** https://dreisdesign.github.io/MindCubby-3D/APPS/GECODER/
+1. **Visit** https://dreisdesign.github.io/MindCubby-3D/APPS/gcoder/
 2. **Click** "Select G-Code File" or drag & drop your `.gcode` file
 3. **View** the formatted specifications in the preview
 4. **Choose** an action:
@@ -114,7 +114,7 @@ The tool automatically detects the slicer and parses the appropriate metadata co
 
 ## Privacy
 
-GECODER processes all files **locally in your browser**. No data is sent to any server. Your G-code files never leave your computer.
+gcoder processes all files **locally in your browser**. No data is sent to any server. Your G-code files never leave your computer.
 
 For detailed information about how your data is handled, see the [Privacy Policy](./PRIVACY.md).
 
@@ -135,7 +135,7 @@ For detailed information about how your data is handled, see the [Privacy Policy
 
 ### Project Structure
 ```
-APPS/GECODER/
+APPS/gcoder/
 ├── index.html       # Main HTML template
 ├── style.css        # Vanilla CSS styling
 ├── script.js        # G-code parsing and UI logic
@@ -149,7 +149,7 @@ APPS/GECODER/
 3. Use a local server:
    ```bash
    python3 -m http.server 8000
-   # Then visit http://localhost:8000/APPS/GECODER/
+   # Then visit http://localhost:8000/APPS/gcoder/
    ```
 
 ### Building/Deployment
@@ -172,7 +172,7 @@ See [LICENSE](../../LICENSE) in the repository root.
 ## Related Projects
 
 - **[MindCubby-3D](../../)** – Parent repository with 3D printing automation workflows
-- **[gcode_specs.py](../../scripts/gcode_specs.py)** – Original Python script that inspired GECODER
+- **[gcode_specs.py](../../scripts/gcode_specs.py)** – Original Python script that inspired gcoder
 
 ---
 
