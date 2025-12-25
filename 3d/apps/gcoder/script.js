@@ -183,6 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
             filament_material: null,
             infill_density: null,
             infill_pattern: null,
+            top_fill_pattern: null,
+            bottom_fill_pattern: null,
             perimeters: null,
             filament_used_g: null,
             print_time_s: null,
@@ -208,6 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (key === 'nozzle_diameter') specs.nozzle_diameter = parseFloat(value);
             if (key === 'fill_density') specs.infill_density = parseFloat(value);
             if (key === 'infill_pattern') specs.infill_pattern = value;
+            if (key === 'top_fill_pattern') specs.top_fill_pattern = value;
+            if (key === 'bottom_fill_pattern') specs.bottom_fill_pattern = value;
             if (key === 'perimeters') specs.perimeters = parseInt(value);
             if (key === 'first_layer_temperature') specs.nozzle_temp = parseInt(value);
             if (key === 'bed_temperature') specs.bed_temp = parseInt(value);
@@ -295,19 +299,21 @@ document.addEventListener('DOMContentLoaded', () => {
             md += `| Infill Density | ${infillStr} |\n`;
         }
 
+        if (specs.top_fill_pattern) md += `| Top Fill Pattern | ${specs.top_fill_pattern} |\n`;
+        if (specs.bottom_fill_pattern) md += `| Bottom Fill Pattern | ${specs.bottom_fill_pattern} |\n`;
+
         if (specs.support_material !== null) {
             md += `| Supports Required | ${specs.support_material ? 'Yes' : 'No'} |\n`;
         }
 
         if (specs.spiral_vase) md += `| Print Mode | Spiral Vase |\n`;
         if (specs.variable_layer_height) md += `| Adaptive Layer Height | Enabled |\n`;
-        if (specs.nozzle_diameter) md += `| Nozzle Diameter | ${specs.nozzle_diameter.toFixed(2)} mm |\n`;
 
         md += "\n## Settings Used\n\n";
 
         let settingsParts = [];
         if (specs.filament_material) settingsParts.push(specs.filament_material);
-        if (specs.nozzle_diameter) settingsParts.push(`${specs.nozzle_diameter.toFixed(2)}mm`); // Added diameter to settings line too
+        if (specs.nozzle_diameter) settingsParts.push(`${specs.nozzle_diameter.toFixed(2)}mm nozzle`);
         if (specs.nozzle_temp) settingsParts.push(`${specs.nozzle_temp}°C Nozzle`);
         if (specs.bed_temp) settingsParts.push(`${specs.bed_temp}°C Bed`);
 
@@ -346,20 +352,22 @@ document.addEventListener('DOMContentLoaded', () => {
             html += `<tr><td>Infill Density</td><td>${infillStr}</td></tr>`;
         }
 
+        if (specs.top_fill_pattern) html += `<tr><td>Top Fill Pattern</td><td>${specs.top_fill_pattern}</td></tr>`;
+        if (specs.bottom_fill_pattern) html += `<tr><td>Bottom Fill Pattern</td><td>${specs.bottom_fill_pattern}</td></tr>`;
+
         if (specs.support_material !== null) {
             html += `<tr><td>Supports Required</td><td>${specs.support_material ? 'Yes' : 'No'}</td></tr>`;
         }
 
         if (specs.spiral_vase) html += `<tr><td>Print Mode</td><td>Spiral Vase</td></tr>`;
         if (specs.variable_layer_height) html += `<tr><td>Adaptive Layer Height</td><td>Enabled</td></tr>`;
-        if (specs.nozzle_diameter) html += `<tr><td>Nozzle Diameter</td><td>${specs.nozzle_diameter.toFixed(2)} mm</td></tr>`;
 
         html += "</tbody></table>";
 
         html += "<h2>Settings Used</h2><ul>";
         let settingsParts = [];
         if (specs.filament_material) settingsParts.push(specs.filament_material);
-        if (specs.nozzle_diameter) settingsParts.push(`${specs.nozzle_diameter.toFixed(2)}mm`);
+        if (specs.nozzle_diameter) settingsParts.push(`${specs.nozzle_diameter.toFixed(2)}mm nozzle`);
         if (specs.nozzle_temp) settingsParts.push(`${specs.nozzle_temp}°C Nozzle`);
         if (specs.bed_temp) settingsParts.push(`${specs.bed_temp}°C Bed`);
 
