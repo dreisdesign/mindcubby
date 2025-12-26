@@ -33,6 +33,9 @@ header {
 h1 {
     margin-bottom: 10px;
     color: var(--primary-color);
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 2rem;
 }
 
 .upload-section {
