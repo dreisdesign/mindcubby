@@ -282,112 +282,179 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function generateMarkdown(specs) {
-        let md = "## Print Specifications\n\n";
-        md += "| Specification | Value |\n";
-        md += "|---|---|\n";
+        let lines = [];
 
+        // Title (cleaned filename)
+        const cleanedName = cleanFilenameForDisplay(specs.filename);
+        lines.push(`**${cleanedName}**`);
+
+        // Print Specifications: Time and Weight only
+        let specs_parts = [];
         const timeStr = formatTime(specs.print_time_s);
-        if (timeStr) md += `| Estimated Print Time | ${timeStr} |\n`;
+        if (timeStr) specs_parts.push(timeStr);
+        if (specs.filament_used_g) specs_parts.push(`${specs.filament_used_g.toFixed(1)}g`);
 
-        if (specs.filament_used_g) md += `| Filament Used | ${specs.filament_used_g.toFixed(1)} g |\n`;
-        if (specs.layer_height) md += `| Layer Height | ${specs.layer_height.toFixed(2)} mm |\n`;
-        if (specs.perimeters) md += `| Wall Thickness | ${specs.perimeters} perimeters |\n`;
+        if (specs_parts.length > 0) {
+            lines.push(specs_parts.join(", "));
+        }
 
-        if (specs.infill_density !== null) {
-            let infillStr = `${specs.infill_density.toFixed(0)}%`;
+        // Print Settings: Layer height, walls, infill, and special modes
+        let settings_parts = [];
+
+        // Layer height
+        if (specs.layer_height) {
+            settings_parts.push(`**${specs.layer_height.toFixed(2)}mm** layers`);
+        }
+
+        // Walls/Perimeters
+        if (specs.perimeters) {
+            settings_parts.push(`**${specs.perimeters} walls**`);
+        }
+
+        // Infill
+        if (specs.infill_density !== null && specs.infill_density > 0) {
+            let infillStr = `**${specs.infill_density.toFixed(0)}%** infill`;
             if (specs.infill_pattern) infillStr += ` (${specs.infill_pattern})`;
-            md += `| Infill Density | ${infillStr} |\n`;
+            settings_parts.push(infillStr);
         }
 
-        if (specs.top_fill_pattern) md += `| Top Fill Pattern | ${specs.top_fill_pattern} |\n`;
-        if (specs.bottom_fill_pattern) md += `| Bottom Fill Pattern | ${specs.bottom_fill_pattern} |\n`;
-
-        if (specs.support_material !== null) {
-            md += `| Supports Required | ${specs.support_material ? 'Yes' : 'No'} |\n`;
+        // Top/Bottom layers
+        const topLayers = specs.top_shell_layers;
+        const bottomLayers = specs.bottom_shell_layers;
+        if (topLayers === 0 && bottomLayers === 0) {
+            settings_parts.push("**No top/bottom layers** (vase-style)");
+        } else if (topLayers !== null || bottomLayers !== null) {
+            let layerParts = [];
+            if (topLayers !== null) layerParts.push(`**${topLayers}** top`);
+            if (bottomLayers !== null) layerParts.push(`**${bottomLayers}** bottom`);
+            settings_parts.push(layerParts.join(" / ") + " layers");
         }
 
-        if (specs.spiral_vase) md += `| Print Mode | Spiral Vase |\n`;
-        if (specs.variable_layer_height) md += `| Adaptive Layer Height | Enabled |\n`;
-
-        md += "\n## Settings Used\n\n";
-
-        let settingsParts = [];
-        if (specs.filament_material) settingsParts.push(specs.filament_material);
-        if (specs.nozzle_diameter) settingsParts.push(`${specs.nozzle_diameter.toFixed(2)}mm nozzle`);
-        if (specs.nozzle_temp) settingsParts.push(`${specs.nozzle_temp}°C Nozzle`);
-        if (specs.bed_temp) settingsParts.push(`${specs.bed_temp}°C Bed`);
-
-        if (settingsParts.length > 0) {
-            md += `- **This Print:** ${settingsParts.join(' • ')}\n`;
+        // Special modes
+        if (specs.fuzzy_skin) {
+            const fuzzyDisplay = specs.fuzzy_skin.replace('allwalls', 'all walls').replace('outside', 'outside only').replace('external', 'external');
+            settings_parts.push(`**Fuzzy skin** (${fuzzyDisplay})`);
+        }
+        if (specs.spiral_vase) {
+            settings_parts.push("**Spiral vase** mode");
+        }
+        if (specs.support_material) {
+            settings_parts.push("**Supports** enabled");
+        }
+        if (specs.variable_layer_height) {
+            settings_parts.push("**Adaptive layers**");
         }
 
-        md += "\n## Print Notes\n\n";
-        if (specs.printer_model) {
-            md += `- Optimized for **${specs.printer_model}**`;
-            if (specs.printer_vendor) md += ` by **${specs.printer_vendor}**`;
-            md += "\n";
+        // Seam position if notable
+        if (specs.seam_position && specs.seam_position !== 'aligned') {
+            const seamDisplay = specs.seam_position.charAt(0).toUpperCase() + specs.seam_position.slice(1);
+            settings_parts.push(`**${seamDisplay}** seam position`);
         }
-        if (specs.slicer) md += `- Exported from **${specs.slicer}**\n`;
-        md += "- ⚠️ **Adjust temperatures +/-5C** if experiencing adhesion or stringing issues\n";
-        md += "- Recommended: Test on a small print first before large jobs\n";
+
+        if (settings_parts.length > 0) {
+            lines.push(settings_parts.join(" / "));
+        }
+
+        // Join with newlines and add trailing newline for multi-part pasting
+        let md = lines.join("\n") + "\n";
 
         return md;
     }
 
     function generateHTML(specs) {
-        // Generate HTML that mimics the Markdown table for the preview/rich-copy
-        let html = "<h2>Print Specifications</h2>";
-        html += "<table><thead><tr><th>Specification</th><th>Value</th></tr></thead><tbody>";
+        // Generate simplified HTML format matching the Python output
+        let html = "";
 
+        // Title (cleaned filename)
+        const cleanedName = cleanFilenameForDisplay(specs.filename);
+        html += `<p><strong>${cleanedName}</strong></p>`;
+
+        // Print Specifications: Time and Weight only
+        let specs_parts = [];
         const timeStr = formatTime(specs.print_time_s);
-        if (timeStr) html += `<tr><td>Estimated Print Time</td><td>${timeStr}</td></tr>`;
+        if (timeStr) specs_parts.push(timeStr);
+        if (specs.filament_used_g) specs_parts.push(`${specs.filament_used_g.toFixed(1)}g`);
 
-        if (specs.filament_used_g) html += `<tr><td>Filament Used</td><td>${specs.filament_used_g.toFixed(1)} g</td></tr>`;
-        if (specs.layer_height) html += `<tr><td>Layer Height</td><td>${specs.layer_height.toFixed(2)} mm</td></tr>`;
-        if (specs.perimeters) html += `<tr><td>Wall Thickness</td><td>${specs.perimeters} perimeters</td></tr>`;
+        if (specs_parts.length > 0) {
+            html += `<p>${specs_parts.join(", ")}</p>`;
+        }
 
-        if (specs.infill_density !== null) {
-            let infillStr = `${specs.infill_density.toFixed(0)}%`;
+        // Print Settings: Layer height, walls, infill, and special modes
+        let settings_parts = [];
+
+        // Layer height
+        if (specs.layer_height) {
+            settings_parts.push(`<strong>${specs.layer_height.toFixed(2)}mm</strong> layers`);
+        }
+
+        // Walls/Perimeters
+        if (specs.perimeters) {
+            settings_parts.push(`<strong>${specs.perimeters} walls</strong>`);
+        }
+
+        // Infill
+        if (specs.infill_density !== null && specs.infill_density > 0) {
+            let infillStr = `<strong>${specs.infill_density.toFixed(0)}%</strong> infill`;
             if (specs.infill_pattern) infillStr += ` (${specs.infill_pattern})`;
-            html += `<tr><td>Infill Density</td><td>${infillStr}</td></tr>`;
+            settings_parts.push(infillStr);
         }
 
-        if (specs.top_fill_pattern) html += `<tr><td>Top Fill Pattern</td><td>${specs.top_fill_pattern}</td></tr>`;
-        if (specs.bottom_fill_pattern) html += `<tr><td>Bottom Fill Pattern</td><td>${specs.bottom_fill_pattern}</td></tr>`;
-
-        if (specs.support_material !== null) {
-            html += `<tr><td>Supports Required</td><td>${specs.support_material ? 'Yes' : 'No'}</td></tr>`;
+        // Top/Bottom layers
+        const topLayers = specs.top_shell_layers;
+        const bottomLayers = specs.bottom_shell_layers;
+        if (topLayers === 0 && bottomLayers === 0) {
+            settings_parts.push("<strong>No top/bottom layers</strong> (vase-style)");
+        } else if (topLayers !== null || bottomLayers !== null) {
+            let layerParts = [];
+            if (topLayers !== null) layerParts.push(`<strong>${topLayers}</strong> top`);
+            if (bottomLayers !== null) layerParts.push(`<strong>${bottomLayers}</strong> bottom`);
+            settings_parts.push(layerParts.join(" / ") + " layers");
         }
 
-        if (specs.spiral_vase) html += `<tr><td>Print Mode</td><td>Spiral Vase</td></tr>`;
-        if (specs.variable_layer_height) html += `<tr><td>Adaptive Layer Height</td><td>Enabled</td></tr>`;
-
-        html += "</tbody></table>";
-
-        html += "<h2>Settings Used</h2><ul>";
-        let settingsParts = [];
-        if (specs.filament_material) settingsParts.push(specs.filament_material);
-        if (specs.nozzle_diameter) settingsParts.push(`${specs.nozzle_diameter.toFixed(2)}mm nozzle`);
-        if (specs.nozzle_temp) settingsParts.push(`${specs.nozzle_temp}°C Nozzle`);
-        if (specs.bed_temp) settingsParts.push(`${specs.bed_temp}°C Bed`);
-
-        if (settingsParts.length > 0) {
-            html += `<li><strong>This Print:</strong> ${settingsParts.join(' • ')}</li>`;
+        // Special modes
+        if (specs.fuzzy_skin) {
+            const fuzzyDisplay = specs.fuzzy_skin.replace('allwalls', 'all walls').replace('outside', 'outside only').replace('external', 'external');
+            settings_parts.push(`<strong>Fuzzy skin</strong> (${fuzzyDisplay})`);
         }
-        html += "</ul>";
-
-        html += "<h2>Print Notes</h2><ul>";
-        if (specs.printer_model) {
-            let modelStr = `Optimized for <strong>${specs.printer_model}</strong>`;
-            if (specs.printer_vendor) modelStr += ` by <strong>${specs.printer_vendor}</strong>`;
-            html += `<li>${modelStr}</li>`;
+        if (specs.spiral_vase) {
+            settings_parts.push("<strong>Spiral vase</strong> mode");
         }
-        if (specs.slicer) html += `<li>Exported from <strong>${specs.slicer}</strong></li>`;
-        html += "<li>⚠️ <strong>Adjust temperatures +/-5C</strong> if experiencing adhesion or stringing issues</li>";
-        html += "<li>Recommended: Test on a small print first before large jobs</li>";
-        html += "</ul>";
+        if (specs.support_material) {
+            settings_parts.push("<strong>Supports</strong> enabled");
+        }
+        if (specs.variable_layer_height) {
+            settings_parts.push("<strong>Adaptive layers</strong>");
+        }
+
+        // Seam position if notable
+        if (specs.seam_position && specs.seam_position !== 'aligned') {
+            const seamDisplay = specs.seam_position.charAt(0).toUpperCase() + specs.seam_position.slice(1);
+            settings_parts.push(`<strong>${seamDisplay}</strong> seam position`);
+        }
+
+        if (settings_parts.length > 0) {
+            html += `<p>${settings_parts.join(" / ")}</p>`;
+        }
 
         return html;
+    }
+
+    function cleanFilenameForDisplay(filename) {
+        // Remove extension
+        let name = filename.replace(/\.(gcode|md|html|json)$/i, '');
+        // Remove time patterns like _3m12s, _1h30m
+        name = name.replace(/_\d+h?\d*m\d*s?/g, '');
+        // Remove filament type suffix
+        name = name.replace(/(PLA|PETG|ABS|TPU|ASA)$/i, '');
+        // Remove common prefixes
+        name = name.replace(/^CE3E3V2[_ ]?/i, '');
+        name = name.replace(/^MC3D[_ ]?/i, '');
+        name = name.replace(/[_ ]?MC3D[_ ]?/gi, ' ');
+        // Replace hyphens and underscores with spaces
+        name = name.replace(/[-_]/g, ' ');
+        // Collapse multiple spaces
+        name = name.replace(/\s+/g, ' ').trim();
+        return name;
     }
 
     function generateSettingsHTML(specs) {
