@@ -101,14 +101,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reprocess file with current app version
     const btnReprocess = document.getElementById('btnReprocess');
     const processTime = document.getElementById('processTime');
-    
+
     function updateProcessTime() {
         const now = new Date();
         const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         processTime.textContent = `Processed at ${timeStr}`;
         processTime.classList.remove('hidden');
     }
-    
+
     btnReprocess.addEventListener('click', () => {
         if (!currentFileContent || !currentFileName) {
             statusMessage.textContent = 'No file loaded. Please select a file first.';
