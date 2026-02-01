@@ -93,6 +93,10 @@ input[type="file"] {
     flex-wrap: wrap;
 }
 
+.button-spacer {
+    flex-grow: 1;
+}
+
 button {
     padding: 10px 20px;
     border: none;
