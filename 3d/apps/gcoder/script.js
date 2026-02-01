@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         statusMessage.classList.add('hidden');
         resultsSection.classList.remove('hidden');
+        updateProcessTime();
     }
 
     // === SAVE STATE TO LOCALSTORAGE ===
@@ -99,6 +100,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reprocess file with current app version
     const btnReprocess = document.getElementById('btnReprocess');
+    const processTime = document.getElementById('processTime');
+    
+    function updateProcessTime() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        processTime.textContent = `Processed at ${timeStr}`;
+        processTime.classList.remove('hidden');
+    }
+    
     btnReprocess.addEventListener('click', () => {
         if (!currentFileContent || !currentFileName) {
             statusMessage.textContent = 'No file loaded. Please select a file first.';
@@ -110,9 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const specs = parseGcode(currentFileContent, currentFileName);
             saveSession(specs, currentFileName);
             displayResults(specs);
-            statusMessage.textContent = 'Reprocessed!';
-            statusMessage.classList.remove('hidden');
-            setTimeout(() => statusMessage.classList.add('hidden'), 2000);
+            updateProcessTime();
         } catch (err) {
             console.error(err);
             statusMessage.textContent = 'Error reprocessing file.';

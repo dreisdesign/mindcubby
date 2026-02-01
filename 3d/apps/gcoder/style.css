@@ -97,6 +97,14 @@ input[type="file"] {
     flex-grow: 1;
 }
 
+.process-time {
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
 button {
     padding: 10px 20px;
     border: none;
