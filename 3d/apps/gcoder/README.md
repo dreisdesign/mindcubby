@@ -4,7 +4,7 @@
 
 A lightweight, browser-based tool that automatically extracts print specifications from 3D printer G-code files and formats them as ready-to-paste Markdown tables for Printables.com listings.
 
-🔗 **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/g-coder/
+🔗 **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
 
 ---
 
@@ -39,7 +39,7 @@ G-coder automatically extracts and formats:
 
 ## How to Use
 
-1. **Visit** https://dreisdesign.github.io/MindCubby-3D/APPS/g-coder/
+1. **Visit** https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
 2. **Click** "Select G-Code File" or drag & drop your `.gcode` file
 3. **View** the formatted specifications in the preview
 4. **Choose** an action:
