@@ -323,11 +323,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const bottomLayers = specs.bottom_shell_layers;
         if (topLayers === 0 && bottomLayers === 0) {
             settings_parts.push("**No top/bottom layers** (vase-style)");
-        } else if (topLayers !== null || bottomLayers !== null) {
+        } else if ((topLayers !== null && topLayers !== undefined) || (bottomLayers !== null && bottomLayers !== undefined)) {
             let layerParts = [];
-            if (topLayers !== null) layerParts.push(`**${topLayers}** top`);
-            if (bottomLayers !== null) layerParts.push(`**${bottomLayers}** bottom`);
-            settings_parts.push(layerParts.join(" / ") + " layers");
+            if (topLayers !== null && topLayers !== undefined) layerParts.push(`**${topLayers}** top`);
+            if (bottomLayers !== null && bottomLayers !== undefined) layerParts.push(`**${bottomLayers}** bottom`);
+            if (layerParts.length > 0) {
+                settings_parts.push(layerParts.join(" / ") + " layers");
+            }
         }
 
         // Special modes
@@ -404,11 +406,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const bottomLayers = specs.bottom_shell_layers;
         if (topLayers === 0 && bottomLayers === 0) {
             settings_parts.push("<strong>No top/bottom layers</strong> (vase-style)");
-        } else if (topLayers !== null || bottomLayers !== null) {
+        } else if ((topLayers !== null && topLayers !== undefined) || (bottomLayers !== null && bottomLayers !== undefined)) {
             let layerParts = [];
-            if (topLayers !== null) layerParts.push(`<strong>${topLayers}</strong> top`);
-            if (bottomLayers !== null) layerParts.push(`<strong>${bottomLayers}</strong> bottom`);
-            settings_parts.push(layerParts.join(" / ") + " layers");
+            if (topLayers !== null && topLayers !== undefined) layerParts.push(`<strong>${topLayers}</strong> top`);
+            if (bottomLayers !== null && bottomLayers !== undefined) layerParts.push(`<strong>${bottomLayers}</strong> bottom`);
+            if (layerParts.length > 0) {
+                settings_parts.push(layerParts.join(" / ") + " layers");
+            }
         }
 
         // Special modes
