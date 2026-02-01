@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentFileName = '';
     let currentSpecs = null;
+    let currentFileContent = null;
 
     // === RESTORE STATE FROM LOCALSTORAGE ===
     function restoreSession() {
@@ -79,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const reader = new FileReader();
         reader.onload = (event) => {
             const content = event.target.result;
+            currentFileContent = content; // Store for reprocessing
             try {
                 const specs = parseGcode(content, file.name);
 
@@ -93,6 +95,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
         reader.readAsText(file);
+    });
+
+    // Reprocess file with current app version
+    const btnReprocess = document.getElementById('btnReprocess');
+    btnReprocess.addEventListener('click', () => {
+        if (!currentFileContent || !currentFileName) {
+            statusMessage.textContent = 'No file loaded. Please select a file first.';
+            statusMessage.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const specs = parseGcode(currentFileContent, currentFileName);
+            saveSession(specs, currentFileName);
+            displayResults(specs);
+            statusMessage.textContent = 'Reprocessed!';
+            statusMessage.classList.remove('hidden');
+            setTimeout(() => statusMessage.classList.add('hidden'), 2000);
+        } catch (err) {
+            console.error(err);
+            statusMessage.textContent = 'Error reprocessing file.';
+            statusMessage.classList.remove('hidden');
+        }
     });
 
     // Copy Rich Text (HTML) for Printables
