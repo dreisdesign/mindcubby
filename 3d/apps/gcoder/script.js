@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const mins = totalMinutes % 60;
             return mins === 0
                 ? `${hours} Hour${hours > 1 ? 's' : ''}`
-                : `${hours} Hour${hours > 1 ? 's' : ''} ${mins} Minute${mins > 1 ? 's' : ''}`;
+                : `${hours}h ${mins}m`;
         }
         return `${totalMinutes} Minute${totalMinutes > 1 ? 's' : ''}`;
     }
@@ -534,11 +534,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (bottomLayers && bottomLayers > 0 && specs.bottom_fill_pattern) {
             const patternDisplay = specs.bottom_fill_pattern.replace('archimedeanchords', 'Archimedes Chords').replace('rectilinear', 'Rectilinear');
             html += `<p>Bottom Surface Pattern: ${patternDisplay.charAt(0).toUpperCase() + patternDisplay.slice(1)}</p>`;
-        }
-
-        // Vase-style note
-        if (topLayers === 0 && bottomLayers === 0) {
-            html += `<p>Top/Bottom: <strong>None</strong></p>`;
         }
 
         // Supporting Structure

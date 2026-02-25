@@ -54,6 +54,7 @@ G-coder automatically extracts and formats:
 - **Cura** – Standard export format
 - **PrusaSlicer** – RepRap G-code format
 - **SuperSlicer** – PrusaSlicer derivative
+- **OrcaSlicer** – Full support including sparse infill, spiral mode, and object-level settings
 
 The tool automatically detects the slicer and parses the appropriate metadata comments.
 
@@ -81,6 +82,17 @@ The tool automatically detects the slicer and parses the appropriate metadata co
 - Edge
 
 ---
+
+## Key Features
+
+### Object-Level Settings Support
+G-coder correctly handles **object-level settings overrides** from post-processing scripts (indicated by `OBJECT_*` prefixes in G-code). For example:
+- Wall layers (perimeters) can be set differently per object
+- Top/bottom shell layers respect object-level overrides
+- Fuzzy skin and seam position settings are applied per-object
+- Thickness calculations never override object-level settings
+
+This is especially useful when working with **OrcaSlicer's model-specific settings**.
 
 ## Example Output
 
@@ -172,7 +184,8 @@ See [LICENSE](../../LICENSE) in the repository root.
 ## Related Projects
 
 - **[MindCubby-3D](../../)** – Parent repository with 3D printing automation workflows
-- **[gcode_specs.py](../../scripts/gcode_specs.py)** – Original Python script that inspired G-coder
+- **[gcode_specs.py](../../MINDCUBBY-3D/scripts/gcode_specs.py)** – Original Python script (command-line version with identical parsing logic)
+- **[orcaslicer-postprocess-inject-object-settings.py](../../MINDCUBBY-3D/scripts/orcaslicer-postprocess-inject-object-settings.py)** – Post-processor that injects object-level settings into G-code (generates OBJECT_* comments that G-coder properly handles)
 
 ---
 
