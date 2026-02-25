@@ -218,23 +218,39 @@ document.addEventListener('DOMContentLoaded', () => {
             infill_pattern: null,
             top_fill_pattern: null,
             bottom_fill_pattern: null,
+            top_shell_layers: null,
+            bottom_shell_layers: null,
             perimeters: null,
             filament_used_g: null,
             print_time_s: null,
             spiral_vase: null,
             variable_layer_height: null,
-            support_material: null
+            support_material: null,
+            fuzzy_skin: null,
+            seam_position: null,
+            skirt_loops: null,
+            brim_type: null,
+            print_sequence: null,
+            ironing_type: null
         };
 
         // Extract ALL settings from G-code comments dynamically
         const settingsRegex = /; ([\w_]+) = (.+?)(?=\n|$)/g;
         let match;
         const allSettings = {};
+        const objectLevelSettings = {};  // Store injected object-level settings separately
 
         while ((match = settingsRegex.exec(content)) !== null) {
             const key = match[1];
             const value = match[2].trim();
             allSettings[key] = value;
+
+            // Also capture injected object-level settings from post-processing script
+            // (e.g., ; OBJECT_wall_loops = 3)
+            if (key.startsWith('OBJECT_')) {
+                const actualKey = key.substring(7);  // Remove 'OBJECT_' prefix
+                objectLevelSettings[actualKey] = value;
+            }
 
             // Map key settings to specs object for Printables output
             if (key === 'printer_model') specs.printer_model = value === 'ENDER3V2' ? 'Ender 3 V2' : value;
@@ -245,12 +261,67 @@ document.addEventListener('DOMContentLoaded', () => {
             if (key === 'infill_pattern') specs.infill_pattern = value;
             if (key === 'top_fill_pattern') specs.top_fill_pattern = value;
             if (key === 'bottom_fill_pattern') specs.bottom_fill_pattern = value;
+            if (key === 'top_solid_layers' || key === 'top_shell_layers') specs.top_shell_layers = parseInt(value);
+            if (key === 'bottom_solid_layers' || key === 'bottom_shell_layers') specs.bottom_shell_layers = parseInt(value);
             if (key === 'perimeters') specs.perimeters = parseInt(value);
             if (key === 'first_layer_temperature') specs.nozzle_temp = parseInt(value);
             if (key === 'bed_temperature') specs.bed_temp = parseInt(value);
             if (key === 'spiral_vase') specs.spiral_vase = value === '1';
+            if (key === 'spiral_mode') specs.spiral_vase = value === '1';  // OrcaSlicer format
             if (key === 'variable_layer_height') specs.variable_layer_height = value === '1';
             if (key === 'support_material') specs.support_material = value === '1';
+            // Fuzzy skin - check both global setting and object-level parameters
+            // In OrcaSlicer, object-level fuzzy skin has non-zero thickness/distance even if global = 'none'
+            if (key === 'fuzzy_skin' && value !== 'none') {
+                specs.fuzzy_skin = value;
+            }
+            if (key === 'fuzzy_skin_thickness' && parseFloat(value) > 0) {
+                if (!specs.fuzzy_skin) specs.fuzzy_skin = 'displacement';  // Default mode
+            }
+            if (key === 'fuzzy_skin_point_distance' && parseFloat(value) > 0) {
+                if (!specs.fuzzy_skin) specs.fuzzy_skin = 'displacement';  // Default mode
+            }
+            if (key === 'fuzzy_skin_mode' && !specs.fuzzy_skin && allSettings['fuzzy_skin_thickness'] > 0) {
+                specs.fuzzy_skin = value;
+            }
+            if (key === 'seam_position') specs.seam_position = value;
+            if (key === 'brim_type') specs.brim_type = value;
+            if (key === 'skirt_loops') specs.skirt_loops = parseInt(value);
+            if (key === 'print_sequence') specs.print_sequence = value;
+            if (key === 'ironing_type') specs.ironing_type = value;
+        }
+
+        // Apply object-level setting overrides (from post-processing script injection)
+        // These take priority over global settings
+        if (objectLevelSettings['wall_loops']) {
+            specs.perimeters = parseInt(objectLevelSettings['wall_loops']);
+        }
+        if (objectLevelSettings['top_shell_layers']) {
+            specs.top_shell_layers = parseInt(objectLevelSettings['top_shell_layers']);
+        }
+        if (objectLevelSettings['bottom_shell_layers']) {
+            specs.bottom_shell_layers = parseInt(objectLevelSettings['bottom_shell_layers']);
+        }
+        if (objectLevelSettings['fuzzy_skin']) {
+            specs.fuzzy_skin = objectLevelSettings['fuzzy_skin'];
+        }
+        if (objectLevelSettings['fuzzy_skin_thickness']) {
+            const thickness = parseFloat(objectLevelSettings['fuzzy_skin_thickness']);
+            if (thickness > 0 && !specs.fuzzy_skin) {
+                specs.fuzzy_skin = 'displacement';
+            }
+        }
+        if (objectLevelSettings['fuzzy_skin_point_distance']) {
+            const distance = parseFloat(objectLevelSettings['fuzzy_skin_point_distance']);
+            if (distance > 0 && !specs.fuzzy_skin) {
+                specs.fuzzy_skin = 'displacement';
+            }
+        }
+        if (objectLevelSettings['seam_position']) {
+            specs.seam_position = objectLevelSettings['seam_position'];
+        }
+        if (objectLevelSettings['brim_type']) {
+            specs.brim_type = objectLevelSettings['brim_type'];
         }
 
         // Store all extracted settings for the settings display
@@ -321,73 +392,86 @@ document.addEventListener('DOMContentLoaded', () => {
         const cleanedName = cleanFilenameForDisplay(specs.filename);
         lines.push(`**${cleanedName}**`);
 
-        // Print Specifications: Time and Weight only
-        let specs_parts = [];
+        // Print Time only
         const timeStr = formatTime(specs.print_time_s);
-        if (timeStr) specs_parts.push(timeStr);
-        if (specs.filament_used_g) specs_parts.push(`${specs.filament_used_g.toFixed(1)}g`);
-
-        if (specs_parts.length > 0) {
-            lines.push(specs_parts.join(", "));
+        if (timeStr) {
+            lines.push("");  // Blank line
+            lines.push(timeStr);
         }
 
-        // Print Settings: Layer height, walls, infill, and special modes
-        let settings_parts = [];
-
-        // Layer height
+        // Layer Settings
+        lines.push("");  // Blank line separator
         if (specs.layer_height) {
-            settings_parts.push(`**${specs.layer_height.toFixed(2)}mm** layers`);
+            lines.push(`Layer Height: **${specs.layer_height.toFixed(2)}mm**`);
         }
-
-        // Walls/Perimeters
         if (specs.perimeters) {
-            settings_parts.push(`**${specs.perimeters} walls**`);
-        }
-
-        // Infill
-        if (specs.infill_density !== null && specs.infill_density > 0) {
-            let infillStr = `**${specs.infill_density.toFixed(0)}%** infill`;
-            if (specs.infill_pattern) infillStr += ` (${specs.infill_pattern})`;
-            settings_parts.push(infillStr);
-        }
-
-        // Top/Bottom layers
-        const topLayers = specs.top_shell_layers;
-        const bottomLayers = specs.bottom_shell_layers;
-        if (topLayers === 0 && bottomLayers === 0) {
-            settings_parts.push("**No top/bottom layers** (vase-style)");
-        } else if ((topLayers !== null && topLayers !== undefined) || (bottomLayers !== null && bottomLayers !== undefined)) {
-            let layerParts = [];
-            if (topLayers !== null && topLayers !== undefined) layerParts.push(`**${topLayers}** top`);
-            if (bottomLayers !== null && bottomLayers !== undefined) layerParts.push(`**${bottomLayers}** bottom`);
-            if (layerParts.length > 0) {
-                settings_parts.push(layerParts.join(" / ") + " layers");
-            }
-        }
-
-        // Special modes
-        if (specs.fuzzy_skin) {
-            const fuzzyDisplay = specs.fuzzy_skin.replace('allwalls', 'all walls').replace('outside', 'outside only').replace('external', 'external');
-            settings_parts.push(`**Fuzzy skin** (${fuzzyDisplay})`);
-        }
-        if (specs.spiral_vase) {
-            settings_parts.push("**Spiral vase** mode");
-        }
-        if (specs.support_material) {
-            settings_parts.push("**Supports** enabled");
+            lines.push(`Walls: **${specs.perimeters}**`);
         }
         if (specs.variable_layer_height) {
-            settings_parts.push("**Adaptive layers**");
+            lines.push(`Variable Layer Height: **Yes**`);
         }
 
-        // Seam position if notable
+        // Infill & Surface
+        if (specs.infill_density !== null && specs.infill_density > 0) {
+            let infillStr = `**${specs.infill_density.toFixed(0)}%**`;
+            if (specs.infill_pattern) {
+                infillStr += ` (${specs.infill_pattern.charAt(0).toUpperCase() + specs.infill_pattern.slice(1)})`;
+            }
+            lines.push(`Infill: ${infillStr}`);
+        }
+
+        // Top/Bottom Layers
+        const topLayers = specs.top_shell_layers;
+        const bottomLayers = specs.bottom_shell_layers;
+        if (topLayers !== null && topLayers !== undefined) {
+            lines.push(`Top Layers: **${topLayers}**`);
+        }
+        if (bottomLayers !== null && bottomLayers !== undefined) {
+            lines.push(`Bottom Layers: **${bottomLayers}**`);
+        }
+
+        // Surface patterns only if layers exist
+        if (topLayers && topLayers > 0 && specs.top_fill_pattern) {
+            const patternDisplay = specs.top_fill_pattern.replace('monotonicline', 'Monotonic Line').replace('rectilinear', 'Rectilinear');
+            lines.push(`Top Surface Pattern: ${patternDisplay.charAt(0).toUpperCase() + patternDisplay.slice(1)}`);
+        }
+        if (bottomLayers && bottomLayers > 0 && specs.bottom_fill_pattern) {
+            const patternDisplay = specs.bottom_fill_pattern.replace('archimedeanchords', 'Archimedes Chords').replace('rectilinear', 'Rectilinear');
+            lines.push(`Bottom Surface Pattern: ${patternDisplay.charAt(0).toUpperCase() + patternDisplay.slice(1)}`);
+        }
+
+        // Supporting Structure
+        lines.push("");  // Blank line separator
+        if (specs.brim_type && specs.brim_type !== 'no_brim') {
+            const brimDisplay = specs.brim_type.replace(/_/g, ' ');
+            lines.push(`Brim: ${brimDisplay.charAt(0).toUpperCase() + brimDisplay.slice(1)}`);
+        }
+        if (specs.skirt_loops) {
+            lines.push(`Skirt: **${specs.skirt_loops}** loops`);
+        }
+        if (specs.print_sequence && specs.print_sequence.toLowerCase() !== 'by object') {
+            const printSeqDisplay = specs.print_sequence.replace('by object', 'By Object').replace('by layer', 'By Layer');
+            lines.push(`Wall Print Order: ${printSeqDisplay.charAt(0).toUpperCase() + printSeqDisplay.slice(1)}`);
+        }
+
+        // Special Effects
+        lines.push("");  // Blank line separator
+        if (specs.spiral_vase) {
+            lines.push(`Spiral Vase: **Yes**`);
+        }
+        if (specs.fuzzy_skin) {
+            lines.push(`Fuzzy Texture: Enabled`);
+        }
+        if (specs.ironing_type && specs.ironing_type !== 'no ironing') {
+            const ironingDisplay = specs.ironing_type.replace(/_/g, ' ');
+            lines.push(`Ironing: ${ironingDisplay.charAt(0).toUpperCase() + ironingDisplay.slice(1)}`);
+        }
+        if (specs.support_material) {
+            lines.push(`Supports: **Yes**`);
+        }
         if (specs.seam_position && specs.seam_position !== 'aligned') {
             const seamDisplay = specs.seam_position.charAt(0).toUpperCase() + specs.seam_position.slice(1);
-            settings_parts.push(`**${seamDisplay}** seam position`);
-        }
-
-        if (settings_parts.length > 0) {
-            lines.push(settings_parts.join(" / "));
+            lines.push(`Seam Position: ${seamDisplay}`);
         }
 
         // Join with newlines and add trailing newline for multi-part pasting
@@ -404,73 +488,92 @@ document.addEventListener('DOMContentLoaded', () => {
         const cleanedName = cleanFilenameForDisplay(specs.filename);
         html += `<p><strong>${cleanedName}</strong></p>`;
 
-        // Print Specifications: Time and Weight only
-        let specs_parts = [];
+        // Print Time only (no filament details)
         const timeStr = formatTime(specs.print_time_s);
-        if (timeStr) specs_parts.push(timeStr);
-        if (specs.filament_used_g) specs_parts.push(`${specs.filament_used_g.toFixed(1)}g`);
-
-        if (specs_parts.length > 0) {
-            html += `<p>${specs_parts.join(", ")}</p>`;
+        if (timeStr) {
+            html += `<p></p>`;  // Blank line
+            html += `<p>${timeStr}</p>`;
         }
 
-        // Print Settings: Layer height, walls, infill, and special modes
-        let settings_parts = [];
-
-        // Layer height
+        // Layer Settings
+        html += `<p></p>`;  // Blank line separator
         if (specs.layer_height) {
-            settings_parts.push(`<strong>${specs.layer_height.toFixed(2)}mm</strong> layers`);
+            html += `<p>Layer Height: <strong>${specs.layer_height.toFixed(2)}mm</strong></p>`;
         }
-
-        // Walls/Perimeters
         if (specs.perimeters) {
-            settings_parts.push(`<strong>${specs.perimeters} walls</strong>`);
-        }
-
-        // Infill
-        if (specs.infill_density !== null && specs.infill_density > 0) {
-            let infillStr = `<strong>${specs.infill_density.toFixed(0)}%</strong> infill`;
-            if (specs.infill_pattern) infillStr += ` (${specs.infill_pattern})`;
-            settings_parts.push(infillStr);
-        }
-
-        // Top/Bottom layers
-        const topLayers = specs.top_shell_layers;
-        const bottomLayers = specs.bottom_shell_layers;
-        if (topLayers === 0 && bottomLayers === 0) {
-            settings_parts.push("<strong>No top/bottom layers</strong> (vase-style)");
-        } else if ((topLayers !== null && topLayers !== undefined) || (bottomLayers !== null && bottomLayers !== undefined)) {
-            let layerParts = [];
-            if (topLayers !== null && topLayers !== undefined) layerParts.push(`<strong>${topLayers}</strong> top`);
-            if (bottomLayers !== null && bottomLayers !== undefined) layerParts.push(`<strong>${bottomLayers}</strong> bottom`);
-            if (layerParts.length > 0) {
-                settings_parts.push(layerParts.join(" / ") + " layers");
-            }
-        }
-
-        // Special modes
-        if (specs.fuzzy_skin) {
-            const fuzzyDisplay = specs.fuzzy_skin.replace('allwalls', 'all walls').replace('outside', 'outside only').replace('external', 'external');
-            settings_parts.push(`<strong>Fuzzy skin</strong> (${fuzzyDisplay})`);
-        }
-        if (specs.spiral_vase) {
-            settings_parts.push("<strong>Spiral vase</strong> mode");
-        }
-        if (specs.support_material) {
-            settings_parts.push("<strong>Supports</strong> enabled");
+            html += `<p>Walls: <strong>${specs.perimeters}</strong></p>`;
         }
         if (specs.variable_layer_height) {
-            settings_parts.push("<strong>Adaptive layers</strong>");
+            html += `<p>Variable Layer Height: <strong>Yes</strong></p>`;
         }
 
-        // Seam position if notable
+        // Infill & Surface
+        if (specs.infill_density !== null && specs.infill_density > 0) {
+            let infillStr = `<strong>${specs.infill_density.toFixed(0)}%</strong>`;
+            if (specs.infill_pattern) {
+                infillStr += ` (${specs.infill_pattern.charAt(0).toUpperCase() + specs.infill_pattern.slice(1)})`;
+            }
+            html += `<p>Infill: ${infillStr}</p>`;
+        }
+
+        // Top/Bottom Layers
+        const topLayers = specs.top_shell_layers;
+        const bottomLayers = specs.bottom_shell_layers;
+        if (topLayers !== null && topLayers !== undefined) {
+            html += `<p>Top Layers: <strong>${topLayers}</strong></p>`;
+        }
+        if (bottomLayers !== null && bottomLayers !== undefined) {
+            html += `<p>Bottom Layers: <strong>${bottomLayers}</strong></p>`;
+        }
+
+        // Surface patterns if layers exist
+        if (topLayers && topLayers > 0 && specs.top_fill_pattern) {
+            const patternDisplay = specs.top_fill_pattern.replace('monotonicline', 'Monotonic Line').replace('rectilinear', 'Rectilinear');
+            html += `<p>Top Surface Pattern: ${patternDisplay.charAt(0).toUpperCase() + patternDisplay.slice(1)}</p>`;
+        }
+        if (bottomLayers && bottomLayers > 0 && specs.bottom_fill_pattern) {
+            const patternDisplay = specs.bottom_fill_pattern.replace('archimedeanchords', 'Archimedes Chords').replace('rectilinear', 'Rectilinear');
+            html += `<p>Bottom Surface Pattern: ${patternDisplay.charAt(0).toUpperCase() + patternDisplay.slice(1)}</p>`;
+        }
+
+        // Vase-style note
+        if (topLayers === 0 && bottomLayers === 0) {
+            html += `<p>Top/Bottom: <strong>None</strong></p>`;
+        }
+
+        // Supporting Structure
+        html += `<p></p>`;  // Blank line separator
+        if (specs.brim_type && specs.brim_type !== 'no_brim') {
+            const brimDisplay = specs.brim_type.replace(/_/g, ' ');
+            html += `<p>Brim: ${brimDisplay.charAt(0).toUpperCase() + brimDisplay.slice(1)}</p>`;
+        }
+        if (specs.skirt_loops) {
+            html += `<p>Skirt: <strong>${specs.skirt_loops}</strong> loops</p>`;
+        }
+        if (specs.print_sequence) {
+            const printSeqDisplay = specs.print_sequence.replace('by object', 'By Object').replace('by layer', 'By Layer');
+            html += `<p>Wall Print Order: ${printSeqDisplay.charAt(0).toUpperCase() + printSeqDisplay.slice(1)}</p>`;
+        }
+
+        // Special Effects
+        html += `<p></p>`;  // Blank line separator
+        if (specs.spiral_vase) {
+            html += `<p>Spiral Vase: <strong>Yes</strong></p>`;
+        }
+        if (specs.fuzzy_skin) {
+            const fuzzyDisplay = specs.fuzzy_skin.replace('allwalls', 'All Walls').replace('outside', 'Outside Only').replace('displacement', 'Displacement');
+            html += `<p>Fuzzy Texture: ${fuzzyDisplay.charAt(0).toUpperCase() + fuzzyDisplay.slice(1)}</p>`;
+        }
+        if (specs.ironing_type && specs.ironing_type !== 'no ironing') {
+            const ironingDisplay = specs.ironing_type.replace(/_/g, ' ');
+            html += `<p>Ironing: ${ironingDisplay.charAt(0).toUpperCase() + ironingDisplay.slice(1)}</p>`;
+        }
+        if (specs.support_material) {
+            html += `<p>Supports: <strong>Yes</strong></p>`;
+        }
         if (specs.seam_position && specs.seam_position !== 'aligned') {
             const seamDisplay = specs.seam_position.charAt(0).toUpperCase() + specs.seam_position.slice(1);
-            settings_parts.push(`<strong>${seamDisplay}</strong> seam position`);
-        }
-
-        if (settings_parts.length > 0) {
-            html += `<p>${settings_parts.join(" / ")}</p>`;
+            html += `<p>Seam Position: ${seamDisplay}</p>`;
         }
 
         return html;
