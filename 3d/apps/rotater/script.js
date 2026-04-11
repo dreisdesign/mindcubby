@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
+import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
 // ── Defaults (mirrors Python CLI defaults) ────────────────────────────────────
 const EXPORT = { size: 720, frames: 144, fps: 24 };
@@ -183,28 +184,38 @@ function download(data, filename, type) {
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
-// Capture N frames by rotating the mesh, return array of Uint8ClampedArrays
+// Capture N frames by orbiting the camera, return array of Uint8ClampedArrays
 async function captureFrames(n) {
     const S = EXPORT.size;
     const off = Object.assign(document.createElement('canvas'), { width: S, height: S });
     const ctx = off.getContext('2d', { willReadFrequently: true });
-    const savedY = mesh.rotation.y;
     const frames = [];
 
+    const dist = camera.position.length();
+    const elev = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
+    const savedCamPos = camera.position.clone();
+
     for (let i = 0; i < n; i++) {
-        mesh.rotation.y = savedY + (2 * Math.PI * i) / n;
+        const azimuth = -(2 * Math.PI * i) / n;
+        camera.position.set(
+            dist * Math.cos(elev) * Math.sin(azimuth),
+            dist * Math.sin(elev),
+            dist * Math.cos(elev) * Math.cos(azimuth),
+        );
+        camera.lookAt(0, 0, 0);
         renderer.render(scene, camera);
         ctx.drawImage(renderer.domElement, 0, 0, S, S);
         frames.push(new Uint8ClampedArray(ctx.getImageData(0, 0, S, S).data));
 
-        // Yield every 12 frames so the status label updates
         if (i % 12 === 0) {
             setStatus(`Capturing… ${i + 1} / ${n}`);
             await new Promise(r => setTimeout(r, 0));
         }
     }
 
-    mesh.rotation.y = savedY;
+    camera.position.copy(savedCamPos);
+    camera.lookAt(0, 0, 0);
+    controls.update();
     return frames;
 }
 
@@ -247,46 +258,77 @@ btnGif.addEventListener('click', async () => {
     }
 });
 
-// ── Video export ──────────────────────────────────────────────────────────────
+// ── Video export (H.264 MP4 via WebCodecs + mp4-muxer) ───────────────────────
 btnVideo.addEventListener('click', async () => {
     if (!mesh) return;
+    if (typeof VideoEncoder === 'undefined') {
+        setStatus('Error: WebCodecs not supported in this browser (use Chrome/Edge/Safari 16.4+).');
+        return;
+    }
     setExporting(true);
     controls.autoRotate = false;
 
     try {
         const { frames: n, fps } = EXPORT;
+        const S = EXPORT.size;
 
-        const stream = renderer.domElement.captureStream(fps);
-        const mime   = ['video/webm;codecs=vp9', 'video/webm']
-            .find(t => MediaRecorder.isTypeSupported(t));
-        if (!mime) throw new Error('MediaRecorder not supported in this browser.');
+        // Off-screen canvas at export resolution
+        const off = Object.assign(document.createElement('canvas'), { width: S, height: S });
+        const ctx = off.getContext('2d');
 
-        const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
-        const chunks   = [];
-        recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-
-        const savedY = mesh.rotation.y;
-
-        await new Promise((res, rej) => {
-            recorder.onstop  = res;
-            recorder.onerror = rej;
-            recorder.start();
-
-            let f = 0;
-            function tick() {
-                if (f >= n) { recorder.stop(); return; }
-                mesh.rotation.y = savedY + (2 * Math.PI * f) / n;
-                renderer.render(scene, camera);
-                setStatus(`Recording… ${f + 1} / ${n}`);
-                f++;
-                setTimeout(tick, 1000 / fps);
-            }
-            tick();
+        const muxer = new Muxer({
+            target: new ArrayBufferTarget(),
+            video: { codec: 'avc', width: S, height: S },
+            fastStart: 'in-memory',
         });
 
-        mesh.rotation.y = savedY;
-        download(new Blob(chunks, { type: mime }), 'rotation.webm', mime);
-        setStatus('Video saved ✓');
+        const encoder = new VideoEncoder({
+            output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+            error: e => { throw e; },
+        });
+        encoder.configure({
+            codec: 'avc1.42001f',   // H.264 Baseline
+            width: S,
+            height: S,
+            bitrate: 8_000_000,
+            framerate: fps,
+        });
+
+        const dist = camera.position.length();
+        const elev = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
+        const savedCamPos = camera.position.clone();
+
+        for (let f = 0; f < n; f++) {
+            const azimuth = -(2 * Math.PI * f) / n;
+            camera.position.set(
+                dist * Math.cos(elev) * Math.sin(azimuth),
+                dist * Math.sin(elev),
+                dist * Math.cos(elev) * Math.cos(azimuth),
+            );
+            camera.lookAt(0, 0, 0);
+            renderer.render(scene, camera);
+            ctx.drawImage(renderer.domElement, 0, 0, S, S);
+
+            const timestamp = Math.round(f * (1_000_000 / fps));
+            const frame = new VideoFrame(off, { timestamp });
+            encoder.encode(frame, { keyFrame: f % 30 === 0 });
+            frame.close();
+
+            if (f % 12 === 0) {
+                setStatus(`Encoding… ${f + 1} / ${n}`);
+                await new Promise(r => setTimeout(r, 0));
+            }
+        }
+
+        await encoder.flush();
+        muxer.finalize();
+
+        camera.position.copy(savedCamPos);
+        camera.lookAt(0, 0, 0);
+        controls.update();
+
+        download(muxer.target.buffer, 'rotation.mp4', 'video/mp4');
+        setStatus('MP4 saved ✓');
     } catch (err) {
         setStatus('Error: ' + err.message);
         console.error(err);
