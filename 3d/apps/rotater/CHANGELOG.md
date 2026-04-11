@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [0.9.3] - 2026-04-11
+
+### Added
+- Download PNG button — exports the current frame as a PNG, auto-pauses rotation if not already paused
+
+## [0.9.2] - 2026-04-11
+
+### Changed
+- Replaced file icon with plus (+) icon on both Select STL buttons to match GCoder
+
+## [0.9.1] - 2026-04-11
+
+### Changed
+- Export buttons renamed to "Download GIF" and "Download MP4"
+- Added download arrow icon to both export buttons (matches GCoder style)
+- Button padding and font size updated to match GCoder (`10px 20px`, `14px`)
+
 ## [0.9.0] - 2026-04-11
 
 ### Added

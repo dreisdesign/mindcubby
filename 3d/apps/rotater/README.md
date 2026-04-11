@@ -19,7 +19,7 @@ python3 -m http.server 8765
 - Live 3D preview — orbit, zoom, pan; pause/resume rotation
 - STL file and all settings persist across page refreshes (no re-upload needed)
 - Controls: color, background, shading, speed, elevation
-- Export as **GIF** or **MP4 video** (all client-side, STL never leaves your machine)
+- Export as **GIF**, **MP4 video**, or **PNG** snapshot (all client-side, STL never leaves your machine)
 - Requires an internet connection on first load to fetch Three.js and gifenc from CDN (cached after that)
 
 ---
