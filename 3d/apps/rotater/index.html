@@ -57,8 +57,8 @@
                         <label class="control-label">
                             Shading
                             <select id="shading">
-                                <option value="metallic" selected>Metallic</option>
-                                <option value="phong">Phong</option>
+                                <option value="metallic">Metallic</option>
+                                <option value="phong" selected>Phong</option>
                                 <option value="flat">Flat</option>
                             </select>
                         </label>
@@ -76,8 +76,14 @@
                 </div>
 
                 <div class="export-actions">
-                    <button id="btnExportGif" class="primary-btn">Export GIF</button>
-                    <button id="btnExportVideo" class="secondary-btn">Export Video (.mp4)</button>
+                    <div class="export-group">
+                        <button id="btnExportGif" class="primary-btn">Export GIF</button>
+                        <span id="estimateGif" class="export-estimate"></span>
+                    </div>
+                    <div class="export-group">
+                        <button id="btnExportVideo" class="secondary-btn">Export Video (.mp4)</button>
+                        <span id="estimateMp4" class="export-estimate"></span>
+                    </div>
                     <span id="exportStatus" class="export-status"></span>
                 </div>
             </div>

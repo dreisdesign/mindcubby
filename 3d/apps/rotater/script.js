@@ -4,8 +4,26 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
-// ── Defaults (mirrors Python CLI defaults) ────────────────────────────────────
-const EXPORT = { size: 720, frames: 144, fps: 24 };
+// ── Defaults ─────────────────────────────────────────────────────────────────
+const EXPORT = { size: 720, fps: 24 };
+const BASE_ROTATE_SPEED = 2.5; // OrbitControls units: 2.0 = 1 rev/60s at 60fps
+
+// Returns frame count that gives 1 revolution matching the live rotation speed
+function exportFrames() {
+    const speed = controls ? controls.autoRotateSpeed : BASE_ROTATE_SPEED;
+    const secsPerRev = 60 / speed;
+    return Math.round(EXPORT.fps * secsPerRev);
+}
+
+function updateEstimate() {
+    if (!estimateGif) return;
+    const n    = exportFrames();
+    const secs = n / EXPORT.fps;
+    const gifMB = (n * 8.7 / 1024).toFixed(1);
+    const mp4MB = (secs * 0.15).toFixed(1);
+    estimateGif.textContent = `~${gifMB} MB · ${n} frames`;
+    estimateMp4.textContent = `~${mp4MB} MB · ${secs.toFixed(1)}s`;
+}
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
 const canvas      = document.getElementById('canvas');
@@ -22,6 +40,8 @@ const elevVal     = document.getElementById('elevVal');
 const btnGif      = document.getElementById('btnExportGif');
 const btnVideo    = document.getElementById('btnExportVideo');
 const statusEl    = document.getElementById('exportStatus');
+const estimateGif = document.getElementById('estimateGif');
+const estimateMp4 = document.getElementById('estimateMp4');
 const fileNameEl  = document.getElementById('fileName');
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -107,6 +127,7 @@ function loadSTL(file) {
 
         placeCamera();
         viewerSec.classList.remove('hidden');
+        updateEstimate();
         requestAnimationFrame(syncCanvasSize);
     });
 }
@@ -158,7 +179,8 @@ shadingEl.addEventListener('change', () => {
 speedSlider.addEventListener('input', () => {
     const v = parseFloat(speedSlider.value);
     speedVal.textContent = v.toFixed(1) + '×';
-    if (controls) controls.autoRotateSpeed = 2.5 * v;
+    if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * v;
+    updateEstimate();
 });
 
 elevSlider.addEventListener('input', () => {
@@ -226,7 +248,7 @@ btnGif.addEventListener('click', async () => {
     controls.autoRotate = false;
 
     try {
-        const frames = await captureFrames(EXPORT.frames);
+        const frames = await captureFrames(exportFrames());
         const delay  = Math.round(1000 / EXPORT.fps);
         const S      = EXPORT.size;
 
@@ -269,7 +291,8 @@ btnVideo.addEventListener('click', async () => {
     controls.autoRotate = false;
 
     try {
-        const { frames: n, fps } = EXPORT;
+        const { fps } = EXPORT;
+        const n = exportFrames();
         const S = EXPORT.size;
 
         // Off-screen canvas at export resolution
