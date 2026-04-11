@@ -325,6 +325,22 @@ btnPause.addEventListener('click', () => {
     btnPause.title = isPaused ? 'Resume rotation' : 'Pause rotation';
 });
 
+document.getElementById('btnExportPng').addEventListener('click', () => {
+    if (!mesh) return;
+    // Pause if not already paused
+    if (!isPaused) {
+        isPaused = true;
+        controls.autoRotate = false;
+        iconPause.style.display = 'none';
+        iconPlay.style.display = '';
+        btnPause.setAttribute('aria-label', 'Resume rotation');
+        btnPause.title = 'Resume rotation';
+    }
+    // Render one fresh frame then export
+    renderer.render(scene, camera);
+    canvas.toBlob(blob => download(blob, 'model.png', 'image/png'), 'image/png');
+});
+
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
