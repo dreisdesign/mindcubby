@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [0.9.0] - 2026-04-11
+
+### Added
+- Pause/resume button in bottom-left corner of the canvas
+- GCoder-style default landing page (big title, dashed upload section)
+- Full-viewport layout activates after first file load
+- Filename moved to bottom-right overlay on canvas (no header jitter on restore)
+- STL and settings persist across page refreshes (IndexedDB + localStorage)
+
 ## [0.8.0] - 2026-04-11
 
 ### Added
