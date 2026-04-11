@@ -9,7 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- v0.1.0 output: 295 KB GIF @ 72 frames, 24 fps, 720×720px -->
 <!-- v0.2.0 output: 698 KB GIF @ 144 frames, 24 fps, 720×720px -->
 
-<!-- v0.4.0 output: TBD -->
+<!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
+
+## [0.5.0] - 2026-04-11
+
+### Added
+- File size estimates shown beneath each export button, update live with speed slider
+  - GIF calibrated to ~8.7 KB/frame, MP4 to ~0.15 MB/s
+
+### Fixed
+- Export frame count now derived from live `autoRotateSpeed` — exported speed matches viewer exactly
+- Export rotation direction matches OrbitControls auto-rotate
+
+### Changed
+- Default shading changed from Metallic to Phong
 
 ## [0.4.0] - 2026-04-11
 
