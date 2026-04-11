@@ -1,6 +1,29 @@
-# stl_rotate
+# Rotater
 
 Rotate an STL model 360° and export as an animated **GIF** or **MP4** video.
+
+Available as both a **web app** (Three.js, runs in the browser) and a **Python CLI** script.
+
+---
+
+## Web App
+
+Open `index.html` via a local server (ES modules require `http://`, not `file://`):
+
+```bash
+python3 -m http.server 8765
+# then open http://localhost:8765
+```
+
+- Drag and drop any STL file
+- Live 3D preview — orbit, zoom, pan
+- Controls: color, background, shading, speed, elevation
+- Export as **GIF** or **WebM video** (all client-side, STL never leaves your machine)
+- Requires an internet connection on first load to fetch Three.js and gifenc from CDN (cached after that)
+
+---
+
+## Python CLI
 
 ## Requirements
 

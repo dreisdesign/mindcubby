@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROTATER — STL Spin Viewer</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/",
+            "gifenc": "https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js"
+        }
+    }
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>ROTATER</h1>
+            <p>Drag in an STL — orbit live, export as GIF or video.</p>
+        </header>
+
+        <main>
+            <div id="dropZone" class="upload-section">
+                <label for="fileInput" class="file-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
+                        style="display:inline;margin-right:8px;vertical-align:middle">
+                        <path
+                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z" />
+                    </svg>
+                    Select STL File
+                    <input type="file" id="fileInput" accept=".stl">
+                </label>
+                <p id="fileName" class="file-name"></p>
+            </div>
+
+            <div id="viewerSection" class="viewer-section hidden">
+                <div class="canvas-wrap">
+                    <canvas id="canvas"></canvas>
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <label class="control-label">
+                            Color
+                            <input type="color" id="colorPicker" value="#aab8c8">
+                        </label>
+                        <label class="control-label">
+                            Background
+                            <input type="color" id="bgPicker" value="#0a0a12">
+                        </label>
+                        <label class="control-label">
+                            Shading
+                            <select id="shading">
+                                <option value="metallic" selected>Metallic</option>
+                                <option value="phong">Phong</option>
+                                <option value="flat">Flat</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label range-label">
+                            <span>Speed <span id="speedVal">1.0×</span></span>
+                            <input type="range" id="speedSlider" min="0.2" max="4" step="0.1" value="1.0">
+                        </label>
+                        <label class="control-label range-label">
+                            <span>Elevation <span id="elevVal">28°</span></span>
+                            <input type="range" id="elevationSlider" min="5" max="75" step="1" value="28">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="export-actions">
+                    <button id="btnExportGif" class="primary-btn">Export GIF</button>
+                    <button id="btnExportVideo" class="secondary-btn">Export Video (.webm)</button>
+                    <span id="exportStatus" class="export-status"></span>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Drag to orbit · Scroll to zoom · Right-drag to pan</p>
+        </footer>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
