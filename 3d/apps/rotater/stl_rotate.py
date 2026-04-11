@@ -69,7 +69,7 @@ def load_stl(path: str) -> np.ndarray:
 SHADING_PRESETS = {
     "flat":     None,           # solid colour, no lighting
     "phong":    (0.25, 0.65, 0.25, 32),
-    "metallic": (0.15, 0.50, 0.70, 128),
+    "metallic": (0.18, 0.50, 0.70, 128),
 }
 
 
@@ -232,15 +232,15 @@ def main():
     )
     parser.add_argument("--out-file", default="",
                         help="Output filename. Auto-derived from input if omitted.")
-    parser.add_argument("--frames", type=int, default=72,
+    parser.add_argument("--frames", type=int, default=144,
                         help="Total frames for one full 360° rotation.")
     parser.add_argument("--fps", type=int, default=24,
                         help="Frames per second.")
-    parser.add_argument("--elevation", type=float, default=25.0,
+    parser.add_argument("--elevation", type=float, default=28.0,
                         help="Camera elevation angle in degrees.")
-    parser.add_argument("--color", default="steelblue",
+    parser.add_argument("--color", default="#aab8c8",
                         help="Model face color (any matplotlib color string).")
-    parser.add_argument("--bg", default="black",
+    parser.add_argument("--bg", default="#0a0a12",
                         help="Background color.")
     parser.add_argument("--title", default="",
                         help="Optional text title overlaid on the animation.")
