@@ -256,6 +256,30 @@ html.loaded .viewer-section.hidden {
     transition: opacity 0.3s;
 }
 
+.pause-btn {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    color: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    font-size: 0;
+}
+
+.pause-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+}
+
 /* ── Controls bar (loaded) ── */
 
 html.loaded .controls-bar {
@@ -409,310 +433,4 @@ button {
     font-size: 0.72rem;
     color: #aaa;
     text-align: center;
-}
-
-/* ── Full-page layout ───────────────────────────────────────────────────────── */
-
-html,
-body {
-    height: 100%;
-    margin: 0;
-    overflow: hidden;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    line-height: 1.6;
-    padding: 16px;
-    box-sizing: border-box;
-}
-
-.container {
-    max-width: 900px;
-    height: 100%;
-    margin: 0 auto;
-    background: var(--card-bg);
-    border-radius: 10px;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-/* ── Header ─────────────────────────────────────────────────────────────────── */
-
-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-    gap: 12px;
-}
-
-h1 {
-    margin: 0;
-    color: var(--primary-color);
-    font-size: 1.6rem;
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -0.02em;
-}
-
-
-.file-label {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--primary-color);
-    color: white;
-    padding: 7px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    transition: opacity 0.2s;
-    flex-shrink: 0;
-}
-
-.file-label:hover {
-    opacity: 0.9;
-}
-
-input[type="file"] {
-    display: none;
-}
-
-.file-name {
-    position: absolute;
-    bottom: 8px;
-    right: 10px;
-    font-size: 0.75rem;
-    font-style: italic;
-    color: rgba(255, 255, 255, 0.45);
-    pointer-events: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 60%;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* ── Main canvas area ───────────────────────────────────────────────────────── */
-
-main {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-main.drag-over {
-    background: #f4f2ff;
-}
-
-.empty-state {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #bbb;
-    font-size: 1rem;
-    text-align: center;
-    line-height: 1.8;
-    pointer-events: none;
-    border: 2px dashed var(--border-color);
-    margin: 16px;
-    border-radius: 8px;
-}
-
-.viewer-section {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.canvas-wrap {
-    position: relative;
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-    background: #0a0a12;
-}
-
-.scroll-hint {
-    position: absolute;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.45);
-    color: #fff;
-    font-size: 0.9rem;
-    font-weight: 600;
-    pointer-events: none;
-    transition: opacity 0.3s;
-}
-
-.canvas-wrap canvas {
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-}
-
-/* ── Controls bar ───────────────────────────────────────────────────────────── */
-
-.controls-bar {
-    flex-shrink: 0;
-    border-top: 1px solid var(--border-color);
-    padding: 10px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: #fafafa;
-}
-
-.controls-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: flex-end;
-}
-
-.export-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: flex-start;
-    padding-top: 8px;
-    border-top: 1px solid var(--border-color);
-}
-
-.control-label {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    gap: 4px;
-}
-
-.range-label {
-    flex: 1;
-    min-width: 140px;
-}
-
-.range-label>span {
-    display: flex;
-    justify-content: space-between;
-}
-
-.range-label>span span {
-    font-weight: 400;
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--primary-color);
-}
-
-input[type="color"] {
-    width: 44px;
-    height: 28px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    cursor: pointer;
-    padding: 2px;
-}
-
-select {
-    padding: 5px 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 0.85rem;
-    background: white;
-    min-width: 100px;
-    cursor: pointer;
-}
-
-input[type="range"] {
-    width: 100%;
-    accent-color: var(--primary-color);
-}
-
-/* ── Export ─────────────────────────────────────────────────────────────────── */
-
-.export-group {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.primary-btn {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.primary-btn:hover {
-    opacity: 0.9;
-}
-
-.primary-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.secondary-btn {
-    background-color: #eee;
-    color: #333;
-}
-
-.secondary-btn:hover {
-    background-color: #ddd;
-}
-
-.secondary-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.export-status {
-    font-size: 0.82rem;
-    color: #666;
-    font-style: italic;
-    align-self: center;
-}
-
-.export-estimate {
-    font-size: 0.72rem;
-    color: #aaa;
-    text-align: center;
-}
-
-/* ── Footer ─────────────────────────────────────────────────────────────────── */
-
-footer {
-    flex-shrink: 0;
-    text-align: center;
-    font-size: 0.72rem;
-    color: #bbb;
-    padding: 6px;
-    border-top: 1px solid var(--border-color);
 }

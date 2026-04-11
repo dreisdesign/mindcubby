@@ -43,10 +43,14 @@ const statusEl = document.getElementById('exportStatus');
 const estimateGif = document.getElementById('estimateGif');
 const estimateMp4 = document.getElementById('estimateMp4');
 const fileNameEl = document.getElementById('fileName');
+const btnPause = document.getElementById('btnPause');
+const iconPause = document.getElementById('iconPause');
+const iconPlay = document.getElementById('iconPlay');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let renderer, scene, camera, controls, mesh;
 let isExporting = false;
+let isPaused = false;
 let modelRadius = 1;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -192,6 +196,11 @@ function loadSTLBuffer(buffer, name) {
 
     placeCamera();
     document.documentElement.classList.add('loaded');
+    // Reset pause state on new load
+    isPaused = false;
+    controls.autoRotate = true;
+    iconPause.style.display = '';
+    iconPlay.style.display = 'none';
     viewerSec.classList.remove('hidden');
     document.getElementById('emptyState').classList.add('hidden');
     document.getElementById('controlsBar').classList.remove('hidden');
@@ -306,6 +315,15 @@ function handleFile(file) {
 }
 
 fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+btnPause.addEventListener('click', () => {
+    isPaused = !isPaused;
+    controls.autoRotate = !isPaused;
+    iconPause.style.display = isPaused ? 'none' : '';
+    iconPlay.style.display = isPaused ? '' : 'none';
+    btnPause.setAttribute('aria-label', isPaused ? 'Resume rotation' : 'Pause rotation');
+    btnPause.title = isPaused ? 'Resume rotation' : 'Pause rotation';
+});
 
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
