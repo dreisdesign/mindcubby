@@ -17,7 +17,7 @@ function exportFrames() {
 
 function updateEstimate() {
     if (!estimateGif) return;
-    const n    = exportFrames();
+    const n = exportFrames();
     const secs = n / EXPORT.fps;
     const gifMB = (n * 8.7 / 1024).toFixed(1);
     const mp4MB = (secs * 0.15).toFixed(1);
@@ -26,23 +26,23 @@ function updateEstimate() {
 }
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
-const canvas      = document.getElementById('canvas');
-const fileInput   = document.getElementById('fileInput');
-const dropZone    = document.getElementById('dropZone');
-const viewerSec   = document.getElementById('viewerSection');
-const colorPick   = document.getElementById('colorPicker');
-const bgPick      = document.getElementById('bgPicker');
-const shadingEl   = document.getElementById('shading');
+const canvas = document.getElementById('canvas');
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const viewerSec = document.getElementById('viewerSection');
+const colorPick = document.getElementById('colorPicker');
+const bgPick = document.getElementById('bgPicker');
+const shadingEl = document.getElementById('shading');
 const speedSlider = document.getElementById('speedSlider');
-const speedVal    = document.getElementById('speedVal');
-const elevSlider  = document.getElementById('elevationSlider');
-const elevVal     = document.getElementById('elevVal');
-const btnGif      = document.getElementById('btnExportGif');
-const btnVideo    = document.getElementById('btnExportVideo');
-const statusEl    = document.getElementById('exportStatus');
+const speedVal = document.getElementById('speedVal');
+const elevSlider = document.getElementById('elevationSlider');
+const elevVal = document.getElementById('elevVal');
+const btnGif = document.getElementById('btnExportGif');
+const btnVideo = document.getElementById('btnExportVideo');
+const statusEl = document.getElementById('exportStatus');
 const estimateGif = document.getElementById('estimateGif');
 const estimateMp4 = document.getElementById('estimateMp4');
-const fileNameEl  = document.getElementById('fileName');
+const fileNameEl = document.getElementById('fileName');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let renderer, scene, camera, controls, mesh;
@@ -91,7 +91,7 @@ function initThree() {
 }
 
 let scrollHintTimer = null;
-const scrollHintEl  = (() => {
+const scrollHintEl = (() => {
     const el = document.createElement('div');
     el.className = 'scroll-hint';
     el.textContent = 'Use Ctrl + scroll to zoom';
@@ -104,7 +104,7 @@ const scrollHintEl  = (() => {
         'transition:opacity 0.3s',
     ].join(';');
     // Inject into canvas-wrap once DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {}, { once: true });
+    document.addEventListener('DOMContentLoaded', () => { }, { once: true });
     return el;
 })();
 
@@ -156,8 +156,8 @@ function syncCanvasSize() {
 // ── Material ─────────────────────────────────────────────────────────────────
 function getMaterial(shading, color) {
     const base = { color, side: THREE.DoubleSide };
-    if (shading === 'flat')   return new THREE.MeshBasicMaterial(base);
-    if (shading === 'phong')  return new THREE.MeshPhongMaterial({ ...base, shininess: 64, specular: '#222233' });
+    if (shading === 'flat') return new THREE.MeshBasicMaterial(base);
+    if (shading === 'phong') return new THREE.MeshPhongMaterial({ ...base, shininess: 64, specular: '#222233' });
     // metallic
     return new THREE.MeshStandardMaterial({ ...base, metalness: 0.75, roughness: 0.2 });
 }
@@ -199,7 +199,7 @@ function loadSTL(file) {
 }
 
 function placeCamera() {
-    const el   = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+    const el = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
     const dist = modelRadius / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.5;
     camera.position.set(0, dist * Math.sin(el), dist * Math.cos(el));
     camera.lookAt(0, 0, 0);
@@ -225,8 +225,8 @@ function handleFile(file) {
 
 fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
 
-dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
@@ -234,7 +234,7 @@ dropZone.addEventListener('drop', e => {
 });
 
 colorPick.addEventListener('input', () => { if (mesh) mesh.material.color.set(colorPick.value); });
-bgPick.addEventListener('input',    () => { if (scene) scene.background.set(bgPick.value); });
+bgPick.addEventListener('input', () => { if (scene) scene.background.set(bgPick.value); });
 
 shadingEl.addEventListener('change', () => {
     if (!mesh) return;
@@ -255,10 +255,10 @@ elevSlider.addEventListener('input', () => {
 });
 
 // ── Export helpers ────────────────────────────────────────────────────────────
-const setStatus   = msg => { statusEl.textContent = msg; };
-const setExporting = v  => {
+const setStatus = msg => { statusEl.textContent = msg; };
+const setExporting = v => {
     isExporting = v;
-    btnGif.disabled   = v;
+    btnGif.disabled = v;
     btnVideo.disabled = v;
 };
 
@@ -315,8 +315,8 @@ btnGif.addEventListener('click', async () => {
 
     try {
         const frames = await captureFrames(exportFrames());
-        const delay  = Math.round(1000 / EXPORT.fps);
-        const S      = EXPORT.size;
+        const delay = Math.round(1000 / EXPORT.fps);
+        const S = EXPORT.size;
 
         setStatus('Encoding GIF…');
         await new Promise(r => setTimeout(r, 0));
@@ -324,7 +324,7 @@ btnGif.addEventListener('click', async () => {
         const gif = GIFEncoder();
         for (let i = 0; i < frames.length; i++) {
             const palette = quantize(frames[i], 256);
-            const index   = applyPalette(frames[i], palette);
+            const index = applyPalette(frames[i], palette);
             gif.writeFrame(index, S, S, { palette, delay });
 
             if (i % 16 === 0) {

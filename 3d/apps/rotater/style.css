@@ -8,7 +8,8 @@
 
 /* ── Full-page layout ───────────────────────────────────────────────────────── */
 
-html, body {
+html,
+body {
     height: 100%;
     margin: 0;
     overflow: hidden;
@@ -208,12 +209,12 @@ main.drag-over {
     min-width: 140px;
 }
 
-.range-label > span {
+.range-label>span {
     display: flex;
     justify-content: space-between;
 }
 
-.range-label > span span {
+.range-label>span span {
     font-weight: 400;
     text-transform: none;
     letter-spacing: 0;
@@ -266,16 +267,28 @@ button {
     color: white;
 }
 
-.primary-btn:hover { opacity: 0.9; }
-.primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.primary-btn:hover {
+    opacity: 0.9;
+}
+
+.primary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 .secondary-btn {
     background-color: #eee;
     color: #333;
 }
 
-.secondary-btn:hover { background-color: #ddd; }
-.secondary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.secondary-btn:hover {
+    background-color: #ddd;
+}
+
+.secondary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 .export-status {
     font-size: 0.82rem;
@@ -300,4 +313,3 @@ footer {
     padding: 6px;
     border-top: 1px solid var(--border-color);
 }
-
