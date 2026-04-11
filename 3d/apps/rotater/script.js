@@ -191,6 +191,7 @@ function loadSTLBuffer(buffer, name) {
     modelRadius = Math.max(sz.x, sz.y, sz.z) / 2;
 
     placeCamera();
+    document.documentElement.classList.add('loaded');
     viewerSec.classList.remove('hidden');
     document.getElementById('emptyState').classList.add('hidden');
     document.getElementById('controlsBar').classList.remove('hidden');
