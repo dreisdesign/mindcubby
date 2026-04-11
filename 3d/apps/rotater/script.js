@@ -447,12 +447,12 @@ btnGif.addEventListener('click', async () => {
         setStatus('Encoding GIF…');
         await new Promise(r => setTimeout(r, 0));
 
-        const gif = GIFEncoder();
         const repeat = document.getElementById('gifLoop').checked ? 0 : -1;
+        const gif = GIFEncoder({ repeat });
         for (let i = 0; i < frames.length; i++) {
             const palette = quantize(frames[i], 256);
             const index = applyPalette(frames[i], palette);
-            gif.writeFrame(index, S, S, { palette, delay, repeat });
+            gif.writeFrame(index, S, S, { palette, delay });
 
             if (i % 16 === 0) {
                 setStatus(`Encoding… ${i + 1} / ${frames.length}`);
