@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [0.7.0] - 2026-04-11
+
+### Changed
+- Full single-page no-scroll layout — everything fits in the viewport
+- Upload button moved to top-right of header bar
+- Canvas fills remaining vertical space (flex:1, non-square aspect ratio)
+- Controls and export actions pinned in a compact bar at the bottom
+- Canvas renderer now uses full width×height, camera aspect ratio updated on resize
+
 ## [0.6.0] - 2026-04-11
 
 ### Added

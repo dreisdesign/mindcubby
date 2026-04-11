@@ -142,9 +142,15 @@ function onCanvasWheel(e) {
 }
 
 function syncCanvasSize() {
-    const w = canvas.parentElement.clientWidth;
-    if (w === 0) return;
-    renderer.setSize(w, w, false); // false = don't touch CSS
+    const wrap = canvas.parentElement;
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    if (w === 0 || h === 0) return;
+    renderer.setSize(w, h, false); // false = don't touch CSS
+    if (camera) {
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+    }
 }
 
 // ── Material ─────────────────────────────────────────────────────────────────
@@ -185,6 +191,8 @@ function loadSTL(file) {
 
         placeCamera();
         viewerSec.classList.remove('hidden');
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('controlsBar').classList.remove('hidden');
         updateEstimate();
         requestAnimationFrame(syncCanvasSize);
     });
