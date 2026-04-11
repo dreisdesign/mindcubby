@@ -325,6 +325,13 @@ btnPause.addEventListener('click', () => {
     btnPause.title = isPaused ? 'Resume rotation' : 'Pause rotation';
 });
 
+document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && !isExporting && mesh) {
+        e.preventDefault();
+        btnPause.click();
+    }
+});
+
 document.getElementById('btnExportPng').addEventListener('click', () => {
     if (!mesh) return;
     // Pause if not already paused
