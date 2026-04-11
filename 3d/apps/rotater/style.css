@@ -57,12 +57,6 @@ h1 {
     letter-spacing: -0.02em;
 }
 
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-}
 
 .file-label {
     display: inline-flex;
@@ -88,13 +82,17 @@ input[type="file"] {
 }
 
 .file-name {
-    font-size: 0.8rem;
+    position: absolute;
+    bottom: 8px;
+    right: 10px;
+    font-size: 0.75rem;
     font-style: italic;
-    color: #888;
+    color: rgba(255, 255, 255, 0.45);
+    pointer-events: none;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 200px;
+    max-width: 60%;
 }
 
 .hidden {
