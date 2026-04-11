@@ -434,3 +434,13 @@ button {
     color: #aaa;
     text-align: center;
 }
+
+.gif-loop-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    color: #666;
+    cursor: pointer;
+    user-select: none;
+}
