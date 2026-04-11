@@ -54,11 +54,6 @@ header>p {
     font-size: 1rem;
 }
 
-/* Compact select button shown only in loaded state */
-.compact-btn {
-    display: none;
-}
-
 /* ── Upload section (default) ── */
 
 .upload-section {
@@ -100,6 +95,11 @@ main.drag-over .upload-section {
 
 .file-label:hover {
     opacity: 0.9;
+}
+
+/* Compact select button shown only in loaded state */
+.compact-btn {
+    display: none;
 }
 
 input[type="file"] {
