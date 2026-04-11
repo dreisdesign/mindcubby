@@ -163,39 +163,39 @@ function getMaterial(shading, color) {
 }
 
 // ── STL Loading ───────────────────────────────────────────────────────────────
-function loadSTL(file) {
-    const url = URL.createObjectURL(file);
-    new STLLoader().load(url, (geo) => {
-        URL.revokeObjectURL(url);
+function loadSTLBuffer(buffer, name) {
+    const geo = new STLLoader().parse(buffer);
 
-        if (mesh) {
-            scene.remove(mesh);
-            mesh.geometry.dispose();
-            mesh.material.dispose();
-        }
+    if (mesh) {
+        scene.remove(mesh);
+        mesh.geometry.dispose();
+        mesh.material.dispose();
+    }
 
-        // Center and orient (STL files from slicers are Z-up; Three.js is Y-up)
-        geo.computeBoundingBox();
-        const center = new THREE.Vector3();
-        geo.boundingBox.getCenter(center);
-        geo.translate(-center.x, -center.y, -center.z);
-        geo.computeVertexNormals();
+    // Center and orient (STL files from slicers are Z-up; Three.js is Y-up)
+    geo.computeBoundingBox();
+    const center = new THREE.Vector3();
+    geo.boundingBox.getCenter(center);
+    geo.translate(-center.x, -center.y, -center.z);
+    geo.computeVertexNormals();
 
-        mesh = new THREE.Mesh(geo, getMaterial(shadingEl.value, colorPick.value));
-        mesh.rotation.x = -Math.PI / 2; // Z-up → Y-up
-        scene.add(mesh);
+    mesh = new THREE.Mesh(geo, getMaterial(shadingEl.value, colorPick.value));
+    mesh.rotation.x = -Math.PI / 2; // Z-up → Y-up
+    scene.add(mesh);
 
-        const sz = new THREE.Vector3();
-        geo.boundingBox.getSize(sz);
-        modelRadius = Math.max(sz.x, sz.y, sz.z) / 2;
+    // Sync background color (matters when restoring settings before initThree)
+    if (scene) scene.background.set(bgPick.value);
 
-        placeCamera();
-        viewerSec.classList.remove('hidden');
-        document.getElementById('emptyState').classList.add('hidden');
-        document.getElementById('controlsBar').classList.remove('hidden');
-        updateEstimate();
-        requestAnimationFrame(syncCanvasSize);
-    });
+    const sz = new THREE.Vector3();
+    geo.boundingBox.getSize(sz);
+    modelRadius = Math.max(sz.x, sz.y, sz.z) / 2;
+
+    placeCamera();
+    viewerSec.classList.remove('hidden');
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('controlsBar').classList.remove('hidden');
+    updateEstimate();
+    requestAnimationFrame(syncCanvasSize);
 }
 
 function placeCamera() {
@@ -215,12 +215,93 @@ function loop() {
     }
 }
 
+// ── Persistence (IndexedDB for binary, localStorage for settings) ───────────
+const DB_NAME = 'rotater';
+const DB_STORE = 'files';
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = e => e.target.result.createObjectStore(DB_STORE);
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = e => reject(e.target.error);
+    });
+}
+
+async function saveFileToIDB(name, buffer) {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).put({ name, buffer }, 'stl');
+    } catch (e) {
+        console.warn('Could not save STL to IndexedDB:', e);
+    }
+}
+
+async function loadFileFromIDB() {
+    try {
+        const db = await openDB();
+        return await new Promise((resolve, reject) => {
+            const req = db.transaction(DB_STORE).objectStore(DB_STORE).get('stl');
+            req.onsuccess = e => resolve(e.target.result ?? null);
+            req.onerror = e => reject(e.target.error);
+        });
+    } catch (e) {
+        return null;
+    }
+}
+
+const SETTINGS_KEY = 'rotater_settings';
+
+function saveSettings() {
+    try {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+            color: colorPick.value,
+            bg: bgPick.value,
+            shading: shadingEl.value,
+            speed: speedSlider.value,
+            elevation: elevSlider.value,
+        }));
+    } catch (e) { }
+}
+
+function restoreSettings() {
+    try {
+        const s = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+        if (!s) return;
+        colorPick.value = s.color;
+        bgPick.value = s.bg;
+        shadingEl.value = s.shading;
+        speedSlider.value = s.speed;
+        speedVal.textContent = parseFloat(s.speed).toFixed(1) + '×';
+        elevSlider.value = s.elevation;
+        elevVal.textContent = s.elevation + '°';
+    } catch (e) { }
+}
+
+async function restoreSession() {
+    restoreSettings();
+    const saved = await loadFileFromIDB();
+    if (!saved) return;
+    fileNameEl.textContent = saved.name + ' ↩';
+    if (!renderer) initThree();
+    controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+    loadSTLBuffer(saved.buffer, saved.name);
+}
+
 // ── UI events ─────────────────────────────────────────────────────────────────
 function handleFile(file) {
     if (!file?.name.toLowerCase().endsWith('.stl')) return;
     fileNameEl.textContent = file.name;
     if (!renderer) initThree();
-    loadSTL(file);
+    const reader = new FileReader();
+    reader.onload = e => {
+        const buffer = e.target.result;
+        saveFileToIDB(file.name, buffer);
+        saveSettings();
+        loadSTLBuffer(buffer, file.name);
+    };
+    reader.readAsArrayBuffer(file);
 }
 
 fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
@@ -233,13 +314,14 @@ dropZone.addEventListener('drop', e => {
     handleFile(e.dataTransfer.files[0]);
 });
 
-colorPick.addEventListener('input', () => { if (mesh) mesh.material.color.set(colorPick.value); });
-bgPick.addEventListener('input', () => { if (scene) scene.background.set(bgPick.value); });
+colorPick.addEventListener('input', () => { if (mesh) mesh.material.color.set(colorPick.value); saveSettings(); });
+bgPick.addEventListener('input', () => { if (scene) scene.background.set(bgPick.value); saveSettings(); });
 
 shadingEl.addEventListener('change', () => {
     if (!mesh) return;
     mesh.material.dispose();
     mesh.material = getMaterial(shadingEl.value, colorPick.value);
+    saveSettings();
 });
 
 speedSlider.addEventListener('input', () => {
@@ -247,11 +329,13 @@ speedSlider.addEventListener('input', () => {
     speedVal.textContent = v.toFixed(1) + '×';
     if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * v;
     updateEstimate();
+    saveSettings();
 });
 
 elevSlider.addEventListener('input', () => {
     elevVal.textContent = elevSlider.value + '°';
     if (mesh) placeCamera();
+    saveSettings();
 });
 
 // ── Export helpers ────────────────────────────────────────────────────────────
@@ -427,3 +511,6 @@ btnVideo.addEventListener('click', async () => {
         setTimeout(() => setStatus(''), 5000);
     }
 });
+
+// ── Restore on load ───────────────────────────────────────────────────────────
+restoreSession();

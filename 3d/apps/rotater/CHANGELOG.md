@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [0.8.0] - 2026-04-11
+
+### Added
+- STL file persists across page refreshes (stored in IndexedDB)
+- All control settings persist across refreshes (color, background, shading, speed, elevation) via localStorage
+- Restored filename shown with ↩ indicator in header
+
 ## [0.7.0] - 2026-04-11
 
 ### Changed
