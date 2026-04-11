@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- v0.1.0 output: 295 KB GIF @ 72 frames, 24 fps, 720×720px -->
 <!-- v0.2.0 output: 698 KB GIF @ 144 frames, 24 fps, 720×720px -->
 
+<!-- v0.4.0 output: TBD -->
+
+## [0.4.0] - 2026-04-11
+
+### Fixed
+- GIF and MP4 export now orbit the camera (not the mesh), matching the live viewer exactly
+- Export rotation direction aligned with OrbitControls auto-rotate direction
+
+### Changed
+- Video export switched from WebM (MediaRecorder) to H.264 MP4 (WebCodecs + mp4-muxer)
+- mp4-muxer v5.1.3 added as CDN dependency
+
 ## [0.3.0] - 2026-04-11
 
 ### Added
