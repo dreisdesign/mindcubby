@@ -273,6 +273,10 @@ document.getElementById('btnResetZoom').addEventListener('click', () => {
     if (mesh) placeCamera();
 });
 
+canvas.addEventListener('click', () => {
+    if (mesh && !isExporting) btnPause.click();
+});
+
 document.addEventListener('keydown', e => {
     if (e.code === 'Space' && !isExporting && mesh) {
         e.preventDefault();
