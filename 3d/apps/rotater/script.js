@@ -269,6 +269,10 @@ btnPause.addEventListener('click', () => {
     btnPause.title = isPaused ? 'Resume rotation' : 'Pause rotation';
 });
 
+document.getElementById('btnResetZoom').addEventListener('click', () => {
+    if (mesh) placeCamera();
+});
+
 document.addEventListener('keydown', e => {
     if (e.code === 'Space' && !isExporting && mesh) {
         e.preventDefault();

@@ -280,6 +280,10 @@ html.loaded .viewer-section.hidden {
     color: #fff;
 }
 
+.reset-zoom-btn {
+    left: 50px;
+}
+
 /* ── Controls bar (loaded) ── */
 
 html.loaded .controls-bar {
