@@ -196,6 +196,7 @@ function loadSTLBuffer(buffer, name) {
 
     placeCamera();
     document.documentElement.classList.add('loaded');
+    document.getElementById('compactBtnLabel').textContent = 'Replace STL';
     // Reset pause state on new load
     isPaused = false;
     controls.autoRotate = true;
