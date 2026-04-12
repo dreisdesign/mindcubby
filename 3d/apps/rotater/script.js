@@ -52,6 +52,7 @@ let renderer, scene, camera, controls, mesh;
 let isExporting = false;
 let isPaused = false;
 let modelRadius = 1;
+let currentFileName = 'model';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
@@ -238,6 +239,7 @@ async function restoreSession() {
     const saved = await loadFileFromIDB();
     if (!saved) return;
     fileNameEl.textContent = saved.name + ' ↩';
+    currentFileName = saved.name.replace(/\.stl$/i, '');
     if (!renderer) initThree();
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
     loadSTLBuffer(saved.buffer, saved.name);
@@ -247,6 +249,7 @@ async function restoreSession() {
 function handleFile(file) {
     if (!file?.name.toLowerCase().endsWith('.stl')) return;
     fileNameEl.textContent = file.name;
+    currentFileName = file.name.replace(/\.stl$/i, '');
     if (!renderer) initThree();
     const reader = new FileReader();
     reader.onload = e => {
@@ -304,7 +307,7 @@ document.getElementById('btnExportPng').addEventListener('click', () => {
     }
     // Render one fresh frame then export
     renderer.render(scene, camera);
-    canvas.toBlob(blob => download(blob, 'model.png', 'image/png'), 'image/png');
+    canvas.toBlob(blob => download(blob, currentFileName + '.png', 'image/png'), 'image/png');
 });
 
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
@@ -421,7 +424,7 @@ btnGif.addEventListener('click', async () => {
         }
 
         gif.finish();
-        download(gif.bytes(), 'rotation.gif', 'image/gif');
+        download(gif.bytes(), currentFileName + '.gif', 'image/gif');
         setStatus('GIF saved ✓');
     } catch (err) {
         setStatus('Error: ' + err.message);
@@ -503,7 +506,7 @@ btnVideo.addEventListener('click', async () => {
         camera.lookAt(0, 0, 0);
         controls.update();
 
-        download(muxer.target.buffer, 'rotation.mp4', 'video/mp4');
+        download(muxer.target.buffer, currentFileName + '.mp4', 'video/mp4');
         setStatus('MP4 saved ✓');
     } catch (err) {
         setStatus('Error: ' + err.message);
