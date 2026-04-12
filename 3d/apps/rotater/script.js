@@ -81,68 +81,11 @@ function initThree() {
     controls.dampingFactor = 0.06;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 2.5;
-    controls.enableZoom = false; // zoom handled manually below
-
-    // ── Scroll interception (Google Maps pattern) ──────────────────────
-    // Plain scroll  → pass through to page, show hint
-    // Ctrl/Cmd+scroll → zoom the model
-    canvas.addEventListener('wheel', onCanvasWheel, { capture: true, passive: false });
-    canvas.addEventListener('mouseleave', hideScrollHint);
+    controls.enableZoom = true;
 
     syncCanvasSize();
     window.addEventListener('resize', syncCanvasSize);
     requestAnimationFrame(loop);
-}
-
-let scrollHintTimer = null;
-const scrollHintEl = (() => {
-    const el = document.createElement('div');
-    el.className = 'scroll-hint';
-    el.textContent = 'Use Ctrl + scroll to zoom';
-    el.style.cssText = [
-        'position:absolute', 'inset:0', 'display:none',
-        'align-items:center', 'justify-content:center',
-        'background:rgba(0,0,0,0.45)', 'color:#fff',
-        'font-size:0.9rem', 'font-weight:600',
-        'border-radius:8px', 'pointer-events:none',
-        'transition:opacity 0.3s',
-    ].join(';');
-    // Inject into canvas-wrap once DOM is ready
-    document.addEventListener('DOMContentLoaded', () => { }, { once: true });
-    return el;
-})();
-
-function ensureHint() {
-    const wrap = canvas.parentElement;
-    if (!wrap.contains(scrollHintEl)) wrap.appendChild(scrollHintEl);
-}
-
-function showScrollHint() {
-    ensureHint();
-    clearTimeout(scrollHintTimer);
-    scrollHintEl.style.display = 'flex';
-    scrollHintEl.style.opacity = '1';
-    scrollHintTimer = setTimeout(hideScrollHint, 1500);
-}
-
-function hideScrollHint() {
-    scrollHintEl.style.opacity = '0';
-    scrollHintTimer = setTimeout(() => { scrollHintEl.style.display = 'none'; }, 300);
-}
-
-function onCanvasWheel(e) {
-    if (e.ctrlKey || e.metaKey) {
-        // Zoom: prevent page scroll, let OrbitControls handle it
-        e.preventDefault();
-        // Manually dolly: positive deltaY = zoom out
-        const zoomSpeed = 0.001;
-        const factor = 1 + e.deltaY * zoomSpeed;
-        camera.position.multiplyScalar(Math.max(0.1, Math.min(10, factor)));
-        controls.update();
-    } else {
-        // Let page scroll — just show the hint
-        showScrollHint();
-    }
 }
 
 function syncCanvasSize() {
