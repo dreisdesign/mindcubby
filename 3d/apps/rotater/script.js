@@ -273,8 +273,15 @@ document.getElementById('btnResetZoom').addEventListener('click', () => {
     if (mesh) placeCamera();
 });
 
-canvas.addEventListener('click', () => {
-    if (mesh && !isExporting) btnPause.click();
+// Only toggle pause on a true click (not after a drag)
+let _mouseDownPos = null;
+canvas.addEventListener('mousedown', e => { _mouseDownPos = { x: e.clientX, y: e.clientY }; });
+canvas.addEventListener('mouseup', e => {
+    if (!_mouseDownPos) return;
+    const dx = e.clientX - _mouseDownPos.x;
+    const dy = e.clientY - _mouseDownPos.y;
+    if (Math.sqrt(dx * dx + dy * dy) < 4 && mesh && !isExporting) btnPause.click();
+    _mouseDownPos = null;
 });
 
 document.addEventListener('keydown', e => {
