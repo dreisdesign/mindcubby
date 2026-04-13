@@ -172,7 +172,8 @@ function loop() {
             controls.update();
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
             const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
-            const el = baseEl + Math.sin(tiltPhase) * (Math.PI / 9); // ±20°
+            const MAX_EL = Math.PI / 2 - 0.05; // clamp below zenith to avoid lookAt flip
+            const el = THREE.MathUtils.clamp(baseEl + Math.sin(tiltPhase) * (Math.PI / 9), -MAX_EL, MAX_EL);
             const dist = camera.position.length();
             const az = Math.atan2(camera.position.x, camera.position.z);
             camera.position.set(
@@ -400,10 +401,11 @@ async function captureFrames(n) {
     const isTilt = rotateModeEl.value === 'tilt';
     const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
     const swing = Math.PI / 9; // ±20°
+    const MAX_EL = Math.PI / 2 - 0.05;
 
     for (let i = 0; i < n; i++) {
         if (isTilt) {
-            const el = baseEl + Math.sin(2 * Math.PI * i / n) * swing;
+            const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * i / n) * swing, -MAX_EL, MAX_EL);
             camera.position.set(
                 dist * Math.cos(el) * Math.sin(az),
                 dist * Math.sin(el),
@@ -519,10 +521,11 @@ btnVideo.addEventListener('click', async () => {
         const isTilt = rotateModeEl.value === 'tilt';
         const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
         const swing = Math.PI / 9; // ±20°
+        const MAX_EL = Math.PI / 2 - 0.05;
 
         for (let f = 0; f < n; f++) {
             if (isTilt) {
-                const el = baseEl + Math.sin(2 * Math.PI * f / n) * swing;
+                const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * f / n) * swing, -MAX_EL, MAX_EL);
                 camera.position.set(
                     dist * Math.cos(el) * Math.sin(az),
                     dist * Math.sin(el),
