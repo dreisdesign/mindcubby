@@ -632,15 +632,15 @@ button {
 }
 
 .shading-thumb--flat {
-    background: #6a7e8e;
+    background: var(--sh-base, #aab8c8);
 }
 
 .shading-thumb--phong {
-    background: radial-gradient(circle at 38% 35%, #fff 5%, #aab8c8 42%, #5a6e7e 100%);
+    background: radial-gradient(circle at 38% 35%, #fff 5%, var(--sh-base, #aab8c8) 42%, var(--sh-shadow, #5a6e7e) 100%);
 }
 
 .shading-thumb--metallic {
-    background: radial-gradient(circle at 30% 28%, #fff 6%, #8899aa 28%, #1a2535 90%);
+    background: radial-gradient(circle at 30% 28%, #fff 6%, var(--sh-base, #aab8c8) 28%, var(--sh-deep, #1a2535) 90%);
 }
 
 .shading-name {

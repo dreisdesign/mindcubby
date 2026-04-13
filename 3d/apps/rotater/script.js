@@ -155,7 +155,7 @@ function loadSTLBuffer(buffer, name) {
     document.getElementById('compactBtnLabel').textContent = 'Replace STL';
     // Reset pause state on new load
     isPaused = false;
-    controls.autoRotate = rotateModeEl.value !== 'tilt';
+    controls.autoRotate = true;
     iconPause.style.display = '';
     iconPlay.style.display = 'none';
     viewerSec.classList.remove('hidden');
@@ -178,7 +178,7 @@ function loop() {
     requestAnimationFrame(loop);
     if (!isExporting) {
         if (!isPaused && (rotateModeEl.value === 'tilt' || rotateModeEl.value === 'wobble') && mesh) {
-            controls.autoRotate = rotateModeEl.value === 'wobble';
+            controls.autoRotate = true;
             controls.update();
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
             const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
@@ -194,7 +194,7 @@ function loop() {
             );
             camera.lookAt(0, 0, 0);
         } else {
-            controls.autoRotate = !isPaused && rotateModeEl.value !== 'tilt';
+            controls.autoRotate = !isPaused;
             controls.update();
         }
         renderer.render(scene, camera);
@@ -268,6 +268,7 @@ function restoreSettings() {
         if (s.tiltRange) { tiltRangeSlider.value = s.tiltRange; tiltRangeVal.textContent = s.tiltRange + '°'; }
         const m = rotateModeEl.value;
         document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble');
+        updateShadingThumbs();
     } catch (e) { }
 }
 
@@ -315,7 +316,7 @@ fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
 
 btnPause.addEventListener('click', () => {
     isPaused = !isPaused;
-    controls.autoRotate = !isPaused && rotateModeEl.value !== 'tilt';
+    controls.autoRotate = !isPaused;
     iconPause.style.display = isPaused ? 'none' : '';
     iconPlay.style.display = isPaused ? '' : 'none';
     btnPause.setAttribute('aria-label', isPaused ? 'Resume rotation' : 'Pause rotation');
@@ -368,7 +369,21 @@ dropZone.addEventListener('drop', e => {
     handleFile(e.dataTransfer.files[0]);
 });
 
-colorPick.addEventListener('input', () => { if (mesh) mesh.material.color.set(colorPick.value); saveSettings(); });
+function updateShadingThumbs() {
+    const c = new THREE.Color(colorPick.value);
+    const shadow = c.clone().lerp(new THREE.Color(0, 0, 0), 0.45);
+    const deep = c.clone().lerp(new THREE.Color(0, 0, 0), 0.82);
+    const root = document.documentElement;
+    root.style.setProperty('--sh-base', colorPick.value);
+    root.style.setProperty('--sh-shadow', `#${shadow.getHexString()}`);
+    root.style.setProperty('--sh-deep', `#${deep.getHexString()}`);
+}
+
+colorPick.addEventListener('input', () => {
+    if (mesh) mesh.material.color.set(colorPick.value);
+    updateShadingThumbs();
+    saveSettings();
+});
 bgPick.addEventListener('input', () => { if (scene) scene.background.set(bgPick.value); saveSettings(); });
 
 shadingEl.addEventListener('change', () => {
@@ -380,7 +395,7 @@ shadingEl.addEventListener('change', () => {
 
 rotateModeEl.addEventListener('change', () => {
     const m = rotateModeEl.value;
-    if (controls) controls.autoRotate = !isPaused && m !== 'tilt';
+    if (controls) controls.autoRotate = !isPaused;
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble');
     saveSettings();
 });
@@ -391,6 +406,7 @@ tiltRangeSlider.addEventListener('input', () => {
 });
 
 document.getElementById('btnBenchy').addEventListener('click', async () => {
+    if (mesh && !confirm('Replace the current model with 3D Benchy?')) return;
     try {
         const resp = await fetch('./benchy.stl');
         if (!resp.ok) return;
