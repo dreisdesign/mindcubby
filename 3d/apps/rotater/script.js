@@ -379,11 +379,15 @@ function updateShadingThumbs() {
     const bg = new THREE.Color(bgPick.value);
     const shadow = c.clone().lerp(bg, 0.6);
     const deep = c.clone().lerp(bg, 0.85);
+    // Label legibility: use light text on dark bg, dark text on light bg
+    const lum = 0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b;
+    const nameColor = lum > 0.35 ? '#555' : 'rgba(255,255,255,0.55)';
     const root = document.documentElement;
     root.style.setProperty('--sh-base', colorPick.value);
     root.style.setProperty('--sh-shadow', `#${shadow.getHexString()}`);
     root.style.setProperty('--sh-deep', `#${deep.getHexString()}`);
     root.style.setProperty('--sh-bg', bgPick.value);
+    root.style.setProperty('--sh-name-color', nameColor);
 }
 
 function updateColorSwatches() {

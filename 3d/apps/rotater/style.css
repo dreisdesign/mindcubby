@@ -610,9 +610,9 @@ button {
     padding: 6px 8px;
     border: 2px solid transparent;
     border-radius: 6px;
-    background: white;
+    background: var(--sh-bg, #0a0a12);
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
+    transition: border-color 0.15s;
 }
 
 .shading-option input[type="radio"] {
@@ -621,7 +621,6 @@ button {
 
 .shading-option:has(input:checked) {
     border-color: var(--primary-color);
-    background: #f0eeff;
 }
 
 .shading-thumb {
@@ -632,7 +631,7 @@ button {
 }
 
 .shading-thumb--flat {
-    background: radial-gradient(circle, var(--sh-base, #aab8c8) 65%, var(--sh-bg, #0a0a12) 100%);
+    background: var(--sh-base, #aab8c8);
 }
 
 .shading-thumb--phong {
@@ -648,7 +647,7 @@ button {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #777;
+    color: var(--sh-name-color, #888);
     line-height: 1;
 }
 
