@@ -271,13 +271,18 @@ html.loaded .viewer-section.hidden {
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.2s, color 0.2s, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
     font-size: 0;
 }
 
 .pause-btn:hover {
     background: rgba(0, 0, 0, 0.7);
     color: #fff;
+}
+
+.pause-btn:active {
+    transform: scale(0.82);
+    transition: background 0.1s, color 0.1s, transform 0.06s ease-in;
 }
 
 .reset-zoom-btn {
