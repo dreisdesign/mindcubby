@@ -322,13 +322,20 @@ html.loaded footer {
     align-items: flex-end;
 }
 
+.controls-row--motion {
+    align-items: flex-start;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
 .export-row {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     align-items: flex-start;
-    padding-top: 8px;
-    border-top: 1px solid var(--border-color);
+    padding-top: 14px;
+    margin-top: 2px;
+    border-top: 2px solid var(--border-color);
 }
 
 .control-label {
