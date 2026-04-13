@@ -744,7 +744,8 @@ button {
 }
 
 .shading-thumb--metallic {
-    background: radial-gradient(circle at 30% 28%, #fff 6%, var(--sh-base, #aab8c8) 32%, var(--sh-shadow, #6a7e8e) 58%, var(--sh-deep, #1a2535) 90%);
+    /* IBL-lit metal: strong off-center specular, rich base color, soft shadow edge */
+    background: radial-gradient(circle at 32% 30%, #fff 4%, #ffffffcc 10%, var(--sh-base, #aab8c8) 36%, var(--sh-shadow, #6a7e8e) 62%, var(--sh-deep, #1a2535) 90%);
 }
 
 .shading-name {
