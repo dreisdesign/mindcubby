@@ -540,7 +540,7 @@ button {
     overflow: hidden;
 }
 
-.gif-group-box > .primary-btn {
+.gif-group-box>.primary-btn {
     border-radius: 4px 0 0 4px;
 }
 
@@ -593,4 +593,102 @@ button {
 
 .loop-toggle-label:has(input:checked) .loop-toggle-thumb {
     transform: translateX(12px);
+}
+
+/* ── Shading thumbnail cards ── */
+
+.shading-group {
+    display: flex;
+    gap: 6px;
+}
+
+.shading-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.shading-option input[type="radio"] {
+    display: none;
+}
+
+.shading-option:has(input:checked) {
+    border-color: var(--primary-color);
+    background: #f0eeff;
+}
+
+.shading-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.shading-thumb--flat {
+    background: #6a7e8e;
+}
+
+.shading-thumb--phong {
+    background: radial-gradient(circle at 38% 35%, #fff 5%, #aab8c8 42%, #5a6e7e 100%);
+}
+
+.shading-thumb--metallic {
+    background: radial-gradient(circle at 30% 28%, #fff 6%, #8899aa 28%, #1a2535 90%);
+}
+
+.shading-name {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #777;
+    line-height: 1;
+}
+
+/* ── Flat tick label ── */
+
+.tick--flat {
+    color: var(--primary-color) !important;
+    font-weight: 700 !important;
+}
+
+.tick--flat::before {
+    background: var(--primary-color) !important;
+}
+
+/* ── Benchy button (loaded-state header) ── */
+
+.benchy-btn {
+    display: none;
+    padding: 7px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: white;
+    color: var(--primary-color);
+    border: 1.5px solid var(--primary-color);
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html.loaded .benchy-btn {
+    display: inline-flex;
+    align-items: center;
+}
+
+.benchy-btn:hover {
+    background: #f0eeff;
+}
+
+.benchy-btn:active {
+    transform: scale(0.93);
+    transition: background 0.1s, transform 0.06s ease-in;
 }
