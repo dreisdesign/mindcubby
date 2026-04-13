@@ -87,12 +87,12 @@ function initThree() {
 
     camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
 
-    // Three-point lighting to approximate the Python Blinn-Phong setup
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const key = new THREE.DirectionalLight(0xffffff, 1.5);
+    // Three-point lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    const key = new THREE.DirectionalLight(0xffffff, 1.8);
     key.position.set(1.5, 2.0, 1.5);
     scene.add(key);
-    const fill = new THREE.DirectionalLight(0xffffff, 0.35);
+    const fill = new THREE.DirectionalLight(0xffffff, 0.4);
     fill.position.set(-2, 0.5, -1);
     scene.add(fill);
     const rim = new THREE.DirectionalLight(0xffffff, 0.55);
