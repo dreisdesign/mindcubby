@@ -462,8 +462,8 @@ function updateShadingThumbs() {
     const bg = new THREE.Color(bgPick.value);
     // Phong/metallic shadows are darkened model color — bg-independent so
     // the gradient always reads correctly regardless of canvas background.
-    const shadow = c.clone().multiplyScalar(0.45);
-    const deep   = c.clone().multiplyScalar(0.12);
+    const shadow = c.clone().multiplyScalar(0.5);   // phong/metallic midtone
+    const deep   = c.clone().multiplyScalar(0.28);  // metallic deep shadow
     // WCAG contrast: white text when bg luminance is below the 0.179 crossover
     // (the point where white and black have equal contrast ratios).
     // Use opaque values only — semi-transparent text fails on mid-range bgs.
