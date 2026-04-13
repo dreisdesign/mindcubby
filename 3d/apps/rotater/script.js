@@ -46,7 +46,11 @@ const fileNameEl = document.getElementById('fileName');
 const btnPause = document.getElementById('btnPause');
 const iconPause = document.getElementById('iconPause');
 const iconPlay = document.getElementById('iconPlay');
-const rotateModeEl = document.getElementById('rotateMode');
+const rotateModeEl = {
+    get value() { return document.querySelector('input[name="rotateMode"]:checked')?.value ?? 'spin'; },
+    set value(v) { const el = document.querySelector(`input[name="rotateMode"][value="${v}"]`); if (el) el.checked = true; },
+    addEventListener(type, fn) { document.querySelectorAll('input[name="rotateMode"]').forEach(el => el.addEventListener(type, fn)); },
+};
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let renderer, scene, camera, controls, mesh;

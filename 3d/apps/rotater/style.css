@@ -290,9 +290,9 @@ html.loaded .controls-bar {
     display: flex;
     flex-shrink: 0;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     border-top: 1px solid var(--border-color);
-    padding: 10px 20px;
+    padding: 14px 20px;
     background: #fafafa;
 }
 
@@ -376,6 +376,41 @@ select {
     background: white;
     min-width: 100px;
     cursor: pointer;
+}
+
+.radio-group {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #555;
+    background: white;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+}
+
+.radio-option:not(:last-child) {
+    border-right: 1px solid var(--border-color);
+}
+
+.radio-option input[type="radio"] {
+    display: none;
+}
+
+.radio-option:has(input:checked) {
+    background: var(--primary-color);
+    color: white;
 }
 
 input[type="range"] {
