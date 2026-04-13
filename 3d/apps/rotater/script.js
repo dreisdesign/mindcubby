@@ -46,6 +46,7 @@ const fileNameEl = document.getElementById('fileName');
 const btnPause = document.getElementById('btnPause');
 const iconPause = document.getElementById('iconPause');
 const iconPlay = document.getElementById('iconPlay');
+const rotateModeEl = document.getElementById('rotateMode');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let renderer, scene, camera, controls, mesh;
@@ -53,6 +54,7 @@ let isExporting = false;
 let isPaused = false;
 let modelRadius = 1;
 let currentFileName = 'model';
+let tiltPhase = 0;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
@@ -143,7 +145,7 @@ function loadSTLBuffer(buffer, name) {
     document.getElementById('compactBtnLabel').textContent = 'Replace STL';
     // Reset pause state on new load
     isPaused = false;
-    controls.autoRotate = true;
+    controls.autoRotate = rotateModeEl.value === 'spin';
     iconPause.style.display = '';
     iconPlay.style.display = 'none';
     viewerSec.classList.remove('hidden');
@@ -165,7 +167,24 @@ function placeCamera() {
 function loop() {
     requestAnimationFrame(loop);
     if (!isExporting) {
-        controls.update();
+        if (!isPaused && rotateModeEl.value === 'tilt' && mesh) {
+            controls.autoRotate = false;
+            controls.update();
+            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+            const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+            const el = baseEl + Math.sin(tiltPhase) * (Math.PI / 9); // ±20°
+            const dist = camera.position.length();
+            const az = Math.atan2(camera.position.x, camera.position.z);
+            camera.position.set(
+                dist * Math.cos(el) * Math.sin(az),
+                dist * Math.sin(el),
+                dist * Math.cos(el) * Math.cos(az),
+            );
+            camera.lookAt(0, 0, 0);
+        } else {
+            controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';
+            controls.update();
+        }
         renderer.render(scene, camera);
     }
 }
@@ -216,6 +235,7 @@ function saveSettings() {
             shading: shadingEl.value,
             speed: speedSlider.value,
             elevation: elevSlider.value,
+            rotateMode: rotateModeEl.value,
         }));
     } catch (e) { }
 }
@@ -231,6 +251,7 @@ function restoreSettings() {
         speedVal.textContent = parseFloat(s.speed).toFixed(1) + '×';
         elevSlider.value = s.elevation;
         elevVal.textContent = s.elevation + '°';
+        if (s.rotateMode) rotateModeEl.value = s.rotateMode;
     } catch (e) { }
 }
 
@@ -265,7 +286,7 @@ fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
 
 btnPause.addEventListener('click', () => {
     isPaused = !isPaused;
-    controls.autoRotate = !isPaused;
+    controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';
     iconPause.style.display = isPaused ? 'none' : '';
     iconPlay.style.display = isPaused ? '' : 'none';
     btnPause.setAttribute('aria-label', isPaused ? 'Resume rotation' : 'Pause rotation');
@@ -328,6 +349,11 @@ shadingEl.addEventListener('change', () => {
     saveSettings();
 });
 
+rotateModeEl.addEventListener('change', () => {
+    if (controls) controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';
+    saveSettings();
+});
+
 speedSlider.addEventListener('input', () => {
     const v = parseFloat(speedSlider.value);
     speedVal.textContent = v.toFixed(1) + '×';
@@ -369,15 +395,28 @@ async function captureFrames(n) {
 
     const dist = camera.position.length();
     const elev = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
+    const az = Math.atan2(camera.position.x, camera.position.z);
     const savedCamPos = camera.position.clone();
+    const isTilt = rotateModeEl.value === 'tilt';
+    const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+    const swing = Math.PI / 9; // ±20°
 
     for (let i = 0; i < n; i++) {
-        const azimuth = -(2 * Math.PI * i) / n;
-        camera.position.set(
-            dist * Math.cos(elev) * Math.sin(azimuth),
-            dist * Math.sin(elev),
-            dist * Math.cos(elev) * Math.cos(azimuth),
-        );
+        if (isTilt) {
+            const el = baseEl + Math.sin(2 * Math.PI * i / n) * swing;
+            camera.position.set(
+                dist * Math.cos(el) * Math.sin(az),
+                dist * Math.sin(el),
+                dist * Math.cos(el) * Math.cos(az),
+            );
+        } else {
+            const azimuth = -(2 * Math.PI * i) / n;
+            camera.position.set(
+                dist * Math.cos(elev) * Math.sin(azimuth),
+                dist * Math.sin(elev),
+                dist * Math.cos(elev) * Math.cos(azimuth),
+            );
+        }
         camera.lookAt(0, 0, 0);
         renderer.render(scene, camera);
         ctx.drawImage(renderer.domElement, 0, 0, S, S);
@@ -431,7 +470,7 @@ btnGif.addEventListener('click', async () => {
         console.error(err);
     } finally {
         setExporting(false);
-        controls.autoRotate = true;
+        controls.autoRotate = rotateModeEl.value === 'spin';
         setTimeout(() => setStatus(''), 5000);
     }
 });
@@ -475,15 +514,28 @@ btnVideo.addEventListener('click', async () => {
 
         const dist = camera.position.length();
         const elev = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
+        const az = Math.atan2(camera.position.x, camera.position.z);
         const savedCamPos = camera.position.clone();
+        const isTilt = rotateModeEl.value === 'tilt';
+        const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+        const swing = Math.PI / 9; // ±20°
 
         for (let f = 0; f < n; f++) {
-            const azimuth = -(2 * Math.PI * f) / n;
-            camera.position.set(
-                dist * Math.cos(elev) * Math.sin(azimuth),
-                dist * Math.sin(elev),
-                dist * Math.cos(elev) * Math.cos(azimuth),
-            );
+            if (isTilt) {
+                const el = baseEl + Math.sin(2 * Math.PI * f / n) * swing;
+                camera.position.set(
+                    dist * Math.cos(el) * Math.sin(az),
+                    dist * Math.sin(el),
+                    dist * Math.cos(el) * Math.cos(az),
+                );
+            } else {
+                const azimuth = -(2 * Math.PI * f) / n;
+                camera.position.set(
+                    dist * Math.cos(elev) * Math.sin(azimuth),
+                    dist * Math.sin(elev),
+                    dist * Math.cos(elev) * Math.cos(azimuth),
+                );
+            }
             camera.lookAt(0, 0, 0);
             renderer.render(scene, camera);
             ctx.drawImage(renderer.domElement, 0, 0, S, S);
@@ -513,7 +565,7 @@ btnVideo.addEventListener('click', async () => {
         console.error(err);
     } finally {
         setExporting(false);
-        controls.autoRotate = true;
+        controls.autoRotate = rotateModeEl.value === 'spin';
         setTimeout(() => setStatus(''), 5000);
     }
 });
