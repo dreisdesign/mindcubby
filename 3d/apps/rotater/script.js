@@ -65,6 +65,7 @@ let isPaused = false;
 let modelRadius = 1;
 let currentFileName = 'model';
 let tiltPhase = 0;
+let swingBaseAz = 0, swingLastAz = 0;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
@@ -214,25 +215,37 @@ function loop() {
             camera.lookAt(0, 0, 0);
             controls.update();
         } else if (!isPaused && rotateModeEl.value === 'swing' && mesh) {
-            // Swing: azimuth oscillates ±swingRange instead of full spin
+            // Swing: azimuth oscillates ±swingRange around a user-orbitable base
             controls.autoRotate = false;
+            controls.update(); // apply user input first
+            // Accumulate user-driven azimuth delta on top of the base
+            const actualAz = Math.atan2(camera.position.x, camera.position.z);
+            let azDelta = actualAz - swingLastAz;
+            if (azDelta > Math.PI) azDelta -= 2 * Math.PI;
+            if (azDelta < -Math.PI) azDelta += 2 * Math.PI;
+            swingBaseAz += azDelta;
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
-            const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
             const MAX_EL = Math.PI / 2 - 0.05;
-            const el = Math.min(baseEl, MAX_EL);
             const swingRange = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
             const dist = camera.position.length();
-            const az = Math.sin(tiltPhase) * swingRange;
+            // Elevation is user-controlled (read from wherever they orbited to)
+            const el = THREE.MathUtils.clamp(Math.asin(camera.position.y / dist), -MAX_EL, MAX_EL);
+            const az = swingBaseAz + Math.sin(tiltPhase) * swingRange;
             camera.position.set(
                 dist * Math.cos(el) * Math.sin(az),
                 dist * Math.sin(el),
                 dist * Math.cos(el) * Math.cos(az),
             );
             camera.lookAt(0, 0, 0);
-            controls.update();
+            swingLastAz = az;
         } else {
             controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin');
             controls.update();
+            // Keep swing base in sync while paused / in other modes so resume is seamless
+            if (rotateModeEl.value === 'swing' && camera) {
+                swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
+                swingLastAz = swingBaseAz;
+            }
         }
         renderer.render(scene, camera);
     }
@@ -517,6 +530,10 @@ rotateModeEl.addEventListener('change', () => {
         document.documentElement.classList.remove('rotation-paused');
     }
     tiltPhase = 0;
+    if (m === 'swing' && camera) {
+        swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
+        swingLastAz = swingBaseAz;
+    }
     if (controls) controls.autoRotate = !isPaused && m === 'spin';
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble' || m === 'swing');
     document.documentElement.classList.toggle('none-mode', isOff);
