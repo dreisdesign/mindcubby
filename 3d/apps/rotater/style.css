@@ -740,7 +740,7 @@ button {
 }
 
 .shading-thumb--phong {
-    background: radial-gradient(circle at 38% 35%, #fff 5%, var(--sh-base, #aab8c8) 42%, var(--sh-shadow, #5a6e7e) 100%);
+    background: radial-gradient(circle at 38% 35%, #ffffffcc 4%, var(--sh-base, #aab8c8) 40%, var(--sh-shadow, #6a7e8e) 100%);
 }
 
 .shading-thumb--metallic {

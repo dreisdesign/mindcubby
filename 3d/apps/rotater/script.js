@@ -127,7 +127,10 @@ function syncCanvasSize() {
 function getMaterial(shading, color) {
     const base = { color, side: THREE.DoubleSide };
     if (shading === 'flat') return new THREE.MeshBasicMaterial(base);
-    if (shading === 'phong') return new THREE.MeshPhongMaterial({ ...base, shininess: 80, specular: '#888899' });
+    // Phong: PBR non-metal with moderate roughness. Using MeshStandardMaterial
+    // so the RoomEnvironment IBL provides indirect specular — this makes dark/
+    // black models readable via env reflections regardless of albedo.
+    if (shading === 'phong') return new THREE.MeshStandardMaterial({ ...base, metalness: 0, roughness: 0.62 });
     // metallic
     return new THREE.MeshStandardMaterial({ ...base, metalness: 0.65, roughness: 0.3 });
 }
