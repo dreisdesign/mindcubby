@@ -155,7 +155,8 @@ function loadSTLBuffer(buffer, name) {
     document.getElementById('compactBtnLabel').textContent = 'Replace STL';
     // Reset pause state on new load
     isPaused = false;
-    controls.autoRotate = true;
+    controls.autoRotate = rotateModeEl.value !== 'none';
+    document.documentElement.classList.remove('rotation-paused');
     iconPause.style.display = '';
     iconPlay.style.display = 'none';
     viewerSec.classList.remove('hidden');
@@ -270,9 +271,12 @@ function restoreSettings() {
         const m = rotateModeEl.value;
         document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble');
         const isNone = m === 'none';
+        document.documentElement.classList.toggle('none-mode', isNone);
         btnGif.disabled = isNone;
         btnVideo.disabled = isNone;
+        document.getElementById('gifLoop').disabled = isNone;
         updateShadingThumbs();
+        updateColorSwatches();
     } catch (e) { }
 }
 
@@ -318,13 +322,28 @@ function handleFile(file) {
 
 fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
 
-btnPause.addEventListener('click', () => {
+function togglePause() {
+    if (rotateModeEl.value === 'none') return;
     isPaused = !isPaused;
     controls.autoRotate = !isPaused;
+    document.documentElement.classList.toggle('rotation-paused', isPaused);
     iconPause.style.display = isPaused ? 'none' : '';
     iconPlay.style.display = isPaused ? '' : 'none';
     btnPause.setAttribute('aria-label', isPaused ? 'Resume rotation' : 'Pause rotation');
     btnPause.title = isPaused ? 'Resume rotation' : 'Pause rotation';
+}
+
+btnPause.addEventListener('click', togglePause);
+
+// Re-clicking the active rotation option pauses/resumes
+document.querySelectorAll('.radio-option').forEach(label => {
+    label.addEventListener('mousedown', () => {
+        label._wasChecked = label.querySelector('input').checked;
+    });
+    label.addEventListener('click', () => {
+        const input = label.querySelector('input');
+        if (label._wasChecked && input.value !== 'none') togglePause();
+    });
 });
 
 document.getElementById('btnResetZoom').addEventListener('click', () => {
@@ -357,20 +376,33 @@ dropZone.addEventListener('drop', e => {
 
 function updateShadingThumbs() {
     const c = new THREE.Color(colorPick.value);
-    const shadow = c.clone().lerp(new THREE.Color(0, 0, 0), 0.45);
-    const deep = c.clone().lerp(new THREE.Color(0, 0, 0), 0.82);
+    const bg = new THREE.Color(bgPick.value);
+    const shadow = c.clone().lerp(bg, 0.6);
+    const deep = c.clone().lerp(bg, 0.85);
     const root = document.documentElement;
     root.style.setProperty('--sh-base', colorPick.value);
     root.style.setProperty('--sh-shadow', `#${shadow.getHexString()}`);
     root.style.setProperty('--sh-deep', `#${deep.getHexString()}`);
+    root.style.setProperty('--sh-bg', bgPick.value);
+}
+
+function updateColorSwatches() {
+    document.getElementById('colorSwatch').style.background = colorPick.value;
+    document.getElementById('bgSwatch').style.background = bgPick.value;
 }
 
 colorPick.addEventListener('input', () => {
     if (mesh) mesh.material.color.set(colorPick.value);
     updateShadingThumbs();
+    updateColorSwatches();
     saveSettings();
 });
-bgPick.addEventListener('input', () => { if (scene) scene.background.set(bgPick.value); saveSettings(); });
+bgPick.addEventListener('input', () => {
+    if (scene) scene.background.set(bgPick.value);
+    updateShadingThumbs();
+    updateColorSwatches();
+    saveSettings();
+});
 
 shadingEl.addEventListener('change', () => {
     if (!mesh) return;
@@ -382,10 +414,19 @@ shadingEl.addEventListener('change', () => {
 rotateModeEl.addEventListener('change', () => {
     const m = rotateModeEl.value;
     const isNone = m === 'none';
+    // switching mode resumes rotation
+    if (isPaused && !isNone) {
+        isPaused = false;
+        iconPause.style.display = '';
+        iconPlay.style.display = 'none';
+        document.documentElement.classList.remove('rotation-paused');
+    }
     if (controls) controls.autoRotate = !isPaused && !isNone;
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble');
+    document.documentElement.classList.toggle('none-mode', isNone);
     btnGif.disabled = isNone;
     btnVideo.disabled = isNone;
+    document.getElementById('gifLoop').disabled = isNone;
     saveSettings();
 });
 
@@ -394,7 +435,9 @@ tiltRangeSlider.addEventListener('input', () => {
     saveSettings();
 });
 
-document.getElementById('btnBenchy').addEventListener('click', async () => {
+document.getElementById('menuBenchy').addEventListener('click', async () => {
+    document.getElementById('menuDropdown').hidden = true;
+    document.getElementById('btnMenu').setAttribute('aria-expanded', 'false');
     if (mesh && !confirm('Replace the current model with 3D Benchy?')) return;
     try {
         const resp = await fetch('./benchy.stl');
@@ -406,6 +449,21 @@ document.getElementById('btnBenchy').addEventListener('click', async () => {
         controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
         loadSTLBuffer(buffer, '3dbenchy.stl');
     } catch (e) { }
+});
+
+const btnMenu = document.getElementById('btnMenu');
+const menuDropdown = document.getElementById('menuDropdown');
+btnMenu.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = !menuDropdown.hidden;
+    menuDropdown.hidden = open;
+    btnMenu.setAttribute('aria-expanded', String(!open));
+});
+document.addEventListener('click', () => {
+    if (!menuDropdown.hidden) {
+        menuDropdown.hidden = true;
+        btnMenu.setAttribute('aria-expanded', 'false');
+    }
 });
 
 speedSlider.addEventListener('input', () => {

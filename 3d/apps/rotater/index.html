@@ -32,13 +32,19 @@
                 </svg>
                 <span id="compactBtnLabel">Select STL</span>
             </label>
-            <button id="btnBenchy" class="benchy-btn" title="Replace current model with demo (3D Benchy)">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"
-                    style="display:inline;margin-right:4px;vertical-align:middle" aria-hidden="true">
-                    <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
-                </svg>
-                Benchy
-            </button>
+            <div class="menu-wrap">
+                <button id="btnMenu" class="menu-btn" title="More options" aria-label="More options" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+                <div id="menuDropdown" class="menu-dropdown" hidden>
+                    <button id="menuBenchy" class="menu-item" title="Replace current model with 3D Benchy demo">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
+                        </svg>
+                        Reset to Benchy
+                    </button>
+                </div>
+            </div>
         </header>
 
         <main id="dropZone">
@@ -82,14 +88,21 @@
 
         <div id="controlsBar" class="controls-bar hidden">
             <div class="controls-row">
-                <label class="control-label">
-                    Color
-                    <input type="color" id="colorPicker" value="#aab8c8">
-                </label>
-                <label class="control-label">
-                    Background
-                    <input type="color" id="bgPicker" value="#0a0a12">
-                </label>
+                <div class="control-label">
+                    Colors
+                    <div class="color-group">
+                        <label class="color-option" title="Choose model color">
+                            <input type="color" id="colorPicker" value="#aab8c8">
+                            <span class="color-swatch" id="colorSwatch"></span>
+                            <span class="color-name">Model</span>
+                        </label>
+                        <label class="color-option" title="Choose background color">
+                            <input type="color" id="bgPicker" value="#0a0a12">
+                            <span class="color-swatch" id="bgSwatch"></span>
+                            <span class="color-name">BG</span>
+                        </label>
+                    </div>
+                </div>
                 <label class="control-label">
                     Shading
                     <div class="shading-group">
@@ -121,15 +134,15 @@
                         </label>
                         <label class="radio-option">
                             <input type="radio" name="rotateMode" value="spin" checked>
-                            Spin
+                            Spin<span class="pause-hint" aria-hidden="true"></span>
                         </label>
                         <label class="radio-option">
                             <input type="radio" name="rotateMode" value="tilt">
-                            Tilt
+                            Tilt<span class="pause-hint" aria-hidden="true"></span>
                         </label>
                         <label class="radio-option">
                             <input type="radio" name="rotateMode" value="wobble">
-                            Wobble
+                            Wobble<span class="pause-hint" aria-hidden="true"></span>
                         </label>
                     </div>
                 </div>
@@ -175,7 +188,7 @@
             <div class="export-row">
                 <div class="export-group">
                     <div class="gif-group-box">
-                        <button id="btnExportGif" class="primary-btn" title="Save animated GIF (one full rotation)">
+                        <button id="btnExportGif" class="primary-btn" title="Save animated GIF (full rotation)">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
                                 style="display:inline;margin-right:8px;vertical-align:middle">
                                 <path
@@ -192,7 +205,7 @@
                     <span id="estimateGif" class="export-estimate"></span>
                 </div>
                 <div class="export-group">
-                    <button id="btnExportVideo" class="secondary-btn" title="Save MP4 video (one full rotation)">
+                    <button id="btnExportVideo" class="secondary-btn" title="Save MP4 video (full rotation)">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
                             style="display:inline;margin-right:8px;vertical-align:middle">
                             <path

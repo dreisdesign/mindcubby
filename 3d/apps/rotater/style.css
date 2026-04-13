@@ -632,7 +632,7 @@ button {
 }
 
 .shading-thumb--flat {
-    background: var(--sh-base, #aab8c8);
+    background: radial-gradient(circle, var(--sh-base, #aab8c8) 65%, var(--sh-bg, #0a0a12) 100%);
 }
 
 .shading-thumb--phong {
@@ -664,32 +664,164 @@ button {
     background: var(--primary-color) !important;
 }
 
-/* ── Benchy button (loaded-state header) ── */
+/* ── Hamburger menu ── */
 
-.benchy-btn {
+.menu-wrap {
+    position: relative;
+}
+
+.menu-btn {
     display: none;
-    padding: 7px 14px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 34px;
+    height: 34px;
+    padding: 8px;
     background: white;
-    color: var(--primary-color);
-    border: 1.5px solid var(--primary-color);
+    color: #555;
+    border: 1.5px solid var(--border-color);
     border-radius: 4px;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.15s, color 0.15s, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-html.loaded .benchy-btn {
-    display: inline-flex;
-    align-items: center;
+html.loaded .menu-btn {
+    display: flex;
 }
 
-.benchy-btn:hover {
+.menu-btn span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    border-radius: 1px;
+}
+
+.menu-btn:hover {
     background: #f0eeff;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
-.benchy-btn:active {
-    transform: scale(0.93);
-    transition: background 0.1s, transform 0.06s ease-in;
+.menu-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+    min-width: 160px;
+    z-index: 200;
+    padding: 4px;
+}
+
+.menu-dropdown[hidden] {
+    display: none;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.menu-item:hover {
+    background: #f0eeff;
+    color: var(--primary-color);
+}
+
+/* ── Color picker cards ── */
+
+.color-group {
+    display: flex;
+    gap: 6px;
+}
+
+.color-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+
+.color-option input[type="color"] {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+
+.color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.color-name {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #777;
+    line-height: 1;
+}
+
+.color-option:hover {
+    border-color: var(--primary-color);
+}
+
+/* ── None-mode: disable motion controls ── */
+
+html.none-mode .range-label {
+    opacity: 0.38;
+    pointer-events: none;
+}
+
+html.none-mode .loop-toggle-label {
+    opacity: 0.38;
+    pointer-events: none;
+}
+
+/* ── Rotation re-click pause hint ── */
+
+.pause-hint {
+    display: none;
+    margin-left: 4px;
+    font-size: 0.8em;
+    opacity: 0.75;
+}
+
+.pause-hint::before {
+    content: '⏸';
+}
+
+html.rotation-paused .pause-hint::before {
+    content: '▶';
+}
+
+.radio-option:has(input:checked):hover .pause-hint {
+    display: inline;
 }
