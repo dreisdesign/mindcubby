@@ -386,6 +386,18 @@ document.getElementById('btnResetZoom').addEventListener('click', () => {
     if (mesh) placeCamera();
 });
 
+document.getElementById('btnRotateCCW').addEventListener('click', () => {
+    if (!mesh) return;
+    mesh.rotation.y -= Math.PI / 2;
+    renderer.render(scene, camera);
+});
+
+document.getElementById('btnRotateCW').addEventListener('click', () => {
+    if (!mesh) return;
+    mesh.rotation.y += Math.PI / 2;
+    renderer.render(scene, camera);
+});
+
 document.getElementById('btnExportPng').addEventListener('click', () => {
     if (!mesh) return;
     // Pause if not already paused

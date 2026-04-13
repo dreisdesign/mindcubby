@@ -289,6 +289,14 @@ html.loaded .viewer-section.hidden {
     left: 50px;
 }
 
+.rotate-ccw-btn {
+    left: 90px;
+}
+
+.rotate-cw-btn {
+    left: 130px;
+}
+
 /* ── Controls bar (loaded) ── */
 
 html.loaded .controls-bar {

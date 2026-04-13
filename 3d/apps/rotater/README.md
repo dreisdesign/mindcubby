@@ -24,6 +24,7 @@ python3 -m http.server 8765
 - **Drag** to orbit · **Scroll** to zoom · **Right-drag** to pan
 - **Pause/Resume** button (or re-click the active Rotation option) to pause/resume animation
 - **Reset camera** button resets to the default view angle
+- **Rotate CCW / CW** buttons snap the model's Y-axis orientation by 90° without affecting the running animation
 
 ### Appearance
 
