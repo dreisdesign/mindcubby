@@ -88,8 +88,8 @@ function initThree() {
     camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
 
     // Three-point lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-    const key = new THREE.DirectionalLight(0xffffff, 2.0);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+    const key = new THREE.DirectionalLight(0xffffff, 1.9);
     key.position.set(1.5, 2.0, 1.5);
     scene.add(key);
     const fill = new THREE.DirectionalLight(0xffffff, 0.4);
@@ -127,7 +127,7 @@ function syncCanvasSize() {
 function getMaterial(shading, color) {
     const base = { color, side: THREE.DoubleSide };
     if (shading === 'flat') return new THREE.MeshBasicMaterial(base);
-    if (shading === 'phong') return new THREE.MeshPhongMaterial({ ...base, shininess: 64, specular: '#222233' });
+    if (shading === 'phong') return new THREE.MeshPhongMaterial({ ...base, shininess: 80, specular: '#888899' });
     // metallic
     return new THREE.MeshStandardMaterial({ ...base, metalness: 0.65, roughness: 0.3 });
 }
