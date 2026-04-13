@@ -73,6 +73,8 @@ function initThree() {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.75;
 
     // RoomEnvironment provides neutral IBL so MeshStandardMaterial (metal
     // shading) has environment reflections — without it metalness hides the
@@ -88,7 +90,7 @@ function initThree() {
     camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
 
     // Three-point lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
     const key = new THREE.DirectionalLight(0xffffff, 1.9);
     key.position.set(1.5, 2.0, 1.5);
     scene.add(key);
@@ -130,7 +132,7 @@ function getMaterial(shading, color) {
     // Phong: PBR non-metal with moderate roughness. Using MeshStandardMaterial
     // so the RoomEnvironment IBL provides indirect specular — this makes dark/
     // black models readable via env reflections regardless of albedo.
-    if (shading === 'phong') return new THREE.MeshStandardMaterial({ ...base, metalness: 0, roughness: 0.62 });
+    if (shading === 'phong') return new THREE.MeshStandardMaterial({ ...base, metalness: 0, roughness: 0.62, envMapIntensity: 0.4 });
     // metallic
     return new THREE.MeshStandardMaterial({ ...base, metalness: 0.65, roughness: 0.3 });
 }

@@ -23,7 +23,8 @@ python3 -m http.server 8765
 
 - **Drag** to orbit · **Scroll** to zoom · **Right-drag** to pan
 - **Pause/Resume** button (or re-click the active Rotation option) to pause/resume animation
-- **↺ / ↻** buttons on the viewer snap the model's Y-axis by 90° CCW/CW without interrupting animation
+- **↺** button on the viewer snaps the model's Y-axis 90° CCW without interrupting animation
+- **X-axis** button on the viewer snaps the model 90° around its X-axis (tips the model forward)
 - **Reset View** button (top-right of controls) resets the camera to the default position
 
 ### Appearance
@@ -33,8 +34,8 @@ python3 -m http.server 8765
 | Colors → Model | Model face color |
 | Colors → BG | Background color |
 | Shading → Flat | Solid unlit color |
-| Shading → Phong | Diffuse + specular lighting |
-| Shading → Metal | Metallic/PBR sheen |
+| Shading → Phong | PBR diffuse (non-metal) — surface detail readable on any albedo including black/white |
+| Shading → Metal | PBR metallic with environment reflections |
 
 Shading preview cards update live to reflect the current model and background colors.
 
