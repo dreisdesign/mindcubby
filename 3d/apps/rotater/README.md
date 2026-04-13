@@ -17,14 +17,14 @@ python3 -m http.server 8765
 
 - Drag and drop any STL file onto the page, or click **Select STL**
 - The model and all settings persist across page refreshes — no re-upload needed
-- Click **☰ → Reset to Benchy** to reload the built-in 3D Benchy demo model
+- Click **☰ → Reset to Benchy** to reload the built-in 3D Benchy demo (also clears the saved model so a refresh stays on Benchy)
 
 ### Viewer controls
 
 - **Drag** to orbit · **Scroll** to zoom · **Right-drag** to pan
 - **Pause/Resume** button (or re-click the active Rotation option) to pause/resume animation
-- **Reset camera** button resets to the default view angle
-- **Rotate CCW / CW** buttons snap the model's Y-axis orientation by 90° without affecting the running animation
+- **↺ / ↻** buttons on the viewer snap the model's Y-axis by 90° CCW/CW without interrupting animation
+- **Reset View** button (top-right of controls) resets the camera to the default position
 
 ### Appearance
 
@@ -45,7 +45,7 @@ Shading preview cards update live to reflect the current model and background co
 | Rotation | Off / Spin / Tilt / Wobble / Swing (see below) |
 | Speed | Playback speed: 0.5× – 4× |
 | Tilt | Camera elevation: 0° (flat side-on) → Top (directly above) |
-| Range | Oscillation arc for Tilt, Wobble, and Swing modes |
+| Range | Oscillation amplitude — 10°–50° for Tilt/Wobble; 0°–180° for Swing |
 
 **Rotation modes:**
 
@@ -53,9 +53,9 @@ Shading preview cards update live to reflect the current model and background co
 |---|---|
 | Off | No rotation; GIF/MP4 export disabled |
 | Spin | Continuous 360° orbit around the Y axis |
-| Tilt | Camera elevation oscillates up/down while azimuth stays fixed |
-| Wobble | Combines full 360° spin with simultaneous elevation oscillation |
-| Swing | Azimuth oscillates left/right (partial arc) instead of full spin |
+| Tilt | Camera elevation oscillates up/down; azimuth stays fixed |
+| Wobble | Full 360° spin combined with simultaneous elevation oscillation |
+| Swing | Azimuth oscillates left/right through a partial arc (Range sets the half-angle) |
 
 ### Export
 
