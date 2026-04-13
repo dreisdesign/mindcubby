@@ -709,15 +709,24 @@ button {
     border-radius: 6px;
     background: var(--sh-bg, #0a0a12);
     cursor: pointer;
-    transition: border-color 0.15s;
+    /* ring: transparent outer + no inner */
+    box-shadow: 0 0 0 2px transparent;
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .shading-option input[type="radio"] {
     display: none;
 }
 
+/* Double-ring selection: white inner gap + primary-color outer ring.
+   Readable regardless of card or canvas background color. */
 .shading-option:has(input:checked) {
-    border-color: var(--primary-color);
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.shading-option:has(input:checked) .shading-name {
+    color: white;
 }
 
 .shading-thumb {
