@@ -851,4 +851,8 @@ btnVideo.addEventListener('click', async () => {
 });
 
 // ── Restore on load ───────────────────────────────────────────────────────────
-restoreSession();
+restoreSession().finally(() => {
+    // Remove anti-FOUC guard once session restore attempt is complete,
+    // whether it succeeded (html.loaded is set) or not.
+    document.documentElement.classList.remove('has-session');
+});

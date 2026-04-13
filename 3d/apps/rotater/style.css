@@ -1,9 +1,45 @@
 :root {
-    --primary-color: #2E2B74;
-    --text-color: #333;
-    --bg-color: #F0EEFF;
-    --card-bg: #ffffff;
-    --border-color: #ddd;
+    /* ── Blueberry palette ── */
+    --palette-blueberry-100: #F0EEFF;
+    --palette-blueberry-200: #DBD7FF;
+    --palette-blueberry-300: #B3A8F7;
+    --palette-blueberry-500: #2E2B74;
+    --palette-blueberry-800: #1E193E;
+    --palette-blueberry-900: #15122B;
+
+    /* ── Global palette ── */
+    --palette-base-100: #FBFBFD;
+    --palette-base-800: #2A2A30;
+    --palette-green-500: #00800C;
+    --palette-yellow-500: #FFB300;
+    --palette-red-500: #D32F2F;
+
+    /* ── Semantic — Blueberry theme ── */
+    --color-primary: var(--palette-blueberry-500);
+    --color-primary-darker: var(--palette-blueberry-800);
+    --color-primary-lighter: var(--palette-blueberry-300);
+    --color-background-darkest: var(--palette-blueberry-900);
+    --color-surface: var(--palette-blueberry-100);
+    --color-background: var(--palette-blueberry-200);
+
+    /* ── Semantic — Global ── */
+    --color-text: var(--palette-base-800);
+    --color-surface-alt: var(--palette-base-800);
+    --color-success: var(--palette-green-500);
+    --color-warning: var(--palette-yellow-500);
+    --color-error: var(--palette-red-500);
+
+    /* ── App aliases (used throughout existing CSS) ── */
+    --primary-color: var(--color-primary);
+    --text-color: var(--color-text);
+    --bg-color: var(--color-surface);
+    --card-bg: var(--palette-base-100);
+    --border-color: #d8d5ee;
+}
+
+/* Prevent FOUC on hard refresh when a previous session exists */
+html.has-session:not(.loaded) body {
+    visibility: hidden;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -39,13 +75,11 @@ header {
     margin-bottom: 40px;
 }
 
-h1 {
-    margin: 0 0 6px;
-    color: var(--primary-color);
-    font-size: 4rem;
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -0.02em;
+.logo {
+    height: 64px;
+    width: auto;
+    display: block;
+    margin: 0 auto 8px;
 }
 
 header>p {
@@ -68,7 +102,7 @@ header>p {
 .upload-section:hover,
 main.drag-over .upload-section {
     border-color: var(--primary-color);
-    background: #f8f6ff;
+    background: var(--color-surface);
 }
 
 .drop-hint {
@@ -172,8 +206,8 @@ html.loaded header {
     gap: 12px;
 }
 
-html.loaded h1 {
-    font-size: 1.6rem;
+html.loaded .logo {
+    height: 32px;
     margin: 0;
 }
 
@@ -222,7 +256,7 @@ html.loaded .viewer-section.hidden {
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    background: #0a0a12;
+    background: var(--color-background-darkest);
 }
 
 .canvas-wrap canvas {
@@ -339,7 +373,7 @@ html.loaded .controls-bar {
     gap: 12px;
     border-top: 1px solid var(--border-color);
     padding: 14px 20px;
-    background: #fafafa;
+    background: var(--palette-base-100);
 }
 
 html.loaded .controls-bar.hidden {
