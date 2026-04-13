@@ -88,14 +88,14 @@ function initThree() {
     camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
 
     // Three-point lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-    const key = new THREE.DirectionalLight(0xffffff, 1.8);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const key = new THREE.DirectionalLight(0xffffff, 2.0);
     key.position.set(1.5, 2.0, 1.5);
     scene.add(key);
     const fill = new THREE.DirectionalLight(0xffffff, 0.4);
     fill.position.set(-2, 0.5, -1);
     scene.add(fill);
-    const rim = new THREE.DirectionalLight(0xffffff, 0.55);
+    const rim = new THREE.DirectionalLight(0xffffff, 0.5);
     rim.position.set(0.5, -1, -2);
     scene.add(rim);
 
@@ -129,7 +129,7 @@ function getMaterial(shading, color) {
     if (shading === 'flat') return new THREE.MeshBasicMaterial(base);
     if (shading === 'phong') return new THREE.MeshPhongMaterial({ ...base, shininess: 64, specular: '#222233' });
     // metallic
-    return new THREE.MeshStandardMaterial({ ...base, metalness: 0.75, roughness: 0.2 });
+    return new THREE.MeshStandardMaterial({ ...base, metalness: 0.65, roughness: 0.3 });
 }
 
 // ── STL Loading ───────────────────────────────────────────────────────────────
