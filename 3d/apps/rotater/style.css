@@ -296,8 +296,12 @@ html.loaded .viewer-section.hidden {
     left: 50px;
 }
 
-.rotate-cw-btn {
+.front-view-btn {
     left: 90px;
+}
+
+.rotate-cw-btn {
+    left: 130px;
 }
 
 /* ── Controls bar reset camera button ── */

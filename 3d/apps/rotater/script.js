@@ -405,6 +405,15 @@ document.getElementById('btnRotateCCW').addEventListener('click', () => {
     renderer.render(scene, camera);
 });
 
+document.getElementById('btnFrontView').addEventListener('click', () => {
+    if (!mesh) return;
+    const dist = camera.position.length();
+    camera.position.set(0, 0, dist);
+    camera.lookAt(0, 0, 0);
+    controls.update();
+    renderer.render(scene, camera);
+});
+
 document.getElementById('btnRotateCW').addEventListener('click', () => {
     if (!mesh) return;
     mesh.rotation.y += Math.PI / 2;
