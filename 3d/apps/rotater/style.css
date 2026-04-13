@@ -436,6 +436,7 @@ select {
 .radio-option {
     display: flex;
     align-items: center;
+    gap: 5px;
     padding: 5px 12px;
     font-size: 0.85rem;
     font-weight: 500;
@@ -446,6 +447,12 @@ select {
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.15s, color 0.15s;
+}
+
+.rot-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
 }
 
 .radio-option:not(:last-child) {

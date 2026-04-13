@@ -155,7 +155,7 @@ function loadSTLBuffer(buffer, name) {
     document.getElementById('compactBtnLabel').textContent = 'Replace STL';
     // Reset pause state on new load
     isPaused = false;
-    controls.autoRotate = rotateModeEl.value !== 'none';
+    controls.autoRotate = rotateModeEl.value === 'spin';
     document.documentElement.classList.remove('rotation-paused');
     iconPause.style.display = '';
     iconPlay.style.display = 'none';
@@ -179,12 +179,13 @@ function placeCamera() {
 function loop() {
     requestAnimationFrame(loop);
     if (!isExporting) {
-        if (!isPaused && (rotateModeEl.value === 'tilt' || rotateModeEl.value === 'wobble') && mesh) {
+        if (!isPaused && rotateModeEl.value === 'wobble' && mesh) {
+            // Wobble: autoRotate drives azimuth + elevation sine wave
             controls.autoRotate = true;
             controls.update();
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
             const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
-            const MAX_EL = Math.PI / 2 - 0.05; // clamp below zenith to avoid lookAt flip
+            const MAX_EL = Math.PI / 2 - 0.05;
             const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
             const el = THREE.MathUtils.clamp(baseEl + Math.sin(tiltPhase) * swing, -MAX_EL, MAX_EL);
             const dist = camera.position.length();
@@ -195,8 +196,42 @@ function loop() {
                 dist * Math.cos(el) * Math.cos(az),
             );
             camera.lookAt(0, 0, 0);
+        } else if (!isPaused && rotateModeEl.value === 'tilt' && mesh) {
+            // Tilt: elevation-only sine wave, azimuth stays fixed
+            controls.autoRotate = false;
+            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+            const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+            const MAX_EL = Math.PI / 2 - 0.05;
+            const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
+            const el = THREE.MathUtils.clamp(baseEl + Math.sin(tiltPhase) * swing, -MAX_EL, MAX_EL);
+            const dist = camera.position.length();
+            const az = Math.atan2(camera.position.x, camera.position.z);
+            camera.position.set(
+                dist * Math.cos(el) * Math.sin(az),
+                dist * Math.sin(el),
+                dist * Math.cos(el) * Math.cos(az),
+            );
+            camera.lookAt(0, 0, 0);
+            controls.update();
+        } else if (!isPaused && rotateModeEl.value === 'swing' && mesh) {
+            // Swing: azimuth oscillates ±swingRange instead of full spin
+            controls.autoRotate = false;
+            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+            const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+            const MAX_EL = Math.PI / 2 - 0.05;
+            const el = Math.min(baseEl, MAX_EL);
+            const swingRange = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) * 3.6); // reuse range slider
+            const dist = camera.position.length();
+            const az = Math.sin(tiltPhase) * swingRange;
+            camera.position.set(
+                dist * Math.cos(el) * Math.sin(az),
+                dist * Math.sin(el),
+                dist * Math.cos(el) * Math.cos(az),
+            );
+            camera.lookAt(0, 0, 0);
+            controls.update();
         } else {
-            controls.autoRotate = !isPaused && rotateModeEl.value !== 'none';
+            controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin');
             controls.update();
         }
         renderer.render(scene, camera);
@@ -323,9 +358,9 @@ function handleFile(file) {
 fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
 
 function togglePause() {
-    if (rotateModeEl.value === 'none') return;
+    if (rotateModeEl.value === 'off') return;
     isPaused = !isPaused;
-    controls.autoRotate = !isPaused;
+    controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';
     document.documentElement.classList.toggle('rotation-paused', isPaused);
     iconPause.style.display = isPaused ? 'none' : '';
     iconPlay.style.display = isPaused ? '' : 'none';
@@ -335,14 +370,15 @@ function togglePause() {
 
 btnPause.addEventListener('click', togglePause);
 
-// Re-clicking the active rotation option pauses/resumes
-document.querySelectorAll('.radio-option').forEach(label => {
-    label.addEventListener('mousedown', () => {
-        label._wasChecked = label.querySelector('input').checked;
+// Re-clicking the active rotation option pauses/resumes.
+// We capture which input is checked on pointerdown (before browser changes it).
+document.querySelectorAll('input[name="rotateMode"]').forEach(input => {
+    input.addEventListener('pointerdown', () => {
+        input._alreadyChecked = input.checked;
     });
-    label.addEventListener('click', () => {
-        const input = label.querySelector('input');
-        if (label._wasChecked && input.value !== 'none') togglePause();
+    input.addEventListener('change', () => {
+        if (input._alreadyChecked && input.value !== 'off') togglePause();
+        input._alreadyChecked = false;
     });
 });
 
@@ -417,20 +453,21 @@ shadingEl.addEventListener('change', () => {
 
 rotateModeEl.addEventListener('change', () => {
     const m = rotateModeEl.value;
-    const isNone = m === 'none';
+    const isOff = m === 'off';
     // switching mode resumes rotation
-    if (isPaused && !isNone) {
+    if (isPaused && !isOff) {
         isPaused = false;
         iconPause.style.display = '';
         iconPlay.style.display = 'none';
         document.documentElement.classList.remove('rotation-paused');
     }
-    if (controls) controls.autoRotate = !isPaused && !isNone;
-    document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble');
-    document.documentElement.classList.toggle('none-mode', isNone);
-    btnGif.disabled = isNone;
-    btnVideo.disabled = isNone;
-    document.getElementById('gifLoop').disabled = isNone;
+    tiltPhase = 0;
+    if (controls) controls.autoRotate = !isPaused && m === 'spin';
+    document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble' || m === 'swing');
+    document.documentElement.classList.toggle('none-mode', isOff);
+    btnGif.disabled = isOff;
+    btnVideo.disabled = isOff;
+    document.getElementById('gifLoop').disabled = isOff;
     saveSettings();
 });
 
@@ -500,9 +537,9 @@ elevSlider.addEventListener('input', () => {
 const setStatus = msg => { statusEl.textContent = msg; };
 const setExporting = v => {
     isExporting = v;
-    const isNone = rotateModeEl.value === 'none';
-    btnGif.disabled = v || isNone;
-    btnVideo.disabled = v || isNone;
+    const isOff = rotateModeEl.value === 'off';
+    btnGif.disabled = v || isOff;
+    btnVideo.disabled = v || isOff;
 };
 
 function download(data, filename, type) {
@@ -528,13 +565,14 @@ async function captureFrames(n) {
     const savedCamPos = camera.position.clone();
     const isTilt = rotateModeEl.value === 'tilt';
     const isWobble = rotateModeEl.value === 'wobble';
+    const isSwing = rotateModeEl.value === 'swing';
     const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
-    const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
+    const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
     const MAX_EL = Math.PI / 2 - 0.05;
 
     for (let i = 0; i < n; i++) {
         if (isTilt) {
-            const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * i / n) * swing, -MAX_EL, MAX_EL);
+            const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * i / n) * tiltSwing, -MAX_EL, MAX_EL);
             camera.position.set(
                 dist * Math.cos(el) * Math.sin(az),
                 dist * Math.sin(el),
@@ -542,7 +580,16 @@ async function captureFrames(n) {
             );
         } else if (isWobble) {
             const azimuth = -(2 * Math.PI * i) / n;
-            const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * i / n) * swing, -MAX_EL, MAX_EL);
+            const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * i / n) * tiltSwing, -MAX_EL, MAX_EL);
+            camera.position.set(
+                dist * Math.cos(el) * Math.sin(azimuth),
+                dist * Math.sin(el),
+                dist * Math.cos(el) * Math.cos(azimuth),
+            );
+        } else if (isSwing) {
+            const swingRange = tiltSwing * 3.6;
+            const el = Math.min(baseEl, MAX_EL);
+            const azimuth = Math.sin(2 * Math.PI * i / n) * swingRange;
             camera.position.set(
                 dist * Math.cos(el) * Math.sin(azimuth),
                 dist * Math.sin(el),
@@ -609,7 +656,7 @@ btnGif.addEventListener('click', async () => {
         console.error(err);
     } finally {
         setExporting(false);
-        controls.autoRotate = rotateModeEl.value === 'spin';
+        controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';
         setTimeout(() => setStatus(''), 5000);
     }
 });
@@ -657,13 +704,14 @@ btnVideo.addEventListener('click', async () => {
         const savedCamPos = camera.position.clone();
         const isTilt = rotateModeEl.value === 'tilt';
         const isWobble = rotateModeEl.value === 'wobble';
+        const isSwing = rotateModeEl.value === 'swing';
         const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
-        const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
+        const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
         const MAX_EL = Math.PI / 2 - 0.05;
 
         for (let f = 0; f < n; f++) {
             if (isTilt) {
-                const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * f / n) * swing, -MAX_EL, MAX_EL);
+                const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * f / n) * tiltSwing, -MAX_EL, MAX_EL);
                 camera.position.set(
                     dist * Math.cos(el) * Math.sin(az),
                     dist * Math.sin(el),
@@ -671,7 +719,16 @@ btnVideo.addEventListener('click', async () => {
                 );
             } else if (isWobble) {
                 const azimuth = -(2 * Math.PI * f) / n;
-                const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * f / n) * swing, -MAX_EL, MAX_EL);
+                const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * f / n) * tiltSwing, -MAX_EL, MAX_EL);
+                camera.position.set(
+                    dist * Math.cos(el) * Math.sin(azimuth),
+                    dist * Math.sin(el),
+                    dist * Math.cos(el) * Math.cos(azimuth),
+                );
+            } else if (isSwing) {
+                const swingRange = tiltSwing * 3.6;
+                const el = Math.min(baseEl, MAX_EL);
+                const azimuth = Math.sin(2 * Math.PI * f / n) * swingRange;
                 camera.position.set(
                     dist * Math.cos(el) * Math.sin(azimuth),
                     dist * Math.sin(el),
@@ -714,7 +771,7 @@ btnVideo.addEventListener('click', async () => {
         console.error(err);
     } finally {
         setExporting(false);
-        controls.autoRotate = rotateModeEl.value !== 'tilt';
+        controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';
         setTimeout(() => setStatus(''), 5000);
     }
 });
