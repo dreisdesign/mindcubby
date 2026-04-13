@@ -187,6 +187,9 @@ html.loaded .compact-btn {
     padding: 7px 14px;
     font-size: 0.85rem;
     flex-shrink: 0;
+    background: transparent;
+    border: 1.5px solid #bbb;
+    color: #555;
 }
 
 /* ── Main canvas area (loaded) ── */
@@ -290,11 +293,37 @@ html.loaded .viewer-section.hidden {
 }
 
 .rotate-ccw-btn {
-    left: 90px;
+    left: 50px;
 }
 
 .rotate-cw-btn {
-    left: 130px;
+    left: 90px;
+}
+
+/* ── Controls bar reset camera button ── */
+
+.reset-cam-btn {
+    margin-left: auto;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: transparent;
+    border: 1px solid #ccc;
+    color: #666;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.reset-cam-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 /* ── Controls bar (loaded) ── */
@@ -524,6 +553,21 @@ button {
     cursor: not-allowed;
 }
 
+.export-btn {
+    background: white;
+    color: var(--primary-color);
+    border: 1.5px solid var(--primary-color);
+}
+
+.export-btn:hover {
+    background: rgba(46, 43, 116, 0.06);
+}
+
+.export-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
 .export-status {
     font-size: 0.82rem;
     color: #666;
@@ -555,7 +599,7 @@ button {
     overflow: hidden;
 }
 
-.gif-group-box>.primary-btn {
+.gif-group-box>.export-btn {
     border-radius: 4px 0 0 4px;
 }
 

@@ -220,7 +220,7 @@ function loop() {
             const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
             const MAX_EL = Math.PI / 2 - 0.05;
             const el = Math.min(baseEl, MAX_EL);
-            const swingRange = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) * 3.6); // reuse range slider
+            const swingRange = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
             const dist = camera.position.length();
             const az = Math.sin(tiltPhase) * swingRange;
             camera.position.set(
@@ -302,14 +302,16 @@ function restoreSettings() {
         elevSlider.value = s.elevation;
         elevVal.textContent = elevSlider.value + '°';
         if (s.rotateMode) rotateModeEl.value = s.rotateMode;
-        if (s.tiltRange) { tiltRangeSlider.value = s.tiltRange; tiltRangeVal.textContent = s.tiltRange + '°'; }
         const m = rotateModeEl.value;
-        document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble');
-        const isNone = m === 'none';
-        document.documentElement.classList.toggle('none-mode', isNone);
-        btnGif.disabled = isNone;
-        btnVideo.disabled = isNone;
-        document.getElementById('gifLoop').disabled = isNone;
+        if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
+        if (m === 'swing' || m === 'tilt' || m === 'wobble') updateRangeSliderForMode(m);
+        else tiltRangeVal.textContent = (s.tiltRange || tiltRangeSlider.value) + '°';
+        document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble' || m === 'swing');
+        const isOff = m === 'off';
+        document.documentElement.classList.toggle('none-mode', isOff);
+        btnGif.disabled = isOff;
+        btnVideo.disabled = isOff;
+        document.getElementById('gifLoop').disabled = isOff;
         updateShadingThumbs();
         updateColorSwatches();
     } catch (e) { }
@@ -382,8 +384,9 @@ document.querySelectorAll('input[name="rotateMode"]').forEach(input => {
     });
 });
 
-document.getElementById('btnResetZoom').addEventListener('click', () => {
-    if (mesh) placeCamera();
+document.getElementById('btnResetCamera').addEventListener('click', () => {
+    if (!mesh) return;
+    if (confirm('Reset camera to default view?')) placeCamera();
 });
 
 document.getElementById('btnRotateCCW').addEventListener('click', () => {
@@ -443,6 +446,27 @@ function updateColorSwatches() {
     document.getElementById('bgSwatch').style.background = bgPick.value;
 }
 
+function updateRangeSliderForMode(mode) {
+    if (mode === 'swing') {
+        tiltRangeSlider.min = '0';
+        tiltRangeSlider.max = '180';
+        tiltRangeSlider.step = '15';
+        if (parseFloat(tiltRangeSlider.value) > 180) tiltRangeSlider.value = '90';
+        if (parseFloat(tiltRangeSlider.value) < 0) tiltRangeSlider.value = '90';
+        document.getElementById('tiltRangeTicks').innerHTML =
+            '<span>0°</span><span>30°</span><span>60°</span><span>90°</span><span>120°</span><span>150°</span><span>180°</span>';
+    } else {
+        tiltRangeSlider.min = '10';
+        tiltRangeSlider.max = '50';
+        tiltRangeSlider.step = '10';
+        if (parseFloat(tiltRangeSlider.value) > 50) tiltRangeSlider.value = '30';
+        if (parseFloat(tiltRangeSlider.value) < 10) tiltRangeSlider.value = '10';
+        document.getElementById('tiltRangeTicks').innerHTML =
+            '<span>10°</span><span>20°</span><span>30°</span><span>40°</span><span>50°</span>';
+    }
+    tiltRangeVal.textContent = tiltRangeSlider.value + '°';
+}
+
 colorPick.addEventListener('input', () => {
     if (mesh) mesh.material.color.set(colorPick.value);
     updateShadingThumbs();
@@ -480,6 +504,7 @@ rotateModeEl.addEventListener('change', () => {
     btnGif.disabled = isOff;
     btnVideo.disabled = isOff;
     document.getElementById('gifLoop').disabled = isOff;
+    if (m === 'swing' || m === 'tilt' || m === 'wobble') updateRangeSliderForMode(m);
     saveSettings();
 });
 
@@ -599,7 +624,7 @@ async function captureFrames(n) {
                 dist * Math.cos(el) * Math.cos(azimuth),
             );
         } else if (isSwing) {
-            const swingRange = tiltSwing * 3.6;
+            const swingRange = tiltSwing;
             const el = Math.min(baseEl, MAX_EL);
             const azimuth = Math.sin(2 * Math.PI * i / n) * swingRange;
             camera.position.set(
@@ -738,7 +763,7 @@ btnVideo.addEventListener('click', async () => {
                     dist * Math.cos(el) * Math.cos(azimuth),
                 );
             } else if (isSwing) {
-                const swingRange = tiltSwing * 3.6;
+                const swingRange = tiltSwing;
                 const el = Math.min(baseEl, MAX_EL);
                 const azimuth = Math.sin(2 * Math.PI * f / n) * swingRange;
                 camera.position.set(
