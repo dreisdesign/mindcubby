@@ -269,7 +269,20 @@ function restoreSettings() {
 async function restoreSession() {
     restoreSettings();
     const saved = await loadFileFromIDB();
-    if (!saved) return;
+    if (!saved) {
+        // Load the demo model (not saved to IDB — user's own files take priority)
+        try {
+            const resp = await fetch('./benchy.stl');
+            if (!resp.ok) return;
+            const buffer = await resp.arrayBuffer();
+            fileNameEl.textContent = '3dbenchy.stl';
+            currentFileName = '3dbenchy';
+            if (!renderer) initThree();
+            controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+            loadSTLBuffer(buffer, '3dbenchy.stl');
+        } catch (e) { /* no demo available — stay on landing page */ }
+        return;
+    }
     fileNameEl.textContent = saved.name + ' ↩';
     currentFileName = saved.name.replace(/\.stl$/i, '');
     if (!renderer) initThree();
