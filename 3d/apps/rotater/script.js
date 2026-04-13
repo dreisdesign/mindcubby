@@ -259,7 +259,7 @@ function restoreSettings() {
         speedSlider.value = s.speed;
         speedVal.textContent = parseFloat(s.speed).toFixed(1) + '×';
         elevSlider.value = s.elevation;
-        elevVal.textContent = s.elevation + '°';
+        elevVal.textContent = elevSlider.value + '°';
         if (s.rotateMode) rotateModeEl.value = s.rotateMode;
         if (s.tiltRange) { tiltRangeSlider.value = s.tiltRange; tiltRangeVal.textContent = s.tiltRange + '°'; }
         document.documentElement.classList.toggle('tilt-mode', rotateModeEl.value === 'tilt');
