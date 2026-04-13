@@ -51,6 +51,8 @@ const rotateModeEl = {
     set value(v) { const el = document.querySelector(`input[name="rotateMode"][value="${v}"]`); if (el) el.checked = true; },
     addEventListener(type, fn) { document.querySelectorAll('input[name="rotateMode"]').forEach(el => el.addEventListener(type, fn)); },
 };
+const tiltRangeSlider = document.getElementById('tiltRangeSlider');
+const tiltRangeVal = document.getElementById('tiltRangeVal');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let renderer, scene, camera, controls, mesh;
@@ -177,7 +179,8 @@ function loop() {
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
             const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
             const MAX_EL = Math.PI / 2 - 0.05; // clamp below zenith to avoid lookAt flip
-            const el = THREE.MathUtils.clamp(baseEl + Math.sin(tiltPhase) * (Math.PI / 9), -MAX_EL, MAX_EL);
+            const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
+            const el = THREE.MathUtils.clamp(baseEl + Math.sin(tiltPhase) * swing, -MAX_EL, MAX_EL);
             const dist = camera.position.length();
             const az = Math.atan2(camera.position.x, camera.position.z);
             camera.position.set(
@@ -241,6 +244,7 @@ function saveSettings() {
             speed: speedSlider.value,
             elevation: elevSlider.value,
             rotateMode: rotateModeEl.value,
+            tiltRange: tiltRangeSlider.value,
         }));
     } catch (e) { }
 }
@@ -257,6 +261,8 @@ function restoreSettings() {
         elevSlider.value = s.elevation;
         elevVal.textContent = s.elevation + '°';
         if (s.rotateMode) rotateModeEl.value = s.rotateMode;
+        if (s.tiltRange) { tiltRangeSlider.value = s.tiltRange; tiltRangeVal.textContent = s.tiltRange + '°'; }
+        document.documentElement.classList.toggle('tilt-mode', rotateModeEl.value === 'tilt');
     } catch (e) { }
 }
 
@@ -356,6 +362,12 @@ shadingEl.addEventListener('change', () => {
 
 rotateModeEl.addEventListener('change', () => {
     if (controls) controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';
+    document.documentElement.classList.toggle('tilt-mode', rotateModeEl.value === 'tilt');
+    saveSettings();
+});
+
+tiltRangeSlider.addEventListener('input', () => {
+    tiltRangeVal.textContent = tiltRangeSlider.value + '°';
     saveSettings();
 });
 
@@ -369,7 +381,18 @@ speedSlider.addEventListener('input', () => {
 
 elevSlider.addEventListener('input', () => {
     elevVal.textContent = elevSlider.value + '°';
-    if (mesh) placeCamera();
+    if (mesh && camera) {
+        const el = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+        const dist = camera.position.length();
+        const az = Math.atan2(camera.position.x, camera.position.z);
+        camera.position.set(
+            dist * Math.cos(el) * Math.sin(az),
+            dist * Math.sin(el),
+            dist * Math.cos(el) * Math.cos(az),
+        );
+        camera.lookAt(0, 0, 0);
+        controls.update();
+    }
     saveSettings();
 });
 
@@ -404,7 +427,7 @@ async function captureFrames(n) {
     const savedCamPos = camera.position.clone();
     const isTilt = rotateModeEl.value === 'tilt';
     const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
-    const swing = Math.PI / 9; // ±20°
+    const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
     const MAX_EL = Math.PI / 2 - 0.05;
 
     for (let i = 0; i < n; i++) {
@@ -524,7 +547,7 @@ btnVideo.addEventListener('click', async () => {
         const savedCamPos = camera.position.clone();
         const isTilt = rotateModeEl.value === 'tilt';
         const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
-        const swing = Math.PI / 9; // ±20°
+        const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
         const MAX_EL = Math.PI / 2 - 0.05;
 
         for (let f = 0; f < n; f++) {

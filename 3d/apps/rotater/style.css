@@ -347,6 +347,14 @@ html.loaded footer {
     min-width: 140px;
 }
 
+.tilt-range-label {
+    display: none;
+}
+
+html.tilt-mode .tilt-range-label {
+    display: flex;
+}
+
 .range-label>span {
     display: flex;
     justify-content: space-between;
