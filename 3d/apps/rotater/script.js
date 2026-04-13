@@ -427,9 +427,9 @@ document.getElementById('btnFrontView').addEventListener('click', () => {
     renderer.render(scene, camera);
 });
 
-document.getElementById('btnRotateCW').addEventListener('click', () => {
+document.getElementById('btnRotateX').addEventListener('click', () => {
     if (!mesh) return;
-    mesh.rotation.y += Math.PI / 2;
+    mesh.rotation.x += Math.PI / 2;
     renderer.render(scene, camera);
 });
 
