@@ -274,6 +274,16 @@ async function loadFileFromIDB() {
     }
 }
 
+async function clearIDB() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).delete('stl');
+    } catch (e) {
+        console.warn('Could not clear IndexedDB:', e);
+    }
+}
+
 const SETTINGS_KEY = 'rotater_settings';
 
 function saveSettings() {
@@ -521,6 +531,7 @@ document.getElementById('menuBenchy').addEventListener('click', async () => {
         const resp = await fetch('./benchy.stl');
         if (!resp.ok) return;
         const buffer = await resp.arrayBuffer();
+        await clearIDB();
         fileNameEl.textContent = '3dbenchy.stl';
         currentFileName = '3dbenchy';
         if (!renderer) initThree();
