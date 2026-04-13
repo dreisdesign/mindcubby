@@ -652,9 +652,10 @@ button {
     line-height: 1;
 }
 
-/* ── Flat tick label ── */
+/* ── Special tick labels ── */
 
-.tick--flat {
+.tick--flat,
+.tick--top {
     color: var(--primary-color) !important;
     font-weight: 700 !important;
 }

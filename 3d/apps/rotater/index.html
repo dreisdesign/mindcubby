@@ -32,7 +32,7 @@
                 </svg>
                 <span id="compactBtnLabel">Select STL</span>
             </label>
-            <button id="btnBenchy" class="benchy-btn" title="Load 3DBenchy demo">
+            <button id="btnBenchy" class="benchy-btn" title="Replace current model with demo (3D Benchy)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"
                     style="display:inline;margin-right:4px;vertical-align:middle" aria-hidden="true">
                     <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
@@ -57,8 +57,8 @@
             <div id="viewerSection" class="viewer-section hidden">
                 <div class="canvas-wrap">
                     <canvas id="canvas"></canvas>
-                    <button id="btnResetZoom" class="pause-btn reset-zoom-btn" title="Reset zoom"
-                        aria-label="Reset zoom">
+                    <button id="btnResetZoom" class="pause-btn reset-zoom-btn" title="Reset camera to default position"
+                        aria-label="Reset camera to default position">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <path
                                 d="M12.0002 23C10.6502 23 9.37936 22.7417 8.1877 22.225C6.99603 21.7083 5.95853 21.0083 5.0752 20.125C4.19186 19.2417 3.49186 18.2042 2.9752 17.0125C2.45853 15.8208 2.2002 14.55 2.2002 13.2C2.2002 12.8333 2.32936 12.5208 2.5877 12.2625C2.84603 12.0042 3.15853 11.875 3.5252 11.875C3.89186 11.875 4.20436 12.0042 4.4627 12.2625C4.72103 12.5208 4.8502 12.8333 4.8502 13.2C4.8502 15.1833 5.54603 16.8708 6.9377 18.2625C8.32936 19.6542 10.0169 20.35 12.0002 20.35C13.9835 20.35 15.671 19.6542 17.0627 18.2625C18.4544 16.8708 19.1502 15.1833 19.1502 13.2C19.1502 11.2167 18.4544 9.52918 17.0627 8.13751C15.671 6.74585 13.9835 6.05001 12.0002 6.05001L12.6502 6.70001C12.8835 6.93335 13.0085 7.22085 13.0252 7.56251C13.0419 7.90418 12.9335 8.20835 12.7002 8.47501C12.4669 8.75835 12.1627 8.90835 11.7877 8.92501C11.4127 8.94168 11.0919 8.81668 10.8252 8.55001L7.8752 5.67501C7.60853 5.40835 7.47103 5.09585 7.4627 4.73751C7.45436 4.37918 7.58353 4.06668 7.8502 3.80001L10.7002 0.950013C10.9669 0.683346 11.2794 0.554179 11.6377 0.562513C11.996 0.570846 12.3085 0.708346 12.5752 0.975013C12.8252 1.24168 12.9544 1.55001 12.9627 1.90001C12.971 2.25001 12.8419 2.55835 12.5752 2.82501L12.0002 3.40001C13.3502 3.40001 14.621 3.65835 15.8127 4.17501C17.0044 4.69168 18.0419 5.39168 18.9252 6.27501C19.8085 7.15835 20.5085 8.19585 21.0252 9.38751C21.5419 10.5792 21.8002 11.85 21.8002 13.2C21.8002 14.55 21.5419 15.8208 21.0252 17.0125C20.5085 18.2042 19.8085 19.2417 18.9252 20.125C18.0419 21.0083 17.0044 21.7083 15.8127 22.225C14.621 22.7417 13.3502 23 12.0002 23Z" />
@@ -116,6 +116,10 @@
                     Rotation
                     <div class="radio-group">
                         <label class="radio-option">
+                            <input type="radio" name="rotateMode" value="none">
+                            None
+                        </label>
+                        <label class="radio-option">
                             <input type="radio" name="rotateMode" value="spin" checked>
                             Spin
                         </label>
@@ -129,8 +133,35 @@
                         </label>
                     </div>
                 </div>
+                <label class="control-label range-label">
+                    <span>Speed <span id="speedVal">1.0×</span></span>
+                    <input type="range" id="speedSlider" min="0.5" max="4.0" step="0.5" value="1.0">
+                    <div class="slider-ticks">
+                        <span>0.5×</span>
+                        <span>1×</span>
+                        <span>1.5×</span>
+                        <span>2×</span>
+                        <span>2.5×</span>
+                        <span>3×</span>
+                        <span>3.5×</span>
+                        <span>4×</span>
+                    </div>
+                </label>
+                <label class="control-label range-label">
+                    <span>Tilt <span id="elevVal">30°</span></span>
+                    <input type="range" id="elevationSlider" min="0" max="90" step="15" value="30">
+                    <div class="slider-ticks">
+                        <span class="tick--flat">0°</span>
+                        <span>15°</span>
+                        <span>30°</span>
+                        <span>45°</span>
+                        <span>60°</span>
+                        <span>75°</span>
+                        <span class="tick--top">Top</span>
+                    </div>
+                </label>
                 <label class="control-label range-label tilt-range-label">
-                    <span>Tilt Range <span id="tiltRangeVal">20°</span></span>
+                    <span>Range <span id="tiltRangeVal">20°</span></span>
                     <input type="range" id="tiltRangeSlider" min="10" max="50" step="10" value="20">
                     <div class="slider-ticks">
                         <span>10°</span>
@@ -140,27 +171,11 @@
                         <span>50°</span>
                     </div>
                 </label>
-                <label class="control-label range-label">
-                    <span>Speed <span id="speedVal">1.0×</span></span>
-                    <input type="range" id="speedSlider" min="0.2" max="4" step="0.1" value="1.0">
-                </label>
-                <label class="control-label range-label">
-                    <span>Elevation <span id="elevVal">30°</span></span>
-                    <input type="range" id="elevationSlider" min="0" max="75" step="15" value="30">
-                    <div class="slider-ticks">
-                        <span class="tick--flat">Flat</span>
-                        <span>15°</span>
-                        <span>30°</span>
-                        <span>45°</span>
-                        <span>60°</span>
-                        <span>75°</span>
-                    </div>
-                </label>
             </div>
             <div class="export-row">
                 <div class="export-group">
                     <div class="gif-group-box">
-                        <button id="btnExportGif" class="primary-btn">
+                        <button id="btnExportGif" class="primary-btn" title="Save animated GIF (one full rotation)">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
                                 style="display:inline;margin-right:8px;vertical-align:middle">
                                 <path
@@ -177,7 +192,7 @@
                     <span id="estimateGif" class="export-estimate"></span>
                 </div>
                 <div class="export-group">
-                    <button id="btnExportVideo" class="secondary-btn">
+                    <button id="btnExportVideo" class="secondary-btn" title="Save MP4 video (one full rotation)">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
                             style="display:inline;margin-right:8px;vertical-align:middle">
                             <path
@@ -188,7 +203,7 @@
                     <span id="estimateMp4" class="export-estimate"></span>
                 </div>
                 <div class="export-group">
-                    <button id="btnExportPng" class="secondary-btn">
+                    <button id="btnExportPng" class="secondary-btn" title="Save current view as PNG">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
                             style="display:inline;margin-right:8px;vertical-align:middle">
                             <path

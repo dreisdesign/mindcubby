@@ -166,7 +166,8 @@ function loadSTLBuffer(buffer, name) {
 }
 
 function placeCamera() {
-    const el = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+    const MAX_EL = Math.PI / 2 - 0.02;
+    const el = Math.min(THREE.MathUtils.degToRad(parseFloat(elevSlider.value)), MAX_EL);
     const dist = modelRadius / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.5;
     camera.position.set(0, dist * Math.sin(el), dist * Math.cos(el));
     camera.lookAt(0, 0, 0);
@@ -194,7 +195,7 @@ function loop() {
             );
             camera.lookAt(0, 0, 0);
         } else {
-            controls.autoRotate = !isPaused;
+            controls.autoRotate = !isPaused && rotateModeEl.value !== 'none';
             controls.update();
         }
         renderer.render(scene, camera);
@@ -268,6 +269,9 @@ function restoreSettings() {
         if (s.tiltRange) { tiltRangeSlider.value = s.tiltRange; tiltRangeVal.textContent = s.tiltRange + '°'; }
         const m = rotateModeEl.value;
         document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble');
+        const isNone = m === 'none';
+        btnGif.disabled = isNone;
+        btnVideo.disabled = isNone;
         updateShadingThumbs();
     } catch (e) { }
 }
@@ -327,24 +331,6 @@ document.getElementById('btnResetZoom').addEventListener('click', () => {
     if (mesh) placeCamera();
 });
 
-// Only toggle pause on a true click (not after a drag)
-let _mouseDownPos = null;
-canvas.addEventListener('mousedown', e => { _mouseDownPos = { x: e.clientX, y: e.clientY }; });
-canvas.addEventListener('mouseup', e => {
-    if (!_mouseDownPos) return;
-    const dx = e.clientX - _mouseDownPos.x;
-    const dy = e.clientY - _mouseDownPos.y;
-    if (Math.sqrt(dx * dx + dy * dy) < 4 && mesh && !isExporting) btnPause.click();
-    _mouseDownPos = null;
-});
-
-document.addEventListener('keydown', e => {
-    if (e.code === 'Space' && !isExporting && mesh) {
-        e.preventDefault();
-        btnPause.click();
-    }
-});
-
 document.getElementById('btnExportPng').addEventListener('click', () => {
     if (!mesh) return;
     // Pause if not already paused
@@ -395,8 +381,11 @@ shadingEl.addEventListener('change', () => {
 
 rotateModeEl.addEventListener('change', () => {
     const m = rotateModeEl.value;
-    if (controls) controls.autoRotate = !isPaused;
+    const isNone = m === 'none';
+    if (controls) controls.autoRotate = !isPaused && !isNone;
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'wobble');
+    btnGif.disabled = isNone;
+    btnVideo.disabled = isNone;
     saveSettings();
 });
 
@@ -430,7 +419,8 @@ speedSlider.addEventListener('input', () => {
 elevSlider.addEventListener('input', () => {
     elevVal.textContent = elevSlider.value + '°';
     if (mesh && camera) {
-        const el = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+        const MAX_EL = Math.PI / 2 - 0.02;
+        const el = Math.min(THREE.MathUtils.degToRad(parseFloat(elevSlider.value)), MAX_EL);
         const dist = camera.position.length();
         const az = Math.atan2(camera.position.x, camera.position.z);
         camera.position.set(
@@ -448,8 +438,9 @@ elevSlider.addEventListener('input', () => {
 const setStatus = msg => { statusEl.textContent = msg; };
 const setExporting = v => {
     isExporting = v;
-    btnGif.disabled = v;
-    btnVideo.disabled = v;
+    const isNone = rotateModeEl.value === 'none';
+    btnGif.disabled = v || isNone;
+    btnVideo.disabled = v || isNone;
 };
 
 function download(data, filename, type) {
