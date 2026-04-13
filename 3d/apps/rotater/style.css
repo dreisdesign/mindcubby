@@ -725,9 +725,8 @@ button {
     box-shadow: 0 0 0 2px var(--primary-color);
 }
 
-.shading-option:has(input:checked) .shading-name {
-    color: white;
-}
+/* Selected label inherits --sh-name-color (JS-computed for correct contrast
+   on any bg). No forced override needed. */
 
 .shading-thumb {
     width: 32px;

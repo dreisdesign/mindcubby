@@ -460,11 +460,15 @@ dropZone.addEventListener('drop', e => {
 function updateShadingThumbs() {
     const c = new THREE.Color(colorPick.value);
     const bg = new THREE.Color(bgPick.value);
-    const shadow = c.clone().lerp(bg, 0.6);
-    const deep = c.clone().lerp(bg, 0.85);
-    // Label legibility: use light text on dark bg, dark text on light bg
+    // Phong/metallic shadows are darkened model color — bg-independent so
+    // the gradient always reads correctly regardless of canvas background.
+    const shadow = c.clone().multiplyScalar(0.45);
+    const deep   = c.clone().multiplyScalar(0.12);
+    // WCAG contrast: white text when bg luminance is below the 0.179 crossover
+    // (the point where white and black have equal contrast ratios).
+    // Use opaque values only — semi-transparent text fails on mid-range bgs.
     const lum = 0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b;
-    const nameColor = lum > 0.35 ? '#555' : 'rgba(255,255,255,0.55)';
+    const nameColor = lum < 0.179 ? '#ffffff' : '#2a2a30';
     const root = document.documentElement;
     root.style.setProperty('--sh-base', colorPick.value);
     root.style.setProperty('--sh-shadow', `#${shadow.getHexString()}`);
