@@ -11,6 +11,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [0.12.1] - 2026-04-13
+
+### Fixed
+- Reset to Benchy now clears IndexedDB so a hard refresh stays on Benchy instead of reverting to the previously uploaded STL
+
+## [0.12.0] - 2026-04-13
+
+### Added
+- CCW and CW 90° snap buttons on the canvas overlay — rotate the model's Y-axis by 90° without interrupting animation
+- Reset View button moved from canvas overlay to top-right of the controls bar; now includes icon + label + confirm dialog
+- Committed shared icon library (`3d/apps/icons/`) with 75+ Material-style SVG icons
+
+### Changed
+- Swing Range slider range corrected to 0°–180° (was 10–50 with a ×3.6 multiplier hack)
+- Range slider reconfigures dynamically when switching between Swing (0–180°, 7 ticks) and Tilt/Wobble (10–50°, 5 ticks)
+- Wobble icon updated to `arrow_split`
+- Swing icon updated to `arrow_range`
+- Download GIF/MP4/PNG all use new `.export-btn` style (outlined accent — white bg, accent border/text)
+- Replace STL button demoted to a neutral ghost button (no longer filled-primary)
+- Reset View removed from canvas overlay (no longer a `pause-btn` circle)
+
+## [0.11.0] - 2026-04-13
+
+### Added
+- Swing rotation mode — azimuth oscillates left/right through a partial arc set by the Range slider
+- SVG icons on all rotation mode buttons (Spin, Tilt, Wobble, Swing)
+- "Off" replaces "None" as the rotation mode label throughout
+
+### Fixed
+- Tilt mode was incorrectly doing wobble behavior (both shared `autoRotate=true`); split into separate loop branches — tilt uses `autoRotate=false` with a fixed azimuth
+- Re-click to pause was not working; replaced `mousedown`/`click` on `<label>` with `pointerdown`/`change` on `<input>` directly to avoid browser timing race
+
+### Changed
+- Live loop, GIF capture, and MP4 encode all have four separate branches: Wobble / Tilt / Swing / Spin
+
+## [0.10.1] - 2026-04-13
+
+### Fixed
+- Shading card background now uses the actual scene background color (`var(--sh-bg)`)
+- Shading label text color adapts to background luminance (light text on dark bg, dark text on light bg)
+- Checked shading card shows border highlight only — no background tint overlay
+
+## [0.10.0] - 2026-04-13
+
+### Added
+- Hamburger menu (☰) in header with "Reset to Benchy" action (replaces header Benchy button)
+- Re-click the active Rotation option to pause/resume (pause-hint ⏸/▶ shown on hover)
+- Colors section: Model and BG pickers displayed as equal-size color cards with labels
+
+### Changed
+- Shading preview thumbnails incorporate the scene background color into shadow/deep gradients
+- Speed, Tilt, and Range sliders reordered
+- `html.none-mode` disables Speed, Tilt, Range sliders and Loop toggle visually when Off is selected
+- Color picker size standardized to match shading card dimensions
+
+## [0.9.5] - 2026-04-13
+
+### Added
+- Elevation slider extended to 90° (Top); "Top" tick label shown in accent color
+- Speed slider snaps: 0.5×–4.0× in 0.5 steps (8 ticks)
+- Off mode disables GIF and MP4 export buttons and the Loop toggle
+- Tooltips on all control buttons
+
+### Changed
+- "Elevation" label renamed to "Tilt"
+- Slider order: Speed → Tilt → Range
+- Canvas click-to-pause and spacebar shortcut removed (replaced by dedicated pause button and re-click in 0.10.0)
+
+## [0.9.4] - 2026-04-13
+
+### Added
+- Shading thumbnails dynamically reflect the current model and background colors (Three.js `Color.lerp`)
+- Benchy button replaced with confirm dialog + swap icon before loading
+
+### Fixed
+- Tilt orbit mode now uses `autoRotate=true` (was incorrectly excluded, causing no azimuth movement)
+
 ## [0.9.3] - 2026-04-11
 
 ### Added
