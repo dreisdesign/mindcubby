@@ -330,12 +330,41 @@ html.loaded .viewer-section.hidden {
     left: 50px;
 }
 
-.front-view-btn {
+.rotate-x-btn {
     left: 90px;
 }
 
-.rotate-x-btn {
-    left: 130px;
+.face-nav {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+}
+
+.face-btn {
+    height: 26px;
+    padding: 0 8px;
+    background: rgba(0, 0, 0, 0.45);
+    color: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 13px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition: background 0.2s, color 0.2s, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.face-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+}
+
+.face-btn:active {
+    transform: scale(0.88);
+    transition: background 0.1s, color 0.1s, transform 0.06s ease-in;
 }
 
 /* ── Controls bar reset camera button ── */
@@ -372,7 +401,7 @@ html.loaded .controls-bar {
     flex-direction: column;
     gap: 12px;
     border-top: 1px solid var(--border-color);
-    padding: 14px 20px;
+    padding: 16px 20px;
     background: var(--palette-base-100);
 }
 
@@ -383,12 +412,7 @@ html.loaded .controls-bar.hidden {
 /* ── Footer (loaded) ── */
 
 html.loaded footer {
-    flex-shrink: 0;
-    margin-top: 0;
-    padding: 6px;
-    border-top: 1px solid var(--border-color);
-    font-size: 0.72rem;
-    color: #bbb;
+    display: none;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -399,7 +423,7 @@ html.loaded footer {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
-    align-items: flex-end;
+    align-items: flex-start;
 }
 
 .controls-row--motion {
@@ -416,6 +440,22 @@ html.loaded footer {
     padding-top: 14px;
     margin-top: 2px;
     border-top: 2px solid var(--border-color);
+}
+
+.downloads-section {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.export-anim-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    flex-wrap: wrap;
 }
 
 .control-label {
@@ -440,6 +480,10 @@ html.loaded footer {
 
 html.tilt-mode .tilt-range-label {
     display: flex;
+}
+
+html.tilt-mode .elev-label {
+    display: none;
 }
 
 .range-label>span {
@@ -595,6 +639,7 @@ button {
     background: white;
     color: var(--primary-color);
     border: 1.5px solid var(--primary-color);
+    border-radius: 9999px;
 }
 
 .export-btn:hover {
@@ -633,12 +678,12 @@ button {
 .gif-group-box {
     display: flex;
     align-items: stretch;
-    border-radius: 4px;
+    border-radius: 9999px;
     overflow: hidden;
 }
 
 .gif-group-box>.export-btn {
-    border-radius: 4px 0 0 4px;
+    border-radius: 9999px 0 0 9999px;
 }
 
 .loop-toggle-label {
@@ -652,7 +697,7 @@ button {
     background: white;
     border: 1px solid var(--border-color);
     border-left: none;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 9999px 9999px 0;
     cursor: pointer;
     user-select: none;
     white-space: nowrap;
@@ -898,7 +943,12 @@ html.loaded .menu-btn {
     border-color: var(--primary-color);
 }
 
-/* ── None-mode: disable motion controls ── */
+.orbit-hint {
+    margin: 2px 0 0;
+    font-size: 0.72rem;
+    color: #666;
+    text-align: center;
+}
 
 html.none-mode .range-label {
     opacity: 0.38;
@@ -911,22 +961,3 @@ html.none-mode .loop-toggle-label {
 }
 
 /* ── Rotation re-click pause hint ── */
-
-.pause-hint {
-    display: none;
-    margin-left: 4px;
-    font-size: 0.8em;
-    opacity: 0.75;
-}
-
-.pause-hint::before {
-    content: '⏸';
-}
-
-html.rotation-paused .pause-hint::before {
-    content: '▶';
-}
-
-.radio-option:has(input:checked):hover .pause-hint {
-    display: inline;
-}

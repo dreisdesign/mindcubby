@@ -22,10 +22,8 @@ python3 -m http.server 8765
 ### Viewer controls
 
 - **Drag** to orbit · **Scroll** to zoom · **Right-drag** to pan
-- **Pause/Resume** button (or re-click the active Rotation option) to pause/resume animation
-- **↺** button on the viewer snaps the model's Y-axis 90° CCW without interrupting animation
-- **X-axis** button on the viewer snaps the model 90° around its X-axis (tips the model forward)
-- **Reset View** button (top-right of controls) resets the camera to the default position
+- **Pause/Resume** button (⏸/▶ at lower-left of viewer) or **Spacebar** to toggle
+- **Front / Back / Left / Right / Top / Bottom** face buttons snap the model to that face view
 
 ### Appearance
 
@@ -43,10 +41,10 @@ Shading preview cards update live to reflect the current model and background co
 
 | Control | Description |
 |---|---|
-| Rotation | Off / Spin / Tilt / Wobble / Swing (see below) |
+| Rotation | Off / Spin / Tilt / Swing (see below) |
 | Speed | Playback speed: 0.5× – 4× |
-| Tilt | Camera elevation: 0° (flat side-on) → Top (directly above) |
-| Range | Oscillation amplitude — 10°–50° for Tilt/Wobble; 0°–180° for Swing |
+| Tilt | Camera elevation: 0° (flat side-on) → Top (directly above). Hidden when Tilt rotation is active (orbit controls elevation instead) |
+| Range | Oscillation amplitude — 10°–50° for Tilt; 0°–180° for Swing |
 
 **Rotation modes:**
 
@@ -54,18 +52,17 @@ Shading preview cards update live to reflect the current model and background co
 |---|---|
 | Off | No rotation; GIF/MP4 export disabled |
 | Spin | Continuous 360° orbit around the Y axis |
-| Tilt | Camera elevation oscillates up/down; azimuth stays fixed |
-| Wobble | Full 360° spin combined with simultaneous elevation oscillation |
+| Tilt | Elevation oscillates up/down from wherever you orbit to; azimuth freely orbitable |
 | Swing | Azimuth oscillates left/right through a partial arc (Range sets the half-angle) |
 
 ### Export
 
 | Button | Output |
 |---|---|
-| Download GIF | Animated GIF — one full motion cycle |
+| Animation → Download GIF | Animated GIF — one full motion cycle |
 | Loop toggle | Whether the GIF loops; does not affect MP4 |
-| Download MP4 | H.264 MP4 video — one full motion cycle (requires Chrome/Edge/Safari 16.4+) |
-| Download PNG | Still image of the current view |
+| Animation → Download MP4 | H.264 MP4 video — one full motion cycle (requires Chrome/Edge/Safari 16.4+) |
+| Image → Download PNG | Still image of the current view |
 
 All export is completely client-side — your STL file never leaves your machine.
 

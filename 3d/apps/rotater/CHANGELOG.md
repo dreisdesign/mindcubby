@@ -11,6 +11,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [0.14.0] - 2026-04-14
+
+### Added
+- Face navigation buttons (Front / Back / Left / Right / Top / Bottom) on the canvas overlay — click to snap to any face of the model
+- Spacebar toggles pause/resume
+- PNG export size estimate below Download PNG button (~0.5 MB · 720×720px)
+
+### Changed
+- Download buttons moved to the right of Shading in the controls bar ("Animation" and "Image" section titles)
+- Face-nav buttons centered on the canvas overlay
+- Controls bar padding increased
+- "Drag to orbit" hint moved from footer into controls bar; contrast improved to meet WCAG AA
+- Export buttons use pill border-radius (`border-radius: 9999px`) per Blueberry design system `--radius-button`
+- GIF + Loop toggle compound button uses matching pill shape
+- Colors and Shading sections are now top-aligned
+- Tilt mode: camera elevation now follows user orbit (base elevation tracks user drag, sine oscillation layered on top) — azimuth freely orbitable
+- Tilt elevation slider hidden when Tilt rotation is selected (was redundant — orbit controls the base elevation)
+- Wobble rotation mode removed
+- Tilt orbit fix: `controls.update()` now called before reading camera position, so user drag input is applied before the tilt recalculation
+
+### Fixed
+- Orbit fighting in Tilt mode — camera position was overwritten before OrbitControls could apply drag input
+
 ## [0.13.0] - 2026-04-13
 
 ### Added
