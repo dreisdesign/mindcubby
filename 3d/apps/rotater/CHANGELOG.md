@@ -10,7 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- v0.2.0 output: 698 KB GIF @ 144 frames, 24 fps, 720×720px -->
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
+## [0.16.0] - 2026-04-14
 
+### Added
+- **Dark / light theme** — blueberry palette dark mode; persisted to `rotater-theme` in localStorage; applied before first paint (no flash)
+- **Settings overlay** — hamburger button now opens a Smoothie-styled modal panel (backdrop + 280px card, `border-radius: 16px`, `box-shadow`) instead of a small dropdown; Escape and outside-click dismiss; focus moves to close button on open
+- Theme toggle button in settings panel (moon/sun icon + label, updates on toggle)
+
+### Changed
+- Downloads section: Animation + Image side-by-side on ≥ 560px; stacks vertically on narrow screens
+- Surface colors use `--color-surface-raised` token throughout (radio buttons, selects, color swatches, controls bar, menu button) — all update correctly in dark mode
+- Controls bar, settings panel, and form controls animate smoothly on theme switch (`transition: background 0.25s`)
+- Settings menu items use full-width action buttons with icon + label (matches Smoothie `labs-settings-card` visual pattern)
 ## [0.15.0] - 2026-04-14
 
 ### Added

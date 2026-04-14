@@ -601,16 +601,14 @@ tiltRangeSlider.addEventListener('input', () => {
 });
 
 document.getElementById('menuResetSettings').addEventListener('click', () => {
-    document.getElementById('menuDropdown').hidden = true;
-    document.getElementById('btnMenu').setAttribute('aria-expanded', 'false');
+    closeSettings();
     try { localStorage.removeItem(SETTINGS_KEY); localStorage.removeItem('rotater_hasSession'); } catch (e) { }
     history.replaceState(null, '', location.pathname);
     location.reload();
 });
 
 document.getElementById('menuBenchy').addEventListener('click', async () => {
-    document.getElementById('menuDropdown').hidden = true;
-    document.getElementById('btnMenu').setAttribute('aria-expanded', 'false');
+    closeSettings();
     if (mesh && !confirm('Replace the current model with 3D Benchy?')) return;
     try {
         const resp = await fetch('./benchy.stl');
@@ -625,19 +623,51 @@ document.getElementById('menuBenchy').addEventListener('click', async () => {
     } catch (e) { }
 });
 
+// ── Settings overlay ──────────────────────────────────────────────────────────
+
 const btnMenu = document.getElementById('btnMenu');
-const menuDropdown = document.getElementById('menuDropdown');
-btnMenu.addEventListener('click', e => {
-    e.stopPropagation();
-    const open = !menuDropdown.hidden;
-    menuDropdown.hidden = open;
-    btnMenu.setAttribute('aria-expanded', String(!open));
-});
-document.addEventListener('click', () => {
-    if (!menuDropdown.hidden) {
-        menuDropdown.hidden = true;
-        btnMenu.setAttribute('aria-expanded', 'false');
-    }
+const settingsOverlay = document.getElementById('settingsOverlay');
+const btnCloseSettings = document.getElementById('btnCloseSettings');
+
+function openSettings() {
+    settingsOverlay.hidden = false;
+    btnMenu.setAttribute('aria-expanded', 'true');
+    btnCloseSettings.focus();
+}
+
+function closeSettings() {
+    settingsOverlay.hidden = true;
+    btnMenu.setAttribute('aria-expanded', 'false');
+}
+
+btnMenu.addEventListener('click', e => { e.stopPropagation(); openSettings(); });
+btnCloseSettings.addEventListener('click', closeSettings);
+settingsOverlay.addEventListener('click', e => { if (e.target === settingsOverlay) closeSettings(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !settingsOverlay.hidden) closeSettings(); });
+
+// ── Theme toggle ──────────────────────────────────────────────────────────────
+
+function applyTheme(theme) {
+    document.documentElement.classList.toggle('theme-dark', theme === 'dark');
+    document.documentElement.classList.toggle('theme-light', theme === 'light');
+    try { localStorage.setItem('rotater-theme', theme); } catch (e) { }
+    const isDark = theme === 'dark';
+    const label = document.getElementById('themeToggleLabel');
+    const path = document.getElementById('themeToggleIconPath');
+    if (label) label.textContent = isDark ? 'Turn on light mode' : 'Turn on dark mode';
+    if (path) path.setAttribute('d', isDark
+        // Sun icon for "switch to light"
+        ? 'M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z'
+        // Moon icon for "switch to dark"
+        : 'M9.5 2c-1.82 0-3.53.5-5 1.35C7.99 5.08 10 8.3 10 12s-2.01 6.92-5.5 8.65C6.29 21.5 7.82 22 9.5 22 14.75 22 19 17.52 19 12S14.75 2 9.5 2z'
+    );
+}
+
+// Sync label/icon to whatever theme was applied on load
+applyTheme(document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light');
+
+document.getElementById('btnThemeToggle').addEventListener('click', () => {
+    applyTheme(document.documentElement.classList.contains('theme-dark') ? 'light' : 'dark');
 });
 
 speedSlider.addEventListener('input', () => {

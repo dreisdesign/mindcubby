@@ -29,6 +29,15 @@
     --color-warning: var(--palette-yellow-500);
     --color-error: var(--palette-red-500);
 
+    /* ── Surface ── */
+    --color-surface-raised: #ffffff;
+    /* panel/card surfaces above background */
+    --color-on-surface: var(--palette-blueberry-900);
+    --color-label: #666;
+    /* muted section labels */
+    --color-hint: #aaa;
+    /* hints and estimates */
+
     /* ── App aliases (used throughout existing CSS) ── */
     --primary-color: var(--color-primary);
     --text-color: var(--color-text);
@@ -43,6 +52,24 @@
     /* 11px — small UI: section headers, meta, hints */
     --text-md: 0.8125rem;
     /* 13px — interface: buttons, radio, controls */
+}
+
+/* ── Dark theme overrides ─────────────────────────────────────────────────── */
+
+html.theme-dark {
+    --palette-base-100: var(--palette-blueberry-800);
+    --bg-color: var(--palette-blueberry-900);
+    --card-bg: var(--palette-blueberry-800);
+    --color-surface: var(--palette-blueberry-800);
+    --color-surface-raised: var(--palette-blueberry-800);
+    --color-background: var(--palette-blueberry-900);
+    --color-background-darkest: var(--palette-blueberry-900);
+    --text-color: var(--palette-blueberry-100);
+    --color-text: var(--palette-blueberry-100);
+    --color-on-surface: var(--palette-blueberry-100);
+    --color-label: var(--palette-blueberry-300);
+    --color-hint: var(--palette-blueberry-300);
+    --border-color: rgba(179, 168, 247, 0.18);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -438,7 +465,8 @@ html.loaded .controls-bar {
     gap: 12px;
     border-top: 1px solid var(--border-color);
     padding: 16px 20px;
-    background: var(--palette-base-100);
+    background: var(--color-surface-raised);
+    transition: background 0.2s, border-color 0.2s;
 }
 
 html.loaded .controls-bar.hidden {
@@ -481,9 +509,10 @@ html.loaded footer {
 .downloads-section {
     flex: 1;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 20px;
 }
 
 .export-anim-row {
@@ -498,7 +527,7 @@ html.loaded footer {
     flex-direction: column;
     font-size: var(--text-sm);
     font-weight: 700;
-    color: #666;
+    color: var(--color-label, #666);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     gap: 4px;
@@ -571,7 +600,8 @@ select {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: var(--text-md);
-    background: white;
+    background: var(--color-surface-raised, white);
+    color: var(--color-on-surface, #222);
     min-width: 100px;
     cursor: pointer;
 }
@@ -590,8 +620,8 @@ select {
     padding: 5px 12px;
     font-size: var(--text-md);
     font-weight: 500;
-    color: #555;
-    background: white;
+    color: var(--color-on-surface, #555);
+    background: var(--color-surface-raised, white);
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.15s, color 0.15s;
@@ -704,14 +734,14 @@ button {
 
 .export-status {
     font-size: var(--text-md);
-    color: #666;
+    color: var(--color-label, #666);
     font-style: italic;
     align-self: center;
 }
 
 .export-estimate {
     font-size: var(--text-sm);
-    color: #aaa;
+    color: var(--color-hint, #aaa);
     text-align: center;
 }
 
@@ -879,7 +909,7 @@ button {
     width: 36px;
     height: 36px;
     padding: 8px;
-    background: white;
+    background: var(--color-surface-raised, white);
     color: var(--color-primary);
     border: 1px solid var(--border-color);
     border-radius: 9999px;
@@ -910,43 +940,124 @@ html.loaded .menu-btn {
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
-.menu-dropdown {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
-    min-width: 160px;
-    z-index: 200;
-    padding: 4px;
+/* ── Settings overlay panel ── */
+
+.settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 12px;
 }
 
-.menu-dropdown[hidden] {
+.settings-overlay[hidden] {
     display: none;
 }
 
-.menu-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 8px 12px;
-    text-align: left;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    font-size: var(--text-md);
-    font-weight: 500;
-    color: #333;
-    cursor: pointer;
-    transition: background 0.12s, color 0.12s;
+.settings-panel {
+    background: var(--color-surface-raised, white);
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.18), 0 1.5px 4px rgba(0, 0, 0, 0.06);
+    width: 280px;
+    max-width: calc(100vw - 24px);
+    overflow: hidden;
+    transition: background 0.2s;
 }
 
-.menu-item:hover {
-    background: #f0eeff;
-    color: var(--primary-color);
+.settings-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-panel-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-on-surface, #222);
+}
+
+.settings-close-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--color-on-surface, #555);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.12s;
+}
+
+.settings-close-btn:hover {
+    background: var(--palette-blueberry-100);
+}
+
+.settings-close-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
+}
+
+.settings-panel-body {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.settings-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 14px;
+    background: transparent;
+    color: var(--color-on-surface, #2E2B74);
+    border: none;
+    border-radius: 10px;
+    font-size: var(--text-md);
+    font-weight: 600;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s;
+    box-sizing: border-box;
+}
+
+.settings-action-btn:hover {
+    background: var(--palette-blueberry-100);
+}
+
+.settings-action-btn:active {
+    transform: scale(0.98);
+}
+
+.settings-action-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
+}
+
+.settings-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 14px;
+}
+
+html.theme-dark .settings-action-btn:hover {
+    background: rgba(179, 168, 247, 0.1);
+}
+
+html.theme-dark .settings-close-btn:hover {
+    background: rgba(179, 168, 247, 0.1);
 }
 
 /* ── Color picker cards ── */
@@ -964,7 +1075,7 @@ html.loaded .menu-btn {
     padding: 6px 8px;
     border: 2px solid transparent;
     border-radius: 6px;
-    background: white;
+    background: var(--color-surface-raised, white);
     cursor: pointer;
     transition: border-color 0.15s;
 }
@@ -1061,6 +1172,30 @@ html.none-mode .range-label {
 html.none-mode .loop-toggle-label {
     opacity: 0.38;
     pointer-events: none;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+    .downloads-section {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+}
+
+/* ── Theme transition ────────────────────────────────────────────────────────── */
+
+html {
+    transition: background-color 0.25s, color 0.25s;
+}
+
+.container,
+.controls-bar,
+.settings-panel,
+.radio-option,
+.color-option,
+select {
+    transition: background 0.25s, border-color 0.25s, color 0.2s;
 }
 
 
