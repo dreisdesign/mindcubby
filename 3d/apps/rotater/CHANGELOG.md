@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [0.15.0] - 2026-04-14
+
+### Changed
+- Button styles aligned to Blueberry design system visual language (no web component dependency)
+  - Export buttons (GIF / MP4 / PNG) now use primary fill: blueberry background, white text
+  - "Copy configuration" and "Replace STL" buttons use DS secondary style: transparent fill, primary-color border, `color-mix` hover tint
+  - Hamburger menu button uses full pill border-radius (`9999px`) and primary-color icon
+  - Face-nav and pause/resume overlay buttons updated to full-pill shape; active scale normalised to `0.95` across all buttons
+  - Focus-visible rings (`box-shadow: 0 0 0 2px blueberry-300`) added to all interactive buttons
+  - Body font updated to `"Source Sans 3"` (design system primary typeface) with system-UI fallback chain
+  - `font-weight: 600` and `min-height: 2.5em` applied consistently to all action buttons
+
 ## [0.14.0] - 2026-04-14
 
 ### Added

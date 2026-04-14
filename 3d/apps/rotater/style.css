@@ -35,6 +35,14 @@
     --bg-color: var(--color-surface);
     --card-bg: var(--palette-base-100);
     --border-color: #d8d5ee;
+
+    /* ── Type scale ── */
+    --text-xs: 0.625rem;
+    /* 10px — micro labels: ticks, card names */
+    --text-sm: 0.6875rem;
+    /* 11px — small UI: section headers, meta, hints */
+    --text-md: 0.8125rem;
+    /* 13px — interface: buttons, radio, controls */
 }
 
 /* Prevent FOUC on hard refresh when a previous session exists */
@@ -52,7 +60,7 @@ body {
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
@@ -108,7 +116,7 @@ main.drag-over .upload-section {
 .drop-hint {
     margin: 12px 0 0;
     color: #aaa;
-    font-size: 0.9rem;
+    font-size: var(--text-md);
 }
 
 /* ── File label button ── */
@@ -218,12 +226,27 @@ html.loaded header>p {
 html.loaded .compact-btn {
     display: inline-flex;
     align-items: center;
-    padding: 7px 14px;
-    font-size: 0.85rem;
+    padding: 0.375em 0.75em;
+    min-height: 2.5em;
+    font-size: var(--text-md);
+    font-weight: 600;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    line-height: 1.2;
     flex-shrink: 0;
     background: transparent;
-    border: 1.5px solid #bbb;
-    color: #555;
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+    border-radius: 9999px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: background 0.15s, transform 0.1s;
+}
+
+html.loaded .compact-btn:hover {
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+
+html.loaded .compact-btn:active {
+    transform: scale(0.95);
 }
 
 /* ── Main canvas area (loaded) ── */
@@ -269,7 +292,8 @@ html.loaded .viewer-section.hidden {
     position: absolute;
     bottom: 8px;
     right: 10px;
-    font-size: 0.75rem;
+    z-index: 1;
+    font-size: var(--text-sm);
     font-style: italic;
     color: rgba(255, 255, 255, 0.45);
     pointer-events: none;
@@ -287,7 +311,7 @@ html.loaded .viewer-section.hidden {
     justify-content: center;
     background: rgba(0, 0, 0, 0.45);
     color: #fff;
-    font-size: 0.9rem;
+    font-size: var(--text-md);
     font-weight: 600;
     pointer-events: none;
     transition: opacity 0.3s;
@@ -297,29 +321,37 @@ html.loaded .viewer-section.hidden {
     position: absolute;
     bottom: 10px;
     left: 10px;
+    z-index: 1;
     width: 32px;
     height: 32px;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.45);
-    color: rgba(255, 255, 255, 0.8);
+    background: rgba(21, 18, 43, 0.85);
+    color: var(--palette-blueberry-200);
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.15s, color 0.15s, transform 0.1s;
     font-size: 0;
+    font-family: "Source Sans 3", system-ui, sans-serif;
 }
 
 .pause-btn:hover {
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
+    background: rgba(21, 18, 43, 0.96);
+    color: var(--palette-blueberry-100);
 }
 
 .pause-btn:active {
-    transform: scale(0.82);
-    transition: background 0.1s, color 0.1s, transform 0.06s ease-in;
+    transform: scale(0.95);
+}
+
+.pause-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
 .reset-zoom-btn {
@@ -341,30 +373,38 @@ html.loaded .viewer-section.hidden {
     transform: translateX(-50%);
     display: flex;
     gap: 4px;
+    z-index: 1;
 }
 
 .face-btn {
     height: 26px;
-    padding: 0 8px;
-    background: rgba(0, 0, 0, 0.45);
-    color: rgba(255, 255, 255, 0.8);
+    padding: 0 10px;
+    background: rgba(21, 18, 43, 0.85);
+    color: var(--palette-blueberry-200);
     border: none;
-    border-radius: 13px;
+    border-radius: 9999px;
     cursor: pointer;
-    font-size: 0.7rem;
+    font-size: var(--text-sm);
     font-weight: 600;
-    letter-spacing: 0.03em;
-    transition: background 0.2s, color 0.2s, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+    line-height: 1.2;
 }
 
 .face-btn:hover {
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
+    background: rgba(21, 18, 43, 0.96);
+    color: var(--palette-blueberry-100);
 }
 
 .face-btn:active {
-    transform: scale(0.88);
-    transition: background 0.1s, color 0.1s, transform 0.06s ease-in;
+    transform: scale(0.95);
+}
+
+.face-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
 /* ── Controls bar reset camera button ── */
@@ -376,7 +416,7 @@ html.loaded .viewer-section.hidden {
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    font-size: 0.8rem;
+    font-size: var(--text-md);
     font-weight: 600;
     background: transparent;
     border: 1px solid #ccc;
@@ -461,11 +501,11 @@ html.loaded footer {
 .control-label {
     display: flex;
     flex-direction: column;
-    font-size: 0.7rem;
+    font-size: var(--text-sm);
     font-weight: 700;
     color: #666;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     gap: 4px;
 }
 
@@ -493,8 +533,6 @@ html.tilt-mode .elev-label {
 
 .range-label>span span {
     font-weight: 400;
-    text-transform: none;
-    letter-spacing: 0;
     color: var(--primary-color);
 }
 
@@ -510,10 +548,8 @@ html.tilt-mode .elev-label {
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    font-size: 0.6rem;
+    font-size: var(--text-xs);
     color: #bbb;
-    letter-spacing: 0;
-    text-transform: none;
     font-weight: 400;
 }
 
@@ -539,7 +575,7 @@ select {
     padding: 5px 8px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    font-size: 0.85rem;
+    font-size: var(--text-md);
     background: white;
     min-width: 100px;
     cursor: pointer;
@@ -557,10 +593,8 @@ select {
     align-items: center;
     gap: 5px;
     padding: 5px 12px;
-    font-size: 0.85rem;
+    font-size: var(--text-md);
     font-weight: 500;
-    text-transform: none;
-    letter-spacing: 0;
     color: #555;
     background: white;
     cursor: pointer;
@@ -603,7 +637,7 @@ button {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--text-md);
     font-weight: 600;
 }
 
@@ -636,30 +670,52 @@ button {
 }
 
 .export-btn {
-    background: white;
-    color: var(--primary-color);
-    border: 1.5px solid var(--primary-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em 1.25em;
+    min-height: 2.5em;
+    font-size: var(--text-md);
+    font-weight: 600;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    line-height: 1.2;
+    background: var(--color-primary);
+    color: #fff;
+    border: none;
     border-radius: 9999px;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 
 .export-btn:hover {
-    background: rgba(46, 43, 116, 0.06);
+    background: color-mix(in srgb, var(--color-primary) 85%, black);
+}
+
+.export-btn:active {
+    transform: scale(0.95);
+}
+
+.export-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
 .export-btn:disabled {
-    opacity: 0.45;
+    opacity: 0.5;
     cursor: not-allowed;
+    pointer-events: none;
 }
 
 .export-status {
-    font-size: 0.82rem;
+    font-size: var(--text-md);
     color: #666;
     font-style: italic;
     align-self: center;
 }
 
 .export-estimate {
-    font-size: 0.72rem;
+    font-size: var(--text-sm);
     color: #aaa;
     text-align: center;
 }
@@ -668,7 +724,7 @@ button {
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 0.8rem;
+    font-size: var(--text-md);
     color: #666;
     cursor: pointer;
     user-select: none;
@@ -691,7 +747,7 @@ button {
     align-items: center;
     gap: 8px;
     padding: 0 14px;
-    font-size: 0.8rem;
+    font-size: var(--text-md);
     font-weight: 600;
     color: #555;
     background: white;
@@ -794,10 +850,10 @@ button {
 }
 
 .shading-name {
-    font-size: 0.6rem;
+    font-size: var(--text-xs);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     color: var(--sh-name-color, #888);
     line-height: 1;
 }
@@ -825,16 +881,16 @@ button {
     flex-direction: column;
     justify-content: center;
     gap: 4px;
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     padding: 8px;
     background: white;
-    color: #555;
-    border: 1.5px solid var(--border-color);
-    border-radius: 4px;
+    color: var(--color-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    transition: background 0.15s, border-color 0.15s;
 }
 
 html.loaded .menu-btn {
@@ -850,9 +906,13 @@ html.loaded .menu-btn {
 }
 
 .menu-btn:hover {
-    background: #f0eeff;
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    background: var(--palette-blueberry-100);
+    border-color: var(--color-primary);
+}
+
+.menu-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
 .menu-dropdown {
@@ -882,7 +942,7 @@ html.loaded .menu-btn {
     background: transparent;
     border: none;
     border-radius: 4px;
-    font-size: 0.9rem;
+    font-size: var(--text-md);
     font-weight: 500;
     color: #333;
     cursor: pointer;
@@ -931,10 +991,10 @@ html.loaded .menu-btn {
 }
 
 .color-name {
-    font-size: 0.6rem;
+    font-size: var(--text-xs);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     color: #777;
     line-height: 1;
 }
@@ -943,11 +1003,59 @@ html.loaded .menu-btn {
     border-color: var(--primary-color);
 }
 
+.orbit-hint-bar {
+    flex-shrink: 0;
+    padding: 6px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--palette-base-100);
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.orbit-hint-bar.visible {
+    display: flex;
+}
+
 .orbit-hint {
-    margin: 2px 0 0;
-    font-size: 0.72rem;
+    margin: 0;
+    font-size: var(--text-sm);
     color: #666;
-    text-align: center;
+}
+
+.copy-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.375em 0.75em;
+    min-height: 2.5em;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    line-height: 1.2;
+    color: var(--color-primary);
+    background: transparent;
+    border: 1px solid var(--color-primary);
+    border-radius: 9999px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.copy-link-btn:hover {
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+
+.copy-link-btn:active {
+    transform: scale(0.95);
+}
+
+.copy-link-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
 html.none-mode .range-label {
