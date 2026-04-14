@@ -10,6 +10,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- v0.2.0 output: 698 KB GIF @ 144 frames, 24 fps, 720×720px -->
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
+## [0.18.0] - 2026-04-14
+
+### Added
+- **Canvas overlay UI** — logo (top-left), filename pill + Replace STL button (top-right) are now overlaid directly on the canvas; header is hidden in loaded state
+- **Hamburger in sidebar header** — sticky bar pinned to top of sidebar, always accessible while scrolling controls
+- **Section dividers** — gradient `<hr>` separators (fade to transparent at edges) between Colors/Shading, Exports, and Rotation sections
+- **Copy configuration** floats absolutely at top-right of controls bar; takes no layout space
+
+### Changed
+- **Filename pill** — blueberry-200 background, blueberry-900 text; right-aligned inside `.canvas-top-right` flex group so it expands leftward as name grows
+- **Replace STL button** — filled blueberry-500 (primary), white text, blueberry-800 hover; readable on any canvas background
+- **Rotater logo on canvas** — height `48px` to match the canvas-top-right row height
+- **Shading previews** — static, fixed to blueberry palette (blueberry-200 card bg, blueberry-500 sphere, blueberry-800/900 shadows); no longer dynamically update to follow model/BG color pickers
+- **Loop toggle** active color changed from orange (accent) to primary purple (`--primary-color`)
+- **Rotation controls** larger — controls bar padding `20px 24px`, section gap `20px`, radio option padding `8px 14px`, control-label gap `10px`
+- **Speed slider** takes full width (`flex-basis: 100%`); Tilt/Range sliders sit on the row below
+- Orbit hint text moved to bottom of controls bar
+- Exports label gap removed (`margin-top: 0`, first export row `padding-top: 0`)
+
 ## [0.17.0] - 2026-04-14
 
 ### Added

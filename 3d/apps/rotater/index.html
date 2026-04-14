@@ -34,20 +34,6 @@
         <header>
             <img src="rotater.svg" alt="ROTATER" class="logo">
             <p>View and export rotating 3D models.</p>
-            <label for="fileInput" class="file-label compact-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"
-                    style="display:inline;margin-right:5px;vertical-align:middle">
-                    <path
-                        d="M12.0002 21.8C11.6335 21.8 11.321 21.6708 11.0627 21.4125C10.8044 21.1542 10.6752 20.8417 10.6752 20.475V13.35H3.5252C3.15853 13.35 2.84603 13.2208 2.5877 12.9625C2.32936 12.7042 2.2002 12.3917 2.2002 12.025C2.2002 11.6583 2.32936 11.3458 2.5877 11.0875C2.84603 10.8292 3.15853 10.7 3.5252 10.7H10.6502V3.52501C10.6502 3.15835 10.7794 2.84585 11.0377 2.58751C11.296 2.32918 11.6085 2.20001 11.9752 2.20001C12.3419 2.20001 12.6544 2.32918 12.9127 2.58751C13.171 2.84585 13.3002 3.15835 13.3002 3.52501V10.675H20.4752C20.8419 10.675 21.1544 10.8042 21.4127 11.0625C21.671 11.3208 21.8002 11.6333 21.8002 12C21.8002 12.3667 21.671 12.6792 21.4127 12.9375C21.1544 13.1958 20.8419 13.325 20.4752 13.325H13.3252V20.475C13.3252 20.8417 13.196 21.1542 12.9377 21.4125C12.6794 21.6708 12.3669 21.8 12.0002 21.8Z" />
-                </svg>
-                <span id="compactBtnLabel">Select STL</span>
-            </label>
-            <div class="menu-wrap">
-                <button id="btnMenu" class="menu-btn" title="Settings" aria-label="Settings" aria-expanded="false"
-                    aria-haspopup="dialog">
-                    <span></span><span></span><span></span>
-                </button>
-            </div>
         </header>
 
         <div class="app-body">
@@ -67,6 +53,17 @@
                 <div id="viewerSection" class="viewer-section hidden">
                     <div class="canvas-wrap">
                         <canvas id="canvas"></canvas>
+                        <img src="rotater.svg" alt="ROTATER" class="logo canvas-logo">
+                        <div class="canvas-top-right">
+                            <span id="fileName" class="file-name"></span>
+                            <label for="fileInput" class="file-label compact-btn canvas-replace-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path
+                                        d="M4.5252 20.175H19.5002C19.8669 20.175 20.1752 20.3 20.4252 20.55C20.6752 20.8 20.8002 21.1083 20.8002 21.475C20.8002 21.8417 20.671 22.1542 20.4127 22.4125C20.1544 22.6708 19.8419 22.8 19.4752 22.8H4.5002C4.13353 22.8 3.8252 22.6708 3.5752 22.4125C3.3252 22.1542 3.2002 21.8417 3.2002 21.475C3.2002 21.1083 3.32936 20.8 3.5877 20.55C3.84603 20.3 4.15853 20.175 4.5252 20.175ZM9.6752 18.175C9.30853 18.175 8.99603 18.0458 8.7377 17.7875C8.47936 17.5292 8.3502 17.2167 8.3502 16.85V11.55H6.5252C5.9752 11.55 5.5752 11.3 5.3252 10.8C5.0752 10.3 5.1252 9.83333 5.4752 9.4L10.9752 2.5C11.1085 2.33333 11.2669 2.20833 11.4502 2.125C11.6335 2.04167 11.8169 2 12.0002 2C12.1835 2 12.3669 2.04167 12.5502 2.125C12.7335 2.20833 12.8919 2.33333 13.0252 2.5L18.5252 9.4C18.8752 9.83333 18.9252 10.3 18.6752 10.8C18.4252 11.3 18.0252 11.55 17.4752 11.55H15.6502V16.85C15.6502 17.2167 15.521 17.5292 15.2627 17.7875C15.0044 18.0458 14.6919 18.175 14.3252 18.175H9.6752Z" />
+                                </svg>
+                                <span id="compactBtnLabel">Select STL</span>
+                            </label>
+                        </div>
                         <div class="face-nav">
                             <button id="btnViewFront" class="face-btn" title="Front view"
                                 aria-label="Front view">Front</button>
@@ -92,24 +89,30 @@
                                     d="M7.16309 15.4172V5.66614C7.16309 5.33628 7.28022 5.05985 7.51447 4.83686C7.74873 4.61373 8.02201 4.50217 8.33431 4.50217C8.43197 4.50217 8.53204 4.51681 8.63453 4.54609C8.73702 4.57537 8.8395 4.62662 8.94199 4.69982L16.6286 9.55338C16.8116 9.67051 16.9489 9.81692 17.0404 9.99262C17.1319 10.1683 17.1777 10.3525 17.1777 10.5452C17.1777 10.7379 17.1301 10.9209 17.0349 11.0942C16.9398 11.2676 16.8043 11.4128 16.6286 11.5299L8.94199 16.3835C8.8395 16.4567 8.7354 16.508 8.6297 16.5372C8.52399 16.5665 8.42311 16.5812 8.32706 16.5812C8.0196 16.5812 7.74873 16.4696 7.51447 16.2465C7.28022 16.0233 7.16309 15.7469 7.16309 15.4172Z" />
                             </svg>
                         </button>
-                        <span id="fileName" class="file-name"></span>
                     </div>
                 </div>
             </main>
 
             <div class="sidebar">
-                <div class="orbit-hint-bar">
-                    <p class="orbit-hint">Drag to orbit · Scroll to zoom · Right-drag to pan</p>
-                    <button id="btnCopyLink" class="copy-link-btn" title="Copy shareable link with current settings">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path
-                                d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm1-4h-4v2h4v-2z" />
-                        </svg>
-                        Copy configuration
-                    </button>
+                <div class="sidebar-header">
+                    <div class="menu-wrap">
+                        <button id="btnMenu" class="menu-btn" title="Settings" aria-label="Settings"
+                            aria-expanded="false" aria-haspopup="dialog">
+                            <span></span><span></span><span></span>
+                        </button>
+                    </div>
                 </div>
-
                 <div id="controlsBar" class="controls-bar hidden">
+                    <div class="controls-row controls-row--copy">
+                        <button id="btnCopyLink" class="copy-link-btn"
+                            title="Copy shareable link with current settings">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path
+                                    d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm1-4h-4v2h4v-2z" />
+                            </svg>
+                            Copy configuration
+                        </button>
+                    </div>
                     <div class="controls-row">
                         <div class="control-label">
                             Colors
@@ -146,6 +149,9 @@
                                 </label>
                             </div>
                         </label>
+                    </div>
+                    <hr class="section-divider">
+                    <div class="controls-row">
                         <div class="downloads-section">
                             <div class="control-label">
                                 Exports
@@ -203,6 +209,7 @@
                             </div>
                         </div>
                     </div>
+                    <hr class="section-divider">
                     <div class="controls-row controls-row--motion">
                         <div class="control-label">
                             Rotation
@@ -237,7 +244,7 @@
                                 </label>
                             </div>
                         </div>
-                        <label class="control-label range-label">
+                        <label class="control-label range-label speed-label">
                             <span>Speed <span id="speedVal">1.0×</span></span>
                             <input type="range" id="speedSlider" min="0.5" max="4.0" step="0.5" value="1.0">
                             <div class="slider-ticks">
@@ -276,6 +283,9 @@
                             </div>
                         </label>
                     </div>
+                    <div class="orbit-hint-bar">
+                        <p class="orbit-hint">Drag to orbit · Scroll to zoom · Right-drag to pan</p>
+                    </div>
                 </div>
             </div><!-- .sidebar -->
         </div><!-- .app-body -->
@@ -284,6 +294,14 @@
     </div>
 
     <script type="module" src="script.js"></script>
+
+    <button id="btnThemeToggle" class="theme-toggle-btn">
+        <svg id="themeToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path id="themeToggleIconPath"
+                d="M9.5 2c-1.82 0-3.53.5-5 1.35C7.99 5.08 10 8.3 10 12s-2.01 6.92-5.5 8.65C6.29 21.5 7.82 22 9.5 22 14.75 22 19 17.52 19 12S14.75 2 9.5 2z" />
+        </svg>
+        <span id="themeToggleLabel">Dark mode</span>
+    </button>
 
     <!-- Settings overlay -->
     <div id="settingsOverlay" class="settings-overlay" hidden role="dialog" aria-modal="true"
@@ -299,14 +317,6 @@
                 </button>
             </div>
             <div class="settings-panel-body">
-                <button id="btnThemeToggle" class="settings-action-btn">
-                    <svg id="themeToggleIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
-                        aria-hidden="true">
-                        <path id="themeToggleIconPath"
-                            d="M9.5 2c-1.82 0-3.53.5-5 1.35C7.99 5.08 10 8.3 10 12s-2.01 6.92-5.5 8.65C6.29 21.5 7.82 22 9.5 22 14.75 22 19 17.52 19 12S14.75 2 9.5 2z" />
-                    </svg>
-                    <span id="themeToggleLabel">Turn on dark mode</span>
-                </button>
                 <div class="settings-divider"></div>
                 <button id="menuBenchy" class="settings-action-btn" title="Replace current model with 3D Benchy demo">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

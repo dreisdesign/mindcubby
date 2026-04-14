@@ -35,7 +35,7 @@ python3 -m http.server 8765
 | Shading → Phong | PBR diffuse (non-metal) — surface detail readable on any albedo including black/white |
 | Shading → Metal | PBR metallic with environment reflections |
 
-Shading preview cards update live to reflect the current model and background colors.
+Shading preview cards use fixed blueberry palette colors (matching the app's default model and background colors) so the difference between shading modes is always clearly visible.
 
 ### Motion controls
 

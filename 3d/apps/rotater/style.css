@@ -29,6 +29,10 @@
     --color-warning: var(--palette-yellow-500);
     --color-error: var(--palette-red-500);
 
+    /* ── Export accent (orange) ── */
+    --color-export: #EA580C;
+    --color-export-hover: #C44A08;
+
     /* ── Surface ── */
     --color-surface-raised: #ffffff;
     /* panel/card surfaces above background */
@@ -76,13 +80,7 @@ html.theme-dark {
 }
 
 /* Filled buttons: dark text on light-primary bg for contrast */
-html.theme-dark .export-btn {
-    color: var(--palette-blueberry-900);
-}
-
-html.theme-dark .export-btn:hover {
-    background: color-mix(in srgb, var(--color-primary) 85%, white);
-}
+/* (export buttons use --color-export, not --color-primary, so no override needed) */
 
 /* Radio active: dark text on light-primary bg */
 html.theme-dark .radio-option:has(input:checked) {
@@ -288,7 +286,7 @@ html.loaded .sidebar {
     }
 
     html.loaded .orbit-hint-bar {
-        border-bottom: 1px solid var(--border-color);
+        border-top: 1px solid var(--border-color);
     }
 
     .controls-row {
@@ -309,15 +307,7 @@ html.loaded .sidebar {
 /* ── Header (loaded) ── */
 
 html.loaded header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-    text-align: left;
-    margin-bottom: 0;
-    gap: 12px;
+    display: none;
 }
 
 html.loaded .logo {
@@ -395,19 +385,54 @@ html.loaded .viewer-section.hidden {
 }
 
 .file-name {
-    position: absolute;
-    bottom: 8px;
-    right: 10px;
-    z-index: 1;
     font-size: var(--text-sm);
-    font-style: italic;
-    color: rgba(255, 255, 255, 0.7);
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    font-weight: 600;
+    color: var(--palette-blueberry-900);
+    background: var(--palette-blueberry-200);
+    padding: 3px 12px;
+    border-radius: 9999px;
     pointer-events: none;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 60%;
+    max-width: 180px;
+    text-align: right;
+    flex-shrink: 1;
+}
+
+.canvas-logo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+html.loaded .canvas-logo {
+    height: 48px;
+}
+
+.canvas-top-right {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+html.loaded .canvas-replace-btn {
+    flex-shrink: 0;
+    background: var(--palette-blueberry-500) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.loaded .canvas-replace-btn:hover {
+    background: var(--palette-blueberry-800) !important;
+    color: #fff !important;
 }
 
 .scroll-hint {
@@ -546,9 +571,10 @@ html.loaded .controls-bar {
     display: flex;
     flex-shrink: 0;
     flex-direction: column;
-    gap: 12px;
+    position: relative;
+    gap: 20px;
     border-top: 1px solid var(--border-color);
-    padding: 16px 20px;
+    padding: 20px 24px;
     background: var(--color-surface-raised);
     transition: background 0.2s, border-color 0.2s;
 }
@@ -574,10 +600,60 @@ html.loaded footer {
     align-items: flex-start;
 }
 
+.controls-row--copy {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    z-index: 2;
+    padding: 0;
+    border: none;
+}
+
 .controls-row--motion {
     align-items: flex-start;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-color);
+}
+
+.section-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border-color) 15%, var(--border-color) 85%, transparent);
+    flex-shrink: 0;
+    margin: 0;
+    align-self: stretch;
+}
+
+.controls-row--theme {
+    display: none;
+    /* button is now fixed-position, not in the flow */
+}
+
+.theme-toggle-btn {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 100;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.4em 1em;
+    min-height: 2.25em;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    line-height: 1.2;
+    color: var(--color-primary);
+    background: var(--color-surface-raised, white);
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.theme-toggle-btn:hover {
+    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-raised, white));
+    border-color: var(--color-primary);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
 }
 
 .export-row {
@@ -600,7 +676,7 @@ html.loaded footer {
     display: flex;
     flex-direction: column;
     width: 100%;
-    margin-top: 4px;
+    margin-top: 0;
 }
 
 .export-list-item {
@@ -614,6 +690,10 @@ html.loaded footer {
 
 .export-list-item:last-child {
     border-bottom: none;
+}
+
+.export-list-item:first-child {
+    padding-top: 0;
 }
 
 .export-list-left {
@@ -631,12 +711,16 @@ html.loaded footer {
     color: var(--color-label, #666);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    gap: 4px;
+    gap: 10px;
 }
 
 .range-label {
     flex: 1;
     min-width: 140px;
+}
+
+.speed-label {
+    flex-basis: 100%;
 }
 
 .tilt-range-label {
@@ -717,8 +801,8 @@ select {
 .radio-option {
     display: flex;
     align-items: center;
-    gap: 5px;
-    padding: 5px 12px;
+    gap: 6px;
+    padding: 8px 14px;
     font-size: var(--text-md);
     font-weight: 500;
     color: var(--color-on-surface, #555);
@@ -805,7 +889,7 @@ button {
     font-weight: 600;
     font-family: "Source Sans 3", system-ui, sans-serif;
     line-height: 1.2;
-    background: var(--color-primary);
+    background: var(--color-export);
     color: #fff;
     border: none;
     border-radius: 9999px;
@@ -815,7 +899,7 @@ button {
 }
 
 .export-btn:hover {
-    background: color-mix(in srgb, var(--color-primary) 85%, black);
+    background: var(--color-export-hover);
 }
 
 .export-btn:active {
@@ -912,7 +996,7 @@ button {
 
 .shading-group {
     display: flex;
-    gap: 6px;
+    gap: 10px;
 }
 
 .shading-option {
@@ -923,9 +1007,8 @@ button {
     padding: 6px 8px;
     border: 2px solid transparent;
     border-radius: 6px;
-    background: var(--sh-bg, #0a0a12);
+    background: var(--palette-blueberry-200);
     cursor: pointer;
-    /* ring: transparent outer + no inner */
     box-shadow: 0 0 0 2px transparent;
     transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -952,16 +1035,15 @@ button {
 }
 
 .shading-thumb--flat {
-    background: var(--sh-base, #aab8c8);
+    background: var(--palette-blueberry-500);
 }
 
 .shading-thumb--phong {
-    background: radial-gradient(circle at 38% 35%, #ffffffcc 4%, var(--sh-base, #aab8c8) 40%, var(--sh-shadow, #6a7e8e) 100%);
+    background: radial-gradient(circle at 38% 35%, #ffffffcc 4%, var(--palette-blueberry-500) 40%, var(--palette-blueberry-800) 100%);
 }
 
 .shading-thumb--metallic {
-    /* IBL-lit metal: strong off-center specular, rich base color, soft shadow edge */
-    background: radial-gradient(circle at 32% 30%, #fff 4%, #ffffffcc 10%, var(--sh-base, #aab8c8) 36%, var(--sh-shadow, #6a7e8e) 62%, var(--sh-deep, #1a2535) 90%);
+    background: radial-gradient(circle at 32% 30%, #fff 4%, #ffffffcc 10%, var(--palette-blueberry-500) 36%, var(--palette-blueberry-800) 62%, var(--palette-blueberry-900) 90%);
 }
 
 .shading-name {
@@ -969,7 +1051,7 @@ button {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--sh-name-color, #888);
+    color: var(--palette-blueberry-800);
     line-height: 1;
 }
 
@@ -983,6 +1065,25 @@ button {
 
 .tick--flat::before {
     background: var(--primary-color) !important;
+}
+
+/* ── Sidebar header (sticky hamburger bar) ── */
+
+.sidebar-header {
+    display: none;
+    flex-shrink: 0;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--color-surface-raised);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+html.loaded .sidebar-header {
+    display: flex;
 }
 
 /* ── Hamburger menu ── */
@@ -1205,12 +1306,10 @@ html.theme-dark .color-name {
 
 .orbit-hint-bar {
     flex-shrink: 0;
-    padding: 6px 20px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--palette-base-100);
+    padding: 6px 0;
+    border-top: 1px solid var(--border-color);
     display: none;
     align-items: center;
-    justify-content: space-between;
     gap: 12px;
 }
 
