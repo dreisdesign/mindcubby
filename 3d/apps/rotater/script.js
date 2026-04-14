@@ -181,6 +181,7 @@ function loadSTLBuffer(buffer, name) {
     viewerSec.classList.remove('hidden');
     document.getElementById('emptyState').classList.add('hidden');
     document.getElementById('controlsBar').classList.remove('hidden');
+    document.querySelector('.orbit-hint-bar').classList.add('visible');
     updateEstimate();
     requestAnimationFrame(syncCanvasSize);
 }
@@ -321,35 +322,75 @@ function saveSettings() {
             elevation: elevSlider.value,
             rotateMode: rotateModeEl.value,
             tiltRange: tiltRangeSlider.value,
+            gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
         }));
     } catch (e) { }
+    settingsToURL();
 }
 
 function restoreSettings() {
     try {
-        const s = JSON.parse(localStorage.getItem(SETTINGS_KEY));
-        if (!s) return;
-        colorPick.value = s.color;
-        bgPick.value = s.bg;
-        shadingEl.value = s.shading;
-        speedSlider.value = s.speed;
-        speedVal.textContent = parseFloat(s.speed).toFixed(1) + '×';
-        elevSlider.value = s.elevation;
-        elevVal.textContent = elevSlider.value + '°';
-        if (s.rotateMode) rotateModeEl.value = s.rotateMode;
-        const m = rotateModeEl.value;
-        if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
-        if (m === 'swing' || m === 'tilt') updateRangeSliderForMode(m);
-        else tiltRangeVal.textContent = (s.tiltRange || tiltRangeSlider.value) + '°';
-        document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'swing');
-        const isOff = m === 'off';
-        document.documentElement.classList.toggle('none-mode', isOff);
-        btnGif.disabled = isOff;
-        btnVideo.disabled = isOff;
-        document.getElementById('gifLoop').disabled = isOff;
+        const urlS = getURLSettings();
+        const s = urlS ?? JSON.parse(localStorage.getItem(SETTINGS_KEY));
+        if (s) {
+            if (s.color) colorPick.value = s.color;
+            if (s.bg) bgPick.value = s.bg;
+            if (s.shading) shadingEl.value = s.shading;
+            if (s.speed != null) {
+                speedSlider.value = s.speed;
+                speedVal.textContent = parseFloat(s.speed).toFixed(1) + '×';
+            }
+            if (s.elevation != null) {
+                elevSlider.value = s.elevation;
+                elevVal.textContent = elevSlider.value + '°';
+            }
+            if (s.rotateMode) rotateModeEl.value = s.rotateMode;
+            const m = rotateModeEl.value;
+            if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
+            if (m === 'swing' || m === 'tilt') updateRangeSliderForMode(m);
+            else tiltRangeVal.textContent = (s.tiltRange || tiltRangeSlider.value) + '°';
+            document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'swing');
+            const isOff = m === 'off';
+            document.documentElement.classList.toggle('none-mode', isOff);
+            btnGif.disabled = isOff;
+            btnVideo.disabled = isOff;
+            const gifLoopEl = document.getElementById('gifLoop');
+            gifLoopEl.disabled = isOff;
+            if (s.gifLoop != null) gifLoopEl.checked = s.gifLoop === true || s.gifLoop === '1' || s.gifLoop === 1;
+        }
         updateShadingThumbs();
         updateColorSwatches();
     } catch (e) { }
+}
+
+// ── URL / shareable settings ─────────────────────────────────────────────────────────────
+function getURLSettings() {
+    const p = new URLSearchParams(location.search);
+    if (!p.has('c') && !p.has('sh') && !p.has('rm')) return null;
+    return {
+        color: p.has('c') ? '#' + p.get('c') : null,
+        bg: p.has('b') ? '#' + p.get('b') : null,
+        shading: p.get('sh') || null,
+        rotateMode: p.get('rm') || null,
+        speed: p.get('sp') || null,
+        elevation: p.get('el') || null,
+        tiltRange: p.get('tr') || null,
+        gifLoop: p.has('gl') ? p.get('gl') === '1' : null,
+    };
+}
+
+function settingsToURL() {
+    const p = new URLSearchParams({
+        c: colorPick.value.replace('#', ''),
+        b: bgPick.value.replace('#', ''),
+        sh: shadingEl.value,
+        rm: rotateModeEl.value,
+        sp: speedSlider.value,
+        el: elevSlider.value,
+        tr: tiltRangeSlider.value,
+        gl: document.getElementById('gifLoop')?.checked ? '1' : '0',
+    });
+    history.replaceState(null, '', '?' + p.toString());
 }
 
 async function restoreSession() {
@@ -518,6 +559,10 @@ shadingEl.addEventListener('change', () => {
     saveSettings();
 });
 
+document.getElementById('gifLoop').addEventListener('change', () => {
+    saveSettings();
+});
+
 rotateModeEl.addEventListener('change', () => {
     const m = rotateModeEl.value;
     const isOff = m === 'off';
@@ -551,6 +596,14 @@ rotateModeEl.addEventListener('change', () => {
 tiltRangeSlider.addEventListener('input', () => {
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
     saveSettings();
+});
+
+document.getElementById('menuResetSettings').addEventListener('click', () => {
+    document.getElementById('menuDropdown').hidden = true;
+    document.getElementById('btnMenu').setAttribute('aria-expanded', 'false');
+    try { localStorage.removeItem(SETTINGS_KEY); } catch (e) { }
+    history.replaceState(null, '', location.pathname);
+    location.reload();
 });
 
 document.getElementById('menuBenchy').addEventListener('click', async () => {
@@ -609,6 +662,16 @@ elevSlider.addEventListener('input', () => {
         controls.update();
     }
     saveSettings();
+});
+
+document.getElementById('btnCopyLink')?.addEventListener('click', () => {
+    settingsToURL();
+    navigator.clipboard.writeText(location.href).then(() => {
+        const btn = document.getElementById('btnCopyLink');
+        const prev = btn.innerHTML;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.innerHTML = prev; }, 1800);
+    }).catch(() => { });
 });
 
 // ── Export helpers ────────────────────────────────────────────────────────────

@@ -13,7 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.15.0] - 2026-04-14
 
+### Added
+- **Shareable URL** — all settings are written to the query string on every change via `settingsToURL` / `history.replaceState`; opening a URL with params restores those settings, falling back to localStorage
+- **Copy configuration** button in the orbit-hint bar — copies the current URL (with all settings encoded) to the clipboard; flashes "Copied!" for 1.8 s
+- **Reset settings** item in the hamburger menu — clears localStorage and the query string, then reloads
+- GIF loop preference now persisted in localStorage and query string (`gl` param)
+
 ### Changed
+- Orbit/zoom/pan hint moved below the canvas into its own `.orbit-hint-bar` strip (shown on model load); removed from the controls bar
+- Export button labels shortened: "Download GIF" → **GIF**, "Download MP4" → **MP4**, "Download PNG" → **PNG**
+- Default model color `#aab8c8` → `#2e2b74`; default background `#0a0a12` → `#dbd7ff`
 - Button styles aligned to Blueberry design system visual language (no web component dependency)
   - Export buttons (GIF / MP4 / PNG) now use primary fill: blueberry background, white text
   - "Copy configuration" and "Replace STL" buttons use DS secondary style: transparent fill, primary-color border, `color-mix` hover tint
