@@ -171,6 +171,7 @@ function loadSTLBuffer(buffer, name) {
 
     placeCamera();
     document.documentElement.classList.add('loaded');
+    try { localStorage.setItem('rotater_hasSession', '1'); } catch (e) { }
     document.getElementById('compactBtnLabel').textContent = 'Replace STL';
     // Reset pause state on new load
     isPaused = false;
@@ -407,6 +408,7 @@ async function restoreSession() {
             if (!renderer) initThree();
             controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
             loadSTLBuffer(buffer, '3dbenchy.stl');
+            saveSettings();
         } catch (e) { /* no demo available — stay on landing page */ }
         return;
     }
@@ -601,7 +603,7 @@ tiltRangeSlider.addEventListener('input', () => {
 document.getElementById('menuResetSettings').addEventListener('click', () => {
     document.getElementById('menuDropdown').hidden = true;
     document.getElementById('btnMenu').setAttribute('aria-expanded', 'false');
-    try { localStorage.removeItem(SETTINGS_KEY); } catch (e) { }
+    try { localStorage.removeItem(SETTINGS_KEY); localStorage.removeItem('rotater_hasSession'); } catch (e) { }
     history.replaceState(null, '', location.pathname);
     location.reload();
 });

@@ -45,11 +45,6 @@
     /* 13px — interface: buttons, radio, controls */
 }
 
-/* Prevent FOUC on hard refresh when a previous session exists */
-html.has-session:not(.loaded) body {
-    visibility: hidden;
-}
-
 /* ══════════════════════════════════════════════════════════════════════════════
    DEFAULT (empty) STATE — normal page layout like GCoder
    ══════════════════════════════════════════════════════════════════════════════ */
@@ -295,7 +290,8 @@ html.loaded .viewer-section.hidden {
     z-index: 1;
     font-size: var(--text-sm);
     font-style: italic;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
     pointer-events: none;
     white-space: nowrap;
     overflow: hidden;
@@ -485,10 +481,9 @@ html.loaded footer {
 .downloads-section {
     flex: 1;
     display: flex;
-    justify-content: flex-end;
-    align-items: flex-start;
-    gap: 16px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
 }
 
 .export-anim-row {
@@ -1067,5 +1062,7 @@ html.none-mode .loop-toggle-label {
     opacity: 0.38;
     pointer-events: none;
 }
+
+
 
 /* ── Rotation re-click pause hint ── */

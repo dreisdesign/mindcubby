@@ -7,7 +7,12 @@
     <title>ROTATER — STL Spin Viewer</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
-    <script>if (localStorage.getItem('rotater_settings')) document.documentElement.classList.add('has-session');</script>
+    <style>
+        html.has-session:not(.loaded) body {
+            visibility: hidden;
+        }
+    </style>
+    <script>try { if (localStorage.getItem('rotater_hasSession')) document.documentElement.classList.add('has-session'); } catch (e) { }</script>
     <script type="importmap">
     {
         "imports": {
