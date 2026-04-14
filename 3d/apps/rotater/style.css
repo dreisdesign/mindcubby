@@ -70,6 +70,30 @@ html.theme-dark {
     --color-label: var(--palette-blueberry-300);
     --color-hint: var(--palette-blueberry-300);
     --border-color: rgba(179, 168, 247, 0.18);
+    /* Interactive elements need a lighter primary so they're visible on dark surfaces */
+    --color-primary: var(--palette-blueberry-300);
+    --primary-color: var(--palette-blueberry-300);
+}
+
+/* Filled buttons: dark text on light-primary bg for contrast */
+html.theme-dark .export-btn {
+    color: var(--palette-blueberry-900);
+}
+
+html.theme-dark .export-btn:hover {
+    background: color-mix(in srgb, var(--color-primary) 85%, white);
+}
+
+/* Radio active: dark text on light-primary bg */
+html.theme-dark .radio-option:has(input:checked) {
+    color: var(--palette-blueberry-900);
+}
+
+/* Loop toggle label: dark theme surface instead of hardcoded white */
+html.theme-dark .loop-toggle-label {
+    background: var(--color-surface-raised);
+    color: var(--text-color);
+    border-color: var(--border-color);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -210,16 +234,76 @@ html.loaded body {
 }
 
 html.loaded body {
-    padding: 16px;
+    padding: 0;
     box-sizing: border-box;
 }
 
 html.loaded .container {
     height: 100%;
     padding: 0;
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+}
+
+html.loaded .app-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+html.loaded .sidebar {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+@media (min-width: 900px) {
+    html.loaded .app-body {
+        flex-direction: row;
+    }
+
+    html.loaded main {
+        flex: 1;
+        min-height: 0;
+    }
+
+    html.loaded .sidebar {
+        width: 400px;
+        border-left: 1px solid var(--border-color);
+        overflow-y: auto;
+    }
+
+    html.loaded .controls-bar {
+        border-top: none;
+        flex: 1;
+        overflow: visible;
+    }
+
+    html.loaded .orbit-hint-bar {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .controls-row {
+        flex-direction: column;
+        flex-wrap: nowrap;
+    }
+
+    .controls-row--motion {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .range-label {
+        min-width: 0;
+    }
 }
 
 /* ── Header (loaded) ── */
@@ -508,18 +592,35 @@ html.loaded footer {
 
 .downloads-section {
     flex: 1;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: flex-start;
-    gap: 20px;
+    min-width: 0;
 }
 
-.export-anim-row {
+/* ── Export list (macOS-style action rows) ── */
+.export-list {
     display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.export-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.export-list-item:last-child {
+    border-bottom: none;
+}
+
+.export-list-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .control-label {
@@ -742,7 +843,8 @@ button {
 .export-estimate {
     font-size: var(--text-sm);
     color: var(--color-hint, #aaa);
-    text-align: center;
+    text-align: right;
+    flex: 1;
 }
 
 .gif-loop-label {
@@ -755,30 +857,18 @@ button {
     user-select: none;
 }
 
-/* GIF button + Loop toggle grouped box */
-.gif-group-box {
-    display: flex;
-    align-items: stretch;
-    border-radius: 9999px;
-    overflow: hidden;
-}
-
-.gif-group-box>.export-btn {
-    border-radius: 9999px 0 0 9999px;
-}
-
 .loop-toggle-label {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 14px;
+    padding: 0 12px;
+    min-height: 2.5em;
     font-size: var(--text-md);
     font-weight: 600;
-    color: #555;
-    background: white;
+    color: var(--color-on-surface, #555);
+    background: var(--color-surface-raised, white);
     border: 1px solid var(--border-color);
-    border-left: none;
-    border-radius: 0 9999px 9999px 0;
+    border-radius: 9999px;
     cursor: pointer;
     user-select: none;
     white-space: nowrap;
@@ -1105,6 +1195,10 @@ html.theme-dark .settings-close-btn:hover {
     line-height: 1;
 }
 
+html.theme-dark .color-name {
+    color: var(--color-label);
+}
+
 .color-option:hover {
     border-color: var(--primary-color);
 }
@@ -1128,6 +1222,10 @@ html.theme-dark .settings-close-btn:hover {
     margin: 0;
     font-size: var(--text-sm);
     color: #666;
+}
+
+html.theme-dark .orbit-hint {
+    color: var(--color-label);
 }
 
 .copy-link-btn {
@@ -1172,15 +1270,6 @@ html.none-mode .range-label {
 html.none-mode .loop-toggle-label {
     opacity: 0.38;
     pointer-events: none;
-}
-
-/* ── Responsive ──────────────────────────────────────────────────────────────── */
-
-@media (max-width: 560px) {
-    .downloads-section {
-        flex-direction: column;
-        align-items: flex-end;
-    }
 }
 
 /* ── Theme transition ────────────────────────────────────────────────────────── */

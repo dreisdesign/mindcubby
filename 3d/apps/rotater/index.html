@@ -50,224 +50,235 @@
             </div>
         </header>
 
-        <main id="dropZone">
-            <div class="upload-section" id="emptyState">
-                <label for="fileInput" class="file-label">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
-                        style="display:inline;margin-right:8px;vertical-align:middle">
-                        <path
-                            d="M12.0002 21.8C11.6335 21.8 11.321 21.6708 11.0627 21.4125C10.8044 21.1542 10.6752 20.8417 10.6752 20.475V13.35H3.5252C3.15853 13.35 2.84603 13.2208 2.5877 12.9625C2.32936 12.7042 2.2002 12.3917 2.2002 12.025C2.2002 11.6583 2.32936 11.3458 2.5877 11.0875C2.84603 10.8292 3.15853 10.7 3.5252 10.7H10.6502V3.52501C10.6502 3.15835 10.7794 2.84585 11.0377 2.58751C11.296 2.32918 11.6085 2.20001 11.9752 2.20001C12.3419 2.20001 12.6544 2.32918 12.9127 2.58751C13.171 2.84585 13.3002 3.15835 13.3002 3.52501V10.675H20.4752C20.8419 10.675 21.1544 10.8042 21.4127 11.0625C21.671 11.3208 21.8002 11.6333 21.8002 12C21.8002 12.3667 21.671 12.6792 21.4127 12.9375C21.1544 13.1958 20.8419 13.325 20.4752 13.325H13.3252V20.475C13.3252 20.8417 13.196 21.1542 12.9377 21.4125C12.6794 21.6708 12.3669 21.8 12.0002 21.8Z" />
-                    </svg>
-                    Select STL
-                    <input type="file" id="fileInput" accept=".stl">
-                </label>
-                <p class="drop-hint">or drop an STL file here</p>
-            </div>
-            <div id="viewerSection" class="viewer-section hidden">
-                <div class="canvas-wrap">
-                    <canvas id="canvas"></canvas>
-                    <div class="face-nav">
-                        <button id="btnViewFront" class="face-btn" title="Front view"
-                            aria-label="Front view">Front</button>
-                        <button id="btnViewBack" class="face-btn" title="Back view" aria-label="Back view">Back</button>
-                        <button id="btnViewLeft" class="face-btn" title="Left side view"
-                            aria-label="Left side view">Left</button>
-                        <button id="btnFrontView" class="face-btn" title="Right side view"
-                            aria-label="Right side view">Right</button>
-                        <button id="btnViewTop" class="face-btn" title="Top view" aria-label="Top view">Top</button>
-                        <button id="btnViewBottom" class="face-btn" title="Bottom view"
-                            aria-label="Bottom view">Bottom</button>
+        <div class="app-body">
+            <main id="dropZone">
+                <div class="upload-section" id="emptyState">
+                    <label for="fileInput" class="file-label">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
+                            style="display:inline;margin-right:8px;vertical-align:middle">
+                            <path
+                                d="M12.0002 21.8C11.6335 21.8 11.321 21.6708 11.0627 21.4125C10.8044 21.1542 10.6752 20.8417 10.6752 20.475V13.35H3.5252C3.15853 13.35 2.84603 13.2208 2.5877 12.9625C2.32936 12.7042 2.2002 12.3917 2.2002 12.025C2.2002 11.6583 2.32936 11.3458 2.5877 11.0875C2.84603 10.8292 3.15853 10.7 3.5252 10.7H10.6502V3.52501C10.6502 3.15835 10.7794 2.84585 11.0377 2.58751C11.296 2.32918 11.6085 2.20001 11.9752 2.20001C12.3419 2.20001 12.6544 2.32918 12.9127 2.58751C13.171 2.84585 13.3002 3.15835 13.3002 3.52501V10.675H20.4752C20.8419 10.675 21.1544 10.8042 21.4127 11.0625C21.671 11.3208 21.8002 11.6333 21.8002 12C21.8002 12.3667 21.671 12.6792 21.4127 12.9375C21.1544 13.1958 20.8419 13.325 20.4752 13.325H13.3252V20.475C13.3252 20.8417 13.196 21.1542 12.9377 21.4125C12.6794 21.6708 12.3669 21.8 12.0002 21.8Z" />
+                        </svg>
+                        Select STL
+                        <input type="file" id="fileInput" accept=".stl">
+                    </label>
+                    <p class="drop-hint">or drop an STL file here</p>
+                </div>
+                <div id="viewerSection" class="viewer-section hidden">
+                    <div class="canvas-wrap">
+                        <canvas id="canvas"></canvas>
+                        <div class="face-nav">
+                            <button id="btnViewFront" class="face-btn" title="Front view"
+                                aria-label="Front view">Front</button>
+                            <button id="btnViewBack" class="face-btn" title="Back view"
+                                aria-label="Back view">Back</button>
+                            <button id="btnViewLeft" class="face-btn" title="Left side view"
+                                aria-label="Left side view">Left</button>
+                            <button id="btnFrontView" class="face-btn" title="Right side view"
+                                aria-label="Right side view">Right</button>
+                            <button id="btnViewTop" class="face-btn" title="Top view" aria-label="Top view">Top</button>
+                            <button id="btnViewBottom" class="face-btn" title="Bottom view"
+                                aria-label="Bottom view">Bottom</button>
+                        </div>
+                        <button id="btnPause" class="pause-btn" title="Pause/Resume rotation"
+                            aria-label="Pause rotation">
+                            <svg id="iconPause" width="14" height="14" viewBox="0 0 22 22" fill="currentColor">
+                                <path
+                                    d="M15.2187 17.3279C14.5598 17.3279 14.0071 17.1046 13.5606 16.658C13.114 16.2115 12.8907 15.6588 12.8907 14.9999V6.0395C12.8907 5.38065 13.114 4.82794 13.5606 4.38138C14.0071 3.93483 14.5598 3.71155 15.2187 3.71155C15.8775 3.71155 16.4302 3.93483 16.8768 4.38138C17.3234 4.82794 17.5466 5.38065 17.5466 6.0395V14.9999C17.5466 15.6588 17.3234 16.2115 16.8768 16.658C16.4302 17.1046 15.8775 17.3279 15.2187 17.3279ZM7.53205 17.3279C6.8732 17.3279 6.32049 17.1046 5.87394 16.658C5.42738 16.2115 5.2041 15.6588 5.2041 14.9999V6.0395C5.2041 5.38065 5.42738 4.82794 5.87394 4.38138C6.32049 3.93483 6.8732 3.71155 7.53205 3.71155C8.19091 3.71155 8.74361 3.93483 9.19017 4.38138C9.63673 4.82794 9.86 5.38065 9.86 6.0395V14.9999C9.86 15.6588 9.63673 16.2115 9.19017 16.658C8.74361 17.1046 8.19091 17.3279 7.53205 17.3279Z" />
+                            </svg>
+                            <svg id="iconPlay" width="14" height="14" viewBox="0 0 22 22" fill="currentColor"
+                                style="display:none">
+                                <path
+                                    d="M7.16309 15.4172V5.66614C7.16309 5.33628 7.28022 5.05985 7.51447 4.83686C7.74873 4.61373 8.02201 4.50217 8.33431 4.50217C8.43197 4.50217 8.53204 4.51681 8.63453 4.54609C8.73702 4.57537 8.8395 4.62662 8.94199 4.69982L16.6286 9.55338C16.8116 9.67051 16.9489 9.81692 17.0404 9.99262C17.1319 10.1683 17.1777 10.3525 17.1777 10.5452C17.1777 10.7379 17.1301 10.9209 17.0349 11.0942C16.9398 11.2676 16.8043 11.4128 16.6286 11.5299L8.94199 16.3835C8.8395 16.4567 8.7354 16.508 8.6297 16.5372C8.52399 16.5665 8.42311 16.5812 8.32706 16.5812C8.0196 16.5812 7.74873 16.4696 7.51447 16.2465C7.28022 16.0233 7.16309 15.7469 7.16309 15.4172Z" />
+                            </svg>
+                        </button>
+                        <span id="fileName" class="file-name"></span>
                     </div>
-                    <button id="btnPause" class="pause-btn" title="Pause/Resume rotation" aria-label="Pause rotation">
-                        <svg id="iconPause" width="14" height="14" viewBox="0 0 22 22" fill="currentColor">
+                </div>
+            </main>
+
+            <div class="sidebar">
+                <div class="orbit-hint-bar">
+                    <p class="orbit-hint">Drag to orbit · Scroll to zoom · Right-drag to pan</p>
+                    <button id="btnCopyLink" class="copy-link-btn" title="Copy shareable link with current settings">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
-                                d="M15.2187 17.3279C14.5598 17.3279 14.0071 17.1046 13.5606 16.658C13.114 16.2115 12.8907 15.6588 12.8907 14.9999V6.0395C12.8907 5.38065 13.114 4.82794 13.5606 4.38138C14.0071 3.93483 14.5598 3.71155 15.2187 3.71155C15.8775 3.71155 16.4302 3.93483 16.8768 4.38138C17.3234 4.82794 17.5466 5.38065 17.5466 6.0395V14.9999C17.5466 15.6588 17.3234 16.2115 16.8768 16.658C16.4302 17.1046 15.8775 17.3279 15.2187 17.3279ZM7.53205 17.3279C6.8732 17.3279 6.32049 17.1046 5.87394 16.658C5.42738 16.2115 5.2041 15.6588 5.2041 14.9999V6.0395C5.2041 5.38065 5.42738 4.82794 5.87394 4.38138C6.32049 3.93483 6.8732 3.71155 7.53205 3.71155C8.19091 3.71155 8.74361 3.93483 9.19017 4.38138C9.63673 4.82794 9.86 5.38065 9.86 6.0395V14.9999C9.86 15.6588 9.63673 16.2115 9.19017 16.658C8.74361 17.1046 8.19091 17.3279 7.53205 17.3279Z" />
+                                d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm1-4h-4v2h4v-2z" />
                         </svg>
-                        <svg id="iconPlay" width="14" height="14" viewBox="0 0 22 22" fill="currentColor"
-                            style="display:none">
-                            <path
-                                d="M7.16309 15.4172V5.66614C7.16309 5.33628 7.28022 5.05985 7.51447 4.83686C7.74873 4.61373 8.02201 4.50217 8.33431 4.50217C8.43197 4.50217 8.53204 4.51681 8.63453 4.54609C8.73702 4.57537 8.8395 4.62662 8.94199 4.69982L16.6286 9.55338C16.8116 9.67051 16.9489 9.81692 17.0404 9.99262C17.1319 10.1683 17.1777 10.3525 17.1777 10.5452C17.1777 10.7379 17.1301 10.9209 17.0349 11.0942C16.9398 11.2676 16.8043 11.4128 16.6286 11.5299L8.94199 16.3835C8.8395 16.4567 8.7354 16.508 8.6297 16.5372C8.52399 16.5665 8.42311 16.5812 8.32706 16.5812C8.0196 16.5812 7.74873 16.4696 7.51447 16.2465C7.28022 16.0233 7.16309 15.7469 7.16309 15.4172Z" />
-                        </svg>
+                        Copy configuration
                     </button>
-                    <span id="fileName" class="file-name"></span>
                 </div>
-            </div>
-        </main>
 
-        <div class="orbit-hint-bar">
-            <p class="orbit-hint">Drag to orbit · Scroll to zoom · Right-drag to pan</p>
-            <button id="btnCopyLink" class="copy-link-btn" title="Copy shareable link with current settings">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path
-                        d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm1-4h-4v2h4v-2z" />
-                </svg>
-                Copy configuration
-            </button>
-        </div>
-
-        <div id="controlsBar" class="controls-bar hidden">
-            <div class="controls-row">
-                <div class="control-label">
-                    Colors
-                    <div class="color-group">
-                        <label class="color-option" title="Choose model color">
-                            <input type="color" id="colorPicker" value="#2e2b74">
-                            <span class="color-swatch" id="colorSwatch"></span>
-                            <span class="color-name">Model</span>
+                <div id="controlsBar" class="controls-bar hidden">
+                    <div class="controls-row">
+                        <div class="control-label">
+                            Colors
+                            <div class="color-group">
+                                <label class="color-option" title="Choose model color">
+                                    <input type="color" id="colorPicker" value="#2e2b74">
+                                    <span class="color-swatch" id="colorSwatch"></span>
+                                    <span class="color-name">Model</span>
+                                </label>
+                                <label class="color-option" title="Choose background color">
+                                    <input type="color" id="bgPicker" value="#dbd7ff">
+                                    <span class="color-swatch" id="bgSwatch"></span>
+                                    <span class="color-name">BG</span>
+                                </label>
+                            </div>
+                        </div>
+                        <label class="control-label">
+                            Shading
+                            <div class="shading-group">
+                                <label class="shading-option">
+                                    <input type="radio" name="shading" value="flat">
+                                    <span class="shading-thumb shading-thumb--flat"></span>
+                                    <span class="shading-name">Flat</span>
+                                </label>
+                                <label class="shading-option">
+                                    <input type="radio" name="shading" value="phong" checked>
+                                    <span class="shading-thumb shading-thumb--phong"></span>
+                                    <span class="shading-name">Phong</span>
+                                </label>
+                                <label class="shading-option">
+                                    <input type="radio" name="shading" value="metallic">
+                                    <span class="shading-thumb shading-thumb--metallic"></span>
+                                    <span class="shading-name">Metal</span>
+                                </label>
+                            </div>
                         </label>
-                        <label class="color-option" title="Choose background color">
-                            <input type="color" id="bgPicker" value="#dbd7ff">
-                            <span class="color-swatch" id="bgSwatch"></span>
-                            <span class="color-name">BG</span>
-                        </label>
-                    </div>
-                </div>
-                <label class="control-label">
-                    Shading
-                    <div class="shading-group">
-                        <label class="shading-option">
-                            <input type="radio" name="shading" value="flat">
-                            <span class="shading-thumb shading-thumb--flat"></span>
-                            <span class="shading-name">Flat</span>
-                        </label>
-                        <label class="shading-option">
-                            <input type="radio" name="shading" value="phong" checked>
-                            <span class="shading-thumb shading-thumb--phong"></span>
-                            <span class="shading-name">Phong</span>
-                        </label>
-                        <label class="shading-option">
-                            <input type="radio" name="shading" value="metallic">
-                            <span class="shading-thumb shading-thumb--metallic"></span>
-                            <span class="shading-name">Metal</span>
-                        </label>
-                    </div>
-                </label>
-                <div class="downloads-section">
-                    <div class="control-label">
-                        Animation
-                        <div class="export-anim-row">
-                            <div class="export-group">
-                                <div class="gif-group-box">
-                                    <button id="btnExportGif" class="export-btn"
-                                        title="Save animated GIF (full rotation)">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
-                                            style="display:inline;margin-right:8px;vertical-align:middle">
-                                            <path
-                                                d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
-                                        </svg>
-                                        GIF
-                                    </button>
-                                    <label class="loop-toggle-label" for="gifLoop">
-                                        <input type="checkbox" id="gifLoop" checked>
-                                        <span class="loop-toggle-track"><span class="loop-toggle-thumb"></span></span>
-                                        Loop
-                                    </label>
+                        <div class="downloads-section">
+                            <div class="control-label">
+                                Exports
+                                <div class="export-list">
+                                    <div class="export-list-item">
+                                        <div class="export-list-left">
+                                            <button id="btnExportGif" class="export-btn"
+                                                title="Save animated GIF (full rotation)">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                                    aria-hidden="true">
+                                                    <path
+                                                        d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
+                                                </svg>
+                                                GIF
+                                            </button>
+                                            <label class="loop-toggle-label" for="gifLoop">
+                                                <input type="checkbox" id="gifLoop" checked>
+                                                <span class="loop-toggle-track"><span
+                                                        class="loop-toggle-thumb"></span></span>
+                                                Loop
+                                            </label>
+                                        </div>
+                                        <span id="estimateGif" class="export-estimate"></span>
+                                    </div>
+                                    <div class="export-list-item">
+                                        <div class="export-list-left">
+                                            <button id="btnExportVideo" class="export-btn"
+                                                title="Save MP4 video (full rotation)">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                                    aria-hidden="true">
+                                                    <path
+                                                        d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
+                                                </svg>
+                                                MP4
+                                            </button>
+                                        </div>
+                                        <span id="estimateMp4" class="export-estimate"></span>
+                                    </div>
+                                    <div class="export-list-item">
+                                        <div class="export-list-left">
+                                            <button id="btnExportPng" class="export-btn"
+                                                title="Save current view as PNG">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                                    aria-hidden="true">
+                                                    <path
+                                                        d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
+                                                </svg>
+                                                PNG
+                                            </button>
+                                        </div>
+                                        <span id="estimatePng" class="export-estimate"></span>
+                                    </div>
                                 </div>
-                                <span id="estimateGif" class="export-estimate"></span>
+                                <span id="exportStatus" class="export-status"></span>
                             </div>
-                            <div class="export-group">
-                                <button id="btnExportVideo" class="export-btn" title="Save MP4 video (full rotation)">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
-                                        style="display:inline;margin-right:8px;vertical-align:middle">
+                        </div>
+                    </div>
+                    <div class="controls-row controls-row--motion">
+                        <div class="control-label">
+                            Rotation
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="rotateMode" value="off">
+                                    Off
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="rotateMode" value="spin" checked>
+                                    <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                         <path
-                                            d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
+                                            d="M12 4C9.4 4 7.05 5.08 5.37 6.84L7 8.5H2.5V4l1.71 1.71C5.96 3.66 8.83 2 12 2c4.42 0 8.17 2.87 9.5 6.84l-1.93.64A8 8 0 0 0 12 4zm0 16a8 8 0 0 0 7.57-5.48l1.93.64C20.17 19.13 16.42 22 12 22c-3.17 0-6.04-1.66-7.79-4.21L2.5 19.5V15H7l-1.63 1.66C7.05 18.92 9.4 20 12 20z" />
                                     </svg>
-                                    MP4
-                                </button>
-                                <span id="estimateMp4" class="export-estimate"></span>
+                                    Spin
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="rotateMode" value="tilt">
+                                    <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path
+                                            d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z" />
+                                    </svg>
+                                    Tilt
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="rotateMode" value="swing">
+                                    <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path
+                                            d="M6.25 13.35L7.6 14.7C7.85 14.95 7.97917 15.2542 7.9875 15.6125C7.99583 15.9708 7.86667 16.2833 7.6 16.55C7.35 16.8 7.04167 16.925 6.675 16.925C6.30833 16.925 6 16.8 5.75 16.55L2.15 12.95C2.01667 12.8167 1.91667 12.675 1.85 12.525C1.78333 12.375 1.75 12.2083 1.75 12.025C1.75 11.8417 1.78333 11.6708 1.85 11.5125C1.91667 11.3542 2.01667 11.2083 2.15 11.075L5.725 7.5C5.975 7.25 6.27917 7.125 6.6375 7.125C6.99583 7.125 7.30833 7.25 7.575 7.5C7.84167 7.76667 7.975 8.07917 7.975 8.4375C7.975 8.79583 7.84167 9.10833 7.575 9.375L6.275 10.675H17.7L16.375 9.35C16.1083 9.08333 15.9792 8.775 15.9875 8.425C15.9958 8.075 16.1333 7.76667 16.4 7.5C16.6667 7.25 16.9792 7.125 17.3375 7.125C17.6958 7.125 18 7.25 18.25 7.5L21.85 11.1C21.9833 11.2333 22.0792 11.375 22.1375 11.525C22.1958 11.675 22.225 11.8417 22.225 12.025C22.225 12.2083 22.1958 12.375 22.1375 12.525C22.0792 12.675 21.9833 12.8167 21.85 12.95L18.25 16.55C18 16.8 17.6958 16.925 17.3375 16.925C16.9792 16.925 16.6667 16.8 16.4 16.55C16.1333 16.2833 15.9958 15.9708 15.9875 15.6125C15.9792 15.2542 16.1083 14.9417 16.375 14.675L17.7 13.35H6.25Z" />
+                                    </svg>
+                                    Swing
+                                </label>
                             </div>
                         </div>
-                    </div>
-                    <div class="control-label">
-                        Image
-                        <div class="export-group">
-                            <button id="btnExportPng" class="export-btn" title="Save current view as PNG">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
-                                    style="display:inline;margin-right:8px;vertical-align:middle">
-                                    <path
-                                        d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
-                                </svg>
-                                PNG
-                            </button>
-                            <span id="estimatePng" class="export-estimate"></span>
-                        </div>
-                    </div>
-                    <span id="exportStatus" class="export-status"></span>
-                </div>
-            </div>
-            <div class="controls-row controls-row--motion">
-                <div class="control-label">
-                    Rotation
-                    <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="rotateMode" value="off">
-                            Off
+                        <label class="control-label range-label">
+                            <span>Speed <span id="speedVal">1.0×</span></span>
+                            <input type="range" id="speedSlider" min="0.5" max="4.0" step="0.5" value="1.0">
+                            <div class="slider-ticks">
+                                <span>0.5×</span>
+                                <span>1×</span>
+                                <span>1.5×</span>
+                                <span>2×</span>
+                                <span>2.5×</span>
+                                <span>3×</span>
+                                <span>3.5×</span>
+                                <span>4×</span>
+                            </div>
                         </label>
-                        <label class="radio-option">
-                            <input type="radio" name="rotateMode" value="spin" checked>
-                            <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path
-                                    d="M12 4C9.4 4 7.05 5.08 5.37 6.84L7 8.5H2.5V4l1.71 1.71C5.96 3.66 8.83 2 12 2c4.42 0 8.17 2.87 9.5 6.84l-1.93.64A8 8 0 0 0 12 4zm0 16a8 8 0 0 0 7.57-5.48l1.93.64C20.17 19.13 16.42 22 12 22c-3.17 0-6.04-1.66-7.79-4.21L2.5 19.5V15H7l-1.63 1.66C7.05 18.92 9.4 20 12 20z" />
-                            </svg>
-                            Spin
+                        <label class="control-label range-label elev-label">
+                            <span>Tilt <span id="elevVal">30°</span></span>
+                            <input type="range" id="elevationSlider" min="0" max="90" step="15" value="30">
+                            <div class="slider-ticks">
+                                <span class="tick--flat">0°</span>
+                                <span>15°</span>
+                                <span>30°</span>
+                                <span>45°</span>
+                                <span>60°</span>
+                                <span>75°</span>
+                                <span class="tick--top">Top</span>
+                            </div>
                         </label>
-                        <label class="radio-option">
-                            <input type="radio" name="rotateMode" value="tilt">
-                            <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z" />
-                            </svg>
-                            Tilt
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="rotateMode" value="swing">
-                            <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path
-                                    d="M6.25 13.35L7.6 14.7C7.85 14.95 7.97917 15.2542 7.9875 15.6125C7.99583 15.9708 7.86667 16.2833 7.6 16.55C7.35 16.8 7.04167 16.925 6.675 16.925C6.30833 16.925 6 16.8 5.75 16.55L2.15 12.95C2.01667 12.8167 1.91667 12.675 1.85 12.525C1.78333 12.375 1.75 12.2083 1.75 12.025C1.75 11.8417 1.78333 11.6708 1.85 11.5125C1.91667 11.3542 2.01667 11.2083 2.15 11.075L5.725 7.5C5.975 7.25 6.27917 7.125 6.6375 7.125C6.99583 7.125 7.30833 7.25 7.575 7.5C7.84167 7.76667 7.975 8.07917 7.975 8.4375C7.975 8.79583 7.84167 9.10833 7.575 9.375L6.275 10.675H17.7L16.375 9.35C16.1083 9.08333 15.9792 8.775 15.9875 8.425C15.9958 8.075 16.1333 7.76667 16.4 7.5C16.6667 7.25 16.9792 7.125 17.3375 7.125C17.6958 7.125 18 7.25 18.25 7.5L21.85 11.1C21.9833 11.2333 22.0792 11.375 22.1375 11.525C22.1958 11.675 22.225 11.8417 22.225 12.025C22.225 12.2083 22.1958 12.375 22.1375 12.525C22.0792 12.675 21.9833 12.8167 21.85 12.95L18.25 16.55C18 16.8 17.6958 16.925 17.3375 16.925C16.9792 16.925 16.6667 16.8 16.4 16.55C16.1333 16.2833 15.9958 15.9708 15.9875 15.6125C15.9792 15.2542 16.1083 14.9417 16.375 14.675L17.7 13.35H6.25Z" />
-                            </svg>
-                            Swing
+                        <label class="control-label range-label tilt-range-label">
+                            <span>Range <span id="tiltRangeVal">20°</span></span>
+                            <input type="range" id="tiltRangeSlider" min="10" max="50" step="10" value="20">
+                            <div class="slider-ticks" id="tiltRangeTicks">
+                                <span>10°</span>
+                                <span>20°</span>
+                                <span>30°</span>
+                                <span>40°</span>
+                                <span>50°</span>
+                            </div>
                         </label>
                     </div>
                 </div>
-                <label class="control-label range-label">
-                    <span>Speed <span id="speedVal">1.0×</span></span>
-                    <input type="range" id="speedSlider" min="0.5" max="4.0" step="0.5" value="1.0">
-                    <div class="slider-ticks">
-                        <span>0.5×</span>
-                        <span>1×</span>
-                        <span>1.5×</span>
-                        <span>2×</span>
-                        <span>2.5×</span>
-                        <span>3×</span>
-                        <span>3.5×</span>
-                        <span>4×</span>
-                    </div>
-                </label>
-                <label class="control-label range-label elev-label">
-                    <span>Tilt <span id="elevVal">30°</span></span>
-                    <input type="range" id="elevationSlider" min="0" max="90" step="15" value="30">
-                    <div class="slider-ticks">
-                        <span class="tick--flat">0°</span>
-                        <span>15°</span>
-                        <span>30°</span>
-                        <span>45°</span>
-                        <span>60°</span>
-                        <span>75°</span>
-                        <span class="tick--top">Top</span>
-                    </div>
-                </label>
-                <label class="control-label range-label tilt-range-label">
-                    <span>Range <span id="tiltRangeVal">20°</span></span>
-                    <input type="range" id="tiltRangeSlider" min="10" max="50" step="10" value="20">
-                    <div class="slider-ticks" id="tiltRangeTicks">
-                        <span>10°</span>
-                        <span>20°</span>
-                        <span>30°</span>
-                        <span>40°</span>
-                        <span>50°</span>
-                    </div>
-                </label>
-            </div>
-        </div>
+            </div><!-- .sidebar -->
+        </div><!-- .app-body -->
 
         <footer></footer>
     </div>

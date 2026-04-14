@@ -57,12 +57,14 @@ Shading preview cards update live to reflect the current model and background co
 
 ### Export
 
+Each format appears as a row showing the download button, estimated file size, and (for GIF) a Loop toggle:
+
 | Button | Output |
 |---|---|
-| Animation → Download GIF | Animated GIF — one full motion cycle |
+| GIF | Animated GIF — one full motion cycle |
 | Loop toggle | Whether the GIF loops; does not affect MP4 |
-| Animation → Download MP4 | H.264 MP4 video — one full motion cycle (requires Chrome/Edge/Safari 16.4+) |
-| Image → Download PNG | Still image of the current view |
+| MP4 | H.264 MP4 video — one full motion cycle (requires Chrome/Edge/Safari 16.4+) |
+| PNG | Still image of the current view |
 
 All export is completely client-side — your STL file never leaves your machine.
 
