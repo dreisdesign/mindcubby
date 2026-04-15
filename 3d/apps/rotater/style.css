@@ -115,7 +115,7 @@ html.theme-dark .rotation-option {
     border-color: rgba(179, 168, 247, 0.4);
 }
 
-html.theme-dark .rotation-power-track {
+html.theme-dark .loop-toggle-track {
     background: rgba(255, 255, 255, 0.2);
 }
 
@@ -765,17 +765,17 @@ html.loaded footer {
 .control-label {
     display: flex;
     flex-direction: column;
-    font-size: var(--text-sm);
+    font-size: var(--text-md);
     font-weight: 700;
     color: var(--color-label, #666);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.01em;
     gap: 10px;
 }
 
 .range-label {
     flex: 1;
     min-width: 140px;
+    gap: 4px;
 }
 
 .speed-label {
@@ -797,6 +797,9 @@ html.tilt-mode .elev-label {
 .range-label>span {
     display: flex;
     justify-content: space-between;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 .range-label>span span {
@@ -1019,7 +1022,7 @@ button {
 }
 
 .gif-loop-label:has(input:checked) .loop-toggle-track {
-    background: var(--color-export);
+    background: var(--color-primary);
 }
 
 .gif-loop-label:has(input:checked) .loop-toggle-thumb {
@@ -1059,6 +1062,7 @@ html.none-mode .gif-loop-label {
     background: #ccc;
     border-radius: 8px;
     flex-shrink: 0;
+    overflow: hidden;
     transition: background 0.2s;
 }
 
@@ -1079,6 +1083,50 @@ html.none-mode .gif-loop-label {
 }
 
 .loop-toggle-label:has(input:checked) .loop-toggle-thumb {
+    transform: translateX(12px);
+}
+
+/* ── Toggle check/X icons ── */
+
+.toggle-check-icon,
+.toggle-x-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 9px;
+    height: 9px;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+}
+
+.toggle-check-icon {
+    left: 2px;
+    color: white;
+    opacity: 0;
+}
+
+.toggle-x-icon {
+    right: 2px;
+    color: rgba(0, 0, 0, 0.45);
+    opacity: 1;
+}
+
+.gif-loop-label:has(input:checked) .toggle-check-icon,
+.rotation-power-toggle:has(input:checked) .toggle-check-icon {
+    opacity: 1;
+}
+
+.gif-loop-label:has(input:checked) .toggle-x-icon,
+.rotation-power-toggle:has(input:checked) .toggle-x-icon {
+    opacity: 0;
+}
+
+.rotation-power-toggle:has(input:checked) .loop-toggle-track {
+    background: var(--color-primary);
+}
+
+.rotation-power-toggle:has(input:checked) .loop-toggle-thumb {
     transform: translateX(12px);
 }
 
@@ -1158,7 +1206,7 @@ html.none-mode .gif-loop-label {
     transform: translateX(-50%);
     background: var(--color-primary);
     color: #fff;
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     font-weight: 700;
     padding: 3px 8px;
     border-radius: 9999px;
@@ -1185,7 +1233,7 @@ html.none-mode .gif-loop-label {
 }
 
 .thumb-label {
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -1588,15 +1636,29 @@ html.theme-dark .settings-close-btn:hover {
 /* ── Controls bar footer (Reset settings) ── */
 
 .controls-bar-footer {
-    display: flex;
-    justify-content: flex-end;
-    padding-top: 4px;
+    height: 0;
+    padding: 0;
+    overflow: visible;
+}
+
+#btnResetSettings {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 10;
+    color: var(--color-hint);
+    border-color: var(--border-color);
+    background: var(--color-surface-raised);
+    font-size: var(--text-sm);
+    opacity: 0.65;
+    transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
 }
 
 #btnResetSettings:hover {
+    opacity: 1;
     color: var(--palette-red-500);
     border-color: var(--palette-red-500);
-    background: color-mix(in srgb, var(--palette-red-500) 6%, transparent);
+    background: color-mix(in srgb, var(--palette-red-500) 6%, var(--color-surface-raised));
 }
 
 .canvas-bottom-center {
@@ -1742,35 +1804,6 @@ html.none-mode .rotation-group {
     display: none;
 }
 
-.rotation-power-track {
-    position: relative;
-    width: 36px;
-    height: 20px;
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 10px;
-    transition: background 0.2s;
-}
-
-.rotation-power-thumb {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 16px;
-    height: 16px;
-    background: white;
-    border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.rotation-power-toggle:has(input:checked) .rotation-power-track {
-    background: #007AFF;
-}
-
-.rotation-power-toggle:has(input:checked) .rotation-power-thumb {
-    transform: translateX(16px);
-}
-
 .rotation-option {
     display: flex;
     flex-direction: column;
@@ -1829,13 +1862,17 @@ html.none-mode .rotation-group {
 }
 
 @keyframes rot-tilt {
-    0%, 100% { transform: translateY(-5px); }
-    50%       { transform: translateY(5px); }
+    0%   { transform: translateY(0); }
+    25%  { transform: translateY(-6px); }
+    75%  { transform: translateY(6px); }
+    100% { transform: translateY(0); }
 }
 
 @keyframes rot-swing {
-    0%, 100% { transform: translateX(-6px); }
-    50%       { transform: translateX(6px); }
+    0%   { transform: translateX(0); }
+    25%  { transform: translateX(6px); }
+    75%  { transform: translateX(-6px); }
+    100% { transform: translateX(0); }
 }
 
 .rotation-option:hover .rotation-thumb--spin .rot-icon {

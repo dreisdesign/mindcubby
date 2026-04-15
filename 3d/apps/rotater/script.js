@@ -572,8 +572,25 @@ document.getElementById('rotationEnabled').addEventListener('change', function (
     const isOff = !this.checked;
     document.documentElement.classList.toggle('none-mode', isOff);
     const m = rotateModeEl.value;
-    document.documentElement.classList.toggle('tilt-mode', !isOff && (m === 'tilt' || m === 'swing'));
-    if (controls) controls.autoRotate = !isOff && !isPaused && m === 'spin';
+    if (isOff) {
+        isPaused = true;
+        if (controls) controls.autoRotate = false;
+        iconPause.style.display = 'none';
+        iconPlay.style.display = '';
+        btnPause.setAttribute('aria-label', 'Resume rotation');
+        btnPause.title = 'Resume rotation';
+        document.documentElement.classList.add('rotation-paused');
+        document.documentElement.classList.remove('tilt-mode');
+    } else {
+        isPaused = false;
+        if (controls) controls.autoRotate = m === 'spin';
+        iconPause.style.display = '';
+        iconPlay.style.display = 'none';
+        btnPause.setAttribute('aria-label', 'Pause rotation');
+        btnPause.title = 'Pause rotation';
+        document.documentElement.classList.remove('rotation-paused');
+        document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'swing');
+    }
     btnGif.disabled = isOff;
     btnVideo.disabled = isOff;
     document.getElementById('gifLoop').disabled = isOff;
