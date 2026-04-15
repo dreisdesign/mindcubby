@@ -74,18 +74,28 @@
                                 <span id="compactBtnLabel">Select STL</span>
                             </label>
                         </div>
-                        <div class="face-nav">
-                            <button id="btnViewFront" class="face-btn" title="Front view"
-                                aria-label="Front view">Front</button>
-                            <button id="btnViewBack" class="face-btn" title="Back view"
-                                aria-label="Back view">Back</button>
-                            <button id="btnViewLeft" class="face-btn" title="Left side view"
-                                aria-label="Left side view">Left</button>
-                            <button id="btnFrontView" class="face-btn" title="Right side view"
-                                aria-label="Right side view">Right</button>
-                            <button id="btnViewTop" class="face-btn" title="Top view" aria-label="Top view">Top</button>
-                            <button id="btnViewBottom" class="face-btn" title="Bottom view"
-                                aria-label="Bottom view">Bottom</button>
+                        <div class="canvas-bottom-center">
+                            <div class="orbit-hint-bar">
+                                <span class="orbit-hint">Drag to orbit · Scroll to zoom · Right-drag to pan</span>
+                                <button class="orbit-hint-dismiss" aria-label="Dismiss hint" title="Dismiss">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="face-nav">
+                                <button id="btnViewFront" class="face-btn" title="Front view"
+                                    aria-label="Front view">Front</button>
+                                <button id="btnViewBack" class="face-btn" title="Back view"
+                                    aria-label="Back view">Back</button>
+                                <button id="btnViewLeft" class="face-btn" title="Left side view"
+                                    aria-label="Left side view">Left</button>
+                                <button id="btnFrontView" class="face-btn" title="Right side view"
+                                    aria-label="Right side view">Right</button>
+                                <button id="btnViewTop" class="face-btn" title="Top view" aria-label="Top view">Top</button>
+                                <button id="btnViewBottom" class="face-btn" title="Bottom view"
+                                    aria-label="Bottom view">Bottom</button>
+                            </div>
                         </div>
                         <button id="btnPause" class="pause-btn" title="Pause/Resume rotation"
                             aria-label="Pause rotation">
@@ -99,128 +109,109 @@
                                     d="M7.16309 15.4172V5.66614C7.16309 5.33628 7.28022 5.05985 7.51447 4.83686C7.74873 4.61373 8.02201 4.50217 8.33431 4.50217C8.43197 4.50217 8.53204 4.51681 8.63453 4.54609C8.73702 4.57537 8.8395 4.62662 8.94199 4.69982L16.6286 9.55338C16.8116 9.67051 16.9489 9.81692 17.0404 9.99262C17.1319 10.1683 17.1777 10.3525 17.1777 10.5452C17.1777 10.7379 17.1301 10.9209 17.0349 11.0942C16.9398 11.2676 16.8043 11.4128 16.6286 11.5299L8.94199 16.3835C8.8395 16.4567 8.7354 16.508 8.6297 16.5372C8.52399 16.5665 8.42311 16.5812 8.32706 16.5812C8.0196 16.5812 7.74873 16.4696 7.51447 16.2465C7.28022 16.0233 7.16309 15.7469 7.16309 15.4172Z" />
                             </svg>
                         </button>
+                        <button id="btnThemeToggle" class="theme-toggle-btn">
+                            <svg id="themeToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                aria-hidden="true">
+                                <path id="themeToggleIconPath"
+                                    d="M12.0998 22.325C10.6665 22.325 9.31647 22.05 8.0498 21.5C6.78314 20.95 5.67897 20.2041 4.7373 19.2625C3.79564 18.3208 3.0498 17.2166 2.4998 15.95C1.9498 14.6833 1.6748 13.3333 1.6748 11.9C1.6748 9.76664 2.25814 7.81664 3.4248 6.04997C4.59147 4.28331 6.16647 3.01664 8.1498 2.24997C8.68314 2.03331 9.1873 2.07081 9.6623 2.36247C10.1373 2.65414 10.3831 3.06664 10.3998 3.59997C10.4331 4.94997 10.679 6.24164 11.1373 7.47498C11.5956 8.70831 12.2998 9.79998 13.2498 10.75C14.1998 11.7 15.2915 12.4083 16.5248 12.875C17.7581 13.3416 19.0498 13.575 20.3998 13.575C20.9331 13.575 21.3498 13.7875 21.6498 14.2125C21.9498 14.6375 22.0081 15.1 21.8248 15.6C21.0915 17.65 19.8331 19.2833 18.0498 20.5C16.2665 21.7166 14.2831 22.325 12.0998 22.325Z" />
+                            </svg>
+                            <span id="themeToggleLabel">Dark mode</span>
+                        </button>
                     </div>
                 </div>
             </main>
 
             <div class="sidebar">
                 <div class="sidebar-header">
-                    <button id="btnResetSettings" class="copy-link-btn copy-link-btn--secondary"
-                        title="Clear saved settings and restore defaults">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path
-                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
-                        </svg>
-                        Reset settings
-                    </button>
                     <button id="btnCopyLink" class="copy-link-btn" title="Copy shareable link with current settings">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path
-                                d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm1-4h-4v2h4v-2z" />
+                            <path d="M9.2248 18.75C8.49597 18.75 7.87214 18.4905 7.35331 17.9715C6.83431 17.4527 6.5748 16.8288 6.5748 16.1V3.9C6.5748 3.17133 6.83431 2.5475 7.35331 2.0285C7.87214 1.5095 8.49597 1.25 9.2248 1.25H18.4248C19.1535 1.25 19.7773 1.5095 20.2963 2.0285C20.8153 2.5475 21.0748 3.17133 21.0748 3.9V16.1C21.0748 16.8288 20.8153 17.4527 20.2963 17.9715C19.7773 18.4905 19.1535 18.75 18.4248 18.75H9.2248ZM4.5748 23.4C3.84597 23.4 3.22214 23.1405 2.7033 22.6215C2.1843 22.1025 1.9248 21.4787 1.9248 20.75V7.225C1.9248 6.85833 2.05397 6.54583 2.3123 6.2875C2.57064 6.02917 2.88314 5.9 3.2498 5.9C3.61647 5.9 3.92897 6.02917 4.1873 6.2875C4.44564 6.54583 4.5748 6.85833 4.5748 7.225V20.75H15.0998C15.4665 20.75 15.779 20.8792 16.0373 21.1375C16.2956 21.3958 16.4248 21.7083 16.4248 22.075C16.4248 22.4417 16.2956 22.7542 16.0373 23.0125C15.779 23.2708 15.4665 23.4 15.0998 23.4H4.5748Z" />
                         </svg>
                         Copy configuration
                     </button>
                 </div>
                 <div id="controlsBar" class="controls-bar hidden">
-                    <div class="controls-row">
-                        <div class="control-label">
-                            Colors
-                            <div class="color-group">
-                                <label class="color-option" title="Choose model color">
-                                    <input type="color" id="colorPicker" value="#2e2b74">
-                                    <span class="color-swatch" id="colorSwatch"></span>
-                                    <span class="color-name">Model</span>
-                                </label>
-                                <label class="color-option" title="Choose background color">
-                                    <input type="color" id="bgPicker" value="#dbd7ff">
-                                    <span class="color-swatch" id="bgSwatch"></span>
-                                    <span class="color-name">BG</span>
-                                </label>
-                            </div>
-                        </div>
-                        <label class="control-label">
-                            Shading
-                            <div class="shading-group">
-                                <label class="shading-option">
-                                    <input type="radio" name="shading" value="flat">
-                                    <span class="shading-thumb shading-thumb--flat"></span>
-                                    <span class="shading-name">Flat</span>
-                                </label>
-                                <label class="shading-option">
-                                    <input type="radio" name="shading" value="phong" checked>
-                                    <span class="shading-thumb shading-thumb--phong"></span>
-                                    <span class="shading-name">Phong</span>
-                                </label>
-                                <label class="shading-option">
-                                    <input type="radio" name="shading" value="metallic">
-                                    <span class="shading-thumb shading-thumb--metallic"></span>
-                                    <span class="shading-name">Metal</span>
-                                </label>
-                            </div>
-                        </label>
-                    </div>
-                    <hr class="section-divider">
+                    <div class="controls-section-box">
                     <div class="controls-row">
                         <div class="downloads-section">
                             <div class="control-label">
                                 Exports
-                                <div class="export-list">
-                                    <div class="export-list-item">
-                                        <div class="export-list-left">
-                                            <button id="btnExportGif" class="export-btn"
-                                                title="Save animated GIF (full rotation)">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-                                                    aria-hidden="true">
-                                                    <path
-                                                        d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
-                                                </svg>
-                                                GIF
-                                            </button>
-                                            <label class="loop-toggle-label" for="gifLoop">
-                                                <input type="checkbox" id="gifLoop" checked>
-                                                <span class="loop-toggle-track"><span
-                                                        class="loop-toggle-thumb"></span></span>
-                                                Loop
-                                            </label>
-                                        </div>
-                                        <span id="estimateGif" class="export-estimate"></span>
+                                <div class="export-buttons-row">
+                                    <div class="gif-compound">
+                                        <button id="btnExportGif" class="export-btn gif-btn"
+                                            title="Save animated GIF (full rotation)">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                                aria-hidden="true">
+                                                <path
+                                                    d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
+                                            </svg>
+                                            GIF
+                                        </button>
+                                        <select id="gifLoop" class="gif-type-select">
+                                            <option value="1">Looping GIF</option>
+                                            <option value="0">One-shot GIF</option>
+                                        </select>
                                     </div>
-                                    <div class="export-list-item">
-                                        <div class="export-list-left">
-                                            <button id="btnExportVideo" class="export-btn"
-                                                title="Save MP4 video (full rotation)">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-                                                    aria-hidden="true">
-                                                    <path
-                                                        d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
-                                                </svg>
-                                                MP4
-                                            </button>
-                                        </div>
-                                        <span id="estimateMp4" class="export-estimate"></span>
-                                    </div>
-                                    <div class="export-list-item">
-                                        <div class="export-list-left">
-                                            <button id="btnExportPng" class="export-btn"
-                                                title="Save current view as PNG">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-                                                    aria-hidden="true">
-                                                    <path
-                                                        d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
-                                                </svg>
-                                                PNG
-                                            </button>
-                                        </div>
-                                        <span id="estimatePng" class="export-estimate"></span>
-                                    </div>
+                                    <button id="btnExportVideo" class="export-btn"
+                                        title="Save MP4 video (full rotation)">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                            aria-hidden="true">
+                                            <path
+                                                d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
+                                        </svg>
+                                        MP4
+                                    </button>
+                                    <button id="btnExportPng" class="export-btn" title="Save current view as PNG">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                            aria-hidden="true">
+                                            <path
+                                                d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
+                                        </svg>
+                                        PNG
+                                    </button>
                                 </div>
                                 <span id="exportStatus" class="export-status"></span>
                             </div>
                         </div>
                     </div>
-                    <hr class="section-divider">
+                    </div>
+                    <div class="controls-section-box">
+                    <div class="controls-row">
+                        <div class="control-label" style="flex: 1">
+                            Colors
+                            <div class="styles-group">
+                                    <label class="color-option" title="Choose model color">
+                                        <input type="color" id="colorPicker" value="#2e2b74">
+                                        <span class="color-swatch" id="colorSwatch"></span>
+                                        <span class="color-name">Model</span>
+                                    </label>
+                                    <label class="color-option" title="Choose background color">
+                                        <input type="color" id="bgPicker" value="#dbd7ff">
+                                        <span class="color-swatch" id="bgSwatch"></span>
+                                        <span class="color-name">BG</span>
+                                    </label>
+                                    <label class="shading-option">
+                                        <input type="radio" name="shading" value="flat">
+                                        <span class="shading-thumb shading-thumb--flat"></span>
+                                        <span class="shading-name">Flat</span>
+                                    </label>
+                                    <label class="shading-option">
+                                        <input type="radio" name="shading" value="phong" checked>
+                                        <span class="shading-thumb shading-thumb--phong"></span>
+                                        <span class="shading-name">Phong</span>
+                                    </label>
+                                    <label class="shading-option">
+                                        <input type="radio" name="shading" value="metallic">
+                                        <span class="shading-thumb shading-thumb--metallic"></span>
+                                        <span class="shading-name">Metal</span>
+                                    </label>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="controls-section-box">
                     <div class="controls-row controls-row--motion">
-                        <div class="control-label">
+                        <div class="control-label" style="flex: 1">
                             Rotation
                             <div class="radio-group">
                                 <label class="radio-option">
@@ -292,8 +283,16 @@
                             </div>
                         </label>
                     </div>
-                    <div class="orbit-hint-bar">
-                        <p class="orbit-hint">Drag to orbit · Scroll to zoom · Right-drag to pan</p>
+                    </div>
+                    <div class="controls-bar-footer">
+                        <button id="btnResetSettings" class="copy-link-btn"
+                            title="Clear saved settings and restore defaults">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path
+                                    d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                            </svg>
+                            Reset settings
+                        </button>
                     </div>
                 </div>
             </div><!-- .sidebar -->
@@ -303,14 +302,6 @@
     </div>
 
     <script type="module" src="script.js"></script>
-
-    <button id="btnThemeToggle" class="theme-toggle-btn">
-        <svg id="themeToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path id="themeToggleIconPath"
-                d="M12.0998 22.325C10.6665 22.325 9.31647 22.05 8.0498 21.5C6.78314 20.95 5.67897 20.2041 4.7373 19.2625C3.79564 18.3208 3.0498 17.2166 2.4998 15.95C1.9498 14.6833 1.6748 13.3333 1.6748 11.9C1.6748 9.76664 2.25814 7.81664 3.4248 6.04997C4.59147 4.28331 6.16647 3.01664 8.1498 2.24997C8.68314 2.03331 9.1873 2.07081 9.6623 2.36247C10.1373 2.65414 10.3831 3.06664 10.3998 3.59997C10.4331 4.94997 10.679 6.24164 11.1373 7.47498C11.5956 8.70831 12.2998 9.79998 13.2498 10.75C14.1998 11.7 15.2915 12.4083 16.5248 12.875C17.7581 13.3416 19.0498 13.575 20.3998 13.575C20.9331 13.575 21.3498 13.7875 21.6498 14.2125C21.9498 14.6375 22.0081 15.1 21.8248 15.6C21.0915 17.65 19.8331 19.2833 18.0498 20.5C16.2665 21.7166 14.2831 22.325 12.0998 22.325Z" />
-        </svg>
-        <span id="themeToggleLabel">Dark mode</span>
-    </button>
 
 </body>
 

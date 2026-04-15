@@ -17,15 +17,15 @@ function exportFrames() {
 }
 
 function updateEstimate() {
-    if (!estimateGif) return;
+    if (!btnGif) return;
     const n = exportFrames();
     const secs = n / EXPORT.fps;
     const gifMB = (n * 8.7 / 1024).toFixed(1);
     const mp4MB = (secs * 0.15).toFixed(1);
-    estimateGif.textContent = `~${gifMB} MB · ${n} frames`;
-    estimateMp4.textContent = `~${mp4MB} MB · ${secs.toFixed(1)}s`;
+    btnGif.title = `~${gifMB} MB · ${n} frames`;
+    btnVideo.title = `~${mp4MB} MB · ${secs.toFixed(1)}s`;
     const pngMB = (EXPORT.size * EXPORT.size * 4 * 0.25 / (1024 * 1024)).toFixed(1);
-    if (estimatePng) estimatePng.textContent = `~${pngMB} MB · ${EXPORT.size}×${EXPORT.size}px`;
+    if (btnPng) btnPng.title = `~${pngMB} MB · ${EXPORT.size}×${EXPORT.size}px`;
 }
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
@@ -46,10 +46,8 @@ const elevSlider = document.getElementById('elevationSlider');
 const elevVal = document.getElementById('elevVal');
 const btnGif = document.getElementById('btnExportGif');
 const btnVideo = document.getElementById('btnExportVideo');
+const btnPng = document.getElementById('btnExportPng');
 const statusEl = document.getElementById('exportStatus');
-const estimateGif = document.getElementById('estimateGif');
-const estimateMp4 = document.getElementById('estimateMp4');
-const estimatePng = document.getElementById('estimatePng');
 const fileNameEl = document.getElementById('fileName');
 const btnPause = document.getElementById('btnPause');
 const iconPause = document.getElementById('iconPause');
@@ -182,7 +180,9 @@ function loadSTLBuffer(buffer, name) {
     viewerSec.classList.remove('hidden');
     document.getElementById('emptyState').classList.add('hidden');
     document.getElementById('controlsBar').classList.remove('hidden');
-    document.querySelector('.orbit-hint-bar').classList.add('visible');
+    if (!localStorage.getItem('rotater_hintDismissed')) {
+        document.querySelector('.orbit-hint-bar').classList.add('visible');
+    }
     updateEstimate();
     requestAnimationFrame(syncCanvasSize);
 }
@@ -323,7 +323,7 @@ function saveSettings() {
             elevation: elevSlider.value,
             rotateMode: rotateModeEl.value,
             tiltRange: tiltRangeSlider.value,
-            gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
+            gifLoop: document.getElementById('gifLoop')?.value ?? '1',
         }));
     } catch (e) { }
     settingsToURL();
@@ -357,7 +357,7 @@ function restoreSettings() {
             btnVideo.disabled = isOff;
             const gifLoopEl = document.getElementById('gifLoop');
             gifLoopEl.disabled = isOff;
-            if (s.gifLoop != null) gifLoopEl.checked = s.gifLoop === true || s.gifLoop === '1' || s.gifLoop === 1;
+            if (s.gifLoop != null) gifLoopEl.value = (s.gifLoop === true || s.gifLoop === '1' || s.gifLoop === 1) ? '1' : '0';
         }
         updateShadingThumbs();
         updateColorSwatches();
@@ -389,7 +389,7 @@ function settingsToURL() {
         sp: speedSlider.value,
         el: elevSlider.value,
         tr: tiltRangeSlider.value,
-        gl: document.getElementById('gifLoop')?.checked ? '1' : '0',
+        gl: document.getElementById('gifLoop')?.value ?? '1',
     });
     history.replaceState(null, '', '?' + p.toString());
 }
@@ -585,9 +585,14 @@ tiltRangeSlider.addEventListener('input', () => {
 });
 
 document.getElementById('btnResetSettings').addEventListener('click', () => {
-    try { localStorage.removeItem(SETTINGS_KEY); localStorage.removeItem('rotater_hasSession'); } catch (e) { }
+    try { localStorage.removeItem(SETTINGS_KEY); localStorage.removeItem('rotater_hasSession'); localStorage.removeItem('rotater_hintDismissed'); } catch (e) { }
     history.replaceState(null, '', location.pathname);
     location.reload();
+});
+
+document.querySelector('.orbit-hint-dismiss')?.addEventListener('click', () => {
+    document.querySelector('.orbit-hint-bar').classList.remove('visible');
+    try { localStorage.setItem('rotater_hintDismissed', '1'); } catch (e) { }
 });
 
 document.getElementById('btnClearModel').addEventListener('click', async (e) => {
@@ -760,7 +765,7 @@ btnGif.addEventListener('click', async () => {
         setStatus('Encoding GIF…');
         await new Promise(r => setTimeout(r, 0));
 
-        const repeat = document.getElementById('gifLoop').checked ? 0 : -1;
+        const repeat = document.getElementById('gifLoop').value === '1' ? 0 : -1;
         const gif = GIFEncoder();
         for (let i = 0; i < frames.length; i++) {
             const palette = quantize(frames[i], 256);

@@ -87,11 +87,25 @@ html.theme-dark .radio-option:has(input:checked) {
     color: var(--palette-blueberry-900);
 }
 
-/* Loop toggle label: dark theme surface instead of hardcoded white */
-html.theme-dark .loop-toggle-label {
-    background: var(--color-surface-raised);
-    color: var(--text-color);
-    border-color: var(--border-color);
+/* Section boxes: subtly differentiated in dark mode */
+html.theme-dark .controls-section-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+/* Orbit hint toast: invert for dark mode */
+html.theme-dark .orbit-hint-bar {
+    background: var(--palette-blueberry-200);
+}
+
+html.theme-dark .orbit-hint {
+    color: var(--palette-blueberry-900);
+}
+
+html.theme-dark .orbit-hint-dismiss {
+    background: rgba(30, 25, 62, 0.15);
+    color: var(--palette-blueberry-900);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -285,13 +299,10 @@ html.loaded .sidebar {
         overflow: visible;
     }
 
-    html.loaded .orbit-hint-bar {
-        border-top: 1px solid var(--border-color);
-    }
-
     .controls-row {
         flex-direction: column;
         flex-wrap: nowrap;
+        align-items: stretch;
     }
 
     .controls-row--motion {
@@ -436,8 +447,8 @@ html.loaded .file-chip {
 
 .canvas-logo {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 16px;
+    left: 16px;
     z-index: 1;
     pointer-events: none;
 }
@@ -448,8 +459,8 @@ html.loaded .canvas-logo {
 
 .canvas-top-right {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 16px;
+    right: 16px;
     z-index: 1;
     display: flex;
     align-items: center;
@@ -485,8 +496,8 @@ html.loaded .canvas-replace-btn:hover {
 
 .pause-btn {
     position: absolute;
-    bottom: 10px;
-    left: 10px;
+    bottom: 16px;
+    right: 16px;
     z-index: 1;
     width: 32px;
     height: 32px;
@@ -533,24 +544,20 @@ html.loaded .canvas-replace-btn:hover {
 }
 
 .face-nav {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
     gap: 4px;
     z-index: 1;
 }
 
 .face-btn {
-    height: 26px;
-    padding: 0 10px;
+    padding: 0 1em;
+    min-height: 2.5em;
     background: rgba(21, 18, 43, 0.85);
     color: var(--palette-blueberry-200);
     border: none;
     border-radius: 9999px;
     cursor: pointer;
-    font-size: var(--text-sm);
+    font-size: var(--text-md);
     font-weight: 600;
     font-family: "Source Sans 3", system-ui, sans-serif;
     backdrop-filter: blur(8px);
@@ -606,15 +613,24 @@ html.loaded .controls-bar {
     flex-shrink: 0;
     flex-direction: column;
     position: relative;
-    gap: 20px;
-    border-top: 1px solid var(--border-color);
-    padding: 20px 24px;
-    background: var(--color-surface-raised);
+    gap: 16px;
+    border-top: none;
+    padding: 16px;
+    background: var(--color-surface);
     transition: background 0.2s, border-color 0.2s;
 }
 
 html.loaded .controls-bar.hidden {
     display: none !important;
+}
+
+/* ── Section boxes inside controls bar ── */
+
+.controls-section-box {
+    background: var(--color-surface-raised);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(30, 25, 62, 0.06);
 }
 
 /* ── Footer (loaded) ── */
@@ -662,32 +678,32 @@ html.loaded footer {
 }
 
 .theme-toggle-btn {
-    position: fixed;
+    position: absolute;
     bottom: 16px;
-    right: 16px;
-    z-index: 100;
+    left: 16px;
+    z-index: 1;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 0.4em 1em;
-    min-height: 2.25em;
+    padding: 0 1em;
+    min-height: 2.5em;
     font-size: var(--text-sm);
     font-weight: 600;
     font-family: "Source Sans 3", system-ui, sans-serif;
     line-height: 1.2;
-    color: var(--color-primary);
-    background: var(--color-surface-raised, white);
-    border: 1px solid var(--border-color);
+    color: var(--palette-blueberry-200);
+    background: rgba(21, 18, 43, 0.85);
+    border: none;
     border-radius: 9999px;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.15s, color 0.15s;
 }
 
 .theme-toggle-btn:hover {
-    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-raised, white));
-    border-color: var(--color-primary);
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
+    background: rgba(21, 18, 43, 0.96);
+    color: var(--palette-blueberry-100);
 }
 
 .export-row {
@@ -832,6 +848,8 @@ select {
 
 .radio-option {
     display: flex;
+    flex: 1;
+    justify-content: center;
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
@@ -981,9 +999,9 @@ button {
     min-height: 2.5em;
     font-size: var(--text-md);
     font-weight: 600;
-    color: var(--color-on-surface, #555);
-    background: var(--color-surface-raised, white);
-    border: 1px solid var(--border-color);
+    color: var(--color-export);
+    background: color-mix(in srgb, var(--color-export) 10%, white);
+    border: 1px solid color-mix(in srgb, var(--color-export) 35%, white);
     border-radius: 9999px;
     cursor: pointer;
     user-select: none;
@@ -1017,7 +1035,7 @@ button {
 }
 
 .loop-toggle-label:has(input:checked) .loop-toggle-track {
-    background: var(--primary-color);
+    background: var(--color-export);
 }
 
 .loop-toggle-label:has(input:checked) .loop-toggle-thumb {
@@ -1104,11 +1122,10 @@ button {
 .sidebar-header {
     display: none;
     flex-shrink: 0;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--color-surface-raised);
+    padding: 12px 16px;
+    background: var(--color-surface);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -1298,9 +1315,14 @@ html.theme-dark .settings-close-btn:hover {
     padding: 6px 8px;
     border: 2px solid transparent;
     border-radius: 6px;
-    background: var(--color-surface-raised, white);
+    background: transparent;
     cursor: pointer;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.color-option:focus-within {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--primary-color);
 }
 
 .color-option input[type="color"] {
@@ -1312,8 +1334,8 @@ html.theme-dark .settings-close-btn:hover {
 }
 
 .color-swatch {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     border-radius: 4px;
     border: 1px solid rgba(0, 0, 0, 0.15);
     flex-shrink: 0;
@@ -1324,40 +1346,226 @@ html.theme-dark .settings-close-btn:hover {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #777;
+    color: var(--palette-blueberry-800);
     line-height: 1;
 }
 
-html.theme-dark .color-name {
-    color: var(--color-label);
+.color-option:hover {
+    border-color: var(--color-primary);
 }
 
-.color-option:hover {
-    border-color: var(--primary-color);
+/* ── Unified Styles group (colors + shading) ── */
+
+.styles-group {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.colors-sub {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.shading-sub {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+}
+
+.shading-sub-label {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-label, #666);
+    line-height: 1;
+}
+
+.shading-items {
+    display: flex;
+    gap: 10px;
+}
+
+/* ── Export buttons row ── */
+
+.export-buttons-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.export-gif-group {
+    display: inline-flex;
+    align-items: stretch;
+}
+
+/* ── GIF compound pill (button + loop inline) ── */
+
+.gif-compound {
+    display: inline-flex;
+    align-items: stretch;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.gif-btn {
+    border-radius: 9999px 0 0 9999px;
+    border-right: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.gif-loop-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    min-height: 2.5em;
+    font-size: var(--text-md);
+    font-weight: 600;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    color: white;
+    background: var(--color-export);
+    border-radius: 0 9999px 9999px 0;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+
+.gif-loop-inline:hover {
+    background: var(--color-export-hover);
+}
+
+.gif-loop-inline input[type="checkbox"] {
+    display: none;
+}
+
+.gif-loop-inline .loop-toggle-track {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.gif-loop-inline:has(input:checked) .loop-toggle-track {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.gif-loop-inline .loop-toggle-thumb {
+    background: var(--color-export);
+    box-shadow: none;
+}
+
+.gif-loop-inline:has(input:checked) .loop-toggle-thumb {
+    background: var(--color-export);
+}
+
+/* ── GIF type dropdown ── */
+
+.gif-type-select {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0 2em 0 1em;
+    min-height: 2.5em;
+    font-size: var(--text-md);
+    font-weight: 600;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    line-height: 1.2;
+    background-color: var(--color-export);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6em center;
+    color: #fff;
+    border: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 0 9999px 9999px 0;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.gif-type-select:hover {
+    background-color: var(--color-export-hover);
+}
+
+.gif-type-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
+}
+
+.gif-type-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ── Controls bar footer (Reset settings) ── */
+
+.controls-bar-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 4px;
+}
+
+#btnResetSettings:hover {
+    color: var(--palette-red-500);
+    border-color: var(--palette-red-500);
+    background: color-mix(in srgb, var(--palette-red-500) 6%, transparent);
+}
+
+.canvas-bottom-center {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1;
+    white-space: nowrap;
 }
 
 .orbit-hint-bar {
-    flex-shrink: 0;
-    padding: 6px 0;
-    border-top: 1px solid;
-    border-image: linear-gradient(to right, transparent, var(--border-color) 15%, var(--border-color) 85%, transparent) 1;
     display: none;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    padding: 8px 8px 8px 16px;
+    background: var(--palette-blueberry-100);
+    border-radius: 9999px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.08);
+    pointer-events: auto;
 }
 
 .orbit-hint-bar.visible {
-    display: flex;
+    display: inline-flex;
 }
 
 .orbit-hint {
     margin: 0;
     font-size: var(--text-sm);
-    color: #666;
+    font-weight: 600;
+    color: var(--palette-blueberry-800);
+    font-family: "Source Sans 3", system-ui, sans-serif;
 }
 
-html.theme-dark .orbit-hint {
-    color: var(--color-label);
+.orbit-hint-dismiss {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: rgba(30, 25, 62, 0.1);
+    color: var(--palette-blueberry-800);
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.orbit-hint-dismiss:hover {
+    background: rgba(30, 25, 62, 0.2);
 }
 
 .copy-link-btn {
