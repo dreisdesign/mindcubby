@@ -10,6 +10,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- v0.2.0 output: 698 KB GIF @ 144 frames, 24 fps, 720×720px -->
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
+## [0.24.2] - 2026-04-15
+
+### Changed
+- **Section order** — sidebar boxes reordered to: Color → Texture → Animation → Export
+- **"Exports" renamed** → "Export"
+
+## [0.24.1] - 2026-04-15
+
+### Fixed
+- **Toggle icons** — check and X SVGs are now centred in their respective halves of the track (no longer tight to the edge)
+- **Pause button** — disabled (faded, non-interactive) when Animation is toggled off
+- **Filename chip** — chip area is no longer clickable; only the × button triggers file replacement
+
+### Changed
+- **Reset settings** — slightly darker text/border (`--color-label` at 80% opacity); background removed (text + stroke only); hover still goes red
+
+## [0.24.0] - 2026-04-15
+
+### Added
+- **Toggle icons** — check (✓) and X icons embedded inside both toggle thumbs; check visible when ON, X visible when OFF
+
+### Changed
+- **Animation toggle** — turning off the Animation toggle now pauses rotation; re-enabling resumes
+- **Unified toggles** — Animation power toggle reuses the same track/thumb markup and 28×16 px size as the GIF Loop toggle
+- **Toggle ON color** — both toggles use `--color-primary` (blueberry) for the active state
+- **Section headings** — font size increased to `--text-md` (13 px); switched from ALL CAPS to sentence case
+- **Label gap** — spacing between Speed/Tilt/Range label text and slider reduced
+- **"Rotation" → "Animation"** — section header renamed
+- **Rotation preview animations** — tilt and swing previews now start from rest (no jump)
+- **Slider tooltip** — font size increased from 10 px to 11 px
+- **Reset settings button** — moved to `position: fixed` at viewport bottom-right
+
+## [0.23.0] - 2026-04-15
+
+### Added
+- **Thumbnail card borders** — selected card gets a white inner border + blueberry ring for clear active state
+- **Animation section toggle** — power toggle in the section header enables/disables all animation
+- **Loop label** — "LOOP" text label added next to the GIF Loop toggle
+- **Animation timing** — GIF/MP4 frame timing tightened for spin, tilt, and swing modes
+
+### Changed
+- **Thumbnail hover lift** — rotation cards animate upward on hover with a blueberry drop shadow
+- **Selected card ring** — uses `--color-primary` to stay in sync with theme
+
 ## [0.22.0] - 2026-04-15
 
 ### Changed

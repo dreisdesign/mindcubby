@@ -17,8 +17,8 @@ python3 -m http.server 8765
 
 - Drag and drop any STL file onto the page, or click **Select STL**
 - The model and all settings persist across page refreshes — no re-upload needed
-- The filename chip (top-right of canvas) shows the active file; click it to replace the STL, or hover and click × to reset to Benchy
-- Click **Reset settings** (sidebar header) to clear saved settings and restore defaults
+- The filename chip (top-right of canvas) shows the active file; click **×** to reset to Benchy
+- Click **Reset settings** (bottom-right of viewport) to clear saved settings and restore defaults
 
 ### Viewer controls
 
@@ -28,42 +28,32 @@ python3 -m http.server 8765
 
 ### Appearance
 
-| Control | Description |
-|---|---|
-| Colors → Model | Model face color |
-| Colors → BG | Background color |
-| Shading → Flat | Solid unlit color |
-| Shading → Phong | PBR diffuse (non-metal) — surface detail readable on any albedo including black/white |
-| Shading → Metal | PBR metallic with environment reflections |
-
-Shading preview cards use fixed blueberry palette colors (matching the app's default model and background colors) so the difference between shading modes is always clearly visible.
-
-### Motion controls
+Sidebar order: **Color → Texture → Animation → Export**
 
 | Control | Description |
 |---|---|
-| Rotation | Off / Spin / Tilt / Swing (see below) |
+| Color → Model | Model face color |
+| Color → BG | Background color |
+| Texture → Flat | Solid unlit color |
+| Texture → Phong | PBR diffuse (non-metal) |
+| Texture → Metal | PBR metallic with environment reflections |
+
+### Animation controls
+
+| Control | Description |
+|---|---|
+| Animation toggle | Enable / disable all animation; turning off also pauses the viewer |
+| Spin / Tilt / Swing | Animation mode — thumbnail cards animate on hover |
 | Speed | Playback speed: 0.5× – 4× |
-| Tilt | Camera elevation: 0° (flat side-on) → Top (directly above). Hidden when Tilt rotation is active (orbit controls elevation instead) |
-| Range | Oscillation amplitude — 10°–50° for Tilt; 0°–180° for Swing |
-
-**Rotation modes:**
-
-| Mode | Behaviour |
-|---|---|
-| Off | No rotation; GIF/MP4 export disabled |
-| Spin | Continuous 360° orbit around the Y axis |
-| Tilt | Elevation oscillates up/down from wherever you orbit to; azimuth freely orbitable |
-| Swing | Azimuth oscillates left/right through a partial arc (Range sets the half-angle) |
+| Tilt | Camera elevation: 0° (flat side-on) → Top (directly above). Hidden in Tilt mode |
+| Range | Oscillation amplitude for Tilt and Swing modes |
 
 ### Export
-
-Each format appears as a row showing the download button, estimated file size, and (for GIF) a Loop toggle:
 
 | Button | Output |
 |---|---|
 | GIF | Animated GIF — one full motion cycle |
-| Loop toggle | Whether the GIF loops; does not affect MP4 |
+| Loop toggle | Whether the GIF loops forever (default: on) |
 | MP4 | H.264 MP4 video — one full motion cycle (requires Chrome/Edge/Safari 16.4+) |
 | PNG | Still image of the current view |
 
