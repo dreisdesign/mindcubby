@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- v0.2.0 output: 698 KB GIF @ 144 frames, 24 fps, 720×720px -->
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
+## [0.22.0] - 2026-04-15
+
+### Changed
+- **GIF loop control** — restored as a "Loop forever" checkbox toggle positioned below the GIF button; checked = looping GIF (default)
+- **Sliders** — simplified tick labels to only show min/max values; current value now appears as a floating tooltip bubble above the thumb on hover/focus
+- **Colors section** — split into two separate boxes: "Color" (Model + BG) and "Texture" (Flat / Phong / Metal)
+- **Rotation mode** — replaced segmented button bar with thumbnail cards; icons animate on hover (spin rotates, tilt bobs vertically, swing moves horizontally)
+- **Thumbnail labels** — all thumb labels (Color, Texture, Rotation) now sit below each card outside the card border, aligned consistently
+- **Shading thumbnails** — enlarged from 32×32 to 44×44 to match color swatches; hover adds lift and shadow
+- **Dark mode text** — fixed labels using hard-coded `--palette-blueberry-800` (invisible on dark bg); now all use `--color-label` which is properly theme-aware
+
 ## [0.21.0] - 2026-04-15
 
 ### Changed

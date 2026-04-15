@@ -981,14 +981,41 @@ button {
     flex: 1;
 }
 
+/* ── GIF group (stacked button + loop toggle) ── */
+
+.gif-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
 .gif-loop-label {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
     font-size: var(--text-md);
-    color: #666;
+    font-weight: 600;
+    color: var(--color-label);
     cursor: pointer;
     user-select: none;
+}
+
+.gif-loop-label input[type="checkbox"] {
+    display: none;
+}
+
+.gif-loop-label:has(input:checked) .loop-toggle-track {
+    background: var(--color-export);
+}
+
+.gif-loop-label:has(input:checked) .loop-toggle-thumb {
+    transform: translateX(12px);
+}
+
+html.none-mode .gif-loop-label {
+    opacity: 0.38;
+    pointer-events: none;
 }
 
 .loop-toggle-label {
@@ -1053,14 +1080,13 @@ button {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
     padding: 6px 8px;
     border: 2px solid transparent;
     border-radius: 6px;
     background: var(--palette-blueberry-200);
     cursor: pointer;
     box-shadow: 0 0 0 2px transparent;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s, background 0.15s;
 }
 
 .shading-option input[type="radio"] {
@@ -1074,12 +1100,21 @@ button {
     box-shadow: 0 0 0 2px var(--primary-color);
 }
 
-/* Selected label inherits --sh-name-color (JS-computed for correct contrast
-   on any bg). No forced override needed. */
+.shading-option:hover {
+    border-color: var(--color-primary-lighter);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(46, 43, 116, 0.15);
+}
+
+.shading-option:has(input:checked):hover {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--primary-color), 0 4px 10px rgba(46, 43, 116, 0.15);
+    transform: translateY(-1px);
+}
 
 .shading-thumb {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     flex-shrink: 0;
 }
@@ -1096,16 +1131,54 @@ button {
     background: radial-gradient(circle at 32% 30%, #fff 4%, #ffffffcc 10%, var(--palette-blueberry-500) 36%, var(--palette-blueberry-800) 62%, var(--palette-blueberry-900) 90%);
 }
 
-.shading-name {
+/* ── Slider tooltip (Chrome-style hover bubble) ── */
+
+.range-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.slider-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: calc(var(--pct, 0.5) * (100% - 16px) + 8px);
+    transform: translateX(-50%);
+    background: var(--color-primary);
+    color: #fff;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+    z-index: 2;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+}
+
+.range-wrap:hover .slider-tooltip,
+.range-wrap:focus-within .slider-tooltip {
+    opacity: 1;
+}
+
+/* ── Thumb card wrap (shared by Color, Texture, Rotation) ── */
+
+.thumb-card-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.thumb-label {
     font-size: var(--text-xs);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--palette-blueberry-800);
+    color: var(--color-label);
     line-height: 1;
 }
-
-/* ── Special tick labels ── */
 
 .tick--flat,
 .tick--top {
@@ -1346,7 +1419,7 @@ html.theme-dark .settings-close-btn:hover {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--palette-blueberry-800);
+    color: var(--color-label);
     line-height: 1;
 }
 
@@ -1619,6 +1692,93 @@ html.none-mode .range-label {
 html.none-mode .loop-toggle-label {
     opacity: 0.38;
     pointer-events: none;
+}
+
+/* ── Rotation thumbnail cards ── */
+
+.rotation-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.rotation-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background: var(--palette-blueberry-200);
+    cursor: pointer;
+    box-shadow: 0 0 0 2px transparent;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.rotation-option input[type="radio"] {
+    display: none;
+}
+
+.rotation-option:has(input:checked) {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.rotation-option:hover {
+    border-color: var(--color-primary-lighter);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(46, 43, 116, 0.15);
+}
+
+.rotation-option:has(input:checked):hover {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--primary-color), 0 4px 10px rgba(46, 43, 116, 0.15);
+    transform: translateY(-1px);
+}
+
+.rotation-thumb {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--palette-blueberry-500);
+}
+
+.rotation-thumb .rot-icon {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+/* ── Rotation hover demo animations ── */
+
+@keyframes rot-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes rot-tilt {
+    0%, 100% { transform: translateY(-5px); }
+    50%       { transform: translateY(5px); }
+}
+
+@keyframes rot-swing {
+    0%, 100% { transform: translateX(-6px); }
+    50%       { transform: translateX(6px); }
+}
+
+.rotation-option:hover .rotation-thumb--spin .rot-icon {
+    animation: rot-spin 1.2s linear infinite;
+}
+
+.rotation-option:hover .rotation-thumb--tilt .rot-icon {
+    animation: rot-tilt 0.9s ease-in-out infinite;
+}
+
+.rotation-option:hover .rotation-thumb--swing .rot-icon {
+    animation: rot-swing 0.9s ease-in-out infinite;
 }
 
 /* ── Theme transition ────────────────────────────────────────────────────────── */

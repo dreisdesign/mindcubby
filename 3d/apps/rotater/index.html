@@ -137,8 +137,8 @@
                             <div class="control-label">
                                 Exports
                                 <div class="export-buttons-row">
-                                    <div class="gif-compound">
-                                        <button id="btnExportGif" class="export-btn gif-btn"
+                                    <div class="gif-group">
+                                        <button id="btnExportGif" class="export-btn"
                                             title="Save animated GIF (full rotation)">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
                                                 aria-hidden="true">
@@ -147,10 +147,11 @@
                                             </svg>
                                             GIF
                                         </button>
-                                        <select id="gifLoop" class="gif-type-select">
-                                            <option value="1">Looping GIF</option>
-                                            <option value="0">One-shot GIF</option>
-                                        </select>
+                                        <label class="gif-loop-label" for="gifLoop">
+                                            <input type="checkbox" id="gifLoop" checked>
+                                            <span class="loop-toggle-track"><span class="loop-toggle-thumb"></span></span>
+                                            Loop forever
+                                        </label>
                                     </div>
                                     <button id="btnExportVideo" class="export-btn"
                                         title="Save MP4 video (full rotation)">
@@ -178,33 +179,52 @@
                     <div class="controls-section-box">
                     <div class="controls-row">
                         <div class="control-label" style="flex: 1">
-                            Colors
-                            <div class="styles-group">
-                                    <label class="color-option" title="Choose model color">
-                                        <input type="color" id="colorPicker" value="#2e2b74">
-                                        <span class="color-swatch" id="colorSwatch"></span>
-                                        <span class="color-name">Model</span>
-                                    </label>
-                                    <label class="color-option" title="Choose background color">
-                                        <input type="color" id="bgPicker" value="#dbd7ff">
-                                        <span class="color-swatch" id="bgSwatch"></span>
-                                        <span class="color-name">BG</span>
-                                    </label>
-                                    <label class="shading-option">
-                                        <input type="radio" name="shading" value="flat">
-                                        <span class="shading-thumb shading-thumb--flat"></span>
-                                        <span class="shading-name">Flat</span>
-                                    </label>
-                                    <label class="shading-option">
-                                        <input type="radio" name="shading" value="phong" checked>
-                                        <span class="shading-thumb shading-thumb--phong"></span>
-                                        <span class="shading-name">Phong</span>
-                                    </label>
-                                    <label class="shading-option">
-                                        <input type="radio" name="shading" value="metallic">
-                                        <span class="shading-thumb shading-thumb--metallic"></span>
-                                        <span class="shading-name">Metal</span>
-                                    </label>
+                            Color
+                            <div class="color-group">
+                                    <div class="thumb-card-wrap">
+                                        <label class="color-option" title="Choose model color">
+                                            <input type="color" id="colorPicker" value="#2e2b74">
+                                            <span class="color-swatch" id="colorSwatch"></span>
+                                        </label>
+                                        <span class="thumb-label">Model</span>
+                                    </div>
+                                    <div class="thumb-card-wrap">
+                                        <label class="color-option" title="Choose background color">
+                                            <input type="color" id="bgPicker" value="#dbd7ff">
+                                            <span class="color-swatch" id="bgSwatch"></span>
+                                        </label>
+                                        <span class="thumb-label">BG</span>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="controls-section-box">
+                    <div class="controls-row">
+                        <div class="control-label" style="flex: 1">
+                            Texture
+                            <div class="shading-group">
+                                    <div class="thumb-card-wrap">
+                                        <label class="shading-option">
+                                            <input type="radio" name="shading" value="flat">
+                                            <span class="shading-thumb shading-thumb--flat"></span>
+                                        </label>
+                                        <span class="thumb-label">Flat</span>
+                                    </div>
+                                    <div class="thumb-card-wrap">
+                                        <label class="shading-option">
+                                            <input type="radio" name="shading" value="phong" checked>
+                                            <span class="shading-thumb shading-thumb--phong"></span>
+                                        </label>
+                                        <span class="thumb-label">Phong</span>
+                                    </div>
+                                    <div class="thumb-card-wrap">
+                                        <label class="shading-option">
+                                            <input type="radio" name="shading" value="metallic">
+                                            <span class="shading-thumb shading-thumb--metallic"></span>
+                                        </label>
+                                        <span class="thumb-label">Metal</span>
+                                    </div>
                             </div>
                         </div>
                     </div>
@@ -213,72 +233,83 @@
                     <div class="controls-row controls-row--motion">
                         <div class="control-label" style="flex: 1">
                             Rotation
-                            <div class="radio-group">
-                                <label class="radio-option">
-                                    <input type="radio" name="rotateMode" value="off">
-                                    Off
-                                </label>
-                                <label class="radio-option">
-                                    <input type="radio" name="rotateMode" value="spin" checked>
-                                    <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                        <path
-                                            d="M12 4C9.4 4 7.05 5.08 5.37 6.84L7 8.5H2.5V4l1.71 1.71C5.96 3.66 8.83 2 12 2c4.42 0 8.17 2.87 9.5 6.84l-1.93.64A8 8 0 0 0 12 4zm0 16a8 8 0 0 0 7.57-5.48l1.93.64C20.17 19.13 16.42 22 12 22c-3.17 0-6.04-1.66-7.79-4.21L2.5 19.5V15H7l-1.63 1.66C7.05 18.92 9.4 20 12 20z" />
-                                    </svg>
-                                    Spin
-                                </label>
-                                <label class="radio-option">
-                                    <input type="radio" name="rotateMode" value="tilt">
-                                    <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                        <path
-                                            d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z" />
-                                    </svg>
-                                    Tilt
-                                </label>
-                                <label class="radio-option">
-                                    <input type="radio" name="rotateMode" value="swing">
-                                    <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                        <path
-                                            d="M6.25 13.35L7.6 14.7C7.85 14.95 7.97917 15.2542 7.9875 15.6125C7.99583 15.9708 7.86667 16.2833 7.6 16.55C7.35 16.8 7.04167 16.925 6.675 16.925C6.30833 16.925 6 16.8 5.75 16.55L2.15 12.95C2.01667 12.8167 1.91667 12.675 1.85 12.525C1.78333 12.375 1.75 12.2083 1.75 12.025C1.75 11.8417 1.78333 11.6708 1.85 11.5125C1.91667 11.3542 2.01667 11.2083 2.15 11.075L5.725 7.5C5.975 7.25 6.27917 7.125 6.6375 7.125C6.99583 7.125 7.30833 7.25 7.575 7.5C7.84167 7.76667 7.975 8.07917 7.975 8.4375C7.975 8.79583 7.84167 9.10833 7.575 9.375L6.275 10.675H17.7L16.375 9.35C16.1083 9.08333 15.9792 8.775 15.9875 8.425C15.9958 8.075 16.1333 7.76667 16.4 7.5C16.6667 7.25 16.9792 7.125 17.3375 7.125C17.6958 7.125 18 7.25 18.25 7.5L21.85 11.1C21.9833 11.2333 22.0792 11.375 22.1375 11.525C22.1958 11.675 22.225 11.8417 22.225 12.025C22.225 12.2083 22.1958 12.375 22.1375 12.525C22.0792 12.675 21.9833 12.8167 21.85 12.95L18.25 16.55C18 16.8 17.6958 16.925 17.3375 16.925C16.9792 16.925 16.6667 16.8 16.4 16.55C16.1333 16.2833 15.9958 15.9708 15.9875 15.6125C15.9792 15.2542 16.1083 14.9417 16.375 14.675L17.7 13.35H6.25Z" />
-                                    </svg>
-                                    Swing
-                                </label>
+                            <div class="rotation-group">
+                                <div class="thumb-card-wrap">
+                                    <label class="rotation-option">
+                                        <input type="radio" name="rotateMode" value="off">
+                                        <span class="rotation-thumb rotation-thumb--off">
+                                            <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                <path d="M6 6h12v12H6z"/>
+                                            </svg>
+                                        </span>
+                                    </label>
+                                    <span class="thumb-label">Off</span>
+                                </div>
+                                <div class="thumb-card-wrap">
+                                    <label class="rotation-option">
+                                        <input type="radio" name="rotateMode" value="spin" checked>
+                                        <span class="rotation-thumb rotation-thumb--spin">
+                                            <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                <path d="M12 4C9.4 4 7.05 5.08 5.37 6.84L7 8.5H2.5V4l1.71 1.71C5.96 3.66 8.83 2 12 2c4.42 0 8.17 2.87 9.5 6.84l-1.93.64A8 8 0 0 0 12 4zm0 16a8 8 0 0 0 7.57-5.48l1.93.64C20.17 19.13 16.42 22 12 22c-3.17 0-6.04-1.66-7.79-4.21L2.5 19.5V15H7l-1.63 1.66C7.05 18.92 9.4 20 12 20z"/>
+                                            </svg>
+                                        </span>
+                                    </label>
+                                    <span class="thumb-label">Spin</span>
+                                </div>
+                                <div class="thumb-card-wrap">
+                                    <label class="rotation-option">
+                                        <input type="radio" name="rotateMode" value="tilt">
+                                        <span class="rotation-thumb rotation-thumb--tilt">
+                                            <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"/>
+                                            </svg>
+                                        </span>
+                                    </label>
+                                    <span class="thumb-label">Tilt</span>
+                                </div>
+                                <div class="thumb-card-wrap">
+                                    <label class="rotation-option">
+                                        <input type="radio" name="rotateMode" value="swing">
+                                        <span class="rotation-thumb rotation-thumb--swing">
+                                            <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                <path d="M6.25 13.35L7.6 14.7C7.85 14.95 7.97917 15.2542 7.9875 15.6125C7.99583 15.9708 7.86667 16.2833 7.6 16.55C7.35 16.8 7.04167 16.925 6.675 16.925C6.30833 16.925 6 16.8 5.75 16.55L2.15 12.95C2.01667 12.8167 1.91667 12.675 1.85 12.525C1.78333 12.375 1.75 12.2083 1.75 12.025C1.75 11.8417 1.78333 11.6708 1.85 11.5125C1.91667 11.3542 2.01667 11.2083 2.15 11.075L5.725 7.5C5.975 7.25 6.27917 7.125 6.6375 7.125C6.99583 7.125 7.30833 7.25 7.575 7.5C7.84167 7.76667 7.975 8.07917 7.975 8.4375C7.975 8.79583 7.84167 9.10833 7.575 9.375L6.275 10.675H17.7L16.375 9.35C16.1083 9.08333 15.9792 8.775 15.9875 8.425C15.9958 8.075 16.1333 7.76667 16.4 7.5C16.6667 7.25 16.9792 7.125 17.3375 7.125C17.6958 7.125 18 7.25 18.25 7.5L21.85 11.1C21.9833 11.2333 22.0792 11.375 22.1375 11.525C22.1958 11.675 22.225 11.8417 22.225 12.025C22.225 12.2083 22.1958 12.375 22.1375 12.525C22.0792 12.675 21.9833 12.8167 21.85 12.95L18.25 16.55C18 16.8 17.6958 16.925 17.3375 16.925C16.9792 16.925 16.6667 16.8 16.4 16.55C16.1333 16.2833 15.9958 15.9708 15.9875 15.6125C15.9792 15.2542 16.1083 14.9417 16.375 14.675L17.7 13.35H6.25Z"/>
+                                            </svg>
+                                        </span>
+                                    </label>
+                                    <span class="thumb-label">Swing</span>
+                                </div>
                             </div>
                         </div>
                         <label class="control-label range-label speed-label">
-                            <span>Speed <span id="speedVal">1.0×</span></span>
-                            <input type="range" id="speedSlider" min="0.5" max="4.0" step="0.5" value="1.0">
+                            <span>Speed</span>
+                            <div class="range-wrap">
+                                <span class="slider-tooltip" id="speedVal">1.0×</span>
+                                <input type="range" id="speedSlider" min="0.5" max="4.0" step="0.5" value="1.0">
+                            </div>
                             <div class="slider-ticks">
                                 <span>0.5×</span>
-                                <span>1×</span>
-                                <span>1.5×</span>
-                                <span>2×</span>
-                                <span>2.5×</span>
-                                <span>3×</span>
-                                <span>3.5×</span>
                                 <span>4×</span>
                             </div>
                         </label>
                         <label class="control-label range-label elev-label">
-                            <span>Tilt <span id="elevVal">30°</span></span>
-                            <input type="range" id="elevationSlider" min="0" max="90" step="15" value="30">
+                            <span>Tilt</span>
+                            <div class="range-wrap">
+                                <span class="slider-tooltip" id="elevVal">30°</span>
+                                <input type="range" id="elevationSlider" min="0" max="90" step="15" value="30">
+                            </div>
                             <div class="slider-ticks">
                                 <span class="tick--flat">0°</span>
-                                <span>15°</span>
-                                <span>30°</span>
-                                <span>45°</span>
-                                <span>60°</span>
-                                <span>75°</span>
                                 <span class="tick--top">Top</span>
                             </div>
                         </label>
                         <label class="control-label range-label tilt-range-label">
-                            <span>Range <span id="tiltRangeVal">20°</span></span>
-                            <input type="range" id="tiltRangeSlider" min="10" max="50" step="10" value="20">
+                            <span>Range</span>
+                            <div class="range-wrap">
+                                <span class="slider-tooltip" id="tiltRangeVal">20°</span>
+                                <input type="range" id="tiltRangeSlider" min="10" max="50" step="10" value="20">
+                            </div>
                             <div class="slider-ticks" id="tiltRangeTicks">
                                 <span>10°</span>
-                                <span>20°</span>
-                                <span>30°</span>
-                                <span>40°</span>
                                 <span>50°</span>
                             </div>
                         </label>

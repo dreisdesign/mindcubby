@@ -60,6 +60,15 @@ const rotateModeEl = {
 const tiltRangeSlider = document.getElementById('tiltRangeSlider');
 const tiltRangeVal = document.getElementById('tiltRangeVal');
 
+// ── Slider tooltip sync ───────────────────────────────────────────────────────
+function syncSliderTooltip(slider) {
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    const pct = (parseFloat(slider.value) - min) / (max - min);
+    const wrap = slider.parentElement;
+    if (wrap && wrap.classList.contains('range-wrap')) wrap.style.setProperty('--pct', pct);
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let renderer, scene, camera, controls, mesh;
 let isExporting = false;
@@ -323,7 +332,7 @@ function saveSettings() {
             elevation: elevSlider.value,
             rotateMode: rotateModeEl.value,
             tiltRange: tiltRangeSlider.value,
-            gifLoop: document.getElementById('gifLoop')?.value ?? '1',
+            gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
         }));
     } catch (e) { }
     settingsToURL();
@@ -357,10 +366,13 @@ function restoreSettings() {
             btnVideo.disabled = isOff;
             const gifLoopEl = document.getElementById('gifLoop');
             gifLoopEl.disabled = isOff;
-            if (s.gifLoop != null) gifLoopEl.value = (s.gifLoop === true || s.gifLoop === '1' || s.gifLoop === 1) ? '1' : '0';
+            if (s.gifLoop != null) gifLoopEl.checked = (s.gifLoop === true || s.gifLoop === '1' || s.gifLoop === 1);
         }
         updateShadingThumbs();
         updateColorSwatches();
+        syncSliderTooltip(speedSlider);
+        syncSliderTooltip(elevSlider);
+        syncSliderTooltip(tiltRangeSlider);
     } catch (e) { }
 }
 
@@ -389,7 +401,7 @@ function settingsToURL() {
         sp: speedSlider.value,
         el: elevSlider.value,
         tr: tiltRangeSlider.value,
-        gl: document.getElementById('gifLoop')?.value ?? '1',
+        gl: document.getElementById('gifLoop')?.checked ? '1' : '0',
     });
     history.replaceState(null, '', '?' + p.toString());
 }
@@ -512,7 +524,7 @@ function updateRangeSliderForMode(mode) {
         if (parseFloat(tiltRangeSlider.value) > 180) tiltRangeSlider.value = '90';
         if (parseFloat(tiltRangeSlider.value) < 0) tiltRangeSlider.value = '90';
         document.getElementById('tiltRangeTicks').innerHTML =
-            '<span>0°</span><span>30°</span><span>60°</span><span>90°</span><span>120°</span><span>150°</span><span>180°</span>';
+            '<span>0°</span><span>180°</span>';
     } else {
         tiltRangeSlider.min = '10';
         tiltRangeSlider.max = '50';
@@ -520,9 +532,10 @@ function updateRangeSliderForMode(mode) {
         if (parseFloat(tiltRangeSlider.value) > 50) tiltRangeSlider.value = '30';
         if (parseFloat(tiltRangeSlider.value) < 10) tiltRangeSlider.value = '10';
         document.getElementById('tiltRangeTicks').innerHTML =
-            '<span>10°</span><span>20°</span><span>30°</span><span>40°</span><span>50°</span>';
+            '<span>10°</span><span>50°</span>';
     }
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
+    syncSliderTooltip(tiltRangeSlider);
 }
 
 colorPick.addEventListener('input', () => {
@@ -581,6 +594,7 @@ rotateModeEl.addEventListener('change', () => {
 
 tiltRangeSlider.addEventListener('input', () => {
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
+    syncSliderTooltip(tiltRangeSlider);
     saveSettings();
 });
 
@@ -640,6 +654,7 @@ document.getElementById('btnThemeToggle').addEventListener('click', () => {
 speedSlider.addEventListener('input', () => {
     const v = parseFloat(speedSlider.value);
     speedVal.textContent = v.toFixed(1) + '×';
+    syncSliderTooltip(speedSlider);
     if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * v;
     updateEstimate();
     saveSettings();
@@ -647,6 +662,7 @@ speedSlider.addEventListener('input', () => {
 
 elevSlider.addEventListener('input', () => {
     elevVal.textContent = elevSlider.value + '°';
+    syncSliderTooltip(elevSlider);
     if (mesh && camera) {
         const MAX_EL = Math.PI / 2 - 0.02;
         const el = Math.min(THREE.MathUtils.degToRad(parseFloat(elevSlider.value)), MAX_EL);
@@ -765,7 +781,7 @@ btnGif.addEventListener('click', async () => {
         setStatus('Encoding GIF…');
         await new Promise(r => setTimeout(r, 0));
 
-        const repeat = document.getElementById('gifLoop').value === '1' ? 0 : -1;
+        const repeat = document.getElementById('gifLoop').checked ? 0 : -1;
         const gif = GIFEncoder();
         for (let i = 0; i < frames.length; i++) {
             const palette = quantize(frames[i], 256);
