@@ -333,6 +333,7 @@ function saveSettings() {
             rotateMode: rotateModeEl.value,
             tiltRange: tiltRangeSlider.value,
             gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
+            rotationEnabled: document.getElementById('rotationEnabled')?.checked ? '1' : '0',
         }));
     } catch (e) { }
     settingsToURL();
@@ -354,13 +355,16 @@ function restoreSettings() {
                 elevSlider.value = s.elevation;
                 elevVal.textContent = elevSlider.value + '°';
             }
+            if (s.rotateMode === 'off') { if (s.rotationEnabled == null) s.rotationEnabled = '0'; s.rotateMode = null; }
             if (s.rotateMode) rotateModeEl.value = s.rotateMode;
             const m = rotateModeEl.value;
             if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
             if (m === 'swing' || m === 'tilt') updateRangeSliderForMode(m);
             else tiltRangeVal.textContent = (s.tiltRange || tiltRangeSlider.value) + '°';
             document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'swing');
-            const isOff = m === 'off';
+            const rotEnabledEl = document.getElementById('rotationEnabled');
+            if (s.rotationEnabled != null) rotEnabledEl.checked = s.rotationEnabled === '1' || s.rotationEnabled === true || s.rotationEnabled === 1;
+            const isOff = !rotEnabledEl.checked;
             document.documentElement.classList.toggle('none-mode', isOff);
             btnGif.disabled = isOff;
             btnVideo.disabled = isOff;
@@ -379,7 +383,7 @@ function restoreSettings() {
 // ── URL / shareable settings ─────────────────────────────────────────────────────────────
 function getURLSettings() {
     const p = new URLSearchParams(location.search);
-    if (!p.has('c') && !p.has('sh') && !p.has('rm')) return null;
+    if (!p.has('c') && !p.has('sh') && !p.has('rm') && !p.has('re')) return null;
     return {
         color: p.has('c') ? '#' + p.get('c') : null,
         bg: p.has('b') ? '#' + p.get('b') : null,
@@ -389,6 +393,7 @@ function getURLSettings() {
         elevation: p.get('el') || null,
         tiltRange: p.get('tr') || null,
         gifLoop: p.has('gl') ? p.get('gl') === '1' : null,
+        rotationEnabled: p.has('re') ? p.get('re') : null,
     };
 }
 
@@ -402,6 +407,7 @@ function settingsToURL() {
         el: elevSlider.value,
         tr: tiltRangeSlider.value,
         gl: document.getElementById('gifLoop')?.checked ? '1' : '0',
+        re: document.getElementById('rotationEnabled')?.checked ? '1' : '0',
     });
     history.replaceState(null, '', '?' + p.toString());
 }
@@ -562,11 +568,22 @@ document.getElementById('gifLoop').addEventListener('change', () => {
     saveSettings();
 });
 
+document.getElementById('rotationEnabled').addEventListener('change', function () {
+    const isOff = !this.checked;
+    document.documentElement.classList.toggle('none-mode', isOff);
+    const m = rotateModeEl.value;
+    document.documentElement.classList.toggle('tilt-mode', !isOff && (m === 'tilt' || m === 'swing'));
+    if (controls) controls.autoRotate = !isOff && !isPaused && m === 'spin';
+    btnGif.disabled = isOff;
+    btnVideo.disabled = isOff;
+    document.getElementById('gifLoop').disabled = isOff;
+    saveSettings();
+});
+
 rotateModeEl.addEventListener('change', () => {
     const m = rotateModeEl.value;
-    const isOff = m === 'off';
     // switching mode resumes rotation
-    if (isPaused && !isOff) {
+    if (isPaused) {
         isPaused = false;
         iconPause.style.display = '';
         iconPlay.style.display = 'none';
@@ -584,10 +601,6 @@ rotateModeEl.addEventListener('change', () => {
     }
     if (controls) controls.autoRotate = !isPaused && m === 'spin';
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'swing');
-    document.documentElement.classList.toggle('none-mode', isOff);
-    btnGif.disabled = isOff;
-    btnVideo.disabled = isOff;
-    document.getElementById('gifLoop').disabled = isOff;
     if (m === 'swing' || m === 'tilt') updateRangeSliderForMode(m);
     saveSettings();
 });
@@ -693,7 +706,7 @@ document.getElementById('btnCopyLink')?.addEventListener('click', () => {
 const setStatus = msg => { statusEl.textContent = msg; };
 const setExporting = v => {
     isExporting = v;
-    const isOff = rotateModeEl.value === 'off';
+    const isOff = !(document.getElementById('rotationEnabled')?.checked ?? true);
     btnGif.disabled = v || isOff;
     btnVideo.disabled = v || isOff;
 };

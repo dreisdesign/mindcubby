@@ -150,7 +150,7 @@
                                         <label class="gif-loop-label" for="gifLoop">
                                             <input type="checkbox" id="gifLoop" checked>
                                             <span class="loop-toggle-track"><span class="loop-toggle-thumb"></span></span>
-                                            Loop forever
+                                            Loop
                                         </label>
                                     </div>
                                     <button id="btnExportVideo" class="export-btn"
@@ -232,19 +232,14 @@
                     <div class="controls-section-box">
                     <div class="controls-row controls-row--motion">
                         <div class="control-label" style="flex: 1">
-                            Rotation
+                            <div class="section-header-row">
+                                Rotation
+                                <label class="rotation-power-toggle" title="Enable/disable rotation">
+                                    <input type="checkbox" id="rotationEnabled" checked>
+                                    <span class="rotation-power-track"><span class="rotation-power-thumb"></span></span>
+                                </label>
+                            </div>
                             <div class="rotation-group">
-                                <div class="thumb-card-wrap">
-                                    <label class="rotation-option">
-                                        <input type="radio" name="rotateMode" value="off">
-                                        <span class="rotation-thumb rotation-thumb--off">
-                                            <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                                <path d="M6 6h12v12H6z"/>
-                                            </svg>
-                                        </span>
-                                    </label>
-                                    <span class="thumb-label">Off</span>
-                                </div>
                                 <div class="thumb-card-wrap">
                                     <label class="rotation-option">
                                         <input type="radio" name="rotateMode" value="spin" checked>
