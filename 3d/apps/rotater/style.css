@@ -829,7 +829,6 @@ html.tilt-mode .elev-label {
     color: var(--color-hint);
     cursor: pointer;
     flex-shrink: 0;
-    margin-left: auto;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.15s, color 0.12s, border-color 0.12s, transform 0.12s;
@@ -856,6 +855,10 @@ html.tilt-mode .elev-label {
     justify-content: space-between;
     padding: 0 10px;
     margin-top: 1px;
+}
+
+.slider-ticks {
+    pointer-events: none;
 }
 
 .slider-ticks span {
@@ -1245,27 +1248,13 @@ html.none-mode .gif-loop-label {
 }
 
 .slider-tooltip {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: calc(var(--pct, 0.5) * (100% - 16px) + 8px);
-    transform: translateX(-50%);
-    background: var(--color-primary);
-    color: #fff;
-    font-size: var(--text-sm);
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 9999px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.15s;
+    margin-left: auto;
+    margin-right: 6px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-label);
     white-space: nowrap;
-    z-index: 2;
     font-family: "Source Sans 3", system-ui, sans-serif;
-}
-
-.range-wrap:hover .slider-tooltip,
-.range-wrap:focus-within .slider-tooltip {
-    opacity: 1;
 }
 
 /* ── Thumb card wrap (shared by Color, Texture, Rotation) ── */

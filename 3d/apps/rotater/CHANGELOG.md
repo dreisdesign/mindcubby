@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- v0.2.0 output: 698 KB GIF @ 144 frames, 24 fps, 720×720px -->
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
+## [0.24.4] - 2026-04-15
+
+### Fixed
+- **Slider value display** — value (e.g. "1.0×", "30°") moved from floating bubble into the label header row; no longer overlaps the reset button or the label text
+- **Tick mark clicks** — clicking the min/max tick labels (e.g. "0.5×", "4×") no longer accidentally moves the slider
+
+## [0.24.3] - 2026-04-15
+
+### Added
+- **Slider reset buttons** — circular revert button appears in the Speed and Tilt label rows only when the value differs from its default; click snaps back to default (Speed: 1.0×, Tilt: 30°)
+
+### Changed
+- **Sidebar width** — reduced from 400 px to 350 px
+- **Filename chip** — removed ↩ indicator from cached model filenames
+
 ## [0.24.2] - 2026-04-15
 
 ### Changed

@@ -253,9 +253,14 @@
                                 </div>
                             </div>
                             <label class="control-label range-label speed-label">
-                                <span>Speed<button class="slider-reset-btn" id="speedResetBtn" type="button" title="Reset to default" aria-label="Reset speed to default"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg></button></span>
+                                <span>Speed<span class="slider-tooltip" id="speedVal">1.0×</span><button
+                                        class="slider-reset-btn" id="speedResetBtn" type="button"
+                                        title="Reset to default" aria-label="Reset speed to default"><svg
+                                            viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                            <path
+                                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                                        </svg></button></span>
                                 <div class="range-wrap">
-                                    <span class="slider-tooltip" id="speedVal">1.0×</span>
                                     <input type="range" id="speedSlider" min="0.5" max="4.0" step="0.5" value="1.0">
                                 </div>
                                 <div class="slider-ticks">
@@ -264,9 +269,14 @@
                                 </div>
                             </label>
                             <label class="control-label range-label elev-label">
-                                <span>Tilt<button class="slider-reset-btn" id="elevResetBtn" type="button" title="Reset to default" aria-label="Reset tilt to default"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg></button></span>
+                                <span>Tilt<span class="slider-tooltip" id="elevVal">30°</span><button
+                                        class="slider-reset-btn" id="elevResetBtn" type="button"
+                                        title="Reset to default" aria-label="Reset tilt to default"><svg
+                                            viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                            <path
+                                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                                        </svg></button></span>
                                 <div class="range-wrap">
-                                    <span class="slider-tooltip" id="elevVal">30°</span>
                                     <input type="range" id="elevationSlider" min="0" max="90" step="15" value="30">
                                 </div>
                                 <div class="slider-ticks">
@@ -275,9 +285,8 @@
                                 </div>
                             </label>
                             <label class="control-label range-label tilt-range-label">
-                                <span>Range</span>
+                                <span>Range<span class="slider-tooltip" id="tiltRangeVal">20°</span></span>
                                 <div class="range-wrap">
-                                    <span class="slider-tooltip" id="tiltRangeVal">20°</span>
                                     <input type="range" id="tiltRangeSlider" min="10" max="50" step="10" value="20">
                                 </div>
                                 <div class="slider-ticks" id="tiltRangeTicks">
