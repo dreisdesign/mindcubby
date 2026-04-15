@@ -584,16 +584,16 @@ tiltRangeSlider.addEventListener('input', () => {
     saveSettings();
 });
 
-document.getElementById('menuResetSettings').addEventListener('click', () => {
-    closeSettings();
+document.getElementById('btnResetSettings').addEventListener('click', () => {
     try { localStorage.removeItem(SETTINGS_KEY); localStorage.removeItem('rotater_hasSession'); } catch (e) { }
     history.replaceState(null, '', location.pathname);
     location.reload();
 });
 
-document.getElementById('menuBenchy').addEventListener('click', async () => {
-    closeSettings();
-    if (mesh && !confirm('Replace the current model with 3D Benchy?')) return;
+document.getElementById('btnClearModel').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!confirm('Reset to 3D Benchy?')) return;
     try {
         const resp = await fetch('./benchy.stl');
         if (!resp.ok) return;
@@ -607,28 +607,6 @@ document.getElementById('menuBenchy').addEventListener('click', async () => {
     } catch (e) { }
 });
 
-// ── Settings overlay ──────────────────────────────────────────────────────────
-
-const btnMenu = document.getElementById('btnMenu');
-const settingsOverlay = document.getElementById('settingsOverlay');
-const btnCloseSettings = document.getElementById('btnCloseSettings');
-
-function openSettings() {
-    settingsOverlay.hidden = false;
-    btnMenu.setAttribute('aria-expanded', 'true');
-    btnCloseSettings.focus();
-}
-
-function closeSettings() {
-    settingsOverlay.hidden = true;
-    btnMenu.setAttribute('aria-expanded', 'false');
-}
-
-btnMenu.addEventListener('click', e => { e.stopPropagation(); openSettings(); });
-btnCloseSettings.addEventListener('click', closeSettings);
-settingsOverlay.addEventListener('click', e => { if (e.target === settingsOverlay) closeSettings(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !settingsOverlay.hidden) closeSettings(); });
-
 // ── Theme toggle ──────────────────────────────────────────────────────────────
 
 function applyTheme(theme) {
@@ -640,10 +618,10 @@ function applyTheme(theme) {
     const path = document.getElementById('themeToggleIconPath');
     if (label) label.textContent = isDark ? 'Turn on light mode' : 'Turn on dark mode';
     if (path) path.setAttribute('d', isDark
-        // Sun icon for "switch to light"
-        ? 'M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z'
-        // Moon icon for "switch to dark"
-        : 'M9.5 2c-1.82 0-3.53.5-5 1.35C7.99 5.08 10 8.3 10 12s-2.01 6.92-5.5 8.65C6.29 21.5 7.82 22 9.5 22 14.75 22 19 17.52 19 12S14.75 2 9.5 2z'
+        // bedtime_off icon — dark mode is on, click to switch to light
+        ? 'M13.35 10.65C14.25 11.55 15.3167 12.2417 16.55 12.725C17.7833 13.2083 19.1 13.45 20.5 13.45C21.0333 13.45 21.45 13.6667 21.75 14.1C22.05 14.5333 22.1083 15 21.925 15.5C21.7917 15.8833 21.6167 16.2708 21.4 16.6625C21.1833 17.0542 20.9333 17.45 20.65 17.85C20.3833 18.2 20.0292 18.3875 19.5875 18.4125C19.1458 18.4375 18.7583 18.2833 18.425 17.95L6.025 5.55C5.70833 5.23333 5.55833 4.85417 5.575 4.4125C5.59167 3.97083 5.775 3.61667 6.125 3.35C6.425 3.11667 6.74583 2.90417 7.0875 2.7125C7.42917 2.52083 7.81667 2.33333 8.25 2.15C8.78333 1.91667 9.2875 1.94583 9.7625 2.2375C10.2375 2.52917 10.4833 2.94167 10.5 3.475C10.5333 4.90833 10.7917 6.2375 11.275 7.4625C11.7583 8.6875 12.45 9.75 13.35 10.65ZM17.8 23.9L15.6 21.725C15.05 21.925 14.4833 22.075 13.9 22.175C13.3167 22.275 12.7167 22.325 12.1 22.325C10.6667 22.325 9.31667 22.05 8.05 21.5C6.78333 20.95 5.67917 20.2042 4.7375 19.2625C3.79583 18.3208 3.05 17.2167 2.5 15.95C1.95 14.6833 1.675 13.3333 1.675 11.9C1.675 11.2833 1.725 10.6833 1.825 10.1C1.925 9.51667 2.075 8.95 2.275 8.4L0.15 6.275C-0.116667 6.00833 -0.25 5.69167 -0.25 5.325C-0.25 4.95833 -0.116667 4.64167 0.15 4.375C0.416667 4.10833 0.733333 3.975 1.1 3.975C1.46667 3.975 1.78333 4.10833 2.05 4.375L19.65 22.025C19.9 22.2917 20.025 22.6042 20.025 22.9625C20.025 23.3208 19.9 23.625 19.65 23.875C19.4 24.125 19.0917 24.2542 18.725 24.2625C18.3583 24.2708 18.05 24.15 17.8 23.9Z'
+        // bedtime icon — light mode is on, click to switch to dark
+        : 'M12.0998 22.325C10.6665 22.325 9.31647 22.05 8.0498 21.5C6.78314 20.95 5.67897 20.2041 4.7373 19.2625C3.79564 18.3208 3.0498 17.2166 2.4998 15.95C1.9498 14.6833 1.6748 13.3333 1.6748 11.9C1.6748 9.76664 2.25814 7.81664 3.4248 6.04997C4.59147 4.28331 6.16647 3.01664 8.1498 2.24997C8.68314 2.03331 9.1873 2.07081 9.6623 2.36247C10.1373 2.65414 10.3831 3.06664 10.3998 3.59997C10.4331 4.94997 10.679 6.24164 11.1373 7.47498C11.5956 8.70831 12.2998 9.79998 13.2498 10.75C14.1998 11.7 15.2915 12.4083 16.5248 12.875C17.7581 13.3416 19.0498 13.575 20.3998 13.575C20.9331 13.575 21.3498 13.7875 21.6498 14.2125C21.9498 14.6375 22.0081 15.1 21.8248 15.6C21.0915 17.65 19.8331 19.2833 18.0498 20.5C16.2665 21.7166 14.2831 22.325 12.0998 22.325Z'
     );
 }
 

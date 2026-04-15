@@ -322,6 +322,7 @@ html.loaded header>p {
 html.loaded .compact-btn {
     display: inline-flex;
     align-items: center;
+    gap: 5px;
     padding: 0.375em 0.75em;
     min-height: 2.5em;
     font-size: var(--text-md);
@@ -384,20 +385,53 @@ html.loaded .viewer-section.hidden {
     display: block;
 }
 
-.file-name {
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--palette-blueberry-900);
+.file-chip {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    min-height: 2.5em;
+    padding: 0 8px 0 14px;
     background: var(--palette-blueberry-200);
-    padding: 3px 12px;
+    color: var(--palette-blueberry-900);
     border-radius: 9999px;
-    pointer-events: none;
+    cursor: pointer;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 220px;
+    font-size: var(--text-md);
+    font-weight: 600;
+    transition: background 0.15s, color 0.15s;
+}
+
+html.loaded .file-chip {
+    display: inline-flex;
+}
+
+.file-chip:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+.file-chip-name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 180px;
-    text-align: right;
     flex-shrink: 1;
+    min-width: 0;
+}
+
+.file-chip-x {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.5em;
+    height: 1.5em;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
 }
 
 .canvas-logo {
@@ -667,7 +701,7 @@ html.loaded footer {
 }
 
 .downloads-section {
-    flex: 1;
+    flex: 1 1 100%;
     min-width: 0;
 }
 
@@ -685,15 +719,13 @@ html.loaded footer {
     justify-content: space-between;
     gap: 12px;
     padding: 7px 0;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid;
+    border-image: linear-gradient(to right, transparent, var(--border-color) 15%, var(--border-color) 85%, transparent) 1;
 }
 
 .export-list-item:last-child {
     border-bottom: none;
-}
-
-.export-list-item:first-child {
-    padding-top: 0;
+    border-image: none;
 }
 
 .export-list-left {
@@ -926,7 +958,7 @@ button {
 
 .export-estimate {
     font-size: var(--text-sm);
-    color: var(--color-hint, #aaa);
+    color: var(--color-label, #666);
     text-align: right;
     flex: 1;
 }
@@ -1072,9 +1104,9 @@ button {
 .sidebar-header {
     display: none;
     flex-shrink: 0;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
+    padding: 10px 20px;
     border-bottom: 1px solid var(--border-color);
     background: var(--color-surface-raised);
     position: sticky;
@@ -1307,7 +1339,8 @@ html.theme-dark .color-name {
 .orbit-hint-bar {
     flex-shrink: 0;
     padding: 6px 0;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid;
+    border-image: linear-gradient(to right, transparent, var(--border-color) 15%, var(--border-color) 85%, transparent) 1;
     display: none;
     align-items: center;
     gap: 12px;
@@ -1333,7 +1366,7 @@ html.theme-dark .orbit-hint {
     gap: 5px;
     padding: 0.375em 0.75em;
     min-height: 2.5em;
-    font-size: var(--text-sm);
+    font-size: var(--text-md);
     font-weight: 600;
     font-family: "Source Sans 3", system-ui, sans-serif;
     line-height: 1.2;
@@ -1359,6 +1392,15 @@ html.theme-dark .orbit-hint {
 .copy-link-btn:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
+}
+
+.copy-link-btn--secondary {
+    color: var(--color-label, #666);
+    border-color: var(--border-color);
+}
+
+.copy-link-btn--secondary:hover {
+    background: color-mix(in srgb, var(--color-label, #666) 6%, transparent);
 }
 
 html.none-mode .range-label {

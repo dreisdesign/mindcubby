@@ -17,7 +17,8 @@ python3 -m http.server 8765
 
 - Drag and drop any STL file onto the page, or click **Select STL**
 - The model and all settings persist across page refreshes — no re-upload needed
-- Click **☰ → Reset to Benchy** to reload the built-in 3D Benchy demo (also clears the saved model so a refresh stays on Benchy)
+- The filename chip (top-right of canvas) shows the active file; click it to replace the STL, or hover and click × to reset to Benchy
+- Click **Reset settings** (sidebar header) to clear saved settings and restore defaults
 
 ### Viewer controls
 
