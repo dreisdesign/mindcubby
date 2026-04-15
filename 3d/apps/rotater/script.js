@@ -8,6 +8,8 @@ import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 // ── Defaults ─────────────────────────────────────────────────────────────────
 const EXPORT = { size: 720, fps: 24 };
 const BASE_ROTATE_SPEED = 2.5; // OrbitControls units: 2.0 = 1 rev/60s at 60fps
+const SPEED_DEFAULT = 1.0;
+const ELEV_DEFAULT = 30;
 
 // Returns frame count that gives 1 revolution matching the live rotation speed
 function exportFrames() {
@@ -59,6 +61,8 @@ const rotateModeEl = {
 };
 const tiltRangeSlider = document.getElementById('tiltRangeSlider');
 const tiltRangeVal = document.getElementById('tiltRangeVal');
+const speedResetBtn = document.getElementById('speedResetBtn');
+const elevResetBtn = document.getElementById('elevResetBtn');
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
 function syncSliderTooltip(slider) {
@@ -377,6 +381,8 @@ function restoreSettings() {
         syncSliderTooltip(speedSlider);
         syncSliderTooltip(elevSlider);
         syncSliderTooltip(tiltRangeSlider);
+        speedResetBtn.classList.toggle('is-changed', parseFloat(speedSlider.value) !== SPEED_DEFAULT);
+        elevResetBtn.classList.toggle('is-changed', parseFloat(elevSlider.value) !== ELEV_DEFAULT);
     } catch (e) { }
 }
 
@@ -430,7 +436,7 @@ async function restoreSession() {
         } catch (e) { /* no demo available — stay on landing page */ }
         return;
     }
-    fileNameEl.textContent = saved.name + ' ↩';
+    fileNameEl.textContent = saved.name;
     currentFileName = saved.name.replace(/\.stl$/i, '');
     if (!renderer) initThree();
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
@@ -686,6 +692,7 @@ speedSlider.addEventListener('input', () => {
     speedVal.textContent = v.toFixed(1) + '×';
     syncSliderTooltip(speedSlider);
     if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * v;
+    speedResetBtn.classList.toggle('is-changed', v !== SPEED_DEFAULT);
     updateEstimate();
     saveSettings();
 });
@@ -693,6 +700,7 @@ speedSlider.addEventListener('input', () => {
 elevSlider.addEventListener('input', () => {
     elevVal.textContent = elevSlider.value + '°';
     syncSliderTooltip(elevSlider);
+    elevResetBtn.classList.toggle('is-changed', parseFloat(elevSlider.value) !== ELEV_DEFAULT);
     if (mesh && camera) {
         const MAX_EL = Math.PI / 2 - 0.02;
         const el = Math.min(THREE.MathUtils.degToRad(parseFloat(elevSlider.value)), MAX_EL);
@@ -707,6 +715,18 @@ elevSlider.addEventListener('input', () => {
         controls.update();
     }
     saveSettings();
+});
+
+speedResetBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    speedSlider.value = SPEED_DEFAULT;
+    speedSlider.dispatchEvent(new Event('input'));
+});
+
+elevResetBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    elevSlider.value = ELEV_DEFAULT;
+    elevSlider.dispatchEvent(new Event('input'));
 });
 
 document.getElementById('btnCopyLink')?.addEventListener('click', () => {

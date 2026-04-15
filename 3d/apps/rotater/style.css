@@ -299,7 +299,7 @@ html.loaded .sidebar {
     }
 
     html.loaded .sidebar {
-        width: 400px;
+        width: 350px;
         border-left: 1px solid var(--border-color);
         overflow-y: auto;
     }
@@ -803,6 +803,7 @@ html.tilt-mode .elev-label {
 .range-label>span {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -811,6 +812,43 @@ html.tilt-mode .elev-label {
 .range-label>span span {
     font-weight: 400;
     color: var(--primary-color);
+}
+
+/* ── Slider reset button ── */
+
+.slider-reset-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 1.5px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    color: var(--color-hint);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s, color 0.12s, border-color 0.12s, transform 0.12s;
+}
+
+.slider-reset-btn svg {
+    width: 11px;
+    height: 11px;
+}
+
+.slider-reset-btn.is-changed {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.slider-reset-btn.is-changed:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    transform: rotate(-30deg);
 }
 
 .slider-ticks {
@@ -1863,22 +1901,49 @@ html.none-mode .rotation-group {
 /* ── Rotation hover demo animations ── */
 
 @keyframes rot-spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes rot-tilt {
-    0%   { transform: translateY(0); }
-    25%  { transform: translateY(-6px); }
-    75%  { transform: translateY(6px); }
-    100% { transform: translateY(0); }
+    0% {
+        transform: translateY(0);
+    }
+
+    25% {
+        transform: translateY(-6px);
+    }
+
+    75% {
+        transform: translateY(6px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
 }
 
 @keyframes rot-swing {
-    0%   { transform: translateX(0); }
-    25%  { transform: translateX(6px); }
-    75%  { transform: translateX(-6px); }
-    100% { transform: translateX(0); }
+    0% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(6px);
+    }
+
+    75% {
+        transform: translateX(-6px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
 }
 
 .rotation-option:hover .rotation-thumb--spin .rot-icon {
