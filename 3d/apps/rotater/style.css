@@ -831,10 +831,6 @@ html.tilt-mode .tilt-range-label {
     display: flex;
 }
 
-html.tilt-mode .elev-label {
-    display: none;
-}
-
 .range-label>span {
     display: flex;
     justify-content: space-between;
@@ -1302,16 +1298,6 @@ html.none-mode .gif-loop-label {
     font-weight: 700;
     color: var(--color-label);
     line-height: 1;
-}
-
-.tick--flat,
-.tick--top {
-    color: var(--primary-color) !important;
-    font-weight: 700 !important;
-}
-
-.tick--flat::before {
-    background: var(--primary-color) !important;
 }
 
 /* ── Sidebar header (sticky hamburger bar) ── */

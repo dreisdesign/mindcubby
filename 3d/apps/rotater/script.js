@@ -9,7 +9,7 @@ import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 const EXPORT = { size: 720, fps: 24 };
 const BASE_ROTATE_SPEED = 2.5; // OrbitControls units: 2.0 = 1 rev/60s at 60fps
 const SPEED_DEFAULT = 1.0;
-const ELEV_DEFAULT = 30;
+const ELEV_DEFAULT = 30; // Used by placeCamera() for initial camera height
 
 // Returns frame count that gives 1 revolution matching the live rotation speed
 function exportFrames() {
@@ -44,8 +44,7 @@ const shadingEl = {
 };
 const speedSlider = document.getElementById('speedSlider');
 const speedVal = document.getElementById('speedVal');
-const elevSlider = document.getElementById('elevationSlider');
-const elevVal = document.getElementById('elevVal');
+
 const btnGif = document.getElementById('btnExportGif');
 const btnVideo = document.getElementById('btnExportVideo');
 const btnPng = document.getElementById('btnExportPng');
@@ -62,7 +61,7 @@ const rotateModeEl = {
 const tiltRangeSlider = document.getElementById('tiltRangeSlider');
 const tiltRangeVal = document.getElementById('tiltRangeVal');
 const speedResetBtn = document.getElementById('speedResetBtn');
-const elevResetBtn = document.getElementById('elevResetBtn');
+
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
 function syncSliderTooltip(slider) {
@@ -226,7 +225,7 @@ function loadSTLBuffer(buffer, name) {
 
 function placeCamera() {
     const MAX_EL = Math.PI / 2 - 0.02;
-    const el = Math.min(THREE.MathUtils.degToRad(parseFloat(elevSlider.value)), MAX_EL);
+    const el = Math.min(THREE.MathUtils.degToRad(ELEV_DEFAULT), MAX_EL);
     const dist = modelRadius / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.1;
     camera.position.set(0, dist * Math.sin(el), dist * Math.cos(el));
     camera.lookAt(0, 0, 0);
@@ -245,11 +244,12 @@ function loop() {
             const dist = camera.position.length();
             const actualEl = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
             let elDelta = actualEl - tiltLastEl;
-            tiltBaseEl += elDelta;
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
             const MAX_EL = Math.PI / 2 - 0.05;
             const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
-            const el = THREE.MathUtils.clamp(tiltBaseEl + Math.sin(tiltPhase) * swing, -MAX_EL, MAX_EL);
+            // Clamp the base so the full ±swing arc always fits — pure unclipped sine guarantees smooth easing
+            tiltBaseEl = THREE.MathUtils.clamp(tiltBaseEl + elDelta, -(MAX_EL - swing), MAX_EL - swing);
+            const el = tiltBaseEl + Math.sin(tiltPhase) * swing;
             const az = Math.atan2(camera.position.x, camera.position.z);
             camera.position.set(
                 dist * Math.cos(el) * Math.sin(az),
@@ -357,7 +357,7 @@ function saveSettings() {
             bg: bgPick.value,
             shading: shadingEl.value,
             speed: speedSlider.value,
-            elevation: elevSlider.value,
+
             rotateMode: rotateModeEl.value,
             tiltRange: tiltRangeSlider.value,
             gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
@@ -379,10 +379,7 @@ function restoreSettings() {
                 speedSlider.value = s.speed;
                 speedVal.textContent = parseFloat(s.speed).toFixed(1) + '×';
             }
-            if (s.elevation != null) {
-                elevSlider.value = s.elevation;
-                elevVal.textContent = elevSlider.value + '°';
-            }
+
             if (s.rotateMode === 'off') { if (s.rotationEnabled == null) s.rotationEnabled = '0'; s.rotateMode = null; }
             if (s.rotateMode) rotateModeEl.value = s.rotateMode;
             const m = rotateModeEl.value;
@@ -403,10 +400,8 @@ function restoreSettings() {
         updateShadingThumbs();
         updateColorSwatches();
         syncSliderTooltip(speedSlider);
-        syncSliderTooltip(elevSlider);
         syncSliderTooltip(tiltRangeSlider);
         speedResetBtn.classList.toggle('is-changed', parseFloat(speedSlider.value) !== SPEED_DEFAULT);
-        elevResetBtn.classList.toggle('is-changed', parseFloat(elevSlider.value) !== ELEV_DEFAULT);
     } catch (e) { }
 }
 
@@ -420,7 +415,7 @@ function getURLSettings() {
         shading: p.get('sh') || null,
         rotateMode: p.get('rm') || null,
         speed: p.get('sp') || null,
-        elevation: p.get('el') || null,
+
         tiltRange: p.get('tr') || null,
         gifLoop: p.has('gl') ? p.get('gl') === '1' : null,
         rotationEnabled: p.has('re') ? p.get('re') : null,
@@ -434,7 +429,7 @@ function settingsToURL() {
         sh: shadingEl.value,
         rm: rotateModeEl.value,
         sp: speedSlider.value,
-        el: elevSlider.value,
+
         tr: tiltRangeSlider.value,
         gl: document.getElementById('gifLoop')?.checked ? '1' : '0',
         re: document.getElementById('rotationEnabled')?.checked ? '1' : '0',
@@ -507,18 +502,10 @@ document.addEventListener('keydown', e => {
     }
 });
 
-function snapFace(meshRx, meshRy, meshRz, targetElevDeg) {
+function snapFace(meshRx, meshRy, meshRz) {
     if (!mesh) return;
     mesh.rotation.set(meshRx, meshRy, meshRz);
     camera.up.set(0, 1, 0);
-    if (targetElevDeg !== undefined) {
-        // Clamp to slider range 0–90; placeCamera() further clamps to MAX_EL (~88.86°), avoiding gimbal lock
-        const clamped = Math.max(0, Math.min(90, targetElevDeg));
-        elevSlider.value = clamped;
-        elevVal.textContent = clamped + '°';
-        syncSliderTooltip(elevSlider);
-        elevResetBtn.classList.toggle('is-changed', clamped !== ELEV_DEFAULT);
-    }
     placeCamera();
     renderer.render(scene, camera);
 }
@@ -759,36 +746,10 @@ speedSlider.addEventListener('input', () => {
     saveSettings();
 });
 
-elevSlider.addEventListener('input', () => {
-    elevVal.textContent = elevSlider.value + '°';
-    syncSliderTooltip(elevSlider);
-    elevResetBtn.classList.toggle('is-changed', parseFloat(elevSlider.value) !== ELEV_DEFAULT);
-    if (mesh && camera) {
-        const MAX_EL = Math.PI / 2 - 0.02;
-        const el = Math.min(THREE.MathUtils.degToRad(parseFloat(elevSlider.value)), MAX_EL);
-        const dist = camera.position.length();
-        const az = Math.atan2(camera.position.x, camera.position.z);
-        camera.position.set(
-            dist * Math.cos(el) * Math.sin(az),
-            dist * Math.sin(el),
-            dist * Math.cos(el) * Math.cos(az),
-        );
-        camera.lookAt(0, 0, 0);
-        controls.update();
-    }
-    saveSettings();
-});
-
 speedResetBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     speedSlider.value = SPEED_DEFAULT;
     speedSlider.dispatchEvent(new Event('input'));
-});
-
-elevResetBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    elevSlider.value = ELEV_DEFAULT;
-    elevSlider.dispatchEvent(new Event('input'));
 });
 
 document.getElementById('btnCopyLink')?.addEventListener('click', () => {
@@ -857,7 +818,7 @@ async function captureFrames(n) {
     const savedCamPos = camera.position.clone();
     const isTilt = rotateModeEl.value === 'tilt';
     const isSwing = rotateModeEl.value === 'swing';
-    const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+    const baseEl = elev;
     const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
     const MAX_EL = Math.PI / 2 - 0.05;
 
@@ -999,7 +960,7 @@ btnVideo.addEventListener('click', async () => {
         const savedCamPos = camera.position.clone();
         const isTilt = rotateModeEl.value === 'tilt';
         const isSwing = rotateModeEl.value === 'swing';
-        const baseEl = THREE.MathUtils.degToRad(parseFloat(elevSlider.value));
+        const baseEl = elev;
         const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
         const MAX_EL = Math.PI / 2 - 0.05;
 
