@@ -609,6 +609,18 @@ html.none-mode .pause-btn {
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
+.face-btn.is-active {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+.face-nav-reset-btn {
+    padding: 0;
+    width: 2.5rem;
+    flex-shrink: 0;
+}
+
 /* ── Controls bar reset camera button ── */
 
 .reset-cam-btn {
@@ -1370,8 +1382,9 @@ html.loaded .menu-btn {
     position: absolute;
     pointer-events: none;
     z-index: 1;
-    /* box-shadow darkens everything outside the positioned square */
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.28);
+    border: 1.5px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+    border-radius: 3px;
     display: none; /* shown by JS when canvas is not square */
 }
 
@@ -1384,11 +1397,10 @@ html.loaded .menu-btn {
 
 .info-made-by {
     display: block;
-    text-align: center;
-    font-size: var(--text-xs);
-    color: var(--color-label);
-    opacity: 0.6;
-    padding: 2px 14px 6px;
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--color-on-surface);
+    padding: 2px 14px 4px;
 }
 
 /* ── Info button row ── */
@@ -1397,8 +1409,10 @@ html.loaded .menu-btn {
     display: flex;
     justify-content: flex-end;
     padding: 0 0 4px;
-    margin-top: auto;  /* pushes to bottom of flex column */
-    padding-top: 24px; /* gap between last control and icon */
+    margin-top: auto;
+    /* pushes to bottom of flex column */
+    padding-top: 24px;
+    /* gap between last control and icon */
 }
 
 .info-icon-btn {

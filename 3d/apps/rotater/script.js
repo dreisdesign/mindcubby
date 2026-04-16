@@ -125,6 +125,10 @@ function initThree() {
 
     syncCanvasSize();
     window.addEventListener('resize', syncCanvasSize);
+    // Deactivate face snap when user starts orbiting
+    controls.addEventListener('start', () => {
+        setActiveFaceBtn(null);
+    });
     requestAnimationFrame(loop);
 }
 
@@ -149,13 +153,12 @@ function syncExportOverlay(w, h) {
         w = wrap.clientWidth;
         h = wrap.clientHeight;
     }
-    if (Math.abs(w - h) < 2) {
-        overlay.style.display = 'none';
-        return;
-    }
-    const sq = Math.min(w, h);
+    const INSET = 72;
+    const available = h - INSET * 2;
+    if (available <= 0) { overlay.style.display = 'none'; return; }
+    const sq = Math.min(w, available);
     const x = (w - sq) / 2;
-    const y = (h - sq) / 2;
+    const y = INSET + (available - sq) / 2;
     overlay.style.left = x + 'px';
     overlay.style.top = y + 'px';
     overlay.style.width = sq + 'px';
@@ -506,20 +509,56 @@ document.addEventListener('keydown', e => {
     }
 });
 
-function snapFace(rx, ry, rz) {
+function snapFace(meshRx, meshRy, meshRz, targetElevDeg, upVec) {
     if (!mesh) return;
-    mesh.rotation.set(rx, ry, rz);
-    camera.up.set(0, 1, 0);
-    placeCamera();
+    mesh.rotation.set(meshRx, meshRy, meshRz);
+    // Sync elevation slider if a target is provided
+    if (targetElevDeg !== undefined) {
+        const clampedElev = Math.max(0, Math.min(90, targetElevDeg));
+        elevSlider.value = clampedElev;
+        elevVal.textContent = clampedElev + '°';
+        syncSliderTooltip(elevSlider);
+        elevResetBtn.classList.toggle('is-changed', clampedElev !== ELEV_DEFAULT);
+    }
+    // For top/bottom views, camera.up can't stay (0,1,0) when camera is directly above/below
+    if (upVec) {
+        const dist = modelRadius / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.1;
+        camera.position.set(0, dist * (upVec[1] < 0 ? -1 : 1), 0);
+        camera.up.set(...upVec);
+        camera.lookAt(0, 0, 0);
+        controls.update();
+    } else {
+        camera.up.set(0, 1, 0);
+        placeCamera();
+    }
     renderer.render(scene, camera);
 }
 
-document.getElementById('btnViewFront').addEventListener('click', () => snapFace(-Math.PI / 2, 0, -Math.PI / 2));
-document.getElementById('btnViewBack').addEventListener('click', () => snapFace(-Math.PI / 2, 0, Math.PI / 2));
-document.getElementById('btnViewLeft').addEventListener('click', () => snapFace(Math.PI / 2, Math.PI, 0));
-document.getElementById('btnFrontView').addEventListener('click', () => snapFace(-Math.PI / 2, 0, 0));
-document.getElementById('btnViewTop').addEventListener('click', () => snapFace(0, 0, 0));
-document.getElementById('btnViewBottom').addEventListener('click', () => snapFace(-Math.PI, 0, 0));
+function setActiveFaceBtn(btnId) {
+    document.querySelectorAll('.face-btn').forEach(b => b.classList.remove('is-active'));
+    const resetBtn = document.getElementById('btnFaceNavReset');
+    if (btnId) {
+        document.getElementById(btnId)?.classList.add('is-active');
+        if (resetBtn) resetBtn.style.display = '';
+    } else {
+        if (resetBtn) resetBtn.style.display = 'none';
+    }
+}
+
+document.getElementById('btnViewFront').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, -Math.PI / 2, 0); setActiveFaceBtn('btnViewFront'); });
+document.getElementById('btnViewBack').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, Math.PI / 2, 0); setActiveFaceBtn('btnViewBack'); });
+document.getElementById('btnViewLeft').addEventListener('click', () => { snapFace(Math.PI / 2, Math.PI, 0, 0); setActiveFaceBtn('btnViewLeft'); });
+document.getElementById('btnFrontView').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, 0, 0); setActiveFaceBtn('btnFrontView'); });
+document.getElementById('btnViewTop').addEventListener('click', () => { snapFace(0, 0, 0, 90, [0, 0, -1]); setActiveFaceBtn('btnViewTop'); });
+document.getElementById('btnViewBottom').addEventListener('click', () => { snapFace(-Math.PI, 0, 0, 0, [0, 0, 1]); setActiveFaceBtn('btnViewBottom'); });
+document.getElementById('btnFaceNavReset').addEventListener('click', () => {
+    if (!mesh) return;
+    mesh.rotation.set(0, 0, 0);
+    camera.up.set(0, 1, 0);
+    placeCamera();
+    renderer.render(scene, camera);
+    setActiveFaceBtn(null);
+});
 
 document.getElementById('btnExportPng').addEventListener('click', () => {
     if (!mesh) return;
