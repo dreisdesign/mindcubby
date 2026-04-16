@@ -253,7 +253,8 @@
                                 </div>
                                 <div class="rotation-group">
                                     <div class="thumb-card-wrap">
-                                        <label class="rotation-option">
+                                        <label class="rotation-option" id="spinModeLabel"
+                                            title="Switch to counter-clockwise">
                                             <input type="radio" name="rotateMode" value="spin" checked>
                                             <span class="rotation-thumb rotation-thumb--spin">
                                                 <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor"
@@ -310,8 +311,14 @@
                                 </div>
                             </label>
                             <label class="control-label range-label tilt-range-label">
-                                <span><span class="wobble-tilt-prefix">Tilt </span>Range<span class="slider-tooltip"
-                                        id="tiltRangeVal">20°</span></span>
+                                <span><span id="tiltRangeLabelText">Range</span><span class="slider-tooltip"
+                                        id="tiltRangeVal">20°</span><button class="slider-reset-btn"
+                                        id="tiltRangeResetBtn" type="button" title="Reset to default"
+                                        aria-label="Reset range to default"><svg viewBox="0 0 24 24" fill="currentColor"
+                                            aria-hidden="true">
+                                            <path
+                                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                                        </svg></button></span>
                                 <div class="range-wrap">
                                     <input type="range" id="tiltRangeSlider" min="10" max="50" step="10" value="20">
                                 </div>
@@ -321,7 +328,13 @@
                                 </div>
                             </label>
                             <label class="control-label range-label wobble-spin-range-label">
-                                <span>Spin Range<span class="slider-tooltip" id="wobbleSpinRangeVal">360°</span></span>
+                                <span>Spin Range<span class="slider-tooltip" id="wobbleSpinRangeVal">360°</span><button
+                                        class="slider-reset-btn" id="wobbleSpinRangeResetBtn" type="button"
+                                        title="Reset to default" aria-label="Reset spin range to default"><svg
+                                            viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                            <path
+                                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                                        </svg></button></span>
                                 <div class="range-wrap">
                                     <input type="range" id="wobbleSpinRangeSlider" min="45" max="360" step="45"
                                         value="360">

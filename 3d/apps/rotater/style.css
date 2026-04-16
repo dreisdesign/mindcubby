@@ -850,8 +850,8 @@ html.wobble-mode .wobble-spin-range-label {
     display: flex;
 }
 
-html:not(.wobble-mode) .wobble-tilt-prefix {
-    display: none;
+html.spin-ccw .rotation-thumb--spin .rot-icon {
+    transform: scaleX(-1);
 }
 
 .range-label>span {

@@ -9,11 +9,14 @@ import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 const EXPORT = { size: 720, fps: 24 };
 const BASE_ROTATE_SPEED = 2.5; // OrbitControls units: 2.0 = 1 rev/60s at 60fps
 const SPEED_DEFAULT = 1.0;
+const TILT_RANGE_DEFAULT = 20;
+const SPIN_RANGE_DEFAULT = 360;
+const WOBBLE_SPIN_RANGE_DEFAULT = 360;
 const ELEV_DEFAULT = 30; // Used by placeCamera() for initial camera height
 
 // Returns frame count that gives 1 revolution matching the live rotation speed
 function exportFrames() {
-    const speed = controls ? controls.autoRotateSpeed : BASE_ROTATE_SPEED;
+    const speed = controls ? Math.abs(controls.autoRotateSpeed) : BASE_ROTATE_SPEED;
     const secsPerRev = 60 / speed;
     return Math.round(EXPORT.fps * secsPerRev);
 }
@@ -63,6 +66,8 @@ const tiltRangeVal = document.getElementById('tiltRangeVal');
 const wobbleSpinRangeSlider = document.getElementById('wobbleSpinRangeSlider');
 const wobbleSpinRangeVal = document.getElementById('wobbleSpinRangeVal');
 const speedResetBtn = document.getElementById('speedResetBtn');
+const tiltRangeResetBtn = document.getElementById('tiltRangeResetBtn');
+const wobbleSpinRangeResetBtn = document.getElementById('wobbleSpinRangeResetBtn');
 
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
@@ -83,6 +88,7 @@ let currentFileName = 'model';
 let tiltPhase = 0;
 let swingBaseAz = 0, swingLastAz = 0;
 let tiltBaseMeshRx = -Math.PI / 2;
+let spinDir = 1; // 1 = clockwise, -1 = counter-clockwise
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
@@ -350,6 +356,7 @@ function saveSettings() {
             rotateMode: rotateModeEl.value,
             tiltRange: tiltRangeSlider.value,
             wobbleSpinRange: wobbleSpinRangeSlider.value,
+            spinDir: spinDir,
             gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
             rotationEnabled: document.getElementById('rotationEnabled')?.checked ? '1' : '0',
         }));
@@ -375,10 +382,12 @@ function restoreSettings() {
             const m = rotateModeEl.value;
             if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
             if (s.wobbleSpinRange) wobbleSpinRangeSlider.value = s.wobbleSpinRange;
+            if (s.spinDir != null) spinDir = parseFloat(s.spinDir) < 0 ? -1 : 1;
             if (m === 'tilt' || m === 'spin' || m === 'wobble') updateRangeSliderForMode(m);
             else tiltRangeVal.textContent = (s.tiltRange || tiltRangeSlider.value) + '°';
             document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin' || m === 'wobble');
             document.documentElement.classList.toggle('wobble-mode', m === 'wobble');
+            updateSpinDirUI();
             const rotEnabledEl = document.getElementById('rotationEnabled');
             if (s.rotationEnabled != null) rotEnabledEl.checked = s.rotationEnabled === '1' || s.rotationEnabled === true || s.rotationEnabled === 1;
             const isOff = !rotEnabledEl.checked;
@@ -394,6 +403,8 @@ function restoreSettings() {
         syncSliderTooltip(speedSlider);
         syncSliderTooltip(tiltRangeSlider);
         syncSliderTooltip(wobbleSpinRangeSlider);
+        updateTiltRangeReset();
+        wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
         speedResetBtn.classList.toggle('is-changed', parseFloat(speedSlider.value) !== SPEED_DEFAULT);
     } catch (e) { }
 }
@@ -411,6 +422,7 @@ function getURLSettings() {
 
         tiltRange: p.get('tr') || null,
         wobbleSpinRange: p.get('wsr') || null,
+        spinDir: p.has('sd') ? (p.get('sd') === '-1' ? -1 : 1) : null,
         gifLoop: p.has('gl') ? p.get('gl') === '1' : null,
         rotationEnabled: p.has('re') ? p.get('re') : null,
     };
@@ -426,6 +438,7 @@ function settingsToURL() {
 
         tr: tiltRangeSlider.value,
         wsr: wobbleSpinRangeSlider.value,
+        sd: spinDir,
         gl: document.getElementById('gifLoop')?.checked ? '1' : '0',
         re: document.getElementById('rotationEnabled')?.checked ? '1' : '0',
     });
@@ -455,7 +468,7 @@ async function restoreSession() {
     fileNameEl.title = saved.name;
     currentFileName = saved.name.replace(/\.stl$/i, '');
     if (!renderer) initThree();
-    controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+    controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value) * spinDir;
     loadSTLBuffer(saved.buffer, saved.name);
 }
 
@@ -489,13 +502,36 @@ function togglePause() {
     btnPause.title = isPaused ? 'Resume rotation' : 'Pause rotation';
 }
 
+function toggleSpinDir() {
+    spinDir = -spinDir;
+    if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value) * spinDir;
+    updateSpinDirUI();
+    saveSettings();
+}
+
+function updateSpinDirUI() {
+    const spinLabel = document.getElementById('spinModeLabel');
+    if (spinLabel) spinLabel.title = spinDir > 0 ? 'Switch to counter-clockwise' : 'Switch to clockwise';
+    document.documentElement.classList.toggle('spin-ccw', spinDir < 0);
+}
+
+function updateTiltRangeReset() {
+    const m = rotateModeEl.value;
+    const def = m === 'spin' ? SPIN_RANGE_DEFAULT : TILT_RANGE_DEFAULT;
+    tiltRangeResetBtn.classList.toggle('is-changed', parseFloat(tiltRangeSlider.value) !== def);
+}
+
 btnPause.addEventListener('click', togglePause);
 
-// Re-clicking the already-active mode thumb toggles pause
+// Re-clicking active Spin card toggles CW/CCW; other active cards toggle pause
 document.querySelectorAll('input[name="rotateMode"]').forEach(input => {
     let wasChecked = false;
     input.addEventListener('mousedown', () => { wasChecked = input.checked; });
-    input.addEventListener('click', () => { if (wasChecked) togglePause(); });
+    input.addEventListener('click', () => {
+        if (!wasChecked) return;
+        if (input.value === 'spin') toggleSpinDir();
+        else togglePause();
+    });
 });
 document.addEventListener('keydown', e => {
     // Space: pause/resume
@@ -615,24 +651,28 @@ function updateRangeSliderForMode(mode) {
         tiltRangeSlider.min = '45';
         tiltRangeSlider.max = '360';
         tiltRangeSlider.step = '45';
-        if (parseFloat(tiltRangeSlider.value) > 360 || parseFloat(tiltRangeSlider.value) < 45) tiltRangeSlider.value = '360';
+        if (parseFloat(tiltRangeSlider.value) > 360 || parseFloat(tiltRangeSlider.value) < 45) tiltRangeSlider.value = String(SPIN_RANGE_DEFAULT);
         document.getElementById('tiltRangeTicks').innerHTML = '<span>45°</span><span>360°</span>';
     } else {  // tilt or wobble: tilt-amplitude range
         tiltRangeSlider.min = '10';
         tiltRangeSlider.max = '50';
         tiltRangeSlider.step = '10';
-        if (parseFloat(tiltRangeSlider.value) > 50) tiltRangeSlider.value = '30';
+        if (parseFloat(tiltRangeSlider.value) > 50) tiltRangeSlider.value = String(TILT_RANGE_DEFAULT);
         if (parseFloat(tiltRangeSlider.value) < 10) tiltRangeSlider.value = '10';
         document.getElementById('tiltRangeTicks').innerHTML = '<span>10°</span><span>50°</span>';
     }
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
     syncSliderTooltip(tiltRangeSlider);
+    const labelText = document.getElementById('tiltRangeLabelText');
+    if (labelText) labelText.textContent = mode === 'wobble' ? 'Tilt Range' : 'Range';
+    updateTiltRangeReset();
     if (mode === 'wobble') {
         const wsv = parseFloat(wobbleSpinRangeSlider.value);
-        if (isNaN(wsv) || wsv < 45 || wsv > 360) wobbleSpinRangeSlider.value = '360';
+        if (isNaN(wsv) || wsv < 45 || wsv > 360) wobbleSpinRangeSlider.value = String(WOBBLE_SPIN_RANGE_DEFAULT);
         document.getElementById('wobbleSpinRangeTicks').innerHTML = '<span>45°</span><span>360°</span>';
         wobbleSpinRangeVal.textContent = wobbleSpinRangeSlider.value + '°';
         syncSliderTooltip(wobbleSpinRangeSlider);
+        wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
     }
 }
 
@@ -722,12 +762,14 @@ rotateModeEl.addEventListener('change', () => {
 tiltRangeSlider.addEventListener('input', () => {
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
     syncSliderTooltip(tiltRangeSlider);
+    updateTiltRangeReset();
     saveSettings();
 });
 
 wobbleSpinRangeSlider.addEventListener('input', () => {
     wobbleSpinRangeVal.textContent = wobbleSpinRangeSlider.value + '°';
     syncSliderTooltip(wobbleSpinRangeSlider);
+    wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
     if (rotateModeEl.value === 'wobble' && controls) {
         const fullSpin = parseFloat(wobbleSpinRangeSlider.value) >= 360;
         controls.autoRotate = !isPaused && fullSpin;
@@ -737,6 +779,19 @@ wobbleSpinRangeSlider.addEventListener('input', () => {
         }
     }
     saveSettings();
+});
+
+tiltRangeResetBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const def = rotateModeEl.value === 'spin' ? SPIN_RANGE_DEFAULT : TILT_RANGE_DEFAULT;
+    tiltRangeSlider.value = def;
+    tiltRangeSlider.dispatchEvent(new Event('input'));
+});
+
+wobbleSpinRangeResetBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    wobbleSpinRangeSlider.value = WOBBLE_SPIN_RANGE_DEFAULT;
+    wobbleSpinRangeSlider.dispatchEvent(new Event('input'));
 });
 
 document.getElementById('btnResetSettings').addEventListener('click', () => {
@@ -768,7 +823,7 @@ document.getElementById('btnClearModel').addEventListener('click', async (e) => 
         fileNameEl.title = '3dbenchy.stl';
         currentFileName = '3dbenchy';
         if (!renderer) initThree();
-        controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+        controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value) * spinDir;
         loadSTLBuffer(buffer, '3dbenchy.stl');
     } catch (e) { }
 });
@@ -802,7 +857,7 @@ speedSlider.addEventListener('input', () => {
     const v = parseFloat(speedSlider.value);
     speedVal.textContent = v.toFixed(1) + '×';
     syncSliderTooltip(speedSlider);
-    if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * v;
+    if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * v * spinDir;
     speedResetBtn.classList.toggle('is-changed', v !== SPEED_DEFAULT);
     updateEstimate();
     saveSettings();
