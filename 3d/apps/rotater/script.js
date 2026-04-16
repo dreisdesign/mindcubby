@@ -923,15 +923,11 @@ function download(data, filename, type) {
 // Capture N frames by orbiting the camera, return array of Uint8ClampedArrays
 async function captureFrames(n) {
     const S = EXPORT.size;
-    const off = Object.assign(document.createElement('canvas'), { width: S, height: S });
-    const ctx = off.getContext('2d', { willReadFrequently: true });
     const frames = [];
 
-    // Resize renderer to square export resolution so camera FOV matches 1:1
-    const prevW = renderer.domElement.width;
-    const prevH = renderer.domElement.height;
-    const prevAspect = camera.aspect;
-    renderer.setSize(S, S, false);
+    // Render into an offscreen target — never touch the visible canvas or camera aspect
+    const rt = new THREE.WebGLRenderTarget(S, S, { samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
+    const savedAspect = camera.aspect;
     camera.aspect = 1;
     camera.updateProjectionMatrix();
 
@@ -989,9 +985,19 @@ async function captureFrames(n) {
             );
         }
         camera.lookAt(0, 0, 0);
+        renderer.setRenderTarget(rt);
         renderer.render(scene, camera);
-        ctx.drawImage(renderer.domElement, 0, 0, S, S);
-        frames.push(new Uint8ClampedArray(ctx.getImageData(0, 0, S, S).data));
+        renderer.setRenderTarget(null);
+        // Read pixels directly from the render target
+        const buf = new Uint8Array(S * S * 4);
+        renderer.readRenderTargetPixels(rt, 0, 0, S, S, buf);
+        // WebGL origin is bottom-left; flip vertically for canvas convention
+        const flipped = new Uint8ClampedArray(S * S * 4);
+        for (let row = 0; row < S; row++) {
+            const src = (S - 1 - row) * S * 4;
+            flipped.set(buf.subarray(src, src + S * 4), row * S * 4);
+        }
+        frames.push(flipped);
 
         if (i % 12 === 0) {
             setStatus(`Capturing… ${i + 1} / ${n}`);
@@ -1002,10 +1008,10 @@ async function captureFrames(n) {
     if (mesh) mesh.rotation.x = savedMeshRx;
     camera.position.copy(savedCamPos);
     camera.lookAt(0, 0, 0);
-    // Restore renderer and camera to preview dimensions
-    renderer.setSize(prevW, prevH, false);
-    camera.aspect = prevAspect;
+    // Restore camera aspect — renderer and visible canvas were never touched
+    camera.aspect = savedAspect;
     camera.updateProjectionMatrix();
+    rt.dispose();
     controls.update();
     return frames;
 }
@@ -1066,15 +1072,9 @@ btnVideo.addEventListener('click', async () => {
         const n = exportFrames();
         const S = EXPORT.size;
 
-        // Off-screen canvas at export resolution
-        const off = Object.assign(document.createElement('canvas'), { width: S, height: S });
-        const ctx = off.getContext('2d');
-
-        // Resize renderer to square export resolution so camera FOV matches 1:1
-        const prevW = renderer.domElement.width;
-        const prevH = renderer.domElement.height;
-        const prevAspect = camera.aspect;
-        renderer.setSize(S, S, false);
+        // Render into an offscreen target — never touch the visible canvas or camera aspect
+        const rt = new THREE.WebGLRenderTarget(S, S, { samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
+        const savedAspect = camera.aspect;
         camera.aspect = 1;
         camera.updateProjectionMatrix();
 
@@ -1150,8 +1150,20 @@ btnVideo.addEventListener('click', async () => {
                 );
             }
             camera.lookAt(0, 0, 0);
+            renderer.setRenderTarget(rt);
             renderer.render(scene, camera);
-            ctx.drawImage(renderer.domElement, 0, 0, S, S);
+            renderer.setRenderTarget(null);
+
+            // Read pixels from render target (WebGL origin bottom-left, VideoFrame expects top-left)
+            const buf = new Uint8Array(S * S * 4);
+            renderer.readRenderTargetPixels(rt, 0, 0, S, S, buf);
+            const flipped = new Uint8ClampedArray(S * S * 4);
+            for (let row = 0; row < S; row++) {
+                const src = (S - 1 - row) * S * 4;
+                flipped.set(buf.subarray(src, src + S * 4), row * S * 4);
+            }
+            const off = Object.assign(document.createElement('canvas'), { width: S, height: S });
+            off.getContext('2d').putImageData(new ImageData(flipped, S, S), 0, 0);
 
             const timestamp = Math.round(f * (1_000_000 / fps));
             const frame = new VideoFrame(off, { timestamp });
@@ -1170,10 +1182,10 @@ btnVideo.addEventListener('click', async () => {
         if (mesh) mesh.rotation.x = savedMeshRx;
         camera.position.copy(savedCamPos);
         camera.lookAt(0, 0, 0);
-        // Restore renderer and camera to preview dimensions
-        renderer.setSize(prevW, prevH, false);
-        camera.aspect = prevAspect;
+        // Restore camera aspect — renderer and visible canvas were never touched
+        camera.aspect = savedAspect;
         camera.updateProjectionMatrix();
+        rt.dispose();
         controls.update();
 
         download(muxer.target.buffer, currentFileName + '.mp4', 'video/mp4');
@@ -1181,12 +1193,6 @@ btnVideo.addEventListener('click', async () => {
     } catch (err) {
         setStatus('Error: ' + err.message);
         console.error(err);
-        // Ensure renderer is restored if export failed mid-way
-        if (typeof prevW !== 'undefined') {
-            renderer.setSize(prevW, prevH, false);
-            camera.aspect = prevAspect;
-            camera.updateProjectionMatrix();
-        }
     } finally {
         setExporting(false);
         controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
