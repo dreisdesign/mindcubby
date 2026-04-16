@@ -498,7 +498,7 @@ html.loaded .canvas-logo {
 
 html.loaded .canvas-replace-btn {
     flex-shrink: 0;
-    background: var(--color-export) !important;
+    background: var(--palette-blueberry-500) !important;
     color: #fff !important;
     border-color: transparent !important;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
@@ -506,7 +506,7 @@ html.loaded .canvas-replace-btn {
 }
 
 html.loaded .canvas-replace-btn:hover {
-    background: var(--color-export-hover) !important;
+    background: var(--palette-blueberry-800) !important;
     color: #fff !important;
 }
 
