@@ -563,6 +563,17 @@ document.getElementById('btnCamReset').addEventListener('click', () => {
     tiltBaseMeshRx = -Math.PI / 2;
     tiltPhase = 0;
     if (mesh) mesh.rotation.x = tiltBaseMeshRx;
+    // In Tilt/Wobble mode, pause so the model holds the neutral level position
+    const m = rotateModeEl.value;
+    if ((m === 'tilt' || m === 'wobble') && !isPaused) {
+        isPaused = true;
+        controls.autoRotate = false;
+        iconPause.style.display = 'none';
+        iconPlay.style.display = '';
+        btnPause.setAttribute('aria-label', 'Resume rotation');
+        btnPause.title = 'Resume rotation';
+        document.documentElement.classList.add('rotation-paused');
+    }
     renderer.render(scene, camera);
 });
 
