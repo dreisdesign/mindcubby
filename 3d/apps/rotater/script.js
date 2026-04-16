@@ -525,9 +525,11 @@ btnPause.addEventListener('click', togglePause);
 
 // Re-clicking active Spin card toggles CW/CCW; other active cards toggle pause
 document.querySelectorAll('input[name="rotateMode"]').forEach(input => {
+    const label = input.closest('label');
+    if (!label) return;
     let wasChecked = false;
-    input.addEventListener('mousedown', () => { wasChecked = input.checked; });
-    input.addEventListener('click', () => {
+    label.addEventListener('mousedown', () => { wasChecked = input.checked; });
+    label.addEventListener('click', () => {
         if (!wasChecked) return;
         if (input.value === 'spin') toggleSpinDir();
         else togglePause();
@@ -553,6 +555,10 @@ function snapCamera(azimuth, elevation) {
     if (!camera) return;
     const dist = camera.position.length();
     const el = THREE.MathUtils.clamp(elevation, -(Math.PI / 2 - 0.01), Math.PI / 2 - 0.01);
+    // Zero any residual damping velocity so the snap is instant with no post-snap drift
+    controls.enableDamping = false;
+    controls.update();
+    controls.enableDamping = true;
     camera.position.set(
         dist * Math.cos(el) * Math.sin(azimuth),
         dist * Math.sin(el),
