@@ -85,21 +85,21 @@
                                     </svg>
                                 </button>
                             </div>
-                            <div class="face-nav">
-                                <button id="btnViewFront" class="face-btn" title="Front view"
-                                    aria-label="Front view">Front</button>
-                                <button id="btnViewBack" class="face-btn" title="Back view"
-                                    aria-label="Back view">Back</button>
-                                <button id="btnViewLeft" class="face-btn" title="Left side view"
-                                    aria-label="Left side view">Left</button>
-                                <button id="btnFrontView" class="face-btn" title="Right side view"
-                                    aria-label="Right side view">Right</button>
-                                <button id="btnViewTop" class="face-btn" title="Top view"
-                                    aria-label="Top view">Top</button>
-                                <button id="btnViewBottom" class="face-btn" title="Bottom view"
-                                    aria-label="Bottom view">Bottom</button>
-                                <button id="btnFaceNavReset" class="face-btn face-nav-reset-btn" title="Reset view"
-                                    aria-label="Reset view" style="display:none">
+                            <div class="face-nav" aria-label="Camera position">
+                                <button id="btnViewFront" class="face-btn" title="Camera: Front"
+                                    aria-label="Camera: Front">Front</button>
+                                <button id="btnViewBack" class="face-btn" title="Camera: Back"
+                                    aria-label="Camera: Back">Back</button>
+                                <button id="btnViewLeft" class="face-btn" title="Camera: Left"
+                                    aria-label="Camera: Left">Left</button>
+                                <button id="btnFrontView" class="face-btn" title="Camera: Right"
+                                    aria-label="Camera: Right">Right</button>
+                                <button id="btnViewTop" class="face-btn" title="Camera: Top"
+                                    aria-label="Camera: Top">Top</button>
+                                <button id="btnViewBottom" class="face-btn" title="Camera: Bottom"
+                                    aria-label="Camera: Bottom">Bottom</button>
+                                <button id="btnFaceNavReset" class="face-btn face-nav-reset-btn" title="Reset camera"
+                                    aria-label="Reset camera" style="display:none">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"
                                         aria-hidden="true">
                                         <path
@@ -263,7 +263,19 @@
                                         </label>
                                         <span class="thumb-label">Tilt</span>
                                     </div>
-
+                                    <div class="thumb-card-wrap">
+                                        <label class="rotation-option">
+                                            <input type="radio" name="rotateMode" value="wobble">
+                                            <span class="rotation-thumb rotation-thumb--wobble">
+                                                <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor"
+                                                    aria-hidden="true">
+                                                    <path
+                                                        d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
+                                                </svg>
+                                            </span>
+                                        </label>
+                                        <span class="thumb-label">Wobble</span>
+                                    </div>
                                 </div>
                             </div>
                             <label class="control-label range-label speed-label">

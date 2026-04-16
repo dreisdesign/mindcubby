@@ -1629,22 +1629,24 @@ html.theme-dark .settings-close-btn:hover {
 
 .color-edit-icon {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 13px;
-    height: 13px;
+    top: 6px;      /* aligns with .color-option padding-top */
+    left: 8px;     /* aligns with .color-option padding-left */
+    width: 44px;   /* matches .color-swatch width */
+    height: 44px;  /* matches .color-swatch height */
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-primary);
+    background: rgba(0, 0, 0, 0.48);
+    border-radius: 4px;
+    color: #fff;
     opacity: 0;
     transition: opacity 0.15s;
     pointer-events: none;
 }
 
 .color-edit-icon svg {
-    width: 13px;
-    height: 13px;
+    width: 20px;
+    height: 20px;
 }
 
 .color-option:hover .color-edit-icon {
@@ -2043,6 +2045,18 @@ html.none-mode .rotation-group {
 
 .rotation-option:hover .rotation-thumb--tilt .rot-icon {
     animation: rot-tilt 1.4s ease-in-out 3;
+}
+
+@keyframes rot-wobble {
+    0%   { transform: rotate(0deg)   scale(1); }
+    25%  { transform: rotate(90deg)  scale(1.1); }
+    50%  { transform: rotate(180deg) scale(1); }
+    75%  { transform: rotate(270deg) scale(1.1); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+.rotation-option:hover .rotation-thumb--wobble .rot-icon {
+    animation: rot-wobble 1.6s ease-in-out 3;
 }
 
 /* ── Theme transition ────────────────────────────────────────────────────────── */
