@@ -472,10 +472,10 @@ document.addEventListener('keydown', e => {
     // Arrow keys: D-pad orbit snap (only when not typing in an input)
     const tag = document.activeElement?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-    if (e.code === 'ArrowLeft')  { e.preventDefault(); snapOrbit(-1,  0); }
-    if (e.code === 'ArrowRight') { e.preventDefault(); snapOrbit( 1,  0); }
-    if (e.code === 'ArrowUp')    { e.preventDefault(); snapOrbit( 0,  1); }
-    if (e.code === 'ArrowDown')  { e.preventDefault(); snapOrbit( 0, -1); }
+    if (e.code === 'ArrowLeft') { e.preventDefault(); snapOrbit(-1, 0); }
+    if (e.code === 'ArrowRight') { e.preventDefault(); snapOrbit(1, 0); }
+    if (e.code === 'ArrowUp') { e.preventDefault(); snapOrbit(0, 1); }
+    if (e.code === 'ArrowDown') { e.preventDefault(); snapOrbit(0, -1); }
 });
 
 function snapCamera(azimuth, elevation) {

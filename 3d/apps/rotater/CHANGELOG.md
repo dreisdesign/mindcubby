@@ -10,7 +10,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- v0.2.0 output: 698 KB GIF @ 144 frames, 24 fps, 720×720px -->
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
-## [0.24.4] - 2026-04-15
+
+## [1.0.0] - 2026-04-16
+
+### Added
+- **Wobble animation mode** — combines Spin and Tilt: continuous camera orbit plus simultaneous mesh-tilt oscillation (gyroscope/spinning-top precession effect)
+- **D-pad orbit controls** — 3×3 grid of arrow buttons at the bottom-center of the viewer snap the camera azimuth or elevation to the nearest 45° increment in that direction; replaces the old Front/Back/Left/Right/Top/Bottom face buttons
+- **Keyboard orbit** — Arrow keys (←↑↓→) trigger the same 45° orbit snaps as the D-pad buttons; Space still pauses/resumes
+- **Pencil overlay on color swatches** — semi-transparent overlay with centered pencil icon appears on hover to indicate the swatch is clickable
+
+### Changed
+- **Pause button** — moved into the D-pad center cell; pressing it (or Space/Enter) pauses/resumes rotation
+- **Camera reset button** — moved to bottom-right floating position (previously held by Pause)
+- **Camera buttons are camera-only** — orbit buttons never move the mesh; mesh orientation is controlled only by animation modes
+- **Spin mode** — Range slider now goes 45°–360°; at 360° = full continuous spin, below 360° = azimuth oscillation (arc back-and-forth)
+- **Wobble reset** — switching to Wobble always resets mesh to its neutral STL orientation, not whatever Tilt left behind
+- **`placeCamera()` always resets `camera.up`** — fixes "stuck upside-down" bug when returning from extreme vertical camera angles
+- **Swing mode removed** — replaced by Spin with Range < 360°
+- **Face buttons removed** — replaced by the D-pad orbit control
+- **Color swatch hover** — border now matches Texture/Animation hover style (lighter lift + shadow)
+
+### Fixed
+- Clicking Top/Bottom camera buttons no longer rotates the mesh — camera orbits only
+- Camera reset after vertical snap no longer leaves the scene upside-down
+- Switching to Wobble after using Tilt no longer inherits the tilted base position
+
+
 
 ### Fixed
 - **Slider value display** — value (e.g. "1.0×", "30°") moved from floating bubble into the label header row; no longer overlaps the reset button or the label text

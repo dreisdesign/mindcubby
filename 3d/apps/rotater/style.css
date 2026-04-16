@@ -555,7 +555,7 @@ html.loaded .canvas-replace-btn {
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
-html.none-mode .pause-btn {
+html.none-mode #btnPause {
     opacity: 0.3;
     pointer-events: none;
 }

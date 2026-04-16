@@ -2,6 +2,8 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
+**Version 1.0.0** · April 16, 2026
+
 ---
 
 ## Web App
@@ -26,9 +28,12 @@ python3 -m http.server 8765
 ### Viewer controls
 
 - **Drag** to orbit · **Scroll** to zoom · **Right-drag** to pan
-- **Pause/Resume** button (⏸/▶, bottom-right of viewer) or **Spacebar** to toggle
-- **Front / Back / Left / Right / Top / Bottom** face buttons snap the camera to that face view
-- **Dark mode toggle** (top-right of viewer)
+- **Spacebar** — pause / resume rotation
+- **D-pad** (bottom-center of viewer) — orbit the camera in 45° snapped increments
+  - Arrow keys (←↑↓→) do the same thing from the keyboard
+  - Center button of the D-pad pauses / resumes (⏸/▶)
+- **Reset camera** button (⟳, bottom-right of viewer) — returns camera to default position
+- **Dark mode toggle** (bottom-left of viewer)
 
 ### Export preview overlay
 
@@ -40,8 +45,8 @@ Sidebar order: **Color → Texture → Animation → Export**
 
 | Control | Description |
 |---|---|
-| Color → Model | Model face color |
-| Color → BG | Background color |
+| Color → Model | Model face color (click swatch to open color picker) |
+| Color → BG | Background color (click swatch to open color picker) |
 | Texture → Flat | Solid unlit color |
 | Texture → Phong | PBR diffuse (non-metal) |
 | Texture → Metal | PBR metallic with environment reflections |
@@ -51,10 +56,11 @@ Sidebar order: **Color → Texture → Animation → Export**
 | Control | Description |
 |---|---|
 | Animation toggle | Enable / disable all animation; turning off also pauses the viewer |
-| Spin / Tilt / Swing | Animation mode — thumbnail cards animate on hover |
+| **Spin** | Object rotates continuously around its vertical axis (like a spinning top). Camera can orbit freely. Range slider < 360° makes it oscillate side to side instead of spinning fully. |
+| **Tilt** | Object rocks on its X axis (like a juggled bowling pin). Camera stays put. Range controls how far it tilts. |
+| **Wobble** | Spin + Tilt combined — continuous spin with a simultaneous tilt oscillation. |
 | Speed | Playback speed: 0.5× – 4× |
-| Elevation | Camera height: 0° (flat side-on) → 90° (directly above). Hidden in Tilt/Swing modes |
-| Range | Oscillation amplitude for Tilt and Swing modes |
+| Range | Oscillation amplitude for Tilt (10°–50°) and arc width for Spin (45°–360°); also controls tilt depth for Wobble |
 
 ### Export
 
