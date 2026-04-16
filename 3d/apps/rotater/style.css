@@ -424,9 +424,9 @@ html.loaded .viewer-section.hidden {
     color: var(--palette-blueberry-900);
     border-radius: 9999px;
     cursor: default;
-    flex-shrink: 1;
+    flex: 1 1 0;
     min-width: 0;
-    max-width: 253px;
+    overflow: hidden;
     font-size: var(--text-md);
     font-weight: 600;
     transition: background 0.15s, color 0.15s;
@@ -476,6 +476,14 @@ html.loaded .canvas-logo {
     height: 48px;
 }
 
+/* On narrow viewports swap the wordmark for the square favicon */
+@media (max-width: 899px) {
+    html.loaded .canvas-logo {
+        content: url('favicon.svg');
+        height: 36px;
+    }
+}
+
 .canvas-top-right {
     position: absolute;
     top: 20px;
@@ -484,18 +492,21 @@ html.loaded .canvas-logo {
     display: flex;
     align-items: center;
     gap: 8px;
+    max-width: calc(100% - 80px);
+    min-width: 0;
 }
 
 html.loaded .canvas-replace-btn {
     flex-shrink: 0;
-    background: var(--palette-blueberry-500) !important;
+    background: var(--color-export) !important;
     color: #fff !important;
     border-color: transparent !important;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+    padding: 0.5em 1.25em !important;
 }
 
 html.loaded .canvas-replace-btn:hover {
-    background: var(--palette-blueberry-800) !important;
+    background: var(--color-export-hover) !important;
     color: #fff !important;
 }
 
@@ -701,6 +712,16 @@ html.loaded footer {
     /* button is now fixed-position, not in the flow */
 }
 
+#themeToggleLabel {
+    display: none;
+}
+
+@media (min-width: 600px) {
+    #themeToggleLabel {
+        display: inline;
+    }
+}
+
 .theme-toggle-btn {
     position: absolute;
     bottom: 16px;
@@ -709,7 +730,7 @@ html.loaded footer {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 0 1em;
+    padding: 0 0.75em;
     min-height: 2.5em;
     font-size: var(--text-sm);
     font-weight: 600;
