@@ -203,6 +203,7 @@ function placeCamera() {
     const MAX_EL = Math.PI / 2 - 0.02;
     const el = Math.min(THREE.MathUtils.degToRad(ELEV_DEFAULT), MAX_EL);
     const dist = modelRadius / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.1;
+    camera.up.set(0, 1, 0);
     camera.position.set(0, dist * Math.sin(el), dist * Math.cos(el));
     camera.lookAt(0, 0, 0);
     controls.update();
@@ -462,10 +463,19 @@ function togglePause() {
 
 btnPause.addEventListener('click', togglePause);
 document.addEventListener('keydown', e => {
+    // Space: pause/resume
     if (e.code === 'Space' && e.target === document.body) {
         e.preventDefault();
         togglePause();
+        return;
     }
+    // Arrow keys: D-pad orbit snap (only when not typing in an input)
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (e.code === 'ArrowLeft')  { e.preventDefault(); snapOrbit(-1,  0); }
+    if (e.code === 'ArrowRight') { e.preventDefault(); snapOrbit( 1,  0); }
+    if (e.code === 'ArrowUp')    { e.preventDefault(); snapOrbit( 0,  1); }
+    if (e.code === 'ArrowDown')  { e.preventDefault(); snapOrbit( 0, -1); }
 });
 
 function snapCamera(azimuth, elevation) {
@@ -507,10 +517,10 @@ function snapOrbit(azDir, elDir) {
     snapCamera(az, el);
 }
 
-document.getElementById('btnCamLeft').addEventListener('click',  () => snapOrbit(-1,  0));
-document.getElementById('btnCamRight').addEventListener('click', () => snapOrbit( 1,  0));
-document.getElementById('btnCamUp').addEventListener('click',    () => snapOrbit( 0,  1));
-document.getElementById('btnCamDown').addEventListener('click',  () => snapOrbit( 0, -1));
+document.getElementById('btnCamLeft').addEventListener('click', () => snapOrbit(-1, 0));
+document.getElementById('btnCamRight').addEventListener('click', () => snapOrbit(1, 0));
+document.getElementById('btnCamUp').addEventListener('click', () => snapOrbit(0, 1));
+document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(0, -1));
 document.getElementById('btnCamReset').addEventListener('click', () => {
     if (!camera) return;
     camera.up.set(0, 1, 0);
@@ -646,8 +656,13 @@ rotateModeEl.addEventListener('change', () => {
         swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
         swingLastAz = swingBaseAz;
     }
-    if ((m === 'tilt' || m === 'wobble') && mesh) {
+    if (m === 'tilt' && mesh) {
         tiltBaseMeshRx = mesh.rotation.x;
+    }
+    if (m === 'wobble' && mesh) {
+        // Wobble always starts from the neutral STL orientation — not wherever tilt left it
+        tiltBaseMeshRx = -Math.PI / 2;
+        mesh.rotation.x = tiltBaseMeshRx;
     }
     if (controls) controls.autoRotate = !isPaused && (m === 'spin' || m === 'wobble');
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin' || m === 'wobble');

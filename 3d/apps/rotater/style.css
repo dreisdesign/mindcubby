@@ -613,11 +613,25 @@ html.none-mode .pause-btn {
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
-.cam-btn-up     { grid-area: up; }
-.cam-btn-left   { grid-area: left; }
-.cam-btn-center { grid-area: mid; }
-.cam-btn-right  { grid-area: right; }
-.cam-btn-down   { grid-area: down; }
+.cam-btn-up {
+    grid-area: up;
+}
+
+.cam-btn-left {
+    grid-area: left;
+}
+
+.cam-btn-center {
+    grid-area: mid;
+}
+
+.cam-btn-right {
+    grid-area: right;
+}
+
+.cam-btn-down {
+    grid-area: down;
+}
 
 /* ── Controls bar reset camera button ── */
 
