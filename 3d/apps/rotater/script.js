@@ -124,10 +124,6 @@ function initThree() {
 
     syncCanvasSize();
     window.addEventListener('resize', syncCanvasSize);
-    // Deactivate face snap when user starts orbiting
-    controls.addEventListener('start', () => {
-        setActiveFaceBtn(null);
-    });
     requestAnimationFrame(loop);
 }
 
@@ -189,7 +185,7 @@ function loadSTLBuffer(buffer, name) {
     document.getElementById('compactBtnLabel').textContent = 'Replace STL';
     // Reset pause state on new load
     isPaused = false;
-    controls.autoRotate = rotateModeEl.value === 'spin';
+    controls.autoRotate = rotateModeEl.value === 'spin' || rotateModeEl.value === 'wobble';
     document.documentElement.classList.remove('rotation-paused');
     iconPause.style.display = '';
     iconPlay.style.display = 'none';
@@ -488,30 +484,38 @@ function snapCamera(azimuth, elevation) {
     renderer.render(scene, camera);
 }
 
-function setActiveFaceBtn(btnId) {
-    document.querySelectorAll('.face-btn').forEach(b => b.classList.remove('is-active'));
-    const resetBtn = document.getElementById('btnFaceNavReset');
-    if (btnId) {
-        document.getElementById(btnId)?.classList.add('is-active');
-        if (resetBtn) resetBtn.style.display = '';
-    } else {
-        if (resetBtn) resetBtn.style.display = 'none';
+// Orbit snap buttons — move camera only, mesh never moves
+function snapOrbit(azDir, elDir) {
+    if (!camera) return;
+    const STEP = Math.PI / 4; // 45° snap increment
+    const MAX_EL = Math.PI / 2 - 0.01;
+    const dist = camera.position.length();
+    let el = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
+    let az = Math.atan2(camera.position.x, camera.position.z);
+    if (azDir !== 0) {
+        const eps = 1e-6;
+        az = azDir > 0
+            ? Math.ceil((az + eps) / STEP) * STEP
+            : Math.floor((az - eps) / STEP) * STEP;
     }
+    if (elDir !== 0) {
+        const eps = 1e-6;
+        el = elDir > 0
+            ? Math.min(Math.ceil((el + eps) / STEP) * STEP, MAX_EL)
+            : Math.max(Math.floor((el - eps) / STEP) * STEP, -MAX_EL);
+    }
+    snapCamera(az, el);
 }
 
-// Camera position presets — move camera only, mesh never moves
-document.getElementById('btnViewFront').addEventListener('click',  () => { snapCamera(0,             0);                    setActiveFaceBtn('btnViewFront'); });
-document.getElementById('btnViewBack').addEventListener('click',   () => { snapCamera(Math.PI,       0);                    setActiveFaceBtn('btnViewBack');  });
-document.getElementById('btnViewLeft').addEventListener('click',   () => { snapCamera(-Math.PI / 2,  0);                    setActiveFaceBtn('btnViewLeft');  });
-document.getElementById('btnFrontView').addEventListener('click',  () => { snapCamera(Math.PI / 2,   0);                    setActiveFaceBtn('btnFrontView'); });
-document.getElementById('btnViewTop').addEventListener('click',    () => { snapCamera(0,              Math.PI / 2 - 0.01);   setActiveFaceBtn('btnViewTop');   });
-document.getElementById('btnViewBottom').addEventListener('click', () => { snapCamera(0,             -(Math.PI / 2 - 0.01)); setActiveFaceBtn('btnViewBottom'); });
-document.getElementById('btnFaceNavReset').addEventListener('click', () => {
+document.getElementById('btnCamLeft').addEventListener('click',  () => snapOrbit(-1,  0));
+document.getElementById('btnCamRight').addEventListener('click', () => snapOrbit( 1,  0));
+document.getElementById('btnCamUp').addEventListener('click',    () => snapOrbit( 0,  1));
+document.getElementById('btnCamDown').addEventListener('click',  () => snapOrbit( 0, -1));
+document.getElementById('btnCamReset').addEventListener('click', () => {
     if (!camera) return;
     camera.up.set(0, 1, 0);
     placeCamera();
     renderer.render(scene, camera);
-    setActiveFaceBtn(null);
 });
 
 document.getElementById('btnExportPng').addEventListener('click', () => {

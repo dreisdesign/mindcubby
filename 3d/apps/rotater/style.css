@@ -572,55 +572,52 @@ html.none-mode .pause-btn {
     left: 90px;
 }
 
-.face-nav {
-    display: flex;
-    gap: 4px;
+.cam-nav {
+    display: grid;
+    grid-template-areas:
+        ".    up   ."
+        "left mid  right"
+        ".    down .";
+    grid-template-columns: repeat(3, 2rem);
+    grid-template-rows: repeat(3, 2rem);
+    gap: 2px;
     z-index: 1;
 }
 
-.face-btn {
-    padding: 0 1em;
-    min-height: 2.5em;
+.cam-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
     background: rgba(21, 18, 43, 0.85);
     color: var(--palette-blueberry-200);
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 9999px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: var(--text-md);
-    font-weight: 600;
-    font-family: "Source Sans 3", system-ui, sans-serif;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     transition: background 0.15s, color 0.15s, transform 0.1s;
-    line-height: 1.2;
 }
 
-.face-btn:hover {
+.cam-btn:hover {
     background: rgba(21, 18, 43, 0.96);
     color: var(--palette-blueberry-100);
 }
 
-.face-btn:active {
-    transform: scale(0.95);
+.cam-btn:active {
+    transform: scale(0.9);
 }
 
-.face-btn:focus-visible {
+.cam-btn:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
-.face-btn.is-active {
-    background: rgba(21, 18, 43, 0.96);
-    color: #fff;
-    border-color: white;
-    box-shadow: 0 0 0 2px var(--primary-color);
-}
-
-.face-nav-reset-btn {
-    padding: 0;
-    width: 2.5rem;
-    flex-shrink: 0;
-}
+.cam-btn-up     { grid-area: up; }
+.cam-btn-left   { grid-area: left; }
+.cam-btn-center { grid-area: mid; }
+.cam-btn-right  { grid-area: right; }
+.cam-btn-down   { grid-area: down; }
 
 /* ── Controls bar reset camera button ── */
 
@@ -1429,6 +1426,7 @@ html.loaded .menu-btn {
 
 .info-description {
     margin: 0;
+    padding-left: 14px;
     font-size: var(--text-sm);
     color: var(--color-label);
     line-height: 1.5;
@@ -1438,6 +1436,7 @@ html.loaded .menu-btn {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    padding-left: 14px;
     font-size: var(--text-xs);
     color: var(--color-label);
     opacity: 0.75;
@@ -1629,10 +1628,14 @@ html.theme-dark .settings-close-btn:hover {
 
 .color-edit-icon {
     position: absolute;
-    top: 6px;      /* aligns with .color-option padding-top */
-    left: 8px;     /* aligns with .color-option padding-left */
-    width: 44px;   /* matches .color-swatch width */
-    height: 44px;  /* matches .color-swatch height */
+    top: 6px;
+    /* aligns with .color-option padding-top */
+    left: 8px;
+    /* aligns with .color-option padding-left */
+    width: 44px;
+    /* matches .color-swatch width */
+    height: 44px;
+    /* matches .color-swatch height */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2048,11 +2051,25 @@ html.none-mode .rotation-group {
 }
 
 @keyframes rot-wobble {
-    0%   { transform: rotate(0deg)   scale(1); }
-    25%  { transform: rotate(90deg)  scale(1.1); }
-    50%  { transform: rotate(180deg) scale(1); }
-    75%  { transform: rotate(270deg) scale(1.1); }
-    100% { transform: rotate(360deg) scale(1); }
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+
+    25% {
+        transform: rotate(90deg) scale(1.1);
+    }
+
+    50% {
+        transform: rotate(180deg) scale(1);
+    }
+
+    75% {
+        transform: rotate(270deg) scale(1.1);
+    }
+
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
 }
 
 .rotation-option:hover .rotation-thumb--wobble .rot-icon {
