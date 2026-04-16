@@ -1,6 +1,6 @@
 # Rotater
 
-View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser.
+View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
 ---
 
@@ -15,16 +15,24 @@ python3 -m http.server 8765
 
 ### Loading a model
 
-- Drag and drop any STL file onto the page, or click **Select STL**
+- Drag and drop any STL file onto the page, or click **Replace STL**
 - The model and all settings persist across page refreshes — no re-upload needed
-- The filename chip (top-right of canvas) shows the active file; click **×** to reset to Benchy
-- Click **Reset settings** (bottom-right of viewport) to clear saved settings and restore defaults
+- The filename chip (top-right of canvas) shows the active file
+  - Click **×** while showing the demo to open the file picker
+  - Click **×** while showing your own model to reset back to the demo (3D Benchy)
+- **Reset Settings** (sidebar header, left) clears all saved settings and restores defaults
+- **Copy Link** (sidebar header, right) copies a shareable URL with current settings baked in
 
 ### Viewer controls
 
 - **Drag** to orbit · **Scroll** to zoom · **Right-drag** to pan
-- **Pause/Resume** button (⏸/▶ at lower-left of viewer) or **Spacebar** to toggle
-- **Front / Back / Left / Right / Top / Bottom** face buttons snap the model to that face view
+- **Pause/Resume** button (⏸/▶, bottom-right of viewer) or **Spacebar** to toggle
+- **Front / Back / Left / Right / Top / Bottom** face buttons snap the camera to that face view
+- **Dark mode toggle** (top-right of viewer)
+
+### Export preview overlay
+
+A semi-transparent dark overlay on the sides of the viewer shows exactly which square region (720×720 px) will be captured in GIF and MP4 exports. The model is sized to fill this square region by default.
 
 ### Appearance
 
@@ -45,17 +53,17 @@ Sidebar order: **Color → Texture → Animation → Export**
 | Animation toggle | Enable / disable all animation; turning off also pauses the viewer |
 | Spin / Tilt / Swing | Animation mode — thumbnail cards animate on hover |
 | Speed | Playback speed: 0.5× – 4× |
-| Tilt | Camera elevation: 0° (flat side-on) → Top (directly above). Hidden in Tilt mode |
+| Elevation | Camera height: 0° (flat side-on) → 90° (directly above). Hidden in Tilt/Swing modes |
 | Range | Oscillation amplitude for Tilt and Swing modes |
 
 ### Export
 
 | Button | Output |
 |---|---|
-| GIF | Animated GIF — one full motion cycle |
+| GIF | Animated GIF — one full motion cycle, 720×720 px |
 | Loop toggle | Whether the GIF loops forever (default: on) |
-| MP4 | H.264 MP4 video — one full motion cycle (requires Chrome/Edge/Safari 16.4+) |
-| PNG | Still image of the current view |
+| MP4 | H.264 MP4 video — one full motion cycle, 720×720 px (requires Chrome/Edge/Safari 16.4+) |
+| PNG | Still image of the current view at screen resolution |
 
 All export is completely client-side — your STL file never leaves your machine.
 

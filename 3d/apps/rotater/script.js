@@ -138,6 +138,29 @@ function syncCanvasSize() {
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
     }
+    syncExportOverlay(w, h);
+}
+
+function syncExportOverlay(w, h) {
+    const overlay = document.getElementById('exportRegionOverlay');
+    if (!overlay) return;
+    if (!w || !h) {
+        const wrap = canvas.parentElement;
+        w = wrap.clientWidth;
+        h = wrap.clientHeight;
+    }
+    if (Math.abs(w - h) < 2) {
+        overlay.style.display = 'none';
+        return;
+    }
+    const sq = Math.min(w, h);
+    const x = (w - sq) / 2;
+    const y = (h - sq) / 2;
+    overlay.style.left = x + 'px';
+    overlay.style.top = y + 'px';
+    overlay.style.width = sq + 'px';
+    overlay.style.height = sq + 'px';
+    overlay.style.display = 'block';
 }
 
 // ── Material ─────────────────────────────────────────────────────────────────
@@ -203,7 +226,7 @@ function loadSTLBuffer(buffer, name) {
 function placeCamera() {
     const MAX_EL = Math.PI / 2 - 0.02;
     const el = Math.min(THREE.MathUtils.degToRad(parseFloat(elevSlider.value)), MAX_EL);
-    const dist = modelRadius / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.5;
+    const dist = modelRadius / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.1;
     camera.position.set(0, dist * Math.sin(el), dist * Math.cos(el));
     camera.lookAt(0, 0, 0);
     controls.update();
