@@ -842,6 +842,18 @@ html.tilt-mode .tilt-range-label {
     display: flex;
 }
 
+.wobble-spin-range-label {
+    display: none;
+}
+
+html.wobble-mode .wobble-spin-range-label {
+    display: flex;
+}
+
+html:not(.wobble-mode) .wobble-tilt-prefix {
+    display: none;
+}
+
 .range-label>span {
     display: flex;
     justify-content: space-between;

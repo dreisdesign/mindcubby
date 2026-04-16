@@ -60,6 +60,8 @@ const rotateModeEl = {
 };
 const tiltRangeSlider = document.getElementById('tiltRangeSlider');
 const tiltRangeVal = document.getElementById('tiltRangeVal');
+const wobbleSpinRangeSlider = document.getElementById('wobbleSpinRangeSlider');
+const wobbleSpinRangeVal = document.getElementById('wobbleSpinRangeVal');
 const speedResetBtn = document.getElementById('speedResetBtn');
 
 
@@ -80,7 +82,7 @@ let modelRadius = 1;
 let currentFileName = 'model';
 let tiltPhase = 0;
 let swingBaseAz = 0, swingLastAz = 0;
-let tiltBaseMeshRx = 0;
+let tiltBaseMeshRx = -Math.PI / 2;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
@@ -185,7 +187,7 @@ function loadSTLBuffer(buffer, name) {
     document.getElementById('compactBtnLabel').textContent = 'Replace STL';
     // Reset pause state on new load
     isPaused = false;
-    controls.autoRotate = rotateModeEl.value === 'spin' || rotateModeEl.value === 'wobble';
+    controls.autoRotate = rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360);
     document.documentElement.classList.remove('rotation-paused');
     iconPause.style.display = '';
     iconPlay.style.display = 'none';
@@ -221,12 +223,37 @@ function loop() {
             const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * swing;
         } else if (!isPaused && rotateModeEl.value === 'wobble' && mesh) {
-            // Wobble: continuous spin (via autoRotate) + mesh tilt oscillation simultaneously
-            controls.autoRotate = true;
-            controls.update();
+            // Wobble: mesh tilt oscillation + full or arc spin
+            const wobbleSpinRange = parseFloat(wobbleSpinRangeSlider.value);
+            if (wobbleSpinRange >= 360) {
+                controls.autoRotate = true;
+                controls.update();
+            } else {
+                controls.autoRotate = false;
+                controls.update();
+                const actualAz = Math.atan2(camera.position.x, camera.position.z);
+                let azDelta = actualAz - swingLastAz;
+                if (azDelta > Math.PI) azDelta -= 2 * Math.PI;
+                if (azDelta < -Math.PI) azDelta += 2 * Math.PI;
+                swingBaseAz += azDelta;
+            }
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
-            const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
-            mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * swing;
+            const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
+            mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * tiltSwing;
+            if (wobbleSpinRange < 360) {
+                const MAX_EL = Math.PI / 2 - 0.05;
+                const spinRange = THREE.MathUtils.degToRad(wobbleSpinRange);
+                const dist = camera.position.length();
+                const el = THREE.MathUtils.clamp(Math.asin(camera.position.y / dist), -MAX_EL, MAX_EL);
+                const az = swingBaseAz + Math.sin(tiltPhase) * spinRange;
+                camera.position.set(
+                    dist * Math.cos(el) * Math.sin(az),
+                    dist * Math.sin(el),
+                    dist * Math.cos(el) * Math.cos(az),
+                );
+                camera.lookAt(0, 0, 0);
+                swingLastAz = az;
+            }
         } else if (!isPaused && rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360 && mesh) {
             // Spin with Range < 360°: azimuth oscillates ±range around user-orbitable base
             controls.autoRotate = false;
@@ -252,17 +279,12 @@ function loop() {
             camera.lookAt(0, 0, 0);
             swingLastAz = az;
         } else {
-            controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || rotateModeEl.value === 'wobble');
+            controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
             controls.update();
-            // Keep mode bases in sync while paused / in other modes so resume is seamless
-            if (camera) {
-                if (rotateModeEl.value === 'spin') {
-                    swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
-                    swingLastAz = swingBaseAz;
-                }
-                if ((rotateModeEl.value === 'tilt' || rotateModeEl.value === 'wobble') && mesh) {
-                    tiltBaseMeshRx = mesh.rotation.x;
-                }
+            // Keep spin base in sync while paused so resume is seamless
+            if (camera && rotateModeEl.value === 'spin') {
+                swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
+                swingLastAz = swingBaseAz;
             }
         }
         renderer.render(scene, camera);
@@ -327,6 +349,7 @@ function saveSettings() {
 
             rotateMode: rotateModeEl.value,
             tiltRange: tiltRangeSlider.value,
+            wobbleSpinRange: wobbleSpinRangeSlider.value,
             gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
             rotationEnabled: document.getElementById('rotationEnabled')?.checked ? '1' : '0',
         }));
@@ -351,9 +374,11 @@ function restoreSettings() {
             if (s.rotateMode) rotateModeEl.value = s.rotateMode;
             const m = rotateModeEl.value;
             if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
+            if (s.wobbleSpinRange) wobbleSpinRangeSlider.value = s.wobbleSpinRange;
             if (m === 'tilt' || m === 'spin' || m === 'wobble') updateRangeSliderForMode(m);
             else tiltRangeVal.textContent = (s.tiltRange || tiltRangeSlider.value) + '°';
             document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin' || m === 'wobble');
+            document.documentElement.classList.toggle('wobble-mode', m === 'wobble');
             const rotEnabledEl = document.getElementById('rotationEnabled');
             if (s.rotationEnabled != null) rotEnabledEl.checked = s.rotationEnabled === '1' || s.rotationEnabled === true || s.rotationEnabled === 1;
             const isOff = !rotEnabledEl.checked;
@@ -368,6 +393,7 @@ function restoreSettings() {
         updateColorSwatches();
         syncSliderTooltip(speedSlider);
         syncSliderTooltip(tiltRangeSlider);
+        syncSliderTooltip(wobbleSpinRangeSlider);
         speedResetBtn.classList.toggle('is-changed', parseFloat(speedSlider.value) !== SPEED_DEFAULT);
     } catch (e) { }
 }
@@ -384,6 +410,7 @@ function getURLSettings() {
         speed: p.get('sp') || null,
 
         tiltRange: p.get('tr') || null,
+        wobbleSpinRange: p.get('wsr') || null,
         gifLoop: p.has('gl') ? p.get('gl') === '1' : null,
         rotationEnabled: p.has('re') ? p.get('re') : null,
     };
@@ -398,6 +425,7 @@ function settingsToURL() {
         sp: speedSlider.value,
 
         tr: tiltRangeSlider.value,
+        wsr: wobbleSpinRangeSlider.value,
         gl: document.getElementById('gifLoop')?.checked ? '1' : '0',
         re: document.getElementById('rotationEnabled')?.checked ? '1' : '0',
     });
@@ -453,7 +481,7 @@ fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
 function togglePause() {
     if (rotateModeEl.value === 'off') return;
     isPaused = !isPaused;
-    controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';
+    controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
     document.documentElement.classList.toggle('rotation-paused', isPaused);
     iconPause.style.display = isPaused ? 'none' : '';
     iconPlay.style.display = isPaused ? '' : 'none';
@@ -462,6 +490,13 @@ function togglePause() {
 }
 
 btnPause.addEventListener('click', togglePause);
+
+// Re-clicking the already-active mode thumb toggles pause
+document.querySelectorAll('input[name="rotateMode"]').forEach(input => {
+    let wasChecked = false;
+    input.addEventListener('mousedown', () => { wasChecked = input.checked; });
+    input.addEventListener('click', () => { if (wasChecked) togglePause(); });
+});
 document.addEventListener('keydown', e => {
     // Space: pause/resume
     if (e.code === 'Space' && e.target === document.body) {
@@ -525,6 +560,9 @@ document.getElementById('btnCamReset').addEventListener('click', () => {
     if (!camera) return;
     camera.up.set(0, 1, 0);
     placeCamera();
+    tiltBaseMeshRx = -Math.PI / 2;
+    tiltPhase = 0;
+    if (mesh) mesh.rotation.x = tiltBaseMeshRx;
     renderer.render(scene, camera);
 });
 
@@ -567,22 +605,24 @@ function updateRangeSliderForMode(mode) {
         tiltRangeSlider.max = '360';
         tiltRangeSlider.step = '45';
         if (parseFloat(tiltRangeSlider.value) > 360 || parseFloat(tiltRangeSlider.value) < 45) tiltRangeSlider.value = '360';
-        document.getElementById('tiltRangeTicks').innerHTML =
-            '<span>45°</span><span>360°</span>';
-    } else {  // tilt or wobble: same tilt-amplitude range
-        tiltRangeSlider.min = '10';
-        tiltRangeSlider.max = '50';
-        tiltRangeSlider.step = '10';
+        document.getElementById('tiltRangeTicks').innerHTML = '<span>45°</span><span>360°</span>';
+    } else {  // tilt or wobble: tilt-amplitude range
         tiltRangeSlider.min = '10';
         tiltRangeSlider.max = '50';
         tiltRangeSlider.step = '10';
         if (parseFloat(tiltRangeSlider.value) > 50) tiltRangeSlider.value = '30';
         if (parseFloat(tiltRangeSlider.value) < 10) tiltRangeSlider.value = '10';
-        document.getElementById('tiltRangeTicks').innerHTML =
-            '<span>10°</span><span>50°</span>';
+        document.getElementById('tiltRangeTicks').innerHTML = '<span>10°</span><span>50°</span>';
     }
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
     syncSliderTooltip(tiltRangeSlider);
+    if (mode === 'wobble') {
+        const wsv = parseFloat(wobbleSpinRangeSlider.value);
+        if (isNaN(wsv) || wsv < 45 || wsv > 360) wobbleSpinRangeSlider.value = '360';
+        document.getElementById('wobbleSpinRangeTicks').innerHTML = '<span>45°</span><span>360°</span>';
+        wobbleSpinRangeVal.textContent = wobbleSpinRangeSlider.value + '°';
+        syncSliderTooltip(wobbleSpinRangeSlider);
+    }
 }
 
 colorPick.addEventListener('input', () => {
@@ -624,7 +664,7 @@ document.getElementById('rotationEnabled').addEventListener('change', function (
         document.documentElement.classList.remove('tilt-mode');
     } else {
         isPaused = false;
-        if (controls) controls.autoRotate = m === 'spin' || m === 'wobble';
+        if (controls) controls.autoRotate = m === 'spin' || (m === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360);
         iconPause.style.display = '';
         iconPlay.style.display = 'none';
         btnPause.setAttribute('aria-label', 'Pause rotation');
@@ -647,25 +687,23 @@ rotateModeEl.addEventListener('change', () => {
         iconPlay.style.display = 'none';
         document.documentElement.classList.remove('rotation-paused');
     }
-    // Restore mesh pitch when leaving modes that use mesh tilt
+    // Restore mesh to neutral when leaving tilt/wobble modes
     if (m !== 'tilt' && m !== 'wobble' && mesh) {
-        mesh.rotation.x = tiltBaseMeshRx;
-    }
-    tiltPhase = 0;
-    if (m === 'spin' && camera) {
-        swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
-        swingLastAz = swingBaseAz;
-    }
-    if (m === 'tilt' && mesh) {
-        tiltBaseMeshRx = mesh.rotation.x;
-    }
-    if (m === 'wobble' && mesh) {
-        // Wobble always starts from the neutral STL orientation — not wherever tilt left it
         tiltBaseMeshRx = -Math.PI / 2;
         mesh.rotation.x = tiltBaseMeshRx;
     }
-    if (controls) controls.autoRotate = !isPaused && (m === 'spin' || m === 'wobble');
+    tiltPhase = 0;
+    if ((m === 'spin' || m === 'wobble') && camera) {
+        swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
+        swingLastAz = swingBaseAz;
+    }
+    if ((m === 'tilt' || m === 'wobble') && mesh) {
+        tiltBaseMeshRx = -Math.PI / 2;
+        mesh.rotation.x = tiltBaseMeshRx;
+    }
+    if (controls) controls.autoRotate = !isPaused && (m === 'spin' || (m === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin' || m === 'wobble');
+    document.documentElement.classList.toggle('wobble-mode', m === 'wobble');
     if (m === 'tilt' || m === 'spin' || m === 'wobble') updateRangeSliderForMode(m);
     saveSettings();
 });
@@ -673,6 +711,20 @@ rotateModeEl.addEventListener('change', () => {
 tiltRangeSlider.addEventListener('input', () => {
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
     syncSliderTooltip(tiltRangeSlider);
+    saveSettings();
+});
+
+wobbleSpinRangeSlider.addEventListener('input', () => {
+    wobbleSpinRangeVal.textContent = wobbleSpinRangeSlider.value + '°';
+    syncSliderTooltip(wobbleSpinRangeSlider);
+    if (rotateModeEl.value === 'wobble' && controls) {
+        const fullSpin = parseFloat(wobbleSpinRangeSlider.value) >= 360;
+        controls.autoRotate = !isPaused && fullSpin;
+        if (camera) {
+            swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
+            swingLastAz = swingBaseAz;
+        }
+    }
     saveSettings();
 });
 
@@ -818,8 +870,10 @@ async function captureFrames(n) {
     const isTilt = rotateModeEl.value === 'tilt';
     const isWobble = rotateModeEl.value === 'wobble';
     const isSpinLimited = rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360;
+    const isWobbleArc = isWobble && parseFloat(wobbleSpinRangeSlider.value) < 360;
     const baseEl = elev;
     const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
+    const wobbleSpinSwing = THREE.MathUtils.degToRad(parseFloat(wobbleSpinRangeSlider.value));
     const MAX_EL = Math.PI / 2 - 0.05;
     const savedMeshRx = mesh ? mesh.rotation.x : 0;
 
@@ -827,8 +881,18 @@ async function captureFrames(n) {
         if (isTilt) {
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
             camera.position.copy(savedCamPos);
+        } else if (isWobbleArc) {
+            // Wobble arc: mesh tilts AND camera arcs (< 360° spin range)
+            mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
+            const el = Math.min(baseEl, MAX_EL);
+            const azimuth = az + Math.sin(2 * Math.PI * i / n) * wobbleSpinSwing;
+            camera.position.set(
+                dist * Math.cos(el) * Math.sin(azimuth),
+                dist * Math.sin(el),
+                dist * Math.cos(el) * Math.cos(azimuth),
+            );
         } else if (isWobble) {
-            // Wobble: mesh tilts AND camera spins
+            // Wobble full spin: mesh tilts AND camera spins 360°
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
             const azimuth = -(2 * Math.PI * i) / n;
             camera.position.set(
@@ -910,7 +974,7 @@ btnGif.addEventListener('click', async () => {
         console.error(err);
     } finally {
         setExporting(false);
-        controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';
+        controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
         setTimeout(() => setStatus(''), 5000);
     }
 });
@@ -967,8 +1031,10 @@ btnVideo.addEventListener('click', async () => {
         const isTilt = rotateModeEl.value === 'tilt';
         const isWobble = rotateModeEl.value === 'wobble';
         const isSpinLimited = rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360;
+        const isWobbleArc = isWobble && parseFloat(wobbleSpinRangeSlider.value) < 360;
         const baseEl = elev;
         const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
+        const wobbleSpinSwing = THREE.MathUtils.degToRad(parseFloat(wobbleSpinRangeSlider.value));
         const MAX_EL = Math.PI / 2 - 0.05;
         const savedMeshRx = mesh ? mesh.rotation.x : 0;
 
@@ -976,8 +1042,18 @@ btnVideo.addEventListener('click', async () => {
             if (isTilt) {
                 mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
                 camera.position.copy(savedCamPos);
+            } else if (isWobbleArc) {
+                // Wobble arc: mesh tilts AND camera arcs
+                mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
+                const el = Math.min(baseEl, MAX_EL);
+                const azimuth = az + Math.sin(2 * Math.PI * f / n) * wobbleSpinSwing;
+                camera.position.set(
+                    dist * Math.cos(el) * Math.sin(azimuth),
+                    dist * Math.sin(el),
+                    dist * Math.cos(el) * Math.cos(azimuth),
+                );
             } else if (isWobble) {
-                // Wobble: mesh tilts AND camera spins
+                // Wobble full spin: mesh tilts AND camera spins 360°
                 mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
                 const azimuth = -(2 * Math.PI * f) / n;
                 camera.position.set(
@@ -1041,7 +1117,7 @@ btnVideo.addEventListener('click', async () => {
         }
     } finally {
         setExporting(false);
-        controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';
+        controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
         setTimeout(() => setStatus(''), 5000);
     }
 });
