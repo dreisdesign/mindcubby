@@ -178,6 +178,8 @@ function loadSTLBuffer(buffer, name) {
 
     mesh = new THREE.Mesh(geo, getMaterial(shadingEl.value, colorPick.value));
     mesh.rotation.x = -Math.PI / 2; // Z-up → Y-up
+    tiltBaseMeshRx = -Math.PI / 2;
+    tiltPhase = 0;
     scene.add(mesh);
 
     // Sync background color (matters when restoring settings before initThree)
@@ -226,7 +228,7 @@ function loop() {
             controls.autoRotate = false;
             controls.update();
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
-            const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
+            const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * swing;
         } else if (!isPaused && rotateModeEl.value === 'wobble' && mesh) {
             // Wobble: mesh tilt oscillation + full or arc spin
@@ -244,11 +246,11 @@ function loop() {
                 swingBaseAz += azDelta;
             }
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
-            const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
+            const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * tiltSwing;
             if (wobbleSpinRange < 360) {
                 const MAX_EL = Math.PI / 2 - 0.05;
-                const spinRange = THREE.MathUtils.degToRad(wobbleSpinRange);
+                const spinRange = THREE.MathUtils.degToRad(wobbleSpinRange / 2);
                 const dist = camera.position.length();
                 const el = THREE.MathUtils.clamp(Math.asin(camera.position.y / dist), -MAX_EL, MAX_EL);
                 const az = swingBaseAz + Math.sin(tiltPhase) * spinRange;
@@ -272,7 +274,7 @@ function loop() {
             swingBaseAz += azDelta;
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
             const MAX_EL = Math.PI / 2 - 0.05;
-            const swingRange = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
+            const swingRange = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
             const dist = camera.position.length();
             // Elevation is user-controlled (read from wherever they orbited to)
             const el = THREE.MathUtils.clamp(Math.asin(camera.position.y / dist), -MAX_EL, MAX_EL);
@@ -458,7 +460,7 @@ async function restoreSession() {
             fileNameEl.title = '3dbenchy.stl';
             currentFileName = '3dbenchy';
             if (!renderer) initThree();
-            controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+            controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value) * spinDir;
             loadSTLBuffer(buffer, '3dbenchy.stl');
             saveSettings();
         } catch (e) { /* no demo available — stay on landing page */ }
@@ -940,8 +942,8 @@ async function captureFrames(n) {
     const isSpinLimited = rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360;
     const isWobbleArc = isWobble && parseFloat(wobbleSpinRangeSlider.value) < 360;
     const baseEl = elev;
-    const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
-    const wobbleSpinSwing = THREE.MathUtils.degToRad(parseFloat(wobbleSpinRangeSlider.value));
+    const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
+    const wobbleSpinSwing = THREE.MathUtils.degToRad(parseFloat(wobbleSpinRangeSlider.value) / 2);
     const MAX_EL = Math.PI / 2 - 0.05;
     const savedMeshRx = mesh ? mesh.rotation.x : 0;
 
@@ -1013,6 +1015,7 @@ async function captureFrames(n) {
     camera.updateProjectionMatrix();
     rt.dispose();
     controls.update();
+    renderer.render(scene, camera); // Refresh visible canvas before encoding begins
     return frames;
 }
 
@@ -1105,8 +1108,8 @@ btnVideo.addEventListener('click', async () => {
         const isSpinLimited = rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360;
         const isWobbleArc = isWobble && parseFloat(wobbleSpinRangeSlider.value) < 360;
         const baseEl = elev;
-        const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
-        const wobbleSpinSwing = THREE.MathUtils.degToRad(parseFloat(wobbleSpinRangeSlider.value));
+        const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
+        const wobbleSpinSwing = THREE.MathUtils.degToRad(parseFloat(wobbleSpinRangeSlider.value) / 2);
         const MAX_EL = Math.PI / 2 - 0.05;
         const savedMeshRx = mesh ? mesh.rotation.x : 0;
 
@@ -1187,6 +1190,7 @@ btnVideo.addEventListener('click', async () => {
         camera.updateProjectionMatrix();
         rt.dispose();
         controls.update();
+        renderer.render(scene, camera); // Refresh visible canvas before download
 
         download(muxer.target.buffer, currentFileName + '.mp4', 'video/mp4');
         setStatus('MP4 saved ✓');

@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.0.6] - 2026-04-16
+
+### Fixed
+- **Spin direction toggle** — re-clicking Spin now correctly toggles CW/CCW when using the demo Benchy; the demo load path was missing `* spinDir` when setting `autoRotateSpeed`
+- **Tilt/Wobble start position** — loading a new model while in Tilt or Wobble mode now resets `tiltPhase` to 0 and the mesh to its neutral orientation, so animation always begins from upright
+- **Tilt/Wobble/Spin-arc range semantics** — the Range slider now represents total peak-to-peak swing (e.g. Range 20° → model tilts ±10° from center), matching the expected "start at 0, tilt 10 one way, 20 to the other end" behavior
+- **Export canvas freezes on last frame** — after frame capture completes the visible canvas is now refreshed once so the view is live again while encoding happens
+- **Range slider missing from Spin** — added `?v=1.0.6` version strings to `style.css` and `script.js` to force cache invalidation
+
 ## [1.0.0] - 2026-04-16
 
 ### Added
