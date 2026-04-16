@@ -400,6 +400,11 @@ function restoreSettings() {
             gifLoopEl.disabled = isOff;
             if (s.gifLoop != null) gifLoopEl.checked = (s.gifLoop === true || s.gifLoop === '1' || s.gifLoop === 1);
         }
+        // Always apply mode-based classes/slider setup — even when s is null (settings reset)
+        const curMode = rotateModeEl.value;
+        document.documentElement.classList.toggle('tilt-mode', curMode === 'tilt' || curMode === 'spin' || curMode === 'wobble');
+        document.documentElement.classList.toggle('wobble-mode', curMode === 'wobble');
+        if (curMode === 'tilt' || curMode === 'spin' || curMode === 'wobble') updateRangeSliderForMode(curMode);
         updateShadingThumbs();
         updateColorSwatches();
         syncSliderTooltip(speedSlider);
