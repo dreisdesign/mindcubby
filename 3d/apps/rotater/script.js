@@ -539,10 +539,9 @@ document.getElementById('btnViewFront').addEventListener('click', () => { snapFa
 document.getElementById('btnViewBack').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, Math.PI / 2); setActiveFaceBtn('btnViewBack'); });
 document.getElementById('btnViewLeft').addEventListener('click', () => { snapFace(Math.PI / 2, Math.PI, 0); setActiveFaceBtn('btnViewLeft'); });
 document.getElementById('btnFrontView').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, 0); setActiveFaceBtn('btnFrontView'); });
-// Top: elevation=90 (clamped to MAX_EL by placeCamera, ~88.86°) — nearly overhead, no gimbal lock
-// Bottom: flip mesh 180° so bottom faces up, then look down from same elevation
-document.getElementById('btnViewTop').addEventListener('click', () => { snapFace(0, 0, 0, 90); setActiveFaceBtn('btnViewTop'); });
-document.getElementById('btnViewBottom').addEventListener('click', () => { snapFace(Math.PI, 0, 0, 90); setActiveFaceBtn('btnViewBottom'); });
+// Top/Bottom: just rotate the mesh — don't touch elevation (same as side buttons)
+document.getElementById('btnViewTop').addEventListener('click', () => { snapFace(0, 0, 0); setActiveFaceBtn('btnViewTop'); });
+document.getElementById('btnViewBottom').addEventListener('click', () => { snapFace(Math.PI, 0, 0); setActiveFaceBtn('btnViewBottom'); });
 document.getElementById('btnFaceNavReset').addEventListener('click', () => {
     if (!mesh) return;
     mesh.rotation.set(0, 0, 0);
