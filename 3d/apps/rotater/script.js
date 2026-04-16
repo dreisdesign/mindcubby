@@ -934,6 +934,7 @@ async function captureFrames(n) {
 
     // Render into an offscreen target — never touch the visible canvas or camera aspect
     const rt = new THREE.WebGLRenderTarget(S, S, { samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
+    rt.texture.colorSpace = THREE.SRGBColorSpace; // match screen canvas linear→sRGB encoding
     const savedAspect = camera.aspect;
     camera.aspect = 1;
     camera.updateProjectionMatrix();
@@ -1082,6 +1083,7 @@ btnVideo.addEventListener('click', async () => {
 
         // Render into an offscreen target — never touch the visible canvas or camera aspect
         const rt = new THREE.WebGLRenderTarget(S, S, { samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
+        rt.texture.colorSpace = THREE.SRGBColorSpace; // match screen canvas linear→sRGB encoding
         const savedAspect = camera.aspect;
         camera.aspect = 1;
         camera.updateProjectionMatrix();
