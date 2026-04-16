@@ -361,16 +361,16 @@ html.loaded .compact-btn {
     font-family: "Source Sans 3", system-ui, sans-serif;
     line-height: 1.2;
     flex-shrink: 0;
-    background: transparent;
-    border: 1px solid var(--color-primary);
-    color: var(--color-primary);
+    background: var(--palette-blueberry-500);
+    border: none;
+    color: #fff;
     border-radius: 9999px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
     transition: background 0.15s, transform 0.1s;
 }
 
 html.loaded .compact-btn:hover {
-    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    background: var(--palette-blueberry-800);
 }
 
 html.loaded .compact-btn:active {
@@ -466,14 +466,15 @@ html.loaded .file-chip {
 
 .canvas-logo {
     position: absolute;
-    top: 16px;
-    left: 16px;
+    top: 20px;
+    left: 20px;
     z-index: 1;
     pointer-events: none;
 }
 
 html.loaded .canvas-logo {
-    height: 48px;
+    height: 36px;
+    top: calc(20px + 0.5 * (2.5em - 36px));
 }
 
 /* On narrow viewports swap the wordmark for the square favicon */
@@ -498,16 +499,6 @@ html.loaded .canvas-logo {
 
 html.loaded .canvas-replace-btn {
     flex-shrink: 0;
-    background: var(--palette-blueberry-500) !important;
-    color: #fff !important;
-    border-color: transparent !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
-    padding: 0.5em 1.25em !important;
-}
-
-html.loaded .canvas-replace-btn:hover {
-    background: var(--palette-blueberry-800) !important;
-    color: #fff !important;
 }
 
 .scroll-hint {
@@ -529,8 +520,8 @@ html.loaded .canvas-replace-btn:hover {
     bottom: 16px;
     right: 16px;
     z-index: 1;
-    width: 32px;
-    height: 32px;
+    width: 2.5em;
+    height: 2.5em;
     padding: 0;
     display: flex;
     align-items: center;
@@ -650,7 +641,7 @@ html.loaded .controls-bar {
     position: relative;
     gap: 16px;
     border-top: none;
-    padding: 16px 20px;
+    padding: 20px;
     background: var(--color-surface);
     transition: background 0.2s, border-color 0.2s;
 }
@@ -1314,7 +1305,7 @@ html.none-mode .gif-loop-label {
     flex-shrink: 0;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px 0;
+    padding: 20px 20px 0;
     background: var(--color-surface);
     position: sticky;
     top: 0;

@@ -651,6 +651,11 @@ document.querySelector('.orbit-hint-dismiss')?.addEventListener('click', () => {
 document.getElementById('btnClearModel').addEventListener('click', async (e) => {
     e.stopPropagation();
     e.preventDefault();
+    // If currently showing benchy (no user file in IDB), X = replace (open picker)
+    if (currentFileName === '3dbenchy') {
+        document.getElementById('fileInput').click();
+        return;
+    }
     if (!confirm('Reset to 3D Benchy?')) return;
     try {
         const resp = await fetch('./benchy.stl');
