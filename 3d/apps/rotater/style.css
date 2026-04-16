@@ -852,10 +852,10 @@ html.tilt-mode .tilt-range-label {
     width: 18px;
     height: 18px;
     padding: 0;
-    border: 1.5px solid var(--border-color);
+    border: 1.5px solid var(--color-primary);
     border-radius: 50%;
     background: var(--color-surface-raised);
-    color: var(--color-hint);
+    color: var(--color-primary);
     cursor: pointer;
     flex-shrink: 0;
     opacity: 0;
@@ -1779,7 +1779,7 @@ html.theme-dark .settings-close-btn:hover {
 
 #btnResetSettings {
     color: var(--color-label);
-    border-color: color-mix(in srgb, var(--color-label) 45%, transparent);
+    border-color: var(--color-primary);
 }
 
 #btnResetSettings:hover {
@@ -1878,7 +1878,7 @@ html.theme-dark .settings-close-btn:hover {
 
 .copy-link-btn--secondary {
     color: var(--color-label, #666);
-    border-color: var(--border-color);
+    border-color: var(--color-primary);
 }
 
 .copy-link-btn--secondary:hover {
