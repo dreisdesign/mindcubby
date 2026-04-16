@@ -748,6 +748,22 @@ document.getElementById('btnCopyLink')?.addEventListener('click', () => {
     }).catch(() => { });
 });
 
+// ── Info overlay ──────────────────────────────────────────────────────────────
+document.getElementById('btnInfo').addEventListener('click', () => {
+    document.getElementById('infoOverlay').hidden = false;
+});
+document.getElementById('btnInfoClose').addEventListener('click', () => {
+    document.getElementById('infoOverlay').hidden = true;
+});
+document.getElementById('infoOverlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) document.getElementById('infoOverlay').hidden = true;
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !document.getElementById('infoOverlay').hidden) {
+        document.getElementById('infoOverlay').hidden = true;
+    }
+});
+
 // ── Export helpers ────────────────────────────────────────────────────────────
 const setStatus = msg => { statusEl.textContent = msg; };
 const setExporting = v => {
@@ -773,6 +789,14 @@ async function captureFrames(n) {
     const off = Object.assign(document.createElement('canvas'), { width: S, height: S });
     const ctx = off.getContext('2d', { willReadFrequently: true });
     const frames = [];
+
+    // Resize renderer to square export resolution so camera FOV matches 1:1
+    const prevW = renderer.domElement.width;
+    const prevH = renderer.domElement.height;
+    const prevAspect = camera.aspect;
+    renderer.setSize(S, S, false);
+    camera.aspect = 1;
+    camera.updateProjectionMatrix();
 
     const dist = camera.position.length();
     const elev = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
@@ -822,6 +846,10 @@ async function captureFrames(n) {
 
     camera.position.copy(savedCamPos);
     camera.lookAt(0, 0, 0);
+    // Restore renderer and camera to preview dimensions
+    renderer.setSize(prevW, prevH, false);
+    camera.aspect = prevAspect;
+    camera.updateProjectionMatrix();
     controls.update();
     return frames;
 }
@@ -885,6 +913,14 @@ btnVideo.addEventListener('click', async () => {
         // Off-screen canvas at export resolution
         const off = Object.assign(document.createElement('canvas'), { width: S, height: S });
         const ctx = off.getContext('2d');
+
+        // Resize renderer to square export resolution so camera FOV matches 1:1
+        const prevW = renderer.domElement.width;
+        const prevH = renderer.domElement.height;
+        const prevAspect = camera.aspect;
+        renderer.setSize(S, S, false);
+        camera.aspect = 1;
+        camera.updateProjectionMatrix();
 
         const muxer = new Muxer({
             target: new ArrayBufferTarget(),
@@ -959,6 +995,10 @@ btnVideo.addEventListener('click', async () => {
 
         camera.position.copy(savedCamPos);
         camera.lookAt(0, 0, 0);
+        // Restore renderer and camera to preview dimensions
+        renderer.setSize(prevW, prevH, false);
+        camera.aspect = prevAspect;
+        camera.updateProjectionMatrix();
         controls.update();
 
         download(muxer.target.buffer, currentFileName + '.mp4', 'video/mp4');
@@ -966,6 +1006,12 @@ btnVideo.addEventListener('click', async () => {
     } catch (err) {
         setStatus('Error: ' + err.message);
         console.error(err);
+        // Ensure renderer is restored if export failed mid-way
+        if (typeof prevW !== 'undefined') {
+            renderer.setSize(prevW, prevH, false);
+            camera.aspect = prevAspect;
+            camera.updateProjectionMatrix();
+        }
     } finally {
         setExporting(false);
         controls.autoRotate = !isPaused && rotateModeEl.value === 'spin';

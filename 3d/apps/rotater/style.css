@@ -520,8 +520,8 @@ html.loaded .canvas-replace-btn {
     bottom: 16px;
     right: 16px;
     z-index: 1;
-    width: 2.5em;
-    height: 2.5em;
+    width: 2.5rem;
+    height: 2.5rem;
     padding: 0;
     display: flex;
     align-items: center;
@@ -1359,6 +1359,74 @@ html.loaded .menu-btn {
 .menu-btn:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
+}
+
+/* ── Info button row ── */
+
+.info-btn-row {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 0 4px;
+    margin-top: -8px;
+}
+
+.info-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: var(--color-label);
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+}
+
+.info-icon-btn:hover {
+    color: var(--color-on-surface);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.info-icon-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
+}
+
+/* ── Info panel extras ── */
+
+.info-panel {
+    width: 300px;
+}
+
+.info-panel-body {
+    padding: 14px 16px 16px !important;
+    gap: 8px !important;
+}
+
+.info-description {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-label);
+    line-height: 1.5;
+}
+
+.info-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--text-xs);
+    color: var(--color-label);
+    opacity: 0.75;
+}
+
+.info-link-btn {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 /* ── Settings overlay panel ── */
