@@ -153,12 +153,10 @@ function syncExportOverlay(w, h) {
         w = wrap.clientWidth;
         h = wrap.clientHeight;
     }
-    const INSET = 72;
-    const available = h - INSET * 2;
-    if (available <= 0) { overlay.style.display = 'none'; return; }
-    const sq = Math.min(w, available);
+    if (Math.abs(w - h) < 2) { overlay.style.display = 'none'; return; }
+    const sq = Math.min(w, h);
     const x = (w - sq) / 2;
-    const y = INSET + (available - sq) / 2;
+    const y = (h - sq) / 2;
     overlay.style.left = x + 'px';
     overlay.style.top = y + 'px';
     overlay.style.width = sq + 'px';
