@@ -507,28 +507,19 @@ document.addEventListener('keydown', e => {
     }
 });
 
-function snapFace(meshRx, meshRy, meshRz, targetElevDeg, upVec) {
+function snapFace(meshRx, meshRy, meshRz, targetElevDeg) {
     if (!mesh) return;
     mesh.rotation.set(meshRx, meshRy, meshRz);
-    // Sync elevation slider if a target is provided
+    camera.up.set(0, 1, 0);
     if (targetElevDeg !== undefined) {
-        const clampedElev = Math.max(0, Math.min(90, targetElevDeg));
-        elevSlider.value = clampedElev;
-        elevVal.textContent = clampedElev + '°';
+        // Clamp to slider range 0–90; placeCamera() further clamps to MAX_EL (~88.86°), avoiding gimbal lock
+        const clamped = Math.max(0, Math.min(90, targetElevDeg));
+        elevSlider.value = clamped;
+        elevVal.textContent = clamped + '°';
         syncSliderTooltip(elevSlider);
-        elevResetBtn.classList.toggle('is-changed', clampedElev !== ELEV_DEFAULT);
+        elevResetBtn.classList.toggle('is-changed', clamped !== ELEV_DEFAULT);
     }
-    // For top/bottom views, camera.up can't stay (0,1,0) when camera is directly above/below
-    if (upVec) {
-        const dist = modelRadius / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.1;
-        camera.position.set(0, dist * (upVec[1] < 0 ? -1 : 1), 0);
-        camera.up.set(...upVec);
-        camera.lookAt(0, 0, 0);
-        controls.update();
-    } else {
-        camera.up.set(0, 1, 0);
-        placeCamera();
-    }
+    placeCamera();
     renderer.render(scene, camera);
 }
 
@@ -543,12 +534,15 @@ function setActiveFaceBtn(btnId) {
     }
 }
 
-document.getElementById('btnViewFront').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, -Math.PI / 2, 0); setActiveFaceBtn('btnViewFront'); });
-document.getElementById('btnViewBack').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, Math.PI / 2, 0); setActiveFaceBtn('btnViewBack'); });
-document.getElementById('btnViewLeft').addEventListener('click', () => { snapFace(Math.PI / 2, Math.PI, 0, 0); setActiveFaceBtn('btnViewLeft'); });
-document.getElementById('btnFrontView').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, 0, 0); setActiveFaceBtn('btnFrontView'); });
-document.getElementById('btnViewTop').addEventListener('click', () => { snapFace(0, 0, 0, 90, [0, 0, -1]); setActiveFaceBtn('btnViewTop'); });
-document.getElementById('btnViewBottom').addEventListener('click', () => { snapFace(-Math.PI, 0, 0, 0, [0, 0, 1]); setActiveFaceBtn('btnViewBottom'); });
+// Side faces: no elevation override — preserve whatever tilt the user has set
+document.getElementById('btnViewFront').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, -Math.PI / 2); setActiveFaceBtn('btnViewFront'); });
+document.getElementById('btnViewBack').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, Math.PI / 2); setActiveFaceBtn('btnViewBack'); });
+document.getElementById('btnViewLeft').addEventListener('click', () => { snapFace(Math.PI / 2, Math.PI, 0); setActiveFaceBtn('btnViewLeft'); });
+document.getElementById('btnFrontView').addEventListener('click', () => { snapFace(-Math.PI / 2, 0, 0); setActiveFaceBtn('btnFrontView'); });
+// Top: elevation=90 (clamped to MAX_EL by placeCamera, ~88.86°) — nearly overhead, no gimbal lock
+// Bottom: flip mesh 180° so bottom faces up, then look down from same elevation
+document.getElementById('btnViewTop').addEventListener('click', () => { snapFace(0, 0, 0, 90); setActiveFaceBtn('btnViewTop'); });
+document.getElementById('btnViewBottom').addEventListener('click', () => { snapFace(Math.PI, 0, 0, 90); setActiveFaceBtn('btnViewBottom'); });
 document.getElementById('btnFaceNavReset').addEventListener('click', () => {
     if (!mesh) return;
     mesh.rotation.set(0, 0, 0);
