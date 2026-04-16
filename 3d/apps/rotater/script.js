@@ -80,7 +80,7 @@ let modelRadius = 1;
 let currentFileName = 'model';
 let tiltPhase = 0;
 let swingBaseAz = 0, swingLastAz = 0;
-let tiltBaseEl = 0, tiltLastEl = 0;
+let tiltBaseMeshRx = 0;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
@@ -141,26 +141,6 @@ function syncCanvasSize() {
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
     }
-    syncExportOverlay(w, h);
-}
-
-function syncExportOverlay(w, h) {
-    const overlay = document.getElementById('exportRegionOverlay');
-    if (!overlay) return;
-    if (!w || !h) {
-        const wrap = canvas.parentElement;
-        w = wrap.clientWidth;
-        h = wrap.clientHeight;
-    }
-    if (Math.abs(w - h) < 2) { overlay.style.display = 'none'; return; }
-    const sq = Math.min(w, h);
-    const x = (w - sq) / 2;
-    const y = (h - sq) / 2;
-    overlay.style.left = x + 'px';
-    overlay.style.top = y + 'px';
-    overlay.style.width = sq + 'px';
-    overlay.style.height = sq + 'px';
-    overlay.style.display = 'block';
 }
 
 // ── Material ─────────────────────────────────────────────────────────────────
@@ -237,27 +217,12 @@ function loop() {
     requestAnimationFrame(loop);
     if (!isExporting) {
         if (!isPaused && rotateModeEl.value === 'tilt' && mesh) {
-            // Tilt: elevation sine wave around a user-orbitable base; azimuth freely follows user
+            // Tilt: pitch the mesh around its X axis — camera orbits freely
             controls.autoRotate = false;
-            controls.update(); // apply user input first
-            // Accumulate user-driven elevation delta on top of the base
-            const dist = camera.position.length();
-            const actualEl = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
-            let elDelta = actualEl - tiltLastEl;
+            controls.update();
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
-            const MAX_EL = Math.PI / 2 - 0.05;
             const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
-            // Clamp the base so the full ±swing arc always fits — pure unclipped sine guarantees smooth easing
-            tiltBaseEl = THREE.MathUtils.clamp(tiltBaseEl + elDelta, -(MAX_EL - swing), MAX_EL - swing);
-            const el = tiltBaseEl + Math.sin(tiltPhase) * swing;
-            const az = Math.atan2(camera.position.x, camera.position.z);
-            camera.position.set(
-                dist * Math.cos(el) * Math.sin(az),
-                dist * Math.sin(el),
-                dist * Math.cos(el) * Math.cos(az),
-            );
-            camera.lookAt(0, 0, 0);
-            tiltLastEl = el;
+            mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * swing;
         } else if (!isPaused && rotateModeEl.value === 'swing' && mesh) {
             // Swing: azimuth oscillates ±swingRange around a user-orbitable base
             controls.autoRotate = false;
@@ -291,10 +256,8 @@ function loop() {
                     swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
                     swingLastAz = swingBaseAz;
                 }
-                if (rotateModeEl.value === 'tilt') {
-                    const d = camera.position.length();
-                    tiltBaseEl = Math.asin(Math.max(-1, Math.min(1, camera.position.y / d)));
-                    tiltLastEl = tiltBaseEl;
+                if (rotateModeEl.value === 'tilt' && mesh) {
+                    tiltBaseMeshRx = mesh.rotation.x;
                 }
             }
         }
@@ -655,15 +618,17 @@ rotateModeEl.addEventListener('change', () => {
         iconPlay.style.display = 'none';
         document.documentElement.classList.remove('rotation-paused');
     }
+    // Restore mesh pitch when leaving tilt mode
+    if (m !== 'tilt' && mesh) {
+        mesh.rotation.x = tiltBaseMeshRx;
+    }
     tiltPhase = 0;
     if (m === 'swing' && camera) {
         swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
         swingLastAz = swingBaseAz;
     }
-    if (m === 'tilt' && camera) {
-        const d = camera.position.length();
-        tiltBaseEl = Math.asin(Math.max(-1, Math.min(1, camera.position.y / d)));
-        tiltLastEl = tiltBaseEl;
+    if (m === 'tilt' && mesh) {
+        tiltBaseMeshRx = mesh.rotation.x;
     }
     if (controls) controls.autoRotate = !isPaused && m === 'spin';
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'swing');

@@ -1363,19 +1363,6 @@ html.loaded .menu-btn {
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
-/* ── Export region overlay ── */
-
-.export-region-overlay {
-    position: absolute;
-    pointer-events: none;
-    z-index: 1;
-    border: 1.5px solid rgba(255, 255, 255, 0.45);
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
-    border-radius: 3px;
-    display: none;
-    /* shown by JS when canvas is not square */
-}
-
 /* ── Info overlay extras ── */
 
 .settings-overlay.info-overlay {
