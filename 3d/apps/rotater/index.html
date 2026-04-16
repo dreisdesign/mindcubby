@@ -126,12 +126,20 @@
 
             <div class="sidebar">
                 <div class="sidebar-header">
+                    <button id="btnResetSettings" class="copy-link-btn copy-link-btn--secondary"
+                        title="Clear saved settings and restore defaults">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path
+                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                        </svg>
+                        Reset Settings
+                    </button>
                     <button id="btnCopyLink" class="copy-link-btn" title="Copy shareable link with current settings">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
                                 d="M9.2248 18.75C8.49597 18.75 7.87214 18.4905 7.35331 17.9715C6.83431 17.4527 6.5748 16.8288 6.5748 16.1V3.9C6.5748 3.17133 6.83431 2.5475 7.35331 2.0285C7.87214 1.5095 8.49597 1.25 9.2248 1.25H18.4248C19.1535 1.25 19.7773 1.5095 20.2963 2.0285C20.8153 2.5475 21.0748 3.17133 21.0748 3.9V16.1C21.0748 16.8288 20.8153 17.4527 20.2963 17.9715C19.7773 18.4905 19.1535 18.75 18.4248 18.75H9.2248ZM4.5748 23.4C3.84597 23.4 3.22214 23.1405 2.7033 22.6215C2.1843 22.1025 1.9248 21.4787 1.9248 20.75V7.225C1.9248 6.85833 2.05397 6.54583 2.3123 6.2875C2.57064 6.02917 2.88314 5.9 3.2498 5.9C3.61647 5.9 3.92897 6.02917 4.1873 6.2875C4.44564 6.54583 4.5748 6.85833 4.5748 7.225V20.75H15.0998C15.4665 20.75 15.779 20.8792 16.0373 21.1375C16.2956 21.3958 16.4248 21.7083 16.4248 22.075C16.4248 22.4417 16.2956 22.7542 16.0373 23.0125C15.779 23.2708 15.4665 23.4 15.0998 23.4H4.5748Z" />
                         </svg>
-                        Copy configuration
+                        Copy Link
                     </button>
                 </div>
                 <div id="controlsBar" class="controls-bar hidden">
@@ -152,7 +160,7 @@
                                             <input type="color" id="bgPicker" value="#dbd7ff">
                                             <span class="color-swatch" id="bgSwatch"></span>
                                         </label>
-                                        <span class="thumb-label">BG</span>
+                                        <span class="thumb-label">Background</span>
                                     </div>
                                 </div>
                             </div>
@@ -296,7 +304,7 @@
                             </label>
                         </div>
                     </div>
-                    <div class="controls-section-box">
+                    <div class="controls-section-box export-section-sticky">
                         <div class="controls-row">
                             <div class="downloads-section">
                                 <div class="control-label">
@@ -352,16 +360,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="controls-bar-footer">
-                        <button id="btnResetSettings" class="copy-link-btn reset-settings-btn"
-                            title="Clear saved settings and restore defaults">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path
-                                    d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
-                            </svg>
-                            Reset settings
-                        </button>
                     </div>
                 </div>
             </div><!-- .sidebar -->
