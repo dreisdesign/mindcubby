@@ -223,8 +223,8 @@ function loop() {
             tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
             const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * swing;
-        } else if (!isPaused && rotateModeEl.value === 'swing' && mesh) {
-            // Swing: azimuth oscillates ±swingRange around a user-orbitable base
+        } else if (!isPaused && rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360 && mesh) {
+            // Spin with Range < 360°: azimuth oscillates ±range around user-orbitable base
             controls.autoRotate = false;
             controls.update(); // apply user input first
             // Accumulate user-driven azimuth delta on top of the base
@@ -252,7 +252,7 @@ function loop() {
             controls.update();
             // Keep mode bases in sync while paused / in other modes so resume is seamless
             if (camera) {
-                if (rotateModeEl.value === 'swing') {
+                if (rotateModeEl.value === 'spin') {
                     swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
                     swingLastAz = swingBaseAz;
                 }
@@ -347,9 +347,9 @@ function restoreSettings() {
             if (s.rotateMode) rotateModeEl.value = s.rotateMode;
             const m = rotateModeEl.value;
             if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
-            if (m === 'swing' || m === 'tilt') updateRangeSliderForMode(m);
+            if (m === 'tilt' || m === 'spin') updateRangeSliderForMode(m);
             else tiltRangeVal.textContent = (s.tiltRange || tiltRangeSlider.value) + '°';
-            document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'swing');
+            document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin');
             const rotEnabledEl = document.getElementById('rotationEnabled');
             if (s.rotationEnabled != null) rotEnabledEl.checked = s.rotationEnabled === '1' || s.rotationEnabled === true || s.rotationEnabled === 1;
             const isOff = !rotEnabledEl.checked;
@@ -468,6 +468,7 @@ document.addEventListener('keydown', e => {
 function snapFace(meshRx, meshRy, meshRz) {
     if (!mesh) return;
     mesh.rotation.set(meshRx, meshRy, meshRz);
+    tiltBaseMeshRx = meshRx;
     camera.up.set(0, 1, 0);
     placeCamera();
     renderer.render(scene, camera);
@@ -535,14 +536,13 @@ function updateColorSwatches() {
 }
 
 function updateRangeSliderForMode(mode) {
-    if (mode === 'swing') {
-        tiltRangeSlider.min = '0';
-        tiltRangeSlider.max = '180';
-        tiltRangeSlider.step = '15';
-        if (parseFloat(tiltRangeSlider.value) > 180) tiltRangeSlider.value = '90';
-        if (parseFloat(tiltRangeSlider.value) < 0) tiltRangeSlider.value = '90';
+    if (mode === 'spin') {
+        tiltRangeSlider.min = '45';
+        tiltRangeSlider.max = '360';
+        tiltRangeSlider.step = '45';
+        if (parseFloat(tiltRangeSlider.value) > 360 || parseFloat(tiltRangeSlider.value) < 45) tiltRangeSlider.value = '360';
         document.getElementById('tiltRangeTicks').innerHTML =
-            '<span>0°</span><span>180°</span>';
+            '<span>45°</span><span>360°</span>';
     } else {
         tiltRangeSlider.min = '10';
         tiltRangeSlider.max = '50';
@@ -601,7 +601,7 @@ document.getElementById('rotationEnabled').addEventListener('change', function (
         btnPause.setAttribute('aria-label', 'Pause rotation');
         btnPause.title = 'Pause rotation';
         document.documentElement.classList.remove('rotation-paused');
-        document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'swing');
+        document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin');
     }
     btnGif.disabled = isOff;
     btnVideo.disabled = isOff;
@@ -623,7 +623,7 @@ rotateModeEl.addEventListener('change', () => {
         mesh.rotation.x = tiltBaseMeshRx;
     }
     tiltPhase = 0;
-    if (m === 'swing' && camera) {
+    if (m === 'spin' && camera) {
         swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
         swingLastAz = swingBaseAz;
     }
@@ -631,8 +631,8 @@ rotateModeEl.addEventListener('change', () => {
         tiltBaseMeshRx = mesh.rotation.x;
     }
     if (controls) controls.autoRotate = !isPaused && m === 'spin';
-    document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'swing');
-    if (m === 'swing' || m === 'tilt') updateRangeSliderForMode(m);
+    document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin');
+    if (m === 'tilt' || m === 'spin') updateRangeSliderForMode(m);
     saveSettings();
 });
 
@@ -782,23 +782,19 @@ async function captureFrames(n) {
     const az = Math.atan2(camera.position.x, camera.position.z);
     const savedCamPos = camera.position.clone();
     const isTilt = rotateModeEl.value === 'tilt';
-    const isSwing = rotateModeEl.value === 'swing';
+    const isSpinLimited = rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360;
     const baseEl = elev;
     const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
     const MAX_EL = Math.PI / 2 - 0.05;
+    const savedMeshRx = mesh ? mesh.rotation.x : 0;
 
     for (let i = 0; i < n; i++) {
         if (isTilt) {
-            const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * i / n) * tiltSwing, -MAX_EL, MAX_EL);
-            camera.position.set(
-                dist * Math.cos(el) * Math.sin(az),
-                dist * Math.sin(el),
-                dist * Math.cos(el) * Math.cos(az),
-            );
-        } else if (isSwing) {
-            const swingRange = tiltSwing;
+            mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
+            camera.position.copy(savedCamPos);
+        } else if (isSpinLimited) {
             const el = Math.min(baseEl, MAX_EL);
-            const azimuth = Math.sin(2 * Math.PI * i / n) * swingRange;
+            const azimuth = az + Math.sin(2 * Math.PI * i / n) * tiltSwing;
             camera.position.set(
                 dist * Math.cos(el) * Math.sin(azimuth),
                 dist * Math.sin(el),
@@ -823,6 +819,7 @@ async function captureFrames(n) {
         }
     }
 
+    if (mesh) mesh.rotation.x = savedMeshRx;
     camera.position.copy(savedCamPos);
     camera.lookAt(0, 0, 0);
     // Restore renderer and camera to preview dimensions
@@ -924,23 +921,19 @@ btnVideo.addEventListener('click', async () => {
         const az = Math.atan2(camera.position.x, camera.position.z);
         const savedCamPos = camera.position.clone();
         const isTilt = rotateModeEl.value === 'tilt';
-        const isSwing = rotateModeEl.value === 'swing';
+        const isSpinLimited = rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360;
         const baseEl = elev;
         const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value));
         const MAX_EL = Math.PI / 2 - 0.05;
+        const savedMeshRx = mesh ? mesh.rotation.x : 0;
 
         for (let f = 0; f < n; f++) {
             if (isTilt) {
-                const el = THREE.MathUtils.clamp(baseEl + Math.sin(2 * Math.PI * f / n) * tiltSwing, -MAX_EL, MAX_EL);
-                camera.position.set(
-                    dist * Math.cos(el) * Math.sin(az),
-                    dist * Math.sin(el),
-                    dist * Math.cos(el) * Math.cos(az),
-                );
-            } else if (isSwing) {
-                const swingRange = tiltSwing;
+                mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
+                camera.position.copy(savedCamPos);
+            } else if (isSpinLimited) {
                 const el = Math.min(baseEl, MAX_EL);
-                const azimuth = Math.sin(2 * Math.PI * f / n) * swingRange;
+                const azimuth = az + Math.sin(2 * Math.PI * f / n) * tiltSwing;
                 camera.position.set(
                     dist * Math.cos(el) * Math.sin(azimuth),
                     dist * Math.sin(el),
@@ -972,6 +965,7 @@ btnVideo.addEventListener('click', async () => {
         await encoder.flush();
         muxer.finalize();
 
+        if (mesh) mesh.rotation.x = savedMeshRx;
         camera.position.copy(savedCamPos);
         camera.lookAt(0, 0, 0);
         // Restore renderer and camera to preview dimensions

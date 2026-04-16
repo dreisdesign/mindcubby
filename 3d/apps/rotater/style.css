@@ -1587,7 +1587,8 @@ html.theme-dark .settings-close-btn:hover {
     border-radius: 6px;
     background: transparent;
     cursor: pointer;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
 .color-option:focus-within {
@@ -1621,7 +1622,33 @@ html.theme-dark .settings-close-btn:hover {
 }
 
 .color-option:hover {
-    border-color: var(--color-primary);
+    border-color: var(--color-primary-lighter);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(46, 43, 116, 0.15);
+}
+
+.color-edit-icon {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 13px;
+    height: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+}
+
+.color-edit-icon svg {
+    width: 13px;
+    height: 13px;
+}
+
+.color-option:hover .color-edit-icon {
+    opacity: 1;
 }
 
 /* ── Unified Styles group (colors + shading) ── */
@@ -2010,34 +2037,12 @@ html.none-mode .rotation-group {
     }
 }
 
-@keyframes rot-swing {
-    0% {
-        transform: translateX(0);
-    }
-
-    25% {
-        transform: translateX(6px);
-    }
-
-    75% {
-        transform: translateX(-6px);
-    }
-
-    100% {
-        transform: translateX(0);
-    }
-}
-
 .rotation-option:hover .rotation-thumb--spin .rot-icon {
     animation: rot-spin 2.4s linear 3;
 }
 
 .rotation-option:hover .rotation-thumb--tilt .rot-icon {
     animation: rot-tilt 1.4s ease-in-out 3;
-}
-
-.rotation-option:hover .rotation-thumb--swing .rot-icon {
-    animation: rot-swing 1.4s ease-in-out 3;
 }
 
 /* ── Theme transition ────────────────────────────────────────────────────────── */
