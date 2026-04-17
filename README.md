@@ -4,6 +4,15 @@ A collection of tools and utilities for 3D printing, starting with **G-coder**.
 
 ---
 
+## Table of Contents
+
+- [G-coder — Live App](https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/)
+- [Rotater — Live App](https://dreisdesign.github.io/mindcubby/3d/apps/rotater/)
+- [G-coder (docs)](./3d/apps/gcoder/README.md)
+- [Rotater (docs)](./3d/apps/rotater/README.md)
+- [Roadmap](./ROADMAP.md)
+
+
 ## 🚀 G-coder
 
 **Generate Printables Specifications from G-Code Files**
@@ -32,6 +41,31 @@ A lightweight, browser-based tool that automatically extracts print specificatio
    - **Download .md** – Save curated specs as Markdown
 
 ---
+
+## 🌀 Rotater
+
+View and export rotating 3D STL models as animated GIF, MP4 video, or PNG — entirely in the browser.
+
+### Quick Links
+- **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/rotater/
+- **Documentation:** [Rotater README](./3d/apps/rotater/README.md)
+- **Python CLI:** [stl_rotate.py](./3d/apps/rotater/stl_rotate.py)
+
+### Features
+- Browser-based STL viewer with spin/tilt/wobble animation
+- Export GIF, MP4, or PNG — client-side (your STL never leaves your machine)
+- Drag-and-drop STL loading; settings persist across refreshes
+- Includes Python CLI for headless rendering and GIF/MP4 export
+
+### Quick Web Usage
+1. Serve the app folder locally (ES modules require `http://`):
+
+```bash
+python3 -m http.server 8765
+# then open http://localhost:8765
+```
+2. Open `3d/apps/rotater/index.html`, drag & drop an `.stl`, tweak appearance, and export.
+
 
 ## What's Next?
 
