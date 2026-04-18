@@ -11,6 +11,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.2.0] - 2026-04-18
+
+### Added
+- **Live export preview** — square thumbnail in the Export panel mirrors the export frame crop in real time, updated every 4 frames
+- **Figma-style export UI** — Format dropdown (GIF / MP4 / PNG / JPEG) and Quality dropdown (Low / Medium / High) replace the old per-format button grid; selecting a format reveals only its relevant options; a single orange **Export** button dispatches to the correct handler
+
+### Changed
+- **Frame overlay toggle** — toggling the frame guide overlay no longer moves the camera; it is a pure visual indicator only
+- **Reset camera always fits to frame** — the ⟳ button now always calls `fitToFrame()`, correctly centering the model inside the export square regardless of whether the overlay is shown
+- **Frame recenters on resize** — `syncCanvasSize` calls `fitToFrame()` on window/sidebar resize when the frame is active, so framing never drifts
+- **Speed slider** — reduced to 5 non-linear snap points: **0.5× · 1× · 2× · 3× · 5×** (previously 8 linear steps from 0.5× to 4×); slider index maps to value via `SPEED_VALS`
+- **MP4 repeat removed** — video always exports a single play cycle; the Repeat select has been removed from the MP4 options panel
+- **Export button above preview** — the Export button is placed above the live preview thumbnail so it is always immediately reachable
+- **Preview label** — "Preview" label uses the same small-caps style as the Format and Quality labels
+
+### Fixed
+- `EXPORT._preset` shim now reads from `#exportQuality` (was incorrectly reading from removed `#gifQuality`)
+- Removed dead `exportAdvanced` and `mp4LoopCount` keys from `saveSettings`
+- Duplicate `mp4LoopCount` change listener removed
+
+## [1.1.0] - 2026-04-18
+
+### Added
+- **Export progress bar** — thin fill bar above the status label fills proportionally as frames are captured and encoded (GIF and MP4); hidden when idle
+- **Collapsible sidebar** — chevron button in the sidebar header collapses the controls panel to a 40 px rail; state persists in `localStorage`
+- **Spin CW/CCW hover preview** — when Spin mode is active, hovering the Spin card previews the opposite direction so the user can see the change before clicking
+
+### Changed
+- **Maintain zoom on STL replace** — loading a new STL via "Replace STL" preserves the camera distance so the new model appears at the same zoom level
+- **Quality dropdown labels** — renamed to **Low / Medium / High** (previously "Web · 480p 15fps", etc.); applies to both GIF and Video quality selects
+- **Export filenames prefixed** — all auto-generated exports (PNG, JPEG, GIF, MP4) are now prefixed with `Rotater_`
+- **Export UI restructured** — GIF and Video each have a dedicated format block with inline Save button; quality select inline with block header
+- **MP4 loop control** — replaced range slider with checkbox + count select (1–6 repeats)
+- **Transparent Background** — renamed from "Opaque background" (inverted semantics); unchecked = opaque (default), checked = transparent (PNG only)
+- **Quality slider label** — renamed from "JPEG Quality" to "Quality"; label row moved above slider to match motion sliders
+- **Slider labels** — removed bullet prefix, weight 600, `--color-label` color
+- **Pause/Reset camera** — Pause button moved to canvas bottom-right; Reset camera moved to D-pad center
+- **Video estimate** — applied 0.55 correction factor for more accurate MP4 time estimates
+- **Animation export status** — separate `exportStatusAnim` span from the image status span
+
 ## [1.0.6] - 2026-04-16
 
 ### Fixed

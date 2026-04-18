@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.0.0** · April 16, 2026
+**Version 1.2.0** · April 18, 2026
 
 ---
 
@@ -32,12 +32,13 @@ python3 -m http.server 8765
 - **D-pad** (bottom-center of viewer) — orbit the camera in 45° snapped increments
   - Arrow keys (←↑↓→) do the same thing from the keyboard
   - Center button of the D-pad pauses / resumes (⏸/▶)
-- **Reset camera** button (⟳, bottom-right of viewer) — returns camera to default position
+- **Reset camera** button (⟳, D-pad center) — recenters the model in the export frame
+- **Frame overlay toggle** (⬜, bottom-right of viewer) — shows/hides the export frame guides without moving the camera
 - **Dark mode toggle** (bottom-left of viewer)
 
 ### Export preview overlay
 
-A semi-transparent dark overlay on the sides of the viewer shows exactly which square region (720×720 px) will be captured in GIF and MP4 exports. The model is sized to fill this square region by default.
+A dashed overlay on the viewer always shows exactly which square region will be captured. Enabling the frame toggle adds a solid dim vignette outside the crop area for a clearer preview. The **⟳ reset** button always recenters the model within this square frame.
 
 ### Appearance
 
@@ -59,17 +60,35 @@ Sidebar order: **Color → Texture → Animation → Export**
 | **Spin** | Object rotates continuously around its vertical axis (like a spinning top). Camera can orbit freely. Range slider < 360° makes it oscillate side to side instead of spinning fully. |
 | **Tilt** | Object rocks on its X axis (like a juggled bowling pin). Camera stays put. Range controls how far it tilts. |
 | **Wobble** | Spin + Tilt combined — continuous spin with a simultaneous tilt oscillation. |
-| Speed | Playback speed: 0.5× – 4× |
+| Speed | Playback speed: 0.5× · 1× · 2× · 3× · 5× |
 | Range | Oscillation amplitude for Tilt (10°–50°) and arc width for Spin (45°–360°); also controls tilt depth for Wobble |
 
 ### Export
 
-| Button | Output |
+The Export section uses a **Format** dropdown and a **Quality** dropdown. Selecting a format reveals its specific options. A live **Preview** thumbnail shows the export frame crop in real time.
+
+| Format | Output |
 |---|---|
-| GIF | Animated GIF — one full motion cycle, 720×720 px |
-| Loop toggle | Whether the GIF loops forever (default: on) |
-| MP4 | H.264 MP4 video — one full motion cycle, 720×720 px (requires Chrome/Edge/Safari 16.4+) |
-| PNG | Still image of the current view at screen resolution |
+| Animated GIF | Looping GIF — one full motion cycle at the selected quality |
+| MP4 Video | H.264 MP4 — one full motion cycle (requires Chrome / Edge / Safari 16.4+) |
+| PNG Image | Still image of the current view at screen resolution |
+| JPEG Image | Still image with adjustable compression |
+
+#### GIF options
+
+| Control | Description |
+|---|---|
+| Loop | GIF loops forever (default: on) |
+| Dither | Floyd-Steinberg dithering for smoother gradients |
+| Background | Uncheck for transparent background |
+
+#### Export quality settings
+
+| Level | Resolution | FPS | Notes |
+|---|---|---|---|
+| Low | 480 px | 15 fps | Smallest file |
+| Medium | 720 px | 24 fps | Default |
+| High | 1080 px | 30 fps | Largest file |
 
 All export is completely client-side — your STL file never leaves your machine.
 

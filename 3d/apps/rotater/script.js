@@ -2,35 +2,101 @@ import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { GIFEncoder, quantize, applyPalette } from 'gifenc';
+import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
-const EXPORT = { size: 720, fps: 24 };
+// Export quality presets — size+fps+bitrate in one pick (always square output)
+const QUALITY_PRESETS = {
+    web: { size: 480, fps: 15, bitrate: 4_000_000 },
+    std: { size: 720, fps: 24, bitrate: 8_000_000 },
+    high: { size: 1080, fps: 30, bitrate: 16_000_000 },
+};
+
+const EXPORT = {
+    get gif() {
+        const v = document.getElementById('exportQuality')?.value ?? 'std';
+        const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
+        return {
+            size: p.size,
+            fps: p.fps,
+            loop: document.getElementById('gifLoop')?.checked ?? true,
+            dither: document.getElementById('gifDither')?.checked ?? false,
+        };
+    },
+    get mp4() {
+        const v = document.getElementById('exportQuality')?.value ?? 'std';
+        const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
+        return {
+            size: p.size,
+            fps: p.fps,
+            bitrate: p.bitrate,
+            loops: 0, // single play
+        };
+    },
+    get image() {
+        return {
+            quality: parseInt(document.getElementById('jpegQuality')?.value ?? 92, 10) / 100,
+        };
+    },
+    // Backward-compat shims
+    get _preset() {
+        const v = document.getElementById('exportQuality')?.value ?? 'std';
+        return QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
+    },
+    get size() { return this._preset.size; },
+    get fps() { return this._preset.fps; },
+    get bitrate() { return this._preset.bitrate; },
+    get dither() { return this.gif.dither; },
+};
 const BASE_ROTATE_SPEED = 2.5; // OrbitControls units: 2.0 = 1 rev/60s at 60fps
-const SPEED_DEFAULT = 1.0;
+const SPEED_VALS = [0.5, 1, 2, 3, 5]; // non-linear snap points for speed slider indices 0–4
+const SPEED_DEFAULT = 1; // index into SPEED_VALS
+function getSpeed() { return SPEED_VALS[parseInt(speedSlider.value)] ?? 1; }
 const TILT_RANGE_DEFAULT = 20;
 const SPIN_RANGE_DEFAULT = 360;
 const WOBBLE_SPIN_RANGE_DEFAULT = 360;
 const ELEV_DEFAULT = 30; // Used by placeCamera() for initial camera height
 
 // Returns frame count that gives 1 revolution matching the live rotation speed
-function exportFrames() {
+function exportFrames(fps = EXPORT.gif.fps) {
     const speed = controls ? Math.abs(controls.autoRotateSpeed) : BASE_ROTATE_SPEED;
     const secsPerRev = 60 / speed;
-    return Math.round(EXPORT.fps * secsPerRev);
+    return Math.round(fps * secsPerRev);
 }
 
 function updateEstimate() {
     if (!btnGif) return;
-    const n = exportFrames();
-    const secs = n / EXPORT.fps;
-    const gifMB = (n * 8.7 / 1024).toFixed(1);
-    const mp4MB = (secs * 0.15).toFixed(1);
-    btnGif.title = `~${gifMB} MB · ${n} frames`;
-    btnVideo.title = `~${mp4MB} MB · ${secs.toFixed(1)}s`;
-    const pngMB = (EXPORT.size * EXPORT.size * 4 * 0.25 / (1024 * 1024)).toFixed(1);
-    if (btnPng) btnPng.title = `~${pngMB} MB · ${EXPORT.size}×${EXPORT.size}px`;
+    const { fps: gFps, size: gSize } = EXPORT.gif;
+    const { fps: mFps, size: mSize, bitrate } = EXPORT.mp4;
+
+    // GIF — empirical heuristic: ~50 KB/frame at 720px, scales with pixel area
+    const gN = exportFrames(gFps);
+    const gSecs = (gN / gFps).toFixed(1);
+    const gMB = (gN * Math.pow(gSize / 720, 2) * 50 / 1024).toFixed(1);
+    btnGif.title = `Save animated GIF`;
+    const gifEstEl = document.getElementById('gifEst');
+    if (gifEstEl) gifEstEl.textContent = `~${gMB} MB · ${gN} frames · ${gSecs}s`;
+
+    // MP4 — bitrate-accurate: duration × bitrate ÷ 8
+    const mN = exportFrames(mFps);
+    const mSecs = (mN / mFps).toFixed(1);
+    // 0.55 factor: theoretical bitrate * duration overstates real H.264 file sizes
+    const mMB = (parseFloat(mSecs) * bitrate / 8 / (1024 * 1024) * 0.55).toFixed(1);
+    btnVideo.title = `Save MP4 video`;
+    const mp4EstEl = document.getElementById('mp4Est');
+    if (mp4EstEl) mp4EstEl.textContent = `~${mMB} MB · ${mSecs}s`;
+
+    // Image — based on actual canvas pixel size
+    const imgEstPng = document.getElementById('imgEstPng');
+    const imgEstJpg = document.getElementById('imgEstJpg');
+    if ((imgEstPng || imgEstJpg) && renderer) {
+        const pw = renderer.domElement.width, ph = renderer.domElement.height;
+        const pngMB = (pw * ph * 3 * 0.25 / (1024 * 1024)).toFixed(2);
+        const jpegMB = (pw * ph * EXPORT.image.quality * 0.21 / (1024 * 1024)).toFixed(2);
+        if (imgEstPng) imgEstPng.textContent = `~${pngMB} MB · ${pw}×${ph}px`;
+        if (imgEstJpg) imgEstJpg.textContent = `~${jpegMB} MB · ${pw}×${ph}px`;
+    }
 }
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
@@ -51,7 +117,9 @@ const speedVal = document.getElementById('speedVal');
 const btnGif = document.getElementById('btnExportGif');
 const btnVideo = document.getElementById('btnExportVideo');
 const btnPng = document.getElementById('btnExportPng');
+const exportFormatEl = document.getElementById('exportFormat');
 const statusEl = document.getElementById('exportStatus');
+const animStatusEl = document.getElementById('exportStatusAnim');
 const fileNameEl = document.getElementById('fileName');
 const btnPause = document.getElementById('btnPause');
 const iconPause = document.getElementById('iconPause');
@@ -78,6 +146,29 @@ function syncSliderTooltip(slider) {
     const wrap = slider.parentElement;
     if (wrap && wrap.classList.contains('range-wrap')) wrap.style.setProperty('--pct', pct);
 }
+
+// ── Slider snap-point dots ────────────────────────────────────────────────────
+function addSnapDots(slider) {
+    const wrap = slider.closest('.range-wrap');
+    if (!wrap || wrap.querySelector('.snap-dots')) return;
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    const step = parseFloat(slider.step) || 1;
+    const n = Math.round((max - min) / step) + 1;
+    if (n < 2 || n > 24) return;
+    const dotsEl = document.createElement('div');
+    dotsEl.className = 'snap-dots';
+    dotsEl.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < n; i++) {
+        const dot = document.createElement('span');
+        dot.style.left = `calc(10px + ${(i / (n - 1))} * (100% - 20px))`;
+        dotsEl.appendChild(dot);
+    }
+    wrap.appendChild(dotsEl);
+}
+
+// Add snap dots to all range sliders at startup
+document.querySelectorAll('input[type="range"]').forEach(addSnapDots);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let renderer, scene, camera, controls, mesh;
@@ -132,6 +223,10 @@ function initThree() {
 
     syncCanvasSize();
     window.addEventListener('resize', syncCanvasSize);
+    // ResizeObserver keeps canvas in sync during CSS transitions (e.g. sidebar collapse)
+    if (window.ResizeObserver) {
+        new ResizeObserver(() => syncCanvasSize()).observe(canvas.parentElement);
+    }
     requestAnimationFrame(loop);
 }
 
@@ -144,7 +239,9 @@ function syncCanvasSize() {
     if (camera) {
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
+        if (exportFrameEnabled) fitToFrame();
     }
+    updateEstimate();
 }
 
 // ── Material ─────────────────────────────────────────────────────────────────
@@ -162,6 +259,10 @@ function getMaterial(shading, color) {
 // ── STL Loading ───────────────────────────────────────────────────────────────
 function loadSTLBuffer(buffer, name) {
     const geo = new STLLoader().parse(buffer);
+
+    // Preserve camera distance when replacing a model (maintain user's zoom level)
+    let savedCamPos = null;
+    if (mesh && camera) savedCamPos = camera.position.clone();
 
     if (mesh) {
         scene.remove(mesh);
@@ -189,7 +290,16 @@ function loadSTLBuffer(buffer, name) {
     geo.boundingBox.getSize(sz);
     modelRadius = Math.max(sz.x, sz.y, sz.z) / 2;
 
-    placeCamera();
+    if (savedCamPos && camera) {
+        // Maintain the user's current camera distance; preserve direction
+        const savedDist = savedCamPos.length();
+        camera.position.copy(savedCamPos.clone().normalize().multiplyScalar(savedDist));
+        camera.lookAt(0, 0, 0);
+        controls.target.set(0, 0, 0);
+        controls.update();
+    } else {
+        placeCamera();
+    }
     document.documentElement.classList.add('loaded');
     try { localStorage.setItem('rotater_hasSession', '1'); } catch (e) { }
     document.getElementById('compactBtnLabel').textContent = 'Replace STL';
@@ -216,6 +326,26 @@ function placeCamera() {
     camera.up.set(0, 1, 0);
     camera.position.set(0, dist * Math.sin(el), dist * Math.cos(el));
     camera.lookAt(0, 0, 0);
+    controls.target.set(0, 0, 0);
+    controls.update();
+}
+
+// Fit model into the export frame box (used by reset button when frame is active)
+function fitToFrame() {
+    if (!camera || !controls) return;
+    const wrap = canvas.parentElement;
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    const sq = Math.round(Math.min(w, h) * 0.82);
+    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    // dist so model fills ~88% of the export square: world half-extent = (sq/h)*tan*dist
+    const dist = modelRadius * h / (0.88 * sq * tanHalfFov);
+    const MAX_EL = Math.PI / 2 - 0.02;
+    const el = Math.min(THREE.MathUtils.degToRad(ELEV_DEFAULT), MAX_EL);
+    camera.up.set(0, 1, 0);
+    camera.position.set(0, dist * Math.sin(el), dist * Math.cos(el));
+    camera.lookAt(0, 0, 0);
+    controls.target.set(0, 0, 0);
     controls.update();
 }
 
@@ -227,7 +357,7 @@ function loop() {
             // Tilt: pitch the mesh around its X axis — camera orbits freely
             controls.autoRotate = false;
             controls.update();
-            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * getSpeed();
             const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * swing;
         } else if (!isPaused && rotateModeEl.value === 'wobble' && mesh) {
@@ -245,7 +375,7 @@ function loop() {
                 if (azDelta < -Math.PI) azDelta += 2 * Math.PI;
                 swingBaseAz += azDelta;
             }
-            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * getSpeed();
             const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * tiltSwing;
             if (wobbleSpinRange < 360) {
@@ -272,7 +402,7 @@ function loop() {
             if (azDelta > Math.PI) azDelta -= 2 * Math.PI;
             if (azDelta < -Math.PI) azDelta += 2 * Math.PI;
             swingBaseAz += azDelta;
-            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * parseFloat(speedSlider.value);
+            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * getSpeed();
             const MAX_EL = Math.PI / 2 - 0.05;
             const swingRange = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
             const dist = camera.position.length();
@@ -296,7 +426,90 @@ function loop() {
             }
         }
         renderer.render(scene, camera);
+        drawExportFrame();
+        updateExportPreview();
     }
+}
+
+// ── Export preview thumbnail ──────────────────────────────────────────────────
+let _previewTick = 0;
+function updateExportPreview() {
+    if (++_previewTick % 4 !== 0) return; // update every 4th frame
+    const pv = document.getElementById('exportPreview');
+    if (!pv || !renderer) return;
+    const src = renderer.domElement;
+    const sw = src.width, sh = src.height;
+    const sq = Math.round(Math.min(sw, sh) * 0.82);
+    const sx = Math.floor((sw - sq) / 2);
+    const sy = Math.floor((sh - sq) / 2);
+    const pvW = pv.offsetWidth || 160;
+    if (pv.width !== pvW || pv.height !== pvW) { pv.width = pvW; pv.height = pvW; }
+    // Fill the preview with exactly the export square — no letterbox, no brackets
+    pv.getContext('2d').drawImage(src, sx, sy, sq, sq, 0, 0, pvW, pvW);
+}
+
+// ── Export frame overlay ──────────────────────────────────────────────────
+let exportFrameEnabled = false;
+
+function drawExportFrame() {
+    const fc = document.getElementById('exportFrameCanvas');
+    if (!fc) return;
+    const wrap = fc.parentElement;
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    if (w === 0 || h === 0) return;
+    if (fc.width !== w || fc.height !== h) { fc.width = w; fc.height = h; }
+
+    const sq = Math.round(Math.min(w, h) * 0.82);
+    const sx = Math.floor((w - sq) / 2);
+    const sy = Math.floor((h - sq) / 2);
+    const ctx = fc.getContext('2d');
+
+    ctx.clearRect(0, 0, w, h);
+
+    if (exportFrameEnabled) {
+        // Show dim regions outside the crop square via backdrop-filter divs
+        const dimTop = document.getElementById('frameDimTop');
+        const dimBottom = document.getElementById('frameDimBottom');
+        const dimLeft = document.getElementById('frameDimLeft');
+        const dimRight = document.getElementById('frameDimRight');
+        if (dimTop) { dimTop.style.cssText = `display:block;top:0;left:0;width:100%;height:${sy}px`; }
+        if (dimBottom) { dimBottom.style.cssText = `display:block;bottom:0;left:0;width:100%;height:${sy}px`; }
+        if (dimLeft) { dimLeft.style.cssText = `display:block;top:${sy}px;left:0;width:${sx}px;height:${sq}px`; }
+        if (dimRight) { dimRight.style.cssText = `display:block;top:${sy}px;right:0;width:${sx}px;height:${sq}px`; }
+
+        // Corner bracket marks
+        const cm = Math.round(sq * 0.07);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy + cm); ctx.lineTo(sx, sy); ctx.lineTo(sx + cm, sy);           // TL
+        ctx.moveTo(sx + sq - cm, sy); ctx.lineTo(sx + sq, sy); ctx.lineTo(sx + sq, sy + cm);      // TR
+        ctx.moveTo(sx, sy + sq - cm); ctx.lineTo(sx, sy + sq); ctx.lineTo(sx + cm, sy + sq);      // BL
+        ctx.moveTo(sx + sq - cm, sy + sq); ctx.lineTo(sx + sq, sy + sq); ctx.lineTo(sx + sq, sy + sq - cm); // BR
+        ctx.stroke();
+    } else {
+        // Hint mode: just faint dashed corner brackets, no dim
+        const cm = Math.round(sq * 0.07);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(sx, sy + cm); ctx.lineTo(sx, sy); ctx.lineTo(sx + cm, sy);
+        ctx.moveTo(sx + sq - cm, sy); ctx.lineTo(sx + sq, sy); ctx.lineTo(sx + sq, sy + cm);
+        ctx.moveTo(sx, sy + sq - cm); ctx.lineTo(sx, sy + sq); ctx.lineTo(sx + cm, sy + sq);
+        ctx.moveTo(sx + sq - cm, sy + sq); ctx.lineTo(sx + sq, sy + sq); ctx.lineTo(sx + sq, sy + sq - cm);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+}
+
+function clearExportFrame() {
+    // Hide dim overlay regions; the canvas hint brackets stay (drawn each frame)
+    ['frameDimTop', 'frameDimBottom', 'frameDimLeft', 'frameDimRight'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
 }
 
 // ── Persistence (IndexedDB for binary, localStorage for settings) ───────────
@@ -360,7 +573,13 @@ function saveSettings() {
             wobbleSpinRange: wobbleSpinRangeSlider.value,
             spinDir: spinDir,
             gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
-            rotationEnabled: document.getElementById('rotationEnabled')?.checked ? '1' : '0',
+
+            exportQuality: document.getElementById('exportQuality')?.value ?? 'std',
+            exportFormat: exportFormatEl?.value ?? 'gif',
+            animBg: document.getElementById('animBg')?.checked ? '1' : '0',
+            imageTransparent: document.getElementById('imageBg')?.checked ? '1' : '0',
+            gifDither: document.getElementById('gifDither')?.checked ? '1' : '0',
+            jpegQuality: document.getElementById('jpegQuality')?.value ?? '92',
         }));
     } catch (e) { }
     settingsToURL();
@@ -375,11 +594,11 @@ function restoreSettings() {
             if (s.bg) bgPick.value = s.bg;
             if (s.shading) shadingEl.value = s.shading;
             if (s.speed != null) {
-                speedSlider.value = s.speed;
-                speedVal.textContent = parseFloat(s.speed).toFixed(1) + '×';
+                speedSlider.value = s.speed; // browser quantizes to nearest step (0–4)
+                speedVal.textContent = getSpeed() + '×';
             }
 
-            if (s.rotateMode === 'off') { if (s.rotationEnabled == null) s.rotationEnabled = '0'; s.rotateMode = null; }
+            if (s.rotateMode === 'off') { s.rotateMode = null; }
             if (s.rotateMode) rotateModeEl.value = s.rotateMode;
             const m = rotateModeEl.value;
             if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
@@ -390,15 +609,44 @@ function restoreSettings() {
             document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin' || m === 'wobble');
             document.documentElement.classList.toggle('wobble-mode', m === 'wobble');
             updateSpinDirUI();
-            const rotEnabledEl = document.getElementById('rotationEnabled');
-            if (s.rotationEnabled != null) rotEnabledEl.checked = s.rotationEnabled === '1' || s.rotationEnabled === true || s.rotationEnabled === 1;
-            const isOff = !rotEnabledEl.checked;
-            document.documentElement.classList.toggle('none-mode', isOff);
-            btnGif.disabled = isOff;
-            btnVideo.disabled = isOff;
+            // Restore gifLoop checkbox
             const gifLoopEl = document.getElementById('gifLoop');
-            gifLoopEl.disabled = isOff;
-            if (s.gifLoop != null) gifLoopEl.checked = (s.gifLoop === true || s.gifLoop === '1' || s.gifLoop === 1);
+            if (s.gifLoop != null) {
+                const loopOn = (s.gifLoop === true || s.gifLoop === '1' || s.gifLoop === 1);
+                if (gifLoopEl) gifLoopEl.checked = loopOn;
+            }
+
+            // Restore quality selects (legacy: exportQuality/exportRes → both gif and video)
+            const legacyQ = s.exportQuality ?? (s.exportRes === '1080' ? 'high' : s.exportRes === '480' ? 'web' : null) ?? 'std';
+            const eq = s.exportQuality ?? s.gifQuality ?? s.videoQuality ?? legacyQ;
+            { const el = document.getElementById('exportQuality'); if (el) el.value = eq; }
+            // Restore export format
+            if (s.exportFormat && exportFormatEl) {
+                exportFormatEl.value = s.exportFormat;
+                applyExportFormat(s.exportFormat);
+            }
+            // (exportAdvanced no longer used in new UI)
+            if (s.jpegQuality) {
+                const qEl = document.getElementById('jpegQuality');
+                if (qEl) { qEl.value = s.jpegQuality; document.getElementById('jpegQualityVal').textContent = s.jpegQuality + '%'; }
+            }
+            // mp4 repeat removed — no restore needed
+            // Restore background checkboxes (checked = has background; legacy exportTransparentBg was inverted)
+            if (s.animBg != null) { const el = document.getElementById('animBg'); if (el) el.checked = (s.animBg === true || s.animBg === '1'); }
+            else if (s.exportTransparentBg != null) { const el = document.getElementById('animBg'); if (el) el.checked = !(s.exportTransparentBg === true || s.exportTransparentBg === '1'); }
+            if (s.imageTransparent != null) {
+                const el = document.getElementById('imageBg');
+                if (el) el.checked = (s.imageTransparent === true || s.imageTransparent === '1');
+            } else if (s.imageBg != null) {
+                // Legacy: imageBg=1 meant "has background" (opaque), so transparent = !imageBg
+                const el = document.getElementById('imageBg');
+                if (el) el.checked = !(s.imageBg === true || s.imageBg === '1');
+            }
+            if (s.gifDither != null) {
+                const isOn = (s.gifDither === true || s.gifDither === '1' || s.gifDither === 1);
+                const el = document.getElementById('gifDither');
+                if (el) el.checked = isOn;
+            }
         }
         // Always apply mode-based classes/slider setup — even when s is null (settings reset)
         const curMode = rotateModeEl.value;
@@ -412,7 +660,11 @@ function restoreSettings() {
         syncSliderTooltip(wobbleSpinRangeSlider);
         updateTiltRangeReset();
         wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
-        speedResetBtn.classList.toggle('is-changed', parseFloat(speedSlider.value) !== SPEED_DEFAULT);
+        speedResetBtn.classList.toggle('is-changed', parseInt(speedSlider.value) !== SPEED_DEFAULT);
+        // Init export format panel (if format wasn't restored above, default to gif)
+        if (!exportFormatEl?.value || !document.getElementById(`exportOpts-${exportFormatEl.value}`)) {
+            applyExportFormat('gif');
+        }
     } catch (e) { }
 }
 
@@ -431,7 +683,6 @@ function getURLSettings() {
         wobbleSpinRange: p.get('wsr') || null,
         spinDir: p.has('sd') ? (p.get('sd') === '-1' ? -1 : 1) : null,
         gifLoop: p.has('gl') ? p.get('gl') === '1' : null,
-        rotationEnabled: p.has('re') ? p.get('re') : null,
     };
 }
 
@@ -447,13 +698,13 @@ function settingsToURL() {
         wsr: wobbleSpinRangeSlider.value,
         sd: spinDir,
         gl: document.getElementById('gifLoop')?.checked ? '1' : '0',
-        re: document.getElementById('rotationEnabled')?.checked ? '1' : '0',
     });
     history.replaceState(null, '', '?' + p.toString());
 }
 
 async function restoreSession() {
     restoreSettings();
+    updateColorSwatches(); // guaranteed init even if restoreSettings throws
     const saved = await loadFileFromIDB();
     if (!saved) {
         // Load the demo model (not saved to IDB — user's own files take priority)
@@ -465,7 +716,7 @@ async function restoreSession() {
             fileNameEl.title = '3dbenchy.stl';
             currentFileName = '3dbenchy';
             if (!renderer) initThree();
-            controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value) * spinDir;
+            controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
             loadSTLBuffer(buffer, '3dbenchy.stl');
             saveSettings();
         } catch (e) { /* no demo available — stay on landing page */ }
@@ -475,7 +726,7 @@ async function restoreSession() {
     fileNameEl.title = saved.name;
     currentFileName = saved.name.replace(/\.stl$/i, '');
     if (!renderer) initThree();
-    controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value) * spinDir;
+    controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
     loadSTLBuffer(saved.buffer, saved.name);
 }
 
@@ -511,7 +762,7 @@ function togglePause() {
 
 function toggleSpinDir() {
     spinDir = -spinDir;
-    if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value) * spinDir;
+    if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
     updateSpinDirUI();
     saveSettings();
 }
@@ -608,7 +859,7 @@ document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(
 document.getElementById('btnCamReset').addEventListener('click', () => {
     if (!camera) return;
     camera.up.set(0, 1, 0);
-    placeCamera();
+    fitToFrame();
     tiltBaseMeshRx = -Math.PI / 2;
     tiltPhase = 0;
     if (mesh) mesh.rotation.x = tiltBaseMeshRx;
@@ -626,9 +877,9 @@ document.getElementById('btnCamReset').addEventListener('click', () => {
     renderer.render(scene, camera);
 });
 
-document.getElementById('btnExportPng').addEventListener('click', () => {
+document.getElementById('btnExportPng').addEventListener('click', async () => {
     if (!mesh) return;
-    // Pause if not already paused
+    // Pause if not already
     if (!isPaused) {
         isPaused = true;
         controls.autoRotate = false;
@@ -637,9 +888,59 @@ document.getElementById('btnExportPng').addEventListener('click', () => {
         btnPause.setAttribute('aria-label', 'Resume rotation');
         btnPause.title = 'Resume rotation';
     }
-    // Render one fresh frame then export
+    const { quality } = EXPORT.image;
+    const isTransparent = document.getElementById('imageBg')?.checked ?? false;
+
+    if (isTransparent) {
+        // Render to offscreen target with null background → transparent PNG
+        const pw = renderer.domElement.width, ph = renderer.domElement.height;
+        const rt = new THREE.WebGLRenderTarget(pw, ph);
+        const savedBg = scene.background;
+        const savedClearColor = renderer.getClearColor(new THREE.Color());
+        const savedClearAlpha = renderer.getClearAlpha();
+        scene.background = null;
+        renderer.setClearColor(0x000000, 0);
+        renderer.setRenderTarget(rt);
+        renderer.render(scene, camera);
+        renderer.setRenderTarget(null);
+        const buf = new Uint8Array(pw * ph * 4);
+        renderer.readRenderTargetPixels(rt, 0, 0, pw, ph, buf);
+        rt.dispose();
+        scene.background = savedBg;
+        renderer.setClearColor(savedClearColor, savedClearAlpha);
+        // Flip vertically (WebGL origin is bottom-left)
+        const flipped = new Uint8ClampedArray(pw * ph * 4);
+        for (let row = 0; row < ph; row++) {
+            const src = (ph - 1 - row) * pw * 4;
+            flipped.set(buf.subarray(src, src + pw * 4), row * pw * 4);
+        }
+        const oc = new OffscreenCanvas(pw, ph);
+        oc.getContext('2d').putImageData(new ImageData(flipped, pw, ph), 0, 0);
+        const blob = await oc.convertToBlob({ type: 'image/png' });
+        download(blob, 'Rotater_' + currentFileName + '.png', 'image/png');
+    } else {
+        renderer.render(scene, camera);
+        canvas.toBlob(blob => download(blob, 'Rotater_' + currentFileName + '.png', 'image/png'), 'image/png');
+    }
+});
+
+document.getElementById('btnExportJpeg').addEventListener('click', async () => {
+    if (!mesh) return;
+    if (!isPaused) {
+        isPaused = true;
+        controls.autoRotate = false;
+        iconPause.style.display = 'none';
+        iconPlay.style.display = '';
+        btnPause.setAttribute('aria-label', 'Resume rotation');
+        btnPause.title = 'Resume rotation';
+    }
+    const { quality } = EXPORT.image;
     renderer.render(scene, camera);
-    canvas.toBlob(blob => download(blob, currentFileName + '.png', 'image/png'), 'image/png');
+    canvas.toBlob(
+        blob => download(blob, 'Rotater_' + currentFileName + '.jpg', 'image/jpeg'),
+        'image/jpeg',
+        quality
+    );
 });
 
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
@@ -709,36 +1010,49 @@ shadingEl.addEventListener('change', () => {
     saveSettings();
 });
 
-document.getElementById('gifLoop').addEventListener('change', () => {
+document.querySelectorAll('#gifLoop, #gifDither').forEach(el =>
+    el.addEventListener('change', saveSettings)
+);
+
+document.getElementById('exportQuality')?.addEventListener('change', () => { updateEstimate(); saveSettings(); });
+
+// ── Export format switcher ────────────────────────────────────────────────────
+const FORMAT_LABELS = {
+    gif: 'Export Animated GIF',
+    mp4: 'Export MP4 Video',
+    png: 'Export PNG Image',
+    jpg: 'Export JPEG Image',
+};
+const FORMAT_BTNS = { gif: 'btnExportGif', mp4: 'btnExportVideo', png: 'btnExportPng', jpg: 'btnExportJpeg' };
+
+function applyExportFormat(fmt) {
+    document.querySelectorAll('.export-format-opts').forEach(el => { el.hidden = true; });
+    const opts = document.getElementById(`exportOpts-${fmt}`);
+    if (opts) opts.hidden = false;
+    const mainBtn = document.getElementById('btnExport');
+    if (mainBtn) mainBtn.textContent = FORMAT_LABELS[fmt] ?? 'Export';
+    updateEstimate();
+}
+
+exportFormatEl?.addEventListener('change', function () {
+    applyExportFormat(this.value);
     saveSettings();
 });
 
-document.getElementById('rotationEnabled').addEventListener('change', function () {
-    const isOff = !this.checked;
-    document.documentElement.classList.toggle('none-mode', isOff);
-    const m = rotateModeEl.value;
-    if (isOff) {
-        isPaused = true;
-        if (controls) controls.autoRotate = false;
-        iconPause.style.display = 'none';
-        iconPlay.style.display = '';
-        btnPause.setAttribute('aria-label', 'Resume rotation');
-        btnPause.title = 'Resume rotation';
-        document.documentElement.classList.add('rotation-paused');
-        document.documentElement.classList.remove('tilt-mode');
-    } else {
-        isPaused = false;
-        if (controls) controls.autoRotate = m === 'spin' || (m === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360);
-        iconPause.style.display = '';
-        iconPlay.style.display = 'none';
-        btnPause.setAttribute('aria-label', 'Pause rotation');
-        btnPause.title = 'Pause rotation';
-        document.documentElement.classList.remove('rotation-paused');
-        document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin' || m === 'wobble');
-    }
-    btnGif.disabled = isOff;
-    btnVideo.disabled = isOff;
-    document.getElementById('gifLoop').disabled = isOff;
+// Main export button dispatches to hidden per-format button
+document.getElementById('btnExport')?.addEventListener('click', () => {
+    const fmt = exportFormatEl?.value ?? 'gif';
+    document.getElementById(FORMAT_BTNS[fmt])?.click();
+});
+
+// ── Quality segmented buttons (removed; now using select) ─────────────────────
+
+
+// animBg / imageBg toggles: update estimate display hints
+document.getElementById('animBg')?.addEventListener('change', () => { updateEstimate(); saveSettings(); });
+document.getElementById('imageBg')?.addEventListener('change', () => { updateEstimate(); saveSettings(); });
+document.getElementById('jpegQuality').addEventListener('input', function () {
+    document.getElementById('jpegQualityVal').textContent = this.value + '%';
     saveSettings();
 });
 
@@ -836,7 +1150,7 @@ document.getElementById('btnClearModel').addEventListener('click', async (e) => 
         fileNameEl.title = '3dbenchy.stl';
         currentFileName = '3dbenchy';
         if (!renderer) initThree();
-        controls.autoRotateSpeed = BASE_ROTATE_SPEED * parseFloat(speedSlider.value) * spinDir;
+        controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
         loadSTLBuffer(buffer, '3dbenchy.stl');
     } catch (e) { }
 });
@@ -867,11 +1181,11 @@ document.getElementById('btnThemeToggle').addEventListener('click', () => {
 });
 
 speedSlider.addEventListener('input', () => {
-    const v = parseFloat(speedSlider.value);
-    speedVal.textContent = v.toFixed(1) + '×';
+    const v = getSpeed();
+    speedVal.textContent = v + '×';
     syncSliderTooltip(speedSlider);
     if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * v * spinDir;
-    speedResetBtn.classList.toggle('is-changed', v !== SPEED_DEFAULT);
+    speedResetBtn.classList.toggle('is-changed', parseInt(speedSlider.value) !== SPEED_DEFAULT);
     updateEstimate();
     saveSettings();
 });
@@ -881,6 +1195,23 @@ speedResetBtn.addEventListener('click', (e) => {
     speedSlider.value = SPEED_DEFAULT;
     speedSlider.dispatchEvent(new Event('input'));
 });
+
+// ── Sidebar collapse toggle ───────────────────────────────────────────────────
+document.getElementById('btnCollapseSidebar')?.addEventListener('click', () => {
+    const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+    const btn = document.getElementById('btnCollapseSidebar');
+    if (btn) btn.title = collapsed ? 'Expand panel' : 'Collapse panel';
+    try { localStorage.setItem('rotater_sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) { }
+    syncCanvasSize(); // immediate; ResizeObserver handles transition frames
+});
+// Restore collapse state
+try {
+    if (localStorage.getItem('rotater_sidebarCollapsed') === '1') {
+        document.documentElement.classList.add('sidebar-collapsed');
+        const btn = document.getElementById('btnCollapseSidebar');
+        if (btn) btn.title = 'Expand panel';
+    }
+} catch (e) { }
 
 document.getElementById('btnCopyLink')?.addEventListener('click', () => {
     settingsToURL();
@@ -908,13 +1239,35 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// ── Export frame overlay toggle ───────────────────────────────────────────────
+document.getElementById('btnFrameOverlay').addEventListener('click', function () {
+    exportFrameEnabled = !exportFrameEnabled;
+    this.setAttribute('aria-pressed', String(exportFrameEnabled));
+    this.classList.toggle('pause-btn--active', exportFrameEnabled);
+    if (!exportFrameEnabled) clearExportFrame();
+});
+
 // ── Export helpers ────────────────────────────────────────────────────────────
 const setStatus = msg => { statusEl.textContent = msg; };
+const setAnimStatus = (msg, done, total) => {
+    if (animStatusEl) animStatusEl.textContent = msg;
+    const prog = document.getElementById('animProgress');
+    const fill = document.getElementById('animProgressFill');
+    if (prog && fill) {
+        const show = done != null && total != null && total > 0;
+        prog.hidden = !show;
+        if (show) fill.style.width = `${Math.round(done / total * 100)}%`;
+    }
+};
 const setExporting = v => {
     isExporting = v;
-    const isOff = !(document.getElementById('rotationEnabled')?.checked ?? true);
-    btnGif.disabled = v || isOff;
-    btnVideo.disabled = v || isOff;
+    btnGif.disabled = v;
+    btnVideo.disabled = v;
+    if (btnPng) btnPng.disabled = v;
+    const jpegBtn = document.getElementById('btnExportJpeg');
+    if (jpegBtn) jpegBtn.disabled = v;
+    const mainBtn = document.getElementById('btnExport');
+    if (mainBtn) mainBtn.disabled = v;
 };
 
 function download(data, filename, type) {
@@ -928,8 +1281,8 @@ function download(data, filename, type) {
 }
 
 // Capture N frames by orbiting the camera, return array of Uint8ClampedArrays
-async function captureFrames(n) {
-    const S = EXPORT.size;
+async function captureFrames(n, size = EXPORT.gif.size, transparent = false) {
+    const S = size;
     const frames = [];
 
     // Render into an offscreen target — never touch the visible canvas or camera aspect
@@ -938,6 +1291,15 @@ async function captureFrames(n) {
     const savedAspect = camera.aspect;
     camera.aspect = 1;
     camera.updateProjectionMatrix();
+
+    // Transparent BG: null scene background so render target fills with alpha=0
+    const savedBg = scene.background;
+    const savedClearColor = renderer.getClearColor(new THREE.Color());
+    const savedClearAlpha = renderer.getClearAlpha();
+    if (transparent) {
+        scene.background = null;
+        renderer.setClearColor(0x000000, 0);
+    }
 
     const dist = camera.position.length();
     const elev = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
@@ -1008,7 +1370,7 @@ async function captureFrames(n) {
         frames.push(flipped);
 
         if (i % 12 === 0) {
-            setStatus(`Capturing… ${i + 1} / ${n}`);
+            setAnimStatus(`Capturing… ${i + 1} / ${n}`, i + 1, n);
             await new Promise(r => setTimeout(r, 0));
         }
     }
@@ -1019,10 +1381,40 @@ async function captureFrames(n) {
     // Restore camera aspect — renderer and visible canvas were never touched
     camera.aspect = savedAspect;
     camera.updateProjectionMatrix();
+    if (transparent) {
+        scene.background = savedBg;
+        renderer.setClearColor(savedClearColor, savedClearAlpha);
+    }
     rt.dispose();
     controls.update();
     renderer.render(scene, camera); // Refresh visible canvas before encoding begins
     return frames;
+}
+
+// ── Floyd-Steinberg dithering ────────────────────────────────────────────────
+function applyPaletteDithered(data, palette, width, height) {
+    const errors = new Float32Array(data.length);
+    const indices = new Uint8Array(width * height);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+            const r = Math.max(0, Math.min(255, data[i] + errors[i]));
+            const g = Math.max(0, Math.min(255, data[i + 1] + errors[i + 1]));
+            const b = Math.max(0, Math.min(255, data[i + 2] + errors[i + 2]));
+            const idx = nearestColorIndex(palette, r, g, b);
+            indices[y * width + x] = idx;
+            const pr = palette[idx * 3], pg = palette[idx * 3 + 1], pb = palette[idx * 3 + 2];
+            const er = r - pr, eg = g - pg, eb = b - pb;
+            if (x + 1 < width) { errors[i + 4] += er * 7 / 16; errors[i + 5] += eg * 7 / 16; errors[i + 6] += eb * 7 / 16; }
+            if (y + 1 < height) {
+                const ni = ((y + 1) * width + x) * 4;
+                if (x > 0) { errors[ni - 4] += er * 3 / 16; errors[ni - 3] += eg * 3 / 16; errors[ni - 2] += eb * 3 / 16; }
+                errors[ni] += er * 5 / 16; errors[ni + 1] += eg * 5 / 16; errors[ni + 2] += eb * 5 / 16;
+                if (x + 1 < width) { errors[ni + 4] += er * 1 / 16; errors[ni + 5] += eg * 1 / 16; errors[ni + 6] += eb * 1 / 16; }
+            }
+        }
+    }
+    return indices;
 }
 
 // ── GIF export ────────────────────────────────────────────────────────────────
@@ -1032,37 +1424,58 @@ btnGif.addEventListener('click', async () => {
     controls.autoRotate = false;
 
     try {
-        const frames = await captureFrames(exportFrames());
-        const delay = Math.round(1000 / EXPORT.fps);
-        const S = EXPORT.size;
+        const { fps, size: S, loop, dither } = EXPORT.gif;
+        const isTransparent = !(document.getElementById('animBg')?.checked ?? true);
+        const frames = await captureFrames(exportFrames(fps), S, isTransparent);
+        const delay = Math.round(1000 / fps);
 
-        setStatus('Encoding GIF…');
+        setAnimStatus('Encoding GIF…');
         await new Promise(r => setTimeout(r, 0));
 
-        const repeat = document.getElementById('gifLoop').checked ? 0 : -1;
+        const repeat = loop ? 0 : -1;
         const gif = GIFEncoder();
         for (let i = 0; i < frames.length; i++) {
-            const palette = quantize(frames[i], 256);
-            const index = applyPalette(frames[i], palette);
-            // repeat is a Netscape header written once before the first frame
-            gif.writeFrame(index, S, S, { palette, delay, ...(i === 0 && { repeat }) });
+            let index, palette;
+            if (isTransparent) {
+                // Reserve palette index 255 as transparent; quantize using 255 colors
+                const pal = quantize(frames[i], 255);
+                // Full 256-entry palette: entries 0..N-1 are real colors, 255 is transparent
+                const fullPal = new Uint8Array(256 * 3);
+                fullPal.set(pal);
+                // Build index array — transparent (alpha < 128) pixels → index 255
+                const indices = new Uint8Array(S * S);
+                for (let px = 0; px < S * S; px++) {
+                    if (frames[i][px * 4 + 3] < 128) {
+                        indices[px] = 255;
+                    } else {
+                        indices[px] = nearestColorIndex(pal, frames[i][px * 4], frames[i][px * 4 + 1], frames[i][px * 4 + 2]);
+                    }
+                }
+                gif.writeFrame(indices, S, S, { palette: fullPal, delay, transparent: true, transparentIndex: 255, ...(i === 0 && { repeat }) });
+            } else {
+                palette = quantize(frames[i], 256);
+                index = dither
+                    ? applyPaletteDithered(frames[i], palette, S, S)
+                    : applyPalette(frames[i], palette);
+                gif.writeFrame(index, S, S, { palette, delay, ...(i === 0 && { repeat }) });
+            }
 
             if (i % 16 === 0) {
-                setStatus(`Encoding… ${i + 1} / ${frames.length}`);
+                setAnimStatus(`Encoding… ${i + 1} / ${frames.length}`, i + 1, frames.length);
                 await new Promise(r => setTimeout(r, 0));
             }
         }
 
         gif.finish();
-        download(gif.bytes(), currentFileName + '.gif', 'image/gif');
-        setStatus('GIF saved ✓');
+        download(gif.bytes(), 'Rotater_' + currentFileName + '.gif', 'image/gif');
+        setAnimStatus('GIF saved ✓');
     } catch (err) {
-        setStatus('Error: ' + err.message);
+        setAnimStatus('Error: ' + err.message);
         console.error(err);
     } finally {
         setExporting(false);
         controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
-        setTimeout(() => setStatus(''), 5000);
+        setTimeout(() => setAnimStatus(''), 5000);
     }
 });
 
@@ -1070,16 +1483,17 @@ btnGif.addEventListener('click', async () => {
 btnVideo.addEventListener('click', async () => {
     if (!mesh) return;
     if (typeof VideoEncoder === 'undefined') {
-        setStatus('Error: WebCodecs not supported in this browser (use Chrome/Edge/Safari 16.4+).');
+        setAnimStatus('Error: WebCodecs not supported in this browser (use Chrome/Edge/Safari 16.4+).');
         return;
     }
     setExporting(true);
     controls.autoRotate = false;
 
     try {
-        const { fps } = EXPORT;
-        const n = exportFrames();
-        const S = EXPORT.size;
+        const { fps, bitrate, loops } = EXPORT.mp4;
+        const S = EXPORT.mp4.size;
+        const n = exportFrames(fps);
+        const totalFrames = n * (loops + 1);
 
         // Render into an offscreen target — never touch the visible canvas or camera aspect
         const rt = new THREE.WebGLRenderTarget(S, S, { samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
@@ -1094,15 +1508,16 @@ btnVideo.addEventListener('click', async () => {
             fastStart: 'in-memory',
         });
 
+        let encoderError = null;
         const encoder = new VideoEncoder({
             output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-            error: e => { throw e; },
+            error: e => { encoderError = e; },
         });
         encoder.configure({
             codec: 'avc1.42001f',   // H.264 Baseline
             width: S,
             height: S,
-            bitrate: 8_000_000,
+            bitrate: bitrate,
             framerate: fps,
         });
 
@@ -1120,7 +1535,7 @@ btnVideo.addEventListener('click', async () => {
         const MAX_EL = Math.PI / 2 - 0.05;
         const savedMeshRx = mesh ? mesh.rotation.x : 0;
 
-        for (let f = 0; f < n; f++) {
+        for (let f = 0; f < totalFrames; f++) {
             if (isTilt) {
                 mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
                 camera.position.copy(savedCamPos);
@@ -1177,16 +1592,19 @@ btnVideo.addEventListener('click', async () => {
 
             const timestamp = Math.round(f * (1_000_000 / fps));
             const frame = new VideoFrame(off, { timestamp });
+            if (encoderError) { frame.close(); throw encoderError; }
+            if (encoder.state === 'closed') { frame.close(); throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.'); }
             encoder.encode(frame, { keyFrame: f % 30 === 0 });
             frame.close();
 
             if (f % 12 === 0) {
-                setStatus(`Encoding… ${f + 1} / ${n}`);
+                setAnimStatus(`Encoding… ${f + 1} / ${totalFrames}`, f + 1, totalFrames);
                 await new Promise(r => setTimeout(r, 0));
             }
         }
 
         await encoder.flush();
+        if (encoderError) throw encoderError;
         muxer.finalize();
 
         if (mesh) mesh.rotation.x = savedMeshRx;
@@ -1199,15 +1617,15 @@ btnVideo.addEventListener('click', async () => {
         controls.update();
         renderer.render(scene, camera); // Refresh visible canvas before download
 
-        download(muxer.target.buffer, currentFileName + '.mp4', 'video/mp4');
-        setStatus('MP4 saved ✓');
+        download(muxer.target.buffer, 'Rotater_' + currentFileName + '.mp4', 'video/mp4');
+        setAnimStatus('MP4 saved ✓');
     } catch (err) {
-        setStatus('Error: ' + err.message);
+        setAnimStatus('Error: ' + err.message);
         console.error(err);
     } finally {
         setExporting(false);
         controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
-        setTimeout(() => setStatus(''), 5000);
+        setTimeout(() => setAnimStatus(''), 5000);
     }
 });
 

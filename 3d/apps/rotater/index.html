@@ -53,6 +53,11 @@
                 <div id="viewerSection" class="viewer-section hidden">
                     <div class="canvas-wrap">
                         <canvas id="canvas"></canvas>
+                        <canvas id="exportFrameCanvas" aria-hidden="true"></canvas>
+                        <div id="frameDimTop" class="frame-dim-region" aria-hidden="true"></div>
+                        <div id="frameDimBottom" class="frame-dim-region" aria-hidden="true"></div>
+                        <div id="frameDimLeft" class="frame-dim-region" aria-hidden="true"></div>
+                        <div id="frameDimRight" class="frame-dim-region" aria-hidden="true"></div>
                         <img src="rotater.svg" alt="ROTATER" class="logo canvas-logo">
                         <div class="canvas-top-right">
                             <div class="file-chip">
@@ -100,16 +105,12 @@
                                         <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z" />
                                     </svg>
                                 </button>
-                                <button id="btnPause" class="cam-btn cam-btn-center" title="Pause/Resume rotation"
-                                    aria-label="Pause rotation">
-                                    <svg id="iconPause" width="14" height="14" viewBox="0 0 22 22" fill="currentColor">
+                                <button id="btnCamReset" class="cam-btn cam-btn-center" title="Reset camera view"
+                                    aria-label="Reset camera view">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"
+                                        aria-hidden="true">
                                         <path
-                                            d="M15.2187 17.3279C14.5598 17.3279 14.0071 17.1046 13.5606 16.658C13.114 16.2115 12.8907 15.6588 12.8907 14.9999V6.0395C12.8907 5.38065 13.114 4.82794 13.5606 4.38138C14.0071 3.93483 14.5598 3.71155 15.2187 3.71155C15.8775 3.71155 16.4302 3.93483 16.8768 4.38138C17.3234 4.82794 17.5466 5.38065 17.5466 6.0395V14.9999C17.5466 15.6588 17.3234 16.2115 16.8768 16.658C16.4302 17.1046 15.8775 17.3279 15.2187 17.3279ZM7.53205 17.3279C6.8732 17.3279 6.32049 17.1046 5.87394 16.658C5.42738 16.2115 5.2041 15.6588 5.2041 14.9999V6.0395C5.2041 5.38065 5.42738 4.82794 5.87394 4.38138C6.32049 3.93483 6.8732 3.71155 7.53205 3.71155C8.19091 3.71155 8.74361 3.93483 9.19017 4.38138C9.63673 4.82794 9.86 5.38065 9.86 6.0395V14.9999C9.86 15.6588 9.63673 16.2115 9.19017 16.658C8.74361 17.1046 8.19091 17.3279 7.53205 17.3279Z" />
-                                    </svg>
-                                    <svg id="iconPlay" width="14" height="14" viewBox="0 0 22 22" fill="currentColor"
-                                        style="display:none">
-                                        <path
-                                            d="M7.16309 15.4172V5.66614C7.16309 5.33628 7.28022 5.05985 7.51447 4.83686C7.74873 4.61373 8.02201 4.50217 8.33431 4.50217C8.43197 4.50217 8.53204 4.51681 8.63453 4.54609C8.73702 4.57537 8.8395 4.62662 8.94199 4.69982L16.6286 9.55338C16.8116 9.67051 16.9489 9.81692 17.0404 9.99262C17.1319 10.1683 17.1777 10.3525 17.1777 10.5452C17.1777 10.7379 17.1301 10.9209 17.0349 11.0942C16.9398 11.2676 16.8043 11.4128 16.6286 11.5299L8.94199 16.3835C8.8395 16.4567 8.7354 16.508 8.6297 16.5372C8.52399 16.5665 8.42311 16.5812 8.32706 16.5812C8.0196 16.5812 7.74873 16.4696 7.51447 16.2465C7.28022 16.0233 7.16309 15.7469 7.16309 15.4172Z" />
+                                            d="M13.3252 19.8V22.5C13.3252 22.8667 13.2002 23.175 12.9502 23.425C12.7002 23.675 12.3919 23.8 12.0252 23.8C11.6585 23.8 11.346 23.6708 11.0877 23.4125C10.8294 23.1542 10.7002 22.8417 10.7002 22.475V19.8L10.4752 20.025C10.2252 20.275 9.92103 20.4 9.5627 20.4C9.20436 20.4 8.89186 20.2667 8.6252 20C8.3752 19.75 8.2502 19.4417 8.2502 19.075C8.2502 18.7083 8.3752 18.4 8.6252 18.15L11.0752 15.7C11.3419 15.4333 11.6502 15.3 12.0002 15.3C12.3502 15.3 12.6585 15.4333 12.9252 15.7L15.3752 18.15C15.6252 18.4 15.7502 18.7083 15.7502 19.075C15.7502 19.4417 15.6252 19.75 15.3752 20C15.1252 20.25 14.8169 20.375 14.4502 20.375C14.0835 20.375 13.7752 20.25 13.5252 20L13.3252 19.8ZM4.2002 13.3H1.5002C1.13353 13.3 0.825195 13.1708 0.575195 12.9125C0.325195 12.6542 0.200195 12.3417 0.200195 11.975C0.200195 11.6083 0.329362 11.3 0.587695 11.05C0.846029 10.8 1.15853 10.675 1.5252 10.675H4.2002L4.0002 10.475C3.7502 10.225 3.6252 9.91668 3.6252 9.55001C3.6252 9.18335 3.7502 8.87501 4.0002 8.62501C4.2502 8.37501 4.55853 8.25001 4.9252 8.25001C5.29186 8.25001 5.6002 8.37501 5.8502 8.62501L8.3002 11.075C8.56686 11.3417 8.7002 11.65 8.7002 12C8.7002 12.35 8.56686 12.6583 8.3002 12.925L5.8502 15.375C5.6002 15.625 5.29603 15.7542 4.9377 15.7625C4.57936 15.7708 4.26686 15.6417 4.0002 15.375C3.7502 15.125 3.62103 14.8167 3.6127 14.45C3.60436 14.0833 3.7252 13.775 3.9752 13.525L4.2002 13.3ZM19.8002 13.3L20.0252 13.525C20.2752 13.775 20.4002 14.0792 20.4002 14.4375C20.4002 14.7958 20.2669 15.1083 20.0002 15.375C19.7502 15.625 19.4419 15.75 19.0752 15.75C18.7085 15.75 18.4002 15.625 18.1502 15.375L15.7002 12.925C15.4335 12.6583 15.3002 12.35 15.3002 12C15.3002 11.65 15.4335 11.3417 15.7002 11.075L18.1502 8.62501C18.4002 8.37501 18.7085 8.25001 19.0752 8.25001C19.4419 8.25001 19.7502 8.37501 20.0002 8.62501C20.2502 8.87501 20.3752 9.18335 20.3752 9.55001C20.3752 9.91668 20.2502 10.225 20.0002 10.475L19.8002 10.675H22.5002C22.8669 10.675 23.1752 10.8 23.4252 11.05C23.6752 11.3 23.8002 11.6083 23.8002 11.975C23.8002 12.3417 23.6752 12.6542 23.4252 12.9125C23.1752 13.1708 22.8669 13.3 22.5002 13.3H19.8002ZM12.0002 13.825C11.5002 13.825 11.071 13.6458 10.7127 13.2875C10.3544 12.9292 10.1752 12.5 10.1752 12C10.1752 11.4833 10.3502 11.0417 10.7002 10.675C11.0502 10.3083 11.4835 10.125 12.0002 10.125C12.5169 10.125 12.9585 10.3083 13.3252 10.675C13.6919 11.0417 13.8752 11.4833 13.8752 12C13.8752 12.5167 13.6919 12.95 13.3252 13.3C12.9585 13.65 12.5169 13.825 12.0002 13.825ZM10.7002 4.20001V1.50001C10.7002 1.13335 10.8294 0.825012 11.0877 0.575012C11.346 0.325012 11.6585 0.200012 12.0252 0.200012C12.3919 0.200012 12.7002 0.325012 12.9502 0.575012C13.2002 0.825012 13.3252 1.13335 13.3252 1.50001V4.20001L13.5252 4.00001C13.7752 3.75001 14.0835 3.62501 14.4502 3.62501C14.8169 3.62501 15.1252 3.75001 15.3752 4.00001C15.6252 4.25001 15.7502 4.55835 15.7502 4.92501C15.7502 5.29168 15.6252 5.60001 15.3752 5.85001L12.9252 8.30001C12.6585 8.56668 12.3502 8.70001 12.0002 8.70001C11.6502 8.70001 11.3419 8.56668 11.0752 8.30001L8.6252 5.85001C8.3752 5.60001 8.24603 5.29585 8.2377 4.93751C8.22936 4.57918 8.35853 4.26668 8.6252 4.00001C8.8752 3.75001 9.18353 3.62085 9.5502 3.61251C9.91686 3.60418 10.2252 3.72501 10.4752 3.97501L10.7002 4.20001Z" />
                                     </svg>
                                 </button>
                                 <button id="btnCamRight" class="cam-btn cam-btn-right" title="Orbit right 45°"
@@ -128,24 +129,50 @@
                                 </button>
                             </div>
                         </div>
-                        <button id="btnCamReset" class="pause-btn" title="Reset camera view"
-                            aria-label="Reset camera view">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path
-                                    d="M12 5V2L8 6l4 4V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
-                            </svg>
-                        </button>
-                        <button id="btnThemeToggle" class="theme-toggle-btn">
-                            <svg id="themeToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-                                aria-hidden="true">
-                                <path id="themeToggleIconPath"
-                                    d="M12.0998 22.325C10.6665 22.325 9.31647 22.05 8.0498 21.5C6.78314 20.95 5.67897 20.2041 4.7373 19.2625C3.79564 18.3208 3.0498 17.2166 2.4998 15.95C1.9498 14.6833 1.6748 13.3333 1.6748 11.9C1.6748 9.76664 2.25814 7.81664 3.4248 6.04997C4.59147 4.28331 6.16647 3.01664 8.1498 2.24997C8.68314 2.03331 9.1873 2.07081 9.6623 2.36247C10.1373 2.65414 10.3831 3.06664 10.3998 3.59997C10.4331 4.94997 10.679 6.24164 11.1373 7.47498C11.5956 8.70831 12.2998 9.79998 13.2498 10.75C14.1998 11.7 15.2915 12.4083 16.5248 12.875C17.7581 13.3416 19.0498 13.575 20.3998 13.575C20.9331 13.575 21.3498 13.7875 21.6498 14.2125C21.9498 14.6375 22.0081 15.1 21.8248 15.6C21.0915 17.65 19.8331 19.2833 18.0498 20.5C16.2665 21.7166 14.2831 22.325 12.0998 22.325Z" />
-                            </svg>
-                            <span id="themeToggleLabel">Dark mode</span>
-                        </button>
+                        <div class="canvas-overlay-br">
+                            <button id="btnPause" class="pause-btn" title="Pause/Resume rotation"
+                                aria-label="Pause rotation">
+                                <svg id="iconPause" width="15" height="15" viewBox="0 0 22 22" fill="currentColor"
+                                    aria-hidden="true">
+                                    <path
+                                        d="M15.2187 17.3279C14.5598 17.3279 14.0071 17.1046 13.5606 16.658C13.114 16.2115 12.8907 15.6588 12.8907 14.9999V6.0395C12.8907 5.38065 13.114 4.82794 13.5606 4.38138C14.0071 3.93483 14.5598 3.71155 15.2187 3.71155C15.8775 3.71155 16.4302 3.93483 16.8768 4.38138C17.3234 4.82794 17.5466 5.38065 17.5466 6.0395V14.9999C17.5466 15.6588 17.3234 16.2115 16.8768 16.658C16.4302 17.1046 15.8775 17.3279 15.2187 17.3279ZM7.53205 17.3279C6.8732 17.3279 6.32049 17.1046 5.87394 16.658C5.42738 16.2115 5.2041 15.6588 5.2041 14.9999V6.0395C5.2041 5.38065 5.42738 4.82794 5.87394 4.38138C6.32049 3.93483 6.8732 3.71155 7.53205 3.71155C8.19091 3.71155 8.74361 3.93483 9.19017 4.38138C9.63673 4.82794 9.86 5.38065 9.86 6.0395V14.9999C9.86 15.6588 9.63673 16.2115 9.19017 16.658C8.74361 17.1046 8.19091 17.3279 7.53205 17.3279Z" />
+                                </svg>
+                                <svg id="iconPlay" width="15" height="15" viewBox="0 0 22 22" fill="currentColor"
+                                    aria-hidden="true" style="display:none">
+                                    <path
+                                        d="M7.16309 15.4172V5.66614C7.16309 5.33628 7.28022 5.05985 7.51447 4.83686C7.74873 4.61373 8.02201 4.50217 8.33431 4.50217C8.43197 4.50217 8.53204 4.51681 8.63453 4.54609C8.73702 4.57537 8.8395 4.62662 8.94199 4.69982L16.6286 9.55338C16.8116 9.67051 16.9489 9.81692 17.0404 9.99262C17.1319 10.1683 17.1777 10.3525 17.1777 10.5452C17.1777 10.7379 17.1301 10.9209 17.0349 11.0942C16.9398 11.2676 16.8043 11.4128 16.6286 11.5299L8.94199 16.3835C8.8395 16.4567 8.7354 16.508 8.6297 16.5372C8.52399 16.5665 8.42311 16.5812 8.32706 16.5812C8.0196 16.5812 7.74873 16.4696 7.51447 16.2465C7.28022 16.0233 7.16309 15.7469 7.16309 15.4172Z" />
+                                </svg>
+                            </button>
+                            <button id="btnFrameOverlay" class="pause-btn" title="Toggle export frame"
+                                aria-label="Toggle export frame" aria-pressed="false">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                                    <path
+                                        d="M3 9V5a2 2 0 012-2h4M15 3h4a2 2 0 012 2v4M21 15v4a2 2 0 01-2 2h-4M9 21H5a2 2 0 01-2-2v-4" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="canvas-overlay-bl">
+                            <button id="btnThemeToggle" class="theme-toggle-btn">
+                                <svg id="themeToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                    aria-hidden="true">
+                                    <path id="themeToggleIconPath"
+                                        d="M12.0998 22.325C10.6665 22.325 9.31647 22.05 8.0498 21.5C6.78314 20.95 5.67897 20.2041 4.7373 19.2625C3.79564 18.3208 3.0498 17.2166 2.4998 15.95C1.9498 14.6833 1.6748 13.3333 1.6748 11.9C1.6748 9.76664 2.25814 7.81664 3.4248 6.04997C4.59147 4.28331 6.16647 3.01664 8.1498 2.24997C8.68314 2.03331 9.1873 2.07081 9.6623 2.36247C10.1373 2.65414 10.3831 3.06664 10.3998 3.59997C10.4331 4.94997 10.679 6.24164 11.1373 7.47498C11.5956 8.70831 12.2998 9.79998 13.2498 10.75C14.1998 11.7 15.2915 12.4083 16.5248 12.875C17.7581 13.3416 19.0498 13.575 20.3998 13.575C20.9331 13.575 21.3498 13.7875 21.6498 14.2125C21.9498 14.6375 22.0081 15.1 21.8248 15.6C21.0915 17.65 19.8331 19.2833 18.0498 20.5C16.2665 21.7166 14.2831 22.325 12.0998 22.325Z" />
+                                </svg>
+                                <span id="themeToggleLabel">Dark mode</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </main>
+
+            <!-- Sidebar edge collapse tab (outside sidebar so it escapes overflow:hidden) -->
+            <button id="btnCollapseSidebar" class="sidebar-edge-tab" title="Collapse panel"
+                aria-label="Collapse controls panel">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
+                </svg>
+            </button>
 
             <div class="sidebar">
                 <div class="sidebar-header">
@@ -230,27 +257,11 @@
                         </div>
                     </div>
                     <div class="controls-section-box">
+                        <div class="controls-row controls-row--section-header">
+                            <div class="section-heading">Animation</div>
+                        </div>
                         <div class="controls-row controls-row--motion">
                             <div class="control-label" style="flex: 1">
-                                <div class="section-header-row">
-                                    Animation
-                                    <label class="rotation-power-toggle" title="Enable/disable animation">
-                                        <input type="checkbox" id="rotationEnabled" checked>
-                                        <span class="loop-toggle-track">
-                                            <svg class="toggle-check-icon" viewBox="0 0 24 24" fill="currentColor"
-                                                aria-hidden="true">
-                                                <path
-                                                    d="M9.54999 14.8L18 6.35C18.2682 6.08333 18.5811 5.95 18.9387 5.95C19.2962 5.95 19.6083 6.08158 19.875 6.34475C20.1417 6.60791 20.275 6.92041 20.275 7.28225C20.275 7.64408 20.1417 7.95833 19.875 8.225L10.475 17.625C10.2113 17.8917 9.90374 18.025 9.55224 18.025C9.20074 18.025 8.89165 17.8917 8.62499 17.625L4.17499 13.175C3.90832 12.9128 3.77915 12.6014 3.78749 12.2407C3.79582 11.8802 3.93157 11.5667 4.19474 11.3C4.4579 11.0333 4.7704 10.9 5.13224 10.9C5.49407 10.9 5.80832 11.0333 6.07499 11.3L9.54999 14.8Z" />
-                                            </svg>
-                                            <svg class="toggle-x-icon" viewBox="0 0 24 24" fill="currentColor"
-                                                aria-hidden="true">
-                                                <path
-                                                    d="M12.0251 13.85L7.2501 18.65C6.98343 18.9167 6.66676 19.0458 6.3001 19.0375C5.93343 19.0292 5.61676 18.8917 5.3501 18.625C5.1001 18.3583 4.97926 18.05 4.9876 17.7C4.99593 17.35 5.1251 17.0417 5.3751 16.775L10.1251 12L5.3501 7.175C5.1001 6.90834 4.9751 6.6 4.9751 6.25C4.9751 5.9 5.1001 5.59167 5.3501 5.325C5.61676 5.05834 5.93343 4.92084 6.3001 4.9125C6.66676 4.90417 6.98343 5.03334 7.2501 5.3L12.0251 10.1L16.7501 5.3C17.0168 5.03334 17.3334 4.90417 17.7001 4.9125C18.0668 4.92084 18.3834 5.05834 18.6501 5.325C18.9001 5.59167 19.0209 5.9 19.0126 6.25C19.0043 6.6 18.8751 6.90834 18.6251 7.175L13.8751 12L18.6251 16.775C18.8751 17.025 19.0043 17.3292 19.0126 17.6875C19.0209 18.0458 18.9001 18.3583 18.6501 18.625C18.3834 18.8917 18.0668 19.0292 17.7001 19.0375C17.3334 19.0458 17.0168 18.9167 16.7501 18.65L12.0251 13.85Z" />
-                                            </svg>
-                                            <span class="loop-toggle-thumb"></span>
-                                        </span>
-                                    </label>
-                                </div>
                                 <div class="rotation-group">
                                     <div class="thumb-card-wrap">
                                         <label class="rotation-option" id="spinModeLabel"
@@ -303,11 +314,7 @@
                                                 d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
                                         </svg></button></span>
                                 <div class="range-wrap">
-                                    <input type="range" id="speedSlider" min="0.5" max="4.0" step="0.5" value="1.0">
-                                </div>
-                                <div class="slider-ticks">
-                                    <span>0.5×</span>
-                                    <span>4×</span>
+                                    <input type="range" id="speedSlider" min="0" max="4" step="1" value="1">
                                 </div>
                             </label>
                             <label class="control-label range-label tilt-range-label">
@@ -322,10 +329,6 @@
                                 <div class="range-wrap">
                                     <input type="range" id="tiltRangeSlider" min="10" max="50" step="10" value="20">
                                 </div>
-                                <div class="slider-ticks" id="tiltRangeTicks">
-                                    <span>10°</span>
-                                    <span>50°</span>
-                                </div>
                             </label>
                             <label class="control-label range-label wobble-spin-range-label">
                                 <span>Spin Range<span class="slider-tooltip" id="wobbleSpinRangeVal">360°</span><button
@@ -339,69 +342,82 @@
                                     <input type="range" id="wobbleSpinRangeSlider" min="45" max="360" step="45"
                                         value="360">
                                 </div>
-                                <div class="slider-ticks" id="wobbleSpinRangeTicks">
-                                    <span>45°</span>
-                                    <span>360°</span>
-                                </div>
                             </label>
                         </div>
                     </div>
+                    <!-- ── Export section ── -->
                     <div class="controls-section-box">
-                        <div class="controls-row">
-                            <div class="downloads-section">
-                                <div class="control-label">
-                                    Export
-                                    <div class="export-buttons-row">
-                                        <div class="gif-group">
-                                            <button id="btnExportGif" class="export-btn"
-                                                title="Save animated GIF (full rotation)">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-                                                    aria-hidden="true">
-                                                    <path
-                                                        d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
-                                                </svg>
-                                                GIF
-                                            </button>
-                                            <label class="gif-loop-label" for="gifLoop">
-                                                <input type="checkbox" id="gifLoop" checked>
-                                                <span class="loop-toggle-track">
-                                                    <svg class="toggle-check-icon" viewBox="0 0 24 24"
-                                                        fill="currentColor" aria-hidden="true">
-                                                        <path
-                                                            d="M9.54999 14.8L18 6.35C18.2682 6.08333 18.5811 5.95 18.9387 5.95C19.2962 5.95 19.6083 6.08158 19.875 6.34475C20.1417 6.60791 20.275 6.92041 20.275 7.28225C20.275 7.64408 20.1417 7.95833 19.875 8.225L10.475 17.625C10.2113 17.8917 9.90374 18.025 9.55224 18.025C9.20074 18.025 8.89165 17.8917 8.62499 17.625L4.17499 13.175C3.90832 12.9128 3.77915 12.6014 3.78749 12.2407C3.79582 11.8802 3.93157 11.5667 4.19474 11.3C4.4579 11.0333 4.7704 10.9 5.13224 10.9C5.49407 10.9 5.80832 11.0333 6.07499 11.3L9.54999 14.8Z" />
-                                                    </svg>
-                                                    <svg class="toggle-x-icon" viewBox="0 0 24 24" fill="currentColor"
-                                                        aria-hidden="true">
-                                                        <path
-                                                            d="M12.0251 13.85L7.2501 18.65C6.98343 18.9167 6.66676 19.0458 6.3001 19.0375C5.93343 19.0292 5.61676 18.8917 5.3501 18.625C5.1001 18.3583 4.97926 18.05 4.9876 17.7C4.99593 17.35 5.1251 17.0417 5.3751 16.775L10.1251 12L5.3501 7.175C5.1001 6.90834 4.9751 6.6 4.9751 6.25C4.9751 5.9 5.1001 5.59167 5.3501 5.325C5.61676 5.05834 5.93343 4.92084 6.3001 4.9125C6.66676 4.90417 6.98343 5.03334 7.2501 5.3L12.0251 10.1L16.7501 5.3C17.0168 5.03334 17.3334 4.90417 17.7001 4.9125C18.0668 4.92084 18.3834 5.05834 18.6501 5.325C18.9001 5.59167 19.0209 5.9 19.0126 6.25C19.0043 6.6 18.8751 6.90834 18.6251 7.175L13.8751 12L18.6251 16.775C18.8751 17.025 19.0043 17.3292 19.0126 17.6875C19.0209 18.0458 18.9001 18.3583 18.6501 18.625C18.3834 18.8917 18.0668 19.0292 17.7001 19.0375C17.3334 19.0458 17.0168 18.9167 16.7501 18.65L12.0251 13.85Z" />
-                                                    </svg>
-                                                    <span class="loop-toggle-thumb"></span>
-                                                </span>
-                                                Loop
-                                            </label>
-                                        </div>
-                                        <button id="btnExportVideo" class="export-btn"
-                                            title="Save MP4 video (full rotation)">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-                                                aria-hidden="true">
-                                                <path
-                                                    d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
-                                            </svg>
-                                            MP4
-                                        </button>
-                                        <button id="btnExportPng" class="export-btn" title="Save current view as PNG">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-                                                aria-hidden="true">
-                                                <path
-                                                    d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
-                                            </svg>
-                                            PNG
-                                        </button>
-                                    </div>
-                                    <span id="exportStatus" class="export-status"></span>
-                                </div>
+                        <div class="section-heading">Export</div>
+                        <!-- Format + Quality row -->
+                        <div class="export-selects-row">
+                            <div class="export-select-group">
+                                <label class="export-select-label" for="exportFormat">Format</label>
+                                <select id="exportFormat" class="export-select">
+                                    <option value="gif" selected>Animated GIF</option>
+                                    <option value="mp4">MP4 Video</option>
+                                    <option value="png">PNG Image</option>
+                                    <option value="jpg">JPEG Image</option>
+                                </select>
+                            </div>
+                            <div class="export-select-group">
+                                <label class="export-select-label" for="exportQuality">Quality</label>
+                                <select id="exportQuality" class="export-select">
+                                    <option value="web">Low</option>
+                                    <option value="std" selected>Medium</option>
+                                    <option value="high">High</option>
+                                </select>
                             </div>
                         </div>
+                        <!-- GIF options -->
+                        <div id="exportOpts-gif" class="export-format-opts">
+                            <div class="gif-options-row">
+                                <label class="gif-option-check"><input type="checkbox" id="gifLoop" checked> Loop</label>
+                                <label class="gif-option-check"><input type="checkbox" id="gifDither"> Dither</label>
+                                <label class="gif-option-check" title="Uncheck for transparent background"><input type="checkbox" id="animBg" checked> Background</label>
+                            </div>
+                            <div class="export-size-est-row"><span id="gifEst"></span></div>
+                        </div>
+                        <!-- MP4 options -->
+                        <div id="exportOpts-mp4" class="export-format-opts" hidden>
+                            <div class="export-size-est-row"><span id="mp4Est"></span></div>
+                        </div>
+                        <!-- PNG options -->
+                        <div id="exportOpts-png" class="export-format-opts" hidden>
+                            <div class="gif-options-row">
+                                <label class="gif-option-check" title="Check for transparent background"><input type="checkbox" id="imageBg"> Transparent</label>
+                            </div>
+                            <div class="export-size-est-row"><span id="imgEstPng"></span></div>
+                        </div>
+                        <!-- JPEG options -->
+                        <div id="exportOpts-jpg" class="export-format-opts" hidden>
+                            <label class="control-label range-label" id="jpegQualityRow">
+                                <span>JPEG Compression<span class="slider-tooltip" id="jpegQualityVal">92%</span></span>
+                                <div class="range-wrap">
+                                    <input type="range" id="jpegQuality" min="50" max="100" step="5" value="92">
+                                </div>
+                            </label>
+                            <div class="export-size-est-row"><span id="imgEstJpg"></span></div>
+                        </div>
+                        <!-- Main export button -->
+                        <button id="btnExport" class="export-btn export-btn--main">Export Animated GIF</button>
+                        <!-- Live preview thumbnail -->
+                        <label class="export-select-label export-preview-label">Preview</label>
+                        <div class="export-preview-wrap">
+                            <canvas id="exportPreview" class="export-preview-canvas"></canvas>
+                        </div>
+                        <!-- Hidden legacy trigger buttons -->
+                        <button id="btnExportGif" hidden style="display:none"></button>
+                        <button id="btnExportVideo" hidden style="display:none"></button>
+                        <button id="btnExportPng" hidden style="display:none"></button>
+                        <button id="btnExportJpeg" hidden style="display:none"></button>
+                        <!-- Progress + status -->
+                        <div class="anim-export-footer">
+                            <div id="animProgress" class="anim-progress" hidden>
+                                <div class="anim-progress-fill" id="animProgressFill"></div>
+                            </div>
+                            <span id="exportStatusAnim" class="export-status"></span>
+                        </div>
+                        <span id="exportStatus" class="export-status"></span>
                     </div>
                     <!-- Info button row -->
                     <div class="info-btn-row">
