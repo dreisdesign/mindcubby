@@ -1012,7 +1012,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     width: 100%;
     padding: 6px 8px;
     border-radius: 6px;
-    border: 1.5px solid var(--color-border, rgba(0,0,0,0.12));
+    border: 1.5px solid var(--color-border, rgba(0, 0, 0, 0.12));
     background: var(--color-surface-raised);
     color: var(--color-on-surface);
     font-size: var(--text-sm);
@@ -1032,11 +1032,13 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     flex-direction: column;
     gap: 6px;
     padding: 8px 0 4px;
-    border-top: 1px solid var(--color-border, rgba(0,0,0,0.08));
+    border-top: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
     margin-bottom: 8px;
 }
 
-.export-format-opts[hidden] { display: none !important; }
+.export-format-opts[hidden] {
+    display: none !important;
+}
 
 /* Preview thumbnail */
 .export-preview-wrap {
@@ -1076,9 +1078,18 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     font-family: inherit;
 }
 
-.export-btn--main:hover { background: var(--color-export-hover); }
-.export-btn--main:active { opacity: 0.88; }
-.export-btn--main:disabled { opacity: 0.45; cursor: not-allowed; }
+.export-btn--main:hover {
+    background: var(--color-export-hover);
+}
+
+.export-btn--main:active {
+    opacity: 0.88;
+}
+
+.export-btn--main:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
 
 
 
@@ -2247,9 +2258,15 @@ html.theme-dark .settings-close-btn:hover {
     padding: 5px 12px 7px;
     font-size: var(--text-md);
     color: var(--color-label, #999);
-    border-top: 1px solid var(--color-border, rgba(0, 0, 0, 0.07));
     margin-top: 2px;
     min-height: 24px;
+}
+
+.export-info-time {
+    font-weight: 700;
+    font-size: var(--text-lg, 0.9rem);
+    color: var(--color-on-surface, #222);
+    font-style: normal;
 }
 
 .export-size-est-row:empty,

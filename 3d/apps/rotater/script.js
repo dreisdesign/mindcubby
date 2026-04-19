@@ -70,22 +70,19 @@ function updateEstimate() {
     const { fps: gFps, size: gSize } = EXPORT.gif;
     const { fps: mFps, size: mSize, bitrate } = EXPORT.mp4;
 
-    // GIF — empirical heuristic: ~50 KB/frame at 720px, scales with pixel area
+    // GIF — frames + duration only (file size estimate removed; too variable to be reliable)
     const gN = exportFrames(gFps);
     const gSecs = (gN / gFps).toFixed(1);
-    const gMB = (gN * Math.pow(gSize / 720, 2) * 50 / 1024).toFixed(1);
     btnGif.title = `Save animated GIF`;
     const gifEstEl = document.getElementById('gifEst');
-    if (gifEstEl) gifEstEl.textContent = `~${gMB} MB · ${gN} frames · ${gSecs}s`;
+    if (gifEstEl) gifEstEl.innerHTML = `${gN} frames &middot; <b class="export-info-time">${gSecs}s</b>`;
 
-    // MP4 — bitrate-accurate: duration × bitrate ÷ 8
+    // MP4 — duration only
     const mN = exportFrames(mFps);
     const mSecs = (mN / mFps).toFixed(1);
-    // 0.55 factor: theoretical bitrate * duration overstates real H.264 file sizes
-    const mMB = (parseFloat(mSecs) * bitrate / 8 / (1024 * 1024) * 0.55).toFixed(1);
     btnVideo.title = `Save MP4 video`;
     const mp4EstEl = document.getElementById('mp4Est');
-    if (mp4EstEl) mp4EstEl.textContent = `~${mMB} MB · ${mSecs}s`;
+    if (mp4EstEl) mp4EstEl.innerHTML = `<b class="export-info-time">${mSecs}s</b>`;
 
     // Image — based on actual canvas pixel size
     const imgEstPng = document.getElementById('imgEstPng');
@@ -316,7 +313,7 @@ function loadSTLBuffer(buffer, name) {
         document.querySelector('.orbit-hint-bar').classList.add('visible');
     }
     updateEstimate();
-    requestAnimationFrame(syncCanvasSize);
+    requestAnimationFrame(() => { syncCanvasSize(); if (!savedCamPos) fitToFrame(); });
 }
 
 function placeCamera() {
@@ -468,15 +465,12 @@ function drawExportFrame() {
     ctx.clearRect(0, 0, w, h);
 
     if (exportFrameEnabled) {
-        // Show dim regions outside the crop square via backdrop-filter divs
-        const dimTop = document.getElementById('frameDimTop');
-        const dimBottom = document.getElementById('frameDimBottom');
-        const dimLeft = document.getElementById('frameDimLeft');
-        const dimRight = document.getElementById('frameDimRight');
-        if (dimTop) { dimTop.style.cssText = `display:block;top:0;left:0;width:100%;height:${sy}px`; }
-        if (dimBottom) { dimBottom.style.cssText = `display:block;bottom:0;left:0;width:100%;height:${sy}px`; }
-        if (dimLeft) { dimLeft.style.cssText = `display:block;top:${sy}px;left:0;width:${sx}px;height:${sq}px`; }
-        if (dimRight) { dimRight.style.cssText = `display:block;top:${sy}px;right:0;width:${sx}px;height:${sq}px`; }
+        // Draw dim overlay directly on canvas — avoids hard CSS edges from backdrop-filter divs
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.fillRect(0, 0, w, sy);                  // top
+        ctx.fillRect(0, sy + sq, w, h - sy - sq);   // bottom
+        ctx.fillRect(0, sy, sx, sq);                // left
+        ctx.fillRect(sx + sq, sy, w - sx - sq, sq); // right
 
         // Corner bracket marks
         const cm = Math.round(sq * 0.07);
@@ -489,27 +483,15 @@ function drawExportFrame() {
         ctx.moveTo(sx + sq - cm, sy + sq); ctx.lineTo(sx + sq, sy + sq); ctx.lineTo(sx + sq, sy + sq - cm); // BR
         ctx.stroke();
     } else {
-        // Hint mode: just faint dashed corner brackets, no dim
-        const cm = Math.round(sq * 0.07);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.moveTo(sx, sy + cm); ctx.lineTo(sx, sy); ctx.lineTo(sx + cm, sy);
-        ctx.moveTo(sx + sq - cm, sy); ctx.lineTo(sx + sq, sy); ctx.lineTo(sx + sq, sy + cm);
-        ctx.moveTo(sx, sy + sq - cm); ctx.lineTo(sx, sy + sq); ctx.lineTo(sx + cm, sy + sq);
-        ctx.moveTo(sx + sq - cm, sy + sq); ctx.lineTo(sx + sq, sy + sq); ctx.lineTo(sx + sq, sy + sq - cm);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        // Frame off: just clear — no hint brackets
+        ctx.clearRect(0, 0, w, h);
     }
 }
 
 function clearExportFrame() {
-    // Hide dim overlay regions; the canvas hint brackets stay (drawn each frame)
-    ['frameDimTop', 'frameDimBottom', 'frameDimLeft', 'frameDimRight'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-    });
+    // Dim is drawn on canvas each frame; just force-clear immediately for instant feedback
+    const fc = document.getElementById('exportFrameCanvas');
+    if (fc) fc.getContext('2d').clearRect(0, 0, fc.width, fc.height);
 }
 
 // ── Persistence (IndexedDB for binary, localStorage for settings) ───────────
@@ -854,11 +836,18 @@ function snapOrbit(azDir, elDir) {
 
 document.getElementById('btnCamLeft').addEventListener('click', () => snapOrbit(-1, 0));
 document.getElementById('btnCamRight').addEventListener('click', () => snapOrbit(1, 0));
-document.getElementById('btnCamUp').addEventListener('click', () => snapOrbit(0, 1));
-document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(0, -1));
+document.getElementById('btnCamUp').addEventListener('click', () => snapOrbit(0, -1));
+document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(0, 1));
 document.getElementById('btnCamReset').addEventListener('click', () => {
     if (!camera) return;
+    // Snap to horizontal view (0° elevation) before reframing
+    const dist = camera.position.length();
+    const az = Math.atan2(camera.position.x, camera.position.z);
     camera.up.set(0, 1, 0);
+    camera.position.set(dist * Math.sin(az), 0, dist * Math.cos(az));
+    camera.lookAt(0, 0, 0);
+    controls.target.set(0, 0, 0);
+    controls.update();
     fitToFrame();
     tiltBaseMeshRx = -Math.PI / 2;
     tiltPhase = 0;

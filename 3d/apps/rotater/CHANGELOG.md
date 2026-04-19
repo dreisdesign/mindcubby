@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.2.1] - 2026-04-19
+
+### Changed
+- **Export frame dim** — dim overlay is now drawn directly on the frame canvas instead of separate `backdrop-filter` divs; eliminates the hard CSS edge that appeared as a line at the bottom of the frame
+- **Export estimate** — removed unreliable file-size predictions (MB); export info now shows frames + duration only
+- **Duration display** — total animation duration is shown in bold at normal text colour; no longer buried in muted estimate text
+- **Single border in export options** — removed redundant inner `border-top` from the estimate row; only the section-level border is shown
+- **Camera up / down reversed** — ↑ arrow now orbits up (increases elevation) and ↓ arrow orbits down, matching natural expectation
+- **Recenter snaps to horizon** — the ⟳ reset button now levels the camera to 0° elevation (horizontal) before reframing, instead of the previous 30° default tilt
+- **"Copy Link" renamed to "Copy Settings"** — button label more accurately describes that it copies the shareable settings URL
+
 ## [1.2.0] - 2026-04-18
 
 ### Added
