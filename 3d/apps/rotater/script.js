@@ -39,15 +39,6 @@ const EXPORT = {
             quality: parseInt(document.getElementById('jpegQuality')?.value ?? 92, 10) / 100,
         };
     },
-    // Backward-compat shims
-    get _preset() {
-        const v = document.getElementById('exportQuality')?.value ?? 'std';
-        return QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
-    },
-    get size() { return this._preset.size; },
-    get fps() { return this._preset.fps; },
-    get bitrate() { return this._preset.bitrate; },
-    get dither() { return this.gif.dither; },
 };
 const BASE_ROTATE_SPEED = 2.5; // OrbitControls units: 2.0 = 1 rev/60s at 60fps
 const SPEED_VALS = [0.5, 1, 2, 3, 5]; // non-linear snap points for speed slider indices 0–4
@@ -67,8 +58,8 @@ function exportFrames(fps = EXPORT.gif.fps) {
 
 function updateEstimate() {
     if (!btnGif) return;
-    const { fps: gFps, size: gSize } = EXPORT.gif;
-    const { fps: mFps, size: mSize, bitrate } = EXPORT.mp4;
+    const { fps: gFps } = EXPORT.gif;
+    const { fps: mFps } = EXPORT.mp4;
 
     // GIF — frames + duration only (file size estimate removed; too variable to be reliable)
     const gN = exportFrames(gFps);
@@ -177,6 +168,8 @@ let tiltPhase = 0;
 let swingBaseAz = 0, swingLastAz = 0;
 let tiltBaseMeshRx = -Math.PI / 2;
 let spinDir = 1; // 1 = clockwise, -1 = counter-clockwise
+let modelDims = null;  // { w, d, h } in mm (STL units: x=width, y=depth, z=height)
+let rulerEnabled = false;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
@@ -297,6 +290,8 @@ function loadSTLBuffer(buffer, name) {
     const sz = new THREE.Vector3();
     geo.boundingBox.getSize(sz);
     modelRadius = Math.max(sz.x, sz.y, sz.z) / 2;
+    modelDims = { w: sz.x, d: sz.y, h: sz.z };
+    updateRulerHUD();
 
     if (savedCamPos && camera) {
         // Maintain the user's current camera distance; preserve direction
@@ -503,6 +498,18 @@ function clearExportFrame() {
     // Dim is drawn on canvas each frame; just force-clear immediately for instant feedback
     const fc = document.getElementById('exportFrameCanvas');
     if (fc) fc.getContext('2d').clearRect(0, 0, fc.width, fc.height);
+}
+
+// ── Ruler / dimensions HUD ────────────────────────────────────────────────────
+function updateRulerHUD() {
+    const hud = document.getElementById('rulerHUD');
+    if (!hud) return;
+    hud.hidden = !rulerEnabled;
+    if (!rulerEnabled || !modelDims) return;
+    const fmt = v => v.toFixed(1);
+    document.getElementById('rulerW').textContent = fmt(modelDims.w);
+    document.getElementById('rulerD').textContent = fmt(modelDims.d);
+    document.getElementById('rulerH').textContent = fmt(modelDims.h);
 }
 
 // ── Persistence (IndexedDB for binary, localStorage for settings) ───────────
@@ -798,8 +805,8 @@ document.addEventListener('keydown', e => {
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     if (e.code === 'ArrowLeft') { e.preventDefault(); snapOrbit(-1, 0); }
     if (e.code === 'ArrowRight') { e.preventDefault(); snapOrbit(1, 0); }
-    if (e.code === 'ArrowUp') { e.preventDefault(); snapOrbit(0, 1); }
-    if (e.code === 'ArrowDown') { e.preventDefault(); snapOrbit(0, -1); }
+    if (e.code === 'ArrowUp') { e.preventDefault(); snapOrbit(0, -1); }
+    if (e.code === 'ArrowDown') { e.preventDefault(); snapOrbit(0, 1); }
 });
 
 function snapCamera(azimuth, elevation) {
@@ -1045,9 +1052,6 @@ document.getElementById('btnExport')?.addEventListener('click', () => {
     document.getElementById(FORMAT_BTNS[fmt])?.click();
 });
 
-// ── Quality segmented buttons (removed; now using select) ─────────────────────
-
-
 // animBg / imageBg toggles: update estimate display hints
 document.getElementById('animBg')?.addEventListener('change', () => { updateEstimate(); saveSettings(); });
 document.getElementById('imageBg')?.addEventListener('change', () => { updateEstimate(); saveSettings(); });
@@ -1245,6 +1249,13 @@ document.getElementById('btnFrameOverlay').addEventListener('click', function ()
     this.setAttribute('aria-pressed', String(exportFrameEnabled));
     this.classList.toggle('pause-btn--active', exportFrameEnabled);
     if (!exportFrameEnabled) clearExportFrame();
+});
+
+document.getElementById('btnRuler').addEventListener('click', function () {
+    rulerEnabled = !rulerEnabled;
+    this.setAttribute('aria-pressed', String(rulerEnabled));
+    this.classList.toggle('pause-btn--active', rulerEnabled);
+    updateRulerHUD();
 });
 
 // ── Export helpers ────────────────────────────────────────────────────────────

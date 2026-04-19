@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.3.0] - 2026-04-21
+
+### Added
+- **Dimensions ruler** — new ruler toggle button (⬜ icon, bottom-right canvas area) shows a W · D · H badge in millimetres at the top of the viewport; dimensions are read directly from the STL bounding box (x=width, y=depth, z=height in slicer Z-up convention)
+
+### Fixed
+- **Keyboard ↑ / ↓ orbit** — `ArrowUp` and `ArrowDown` keyboard shortcuts now match the on-screen camera buttons (both previously used the pre-flip direction after the v1.2.1 button swap)
+
+### Changed
+- **Code cleanup** — removed unused `EXPORT` backward-compat shim getters (`size`, `fps`, `bitrate`, `dither`), unused `gSize`/`bitrate` destructuring in `updateEstimate`, and a stale comment stub for removed segmented-quality buttons
+
 ## [1.2.2] - 2026-04-19
 
 ### Changed
