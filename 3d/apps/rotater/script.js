@@ -220,9 +220,17 @@ function initThree() {
 
     syncCanvasSize();
     window.addEventListener('resize', syncCanvasSize);
-    // ResizeObserver keeps canvas in sync during CSS transitions (e.g. sidebar collapse)
+    // ResizeObserver keeps canvas in sync during sidebar transitions.
+    // Throttled to one sync per animation frame so the WebGL resolution
+    // tracks every step of the CSS transition without redundant calls.
     if (window.ResizeObserver) {
-        new ResizeObserver(() => syncCanvasSize()).observe(canvas.parentElement);
+        let roPending = false;
+        new ResizeObserver(() => {
+            if (!roPending) {
+                roPending = true;
+                requestAnimationFrame(() => { syncCanvasSize(); roPending = false; });
+            }
+        }).observe(canvas.parentElement);
     }
     requestAnimationFrame(loop);
 }
@@ -239,6 +247,9 @@ function syncCanvasSize() {
         if (exportFrameEnabled) fitToFrame();
     }
     updateEstimate();
+    // Re-render immediately after setSize clears the buffer so the browser
+    // never composites a blank canvas (prevents the dark-flash during resize).
+    if (scene && camera && !isExporting) renderer.render(scene, camera);
 }
 
 // ── Material ─────────────────────────────────────────────────────────────────

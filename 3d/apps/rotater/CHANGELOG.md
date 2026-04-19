@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.2.2] - 2026-04-19
+
+### Changed
+- **Sidebar toggle — no flash** — renderer re-renders immediately after `setSize()` so the canvas is never composited blank during the sidebar open/close transition
+- **Sidebar toggle — no stretch** — ResizeObserver is throttled to one sync per animation frame (rAF), keeping the WebGL resolution in step with the CSS transition at every frame
+- **Sidebar toggle — larger hit area** — collapse/expand tab widened to 20×64px (was 14×48px) for easier clicking
+- **Sidebar toggle — blueberry styling** — tab background is `--palette-blueberry-200` with a `--palette-blueberry-300` border, matching the app colour palette
+
 ## [1.2.1] - 2026-04-19
 
 ### Changed
