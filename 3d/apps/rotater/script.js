@@ -169,7 +169,6 @@ let swingBaseAz = 0, swingLastAz = 0;
 let tiltBaseMeshRx = -Math.PI / 2;
 let spinDir = 1; // 1 = clockwise, -1 = counter-clockwise
 let modelDims = null;  // { w, d, h } in mm (STL units: x=width, y=depth, z=height)
-let rulerEnabled = false;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
@@ -320,6 +319,14 @@ function loadSTLBuffer(buffer, name) {
     }
     updateEstimate();
     requestAnimationFrame(() => { syncCanvasSize(); if (!savedCamPos) fitToFrame(); });
+
+    const clearBtn = document.getElementById('btnClearModel');
+    if (clearBtn) {
+        const isDemo = (currentFileName === '3dbenchy');
+        const clearLabel = isDemo ? 'Load your own model' : 'Reset to Benchy';
+        clearBtn.title = clearLabel;
+        clearBtn.setAttribute('aria-label', clearLabel);
+    }
 }
 
 function placeCamera() {
@@ -504,8 +511,8 @@ function clearExportFrame() {
 function updateRulerHUD() {
     const hud = document.getElementById('rulerHUD');
     if (!hud) return;
-    hud.hidden = !rulerEnabled;
-    if (!rulerEnabled || !modelDims) return;
+    hud.hidden = !modelDims;
+    if (!modelDims) return;
     const fmt = v => v.toFixed(1);
     document.getElementById('rulerW').textContent = fmt(modelDims.w);
     document.getElementById('rulerD').textContent = fmt(modelDims.d);
@@ -1248,14 +1255,10 @@ document.getElementById('btnFrameOverlay').addEventListener('click', function ()
     exportFrameEnabled = !exportFrameEnabled;
     this.setAttribute('aria-pressed', String(exportFrameEnabled));
     this.classList.toggle('pause-btn--active', exportFrameEnabled);
+    const label = exportFrameEnabled ? 'Hide export frame' : 'Show export frame';
+    this.title = label;
+    this.setAttribute('aria-label', label);
     if (!exportFrameEnabled) clearExportFrame();
-});
-
-document.getElementById('btnRuler').addEventListener('click', function () {
-    rulerEnabled = !rulerEnabled;
-    this.setAttribute('aria-pressed', String(rulerEnabled));
-    this.classList.toggle('pause-btn--active', rulerEnabled);
-    updateRulerHUD();
 });
 
 // ── Export helpers ────────────────────────────────────────────────────────────

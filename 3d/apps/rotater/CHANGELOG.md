@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.3.1] - 2026-04-19
+
+### Changed
+- **Tooltip audit** — reviewed all button tooltips for clarity and accuracy:
+  - "Toggle export frame" → "Show export frame" / "Hide export frame" (toggles with button state)
+  - "Pause/Resume rotation" static text → "Pause rotation" (JS already updates it on state change)
+  - "Reset camera view" → "Level and reframe" (describes the actual action: level to 0° then fit model)
+  - `×` badge button on the filename chip: shows "Load your own model" when the demo is active (clicking opens file picker) and "Reset to Benchy" when a user file is loaded (clicking returns to the demo)
+
 ## [1.3.0] - 2026-04-21
 
 ### Added
