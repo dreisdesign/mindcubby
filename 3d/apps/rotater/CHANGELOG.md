@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.4.0] - 2026-04-21
+
+### Changed
+- **Default texture** → Metal (was Phong); texture order is now Metal · Phong · Flat
+- **Ruler visible only with export frame** — dimensions HUD now shows/hides together with the export frame overlay
+- **Logo height** → `clamp(32px, 6vh, 64px)` (was fixed 8vh / 44px min)
+- **Camera on load** — `placeCamera()` is deferred to the first rAF after `syncCanvasSize()`, so `camera.aspect` is correct before computing fit distance; model now loads at a comfortable size without clipping
+- **"Level and reframe"** — uses the same aspect-aware formula as `placeCamera()`; both place the camera at 0° elevation with `modelRadius × max(1, 1/aspect) / tan(halfFov) × 1.8` distance, giving consistent framing across all viewport shapes
+
+### Fixed
+- **Ruler `hidden` attribute ignored** — added `.ruler-hud[hidden] { display: none }` to override the flex display rule
+- **Stray closing brace** in `script.js` from a previous edit causing a parse error
+
 ## [1.3.1] - 2026-04-19
 
 ### Changed

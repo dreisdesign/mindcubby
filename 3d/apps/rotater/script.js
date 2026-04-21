@@ -47,7 +47,7 @@ function getSpeed() { return SPEED_VALS[parseInt(speedSlider.value)] ?? 1; }
 const TILT_RANGE_DEFAULT = 20;
 const SPIN_RANGE_DEFAULT = 360;
 const WOBBLE_SPIN_RANGE_DEFAULT = 360;
-const ELEV_DEFAULT = 30; // Used by placeCamera() for initial camera height
+const ELEV_DEFAULT = 0; // Used by placeCamera() and fitToFrame() for default camera elevation
 
 // Returns frame count that gives 1 revolution matching the live rotation speed
 function exportFrames(fps = EXPORT.gif.fps) {
@@ -299,9 +299,9 @@ function loadSTLBuffer(buffer, name) {
         camera.lookAt(0, 0, 0);
         controls.target.set(0, 0, 0);
         controls.update();
-    } else {
-        placeCamera();
     }
+    // else: placeCamera() is deferred to the rAF below so syncCanvasSize() runs
+    // first and camera.aspect is correct before we compute the fit distance.
     document.documentElement.classList.add('loaded');
     try { localStorage.setItem('rotater_hasSession', '1'); } catch (e) { }
     document.getElementById('compactBtnLabel').textContent = 'Replace STL';
@@ -318,7 +318,10 @@ function loadSTLBuffer(buffer, name) {
         document.querySelector('.orbit-hint-bar').classList.add('visible');
     }
     updateEstimate();
-    requestAnimationFrame(() => { syncCanvasSize(); if (!savedCamPos) fitToFrame(); });
+    requestAnimationFrame(() => {
+        syncCanvasSize();
+        if (!savedCamPos) { placeCamera(); renderer.render(scene, camera); }
+    });
 
     const clearBtn = document.getElementById('btnClearModel');
     if (clearBtn) {
@@ -330,11 +333,15 @@ function loadSTLBuffer(buffer, name) {
 }
 
 function placeCamera() {
-    const MAX_EL = Math.PI / 2 - 0.02;
-    const el = Math.min(THREE.MathUtils.degToRad(ELEV_DEFAULT), MAX_EL);
-    const dist = modelRadius / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.1;
+    if (!camera || !controls) return;
+    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const aspect = camera.aspect > 0 ? camera.aspect : 1;
+    // Pull back far enough so the full model fits with breathing room.
+    // Math.max(1, 1/aspect) pushes camera further on portrait-ish canvases
+    // where the horizontal axis is constraining.
+    const dist = modelRadius * Math.max(1, 1 / aspect) / tanHalfFov * 1.8;
     camera.up.set(0, 1, 0);
-    camera.position.set(0, dist * Math.sin(el), dist * Math.cos(el));
+    camera.position.set(0, 0, dist);
     camera.lookAt(0, 0, 0);
     controls.target.set(0, 0, 0);
     controls.update();
@@ -511,7 +518,7 @@ function clearExportFrame() {
 function updateRulerHUD() {
     const hud = document.getElementById('rulerHUD');
     if (!hud) return;
-    hud.hidden = !modelDims;
+    hud.hidden = !modelDims || !exportFrameEnabled;
     if (!modelDims) return;
     const fmt = v => v.toFixed(1);
     document.getElementById('rulerW').textContent = fmt(modelDims.w);
@@ -865,15 +872,16 @@ document.getElementById('btnCamUp').addEventListener('click', () => snapOrbit(0,
 document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(0, 1));
 document.getElementById('btnCamReset').addEventListener('click', () => {
     if (!camera) return;
-    // Snap to horizontal view (0° elevation) before reframing
-    const dist = camera.position.length();
+    // Level to 0° elevation, preserve azimuth, fit to full viewport with breathing room
     const az = Math.atan2(camera.position.x, camera.position.z);
+    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const aspect = camera.aspect > 0 ? camera.aspect : 1;
+    const newDist = modelRadius * Math.max(1, 1 / aspect) / tanHalfFov * 1.8;
     camera.up.set(0, 1, 0);
-    camera.position.set(dist * Math.sin(az), 0, dist * Math.cos(az));
+    camera.position.set(newDist * Math.sin(az), 0, newDist * Math.cos(az));
     camera.lookAt(0, 0, 0);
     controls.target.set(0, 0, 0);
     controls.update();
-    fitToFrame();
     tiltBaseMeshRx = -Math.PI / 2;
     tiltPhase = 0;
     if (mesh) mesh.rotation.x = tiltBaseMeshRx;
@@ -1259,6 +1267,7 @@ document.getElementById('btnFrameOverlay').addEventListener('click', function ()
     this.title = label;
     this.setAttribute('aria-label', label);
     if (!exportFrameEnabled) clearExportFrame();
+    updateRulerHUD();
 });
 
 // ── Export helpers ────────────────────────────────────────────────────────────

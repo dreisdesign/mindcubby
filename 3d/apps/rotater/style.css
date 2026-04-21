@@ -161,7 +161,7 @@ header {
 }
 
 .logo {
-    height: 64px;
+    height: 6vh;
     width: auto;
     display: block;
     margin: 0 auto 8px;
@@ -495,7 +495,7 @@ html.loaded .file-chip {
 }
 
 html.loaded .canvas-logo {
-    height: clamp(44px, 8vh, 80px);
+    height: clamp(32px, 6vh, 64px);
     width: auto;
     top: 20px;
 }
@@ -2189,6 +2189,10 @@ html.theme-dark .settings-close-btn:hover {
     border: 1px solid rgba(179, 168, 247, 0.22);
     pointer-events: none;
     white-space: nowrap;
+}
+
+.ruler-hud[hidden] {
+    display: none;
 }
 
 .ruler-dim {
