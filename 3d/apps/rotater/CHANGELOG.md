@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.5.0] - 2026-04-21
+
+### Added
+- **Viewport zoom is now independent of export zoom** — zooming the main viewer is purely cosmetic; the mini preview and all exported files always use the stored export-frame distance
+- **Crop mode zoom-to-export** — enabling the export frame (crop icon) lets the viewport zoom directly control the export framing; zooming in/out updates the mini preview and the export in real time
+- **Export zoom persists** — when crop mode is closed, the zoom level set inside crop mode is baked in as the new export distance for both the preview and subsequent exports
+- **Mini preview uses offscreen render target** — the preview thumbnail is rendered into a dedicated WebGL `RenderTarget` (sized at device pixel ratio) rather than reading from the live canvas, eliminating flicker in Safari and keeping the main viewport unaffected
+
+### Fixed
+- **Spin Range showing 20° on first load** — `updateRangeSliderForMode` was calling `.innerHTML` on `tiltRangeTicks`/`wobbleSpinRangeTicks` elements that don't exist in the HTML, causing a silent throw that left the Range slider at its HTML default (20°); both accesses are now null-guarded and the HTML default is corrected to 360°
+- **Wobble showing two range sliders** — the extra "Spin Range" slider in Wobble mode is now hidden; all three modes show only Speed + Range
+- **D-pad position affected by hint tooltip** — `.canvas-bottom-center` now uses `left:0; right:0; justify-content: center` so the D-pad stays centered regardless of tooltip visibility; the hint floats independently at the bottom-left
+- **Mini preview blurry** — preview canvas now renders at `offsetWidth × devicePixelRatio` instead of a fixed 256 px
+- **Export frame button icon** — updated to crop icon (matching the crop-mode function)
+
 ## [1.4.0] - 2026-04-21
 
 ### Changed

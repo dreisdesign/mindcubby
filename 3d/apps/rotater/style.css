@@ -599,6 +599,7 @@ html.none-mode #btnPause {
     grid-template-rows: repeat(3, 2rem);
     gap: 2px;
     z-index: 1;
+    pointer-events: auto;
 }
 
 .cam-btn {
@@ -893,7 +894,7 @@ html.tilt-mode .tilt-range-label {
 }
 
 html.wobble-mode .wobble-spin-range-label {
-    display: flex;
+    display: none;
 }
 
 html.spin-ccw .rotation-thumb--spin .rot-icon {
@@ -2576,13 +2577,13 @@ html.theme-dark .settings-close-btn:hover {
 .canvas-bottom-center {
     position: absolute;
     bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
     display: flex;
-    align-items: center;
-    gap: 8px;
+    justify-content: center;
+    align-items: flex-end;
     z-index: 5;
-    white-space: nowrap;
+    pointer-events: none;
 }
 
 .orbit-hint-bar {
@@ -2598,6 +2599,9 @@ html.theme-dark .settings-close-btn:hover {
 
 .orbit-hint-bar.visible {
     display: inline-flex;
+    position: absolute;
+    left: 16px;
+    pointer-events: auto;
 }
 
 .orbit-hint {

@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.2.0** · April 18, 2026
+**Version 1.5.0** · April 21, 2026
 
 ---
 
@@ -61,7 +61,14 @@ Sidebar order: **Color → Texture → Animation → Export**
 | **Tilt** | Object rocks on its X axis (like a juggled bowling pin). Camera stays put. Range controls how far it tilts. |
 | **Wobble** | Spin + Tilt combined — continuous spin with a simultaneous tilt oscillation. |
 | Speed | Playback speed: 0.5× · 1× · 2× · 3× · 5× |
-| Range | Oscillation amplitude for Tilt (10°–50°) and arc width for Spin (45°–360°); also controls tilt depth for Wobble |
+| Range | Oscillation amplitude for Tilt (10°–50°) and arc width for Spin (45°–360°); controls tilt depth for Wobble |
+
+### Export preview
+
+The sidebar **Preview** thumbnail always shows exactly what will be exported:
+
+- **Default** — preview uses a stored export-frame distance (fit-to-model). Viewport zoom is cosmetic only and does not affect the exported output.
+- **Crop mode** (crop icon, bottom-right of viewer) — enables zoom-to-export. Zooming the viewport while crop mode is active directly controls the export framing; the preview updates in real time. When crop mode is closed the chosen zoom is locked in for future exports.
 
 ### Export
 

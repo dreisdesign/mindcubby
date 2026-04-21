@@ -169,6 +169,8 @@ let swingBaseAz = 0, swingLastAz = 0;
 let tiltBaseMeshRx = -Math.PI / 2;
 let spinDir = 1; // 1 = clockwise, -1 = counter-clockwise
 let modelDims = null;  // { w, d, h } in mm (STL units: x=width, y=depth, z=height)
+let exportCamDist = null; // stored export camera distance (fit-to-frame, independent of viewport zoom)
+let exportCamElev = 0;   // stored export camera elevation (radians)
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
@@ -321,6 +323,7 @@ function loadSTLBuffer(buffer, name) {
     requestAnimationFrame(() => {
         syncCanvasSize();
         if (!savedCamPos) { placeCamera(); renderer.render(scene, camera); }
+        storeExportCamera();
     });
 
     const clearBtn = document.getElementById('btnClearModel');
@@ -364,6 +367,20 @@ function fitToFrame() {
     camera.lookAt(0, 0, 0);
     controls.target.set(0, 0, 0);
     controls.update();
+}
+
+// Store the ideal export camera distance/elevation (fit-to-export-frame math).
+// Called after model load and after camera reset so the export preview and
+// captured frames always use this framing even if the user zooms the viewport.
+function storeExportCamera() {
+    if (!camera || !canvas || !modelRadius) return;
+    const wrap = canvas.parentElement;
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    if (!w || !h) return;
+    const sq = Math.round(Math.min(w, h) * 0.82);
+    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    exportCamDist = modelRadius * h / (0.88 * sq * tanHalfFov);
+    exportCamElev = Math.min(THREE.MathUtils.degToRad(ELEV_DEFAULT), Math.PI / 2 - 0.02);
 }
 
 // ── Render loop ───────────────────────────────────────────────────────────────
@@ -450,19 +467,66 @@ function loop() {
 
 // ── Export preview thumbnail ──────────────────────────────────────────────────
 let _previewTick = 0;
+let _previewRt = null;
+let _previewRtSize = 0;
+
 function updateExportPreview() {
     if (++_previewTick % 4 !== 0) return; // update every 4th frame
     const pv = document.getElementById('exportPreview');
-    if (!pv || !renderer) return;
-    const src = renderer.domElement;
-    const sw = src.width, sh = src.height;
-    const sq = Math.round(Math.min(sw, sh) * 0.82);
-    const sx = Math.floor((sw - sq) / 2);
-    const sy = Math.floor((sh - sq) / 2);
-    const pvW = pv.offsetWidth || 160;
-    if (pv.width !== pvW || pv.height !== pvW) { pv.width = pvW; pv.height = pvW; }
-    // Fill the preview with exactly the export square — no letterbox, no brackets
-    pv.getContext('2d').drawImage(src, sx, sy, sq, sq, 0, 0, pvW, pvW);
+    if (!pv || !renderer || !camera || !scene) return;
+    if (exportCamDist === null) return; // not ready yet
+
+    // In crop mode, keep exportCamDist in sync with the live camera so that
+    // whatever zoom the user sets is immediately reflected in the preview and baked
+    // for export — no snapping, no state juggling.
+    if (exportFrameEnabled) {
+        exportCamDist = camera.position.length();
+        exportCamElev = Math.asin(Math.max(-1, Math.min(1, camera.position.y / exportCamDist)));
+    }
+
+    const cssW = pv.offsetWidth || 160;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const px = Math.round(cssW * dpr);
+    if (pv.width !== px || pv.height !== px) { pv.width = px; pv.height = px; }
+
+    // Always render into the offscreen RT — the main canvas is never touched.
+    if (!_previewRt || _previewRtSize !== px) {
+        if (_previewRt) _previewRt.dispose();
+        _previewRtSize = px;
+        _previewRt = new THREE.WebGLRenderTarget(px, px, {
+            samples: renderer.capabilities.isWebGL2 ? 4 : 0,
+        });
+        _previewRt.texture.colorSpace = THREE.SRGBColorSpace;
+    }
+
+    const az = Math.atan2(camera.position.x, camera.position.z);
+    const savedPos = camera.position.clone();
+    const savedAspect = camera.aspect;
+    camera.aspect = 1;
+    camera.updateProjectionMatrix();
+    camera.position.set(
+        exportCamDist * Math.cos(exportCamElev) * Math.sin(az),
+        exportCamDist * Math.sin(exportCamElev),
+        exportCamDist * Math.cos(exportCamElev) * Math.cos(az)
+    );
+    camera.lookAt(0, 0, 0);
+    renderer.setRenderTarget(_previewRt);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    camera.position.copy(savedPos);
+    camera.lookAt(controls?.target ?? new THREE.Vector3(0, 0, 0));
+    camera.aspect = savedAspect;
+    camera.updateProjectionMatrix();
+
+    // Read pixels and flip vertically (WebGL origin is bottom-left)
+    const buf = new Uint8Array(px * px * 4);
+    renderer.readRenderTargetPixels(_previewRt, 0, 0, px, px, buf);
+    const imgData = pv.getContext('2d').createImageData(px, px);
+    for (let row = 0; row < px; row++) {
+        const srcRow = (px - 1 - row) * px * 4;
+        imgData.data.set(buf.subarray(srcRow, srcRow + px * 4), row * px * 4);
+    }
+    pv.getContext('2d').putImageData(imgData, 0, 0);
 }
 
 // ── Export frame overlay ──────────────────────────────────────────────────
@@ -885,6 +949,7 @@ document.getElementById('btnCamReset').addEventListener('click', () => {
     tiltBaseMeshRx = -Math.PI / 2;
     tiltPhase = 0;
     if (mesh) mesh.rotation.x = tiltBaseMeshRx;
+    storeExportCamera();
     // In Tilt/Wobble mode, pause so the model holds the neutral level position
     const m = rotateModeEl.value;
     if ((m === 'tilt' || m === 'wobble') && !isPaused) {
@@ -988,28 +1053,22 @@ function updateRangeSliderForMode(mode) {
         tiltRangeSlider.max = '360';
         tiltRangeSlider.step = '45';
         if (parseFloat(tiltRangeSlider.value) > 360 || parseFloat(tiltRangeSlider.value) < 45) tiltRangeSlider.value = String(SPIN_RANGE_DEFAULT);
-        document.getElementById('tiltRangeTicks').innerHTML = '<span>45°</span><span>360°</span>';
+        const tiltTicksEl = document.getElementById('tiltRangeTicks');
+        if (tiltTicksEl) tiltTicksEl.innerHTML = '<span>45°</span><span>360°</span>';
     } else {  // tilt or wobble: tilt-amplitude range
         tiltRangeSlider.min = '10';
         tiltRangeSlider.max = '50';
         tiltRangeSlider.step = '10';
         if (parseFloat(tiltRangeSlider.value) > 50) tiltRangeSlider.value = String(TILT_RANGE_DEFAULT);
         if (parseFloat(tiltRangeSlider.value) < 10) tiltRangeSlider.value = '10';
-        document.getElementById('tiltRangeTicks').innerHTML = '<span>10°</span><span>50°</span>';
+        const tiltTicksEl = document.getElementById('tiltRangeTicks');
+        if (tiltTicksEl) tiltTicksEl.innerHTML = '<span>10°</span><span>50°</span>';
     }
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
     syncSliderTooltip(tiltRangeSlider);
     const labelText = document.getElementById('tiltRangeLabelText');
-    if (labelText) labelText.textContent = mode === 'wobble' ? 'Tilt Range' : 'Range';
+    if (labelText) labelText.textContent = 'Range';
     updateTiltRangeReset();
-    if (mode === 'wobble') {
-        const wsv = parseFloat(wobbleSpinRangeSlider.value);
-        if (isNaN(wsv) || wsv < 45 || wsv > 360) wobbleSpinRangeSlider.value = String(WOBBLE_SPIN_RANGE_DEFAULT);
-        document.getElementById('wobbleSpinRangeTicks').innerHTML = '<span>45°</span><span>360°</span>';
-        wobbleSpinRangeVal.textContent = wobbleSpinRangeSlider.value + '°';
-        syncSliderTooltip(wobbleSpinRangeSlider);
-        wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
-    }
 }
 
 colorPick.addEventListener('input', () => {
@@ -1327,12 +1386,16 @@ async function captureFrames(n, size = EXPORT.gif.size, transparent = false) {
     const dist = camera.position.length();
     const elev = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
     const az = Math.atan2(camera.position.x, camera.position.z);
+    // In crop mode use live camera so viewport zoom is reflected in the export;
+    // otherwise use the stored export distance so a zoomed-in viewport doesn't affect output
+    const exportDist = (!exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
+    const exportElev = (!exportFrameEnabled && exportCamDist !== null) ? exportCamElev : elev;
     const savedCamPos = camera.position.clone();
     const isTilt = rotateModeEl.value === 'tilt';
     const isWobble = rotateModeEl.value === 'wobble';
     const isSpinLimited = rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360;
     const isWobbleArc = isWobble && parseFloat(wobbleSpinRangeSlider.value) < 360;
-    const baseEl = elev;
+    const baseEl = exportElev;
     const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
     const wobbleSpinSwing = THREE.MathUtils.degToRad(parseFloat(wobbleSpinRangeSlider.value) / 2);
     const MAX_EL = Math.PI / 2 - 0.05;
@@ -1341,40 +1404,45 @@ async function captureFrames(n, size = EXPORT.gif.size, transparent = false) {
     for (let i = 0; i < n; i++) {
         if (isTilt) {
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
-            camera.position.copy(savedCamPos);
+            // Keep camera at export distance, same azimuth/elevation as starting position
+            camera.position.set(
+                exportDist * Math.cos(exportElev) * Math.sin(az),
+                exportDist * Math.sin(exportElev),
+                exportDist * Math.cos(exportElev) * Math.cos(az),
+            );
         } else if (isWobbleArc) {
             // Wobble arc: mesh tilts AND camera arcs (< 360° spin range)
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
             const el = Math.min(baseEl, MAX_EL);
             const azimuth = az + Math.sin(2 * Math.PI * i / n) * wobbleSpinSwing;
             camera.position.set(
-                dist * Math.cos(el) * Math.sin(azimuth),
-                dist * Math.sin(el),
-                dist * Math.cos(el) * Math.cos(azimuth),
+                exportDist * Math.cos(el) * Math.sin(azimuth),
+                exportDist * Math.sin(el),
+                exportDist * Math.cos(el) * Math.cos(azimuth),
             );
         } else if (isWobble) {
             // Wobble full spin: mesh tilts AND camera spins 360°
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
             const azimuth = -(2 * Math.PI * i) / n;
             camera.position.set(
-                dist * Math.cos(elev) * Math.sin(azimuth),
-                dist * Math.sin(elev),
-                dist * Math.cos(elev) * Math.cos(azimuth),
+                exportDist * Math.cos(exportElev) * Math.sin(azimuth),
+                exportDist * Math.sin(exportElev),
+                exportDist * Math.cos(exportElev) * Math.cos(azimuth),
             );
         } else if (isSpinLimited) {
             const el = Math.min(baseEl, MAX_EL);
             const azimuth = az + Math.sin(2 * Math.PI * i / n) * tiltSwing;
             camera.position.set(
-                dist * Math.cos(el) * Math.sin(azimuth),
-                dist * Math.sin(el),
-                dist * Math.cos(el) * Math.cos(azimuth),
+                exportDist * Math.cos(el) * Math.sin(azimuth),
+                exportDist * Math.sin(el),
+                exportDist * Math.cos(el) * Math.cos(azimuth),
             );
         } else {
             const azimuth = -(2 * Math.PI * i) / n;
             camera.position.set(
-                dist * Math.cos(elev) * Math.sin(azimuth),
-                dist * Math.sin(elev),
-                dist * Math.cos(elev) * Math.cos(azimuth),
+                exportDist * Math.cos(exportElev) * Math.sin(azimuth),
+                exportDist * Math.sin(exportElev),
+                exportDist * Math.cos(exportElev) * Math.cos(azimuth),
             );
         }
         camera.lookAt(0, 0, 0);
