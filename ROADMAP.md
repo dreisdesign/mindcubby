@@ -60,6 +60,21 @@ Key behaviors to implement:
 
 (Existing roadmap item #1) — make this the next development priority.
 
+### Implemented: HUD badge (v1.3.0)
+W · D · H dimensions displayed as a pill badge at the top of the canvas. Always visible when a model is loaded. Numbers read from the STL bounding box in slicer convention (x=W, y=D, z=H).
+
+### Next: 3D ruler lines in the viewport
+Draw three ruler lines directly in the 3D scene — one per axis — aligned to the bounding box of the model. Each line shows the same W, D, H value as the HUD badge but as a visual reference at the actual scale of the model.
+
+Design notes:
+- Render as `THREE.Line` objects (or `LineSegments`) using a fixed thin material; drawn outside the model's bounding box so they don't overlap the geometry.
+- End-caps or tick marks at each end; label positioned near the midpoint of each line.
+- Labels: use HTML `<div>` elements positioned via `camera.project()` world-to-screen each frame (same approach used for CSS3DRenderer labels in Three.js examples). This avoids needing a separate font atlas.
+- Color-coded per axis (W = red-ish, D = green-ish, H = blue-ish) or a unified neutral style — decide during implementation.
+- Visibility tied to the existing HUD badge; toggling the badge on/off also toggles the 3D lines.
+- No interaction required initially (display-only).
+- Effort: ~1–2 days.
+
 Options:
 
 Option 1 — Axis-aligned bounding-box ruler (quick win)
