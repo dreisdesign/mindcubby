@@ -1101,14 +1101,17 @@ document.getElementById('btnCamUp').addEventListener('click', () => snapOrbit(0,
 document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(0, 1));
 document.getElementById('btnCamReset').addEventListener('click', () => {
     if (!camera) return;
-    // Level to 0° elevation, preserve azimuth, fit to full viewport with breathing room
-    const az = Math.atan2(camera.position.x, camera.position.z);
+    // Level to 0° elevation, preserve azimuth, fit to full viewport with breathing room.
+    // Use getOrbitFrameState() so azimuth is relative to controls.target (correct even after pan).
+    const { az } = getOrbitFrameState();
     const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const aspect = camera.aspect > 0 ? camera.aspect : 1;
     const newDist = modelRadius * Math.max(1, 1 / aspect) / tanHalfFov * 1.8;
     camera.up.set(0, 1, 0);
     camera.position.set(newDist * Math.sin(az), 0, newDist * Math.cos(az));
     camera.lookAt(0, 0, 0);
+    camera.zoom = 1;
+    camera.updateProjectionMatrix();
     controls.target.set(0, 0, 0);
     controls.update();
     tiltBaseMeshRx = -Math.PI / 2;

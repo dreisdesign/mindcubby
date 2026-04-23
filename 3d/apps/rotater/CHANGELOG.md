@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.1] - 2026-04-23
+
+### Fixed
+- **"Level and reframe" wrong angle after pan** — azimuth was computed from the camera's world-space position instead of relative to `controls.target`; after panning the model, the reset button would place the camera at an unexpected angle. Fixed by using `getOrbitFrameState()` (which subtracts the orbit target) to get the correct relative azimuth
+- **"Level and reframe" stale zoom** — `camera.zoom` was not reset to 1 on click; a zoom value leaked from a restored session could make the model appear unexpectedly large or small after the reset
+
 ## [1.7.0] - 2026-04-23
 
 ### Changed
