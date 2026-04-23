@@ -673,10 +673,6 @@ function drawExportFrame() {
         if (cc) {
             cc.hidden = false;
             cc.removeAttribute('aria-hidden');
-            cc.style.left = sx + 'px';
-            cc.style.top = sy + 'px';
-            cc.style.width = sq + 'px';
-            cc.style.height = sq + 'px';
         }
         // Position the 4 transparent click-capture divs over the dim regions
         _cropSx = sx; _cropSy = sy; _cropSq = sq;
@@ -784,8 +780,7 @@ function saveSettings() {
 
             exportQuality: document.getElementById('exportQuality')?.value ?? 'std',
             exportFormat: exportFormatEl?.value ?? 'gif',
-            animBg: document.getElementById('animBg')?.checked ? '1' : '0',
-            imageTransparent: document.getElementById('imageBg')?.checked ? '1' : '0',
+            exportTransparent: document.getElementById('exportTransparent')?.checked ? '1' : '0',
             gifDither: document.getElementById('gifDither')?.checked ? '1' : '0',
             jpegQuality: document.getElementById('jpegQuality')?.value ?? '92',
             exportCamDist: exportCamDist,
@@ -849,16 +844,25 @@ function restoreSettings() {
                 if (qEl) { qEl.value = s.jpegQuality; document.getElementById('jpegQualityVal').textContent = s.jpegQuality + '%'; }
             }
             // mp4 repeat removed — no restore needed
-            // Restore background checkboxes (checked = has background; legacy exportTransparentBg was inverted)
-            if (s.animBg != null) { const el = document.getElementById('animBg'); if (el) el.checked = (s.animBg === true || s.animBg === '1'); }
-            else if (s.exportTransparentBg != null) { const el = document.getElementById('animBg'); if (el) el.checked = !(s.exportTransparentBg === true || s.exportTransparentBg === '1'); }
-            if (s.imageTransparent != null) {
-                const el = document.getElementById('imageBg');
-                if (el) el.checked = (s.imageTransparent === true || s.imageTransparent === '1');
-            } else if (s.imageBg != null) {
-                // Legacy: imageBg=1 meant "has background" (opaque), so transparent = !imageBg
-                const el = document.getElementById('imageBg');
-                if (el) el.checked = !(s.imageBg === true || s.imageBg === '1');
+            // Restore transparent background checkbox (unified for GIF + PNG)
+            // Legacy keys: animBg ("has bg" = !transparent), imageTransparent, imageBg, exportTransparentBg
+            if (s.exportTransparent != null) {
+                const on = (s.exportTransparent === true || s.exportTransparent === '1' || s.exportTransparent === 1);
+                const a = document.getElementById('exportTransparent'); if (a) a.checked = on;
+                const b = document.getElementById('exportTransparentPng'); if (b) b.checked = on;
+            } else if (s.imageTransparent != null) {
+                const on = (s.imageTransparent === true || s.imageTransparent === '1' || s.imageTransparent === 1);
+                const a = document.getElementById('exportTransparent'); if (a) a.checked = on;
+                const b = document.getElementById('exportTransparentPng'); if (b) b.checked = on;
+            } else if (s.animBg != null) {
+                // animBg=1 meant "has background" so transparent = !animBg
+                const on = !(s.animBg === true || s.animBg === '1' || s.animBg === 1);
+                const a = document.getElementById('exportTransparent'); if (a) a.checked = on;
+                const b = document.getElementById('exportTransparentPng'); if (b) b.checked = on;
+            } else if (s.exportTransparentBg != null) {
+                const on = (s.exportTransparentBg === true || s.exportTransparentBg === '1' || s.exportTransparentBg === 1);
+                const a = document.getElementById('exportTransparent'); if (a) a.checked = on;
+                const b = document.getElementById('exportTransparentPng'); if (b) b.checked = on;
             }
             if (s.gifDither != null) {
                 const isOn = (s.gifDither === true || s.gifDither === '1' || s.gifDither === 1);
@@ -1137,7 +1141,7 @@ document.getElementById('btnExportPng').addEventListener('click', async () => {
         btnPause.title = 'Resume rotation';
     }
     const { quality } = EXPORT.image;
-    const isTransparent = document.getElementById('imageBg')?.checked ?? false;
+    const isTransparent = document.getElementById('exportTransparentPng')?.checked ?? false;
 
     if (isTransparent) {
         // Render to offscreen target with null background → transparent PNG
@@ -1287,9 +1291,15 @@ document.getElementById('btnExport')?.addEventListener('click', () => {
     document.getElementById(FORMAT_BTNS[fmt])?.click();
 });
 
-// animBg / imageBg toggles: update estimate display hints
-document.getElementById('animBg')?.addEventListener('change', () => { updateEstimate(); saveSettings(); });
-document.getElementById('imageBg')?.addEventListener('change', () => { updateEstimate(); saveSettings(); });
+// exportTransparent / exportTransparentPng toggles: sync each other + update estimate
+function syncTransparentCheckboxes(sourceId) {
+    const val = document.getElementById(sourceId)?.checked ?? false;
+    const ids = ['exportTransparent', 'exportTransparentPng'];
+    ids.forEach(id => { if (id !== sourceId) { const el = document.getElementById(id); if (el) el.checked = val; } });
+    updateEstimate(); saveSettings();
+}
+document.getElementById('exportTransparent')?.addEventListener('change', () => syncTransparentCheckboxes('exportTransparent'));
+document.getElementById('exportTransparentPng')?.addEventListener('change', () => syncTransparentCheckboxes('exportTransparentPng'));
 document.getElementById('jpegQuality').addEventListener('input', function () {
     document.getElementById('jpegQualityVal').textContent = this.value + '%';
     saveSettings();
@@ -1529,13 +1539,10 @@ function confirmCropMode() {
 }
 
 document.getElementById('btnCancelCrop').addEventListener('click', cancelCropMode);
+document.getElementById('btnConfirmCrop')?.addEventListener('click', confirmCropMode);
 updateFrameOverlayButtonUI();
 
-// Click on any dim region (outside the crop box) cancels crop mode
-['frameDimTop', 'frameDimBottom', 'frameDimLeft', 'frameDimRight'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('click', cancelCropMode);
-});
+// Click outside (dim regions) intentionally does NOT cancel — use the buttons or Esc/Enter
 
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && exportFrameEnabled) cancelCropMode();
@@ -1681,6 +1688,20 @@ async function captureFrames(n, size = EXPORT.gif.size, transparent = false) {
 
 // ── Floyd-Steinberg dithering ────────────────────────────────────────────────
 function applyPaletteDithered(data, palette, width, height) {
+    // Build a 5-bit-per-channel LUT (32³ = 32768 slots) for fast nearest-color lookup.
+    // At most 32768 linear searches (≤256 palette entries each) instead of one per pixel.
+    const lut = new Int16Array(32768).fill(-1);
+    function nearestFast(r, g, b) {
+        const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+        if (lut[key] >= 0) return lut[key];
+        let best = 0, bestD = Infinity;
+        for (let c = 0; c < palette.length; c++) {
+            const dr = r - palette[c][0], dg = g - palette[c][1], db = b - palette[c][2];
+            const d = dr * dr + dg * dg + db * db;
+            if (d < bestD) { bestD = d; best = c; }
+        }
+        return (lut[key] = best);
+    }
     const errors = new Float32Array(data.length);
     const indices = new Uint8Array(width * height);
     for (let y = 0; y < height; y++) {
@@ -1689,9 +1710,9 @@ function applyPaletteDithered(data, palette, width, height) {
             const r = Math.max(0, Math.min(255, data[i] + errors[i]));
             const g = Math.max(0, Math.min(255, data[i + 1] + errors[i + 1]));
             const b = Math.max(0, Math.min(255, data[i + 2] + errors[i + 2]));
-            const idx = nearestColorIndex(palette, r, g, b);
+            const idx = nearestFast(r, g, b);
             indices[y * width + x] = idx;
-            const pr = palette[idx * 3], pg = palette[idx * 3 + 1], pb = palette[idx * 3 + 2];
+            const pr = palette[idx][0], pg = palette[idx][1], pb = palette[idx][2];
             const er = r - pr, eg = g - pg, eb = b - pb;
             if (x + 1 < width) { errors[i + 4] += er * 7 / 16; errors[i + 5] += eg * 7 / 16; errors[i + 6] += eb * 7 / 16; }
             if (y + 1 < height) {
@@ -1713,7 +1734,7 @@ btnGif.addEventListener('click', async () => {
 
     try {
         const { fps, size: S, loop, dither } = EXPORT.gif;
-        const isTransparent = !(document.getElementById('animBg')?.checked ?? true);
+        const isTransparent = document.getElementById('exportTransparent')?.checked ?? false;
         const frames = await captureFrames(exportFrames(fps), S, isTransparent);
         const delay = Math.round(1000 / fps);
 
@@ -1727,17 +1748,14 @@ btnGif.addEventListener('click', async () => {
             if (isTransparent) {
                 // Reserve palette index 255 as transparent; quantize using 255 colors
                 const pal = quantize(frames[i], 255);
-                // Full 256-entry palette: entries 0..N-1 are real colors, 255 is transparent
-                const fullPal = new Uint8Array(256 * 3);
-                fullPal.set(pal);
-                // Build index array — transparent (alpha < 128) pixels → index 255
-                const indices = new Uint8Array(S * S);
+                // gifenc writeFrame needs a 2D [[r,g,b],...] palette — pad to 256 entries so index 255 is the transparent slot
+                const fullPal = pal.slice();
+                while (fullPal.length < 256) fullPal.push([0, 0, 0]);
+                // applyPalette uses an internal rgb565 hash LUT — O(1) per pixel after warm-up.
+                // Then stamp 255 over transparent pixels in a single cheap pass.
+                const indices = applyPalette(frames[i], pal);
                 for (let px = 0; px < S * S; px++) {
-                    if (frames[i][px * 4 + 3] < 128) {
-                        indices[px] = 255;
-                    } else {
-                        indices[px] = nearestColorIndex(pal, frames[i][px * 4], frames[i][px * 4 + 1], frames[i][px * 4 + 2]);
-                    }
+                    if (frames[i][px * 4 + 3] < 128) indices[px] = 255;
                 }
                 gif.writeFrame(indices, S, S, { palette: fullPal, delay, transparent: true, transparentIndex: 255, ...(i === 0 && { repeat }) });
             } else {
@@ -1802,8 +1820,10 @@ btnVideo.addEventListener('click', async () => {
             output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
             error: e => { encoderError = e; },
         });
+        // avc1.4200XX — Baseline profile; level 3.1 (0x1f) up to 720p, level 4.0 (0x28) up to 2048px
+        const avcLevel = S <= 720 ? '1f' : '28';
         encoder.configure({
-            codec: 'avc1.42001f',   // H.264 Baseline
+            codec: `avc1.4200${avcLevel}`,
             width: S,
             height: S,
             bitrate: bitrate,

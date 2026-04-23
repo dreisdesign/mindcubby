@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.0] - 2026-04-23
+
+### Changed
+- **Crop mode redesigned as a modal overlay** — entering crop mode now dims and blurs the area outside the crop frame, hides all other canvas controls, and shows two centred action buttons: **Cancel** (ghost) and **Keep** (primary purple). Clicking outside no longer cancels; use the buttons or Esc / Enter
+- **Unified transparent-background checkbox** — GIF's inverted "Background" checkbox and PNG's separate "Transparent" checkbox are replaced by a single **Transparent** checkbox (unchecked = opaque, default) shown in both GIF and PNG option panels; state is kept in sync when switching formats
+- **MP4 High quality codec level** — encoder now uses AVC level 4.0 for resolutions above 720 px, fixing the "coded area exceeds maximum" error at 1080 p
+
+### Fixed
+- **GIF dither crash** — `nearestColorIndex` was called with three separate `r, g, b` arguments instead of a `[r, g, b]` array; the `g` value landed in the distance-function slot and threw "s is not a function"
+- **Transparent GIF blank output** — palette was being passed as a flat `Uint8Array` to `writeFrame`; gifenc expects a 2D `[[r,g,b],…]` array; fixed by using `pal.slice()` padded to 256 entries
+- **Dither and transparent GIF encoding speed** — replaced per-pixel `nearestColorIndex` O(N·palette) loop with a 32³ LUT cache (dither path) and gifenc's own rgb565 hash table via `applyPalette` (transparent path); encoding is now comparable in speed to the non-dither path
+
 ## [1.6.6] - 2026-04-23
 
 ### Changed

@@ -54,7 +54,23 @@
                     <div class="canvas-wrap">
                         <canvas id="canvas"></canvas>
                         <canvas id="exportFrameCanvas" aria-hidden="true"></canvas>
-                        <div id="cropControls" hidden aria-hidden="true"></div>
+                        <div id="cropControls" hidden aria-hidden="true">
+                            <button id="btnCancelCrop" class="crop-action-btn crop-action-btn--ghost"
+                                title="Discard crop changes (Esc)" aria-label="Cancel crop">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path
+                                        d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                                </svg>
+                                Cancel
+                            </button>
+                            <button id="btnConfirmCrop" class="crop-action-btn crop-action-btn--primary"
+                                title="Apply crop (Enter)" aria-label="Keep crop">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                </svg>
+                                Keep
+                            </button>
+                        </div>
                         <div id="rulerHUD" class="ruler-hud" hidden aria-live="polite">
                             <span class="ruler-dim"><span class="ruler-axis">W</span><span id="rulerW"
                                     class="ruler-val">—</span></span>
@@ -154,13 +170,6 @@
                                         d="M7.16309 15.4172V5.66614C7.16309 5.33628 7.28022 5.05985 7.51447 4.83686C7.74873 4.61373 8.02201 4.50217 8.33431 4.50217C8.43197 4.50217 8.53204 4.51681 8.63453 4.54609C8.73702 4.57537 8.8395 4.62662 8.94199 4.69982L16.6286 9.55338C16.8116 9.67051 16.9489 9.81692 17.0404 9.99262C17.1319 10.1683 17.1777 10.3525 17.1777 10.5452C17.1777 10.7379 17.1301 10.9209 17.0349 11.0942C16.9398 11.2676 16.8043 11.4128 16.6286 11.5299L8.94199 16.3835C8.8395 16.4567 8.7354 16.508 8.6297 16.5372C8.52399 16.5665 8.42311 16.5812 8.32706 16.5812C8.0196 16.5812 7.74873 16.4696 7.51447 16.2465C7.28022 16.0233 7.16309 15.7469 7.16309 15.4172Z" />
                                 </svg>
                             </button>
-                            <button id="btnCancelCrop" class="pause-btn crop-reset-btn"
-                                title="Discard crop changes (Esc)" aria-label="Reset crop">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <path
-                                        d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                                </svg>
-                            </button>
                             <button id="btnFrameOverlay" class="pause-btn" title="Show export frame"
                                 aria-label="Show export frame" aria-pressed="false">
                                 <svg class="frame-overlay-icon frame-overlay-icon--frame" width="15" height="15"
@@ -172,7 +181,7 @@
                                     viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                                 </svg>
-                                <span class="frame-overlay-label">Crop</span>
+                                <span class="frame-overlay-label">Keep</span>
                             </button>
                         </div>
                         <div class="canvas-overlay-bl">
@@ -398,8 +407,8 @@
                                 <label class="gif-option-check"><input type="checkbox" id="gifLoop" checked>
                                     Loop</label>
                                 <label class="gif-option-check"><input type="checkbox" id="gifDither"> Dither</label>
-                                <label class="gif-option-check" title="Uncheck for transparent background"><input
-                                        type="checkbox" id="animBg" checked> Background</label>
+                                <label class="gif-option-check"><input type="checkbox" id="exportTransparent">
+                                    Transparent</label>
                             </div>
                             <div class="export-size-est-row"><span id="gifEst"></span></div>
                         </div>
@@ -410,8 +419,8 @@
                         <!-- PNG options -->
                         <div id="exportOpts-png" class="export-format-opts" hidden>
                             <div class="gif-options-row">
-                                <label class="gif-option-check" title="Check for transparent background"><input
-                                        type="checkbox" id="imageBg"> Transparent</label>
+                                <label class="gif-option-check"><input type="checkbox" id="exportTransparentPng">
+                                    Transparent</label>
                             </div>
                             <div class="export-size-est-row"><span id="imgEstPng"></span></div>
                         </div>
