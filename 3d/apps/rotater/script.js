@@ -49,6 +49,7 @@ const SPIN_RANGE_DEFAULT = 360;
 const WOBBLE_SPIN_RANGE_DEFAULT = 360;
 const ELEV_DEFAULT = 0; // Used by placeCamera() and fitToFrame() for default camera elevation
 const CROP_FRAME_UI_SCALE = 0.82; // Keeps a visual margin around the crop guide
+const VIEWPORT_FIT_SCALE = 1.55; // Smaller than 1.8 so default/reset framing is less zoomed out
 
 // Returns frame count that gives 1 revolution matching the live rotation speed
 function exportFrames(fps = EXPORT.gif.fps) {
@@ -407,7 +408,7 @@ function placeCamera() {
     // Pull back far enough so the full model fits with breathing room.
     // Math.max(1, 1/aspect) pushes camera further on portrait-ish canvases
     // where the horizontal axis is constraining.
-    const dist = modelRadius * Math.max(1, 1 / aspect) / tanHalfFov * 1.8;
+    const dist = modelRadius * Math.max(1, 1 / aspect) / tanHalfFov * VIEWPORT_FIT_SCALE;
     camera.up.set(0, 1, 0);
     camera.position.set(0, 0, dist);
     camera.lookAt(0, 0, 0);
@@ -1106,7 +1107,7 @@ document.getElementById('btnCamReset').addEventListener('click', () => {
     const { az } = getOrbitFrameState();
     const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const aspect = camera.aspect > 0 ? camera.aspect : 1;
-    const newDist = modelRadius * Math.max(1, 1 / aspect) / tanHalfFov * 1.8;
+    const newDist = modelRadius * Math.max(1, 1 / aspect) / tanHalfFov * VIEWPORT_FIT_SCALE;
     camera.up.set(0, 1, 0);
     camera.position.set(newDist * Math.sin(az), 0, newDist * Math.cos(az));
     camera.lookAt(0, 0, 0);
@@ -1374,7 +1375,12 @@ wobbleSpinRangeResetBtn.addEventListener('click', (e) => {
 });
 
 document.getElementById('btnResetSettings').addEventListener('click', () => {
-    try { localStorage.removeItem(SETTINGS_KEY); localStorage.removeItem('rotater_hasSession'); localStorage.setItem('rotater_hintDismissed', '1'); } catch (e) { }
+    try {
+        localStorage.removeItem(SETTINGS_KEY);
+        // Keep session mode so reload does not briefly show the empty upload page.
+        localStorage.setItem('rotater_hasSession', '1');
+        localStorage.setItem('rotater_hintDismissed', '1');
+    } catch (e) { }
     history.replaceState(null, '', location.pathname);
     location.reload();
 });

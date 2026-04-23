@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.2] - 2026-04-23
+
+### Changed
+- **Default viewport framing tightened** — reduced the full-viewport fit scale used by initial placement and "Level and reframe" so models appear less zoomed out by default
+
+### Fixed
+- **Reset Settings empty-page flash** — reset flow now preserves the session flag before reload, preventing a brief flash of the empty upload state during reinitialization
+
 ## [1.7.1] - 2026-04-23
 
 ### Fixed
