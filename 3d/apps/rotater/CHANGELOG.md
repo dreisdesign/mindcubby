@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.6.6] - 2026-04-23
+
+### Changed
+- **Reset moved beside Crop action** — in crop mode, reset now appears in the bottom-right control row directly to the left of the orange **Crop** confirm button
+- **Reset is now icon-only** — the crop reset control uses only the red X icon for a cleaner compact layout
+
+## [1.6.5] - 2026-04-23
+
+### Changed
+- **Main crop control now confirms crop** — clicking the bottom-right crop button enters crop mode; while active, that same button switches to an orange check-style **Crop** confirm button that applies framing (instead of relying on a separate in-frame confirm action)
+- **Crop reset control repositioned** — the in-frame **Reset** action now sits at the upper-right of the crop box for clearer separation from bottom canvas controls
+
+### Fixed
+- **Crop-mode button clutter** — removed the duplicate in-frame crop confirm control so crop mode has one clear confirm path (main orange crop button) and one clear cancel path (Reset / Esc / outside click)
+
 ## [1.5.0] - 2026-04-21
 
 ### Added

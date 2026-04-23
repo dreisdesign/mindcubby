@@ -558,6 +558,60 @@ html.loaded .canvas-replace-btn {
     font-family: "Source Sans 3", system-ui, sans-serif;
 }
 
+#btnFrameOverlay {
+    gap: 0;
+}
+
+#btnFrameOverlay .frame-overlay-icon--confirm,
+#btnFrameOverlay .frame-overlay-label {
+    display: none;
+}
+
+#btnFrameOverlay.is-crop-confirm {
+    width: auto;
+    min-width: 2.5rem;
+    padding: 0 12px;
+    gap: 6px;
+    border-radius: 9999px;
+    background: var(--color-export);
+    color: #fff;
+    border-color: color-mix(in srgb, var(--color-export) 70%, #fff);
+    font-size: var(--text-sm);
+    font-weight: 700;
+}
+
+#btnFrameOverlay.is-crop-confirm .frame-overlay-icon--frame {
+    display: none;
+}
+
+#btnFrameOverlay.is-crop-confirm .frame-overlay-icon--confirm,
+#btnFrameOverlay.is-crop-confirm .frame-overlay-label {
+    display: inline-flex;
+}
+
+#btnFrameOverlay.is-crop-confirm:hover {
+    background: var(--color-export-hover);
+    color: #fff;
+    border-color: color-mix(in srgb, var(--color-export-hover) 70%, #fff);
+}
+
+#btnCancelCrop.crop-reset-btn {
+    display: none;
+    background: rgba(176, 24, 24, 0.94);
+    color: #fff;
+    border-color: rgba(255, 165, 165, 0.75);
+}
+
+html.crop-mode #btnCancelCrop.crop-reset-btn {
+    display: flex;
+}
+
+#btnCancelCrop.crop-reset-btn:hover {
+    background: rgba(144, 16, 16, 0.96);
+    color: #fff;
+    border-color: rgba(255, 145, 145, 0.9);
+}
+
 .pause-btn:hover {
     background: rgba(21, 18, 43, 0.96);
     color: var(--palette-blueberry-100);
@@ -2171,6 +2225,23 @@ html.theme-dark .settings-close-btn:hover {
     display: block;
 }
 
+/* ── Crop mode controls overlay ── */
+
+#cropControls {
+    position: absolute;
+    z-index: 6;
+    pointer-events: none;
+    /* top/left/width/height set by JS to match the crop square */
+}
+
+#cropControls[hidden] {
+    display: none;
+}
+
+html.crop-mode .ruler-hud {
+    top: 10px;
+}
+
 /* ── Ruler / dimensions HUD ── */
 
 .ruler-hud {
@@ -2238,10 +2309,14 @@ html.theme-dark .settings-close-btn:hover {
 .frame-dim-region {
     position: absolute;
     pointer-events: none;
-    backdrop-filter: brightness(0.72);
-    -webkit-backdrop-filter: brightness(0.72);
-    z-index: 2;
+    z-index: 4;
     display: none;
+}
+
+html.crop-mode .frame-dim-region {
+    display: block;
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 /* ── Export section header row ── */
@@ -2604,6 +2679,17 @@ html.theme-dark .settings-close-btn:hover {
     pointer-events: auto;
 }
 
+@media (min-width: 900px) {
+    .orbit-hint-bar.visible {
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 10px);
+        transform: translateX(-50%);
+        max-width: min(78vw, 720px);
+        z-index: 7;
+    }
+}
+
 .orbit-hint {
     margin: 0;
     font-size: var(--text-sm);
@@ -2630,6 +2716,37 @@ html.theme-dark .settings-close-btn:hover {
 
 .orbit-hint-dismiss:hover {
     background: rgba(30, 25, 62, 0.2);
+}
+
+@media (max-width: 899px) {
+    .canvas-bottom-center {
+        bottom: 12px;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+    }
+
+    .orbit-hint-bar.visible {
+        position: static;
+        left: auto;
+        max-width: calc(100vw - 32px);
+    }
+
+    .orbit-hint-bar {
+        padding: 7px 10px;
+        border-radius: 16px;
+    }
+
+    .orbit-hint {
+        white-space: normal;
+        text-align: center;
+        line-height: 1.25;
+    }
+
+    .orbit-hint-bar.visible+.cam-nav {
+        margin-top: 12px;
+    }
 }
 
 .copy-link-btn {

@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.5.0** · April 21, 2026
+**Version 1.6.6** · April 23, 2026
 
 ---
 
@@ -33,7 +33,11 @@ python3 -m http.server 8765
   - Arrow keys (←↑↓→) do the same thing from the keyboard
   - Center button of the D-pad pauses / resumes (⏸/▶)
 - **Reset camera** button (⟳, D-pad center) — recenters the model in the export frame
-- **Frame overlay toggle** (⬜, bottom-right of viewer) — shows/hides the export frame guides without moving the camera
+- **Crop button** (⬜, bottom-right of viewer) — enters crop mode and shows the export frame guides
+  - While crop mode is active this same button turns orange with a check icon and **Crop** label
+  - A red icon-only **Reset** button appears immediately to the left of it
+  - Click it (or press Enter) to apply the current crop framing
+  - Click outside the crop box, press Esc, or use **Reset** to cancel crop edits
 - **Dark mode toggle** (bottom-left of viewer)
 
 ### Export preview overlay
@@ -68,7 +72,9 @@ Sidebar order: **Color → Texture → Animation → Export**
 The sidebar **Preview** thumbnail always shows exactly what will be exported:
 
 - **Default** — preview uses a stored export-frame distance (fit-to-model). Viewport zoom is cosmetic only and does not affect the exported output.
-- **Crop mode** (crop icon, bottom-right of viewer) — enables zoom-to-export. Zooming the viewport while crop mode is active directly controls the export framing; the preview updates in real time. When crop mode is closed the chosen zoom is locked in for future exports.
+- **Crop mode** (crop icon, bottom-right of viewer) — enables zoom-to-export. Zooming the viewport while crop mode is active directly controls the export framing; the preview updates in real time.
+  - The red icon-only **Reset** button appears to the left of the orange **Crop** button and cancels crop edits
+  - The orange **Crop** button confirms and stores the framing for future exports
 
 ### Export
 
