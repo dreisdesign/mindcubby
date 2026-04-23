@@ -8,26 +8,29 @@ Planned improvements and design goals for the Rotater app.
 
 1. Ruler / grid to see the scale of a model
    - Add an on-screen ruler or grid overlay with metric/imperial markings and an optional snapping guide so users can quickly judge model scale.
+2. Replace / Drag-and-Drop overlay (Replace STL UX)
+   - Replace the current inline "Replace STL" flow with a small overlay/modal that exposes the drag-and-drop area and the file picker.
+   - Provide a clear action in the overlay to "Reset to Benchy" (loads the demo model) and a separate "Cancel" control. This makes the upload and reset flows discoverable in one place.
+   - Remove the inline delete/reset button beside the filename in the sidebar; surface the reset action in the overlay instead.
+   - Accessibility/UX notes: overlay must be keyboard-focusable, show drag-over state, and be dismissible with Esc.
 
-2. When exporting show the animation
-   - Display a live preview (or captured frame sequence) during export so users can confirm the motion before saving GIF/MP4.
+3. Textured background
+   - Allow the user to choose a textured or patterned background (e.g. checkerboard, gradient, subtle noise) in addition to solid colors. (Note: a lightweight checkerboard preview was added for export transparency.)
 
-3. Accurate preview of model in frame, while letting the background color "bleed" to fill the preview box
-   - Ensure the model is correctly fitted and centered within the export square (720×720), while allowing the chosen background color to extend behind the model for a clean, polished look.
-
-4. Textured background
-   - Allow the user to choose a textured or patterned background (e.g. checkerboard, gradient, subtle noise) in addition to solid colors.
-
-5. Build plate option
+4. Build plate option
    - Add an optional build plate / platform grid beneath the model so it sits on a visible surface during preview and export.
 
 ---
 
 ## Crop (formerly 'Frame') — design notes
 
-- Status: Ready to design
+- Status: Implemented (modal overlay v1.7.0)
 - Icon: `3d/apps/icons/crop.svg`
-- Goal: Treat the export "frame" as a user-adjustable crop rectangle ("Crop"). Provide direct drag-to-resize and drag-to-move handles, aspect-lock, center/crop-fit actions, and keyboard nudges.
+- Goal: The export "frame" now has a modal-like crop mode that dims/blur the outside area and exposes clear Cancel / Keep actions. This provides a focused, immediate crop workflow for framing exports.
+
+Next: interactive handles & polish
+- Add interactive SVG or DIV handles for corner/edge drag-to-resize and drag-to-move; support aspect-lock, keyboard nudges, and snap-to-center/edges.
+- Improve accessibility (focus management, keyboard shortcuts, ARIA labels) and add persisted crop presets.
 
 Design options:
 
@@ -144,6 +147,15 @@ Recommendation: Implement Option 1 first (bounding-box ruler) to deliver immedia
 - ~~Spin direction toggle (CW / CCW)~~ ✓
 - ~~"Rotater_" prefix on exported filenames~~ ✓
 - ~~Quality preset labels: Low / Medium / High~~ ✓
+
+- **v1.7.x fixes & UI improvements** — recent release(s) completed several Rotater items:
+   - GIF dither crash fix and transparent GIF palette fix (no blank GIFs)
+   - Dither and transparent GIF encoding performance improvements
+   - MP4 H.264 level fix for high-quality 1080p exports
+   - Crop-mode redesigned as a modal overlay with Cancel / Keep actions
+   - Unified transparent-background checkbox and transparent preview support
+   - Fixed Reset Settings empty-page flash and improved reset UX
+   - Fixed Level-and-reframe azimuth and stale-zoom issues; tightened default framing
 
 ---
 
