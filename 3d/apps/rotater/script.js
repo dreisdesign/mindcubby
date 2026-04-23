@@ -583,9 +583,25 @@ function updateExportPreview() {
         _previewCam.updateProjectionMatrix();
     }
 
-    renderer.setRenderTarget(_previewRt);
-    renderer.render(scene, _previewCam);
-    renderer.setRenderTarget(null);
+    // Respect transparent-preview checkbox: render the preview RT with alpha when requested
+    const isTransparentPreview = document.getElementById('exportTransparent')?.checked ?? false;
+    if (isTransparentPreview) {
+        const savedBg = scene.background;
+        const savedClearColor = renderer.getClearColor(new THREE.Color());
+        const savedClearAlpha = renderer.getClearAlpha();
+        scene.background = null;
+        renderer.setClearColor(0x000000, 0);
+        renderer.setRenderTarget(_previewRt);
+        renderer.render(scene, _previewCam);
+        renderer.setRenderTarget(null);
+        // restore
+        scene.background = savedBg;
+        renderer.setClearColor(savedClearColor, savedClearAlpha);
+    } else {
+        renderer.setRenderTarget(_previewRt);
+        renderer.render(scene, _previewCam);
+        renderer.setRenderTarget(null);
+    }
 
     // Read pixels and flip vertically (WebGL origin is bottom-left)
     const buf = new Uint8Array(px * px * 4);
@@ -1300,7 +1316,13 @@ function syncTransparentCheckboxes(sourceId) {
     const val = document.getElementById(sourceId)?.checked ?? false;
     const ids = ['exportTransparent', 'exportTransparentPng'];
     ids.forEach(id => { if (id !== sourceId) { const el = document.getElementById(id); if (el) el.checked = val; } });
+    // Update preview wrapper visual and refresh preview immediately
+    const wrap = document.querySelector('.export-preview-wrap');
+    if (wrap) {
+        wrap.classList.toggle('is-transparent', val);
+    }
     updateEstimate(); saveSettings();
+    try { if (typeof updateExportPreview === 'function') updateExportPreview(); } catch (e) { }
 }
 document.getElementById('exportTransparent')?.addEventListener('change', () => syncTransparentCheckboxes('exportTransparent'));
 document.getElementById('exportTransparentPng')?.addEventListener('change', () => syncTransparentCheckboxes('exportTransparentPng'));
@@ -1939,5 +1961,7 @@ btnVideo.addEventListener('click', async () => {
 restoreSession().finally(() => {
     // Remove anti-FOUC guard once session restore attempt is complete,
     // whether it succeeded (html.loaded is set) or not.
+    // Ensure preview reflects restored transparent setting immediately
+    try { syncTransparentCheckboxes('exportTransparent'); } catch (e) { }
     document.documentElement.classList.remove('has-session');
 });
