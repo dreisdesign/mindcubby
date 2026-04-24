@@ -1189,10 +1189,10 @@ document.getElementById('btnExportPng').addEventListener('click', async () => {
         const oc = new OffscreenCanvas(pw, ph);
         oc.getContext('2d').putImageData(new ImageData(flipped, pw, ph), 0, 0);
         const blob = await oc.convertToBlob({ type: 'image/png' });
-        download(blob, 'Rotater_' + currentFileName + '.png', 'image/png');
+        download(blob, buildExportFilename('png'), 'image/png');
     } else {
         renderer.render(scene, camera);
-        canvas.toBlob(blob => download(blob, 'Rotater_' + currentFileName + '.png', 'image/png'), 'image/png');
+        canvas.toBlob(blob => download(blob, buildExportFilename('png'), 'image/png'), 'image/png');
     }
 });
 
@@ -1209,7 +1209,7 @@ document.getElementById('btnExportJpeg').addEventListener('click', async () => {
     const { quality } = EXPORT.image;
     renderer.render(scene, camera);
     canvas.toBlob(
-        blob => download(blob, 'Rotater_' + currentFileName + '.jpg', 'image/jpeg'),
+        blob => download(blob, buildExportFilename('jpg'), 'image/jpeg'),
         'image/jpeg',
         quality
     );
@@ -1613,6 +1613,36 @@ function download(data, filename, type) {
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
+function getQualityTag() {
+    const q = document.getElementById('exportQuality')?.value ?? 'std';
+    return ({ web: 'low', std: 'medium', high: 'high' }[q]) || q;
+}
+
+function getExportModifierTags(format) {
+    const tags = [];
+    if (format === 'gif') {
+        const loopOn = document.getElementById('gifLoop')?.checked ?? true;
+        tags.push(loopOn ? 'loop' : 'noloop');
+        if (document.getElementById('gifDither')?.checked) tags.push('dither');
+        if (document.getElementById('exportTransparent')?.checked) tags.push('transparent');
+    } else if (format === 'png') {
+        const transparentPng = document.getElementById('exportTransparentPng')?.checked
+            ?? document.getElementById('exportTransparent')?.checked
+            ?? false;
+        if (transparentPng) tags.push('transparent');
+    }
+    return tags;
+}
+
+function buildExportFilename(format) {
+    const ext = ({ gif: 'gif', mp4: 'mp4', png: 'png', jpg: 'jpg' }[format]) || format;
+    const base = `Rotater_${currentFileName}`;
+    const mode = rotateModeEl.value || 'spin';
+    const quality = getQualityTag();
+    const modifiers = getExportModifierTags(format);
+    return [base, mode, quality, ...modifiers].join('_') + '.' + ext;
+}
+
 // Capture N frames by orbiting the camera, return array of Uint8ClampedArrays
 async function captureFrames(n, size = EXPORT.gif.size, transparent = false) {
     const S = size;
@@ -1804,7 +1834,7 @@ btnGif.addEventListener('click', async () => {
         }
 
         gif.finish();
-        download(gif.bytes(), 'Rotater_' + currentFileName + '.gif', 'image/gif');
+        download(gif.bytes(), buildExportFilename('gif'), 'image/gif');
         setAnimStatus('GIF saved ✓');
     } catch (err) {
         setAnimStatus('Error: ' + err.message);
@@ -1945,7 +1975,7 @@ btnVideo.addEventListener('click', async () => {
         controls.update();
         renderer.render(scene, camera); // Refresh visible canvas before download
 
-        download(muxer.target.buffer, 'Rotater_' + currentFileName + '.mp4', 'video/mp4');
+        download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
         setAnimStatus('MP4 saved ✓');
     } catch (err) {
         setAnimStatus('Error: ' + err.message);

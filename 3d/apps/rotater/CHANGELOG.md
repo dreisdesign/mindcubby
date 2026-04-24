@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.3] - 2026-04-24
+
+### Changed
+- **Export filenames now include key settings** — exported files now append animation mode (`spin`, `tilt`, `wobble`), quality (`low`, `medium`, `high`), and relevant modifiers:
+  - GIF: `loop` / `noloop`, plus `dither` and `transparent` when enabled
+  - PNG: `transparent` when enabled
+  - MP4/JPEG: mode + quality tags
+
+### Notes
+- Roadmap item for "save filename with settings" is now completed for mode/quality/modifier tags.
+
 ## [1.7.2] - 2026-04-23
 
 ### Changed
