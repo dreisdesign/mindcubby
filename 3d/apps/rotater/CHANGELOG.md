@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.18] - 2026-04-27
+
+### Added
+- **Dynamic Lighting Rotation**: Added a toggle in Texture Tuning to lock lighting direction to the camera. Disabling it allows directional lights and shadows to rotate independently as the model rotates rather than always staying fixed to the view.
+
 ## [1.7.17] - 2026-04-27
 
 ### Fixed

@@ -141,6 +141,7 @@ const TEXTURE_TUNE_DEFAULTS = {
     phongReflection: 40,
     clayRoughness: 88,
     clayReflection: 10,
+    lightLock: false,
 };
 
 // Returns frame count that gives 1 revolution matching the live rotation speed
@@ -231,6 +232,7 @@ const textureTuneContrastSlider = document.getElementById('textureTuneContrast')
 const textureTuneHighlightsSlider = document.getElementById('textureTuneHighlights');
 const textureTuneShadowsSlider = document.getElementById('textureTuneShadows');
 const textureTuneLightSourceSlider = document.getElementById('textureTuneLightSource');
+const textureTuneLightLockBox = document.getElementById('textureTuneLightLock');
 const textureTuneLightHeightSlider = document.getElementById('textureTuneLightHeight');
 const textureTuneRoughnessSlider = document.getElementById('textureTuneRoughness');
 const textureTuneReflectionSlider = document.getElementById('textureTuneReflection');
@@ -295,7 +297,7 @@ document.querySelectorAll('input[type="range"]').forEach(addSnapDots);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let renderer, scene, camera, controls, mesh;
-let ambientLight, keyLight, fillLight, rimLight;
+let ambientLight, keyLight, fillLight, rimLight, lightRig;
 let shadowCatcher;
 let isExporting = false;
 let isPaused = false;
@@ -330,7 +332,15 @@ const textureTuneState = {
     phongReflection: TEXTURE_TUNE_DEFAULTS.phongReflection,
     clayRoughness: TEXTURE_TUNE_DEFAULTS.clayRoughness,
     clayReflection: TEXTURE_TUNE_DEFAULTS.clayReflection,
+    lightLock: TEXTURE_TUNE_DEFAULTS.lightLock,
 };
+
+function syncLightRig() {
+    if (!lightRig || !camera) return;
+    const az = textureTuneState.lightLock ? getOrbitFrameState().az : 0;
+    lightRig.rotation.y = az;
+    if (scene) scene.environmentRotation.y = az;
+}
 
 function getOrbitFrameState() {
     const target = controls?.target ? controls.target.clone() : new THREE.Vector3(0, 0, 0);
@@ -419,8 +429,11 @@ function initThree() {
     // Warm key (slightly amber) + cool fill + cool rim creates warm/cool contrast
     // that gives white/light models visible form definition without colour bias on
     // deeply-saturated models.
+    lightRig = new THREE.Group();
+    scene.add(lightRig);
+
     ambientLight = new THREE.AmbientLight(0xfff8f2, LIGHT_BASE.ambient);
-    scene.add(ambientLight);
+    lightRig.add(ambientLight);
     keyLight = new THREE.DirectionalLight(0xfff6e8, LIGHT_BASE.key);
     keyLight.position.set(1.5, 2.0, 1.5);
     keyLight.castShadow = false;
@@ -435,14 +448,14 @@ function initThree() {
     keyLight.shadow.normalBias = 0.0025;
     keyLight.shadow.intensity = 0.62;
     keyLight.shadow.radius = 1.1;
-    scene.add(keyLight);
+    lightRig.add(keyLight);
     scene.add(keyLight.target);
     fillLight = new THREE.DirectionalLight(0xc8d8ff, LIGHT_BASE.fill);
     fillLight.position.set(-2, 0.5, -1);
-    scene.add(fillLight);
+    lightRig.add(fillLight);
     rimLight = new THREE.DirectionalLight(0xb8d0ff, LIGHT_BASE.rim);
     rimLight.position.set(-0.4, 1.8, -2.2);
-    scene.add(rimLight);
+    lightRig.add(rimLight);
 
     shadowCatcher = new THREE.Mesh(
         new THREE.PlaneGeometry(1, 1),
@@ -725,7 +738,7 @@ function loadSTLBuffer(buffer, name) {
     updateEstimate();
     requestAnimationFrame(() => {
         syncCanvasSize();
-        if (!savedCamPos) { placeCamera(); renderer.render(scene, camera); }
+        if (!savedCamPos) { placeCamera(); syncLightRig(); renderer.render(scene, camera); }
         if (_hasRestoredExportFrame && Number.isFinite(exportCamDist) && exportCamDist > 0) {
             const { target, az } = getOrbitFrameState();
             setCameraFromOrbitState(camera, target, exportCamDist, exportCamElev, az);
@@ -733,6 +746,7 @@ function loadSTLBuffer(buffer, name) {
             camera.updateProjectionMatrix();
             controls.target.copy(target);
             controls.update();
+            syncLightRig();
             renderer.render(scene, camera);
             _hasRestoredExportFrame = false;
         } else {
@@ -873,6 +887,7 @@ function loop() {
                 swingLastAz = swingBaseAz;
             }
         }
+        syncLightRig();
         renderer.render(scene, camera);
         drawExportFrame();
         updateExportPreview();
@@ -1386,6 +1401,7 @@ function saveSettings() {
             textureTuneShadows: textureTuneState.shadows > 0 ? '1' : '0',
             textureTuneShadowStrength: String(textureTuneState.shadows),
             textureTuneShadowAzimuth: String(textureTuneState.shadowAzimuth),
+            textureTuneLightLock: textureTuneState.lightLock ? '1' : '0',
             textureTuneShadowHeight: String(textureTuneState.shadowHeight),
             textureTuneMetallicRoughness: String(textureTuneState.metallicRoughness),
             textureTuneMetallicMetalness: String(textureTuneState.metallicMetalness),
@@ -1449,6 +1465,7 @@ function restoreSettings() {
                 textureTuneState.shadows = legacyOn ? Math.max(40, TEXTURE_TUNE_DEFAULTS.shadows) : 0;
             }
             if (s.textureTuneShadowAzimuth != null) textureTuneState.shadowAzimuth = clamp(s.textureTuneShadowAzimuth, 0, 360, TEXTURE_TUNE_DEFAULTS.shadowAzimuth);
+            if (s.textureTuneLightLock != null) textureTuneState.lightLock = (s.textureTuneLightLock === '1' || s.textureTuneLightLock === true || s.textureTuneLightLock === 1);
             if (s.textureTuneShadowHeight != null) textureTuneState.shadowHeight = clamp(s.textureTuneShadowHeight, 40, 220, TEXTURE_TUNE_DEFAULTS.shadowHeight);
             if (s.textureTuneMetallicRoughness != null) textureTuneState.metallicRoughness = clamp(s.textureTuneMetallicRoughness, 0, 100, TEXTURE_TUNE_DEFAULTS.metallicRoughness);
             if (s.textureTuneMetallicMetalness != null) textureTuneState.metallicMetalness = clamp(s.textureTuneMetallicMetalness, 0, 100, TEXTURE_TUNE_DEFAULTS.metallicMetalness);
@@ -1595,6 +1612,7 @@ function getURLSettings(searchStr = location.search) {
         textureTuneHighlights: g('thi'),
         textureTuneShadowStrength: g('ts'),
         textureTuneShadowAzimuth: g('tsa'),
+        textureTuneLightLock: p.has('tll') ? p.get('tll') : null,
         textureTuneShadowHeight: g('tsh'),
         textureTuneMetallicRoughness: g('tmr'),
         textureTuneMetallicMetalness: g('tmm'),
@@ -1643,6 +1661,7 @@ function settingsToURL() {
     if (tt.highlights !== D.highlights) p.set('thi', String(tt.highlights));
     if (tt.shadows !== D.shadows) p.set('ts', String(tt.shadows));
     if (tt.shadowAzimuth !== D.shadowAzimuth) p.set('tsa', String(tt.shadowAzimuth));
+    if (tt.lightLock !== D.lightLock) p.set('tll', tt.lightLock ? '1' : '0');
     if (tt.shadowHeight !== D.shadowHeight) p.set('tsh', String(tt.shadowHeight));
     if (tt.metallicRoughness !== D.metallicRoughness) p.set('tmr', String(tt.metallicRoughness));
     if (tt.metallicMetalness !== D.metallicMetalness) p.set('tmm', String(tt.metallicMetalness));
@@ -1951,6 +1970,7 @@ function updateTextureTuneUI() {
     if (textureTuneHighlightsRow) textureTuneHighlightsRow.hidden = false;
     if (textureTuneShadowRow) textureTuneShadowRow.hidden = false;
     if (textureTuneLightSourceRow) textureTuneLightSourceRow.hidden = false;
+    if (textureTuneLightLockBox) textureTuneLightLockBox.checked = textureTuneState.lightLock;
     if (textureTuneLightHeightRow) textureTuneLightHeightRow.hidden = false;
     if (textureTuneRoughnessRow) textureTuneRoughnessRow.hidden = !isStandard;
     if (textureTuneReflectionRow) textureTuneReflectionRow.hidden = !isStandard;
@@ -1985,6 +2005,10 @@ function updateTextureTuneUI() {
         syncSliderTooltip(textureTuneLightSourceSlider);
     }
     if (textureTuneLightSourceVal) textureTuneLightSourceVal.textContent = `${Math.round(textureTuneState.shadowAzimuth)}°`;
+
+    if (textureTuneLightLockBox) {
+        textureTuneLightLockBox.checked = textureTuneState.lightLock;
+    }
 
     if (textureTuneLightHeightSlider) {
         textureTuneLightHeightSlider.value = String(textureTuneState.shadowHeight);
@@ -2094,6 +2118,13 @@ textureTuneLightSourceSlider?.addEventListener('input', () => {
     updateTextureTuneUI();
     if (mesh) updateShadowCatcherPlacement();
     applyCurrentTextureTuning();
+    saveSettings();
+});
+
+textureTuneLightLockBox?.addEventListener('change', () => {
+    textureTuneState.lightLock = textureTuneLightLockBox.checked;
+    updateTextureTuneUI();
+    if (!isExporting) renderer.render(scene, camera);
     saveSettings();
 });
 
@@ -2641,6 +2672,7 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
         renderer.setClearColor(0x000000, 0);
     }
 
+    syncLightRig();
     renderer.render(scene, camera);
 
     // Synchronously copy the export frame to an offscreen canvas BEFORE any
@@ -2779,6 +2811,7 @@ async function captureFrames(n, dims = null, transparent = false) {
             setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
         }
 
+        syncLightRig();
         renderer.render(scene, camera);
         outCtx.clearRect(0, 0, W, H);
         outCtx.drawImage(canvas, 0, 0, W, H);
