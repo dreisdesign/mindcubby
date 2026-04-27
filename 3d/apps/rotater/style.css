@@ -1586,6 +1586,110 @@ html.none-mode .gif-loop-label {
     transform: translateX(12px);
 }
 
+/* ── Texture tuning panel ── */
+
+.texture-control {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    align-self: stretch;
+}
+
+.texture-head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding-right: 2.75rem;
+    min-height: 2.5rem;
+    width: 100%;
+}
+
+.texture-tune-btn {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    width: auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-label);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    opacity: 0.72;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.texture-tune-btn::before {
+    content: "";
+    position: absolute;
+    inset: -10px;
+}
+
+.texture-tune-btn img {
+    width: 17px;
+    height: 17px;
+    display: block;
+    filter: var(--icon-filter, none);
+}
+
+.texture-tune-btn:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+.texture-tune-btn[aria-expanded="true"] {
+    opacity: 1;
+}
+
+.texture-tune-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 2px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+    width: 100%;
+}
+
+.texture-tune-panel[hidden] {
+    display: none !important;
+}
+
+.texture-tune-row {
+    margin: 0;
+}
+
+.texture-tune-row[hidden] {
+    display: none !important;
+}
+
+.texture-tune-row>span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+}
+
+.texture-tune-row.gif-option-check {
+    margin-top: 2px;
+    font-size: var(--text-sm);
+}
+
+/* Keep texture tuning sliders visually consistent: no snap-dot overlays. */
+.texture-tune-panel .snap-dots {
+    display: none;
+}
+
 /* ── Shading thumbnail cards ── */
 
 .shading-group {
@@ -1636,8 +1740,9 @@ html.none-mode .gif-loop-label {
     flex-shrink: 0;
 }
 
-.shading-thumb--flat {
-    background: var(--palette-blueberry-500);
+
+.shading-thumb--clay {
+    background: radial-gradient(circle at 36% 32%, #ffffffc2 5%, #7f7ad2 34%, #55509a 70%, #3c3774 100%);
 }
 
 .shading-thumb--phong {

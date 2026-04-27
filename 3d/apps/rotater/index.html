@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ROTATER — STL Spin Viewer</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=1.7.2">
+    <link rel="stylesheet" href="style.css?v=1.7.10">
     <style>
         html.has-session:not(.loaded) body {
             visibility: hidden;
@@ -261,8 +261,15 @@
                     </div>
                     <div class="controls-section-box">
                         <div class="controls-row">
-                            <div class="control-label" style="flex: 1">
-                                Texture
+                            <div class="control-label texture-control" style="flex: 1">
+                                <div class="texture-head">
+                                    <span>Texture</span>
+                                    <button id="btnTextureTune" class="texture-tune-btn" type="button"
+                                        title="Customize texture tuning" aria-label="Customize texture tuning"
+                                        aria-expanded="false" aria-controls="textureTunePanel">
+                                        <img src="tune.svg" alt="" aria-hidden="true">
+                                    </button>
+                                </div>
                                 <div class="shading-group">
                                     <div class="thumb-card-wrap">
                                         <label class="shading-option">
@@ -280,11 +287,92 @@
                                     </div>
                                     <div class="thumb-card-wrap">
                                         <label class="shading-option">
-                                            <input type="radio" name="shading" value="flat">
-                                            <span class="shading-thumb shading-thumb--flat"></span>
+                                            <input type="radio" name="shading" value="clay">
+                                            <span class="shading-thumb shading-thumb--clay"></span>
                                         </label>
-                                        <span class="thumb-label">Flat</span>
+                                        <span class="thumb-label">Clay</span>
                                     </div>
+                                </div>
+                                <div id="textureTunePanel" class="texture-tune-panel" hidden>
+                                    <label class="control-label range-label texture-tune-row" id="textureTuneLightRow">
+                                        <span>Light<span class="slider-tooltip"
+                                                id="textureTuneLightVal">100%</span></span>
+                                        <div class="range-wrap">
+                                            <input type="range" id="textureTuneLight" min="40" max="200" step="5"
+                                                value="100">
+                                        </div>
+                                    </label>
+                                    <label class="control-label range-label texture-tune-row"
+                                        id="textureTuneContrastRow">
+                                        <span>Contrast<span class="slider-tooltip"
+                                                id="textureTuneContrastVal">100%</span></span>
+                                        <div class="range-wrap">
+                                            <input type="range" id="textureTuneContrast" min="50" max="200" step="5"
+                                                value="100">
+                                        </div>
+                                    </label>
+                                    <label class="control-label range-label texture-tune-row"
+                                        id="textureTuneHighlightsRow">
+                                        <span>Highlights<span class="slider-tooltip"
+                                                id="textureTuneHighlightsVal">100%</span></span>
+                                        <div class="range-wrap">
+                                            <input type="range" id="textureTuneHighlights" min="40" max="250" step="5"
+                                                value="100">
+                                        </div>
+                                    </label>
+                                    <label class="control-label range-label texture-tune-row" id="textureTuneShadowRow">
+                                        <span>Shadows<span class="slider-tooltip"
+                                                id="textureTuneShadowsVal">45%</span></span>
+                                        <div class="range-wrap">
+                                            <input type="range" id="textureTuneShadows" min="0" max="100" step="5"
+                                                value="45">
+                                        </div>
+                                    </label>
+                                    <label class="control-label range-label texture-tune-row"
+                                        id="textureTuneLightSourceRow">
+                                        <span>Light Source<span class="slider-tooltip"
+                                                id="textureTuneLightSourceVal">48°</span></span>
+                                        <div class="range-wrap">
+                                            <input type="range" id="textureTuneLightSource" min="0" max="360" step="5"
+                                                value="48">
+                                        </div>
+                                    </label>
+                                    <label class="control-label range-label texture-tune-row"
+                                        id="textureTuneLightHeightRow">
+                                        <span>Light Height<span class="slider-tooltip"
+                                                id="textureTuneLightHeightVal">100%</span></span>
+                                        <div class="range-wrap">
+                                            <input type="range" id="textureTuneLightHeight" min="40" max="220" step="5"
+                                                value="100">
+                                        </div>
+                                    </label>
+                                    <label class="control-label range-label texture-tune-row"
+                                        id="textureTuneRoughnessRow">
+                                        <span>Roughness<span class="slider-tooltip"
+                                                id="textureTuneRoughnessVal">30%</span></span>
+                                        <div class="range-wrap">
+                                            <input type="range" id="textureTuneRoughness" min="0" max="100" step="1"
+                                                value="30">
+                                        </div>
+                                    </label>
+                                    <label class="control-label range-label texture-tune-row"
+                                        id="textureTuneReflectionRow">
+                                        <span>Reflection<span class="slider-tooltip"
+                                                id="textureTuneReflectionVal">100%</span></span>
+                                        <div class="range-wrap">
+                                            <input type="range" id="textureTuneReflection" min="0" max="200" step="5"
+                                                value="100">
+                                        </div>
+                                    </label>
+                                    <label class="control-label range-label texture-tune-row"
+                                        id="textureTuneMetalnessRow">
+                                        <span>Metalness<span class="slider-tooltip"
+                                                id="textureTuneMetalnessVal">65%</span></span>
+                                        <div class="range-wrap">
+                                            <input type="range" id="textureTuneMetalness" min="0" max="100" step="1"
+                                                value="65">
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -520,7 +608,7 @@
         <footer></footer>
     </div>
 
-    <script type="module" src="script.js?v=1.7.3"></script>
+    <script type="module" src="script.js?v=1.7.8"></script>
 
 </body>
 

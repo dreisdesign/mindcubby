@@ -50,6 +50,22 @@ const WOBBLE_SPIN_RANGE_DEFAULT = 360;
 const ELEV_DEFAULT = 0; // Used by placeCamera() and fitToFrame() for default camera elevation
 const CROP_FRAME_UI_SCALE = 0.82; // Keeps a visual margin around the crop guide
 const VIEWPORT_FIT_SCALE = 1.55; // Smaller than 1.8 so default/reset framing is less zoomed out
+const LIGHT_BASE = { ambient: 0.45, key: 1.9, fill: 0.4, rim: 0.5, exposure: 0.75 };
+const TEXTURE_TUNE_DEFAULTS = {
+    light: 100,
+    contrast: 100,
+    highlights: 100,
+    shadows: 45,
+    shadowAzimuth: 48,
+    shadowHeight: 100,
+    metallicRoughness: 30,
+    metallicMetalness: 65,
+    metallicReflection: 100,
+    phongRoughness: 62,
+    phongReflection: 40,
+    clayRoughness: 88,
+    clayReflection: 10,
+};
 
 // Returns frame count that gives 1 revolution matching the live rotation speed
 function exportFrames(fps = EXPORT.gif.fps) {
@@ -129,6 +145,34 @@ const wobbleSpinRangeResetBtn = document.getElementById('wobbleSpinRangeResetBtn
 const frameOverlayBtn = document.getElementById('btnFrameOverlay');
 const orbitHintBarEl = document.querySelector('.orbit-hint-bar');
 const orbitHintTextEl = orbitHintBarEl?.querySelector('.orbit-hint');
+const textureTuneBtn = document.getElementById('btnTextureTune');
+const textureTunePanel = document.getElementById('textureTunePanel');
+const textureTuneLightSlider = document.getElementById('textureTuneLight');
+const textureTuneContrastSlider = document.getElementById('textureTuneContrast');
+const textureTuneHighlightsSlider = document.getElementById('textureTuneHighlights');
+const textureTuneShadowsSlider = document.getElementById('textureTuneShadows');
+const textureTuneLightSourceSlider = document.getElementById('textureTuneLightSource');
+const textureTuneLightHeightSlider = document.getElementById('textureTuneLightHeight');
+const textureTuneRoughnessSlider = document.getElementById('textureTuneRoughness');
+const textureTuneReflectionSlider = document.getElementById('textureTuneReflection');
+const textureTuneMetalnessSlider = document.getElementById('textureTuneMetalness');
+const textureTuneLightVal = document.getElementById('textureTuneLightVal');
+const textureTuneContrastVal = document.getElementById('textureTuneContrastVal');
+const textureTuneHighlightsVal = document.getElementById('textureTuneHighlightsVal');
+const textureTuneShadowsVal = document.getElementById('textureTuneShadowsVal');
+const textureTuneLightSourceVal = document.getElementById('textureTuneLightSourceVal');
+const textureTuneLightHeightVal = document.getElementById('textureTuneLightHeightVal');
+const textureTuneRoughnessVal = document.getElementById('textureTuneRoughnessVal');
+const textureTuneReflectionVal = document.getElementById('textureTuneReflectionVal');
+const textureTuneMetalnessVal = document.getElementById('textureTuneMetalnessVal');
+const textureTuneContrastRow = document.getElementById('textureTuneContrastRow');
+const textureTuneHighlightsRow = document.getElementById('textureTuneHighlightsRow');
+const textureTuneShadowRow = document.getElementById('textureTuneShadowRow');
+const textureTuneLightSourceRow = document.getElementById('textureTuneLightSourceRow');
+const textureTuneLightHeightRow = document.getElementById('textureTuneLightHeightRow');
+const textureTuneRoughnessRow = document.getElementById('textureTuneRoughnessRow');
+const textureTuneReflectionRow = document.getElementById('textureTuneReflectionRow');
+const textureTuneMetalnessRow = document.getElementById('textureTuneMetalnessRow');
 
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
@@ -165,6 +209,8 @@ document.querySelectorAll('input[type="range"]').forEach(addSnapDots);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let renderer, scene, camera, controls, mesh;
+let ambientLight, keyLight, fillLight, rimLight;
+let shadowCatcher;
 let isExporting = false;
 let isPaused = false;
 let modelRadius = 1;
@@ -183,6 +229,21 @@ let _cropBackupZoom = 1;
 let _cropSx = 0, _cropSy = 0, _cropSq = 0; // crop box pixel coords, updated each frame
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
+const textureTuneState = {
+    light: TEXTURE_TUNE_DEFAULTS.light,
+    contrast: TEXTURE_TUNE_DEFAULTS.contrast,
+    highlights: TEXTURE_TUNE_DEFAULTS.highlights,
+    shadows: TEXTURE_TUNE_DEFAULTS.shadows,
+    shadowAzimuth: TEXTURE_TUNE_DEFAULTS.shadowAzimuth,
+    shadowHeight: TEXTURE_TUNE_DEFAULTS.shadowHeight,
+    metallicRoughness: TEXTURE_TUNE_DEFAULTS.metallicRoughness,
+    metallicMetalness: TEXTURE_TUNE_DEFAULTS.metallicMetalness,
+    metallicReflection: TEXTURE_TUNE_DEFAULTS.metallicReflection,
+    phongRoughness: TEXTURE_TUNE_DEFAULTS.phongRoughness,
+    phongReflection: TEXTURE_TUNE_DEFAULTS.phongReflection,
+    clayRoughness: TEXTURE_TUNE_DEFAULTS.clayRoughness,
+    clayReflection: TEXTURE_TUNE_DEFAULTS.clayReflection,
+};
 
 function getOrbitFrameState() {
     const target = controls?.target ? controls.target.clone() : new THREE.Vector3(0, 0, 0);
@@ -226,6 +287,8 @@ function initThree() {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = false;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.75;
 
@@ -243,16 +306,39 @@ function initThree() {
     camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
 
     // Three-point lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
-    const key = new THREE.DirectionalLight(0xffffff, 1.9);
-    key.position.set(1.5, 2.0, 1.5);
-    scene.add(key);
-    const fill = new THREE.DirectionalLight(0xffffff, 0.4);
-    fill.position.set(-2, 0.5, -1);
-    scene.add(fill);
-    const rim = new THREE.DirectionalLight(0xffffff, 0.5);
-    rim.position.set(0.5, -1, -2);
-    scene.add(rim);
+    ambientLight = new THREE.AmbientLight(0xffffff, LIGHT_BASE.ambient);
+    scene.add(ambientLight);
+    keyLight = new THREE.DirectionalLight(0xffffff, LIGHT_BASE.key);
+    keyLight.position.set(1.5, 2.0, 1.5);
+    keyLight.castShadow = false;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.near = 0.1;
+    keyLight.shadow.camera.far = 50;
+    keyLight.shadow.camera.left = -8;
+    keyLight.shadow.camera.right = 8;
+    keyLight.shadow.camera.top = 8;
+    keyLight.shadow.camera.bottom = -8;
+    keyLight.shadow.bias = -0.0002;
+    keyLight.shadow.normalBias = 0.02;
+    scene.add(keyLight);
+    scene.add(keyLight.target);
+    fillLight = new THREE.DirectionalLight(0xffffff, LIGHT_BASE.fill);
+    fillLight.position.set(-2, 0.5, -1);
+    scene.add(fillLight);
+    rimLight = new THREE.DirectionalLight(0xffffff, LIGHT_BASE.rim);
+    rimLight.position.set(0.5, -1, -2);
+    scene.add(rimLight);
+
+    shadowCatcher = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 1),
+        new THREE.ShadowMaterial({ opacity: 0.28 })
+    );
+    shadowCatcher.rotation.x = -Math.PI / 2;
+    shadowCatcher.receiveShadow = true;
+    shadowCatcher.visible = false;
+    scene.add(shadowCatcher);
+
+    applyTextureLighting();
 
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -301,15 +387,132 @@ function syncCanvasSize() {
 }
 
 // ── Material ─────────────────────────────────────────────────────────────────
+function getActiveShadingMode() {
+    if (shadingEl.value === 'flat' || shadingEl.value === 'toon') return 'clay';
+    return shadingEl.value;
+}
+
+function updateShadowCatcherPlacement() {
+    if (!shadowCatcher || !mesh) return;
+    const box = new THREE.Box3().setFromObject(mesh);
+    const y = box.min.y - Math.max(0.001, modelRadius * 0.01);
+    const scale = Math.max(1, modelRadius * 8);
+    shadowCatcher.position.set(0, y, 0);
+    shadowCatcher.scale.set(scale, scale, 1);
+
+    if (!keyLight) return;
+
+    // Keep the light frustum proportional to model size so shadows stay visible
+    // on both tiny and large STL units.
+    const shadowSpan = Math.max(4, modelRadius * 2.6);
+    const heightGain = Math.max(0.4, Math.min(2.2, textureTuneState.shadowHeight / 100));
+    const lightHeight = Math.max(2.5, modelRadius * 2.2 * heightGain);
+    const centerY = box.getCenter(new THREE.Vector3()).y;
+    const lightRadius = shadowSpan * 0.78;
+    const az = THREE.MathUtils.degToRad(textureTuneState.shadowAzimuth);
+
+    keyLight.position.set(Math.sin(az) * lightRadius, lightHeight, Math.cos(az) * lightRadius);
+    keyLight.target.position.set(0, centerY * 0.35, 0);
+
+    const cam = keyLight.shadow.camera;
+    cam.near = 0.1;
+    cam.far = Math.max(20, lightHeight + shadowSpan * 2.2);
+    cam.left = -shadowSpan;
+    cam.right = shadowSpan;
+    cam.top = shadowSpan;
+    cam.bottom = -shadowSpan;
+    cam.updateProjectionMatrix();
+
+    keyLight.shadow.bias = -Math.max(0.0001, modelRadius * 0.000004);
+    keyLight.shadow.normalBias = Math.max(0.01, modelRadius * 0.0007);
+}
+
+function applyTextureLighting() {
+    const gain = Math.max(0.4, Math.min(2, textureTuneState.light / 100));
+    const contrast = Math.max(0.5, Math.min(2, textureTuneState.contrast / 100));
+    const highlights = Math.max(0.4, Math.min(2.5, textureTuneState.highlights / 100));
+    const inv = 1 / Math.sqrt(contrast);
+    const fwd = Math.sqrt(contrast);
+    const shadowsAmt = Math.max(0, Math.min(1, textureTuneState.shadows / 100));
+    const shadowsOn = shadowsAmt > 0.001;
+
+    if (ambientLight) ambientLight.intensity = LIGHT_BASE.ambient * gain * inv;
+    if (keyLight) keyLight.intensity = LIGHT_BASE.key * gain * contrast * Math.pow(highlights, 0.95);
+    if (fillLight) fillLight.intensity = LIGHT_BASE.fill * gain * inv;
+    if (rimLight) rimLight.intensity = LIGHT_BASE.rim * gain * fwd * Math.pow(highlights, 1.08);
+    if (renderer) {
+        renderer.toneMappingExposure = Math.max(0.2, Math.min(2.8,
+            LIGHT_BASE.exposure * Math.pow(gain, 0.92) * Math.pow(highlights, 0.28)
+        ));
+        renderer.shadowMap.enabled = shadowsOn;
+        renderer.shadowMap.needsUpdate = true;
+    }
+    if (keyLight) keyLight.castShadow = shadowsOn;
+    if (mesh) {
+        mesh.castShadow = shadowsOn;
+        mesh.receiveShadow = shadowsOn;
+    }
+    if (shadowCatcher) {
+        shadowCatcher.visible = shadowsOn;
+        if (shadowCatcher.material && shadowCatcher.material.isShadowMaterial) {
+            shadowCatcher.material.opacity = shadowsOn ? (0.08 + shadowsAmt * 0.62) : 0.08;
+            shadowCatcher.material.needsUpdate = true;
+        }
+    }
+}
+
+function applyCurrentTextureTuning() {
+    applyTextureLighting();
+    if (!mesh || !mesh.material) return;
+    const mode = getActiveShadingMode();
+    const mat = mesh.material;
+    if (!mat.isMeshStandardMaterial) return;
+    if (mode === 'metallic') {
+        mat.metalness = textureTuneState.metallicMetalness / 100;
+        mat.roughness = textureTuneState.metallicRoughness / 100;
+        mat.envMapIntensity = textureTuneState.metallicReflection / 100;
+    } else if (mode === 'phong') {
+        mat.metalness = 0;
+        mat.roughness = textureTuneState.phongRoughness / 100;
+        mat.envMapIntensity = textureTuneState.phongReflection / 100;
+    } else {
+        // Clay: matte non-metal baseline with faint environment response.
+        mat.metalness = 0;
+        mat.roughness = textureTuneState.clayRoughness / 100;
+        mat.envMapIntensity = textureTuneState.clayReflection / 100;
+    }
+    mat.needsUpdate = true;
+}
+
 function getMaterial(shading, color) {
+    if (shading === 'flat' || shading === 'toon') shading = 'clay'; // legacy value
     const base = { color, side: THREE.DoubleSide };
-    if (shading === 'flat') return new THREE.MeshBasicMaterial(base);
+    if (shading === 'clay') {
+        return new THREE.MeshStandardMaterial({
+            ...base,
+            metalness: 0,
+            roughness: textureTuneState.clayRoughness / 100,
+            envMapIntensity: textureTuneState.clayReflection / 100,
+        });
+    }
     // Phong: PBR non-metal with moderate roughness. Using MeshStandardMaterial
     // so the RoomEnvironment IBL provides indirect specular — this makes dark/
     // black models readable via env reflections regardless of albedo.
-    if (shading === 'phong') return new THREE.MeshStandardMaterial({ ...base, metalness: 0, roughness: 0.62, envMapIntensity: 0.4 });
+    if (shading === 'phong') {
+        return new THREE.MeshStandardMaterial({
+            ...base,
+            metalness: 0,
+            roughness: textureTuneState.phongRoughness / 100,
+            envMapIntensity: textureTuneState.phongReflection / 100,
+        });
+    }
     // metallic
-    return new THREE.MeshStandardMaterial({ ...base, metalness: 0.65, roughness: 0.3 });
+    return new THREE.MeshStandardMaterial({
+        ...base,
+        metalness: textureTuneState.metallicMetalness / 100,
+        roughness: textureTuneState.metallicRoughness / 100,
+        envMapIntensity: textureTuneState.metallicReflection / 100,
+    });
 }
 
 // ── STL Loading ───────────────────────────────────────────────────────────────
@@ -333,19 +536,23 @@ function loadSTLBuffer(buffer, name) {
     geo.translate(-center.x, -center.y, -center.z);
     geo.computeVertexNormals();
 
-    mesh = new THREE.Mesh(geo, getMaterial(shadingEl.value, colorPick.value));
-    mesh.rotation.x = -Math.PI / 2; // Z-up → Y-up
-    tiltBaseMeshRx = -Math.PI / 2;
-    tiltPhase = 0;
-    scene.add(mesh);
-
-    // Sync background color (matters when restoring settings before initThree)
-    if (scene) scene.background.set(bgPick.value);
-
     const sz = new THREE.Vector3();
     geo.boundingBox.getSize(sz);
     modelRadius = Math.max(sz.x, sz.y, sz.z) / 2;
     modelDims = { w: sz.x, d: sz.y, h: sz.z };
+
+    mesh = new THREE.Mesh(geo, getMaterial(shadingEl.value, colorPick.value));
+    mesh.rotation.x = -Math.PI / 2; // Z-up → Y-up
+    mesh.castShadow = true;
+    mesh.receiveShadow = false;
+    tiltBaseMeshRx = -Math.PI / 2;
+    tiltPhase = 0;
+    scene.add(mesh);
+    updateShadowCatcherPlacement();
+    applyCurrentTextureTuning();
+
+    // Sync background color (matters when restoring settings before initThree)
+    if (scene) scene.background.set(bgPick.value);
     updateRulerHUD();
 
     if (savedCamPos && camera) {
@@ -800,6 +1007,21 @@ function saveSettings() {
             exportTransparent: document.getElementById('exportTransparent')?.checked ? '1' : '0',
             gifDither: document.getElementById('gifDither')?.checked ? '1' : '0',
             jpegQuality: document.getElementById('jpegQuality')?.value ?? '92',
+            textureTuneOpen: textureTunePanel && !textureTunePanel.hidden ? '1' : '0',
+            textureTuneLight: String(textureTuneState.light),
+            textureTuneContrast: String(textureTuneState.contrast),
+            textureTuneHighlights: String(textureTuneState.highlights),
+            textureTuneShadows: textureTuneState.shadows > 0 ? '1' : '0',
+            textureTuneShadowStrength: String(textureTuneState.shadows),
+            textureTuneShadowAzimuth: String(textureTuneState.shadowAzimuth),
+            textureTuneShadowHeight: String(textureTuneState.shadowHeight),
+            textureTuneMetallicRoughness: String(textureTuneState.metallicRoughness),
+            textureTuneMetallicMetalness: String(textureTuneState.metallicMetalness),
+            textureTuneMetallicReflection: String(textureTuneState.metallicReflection),
+            textureTunePhongRoughness: String(textureTuneState.phongRoughness),
+            textureTunePhongReflection: String(textureTuneState.phongReflection),
+            textureTuneClayRoughness: String(textureTuneState.clayRoughness),
+            textureTuneClayReflection: String(textureTuneState.clayReflection),
             exportCamDist: exportCamDist,
             exportCamElev: exportCamElev,
             exportCamZoom: exportCamZoom,
@@ -812,6 +1034,10 @@ function restoreSettings() {
     try {
         const urlS = getURLSettings();
         const localS = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') || {};
+        const clamp = (v, min, max, fallback) => {
+            const n = parseFloat(v);
+            return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+        };
         let s = localS;
         if (urlS) {
             s = { ...localS };
@@ -820,12 +1046,38 @@ function restoreSettings() {
             });
         }
         if (s) {
+            if (s.shading === 'flat' || s.shading === 'toon') s.shading = 'clay'; // migrate legacy modes
             if (s.color) colorPick.value = s.color;
             if (s.bg) bgPick.value = s.bg;
             if (s.shading) shadingEl.value = s.shading;
             if (s.speed != null) {
                 speedSlider.value = s.speed; // browser quantizes to nearest step (0–4)
                 speedVal.textContent = getSpeed() + '×';
+            }
+
+            if (s.textureTuneLight != null) textureTuneState.light = clamp(s.textureTuneLight, 40, 200, TEXTURE_TUNE_DEFAULTS.light);
+            if (s.textureTuneContrast != null) textureTuneState.contrast = clamp(s.textureTuneContrast, 50, 200, TEXTURE_TUNE_DEFAULTS.contrast);
+            if (s.textureTuneHighlights != null) textureTuneState.highlights = clamp(s.textureTuneHighlights, 40, 250, TEXTURE_TUNE_DEFAULTS.highlights);
+            if (s.textureTuneShadowStrength != null) {
+                textureTuneState.shadows = clamp(s.textureTuneShadowStrength, 0, 100, TEXTURE_TUNE_DEFAULTS.shadows);
+            } else if (s.textureTuneShadows != null) {
+                const legacyOn = (s.textureTuneShadows === true || s.textureTuneShadows === '1' || s.textureTuneShadows === 1);
+                textureTuneState.shadows = legacyOn ? Math.max(40, TEXTURE_TUNE_DEFAULTS.shadows) : 0;
+            }
+            if (s.textureTuneShadowAzimuth != null) textureTuneState.shadowAzimuth = clamp(s.textureTuneShadowAzimuth, 0, 360, TEXTURE_TUNE_DEFAULTS.shadowAzimuth);
+            if (s.textureTuneShadowHeight != null) textureTuneState.shadowHeight = clamp(s.textureTuneShadowHeight, 40, 220, TEXTURE_TUNE_DEFAULTS.shadowHeight);
+            if (s.textureTuneMetallicRoughness != null) textureTuneState.metallicRoughness = clamp(s.textureTuneMetallicRoughness, 0, 100, TEXTURE_TUNE_DEFAULTS.metallicRoughness);
+            if (s.textureTuneMetallicMetalness != null) textureTuneState.metallicMetalness = clamp(s.textureTuneMetallicMetalness, 0, 100, TEXTURE_TUNE_DEFAULTS.metallicMetalness);
+            if (s.textureTuneMetallicReflection != null) textureTuneState.metallicReflection = clamp(s.textureTuneMetallicReflection, 0, 200, TEXTURE_TUNE_DEFAULTS.metallicReflection);
+            if (s.textureTunePhongRoughness != null) textureTuneState.phongRoughness = clamp(s.textureTunePhongRoughness, 0, 100, TEXTURE_TUNE_DEFAULTS.phongRoughness);
+            if (s.textureTunePhongReflection != null) textureTuneState.phongReflection = clamp(s.textureTunePhongReflection, 0, 200, TEXTURE_TUNE_DEFAULTS.phongReflection);
+            if (s.textureTuneClayRoughness != null) textureTuneState.clayRoughness = clamp(s.textureTuneClayRoughness, 0, 100, TEXTURE_TUNE_DEFAULTS.clayRoughness);
+            if (s.textureTuneClayReflection != null) textureTuneState.clayReflection = clamp(s.textureTuneClayReflection, 0, 200, TEXTURE_TUNE_DEFAULTS.clayReflection);
+
+            if (textureTunePanel && s.textureTuneOpen != null) {
+                const isOpen = (s.textureTuneOpen === true || s.textureTuneOpen === '1' || s.textureTuneOpen === 1);
+                textureTunePanel.hidden = !isOpen;
+                textureTuneBtn?.setAttribute('aria-expanded', String(isOpen));
             }
 
             if (s.rotateMode === 'off') { s.rotateMode = null; }
@@ -911,6 +1163,8 @@ function restoreSettings() {
         if (curMode === 'tilt' || curMode === 'spin' || curMode === 'wobble') updateRangeSliderForMode(curMode);
         updateShadingThumbs();
         updateColorSwatches();
+        updateTextureTuneUI();
+        applyTextureLighting();
         syncSliderTooltip(speedSlider);
         syncSliderTooltip(tiltRangeSlider);
         syncSliderTooltip(wobbleSpinRangeSlider);
@@ -1232,6 +1486,86 @@ function updateColorSwatches() {
     document.getElementById('bgSwatch').style.background = bgPick.value;
 }
 
+function setTextureTunePanelOpen(open) {
+    if (!textureTunePanel) return;
+    textureTunePanel.hidden = !open;
+    if (textureTuneBtn) textureTuneBtn.setAttribute('aria-expanded', String(open));
+    if (open) updateTextureTuneUI();
+}
+
+function updateTextureTuneUI() {
+    const mode = getActiveShadingMode();
+    const isStandard = mode === 'metallic' || mode === 'phong' || mode === 'clay';
+    if (textureTuneContrastRow) textureTuneContrastRow.hidden = false;
+    if (textureTuneHighlightsRow) textureTuneHighlightsRow.hidden = false;
+    if (textureTuneShadowRow) textureTuneShadowRow.hidden = false;
+    if (textureTuneLightSourceRow) textureTuneLightSourceRow.hidden = false;
+    if (textureTuneLightHeightRow) textureTuneLightHeightRow.hidden = false;
+    if (textureTuneRoughnessRow) textureTuneRoughnessRow.hidden = !isStandard;
+    if (textureTuneReflectionRow) textureTuneReflectionRow.hidden = !isStandard;
+    if (textureTuneMetalnessRow) textureTuneMetalnessRow.hidden = mode !== 'metallic';
+
+    if (textureTuneLightSlider) {
+        textureTuneLightSlider.value = String(textureTuneState.light);
+        syncSliderTooltip(textureTuneLightSlider);
+    }
+    if (textureTuneLightVal) textureTuneLightVal.textContent = `${Math.round(textureTuneState.light)}%`;
+
+    if (textureTuneContrastSlider) {
+        textureTuneContrastSlider.value = String(textureTuneState.contrast);
+        syncSliderTooltip(textureTuneContrastSlider);
+    }
+    if (textureTuneContrastVal) textureTuneContrastVal.textContent = `${Math.round(textureTuneState.contrast)}%`;
+
+    if (textureTuneHighlightsSlider) {
+        textureTuneHighlightsSlider.value = String(textureTuneState.highlights);
+        syncSliderTooltip(textureTuneHighlightsSlider);
+    }
+    if (textureTuneHighlightsVal) textureTuneHighlightsVal.textContent = `${Math.round(textureTuneState.highlights)}%`;
+
+    if (textureTuneShadowsSlider) {
+        textureTuneShadowsSlider.value = String(textureTuneState.shadows);
+        syncSliderTooltip(textureTuneShadowsSlider);
+    }
+    if (textureTuneShadowsVal) textureTuneShadowsVal.textContent = `${Math.round(textureTuneState.shadows)}%`;
+
+    if (textureTuneLightSourceSlider) {
+        textureTuneLightSourceSlider.value = String(textureTuneState.shadowAzimuth);
+        syncSliderTooltip(textureTuneLightSourceSlider);
+    }
+    if (textureTuneLightSourceVal) textureTuneLightSourceVal.textContent = `${Math.round(textureTuneState.shadowAzimuth)}°`;
+
+    if (textureTuneLightHeightSlider) {
+        textureTuneLightHeightSlider.value = String(textureTuneState.shadowHeight);
+        syncSliderTooltip(textureTuneLightHeightSlider);
+    }
+    if (textureTuneLightHeightVal) textureTuneLightHeightVal.textContent = `${Math.round(textureTuneState.shadowHeight)}%`;
+
+    if (isStandard && textureTuneRoughnessSlider && textureTuneReflectionSlider) {
+        let rough = textureTuneState.phongRoughness;
+        let refl = textureTuneState.phongReflection;
+        if (mode === 'metallic') {
+            rough = textureTuneState.metallicRoughness;
+            refl = textureTuneState.metallicReflection;
+        } else if (mode === 'clay') {
+            rough = textureTuneState.clayRoughness;
+            refl = textureTuneState.clayReflection;
+        }
+        textureTuneRoughnessSlider.value = String(rough);
+        textureTuneReflectionSlider.value = String(refl);
+        if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = `${Math.round(rough)}%`;
+        if (textureTuneReflectionVal) textureTuneReflectionVal.textContent = `${Math.round(refl)}%`;
+        syncSliderTooltip(textureTuneRoughnessSlider);
+        syncSliderTooltip(textureTuneReflectionSlider);
+    }
+
+    if (textureTuneMetalnessSlider) {
+        textureTuneMetalnessSlider.value = String(textureTuneState.metallicMetalness);
+        syncSliderTooltip(textureTuneMetalnessSlider);
+    }
+    if (textureTuneMetalnessVal) textureTuneMetalnessVal.textContent = `${Math.round(textureTuneState.metallicMetalness)}%`;
+}
+
 function updateRangeSliderForMode(mode) {
     if (mode === 'spin') {
         tiltRangeSlider.min = '45';
@@ -1269,10 +1603,93 @@ bgPick.addEventListener('input', () => {
     saveSettings();
 });
 
+textureTuneBtn?.addEventListener('click', () => {
+    const isOpen = !(textureTunePanel?.hidden ?? true);
+    setTextureTunePanelOpen(!isOpen);
+    saveSettings();
+});
+
+textureTuneLightSlider?.addEventListener('input', () => {
+    textureTuneState.light = parseFloat(textureTuneLightSlider.value);
+    updateTextureTuneUI();
+    applyCurrentTextureTuning();
+    saveSettings();
+});
+
+textureTuneContrastSlider?.addEventListener('input', () => {
+    textureTuneState.contrast = parseFloat(textureTuneContrastSlider.value);
+    updateTextureTuneUI();
+    applyCurrentTextureTuning();
+    saveSettings();
+});
+
+textureTuneHighlightsSlider?.addEventListener('input', () => {
+    textureTuneState.highlights = parseFloat(textureTuneHighlightsSlider.value);
+    updateTextureTuneUI();
+    applyCurrentTextureTuning();
+    saveSettings();
+});
+
+textureTuneShadowsSlider?.addEventListener('input', () => {
+    textureTuneState.shadows = parseFloat(textureTuneShadowsSlider.value);
+    updateTextureTuneUI();
+    applyCurrentTextureTuning();
+    saveSettings();
+});
+
+textureTuneLightSourceSlider?.addEventListener('input', () => {
+    textureTuneState.shadowAzimuth = parseFloat(textureTuneLightSourceSlider.value);
+    updateTextureTuneUI();
+    if (mesh) updateShadowCatcherPlacement();
+    applyCurrentTextureTuning();
+    saveSettings();
+});
+
+textureTuneLightHeightSlider?.addEventListener('input', () => {
+    textureTuneState.shadowHeight = parseFloat(textureTuneLightHeightSlider.value);
+    updateTextureTuneUI();
+    if (mesh) updateShadowCatcherPlacement();
+    applyCurrentTextureTuning();
+    saveSettings();
+});
+
+textureTuneRoughnessSlider?.addEventListener('input', () => {
+    const mode = getActiveShadingMode();
+    const v = parseFloat(textureTuneRoughnessSlider.value);
+    if (mode === 'metallic') textureTuneState.metallicRoughness = v;
+    if (mode === 'phong') textureTuneState.phongRoughness = v;
+    if (mode === 'clay') textureTuneState.clayRoughness = v;
+    updateTextureTuneUI();
+    applyCurrentTextureTuning();
+    saveSettings();
+});
+
+textureTuneReflectionSlider?.addEventListener('input', () => {
+    const mode = getActiveShadingMode();
+    const v = parseFloat(textureTuneReflectionSlider.value);
+    if (mode === 'metallic') textureTuneState.metallicReflection = v;
+    if (mode === 'phong') textureTuneState.phongReflection = v;
+    if (mode === 'clay') textureTuneState.clayReflection = v;
+    updateTextureTuneUI();
+    applyCurrentTextureTuning();
+    saveSettings();
+});
+
+textureTuneMetalnessSlider?.addEventListener('input', () => {
+    textureTuneState.metallicMetalness = parseFloat(textureTuneMetalnessSlider.value);
+    updateTextureTuneUI();
+    applyCurrentTextureTuning();
+    saveSettings();
+});
+
 shadingEl.addEventListener('change', () => {
-    if (!mesh) return;
-    mesh.material.dispose();
-    mesh.material = getMaterial(shadingEl.value, colorPick.value);
+    if (shadingEl.value === 'flat' || shadingEl.value === 'toon') shadingEl.value = 'clay';
+    updateTextureTuneUI();
+    if (mesh) {
+        mesh.material.dispose();
+        mesh.material = getMaterial(shadingEl.value, colorPick.value);
+        applyCurrentTextureTuning();
+    }
     saveSettings();
 });
 

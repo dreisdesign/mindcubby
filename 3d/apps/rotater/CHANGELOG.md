@@ -11,6 +11,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.10] - 2026-04-26
+
+### Added
+- **Highlights slider** for brighter white/specular response in the Texture tune panel
+- **Shadows strength slider** (0-100) replacing binary shadow on/off behavior
+- **Light Source slider** to rotate shadow direction around the model
+- **Light Height slider** to control shadow length/angle depth
+
+### Changed
+- **Texture tune icon hit area** — icon remains compact while adding an invisible larger tap target for easier mobile interaction
+- **Texture tune icon alignment** — right-aligned with slider value column for visual consistency
+- **Texture tune sliders layout** — rows now fully stretch within the Texture card with cleaner spacing
+
+### Fixed
+- **Shadow reliability across model scales** — shadow light/frustum now scales with model dimensions so shadows remain visible on small and large STL units
+- **Slider dot inconsistency** — snap-dot overlays are now disabled inside the Texture tune panel so all texture sliders render consistently
+
+## [1.7.5] - 2026-04-26
+
+### Changed
+- **Toon replaced with Clay** — third texture mode is now **Clay** (matte, non-metal) instead of Toon
+- **Texture tuning controls expanded** — added **Contrast** slider and **Shadows** toggle for optional true shadow rendering
+- **Texture tune icon styling** — moved to the far top-right of the Texture box and simplified visual treatment (clean icon style, no circular badge)
+
+### Fixed
+- **Mode-specific tune rows now hide correctly** — Metalness appears only for Metal mode; non-applicable rows are hidden per selected texture mode
+- **Legacy shading migration updated** — stored `flat` and `toon` settings now restore as `clay`
+
+## [1.7.4] - 2026-04-26
+
+### Added
+- **Texture tune panel** — new sliders panel (opened via tune icon in the Texture card) to customize material response in real time
+
+### Changed
+- **Texture card action icon** — added `tune.svg` button at the top-right of the Texture box to open/close tuning controls
+- **Shared Metal/Phong tuning controls** — both modes now share real-time sliders for Light, Roughness, and Reflection (both use `MeshStandardMaterial`)
+- **Metal-specific tuning** — Metal mode now includes a dedicated Metalness slider
+- **Flat replaced with Toon** — third texture mode is now Toon (stylized stepped shading) instead of Flat
+
+### Notes
+- Legacy saved `flat` shading values are automatically migrated to `toon` on restore.
+
 ## [1.7.3] - 2026-04-24
 
 ### Changed
