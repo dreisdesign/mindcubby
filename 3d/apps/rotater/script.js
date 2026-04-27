@@ -1408,9 +1408,9 @@ function restoreSettings() {
         try {
             const saved = localStorage.getItem(SETTINGS_KEY);
             if (saved) localS = JSON.parse(saved) || {};
-        } catch (e) {}
+        } catch (e) { }
 
-        const defaultSearchStr = typeof DEFAULT_SETTINGS_URL !== 'undefined' && DEFAULT_SETTINGS_URL.includes('?') 
+        const defaultSearchStr = typeof DEFAULT_SETTINGS_URL !== 'undefined' && DEFAULT_SETTINGS_URL.includes('?')
             ? '?' + DEFAULT_SETTINGS_URL.split('?')[1] : '';
         const defaultS = getURLSettings(defaultSearchStr) || {};
 
@@ -2703,7 +2703,19 @@ async function captureFrames(n, dims = null, transparent = false) {
     // Use stored export framing only in crop mode; otherwise mirror the live viewport.
     const exportDist = (exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
     const exportElev = (exportFrameEnabled && exportCamDist !== null) ? exportCamElev : elev;
-    const exportZoom = (exportFrameEnabled && exportCamDist !== null) ? (exportCamZoom || 1) : (camera.zoom || 1);
+
+    let exportZoom;
+    if (exportFrameEnabled && exportCamDist !== null) {
+        exportZoom = exportCamZoom || 1;
+    } else {
+        const canvasAspect = savedViewW / Math.max(1, savedViewH);
+        const exportAspect = W / H;
+        exportZoom = camera.zoom || 1;
+        if (exportAspect > canvasAspect) {
+            exportZoom *= (exportAspect / canvasAspect);
+        }
+    }
+
     camera.zoom = exportZoom;
     camera.updateProjectionMatrix();
     const savedCamPos = camera.position.clone();
@@ -2923,9 +2935,10 @@ btnVideo.addEventListener('click', async () => {
             output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
             error: e => { encoderError = e; },
         });
-        // avc1.4200XX — Baseline profile; level 3.1 (0x1f) up to 720p, level 4.0 (0x28) up to 2048px
-        const shortEdge = Math.min(W, H);
-        const avcLevel = shortEdge <= 720 ? '1f' : '28';
+        // avc1.4200XX — Baseline profile
+        // level 3.1 (0x1f) up to 720p, level 4.0 (0x28) up to 1080p, level 5.1 (0x33) up to 4K/2048x2048
+        const totalPixels = W * H;
+        const avcLevel = totalPixels > 2097152 ? '33' : (totalPixels > 921600 ? '28' : '1f');
         encoder.configure({
             codec: `avc1.4200${avcLevel}`,
             width: W,
@@ -2938,7 +2951,19 @@ btnVideo.addEventListener('click', async () => {
         // Use stored export framing only in crop mode; otherwise mirror the live viewport.
         const exportDist = (exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
         const exportElev = (exportFrameEnabled && exportCamDist !== null) ? exportCamElev : elev;
-        const exportZoom = (exportFrameEnabled && exportCamDist !== null) ? (exportCamZoom || 1) : (camera.zoom || 1);
+
+        let exportZoom;
+        if (exportFrameEnabled && exportCamDist !== null) {
+            exportZoom = exportCamZoom || 1;
+        } else {
+            const canvasAspect = savedViewW / Math.max(1, savedViewH);
+            const exportAspect = W / H;
+            exportZoom = camera.zoom || 1;
+            if (exportAspect > canvasAspect) {
+                exportZoom *= (exportAspect / canvasAspect);
+            }
+        }
+
         camera.zoom = exportZoom;
         camera.updateProjectionMatrix();
         const savedCamPos = camera.position.clone();
