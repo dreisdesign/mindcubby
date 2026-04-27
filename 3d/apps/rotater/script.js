@@ -5,6 +5,9 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
+// Paste any Rotater URL here to use it as the default settings for first-time visitors
+const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=clay&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=340&thi=325&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000';
+
 // ── Defaults ─────────────────────────────────────────────────────────────────
 // Export quality presets — base short-edge size + fps + bitrate.
 // GIF/MP4 remain square; still images can use common aspect presets.
@@ -1400,20 +1403,32 @@ function saveSettings() {
 
 function restoreSettings() {
     try {
-        const urlS = getURLSettings();
-        const localS = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') || {};
-        const clamp = (v, min, max, fallback) => {
-            const n = parseFloat(v);
-            return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
-        };
-        let s = localS;
+        const urlS = getURLSettings(location.search);
+        let localS = {};
+        try {
+            const saved = localStorage.getItem(SETTINGS_KEY);
+            if (saved) localS = JSON.parse(saved) || {};
+        } catch (e) {}
+
+        const defaultSearchStr = typeof DEFAULT_SETTINGS_URL !== 'undefined' && DEFAULT_SETTINGS_URL.includes('?') 
+            ? '?' + DEFAULT_SETTINGS_URL.split('?')[1] : '';
+        const defaultS = getURLSettings(defaultSearchStr) || {};
+
+        // Merge order: Default presets <- Local storage <- URL params
+        let s = { ...defaultS, ...localS };
         if (urlS) {
-            s = { ...localS };
+            s = { ...s };
             Object.entries(urlS).forEach(([k, v]) => {
                 if (v !== null && v !== undefined) s[k] = v;
             });
         }
-        if (s) {
+
+        const clamp = (v, min, max, fallback) => {
+            const n = parseFloat(v);
+            return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+        };
+
+        if (s && Object.keys(s).length > 0) {
             if (s.shading === 'flat' || s.shading === 'toon') s.shading = 'clay'; // migrate legacy modes
             if (s.color) colorPick.value = s.color;
             if (s.bg) bgPick.value = s.bg;
@@ -1548,8 +1563,8 @@ function restoreSettings() {
 }
 
 // ── URL / shareable settings ─────────────────────────────────────────────────────────────
-function getURLSettings() {
-    const p = new URLSearchParams(location.search);
+function getURLSettings(searchStr = location.search) {
+    const p = new URLSearchParams(searchStr);
     // Require at least one known key to treat URL as settings-bearing
     if (!p.has('c') && !p.has('sh') && !p.has('rm') && !p.has('re') && !p.has('ef')) return null;
     const g = (k) => p.has(k) ? p.get(k) : null;

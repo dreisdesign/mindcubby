@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.16] - 2026-04-27
+
+### Added
+- **Developer Defaults**: Added `DEFAULT_SETTINGS_URL` at the top of `script.js` to easily enforce default camera formatting, framing, and texture values based on any rotater share parameter URL.
+
 ## [1.7.15] - 2026-04-27
 
 ### Changed
