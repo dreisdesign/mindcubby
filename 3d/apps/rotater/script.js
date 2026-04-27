@@ -3058,6 +3058,7 @@ btnVideo.addEventListener('click', async () => {
                 setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
             }
 
+            syncLightRig();
             renderer.render(scene, camera);
             outCtx.clearRect(0, 0, W, H);
             outCtx.drawImage(canvas, 0, 0, W, H);
