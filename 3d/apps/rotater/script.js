@@ -312,6 +312,7 @@ let exportCamZoom = 1;   // stored export camera projection zoom
 let _cropBackupDist = null; // exportCamDist saved on crop-mode enter, restored on cancel
 let _cropBackupElev = 0;
 let _cropBackupZoom = 1;
+let _cropBackupCameraZoom = 1;
 let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, updated each frame
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
@@ -2412,10 +2413,15 @@ frameOverlayBtn?.addEventListener('click', () => {
     }
     exportFrameEnabled = true;
     if (exportFrameEnabled) {
-        // Entering crop mode: back up framing, then immediately sync to live viewport.
+        // Entering crop mode: back up framing and physically zoom viewport so object seamlessly shrinks into crop UI
         _cropBackupDist = exportCamDist;
         _cropBackupElev = exportCamElev;
         _cropBackupZoom = exportCamZoom;
+        if (camera) {
+            _cropBackupCameraZoom = camera.zoom || 1;
+            camera.zoom = _cropBackupCameraZoom * CROP_FRAME_UI_SCALE;
+            camera.updateProjectionMatrix();
+        }
         _cropLiveSyncArmed = true;
         syncExportCameraFromViewport();
     }
@@ -2426,11 +2432,17 @@ frameOverlayBtn?.addEventListener('click', () => {
 
 function cancelCropMode() {
     if (!exportFrameEnabled) return;
-    // Restore saved export framing — viewport camera stays wherever it is.
+    // Restore saved export framing and pop viewport back to standard scale
     if (_cropBackupDist !== null) {
         exportCamDist = _cropBackupDist;
         exportCamElev = _cropBackupElev;
         exportCamZoom = _cropBackupZoom;
+    } else {
+        exportCamDist = null;
+    }
+    if (camera) {
+        camera.zoom = _cropBackupCameraZoom || 1;
+        camera.updateProjectionMatrix();
     }
     exportFrameEnabled = false;
     updateCropHintUI();
@@ -2445,6 +2457,11 @@ function confirmCropMode() {
     if (!exportFrameEnabled) return;
     // Commit current live crop framing.
     syncExportCameraFromViewport();
+    // Revert the viewport's physical *0.82 shrink so it bounds to the canvas instead of the crop UI
+    if (camera) {
+        camera.zoom = (camera.zoom || 1) / CROP_FRAME_UI_SCALE;
+        camera.updateProjectionMatrix();
+    }
     exportFrameEnabled = false;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
