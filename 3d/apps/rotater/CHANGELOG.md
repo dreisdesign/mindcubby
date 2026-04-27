@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.7.17] - 2026-04-27
 
 ### Fixed
+- Flawless sub-pixel mathematical translation between viewport camera bounds and UI layout when confirming custom crop boxes, stopping the model from 'jumping' inside the mini preview
+- Auto-zooming into newly drawn crop boxes intelligently so that the model doesn't get clipped before you even have a chance to frame it
 - **MP4 Export Error**: Automatically upgraded the H.264 video encoder level from `4.0` (0x28) to `5.1` (0x33) for High quality exports (2048x2048+) to prevent codec crashes when exceeding pixel limits.
 
 ## [1.7.16] - 2026-04-27
