@@ -6,12 +6,80 @@ import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
-// Export quality presets — size+fps+bitrate in one pick (always square output)
+// Export quality presets — base short-edge size + fps + bitrate.
+// GIF/MP4 remain square; still images can use common aspect presets.
 const QUALITY_PRESETS = {
     web: { size: 480, fps: 15, bitrate: 4_000_000 },
-    std: { size: 720, fps: 24, bitrate: 8_000_000 },
-    high: { size: 1080, fps: 30, bitrate: 16_000_000 },
+    std: { size: 1080, fps: 24, bitrate: 8_000_000 },
+    high: { size: 2048, fps: 30, bitrate: 16_000_000 },
 };
+
+const IMAGE_DIMENSION_PRESETS = {
+    square: { w: 1, h: 1, tag: '1x1' },
+    portrait12: { w: 1, h: 2, tag: '1x2' },
+    landscape43: { w: 4, h: 3, tag: '4x3' },
+    landscape21: { w: 2, h: 1, tag: '2x1' },
+};
+
+function getSelectedExportDimensionsId() {
+    return document.querySelector('input[name="exportDimensions"]:checked')?.value ?? 'square';
+}
+
+function setSelectedExportDimensionsId(id) {
+    if (!IMAGE_DIMENSION_PRESETS[id]) id = 'square';
+    const target = document.querySelector(`input[name="exportDimensions"][value="${id}"]`);
+    if (target) {
+        target.checked = true;
+        return;
+    }
+    const fallback = document.querySelector('input[name="exportDimensions"][value="square"]');
+    if (fallback) fallback.checked = true;
+}
+
+function getImageDimensionPreset() {
+    const id = getSelectedExportDimensionsId();
+    if (IMAGE_DIMENSION_PRESETS[id]) return { id, ...IMAGE_DIMENSION_PRESETS[id] };
+    return { id: 'square', ...IMAGE_DIMENSION_PRESETS.square };
+}
+
+// Returns the preset id whose aspect ratio (w/h) is nearest to the given aspect,
+// using log-scale distance so e.g. 0.5 and 2.0 are equidistant from 1.0.
+function nearestDimensionPreset(aspect) {
+    let bestId = 'square', bestDist = Infinity;
+    for (const [id, p] of Object.entries(IMAGE_DIMENSION_PRESETS)) {
+        const dist = Math.abs(Math.log(aspect / (p.w / p.h)));
+        if (dist < bestDist) { bestDist = dist; bestId = id; }
+    }
+    return bestId;
+}
+
+function getImageExportSize() {
+    const v = document.getElementById('exportQuality')?.value ?? 'std';
+    const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
+    const shortEdge = p.size;
+    const preset = getImageDimensionPreset();
+
+    let width = shortEdge;
+    let height = shortEdge;
+    if (preset.w >= preset.h) {
+        height = shortEdge;
+        width = Math.round((shortEdge * preset.w) / preset.h);
+    } else {
+        width = shortEdge;
+        height = Math.round((shortEdge * preset.h) / preset.w);
+    }
+
+    // Prefer even dimensions for codec and pixel-grid consistency.
+    if (width % 2 !== 0) width += 1;
+    if (height % 2 !== 0) height += 1;
+
+    return { width, height, presetId: preset.id, presetTag: preset.tag };
+}
+
+function getPreviewExportSize(_fmt) {
+    // All formats now support aspect presets — always delegate to getImageExportSize().
+    return getImageExportSize();
+}
 
 const EXPORT = {
     get gif() {
@@ -35,8 +103,13 @@ const EXPORT = {
         };
     },
     get image() {
+        const { width, height, presetId, presetTag } = getImageExportSize();
         return {
             quality: parseInt(document.getElementById('jpegQuality')?.value ?? 92, 10) / 100,
+            width,
+            height,
+            presetId,
+            presetTag,
         };
     },
 };
@@ -50,7 +123,7 @@ const WOBBLE_SPIN_RANGE_DEFAULT = 360;
 const ELEV_DEFAULT = 0; // Used by placeCamera() and fitToFrame() for default camera elevation
 const CROP_FRAME_UI_SCALE = 0.82; // Keeps a visual margin around the crop guide
 const VIEWPORT_FIT_SCALE = 1.55; // Smaller than 1.8 so default/reset framing is less zoomed out
-const LIGHT_BASE = { ambient: 0.45, key: 1.9, fill: 0.4, rim: 0.5, exposure: 0.75 };
+const LIGHT_BASE = { ambient: 0.45, key: 1.9, fill: 0.30, rim: 0.92, exposure: 0.75 };
 const TEXTURE_TUNE_DEFAULTS = {
     light: 100,
     contrast: 100,
@@ -93,11 +166,11 @@ function updateEstimate() {
     const mp4EstEl = document.getElementById('mp4Est');
     if (mp4EstEl) mp4EstEl.innerHTML = `<b class="export-info-time">${mSecs}s</b>`;
 
-    // Image — based on actual canvas pixel size
+    // Image — based on selected export dimensions
     const imgEstPng = document.getElementById('imgEstPng');
     const imgEstJpg = document.getElementById('imgEstJpg');
-    if ((imgEstPng || imgEstJpg) && renderer) {
-        const pw = renderer.domElement.width, ph = renderer.domElement.height;
+    if (imgEstPng || imgEstJpg) {
+        const { width: pw, height: ph } = getImageExportSize();
         const pngMB = (pw * ph * 3 * 0.25 / (1024 * 1024)).toFixed(2);
         const jpegMB = (pw * ph * EXPORT.image.quality * 0.21 / (1024 * 1024)).toFixed(2);
         if (imgEstPng) imgEstPng.textContent = `~${pngMB} MB · ${pw}×${ph}px`;
@@ -124,6 +197,8 @@ const btnGif = document.getElementById('btnExportGif');
 const btnVideo = document.getElementById('btnExportVideo');
 const btnPng = document.getElementById('btnExportPng');
 const exportFormatEl = document.getElementById('exportFormat');
+const exportDimensionInputs = Array.from(document.querySelectorAll('input[name="exportDimensions"]'));
+const cropDimensionsDock = document.getElementById('cropDimensionsDock');
 const statusEl = document.getElementById('exportStatus');
 const animStatusEl = document.getElementById('exportStatusAnim');
 const fileNameEl = document.getElementById('fileName');
@@ -146,6 +221,7 @@ const frameOverlayBtn = document.getElementById('btnFrameOverlay');
 const orbitHintBarEl = document.querySelector('.orbit-hint-bar');
 const orbitHintTextEl = orbitHintBarEl?.querySelector('.orbit-hint');
 const textureTuneBtn = document.getElementById('btnTextureTune');
+const textureTuneNewBadge = document.getElementById('textureTuneNewBadge');
 const textureTunePanel = document.getElementById('textureTunePanel');
 const textureTuneLightSlider = document.getElementById('textureTuneLight');
 const textureTuneContrastSlider = document.getElementById('textureTuneContrast');
@@ -173,6 +249,7 @@ const textureTuneLightHeightRow = document.getElementById('textureTuneLightHeigh
 const textureTuneRoughnessRow = document.getElementById('textureTuneRoughnessRow');
 const textureTuneReflectionRow = document.getElementById('textureTuneReflectionRow');
 const textureTuneMetalnessRow = document.getElementById('textureTuneMetalnessRow');
+const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
 
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
@@ -188,11 +265,17 @@ function syncSliderTooltip(slider) {
 function addSnapDots(slider) {
     const wrap = slider.closest('.range-wrap');
     if (!wrap || wrap.querySelector('.snap-dots')) return;
-    const min = parseFloat(slider.min);
-    const max = parseFloat(slider.max);
-    const step = parseFloat(slider.step) || 1;
-    const n = Math.round((max - min) / step) + 1;
-    if (n < 2 || n > 24) return;
+    const explicit = parseInt(slider.dataset.snapCount, 10);
+    let n;
+    if (!isNaN(explicit) && explicit >= 2 && explicit <= 24) {
+        n = explicit; // visual-only markers, evenly spaced
+    } else {
+        const min = parseFloat(slider.min);
+        const max = parseFloat(slider.max);
+        const step = parseFloat(slider.step) || 1;
+        n = Math.round((max - min) / step) + 1;
+        if (n < 2 || n > 24) return;
+    }
     const dotsEl = document.createElement('div');
     dotsEl.className = 'snap-dots';
     dotsEl.setAttribute('aria-hidden', 'true');
@@ -226,7 +309,7 @@ let exportCamZoom = 1;   // stored export camera projection zoom
 let _cropBackupDist = null; // exportCamDist saved on crop-mode enter, restored on cancel
 let _cropBackupElev = 0;
 let _cropBackupZoom = 1;
-let _cropSx = 0, _cropSy = 0, _cropSq = 0; // crop box pixel coords, updated each frame
+let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, updated each frame
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
 const textureTuneState = {
@@ -263,14 +346,37 @@ function setCameraFromOrbitState(cam, target, dist, elev, az) {
     cam.lookAt(target);
 }
 
+function getCropFrameRect(w, h) {
+    const safeW = Math.max(1, w);
+    const safeH = Math.max(1, h);
+    const { width: expW, height: expH } = getPreviewExportSize();
+    const targetAspect = Math.max(1e-6, expW / Math.max(1, expH));
+
+    const maxW = safeW * CROP_FRAME_UI_SCALE;
+    const maxH = safeH * CROP_FRAME_UI_SCALE;
+
+    let frameW = maxW;
+    let frameH = frameW / targetAspect;
+    if (frameH > maxH) {
+        frameH = maxH;
+        frameW = frameH * targetAspect;
+    }
+
+    const sw = Math.max(2, Math.round(frameW));
+    const sh = Math.max(2, Math.round(frameH));
+    const sx = Math.floor((safeW - sw) / 2);
+    const sy = Math.floor((safeH - sh) / 2);
+    return { sx, sy, sw, sh };
+}
+
 function getCropFrameVerticalScale() {
     const wrap = canvas?.parentElement;
     if (!wrap) return CROP_FRAME_UI_SCALE;
     const w = wrap.clientWidth;
     const h = wrap.clientHeight;
     if (!w || !h) return CROP_FRAME_UI_SCALE;
-    const sq = _cropSq > 0 ? _cropSq : Math.round(Math.min(w, h) * CROP_FRAME_UI_SCALE);
-    return Math.max(1e-6, sq / h);
+    const sh = _cropSh > 0 ? _cropSh : getCropFrameRect(w, h).sh;
+    return Math.max(1e-6, sh / h);
 }
 
 function syncExportCameraFromViewport() {
@@ -306,9 +412,12 @@ function initThree() {
     camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
 
     // Three-point lighting
-    ambientLight = new THREE.AmbientLight(0xffffff, LIGHT_BASE.ambient);
+    // Warm key (slightly amber) + cool fill + cool rim creates warm/cool contrast
+    // that gives white/light models visible form definition without colour bias on
+    // deeply-saturated models.
+    ambientLight = new THREE.AmbientLight(0xfff8f2, LIGHT_BASE.ambient);
     scene.add(ambientLight);
-    keyLight = new THREE.DirectionalLight(0xffffff, LIGHT_BASE.key);
+    keyLight = new THREE.DirectionalLight(0xfff6e8, LIGHT_BASE.key);
     keyLight.position.set(1.5, 2.0, 1.5);
     keyLight.castShadow = false;
     keyLight.shadow.mapSize.set(2048, 2048);
@@ -318,15 +427,17 @@ function initThree() {
     keyLight.shadow.camera.right = 8;
     keyLight.shadow.camera.top = 8;
     keyLight.shadow.camera.bottom = -8;
-    keyLight.shadow.bias = -0.0002;
-    keyLight.shadow.normalBias = 0.02;
+    keyLight.shadow.bias = -0.00008;
+    keyLight.shadow.normalBias = 0.0025;
+    keyLight.shadow.intensity = 0.62;
+    keyLight.shadow.radius = 1.1;
     scene.add(keyLight);
     scene.add(keyLight.target);
-    fillLight = new THREE.DirectionalLight(0xffffff, LIGHT_BASE.fill);
+    fillLight = new THREE.DirectionalLight(0xc8d8ff, LIGHT_BASE.fill);
     fillLight.position.set(-2, 0.5, -1);
     scene.add(fillLight);
-    rimLight = new THREE.DirectionalLight(0xffffff, LIGHT_BASE.rim);
-    rimLight.position.set(0.5, -1, -2);
+    rimLight = new THREE.DirectionalLight(0xb8d0ff, LIGHT_BASE.rim);
+    rimLight.position.set(-0.4, 1.8, -2.2);
     scene.add(rimLight);
 
     shadowCatcher = new THREE.Mesh(
@@ -378,7 +489,6 @@ function syncCanvasSize() {
     if (camera) {
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
-        if (exportFrameEnabled) fitToFrame();
     }
     updateEstimate();
     // Re-render immediately after setSize clears the buffer so the browser
@@ -395,51 +505,74 @@ function getActiveShadingMode() {
 function updateShadowCatcherPlacement() {
     if (!shadowCatcher || !mesh) return;
     const box = new THREE.Box3().setFromObject(mesh);
-    const y = box.min.y - Math.max(0.001, modelRadius * 0.01);
-    const scale = Math.max(1, modelRadius * 8);
-    shadowCatcher.position.set(0, y, 0);
-    shadowCatcher.scale.set(scale, scale, 1);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const y = box.min.y - Math.max(0.001, modelRadius * 0.006);
+    const footprint = Math.max(size.x, size.z, 0.001);
+    const modelHeight = Math.max(size.y, 0.001);
+    shadowCatcher.position.set(center.x, y, center.z);
 
     if (!keyLight) return;
 
-    // Keep the light frustum proportional to model size so shadows stay visible
-    // on both tiny and large STL units.
-    const shadowSpan = Math.max(4, modelRadius * 2.6);
+    // Keep shadow direction tied to model size/tuning, then size catcher/frustum
+    // from projected ground-run so long side-cast shadows do not get clipped.
     const heightGain = Math.max(0.4, Math.min(2.2, textureTuneState.shadowHeight / 100));
-    const lightHeight = Math.max(2.5, modelRadius * 2.2 * heightGain);
-    const centerY = box.getCenter(new THREE.Vector3()).y;
-    const lightRadius = shadowSpan * 0.78;
+    const lightHeight = Math.max(
+        center.y + modelRadius * 0.62,
+        modelRadius * (0.82 + heightGain * 1.08)
+    );
+    const lightRadius = modelRadius * THREE.MathUtils.mapLinear(heightGain, 0.4, 2.2, 1.55, 0.72);
     const az = THREE.MathUtils.degToRad(textureTuneState.shadowAzimuth);
 
-    keyLight.position.set(Math.sin(az) * lightRadius, lightHeight, Math.cos(az) * lightRadius);
-    keyLight.target.position.set(0, centerY * 0.35, 0);
+    keyLight.position.set(
+        center.x + Math.sin(az) * lightRadius,
+        lightHeight,
+        center.z + Math.cos(az) * lightRadius
+    );
+    keyLight.target.position.copy(center);
+    keyLight.target.updateMatrixWorld();
+
+    const horizontalRun = Math.hypot(keyLight.position.x - center.x, keyLight.position.z - center.z);
+    const verticalRun = Math.max(0.05, keyLight.position.y - y);
+    const projectedShadowRun = modelHeight * (horizontalRun / verticalRun);
+    const shadowReach = projectedShadowRun * 1.45;
+
+    const catcherHalfSpan = Math.max(
+        footprint * 2.2,
+        footprint * 0.9 + shadowReach + modelRadius * 0.95
+    );
+    const catcherSize = Math.max(1, catcherHalfSpan * 2);
+    shadowCatcher.scale.set(catcherSize, catcherSize, 1);
 
     const cam = keyLight.shadow.camera;
+    const shadowSpan = Math.max(6, catcherHalfSpan * 1.45, modelRadius * 3.2);
     cam.near = 0.1;
-    cam.far = Math.max(20, lightHeight + shadowSpan * 2.2);
+    cam.far = Math.max(30, lightHeight + modelHeight * 4.6 + shadowReach * 2.8);
     cam.left = -shadowSpan;
     cam.right = shadowSpan;
     cam.top = shadowSpan;
     cam.bottom = -shadowSpan;
     cam.updateProjectionMatrix();
 
-    keyLight.shadow.bias = -Math.max(0.0001, modelRadius * 0.000004);
-    keyLight.shadow.normalBias = Math.max(0.01, modelRadius * 0.0007);
+    keyLight.shadow.bias = -Math.max(0.00002, modelRadius * 0.0000015);
+    keyLight.shadow.normalBias = Math.min(0.009, Math.max(0.0012, modelRadius * 0.00011));
 }
 
 function applyTextureLighting() {
     const gain = Math.max(0.4, Math.min(2, textureTuneState.light / 100));
-    const contrast = Math.max(0.5, Math.min(2, textureTuneState.contrast / 100));
-    const highlights = Math.max(0.4, Math.min(2.5, textureTuneState.highlights / 100));
+    const contrast = Math.max(0.5, Math.min(4, textureTuneState.contrast / 100));
+    const highlights = Math.max(0.4, Math.min(4, textureTuneState.highlights / 100));
     const inv = 1 / Math.sqrt(contrast);
     const fwd = Math.sqrt(contrast);
     const shadowsAmt = Math.max(0, Math.min(1, textureTuneState.shadows / 100));
     const shadowsOn = shadowsAmt > 0.001;
+    const shadowBodyFactor = 1 - 0.78 * shadowsAmt;
+    const shadowRimFactor = 1 - 0.62 * shadowsAmt;
 
-    if (ambientLight) ambientLight.intensity = LIGHT_BASE.ambient * gain * inv;
+    if (ambientLight) ambientLight.intensity = LIGHT_BASE.ambient * gain * inv * shadowBodyFactor;
     if (keyLight) keyLight.intensity = LIGHT_BASE.key * gain * contrast * Math.pow(highlights, 0.95);
-    if (fillLight) fillLight.intensity = LIGHT_BASE.fill * gain * inv;
-    if (rimLight) rimLight.intensity = LIGHT_BASE.rim * gain * fwd * Math.pow(highlights, 1.08);
+    if (fillLight) fillLight.intensity = LIGHT_BASE.fill * gain * inv * shadowBodyFactor * 0.92;
+    if (rimLight) rimLight.intensity = LIGHT_BASE.rim * gain * fwd * Math.pow(highlights, 1.08) * shadowRimFactor;
     if (renderer) {
         renderer.toneMappingExposure = Math.max(0.2, Math.min(2.8,
             LIGHT_BASE.exposure * Math.pow(gain, 0.92) * Math.pow(highlights, 0.28)
@@ -448,14 +581,18 @@ function applyTextureLighting() {
         renderer.shadowMap.needsUpdate = true;
     }
     if (keyLight) keyLight.castShadow = shadowsOn;
+    if (keyLight?.shadow) {
+        keyLight.shadow.intensity = shadowsOn ? (0.18 + shadowsAmt * 0.82) : 0;
+        keyLight.shadow.needsUpdate = true;
+    }
     if (mesh) {
         mesh.castShadow = shadowsOn;
-        mesh.receiveShadow = shadowsOn;
+        mesh.receiveShadow = false;
     }
     if (shadowCatcher) {
         shadowCatcher.visible = shadowsOn;
         if (shadowCatcher.material && shadowCatcher.material.isShadowMaterial) {
-            shadowCatcher.material.opacity = shadowsOn ? (0.08 + shadowsAmt * 0.62) : 0.08;
+            shadowCatcher.material.opacity = shadowsOn ? (0.02 + shadowsAmt * 0.16) : 0.02;
             shadowCatcher.material.needsUpdate = true;
         }
     }
@@ -486,7 +623,7 @@ function applyCurrentTextureTuning() {
 
 function getMaterial(shading, color) {
     if (shading === 'flat' || shading === 'toon') shading = 'clay'; // legacy value
-    const base = { color, side: THREE.DoubleSide };
+    const base = { color, side: THREE.DoubleSide, shadowSide: THREE.FrontSide };
     if (shading === 'clay') {
         return new THREE.MeshStandardMaterial({
             ...base,
@@ -629,10 +766,13 @@ function fitToFrame() {
     const wrap = canvas.parentElement;
     const w = wrap.clientWidth;
     const h = wrap.clientHeight;
-    const sq = Math.round(Math.min(w, h) * CROP_FRAME_UI_SCALE);
+    const { sw, sh } = getCropFrameRect(w, h);
     const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    // dist so model fills ~88% of the export square: world half-extent = (sq/h)*tan*dist
-    const dist = modelRadius * h / (0.88 * sq * tanHalfFov);
+    // dist so model fills ~88% of the export frame, considering width and height constraints.
+    const verticalScale = sh / h;
+    const horizontalScale = sw / h;
+    const frameScale = Math.max(1e-6, Math.min(verticalScale, horizontalScale));
+    const dist = modelRadius / (0.88 * tanHalfFov * frameScale);
     const MAX_EL = Math.PI / 2 - 0.02;
     const el = Math.min(THREE.MathUtils.degToRad(ELEV_DEFAULT), MAX_EL);
     camera.up.set(0, 1, 0);
@@ -738,24 +878,181 @@ function loop() {
 // ── Export preview thumbnail ──────────────────────────────────────────────────
 let _previewTick = 0;
 let _previewRt = null;
-let _previewRtSize = 0;
+let _previewRtWidth = 0;
+let _previewRtHeight = 0;
 let _previewCam = null;
 
-function updateExportPreview() {
-    if (++_previewTick % 4 !== 0) return; // update every 4th frame
+function updateExportPreview(force = false) {
+    if (force) _previewTick = 0;
+    if (!force) {
+        const stride = exportFrameEnabled ? 1 : 4;
+        if (++_previewTick % stride !== 0) return;
+    }
     const pv = document.getElementById('exportPreview');
     if (!pv || !renderer || !camera || !scene) return;
     if (exportCamDist === null) return; // not ready yet
 
-    const cssW = pv.offsetWidth || 160;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const px = Math.round(cssW * dpr);
-    if (pv.width !== px || pv.height !== px) { pv.width = px; pv.height = px; }
+    const fmt = exportFormatEl?.value ?? 'gif';
+    const { width: expW, height: expH } = getPreviewExportSize(fmt);
+    const previewWrap = pv.parentElement;
+    const isTransparentPreview = (fmt === 'gif')
+        ? (document.getElementById('exportTransparent')?.checked ?? false)
+        : (fmt === 'png')
+            ? ((document.getElementById('exportTransparentPng')?.checked
+                ?? document.getElementById('exportTransparent')?.checked
+                ?? false))
+            : false;
+    if (previewWrap) {
+        previewWrap.style.aspectRatio = '1 / 1';
+        const transparentOn = (fmt === 'gif')
+            ? (document.getElementById('exportTransparent')?.checked ?? false)
+            : (fmt === 'png')
+                ? ((document.getElementById('exportTransparentPng')?.checked
+                    ?? document.getElementById('exportTransparent')?.checked
+                    ?? false))
+                : false;
+        previewWrap.classList.toggle('is-transparent', transparentOn);
+    }
 
-    if (!_previewRt || _previewRtSize !== px) {
+    const wrap = canvas?.parentElement;
+    const cw = wrap ? wrap.clientWidth : pv.offsetWidth || 160;
+    const ch = wrap ? wrap.clientHeight : pv.offsetWidth || 160;
+
+    const cssW = cw;
+    const cssH = ch;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Determine the true aspect ratio we want the mini preview canvas to have.
+    // In crop mode, we preview the ENTIRE viewport (to show the semi-transparent black overlay).
+    // In normal mode, we preview exactly the cropped region being exported.
+    const previewW = exportFrameEnabled ? cw : expW;
+    const previewH = exportFrameEnabled ? ch : expH;
+
+    // Scale so the largest dimension fits inside a ~160px box to avoid rendering a huge proxy.
+    const maxDim = Math.max(previewW, previewH);
+    const boxSize = pv.parentElement?.clientWidth || 160;
+    const previewScale = boxSize / Math.max(1, maxDim);
+
+    const pxW = Math.max(2, Math.round(previewW * previewScale * dpr));
+    const pxH = Math.max(2, Math.round(previewH * previewScale * dpr));
+
+    if (pv.width !== pxW || pv.height !== pxH) { pv.width = pxW; pv.height = pxH; }
+
+    const cwAspect = Math.max(1, cw) / Math.max(1, ch);
+
+    if (exportFrameEnabled) {
+        const { dist, elev } = getOrbitFrameState();
+        const cropScale = getCropFrameVerticalScale();
+        exportCamDist = dist;
+        exportCamElev = elev;
+        exportCamZoom = (camera.zoom || 1) / cropScale;
+
+        // In crop mode, sample directly from the visible canvas so the mini
+        // preview matches the on-screen tone/contrast exactly.
+        if (!isTransparentPreview) {
+            const wrap = canvas?.parentElement;
+            if (wrap) {
+                const cw = wrap.clientWidth;
+                const ch = wrap.clientHeight;
+                const { sx, sy, sw, sh } = getCropFrameRect(cw, ch);
+                const srcScaleX = canvas.width / Math.max(1, cw);
+                const srcScaleY = canvas.height / Math.max(1, ch);
+                const ctx2d = pv.getContext('2d');
+                if (ctx2d) {
+                    ctx2d.clearRect(0, 0, pxW, pxH);
+                    // Draw entire uncropped viewport
+                    ctx2d.drawImage(
+                        canvas,
+                        0, 0, canvas.width, canvas.height,
+                        0, 0, pxW, pxH
+                    );
+
+                    // Draw dim overlay over the crop region
+                    const scaleX = pxW / cw;
+                    const scaleY = pxH / ch;
+                    ctx2d.fillStyle = 'rgba(0, 0, 0, 0.45)';
+                    ctx2d.fillRect(0, 0, pxW, sy * scaleY);                  // top
+                    ctx2d.fillRect(0, (sy + sh) * scaleY, pxW, pxH - (sy + sh) * scaleY);   // bottom
+                    ctx2d.fillRect(0, sy * scaleY, sx * scaleX, sh * scaleY);                // left
+                    ctx2d.fillRect((sx + sw) * scaleX, sy * scaleY, pxW - (sx + sw) * scaleX, sh * scaleY); // right
+
+                    // Corner marks
+                    const cm = Math.max(2, Math.round(Math.min(sw * scaleX, sh * scaleY) * 0.07));
+                    ctx2d.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+                    ctx2d.lineWidth = 1.5;
+                    ctx2d.beginPath();
+
+                    const minX = sx * scaleX;
+                    const minY = sy * scaleY;
+                    const maxX = (sx + sw) * scaleX;
+                    const maxY = (sy + sh) * scaleY;
+
+                    // TL
+                    ctx2d.moveTo(minX, minY + cm); ctx2d.lineTo(minX, minY); ctx2d.lineTo(minX + cm, minY);
+                    // TR
+                    ctx2d.moveTo(maxX - cm, minY); ctx2d.lineTo(maxX, minY); ctx2d.lineTo(maxX, minY + cm);
+                    // BL
+                    ctx2d.moveTo(minX, maxY - cm); ctx2d.lineTo(minX, maxY); ctx2d.lineTo(minX + cm, maxY);
+                    // BR
+                    ctx2d.moveTo(maxX - cm, maxY); ctx2d.lineTo(maxX, maxY); ctx2d.lineTo(maxX, maxY - cm);
+                    ctx2d.stroke();
+                    return;
+                }
+            }
+        }
+    }
+
+    // In normal (non-crop) mode, for non-transparent formats: sample the main
+    // canvas with a centered aspect-ratio crop matching the export dimensions.
+    // This guarantees the preview perfectly matches what will be exported —
+    // same tone mapping, same AA, same colors — with zero render overhead.
+    if (!exportFrameEnabled && !isTransparentPreview) {
+        const wrap = canvas?.parentElement;
+        if (wrap) {
+            const cw = wrap.clientWidth;
+            const ch = wrap.clientHeight;
+            const exportAspect = expW / Math.max(1, expH);
+            const canvasAspect = cw / Math.max(1, ch);
+            let sx, sy, sw, sh;
+            if (exportAspect <= canvasAspect) {
+                // Export narrower than canvas: letterbox sides
+                sh = ch;
+                sw = ch * exportAspect;
+                sx = (cw - sw) / 2;
+                sy = 0;
+            } else {
+                // Export wider than canvas: letterbox top/bottom
+                sw = cw;
+                sh = cw / exportAspect;
+                sx = 0;
+                sy = (ch - sh) / 2;
+            }
+            const srcScaleX = canvas.width / Math.max(1, cw);
+            const srcScaleY = canvas.height / Math.max(1, ch);
+            const ctx2d = pv.getContext('2d');
+            if (ctx2d) {
+                ctx2d.clearRect(0, 0, pxW, pxH);
+                ctx2d.drawImage(
+                    canvas,
+                    sx * srcScaleX,
+                    sy * srcScaleY,
+                    sw * srcScaleX,
+                    sh * srcScaleY,
+                    0,
+                    0,
+                    pxW,
+                    pxH
+                );
+                return;
+            }
+        }
+    }
+
+    // Fallback: WebGLRenderTarget for transparent exports
+    if (!_previewRt || _previewRtWidth !== pxW || _previewRtHeight !== pxH) {
         if (_previewRt) _previewRt.dispose();
-        _previewRtSize = px;
-        _previewRt = new THREE.WebGLRenderTarget(px, px, {
+        _previewRtWidth = pxW;
+        _previewRtHeight = pxH;
+        _previewRt = new THREE.WebGLRenderTarget(pxW, pxH, {
             samples: renderer.capabilities.isWebGL2 ? 4 : 0,
         });
         _previewRt.texture.colorSpace = THREE.SRGBColorSpace;
@@ -764,61 +1061,83 @@ function updateExportPreview() {
     if (!_previewCam) {
         _previewCam = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
     }
+
+    // We want the transparent render to geometrically match the mini preview canvas layout.
+    // In crop mode, pxW/pxH has the main viewport's aspect ratio.
+    // In non-crop mode, pxW/pxH has the specific export format's aspect ratio.
     _previewCam.fov = camera.fov;
     _previewCam.near = camera.near;
     _previewCam.far = camera.far;
     _previewCam.up.copy(camera.up);
-    _previewCam.aspect = 1;
+    _previewCam.aspect = pxW / pxH;
     _previewCam.updateProjectionMatrix();
 
     if (exportFrameEnabled) {
-        // Crop mode: live-sync framing from the current viewport pose every preview tick.
         const { target, dist, elev, az } = getOrbitFrameState();
-        const cropScale = getCropFrameVerticalScale();
-        const exportZoom = (camera.zoom || 1) / cropScale;
         setCameraFromOrbitState(_previewCam, target, dist, elev, az);
-        _previewCam.zoom = exportZoom;
+        _previewCam.zoom = camera.zoom || 1; // Uncropped zoom!
         _previewCam.updateProjectionMatrix();
-        exportCamDist = dist;
-        exportCamElev = elev;
-        exportCamZoom = exportZoom;
     } else {
-        // Normal mode preview uses stored export distance/elevation/zoom.
-        const { target, az } = getOrbitFrameState();
-        setCameraFromOrbitState(_previewCam, target, exportCamDist, exportCamElev, az);
-        _previewCam.zoom = exportCamZoom || (camera.zoom || 1);
+        const { target, dist: liveDist, elev: liveElev, az } = getOrbitFrameState();
+        setCameraFromOrbitState(_previewCam, target, liveDist, liveElev, az);
+        _previewCam.zoom = camera.zoom || 1;
         _previewCam.updateProjectionMatrix();
     }
 
-    // Respect transparent-preview checkbox: render the preview RT with alpha when requested
-    const isTransparentPreview = document.getElementById('exportTransparent')?.checked ?? false;
-    if (isTransparentPreview) {
-        const savedBg = scene.background;
-        const savedClearColor = renderer.getClearColor(new THREE.Color());
-        const savedClearAlpha = renderer.getClearAlpha();
-        scene.background = null;
-        renderer.setClearColor(0x000000, 0);
-        renderer.setRenderTarget(_previewRt);
-        renderer.render(scene, _previewCam);
-        renderer.setRenderTarget(null);
-        // restore
-        scene.background = savedBg;
-        renderer.setClearColor(savedClearColor, savedClearAlpha);
-    } else {
-        renderer.setRenderTarget(_previewRt);
-        renderer.render(scene, _previewCam);
-        renderer.setRenderTarget(null);
+    const savedBg = scene.background;
+    const savedClearColor = renderer.getClearColor(new THREE.Color());
+    const savedClearAlpha = renderer.getClearAlpha();
+    scene.background = null;
+    renderer.setClearColor(0x000000, 0);
+    renderer.setRenderTarget(_previewRt);
+    renderer.render(scene, _previewCam);
+    renderer.setRenderTarget(null);
+    scene.background = savedBg;
+    renderer.setClearColor(savedClearColor, savedClearAlpha);
+
+    const buf = new Uint8Array(pxW * pxH * 4);
+    renderer.readRenderTargetPixels(_previewRt, 0, 0, pxW, pxH, buf);
+    const imgData = pv.getContext('2d').createImageData(pxW, pxH);
+    for (let row = 0; row < pxH; row++) {
+        const srcRow = (pxH - 1 - row) * pxW * 4;
+        imgData.data.set(buf.subarray(srcRow, srcRow + pxW * 4), row * pxW * 4);
     }
 
-    // Read pixels and flip vertically (WebGL origin is bottom-left)
-    const buf = new Uint8Array(px * px * 4);
-    renderer.readRenderTargetPixels(_previewRt, 0, 0, px, px, buf);
-    const imgData = pv.getContext('2d').createImageData(px, px);
-    for (let row = 0; row < px; row++) {
-        const srcRow = (px - 1 - row) * px * 4;
-        imgData.data.set(buf.subarray(srcRow, srcRow + px * 4), row * px * 4);
+    const ctx2d = pv.getContext('2d');
+    ctx2d.putImageData(imgData, 0, 0);
+
+    if (exportFrameEnabled) {
+        const { sx, sy, sw, sh } = getCropFrameRect(cw, ch);
+        const scaleX = pxW / cw;
+        const scaleY = pxH / ch;
+        ctx2d.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx2d.fillRect(0, 0, pxW, sy * scaleY);
+        ctx2d.fillRect(0, (sy + sh) * scaleY, pxW, pxH - (sy + sh) * scaleY);
+        ctx2d.fillRect(0, sy * scaleY, sx * scaleX, sh * scaleY);
+        ctx2d.fillRect((sx + sw) * scaleX, sy * scaleY, pxW - (sx + sw) * scaleX, sh * scaleY);
+
+        const cm = Math.max(2, Math.round(Math.min(sw * scaleX, sh * scaleY) * 0.07));
+        ctx2d.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx2d.lineWidth = 1.5;
+        ctx2d.beginPath();
+        const minX = sx * scaleX;
+        const minY = sy * scaleY;
+        const maxX = (sx + sw) * scaleX;
+        const maxY = (sy + sh) * scaleY;
+
+        ctx2d.moveTo(minX, minY + cm); ctx2d.lineTo(minX, minY); ctx2d.lineTo(minX + cm, minY);
+        ctx2d.moveTo(maxX - cm, minY); ctx2d.lineTo(maxX, minY); ctx2d.lineTo(maxX, minY + cm);
+        ctx2d.moveTo(minX, maxY - cm); ctx2d.lineTo(minX, maxY); ctx2d.lineTo(minX + cm, maxY);
+        ctx2d.moveTo(maxX - cm, maxY); ctx2d.lineTo(maxX, maxY); ctx2d.lineTo(maxX, maxY - cm);
+        ctx2d.stroke();
     }
-    pv.getContext('2d').putImageData(imgData, 0, 0);
+}
+
+function refreshExportPreviewNow() {
+    try { updateExportPreview(true); } catch (e) { }
+    requestAnimationFrame(() => {
+        try { updateExportPreview(true); } catch (e) { }
+    });
 }
 
 // ── Export frame overlay ──────────────────────────────────────────────────
@@ -857,6 +1176,43 @@ function updateCropHintUI() {
     _hintVisibleBeforeCrop = null;
 }
 
+function updateCropDimensionsDock(frameRect = null) {
+    const showDimensions = !!exportFormatEl?.value; // all formats support aspect presets
+    const useDock = showDimensions && exportFrameEnabled && !!cropDimensionsDock;
+
+    if (!cropDimensionsDock) return;
+    if (!useDock) {
+        cropDimensionsDock.hidden = true;
+        cropDimensionsDock.setAttribute('aria-hidden', 'true');
+        return;
+    }
+
+    cropDimensionsDock.hidden = false;
+    cropDimensionsDock.setAttribute('aria-hidden', 'false');
+
+    const fc = document.getElementById('exportFrameCanvas');
+    const wrap = fc?.parentElement;
+    if (!wrap) return;
+    const w = fc?.width || wrap.clientWidth;
+    const h = fc?.height || wrap.clientHeight;
+    if (!w || !h) return;
+
+    const rect = frameRect ?? getCropFrameRect(w, h);
+    if (!rect || rect.sw <= 0 || rect.sh <= 0) return;
+
+    const gap = Math.round(Math.max(8, Math.min(18, rect.sw * 0.032)));
+    const dockW = cropDimensionsDock.offsetWidth || 52;
+    const dockH = cropDimensionsDock.offsetHeight || 214;
+    const top = Math.max(8, Math.min(h - dockH - 8, rect.sy + (rect.sh - dockH) / 2));
+
+    // Keep the crop shapes in crop mode aligned right rigidly
+    const rightOffset = 16;
+    const left = Math.max(8, w - dockW - rightOffset);
+
+    cropDimensionsDock.style.left = `${Math.round(left)}px`;
+    cropDimensionsDock.style.top = `${Math.round(top)}px`;
+}
+
 function drawExportFrame() {
     const fc = document.getElementById('exportFrameCanvas');
     if (!fc) return;
@@ -866,9 +1222,7 @@ function drawExportFrame() {
     if (w === 0 || h === 0) return;
     if (fc.width !== w || fc.height !== h) { fc.width = w; fc.height = h; }
 
-    const sq = Math.round(Math.min(w, h) * CROP_FRAME_UI_SCALE);
-    const sx = Math.floor((w - sq) / 2);
-    const sy = Math.floor((h - sq) / 2);
+    const { sx, sy, sw, sh } = getCropFrameRect(w, h);
     const ctx = fc.getContext('2d');
 
     ctx.clearRect(0, 0, w, h);
@@ -878,43 +1232,54 @@ function drawExportFrame() {
         // Draw dim overlay directly on canvas — avoids hard CSS edges from backdrop-filter divs
         ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
         ctx.fillRect(0, 0, w, sy);                  // top
-        ctx.fillRect(0, sy + sq, w, h - sy - sq);   // bottom
-        ctx.fillRect(0, sy, sx, sq);                // left
-        ctx.fillRect(sx + sq, sy, w - sx - sq, sq); // right
+        ctx.fillRect(0, sy + sh, w, h - sy - sh);   // bottom
+        ctx.fillRect(0, sy, sx, sh);                // left
+        ctx.fillRect(sx + sw, sy, w - sx - sw, sh); // right
 
         // Corner bracket marks
-        const cm = Math.round(sq * 0.07);
+        const cm = Math.max(8, Math.round(Math.min(sw, sh) * 0.07));
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.moveTo(sx, sy + cm); ctx.lineTo(sx, sy); ctx.lineTo(sx + cm, sy);           // TL
-        ctx.moveTo(sx + sq - cm, sy); ctx.lineTo(sx + sq, sy); ctx.lineTo(sx + sq, sy + cm);      // TR
-        ctx.moveTo(sx, sy + sq - cm); ctx.lineTo(sx, sy + sq); ctx.lineTo(sx + cm, sy + sq);      // BL
-        ctx.moveTo(sx + sq - cm, sy + sq); ctx.lineTo(sx + sq, sy + sq); ctx.lineTo(sx + sq, sy + sq - cm); // BR
+        ctx.moveTo(sx + sw - cm, sy); ctx.lineTo(sx + sw, sy); ctx.lineTo(sx + sw, sy + cm);      // TR
+        ctx.moveTo(sx, sy + sh - cm); ctx.lineTo(sx, sy + sh); ctx.lineTo(sx + cm, sy + sh);      // BL
+        ctx.moveTo(sx + sw - cm, sy + sh); ctx.lineTo(sx + sw, sy + sh); ctx.lineTo(sx + sw, sy + sh - cm); // BR
         ctx.stroke();
 
-        // Position the crop controls div to match the crop square
+        // Position the crop controls div to match the crop frame
         if (cc) {
             cc.hidden = false;
             cc.removeAttribute('aria-hidden');
         }
         // Position the 4 transparent click-capture divs over the dim regions
-        _cropSx = sx; _cropSy = sy; _cropSq = sq;
+        _cropSx = sx; _cropSy = sy; _cropSw = sw; _cropSh = sh;
         [['frameDimTop', 0, 0, w, sy],
-        ['frameDimBottom', 0, sy + sq, w, h - sy - sq],
-        ['frameDimLeft', 0, sy, sx, sq],
-        ['frameDimRight', sx + sq, sy, w - sx - sq, sq]
+        ['frameDimBottom', 0, sy + sh, w, h - sy - sh],
+        ['frameDimLeft', 0, sy, sx, sh],
+        ['frameDimRight', sx + sw, sy, w - sx - sw, sh]
         ].forEach(([id, l, t, dw, dh]) => {
             const el = document.getElementById(id);
             if (!el) return;
             el.style.left = l + 'px'; el.style.top = t + 'px';
             el.style.width = dw + 'px'; el.style.height = dh + 'px';
         });
+
+        // Position corner drag handles at each frame corner
+        const ch = 11; // half the hit-area size in px
+        [['TL', sx, sy], ['TR', sx + sw, sy], ['BL', sx, sy + sh], ['BR', sx + sw, sy + sh]].forEach(([id, cx, cy]) => {
+            const el = document.getElementById(`cropCorner${id}`);
+            if (!el) return;
+            el.style.left = (cx - ch) + 'px';
+            el.style.top = (cy - ch) + 'px';
+        });
+        updateCropDimensionsDock({ sx, sy, sw, sh });
         document.documentElement.classList.add('crop-mode');
     } else {
         // Frame off: just clear — no hint brackets
         ctx.clearRect(0, 0, w, h);
         if (cc) { cc.hidden = true; cc.setAttribute('aria-hidden', 'true'); }
+        updateCropDimensionsDock();
         document.documentElement.classList.remove('crop-mode');
     }
 }
@@ -923,8 +1288,10 @@ function clearExportFrame() {
     // Dim is drawn on canvas each frame; just force-clear immediately for instant feedback
     const fc = document.getElementById('exportFrameCanvas');
     if (fc) fc.getContext('2d').clearRect(0, 0, fc.width, fc.height);
+    _cropSx = 0; _cropSy = 0; _cropSw = 0; _cropSh = 0;
     const cc = document.getElementById('cropControls');
     if (cc) { cc.hidden = true; cc.setAttribute('aria-hidden', 'true'); }
+    updateCropDimensionsDock();
     document.documentElement.classList.remove('crop-mode');
 }
 
@@ -1004,6 +1371,7 @@ function saveSettings() {
 
             exportQuality: document.getElementById('exportQuality')?.value ?? 'std',
             exportFormat: exportFormatEl?.value ?? 'gif',
+            exportDimensions: getSelectedExportDimensionsId(),
             exportTransparent: document.getElementById('exportTransparent')?.checked ? '1' : '0',
             gifDither: document.getElementById('gifDither')?.checked ? '1' : '0',
             jpegQuality: document.getElementById('jpegQuality')?.value ?? '92',
@@ -1102,6 +1470,7 @@ function restoreSettings() {
             const legacyQ = s.exportQuality ?? (s.exportRes === '1080' ? 'high' : s.exportRes === '480' ? 'web' : null) ?? 'std';
             const eq = s.exportQuality ?? s.gifQuality ?? s.videoQuality ?? legacyQ;
             { const el = document.getElementById('exportQuality'); if (el) el.value = eq; }
+            if (s.exportDimensions) setSelectedExportDimensionsId(s.exportDimensions);
             // Restore export format
             if (s.exportFormat && exportFormatEl) {
                 exportFormatEl.value = s.exportFormat;
@@ -1181,34 +1550,98 @@ function restoreSettings() {
 // ── URL / shareable settings ─────────────────────────────────────────────────────────────
 function getURLSettings() {
     const p = new URLSearchParams(location.search);
-    if (!p.has('c') && !p.has('sh') && !p.has('rm') && !p.has('re')) return null;
+    // Require at least one known key to treat URL as settings-bearing
+    if (!p.has('c') && !p.has('sh') && !p.has('rm') && !p.has('re') && !p.has('ef')) return null;
+    const g = (k) => p.has(k) ? p.get(k) : null;
     return {
+        // Core appearance
         color: p.has('c') ? '#' + p.get('c') : null,
         bg: p.has('b') ? '#' + p.get('b') : null,
-        shading: p.get('sh') || null,
-        rotateMode: p.get('rm') || null,
-        speed: p.get('sp') || null,
-
-        tiltRange: p.get('tr') || null,
-        wobbleSpinRange: p.get('wsr') || null,
+        shading: g('sh'),
+        // Animation
+        rotateMode: g('rm'),
+        speed: g('sp'),
+        tiltRange: g('tr'),
+        wobbleSpinRange: g('wsr'),
         spinDir: p.has('sd') ? (p.get('sd') === '-1' ? -1 : 1) : null,
         gifLoop: p.has('gl') ? p.get('gl') === '1' : null,
+        // Export
+        exportFormat: g('ef'),
+        exportQuality: g('eq'),
+        exportDimensions: g('ed'),
+        exportTransparent: p.has('et') ? p.get('et') : null,
+        gifDither: p.has('gd') ? p.get('gd') : null,
+        jpegQuality: g('jq'),
+        textureTuneOpen: p.has('tto') ? p.get('tto') : null,
+        // Texture tune
+        textureTuneLight: g('tl'),
+        textureTuneContrast: g('tc'),
+        textureTuneHighlights: g('thi'),
+        textureTuneShadowStrength: g('ts'),
+        textureTuneShadowAzimuth: g('tsa'),
+        textureTuneShadowHeight: g('tsh'),
+        textureTuneMetallicRoughness: g('tmr'),
+        textureTuneMetallicMetalness: g('tmm'),
+        textureTuneMetallicReflection: g('tme'),
+        textureTunePhongRoughness: g('tpr'),
+        textureTunePhongReflection: g('tpe'),
+        textureTuneClayRoughness: g('tcr'),
+        textureTuneClayReflection: g('tce'),
+        // Export camera framing
+        exportCamDist: g('ecd'),
+        exportCamElev: g('ece'),
+        exportCamZoom: g('ecz'),
     };
 }
 
 function settingsToURL() {
-    const p = new URLSearchParams({
-        c: colorPick.value.replace('#', ''),
-        b: bgPick.value.replace('#', ''),
-        sh: shadingEl.value,
-        rm: rotateModeEl.value,
-        sp: speedSlider.value,
-
-        tr: tiltRangeSlider.value,
-        wsr: wobbleSpinRangeSlider.value,
-        sd: spinDir,
-        gl: document.getElementById('gifLoop')?.checked ? '1' : '0',
-    });
+    const p = new URLSearchParams();
+    // Core appearance
+    p.set('c', colorPick.value.replace('#', ''));
+    p.set('b', bgPick.value.replace('#', ''));
+    p.set('sh', shadingEl.value);
+    // Animation
+    p.set('rm', rotateModeEl.value);
+    p.set('sp', speedSlider.value);
+    p.set('tr', tiltRangeSlider.value);
+    p.set('wsr', wobbleSpinRangeSlider.value);
+    p.set('sd', String(spinDir));
+    p.set('gl', document.getElementById('gifLoop')?.checked ? '1' : '0');
+    // Export format/quality/options
+    const fmt = exportFormatEl?.value ?? 'gif';
+    p.set('ef', fmt);
+    p.set('eq', document.getElementById('exportQuality')?.value ?? 'std');
+    const dim = getSelectedExportDimensionsId();
+    if (dim) p.set('ed', dim);
+    p.set('et', document.getElementById('exportTransparent')?.checked ? '1' : '0');
+    p.set('gd', document.getElementById('gifDither')?.checked ? '1' : '0');
+    const jq = document.getElementById('jpegQuality')?.value;
+    if (jq != null) p.set('jq', jq);
+    // Texture tune panel state
+    p.set('tto', (textureTunePanel && !textureTunePanel.hidden) ? '1' : '0');
+    // Texture tune values (only non-default to keep URLs short)
+    const tt = textureTuneState;
+    const D = TEXTURE_TUNE_DEFAULTS;
+    if (tt.light !== D.light) p.set('tl', String(tt.light));
+    if (tt.contrast !== D.contrast) p.set('tc', String(tt.contrast));
+    if (tt.highlights !== D.highlights) p.set('thi', String(tt.highlights));
+    if (tt.shadows !== D.shadows) p.set('ts', String(tt.shadows));
+    if (tt.shadowAzimuth !== D.shadowAzimuth) p.set('tsa', String(tt.shadowAzimuth));
+    if (tt.shadowHeight !== D.shadowHeight) p.set('tsh', String(tt.shadowHeight));
+    if (tt.metallicRoughness !== D.metallicRoughness) p.set('tmr', String(tt.metallicRoughness));
+    if (tt.metallicMetalness !== D.metallicMetalness) p.set('tmm', String(tt.metallicMetalness));
+    if (tt.metallicReflection !== D.metallicReflection) p.set('tme', String(tt.metallicReflection));
+    if (tt.phongRoughness !== D.phongRoughness) p.set('tpr', String(tt.phongRoughness));
+    if (tt.phongReflection !== D.phongReflection) p.set('tpe', String(tt.phongReflection));
+    if (tt.clayRoughness !== D.clayRoughness) p.set('tcr', String(tt.clayRoughness));
+    if (tt.clayReflection !== D.clayReflection) p.set('tce', String(tt.clayReflection));
+    // Export camera framing
+    if (exportCamDist != null && Number.isFinite(exportCamDist) && exportCamDist > 0)
+        p.set('ecd', exportCamDist.toFixed(4));
+    if (exportCamElev != null && Number.isFinite(exportCamElev))
+        p.set('ece', exportCamElev.toFixed(4));
+    if (exportCamZoom != null && Number.isFinite(exportCamZoom) && exportCamZoom !== 1)
+        p.set('ecz', exportCamZoom.toFixed(4));
     history.replaceState(null, '', '?' + p.toString());
 }
 
@@ -1414,39 +1847,15 @@ document.getElementById('btnExportPng').addEventListener('click', async () => {
         btnPause.setAttribute('aria-label', 'Resume rotation');
         btnPause.title = 'Resume rotation';
     }
-    const { quality } = EXPORT.image;
     const isTransparent = document.getElementById('exportTransparentPng')?.checked ?? false;
 
-    if (isTransparent) {
-        // Render to offscreen target with null background → transparent PNG
-        const pw = renderer.domElement.width, ph = renderer.domElement.height;
-        const rt = new THREE.WebGLRenderTarget(pw, ph);
-        const savedBg = scene.background;
-        const savedClearColor = renderer.getClearColor(new THREE.Color());
-        const savedClearAlpha = renderer.getClearAlpha();
-        scene.background = null;
-        renderer.setClearColor(0x000000, 0);
-        renderer.setRenderTarget(rt);
-        renderer.render(scene, camera);
-        renderer.setRenderTarget(null);
-        const buf = new Uint8Array(pw * ph * 4);
-        renderer.readRenderTargetPixels(rt, 0, 0, pw, ph, buf);
-        rt.dispose();
-        scene.background = savedBg;
-        renderer.setClearColor(savedClearColor, savedClearAlpha);
-        // Flip vertically (WebGL origin is bottom-left)
-        const flipped = new Uint8ClampedArray(pw * ph * 4);
-        for (let row = 0; row < ph; row++) {
-            const src = (ph - 1 - row) * pw * 4;
-            flipped.set(buf.subarray(src, src + pw * 4), row * pw * 4);
-        }
-        const oc = new OffscreenCanvas(pw, ph);
-        oc.getContext('2d').putImageData(new ImageData(flipped, pw, ph), 0, 0);
-        const blob = await oc.convertToBlob({ type: 'image/png' });
+    try {
+        const blob = await renderStillImageBlob('image/png', { transparent: isTransparent });
         download(blob, buildExportFilename('png'), 'image/png');
-    } else {
-        renderer.render(scene, camera);
-        canvas.toBlob(blob => download(blob, buildExportFilename('png'), 'image/png'), 'image/png');
+    } catch (err) {
+        setStatus('Error: ' + err.message);
+        console.error(err);
+        setTimeout(() => setStatus(''), 5000);
     }
 });
 
@@ -1461,12 +1870,14 @@ document.getElementById('btnExportJpeg').addEventListener('click', async () => {
         btnPause.title = 'Resume rotation';
     }
     const { quality } = EXPORT.image;
-    renderer.render(scene, camera);
-    canvas.toBlob(
-        blob => download(blob, buildExportFilename('jpg'), 'image/jpeg'),
-        'image/jpeg',
-        quality
-    );
+    try {
+        const blob = await renderStillImageBlob('image/jpeg', { quality, transparent: false });
+        download(blob, buildExportFilename('jpg'), 'image/jpeg');
+    } catch (err) {
+        setStatus('Error: ' + err.message);
+        console.error(err);
+        setTimeout(() => setStatus(''), 5000);
+    }
 });
 
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
@@ -1491,6 +1902,30 @@ function setTextureTunePanelOpen(open) {
     textureTunePanel.hidden = !open;
     if (textureTuneBtn) textureTuneBtn.setAttribute('aria-expanded', String(open));
     if (open) updateTextureTuneUI();
+}
+
+function isTextureNewBadgeDismissed() {
+    try { return localStorage.getItem(TEXTURE_NEWS_DISMISSED_KEY) === '1'; } catch (e) { return false; }
+}
+
+function setTextureNewBadgeDismissed(hidden) {
+    try { localStorage.setItem(TEXTURE_NEWS_DISMISSED_KEY, hidden ? '1' : '0'); } catch (e) { }
+}
+
+function dismissTextureNewBadge() {
+    if (textureTuneNewBadge) textureTuneNewBadge.hidden = true;
+    setTextureNewBadgeDismissed(true);
+}
+
+function initTextureNewsUI() {
+    if (!textureTuneNewBadge) return;
+
+    if (isTextureNewBadgeDismissed()) {
+        textureTuneNewBadge.hidden = true;
+        return;
+    }
+
+    textureTuneNewBadge.hidden = false;
 }
 
 function updateTextureTuneUI() {
@@ -1606,6 +2041,7 @@ bgPick.addEventListener('input', () => {
 textureTuneBtn?.addEventListener('click', () => {
     const isOpen = !(textureTunePanel?.hidden ?? true);
     setTextureTunePanelOpen(!isOpen);
+    if (!isOpen) dismissTextureNewBadge();
     saveSettings();
 });
 
@@ -1697,7 +2133,20 @@ document.querySelectorAll('#gifLoop, #gifDither').forEach(el =>
     el.addEventListener('change', saveSettings)
 );
 
-document.getElementById('exportQuality')?.addEventListener('change', () => { updateEstimate(); saveSettings(); });
+document.getElementById('exportQuality')?.addEventListener('change', () => {
+    updateEstimate();
+    refreshExportPreviewNow();
+    saveSettings();
+});
+exportDimensionInputs.forEach(input => {
+    input.addEventListener('change', () => {
+        if (!input.checked) return;
+        updateCropDimensionsDock();
+        updateEstimate();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+});
 
 // ── Export format switcher ────────────────────────────────────────────────────
 const FORMAT_LABELS = {
@@ -1712,9 +2161,11 @@ function applyExportFormat(fmt) {
     document.querySelectorAll('.export-format-opts').forEach(el => { el.hidden = true; });
     const opts = document.getElementById(`exportOpts-${fmt}`);
     if (opts) opts.hidden = false;
+    updateCropDimensionsDock();
     const mainBtn = document.getElementById('btnExport');
     if (mainBtn) mainBtn.textContent = FORMAT_LABELS[fmt] ?? 'Export';
     updateEstimate();
+    refreshExportPreviewNow();
 }
 
 exportFormatEl?.addEventListener('change', function () {
@@ -1739,12 +2190,14 @@ function syncTransparentCheckboxes(sourceId) {
         wrap.classList.toggle('is-transparent', val);
     }
     updateEstimate(); saveSettings();
-    try { if (typeof updateExportPreview === 'function') updateExportPreview(); } catch (e) { }
+    refreshExportPreviewNow();
 }
 document.getElementById('exportTransparent')?.addEventListener('change', () => syncTransparentCheckboxes('exportTransparent'));
 document.getElementById('exportTransparentPng')?.addEventListener('change', () => syncTransparentCheckboxes('exportTransparentPng'));
 document.getElementById('jpegQuality').addEventListener('input', function () {
     document.getElementById('jpegQualityVal').textContent = this.value + '%';
+    updateEstimate();
+    refreshExportPreviewNow();
     saveSettings();
 });
 
@@ -1997,6 +2450,57 @@ document.addEventListener('keydown', e => {
     if ((e.key === 'Enter' || e.key === 'Return') && exportFrameEnabled) confirmCropMode();
 });
 
+// ── Crop corner drag to snap aspect ratio ─────────────────────────────────────
+let _cropCornerDrag = null; // { id, startX, startY, initW, initH } or null
+
+['TL', 'TR', 'BL', 'BR'].forEach(cid => {
+    const el = document.getElementById(`cropCorner${cid}`);
+    if (!el) return;
+    el.addEventListener('mousedown', e => {
+        e.preventDefault(); e.stopPropagation();
+        _cropCornerDrag = {
+            id: cid, startX: e.clientX, startY: e.clientY,
+            initW: _cropSw || 100, initH: _cropSh || 100
+        };
+    });
+    el.addEventListener('touchstart', e => {
+        e.preventDefault(); e.stopPropagation();
+        const t = e.touches[0];
+        _cropCornerDrag = {
+            id: cid, startX: t.clientX, startY: t.clientY,
+            initW: _cropSw || 100, initH: _cropSh || 100
+        };
+    }, { passive: false });
+});
+
+function _applyCropCornerDrag(clientX, clientY) {
+    if (!_cropCornerDrag || !exportFrameEnabled) return;
+    const { id, startX, startY, initW, initH } = _cropCornerDrag;
+    const dx = clientX - startX;
+    const dy = clientY - startY;
+    let dw, dh;
+    if (id === 'BR') { dw = dx; dh = dy; }
+    else if (id === 'BL') { dw = -dx; dh = dy; }
+    else if (id === 'TR') { dw = dx; dh = -dy; }
+    else { dw = -dx; dh = -dy; } // TL
+    const newAspect = Math.max(0.1, Math.min(10, (initW + dw) / Math.max(1, initH + dh)));
+    const best = nearestDimensionPreset(newAspect);
+    if (best !== getSelectedExportDimensionsId()) {
+        setSelectedExportDimensionsId(best);
+        updateCropDimensionsDock();
+        updateEstimate();
+        refreshExportPreviewNow();
+        saveSettings();
+    }
+}
+
+document.addEventListener('mousemove', e => _applyCropCornerDrag(e.clientX, e.clientY));
+document.addEventListener('mouseup', () => { _cropCornerDrag = null; });
+document.addEventListener('touchmove', e => {
+    if (_cropCornerDrag) _applyCropCornerDrag(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: true });
+document.addEventListener('touchend', () => { _cropCornerDrag = null; });
+
 // ── Export helpers ────────────────────────────────────────────────────────────
 const setStatus = msg => { statusEl.textContent = msg; };
 const setAnimStatus = (msg, done, total) => {
@@ -2042,7 +2546,9 @@ function getExportModifierTags(format) {
         tags.push(loopOn ? 'loop' : 'noloop');
         if (document.getElementById('gifDither')?.checked) tags.push('dither');
         if (document.getElementById('exportTransparent')?.checked) tags.push('transparent');
-    } else if (format === 'png') {
+    } else if (format === 'png' || format === 'jpg') {
+        if (EXPORT.image.presetTag) tags.push(EXPORT.image.presetTag);
+        if (format !== 'png') return tags;
         const transparentPng = document.getElementById('exportTransparentPng')?.checked
             ?? document.getElementById('exportTransparent')?.checked
             ?? false;
@@ -2060,22 +2566,116 @@ function buildExportFilename(format) {
     return [base, mode, quality, ...modifiers].join('_') + '.' + ext;
 }
 
+async function renderStillImageBlob(type, { quality = 0.92, transparent = false } = {}) {
+    if (!renderer || !camera || !scene || !mesh) throw new Error('Viewer is not ready.');
+
+    if (exportFrameEnabled) syncExportCameraFromViewport();
+
+    const { width: W, height: H } = getImageExportSize();
+
+    const savedAspect = camera.aspect;
+    const savedZoom = camera.zoom;
+    const savedCamPos = camera.position.clone();
+    const savedUp = camera.up.clone();
+    const savedTarget = controls?.target ? controls.target.clone() : new THREE.Vector3(0, 0, 0);
+    const savedBg = scene.background;
+    const savedClearColor = renderer.getClearColor(new THREE.Color());
+    const savedClearAlpha = renderer.getClearAlpha();
+
+    const { target, dist, elev, az } = getOrbitFrameState();
+    const exportDist = (exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
+    const exportElev = (exportFrameEnabled && exportCamDist !== null) ? exportCamElev : elev;
+    const exportZoom = (exportFrameEnabled && exportCamDist !== null) ? (exportCamZoom || 1) : (camera.zoom || 1);
+
+    // Render directly to the main canvas at export resolution so tone-mapping,
+    // antialiasing and color-space encoding are identical to the live viewport.
+    // Render at 2× (SSAA) then downscale — the bilinear downscale blends the
+    // extra samples, eliminating sub-pixel stairstepping on thin/diagonal edges.
+    const SSAA = 2;
+    const savedPR = renderer.getPixelRatio();
+    const wrap = canvas.parentElement;
+    const savedViewW = Math.max(1, wrap.clientWidth);
+    const savedViewH = Math.max(1, wrap.clientHeight);
+    renderer.setPixelRatio(1);
+    renderer.setSize(W * SSAA, H * SSAA, false); // 2× buffer, CSS unchanged
+
+    camera.aspect = W / H;
+    camera.zoom = exportZoom;
+    setCameraFromOrbitState(camera, target, exportDist, exportElev, az);
+    camera.updateProjectionMatrix();
+
+    if (transparent) {
+        scene.background = null;
+        renderer.setClearColor(0x000000, 0);
+    }
+
+    renderer.render(scene, camera);
+
+    // Synchronously copy the export frame to an offscreen canvas BEFORE any
+    // await, so the main renderer/camera can be restored within the same JS
+    // task — preventing the animation loop from seeing the oversized canvas.
+    const out = document.createElement('canvas');
+    out.width = W;
+    out.height = H;
+    const outCtx = out.getContext('2d');
+    outCtx.imageSmoothingEnabled = true;
+    outCtx.imageSmoothingQuality = 'high';
+    outCtx.drawImage(canvas, 0, 0, W, H); // downscale 2× → SSAA
+
+    // Restore scene + camera exactly as the user had them, synchronously.
+    if (transparent) {
+        scene.background = savedBg;
+        renderer.setClearColor(savedClearColor, savedClearAlpha);
+    }
+    camera.position.copy(savedCamPos);
+    camera.up.copy(savedUp);
+    camera.aspect = savedAspect;
+    camera.zoom = savedZoom;
+    camera.lookAt(savedTarget);
+    camera.updateProjectionMatrix();
+    if (controls?.target) controls.target.copy(savedTarget);
+    controls?.update?.();
+
+    // Restore renderer to the viewport size before yielding execution.
+    renderer.setPixelRatio(savedPR);
+    renderer.setSize(savedViewW, savedViewH, false);
+    camera.aspect = savedViewW / savedViewH;
+    camera.updateProjectionMatrix();
+    renderer.render(scene, camera); // repaint the visible frame immediately
+
+    // Now encode from the offscreen copy — the main canvas is already restored.
+    const blob = await new Promise(resolve => {
+        if (type === 'image/jpeg') {
+            out.toBlob(resolve, type, quality);
+        } else {
+            out.toBlob(resolve, type);
+        }
+    });
+    if (!blob) throw new Error('Could not encode exported image.');
+    return blob;
+}
+
 // Capture N frames by orbiting the camera, return array of Uint8ClampedArrays
-async function captureFrames(n, size = EXPORT.gif.size, transparent = false) {
-    const S = size;
+async function captureFrames(n, dims = null, transparent = false) {
+    const { width: W, height: H } = dims ?? getImageExportSize();
     const frames = [];
 
     // Ensure export framing reflects the latest zoom/orbit right before capture.
     if (exportFrameEnabled) syncExportCameraFromViewport();
 
-    // Render into an offscreen target — never touch the visible canvas or camera aspect
-    const rt = new THREE.WebGLRenderTarget(S, S, { samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
-    rt.texture.colorSpace = THREE.SRGBColorSpace; // match screen canvas linear→sRGB encoding
+    // Render directly to the main canvas at 2x resolution for SSAA
+    const SSAA = 2;
+    const savedPR = renderer.getPixelRatio();
+    const wrap = canvas.parentElement;
+    const savedViewW = Math.max(1, wrap.clientWidth);
+    const savedViewH = Math.max(1, wrap.clientHeight);
+    renderer.setPixelRatio(1);
+    renderer.setSize(W * SSAA, H * SSAA, false); // 2× buffer, CSS unchanged
+
     const savedAspect = camera.aspect;
     const savedZoom = camera.zoom;
-    camera.aspect = 1;
+    camera.aspect = W / H;
 
-    // Transparent BG: null scene background so render target fills with alpha=0
     const savedBg = scene.background;
     const savedClearColor = renderer.getClearColor(new THREE.Color());
     const savedClearAlpha = renderer.getClearAlpha();
@@ -2085,10 +2685,10 @@ async function captureFrames(n, size = EXPORT.gif.size, transparent = false) {
     }
 
     const { target, dist, elev, az } = getOrbitFrameState();
-    // Always prefer stored export framing when available (crop mode keeps it live-synced).
-    const exportDist = (exportCamDist !== null) ? exportCamDist : dist;
-    const exportElev = (exportCamDist !== null) ? exportCamElev : elev;
-    const exportZoom = (exportCamDist !== null) ? (exportCamZoom || 1) : (camera.zoom || 1);
+    // Use stored export framing only in crop mode; otherwise mirror the live viewport.
+    const exportDist = (exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
+    const exportElev = (exportFrameEnabled && exportCamDist !== null) ? exportCamElev : elev;
+    const exportZoom = (exportFrameEnabled && exportCamDist !== null) ? (exportCamZoom || 1) : (camera.zoom || 1);
     camera.zoom = exportZoom;
     camera.updateProjectionMatrix();
     const savedCamPos = camera.position.clone();
@@ -2102,6 +2702,13 @@ async function captureFrames(n, size = EXPORT.gif.size, transparent = false) {
     const spinSign = spinDir > 0 ? -1 : 1;
     const MAX_EL = Math.PI / 2 - 0.05;
     const savedMeshRx = mesh ? mesh.rotation.x : 0;
+
+    const out = document.createElement('canvas');
+    out.width = W;
+    out.height = H;
+    const outCtx = out.getContext('2d');
+    outCtx.imageSmoothingEnabled = true;
+    outCtx.imageSmoothingQuality = 'high';
 
     for (let i = 0; i < n; i++) {
         if (isTilt) {
@@ -2127,19 +2734,11 @@ async function captureFrames(n, size = EXPORT.gif.size, transparent = false) {
             const azimuth = az + spinSign * (2 * Math.PI * i) / n;
             setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
         }
-        renderer.setRenderTarget(rt);
+
         renderer.render(scene, camera);
-        renderer.setRenderTarget(null);
-        // Read pixels directly from the render target
-        const buf = new Uint8Array(S * S * 4);
-        renderer.readRenderTargetPixels(rt, 0, 0, S, S, buf);
-        // WebGL origin is bottom-left; flip vertically for canvas convention
-        const flipped = new Uint8ClampedArray(S * S * 4);
-        for (let row = 0; row < S; row++) {
-            const src = (S - 1 - row) * S * 4;
-            flipped.set(buf.subarray(src, src + S * 4), row * S * 4);
-        }
-        frames.push(flipped);
+        outCtx.clearRect(0, 0, W, H);
+        outCtx.drawImage(canvas, 0, 0, W, H);
+        frames.push(new Uint8ClampedArray(outCtx.getImageData(0, 0, W, H).data));
 
         if (i % 12 === 0) {
             setAnimStatus(`Capturing… ${i + 1} / ${n}`, i + 1, n);
@@ -2147,18 +2746,22 @@ async function captureFrames(n, size = EXPORT.gif.size, transparent = false) {
         }
     }
 
-    if (mesh) mesh.rotation.x = savedMeshRx;
-    camera.position.copy(savedCamPos);
-    camera.lookAt(target);
-    // Restore camera aspect — renderer and visible canvas were never touched
-    camera.aspect = savedAspect;
-    camera.zoom = savedZoom;
-    camera.updateProjectionMatrix();
     if (transparent) {
         scene.background = savedBg;
         renderer.setClearColor(savedClearColor, savedClearAlpha);
     }
-    rt.dispose();
+    if (mesh) mesh.rotation.x = savedMeshRx;
+    camera.position.copy(savedCamPos);
+    camera.lookAt(target);
+    camera.aspect = savedAspect;
+    camera.zoom = savedZoom;
+    camera.updateProjectionMatrix();
+
+    // Restore renderer to the viewport size before yielding execution.
+    renderer.setPixelRatio(savedPR);
+    renderer.setSize(savedViewW, savedViewH, false);
+    camera.aspect = savedViewW / savedViewH;
+    camera.updateProjectionMatrix();
     controls.update();
     renderer.render(scene, camera); // Refresh visible canvas before encoding begins
     return frames;
@@ -2211,9 +2814,10 @@ btnGif.addEventListener('click', async () => {
     controls.autoRotate = false;
 
     try {
-        const { fps, size: S, loop, dither } = EXPORT.gif;
+        const { fps, loop, dither } = EXPORT.gif;
+        const { width: W, height: H } = getImageExportSize();
         const isTransparent = document.getElementById('exportTransparent')?.checked ?? false;
-        const frames = await captureFrames(exportFrames(fps), S, isTransparent);
+        const frames = await captureFrames(exportFrames(fps), { width: W, height: H }, isTransparent);
         const delay = Math.round(1000 / fps);
 
         setAnimStatus('Encoding GIF…');
@@ -2232,16 +2836,16 @@ btnGif.addEventListener('click', async () => {
                 // applyPalette uses an internal rgb565 hash LUT — O(1) per pixel after warm-up.
                 // Then stamp 255 over transparent pixels in a single cheap pass.
                 const indices = applyPalette(frames[i], pal);
-                for (let px = 0; px < S * S; px++) {
+                for (let px = 0; px < W * H; px++) {
                     if (frames[i][px * 4 + 3] < 128) indices[px] = 255;
                 }
-                gif.writeFrame(indices, S, S, { palette: fullPal, delay, transparent: true, transparentIndex: 255, ...(i === 0 && { repeat }) });
+                gif.writeFrame(indices, W, H, { palette: fullPal, delay, transparent: true, transparentIndex: 255, ...(i === 0 && { repeat }) });
             } else {
                 palette = quantize(frames[i], 256);
                 index = dither
-                    ? applyPaletteDithered(frames[i], palette, S, S)
+                    ? applyPaletteDithered(frames[i], palette, W, H)
                     : applyPalette(frames[i], palette);
-                gif.writeFrame(index, S, S, { palette, delay, ...(i === 0 && { repeat }) });
+                gif.writeFrame(index, W, H, { palette, delay, ...(i === 0 && { repeat }) });
             }
 
             if (i % 16 === 0) {
@@ -2276,20 +2880,26 @@ btnVideo.addEventListener('click', async () => {
     try {
         if (exportFrameEnabled) syncExportCameraFromViewport();
         const { fps, bitrate, loops } = EXPORT.mp4;
-        const S = EXPORT.mp4.size;
+        const { width: W, height: H } = getImageExportSize();
         const n = exportFrames(fps);
         const totalFrames = n * (loops + 1);
 
-        // Render into an offscreen target — never touch the visible canvas or camera aspect
-        const rt = new THREE.WebGLRenderTarget(S, S, { samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
-        rt.texture.colorSpace = THREE.SRGBColorSpace; // match screen canvas linear→sRGB encoding
+        // Render directly to the main canvas at 2x resolution for SSAA
+        const SSAA = 2;
+        const savedPR = renderer.getPixelRatio();
+        const wrap = canvas.parentElement;
+        const savedViewW = Math.max(1, wrap.clientWidth);
+        const savedViewH = Math.max(1, wrap.clientHeight);
+        renderer.setPixelRatio(1);
+        renderer.setSize(W * SSAA, H * SSAA, false); // 2× buffer, CSS unchanged
+
         const savedAspect = camera.aspect;
         const savedZoom = camera.zoom;
-        camera.aspect = 1;
+        camera.aspect = W / H;
 
         const muxer = new Muxer({
             target: new ArrayBufferTarget(),
-            video: { codec: 'avc', width: S, height: S },
+            video: { codec: 'avc', width: W, height: H },
             fastStart: 'in-memory',
         });
 
@@ -2299,19 +2909,21 @@ btnVideo.addEventListener('click', async () => {
             error: e => { encoderError = e; },
         });
         // avc1.4200XX — Baseline profile; level 3.1 (0x1f) up to 720p, level 4.0 (0x28) up to 2048px
-        const avcLevel = S <= 720 ? '1f' : '28';
+        const shortEdge = Math.min(W, H);
+        const avcLevel = shortEdge <= 720 ? '1f' : '28';
         encoder.configure({
             codec: `avc1.4200${avcLevel}`,
-            width: S,
-            height: S,
+            width: W,
+            height: H,
             bitrate: bitrate,
             framerate: fps,
         });
 
         const { target, dist, elev, az } = getOrbitFrameState();
-        const exportDist = (exportCamDist !== null) ? exportCamDist : dist;
-        const exportElev = (exportCamDist !== null) ? exportCamElev : elev;
-        const exportZoom = (exportCamDist !== null) ? (exportCamZoom || 1) : (camera.zoom || 1);
+        // Use stored export framing only in crop mode; otherwise mirror the live viewport.
+        const exportDist = (exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
+        const exportElev = (exportFrameEnabled && exportCamDist !== null) ? exportCamElev : elev;
+        const exportZoom = (exportFrameEnabled && exportCamDist !== null) ? (exportCamZoom || 1) : (camera.zoom || 1);
         camera.zoom = exportZoom;
         camera.updateProjectionMatrix();
         const savedCamPos = camera.position.clone();
@@ -2325,6 +2937,12 @@ btnVideo.addEventListener('click', async () => {
         const spinSign = spinDir > 0 ? -1 : 1;
         const MAX_EL = Math.PI / 2 - 0.05;
         const savedMeshRx = mesh ? mesh.rotation.x : 0;
+        const out = document.createElement('canvas');
+        out.width = W;
+        out.height = H;
+        const outCtx = out.getContext('2d');
+        outCtx.imageSmoothingEnabled = true;
+        outCtx.imageSmoothingQuality = 'high';
 
         for (let f = 0; f < totalFrames; f++) {
             if (isTilt) {
@@ -2349,23 +2967,13 @@ btnVideo.addEventListener('click', async () => {
                 const azimuth = az + spinSign * (2 * Math.PI * f) / n;
                 setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
             }
-            renderer.setRenderTarget(rt);
-            renderer.render(scene, camera);
-            renderer.setRenderTarget(null);
 
-            // Read pixels from render target (WebGL origin bottom-left, VideoFrame expects top-left)
-            const buf = new Uint8Array(S * S * 4);
-            renderer.readRenderTargetPixels(rt, 0, 0, S, S, buf);
-            const flipped = new Uint8ClampedArray(S * S * 4);
-            for (let row = 0; row < S; row++) {
-                const src = (S - 1 - row) * S * 4;
-                flipped.set(buf.subarray(src, src + S * 4), row * S * 4);
-            }
-            const off = Object.assign(document.createElement('canvas'), { width: S, height: S });
-            off.getContext('2d').putImageData(new ImageData(flipped, S, S), 0, 0);
+            renderer.render(scene, camera);
+            outCtx.clearRect(0, 0, W, H);
+            outCtx.drawImage(canvas, 0, 0, W, H);
 
             const timestamp = Math.round(f * (1_000_000 / fps));
-            const frame = new VideoFrame(off, { timestamp });
+            const frame = new VideoFrame(out, { timestamp });
             if (encoderError) { frame.close(); throw encoderError; }
             if (encoder.state === 'closed') { frame.close(); throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.'); }
             encoder.encode(frame, { keyFrame: f % 30 === 0 });
@@ -2384,11 +2992,15 @@ btnVideo.addEventListener('click', async () => {
         if (mesh) mesh.rotation.x = savedMeshRx;
         camera.position.copy(savedCamPos);
         camera.lookAt(target);
-        // Restore camera aspect — renderer and visible canvas were never touched
         camera.aspect = savedAspect;
         camera.zoom = savedZoom;
         camera.updateProjectionMatrix();
-        rt.dispose();
+
+        renderer.setPixelRatio(savedPR);
+        renderer.setSize(savedViewW, savedViewH, false);
+        camera.aspect = savedViewW / savedViewH;
+        camera.updateProjectionMatrix();
+
         controls.update();
         renderer.render(scene, camera); // Refresh visible canvas before download
 
@@ -2405,6 +3017,8 @@ btnVideo.addEventListener('click', async () => {
 });
 
 // ── Restore on load ───────────────────────────────────────────────────────────
+initTextureNewsUI();
+
 restoreSession().finally(() => {
     // Remove anti-FOUC guard once session restore attempt is complete,
     // whether it succeeded (html.loaded is set) or not.

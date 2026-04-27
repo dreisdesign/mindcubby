@@ -11,6 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.15] - 2026-04-27
+
+### Changed
+- **Crop Dimensions Dock**: Kept crop aspect ratio icons rigidly right-aligned in crop mode. Added visible text labels to the aspect ratio dimension icons and enhanced the active state visualization.
+- **Export Preview**: Added a visible border and subtle shadow to the mini preview panel to prevent it from blending seamlessly into the white background.
+- **Texture Badge UI**: Converted the 'NEW' badge to be unclickable, adjusted its placement to avoid overlapping the tuning filter button, and configured it to dismiss automatically upon expanding the panel.
+
+## [1.7.14] - 2026-04-26
+
+### Added
+- **Image dimension presets for still export** — PNG/JPEG now support quick aspect presets: **1:1**, **4:5**, **9:16**, **16:9**, **4:3**
+- **Dimension preset cards** — replaced the old dropdown with thumb-style selectable cards in the Export section
+- **Texture updates callout** — tune button now shows a minimal **NEW** badge plus a compact hover/focus popover with recent texture additions
+
+### Changed
+- **Still-image render pipeline** — PNG/JPEG are now rendered offscreen at the selected aspect and quality size, independent of viewport aspect
+- **Live preview sync** — export preview aspect and estimated output dimensions update immediately when format, quality, and dimension preset change
+
+### Fixed
+- **Texture updates popover hover stability** — popover no longer closes immediately while moving pointer from tune icon into the popover
+- **Preview aspect stale states** — reduced stale preview cases during fast export setting changes
+
 ## [1.7.10] - 2026-04-26
 
 ### Added

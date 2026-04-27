@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.7.10** · April 26, 2026
+**Version 1.7.14** · April 26, 2026
 
 ---
 
@@ -23,7 +23,7 @@ python3 -m http.server 8765
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
 - **Reset Settings** (sidebar header, left) clears all saved settings and restores defaults
-- **Copy Link** (sidebar header, right) copies a shareable URL with current settings baked in
+- **Copy Settings** (sidebar header, right) copies a shareable URL with current settings baked in
 
 ### Viewer controls
 
@@ -66,6 +66,8 @@ Texture tuning (tune icon in the Texture card) includes:
 - Roughness / Reflection (all modes)
 - Metalness (Metal mode only)
 
+On first visit after texture updates, the tune icon shows a small **NEW** badge with a quick hover/focus changelog popover. Dismiss with **×**.
+
 ### Animation controls
 
 | Control | Description |
@@ -93,8 +95,20 @@ The Export section uses a **Format** dropdown and a **Quality** dropdown. Select
 |---|---|
 | Animated GIF | Looping GIF — one full motion cycle at the selected quality |
 | MP4 Video | H.264 MP4 — one full motion cycle (requires Chrome / Edge / Safari 16.4+) |
-| PNG Image | Still image of the current view at screen resolution |
-| JPEG Image | Still image with adjustable compression |
+| PNG Image | Still image rendered at selected dimensions and quality size |
+| JPEG Image | Still image rendered at selected dimensions and quality size, with adjustable compression |
+
+#### PNG/JPEG dimensions
+
+Still-image formats (PNG/JPEG) support these built-in aspect presets:
+
+- 1:1 (Square)
+- 4:5 (Portrait)
+- 9:16 (Story)
+- 16:9 (Landscape)
+- 4:3 (Landscape)
+
+The Preview thumbnail and estimate label update immediately when you change format, quality, or dimensions.
 
 #### GIF options
 
@@ -114,9 +128,9 @@ The Export section uses a **Format** dropdown and a **Quality** dropdown. Select
 
 | Level | Resolution | FPS | Notes |
 |---|---|---|---|
-| Low | 480 px | 15 fps | Smallest file |
-| Medium | 720 px | 24 fps | Default |
-| High | 1080 px | 30 fps | Largest file |
+| Low | 480 px short edge | 15 fps | Smallest file |
+| Medium | 720 px short edge | 24 fps | Default |
+| High | 1080 px short edge | 30 fps | Largest file |
 
 All export is completely client-side — your STL file never leaves your machine.
 

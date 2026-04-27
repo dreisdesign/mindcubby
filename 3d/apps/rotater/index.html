@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ROTATER — STL Spin Viewer</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=1.7.10">
+    <link rel="stylesheet" href="style.css?v=1.7.24">
     <style>
         html.has-session:not(.loaded) body {
             visibility: hidden;
@@ -71,6 +71,43 @@
                                 Keep
                             </button>
                         </div>
+                        <div id="cropDimensionsDock" class="crop-dimensions-dock" hidden aria-hidden="true">
+                            <div class="dimension-group dimension-group--overlay" role="radiogroup"
+                                aria-label="Image dimensions">
+                                <div class="thumb-card-wrap">
+                                    <label class="dimension-option" title="Square 1:1">
+                                        <input type="radio" name="exportDimensions" value="square" checked>
+                                        <span class="dimension-thumb dimension-thumb--square"><span
+                                                class="dimension-shape"></span></span>
+                                    </label>
+                                    <span class="thumb-label">1:1</span>
+                                </div>
+                                <div class="thumb-card-wrap">
+                                    <label class="dimension-option" title="Portrait 1:2">
+                                        <input type="radio" name="exportDimensions" value="portrait12">
+                                        <span class="dimension-thumb dimension-thumb--portrait12"><span
+                                                class="dimension-shape"></span></span>
+                                    </label>
+                                    <span class="thumb-label">1:2</span>
+                                </div>
+                                <div class="thumb-card-wrap">
+                                    <label class="dimension-option" title="Landscape 2:1">
+                                        <input type="radio" name="exportDimensions" value="landscape21">
+                                        <span class="dimension-thumb dimension-thumb--landscape21"><span
+                                                class="dimension-shape"></span></span>
+                                    </label>
+                                    <span class="thumb-label">2:1</span>
+                                </div>
+                                <div class="thumb-card-wrap">
+                                    <label class="dimension-option" title="Landscape 4:3">
+                                        <input type="radio" name="exportDimensions" value="landscape43">
+                                        <span class="dimension-thumb dimension-thumb--landscape43"><span
+                                                class="dimension-shape"></span></span>
+                                    </label>
+                                    <span class="thumb-label">4:3</span>
+                                </div>
+                            </div>
+                        </div>
                         <div id="rulerHUD" class="ruler-hud" hidden aria-live="polite">
                             <span class="ruler-dim"><span class="ruler-axis">W</span><span id="rulerW"
                                     class="ruler-val">—</span></span>
@@ -86,6 +123,10 @@
                         <div id="frameDimBottom" class="frame-dim-region" aria-hidden="true"></div>
                         <div id="frameDimLeft" class="frame-dim-region" aria-hidden="true"></div>
                         <div id="frameDimRight" class="frame-dim-region" aria-hidden="true"></div>
+                        <div id="cropCornerTL" class="crop-corner crop-corner--tl" aria-hidden="true"></div>
+                        <div id="cropCornerTR" class="crop-corner crop-corner--tr" aria-hidden="true"></div>
+                        <div id="cropCornerBL" class="crop-corner crop-corner--bl" aria-hidden="true"></div>
+                        <div id="cropCornerBR" class="crop-corner crop-corner--br" aria-hidden="true"></div>
                         <img src="rotater.svg" alt="ROTATER" class="logo canvas-logo">
                         <div class="canvas-top-right">
                             <div class="file-chip">
@@ -264,11 +305,14 @@
                             <div class="control-label texture-control" style="flex: 1">
                                 <div class="texture-head">
                                     <span>Texture</span>
-                                    <button id="btnTextureTune" class="texture-tune-btn" type="button"
-                                        title="Customize texture tuning" aria-label="Customize texture tuning"
-                                        aria-expanded="false" aria-controls="textureTunePanel">
-                                        <img src="tune.svg" alt="" aria-hidden="true">
-                                    </button>
+                                    <div class="texture-tune-wrap" id="textureTuneWrap">
+                                        <button id="btnTextureTune" class="texture-tune-btn" type="button"
+                                            title="Customize texture tuning" aria-label="Customize texture tuning"
+                                            aria-expanded="false" aria-controls="textureTunePanel">
+                                            <img src="tune.svg" alt="" aria-hidden="true">
+                                        </button>
+                                        <span id="textureTuneNewBadge" class="texture-new-badge" aria-hidden="true">NEW</span>
+                                    </div>
                                 </div>
                                 <div class="shading-group">
                                     <div class="thumb-card-wrap">
@@ -299,7 +343,7 @@
                                                 id="textureTuneLightVal">100%</span></span>
                                         <div class="range-wrap">
                                             <input type="range" id="textureTuneLight" min="40" max="200" step="5"
-                                                value="100">
+                                                data-snap-count="8" value="100">
                                         </div>
                                     </label>
                                     <label class="control-label range-label texture-tune-row"
@@ -307,8 +351,8 @@
                                         <span>Contrast<span class="slider-tooltip"
                                                 id="textureTuneContrastVal">100%</span></span>
                                         <div class="range-wrap">
-                                            <input type="range" id="textureTuneContrast" min="50" max="200" step="5"
-                                                value="100">
+                                            <input type="range" id="textureTuneContrast" min="50" max="400" step="5"
+                                                data-snap-count="8" value="100">
                                         </div>
                                     </label>
                                     <label class="control-label range-label texture-tune-row"
@@ -316,8 +360,8 @@
                                         <span>Highlights<span class="slider-tooltip"
                                                 id="textureTuneHighlightsVal">100%</span></span>
                                         <div class="range-wrap">
-                                            <input type="range" id="textureTuneHighlights" min="40" max="250" step="5"
-                                                value="100">
+                                            <input type="range" id="textureTuneHighlights" min="40" max="400" step="5"
+                                                data-snap-count="8" value="100">
                                         </div>
                                     </label>
                                     <label class="control-label range-label texture-tune-row" id="textureTuneShadowRow">
@@ -325,7 +369,7 @@
                                                 id="textureTuneShadowsVal">45%</span></span>
                                         <div class="range-wrap">
                                             <input type="range" id="textureTuneShadows" min="0" max="100" step="5"
-                                                value="45">
+                                                data-snap-count="8" value="45">
                                         </div>
                                     </label>
                                     <label class="control-label range-label texture-tune-row"
@@ -334,7 +378,7 @@
                                                 id="textureTuneLightSourceVal">48°</span></span>
                                         <div class="range-wrap">
                                             <input type="range" id="textureTuneLightSource" min="0" max="360" step="5"
-                                                value="48">
+                                                data-snap-count="8" value="48">
                                         </div>
                                     </label>
                                     <label class="control-label range-label texture-tune-row"
@@ -343,7 +387,7 @@
                                                 id="textureTuneLightHeightVal">100%</span></span>
                                         <div class="range-wrap">
                                             <input type="range" id="textureTuneLightHeight" min="40" max="220" step="5"
-                                                value="100">
+                                                data-snap-count="8" value="100">
                                         </div>
                                     </label>
                                     <label class="control-label range-label texture-tune-row"
@@ -352,7 +396,7 @@
                                                 id="textureTuneRoughnessVal">30%</span></span>
                                         <div class="range-wrap">
                                             <input type="range" id="textureTuneRoughness" min="0" max="100" step="1"
-                                                value="30">
+                                                data-snap-count="8" value="30">
                                         </div>
                                     </label>
                                     <label class="control-label range-label texture-tune-row"
@@ -361,7 +405,7 @@
                                                 id="textureTuneReflectionVal">100%</span></span>
                                         <div class="range-wrap">
                                             <input type="range" id="textureTuneReflection" min="0" max="200" step="5"
-                                                value="100">
+                                                data-snap-count="8" value="100">
                                         </div>
                                     </label>
                                     <label class="control-label range-label texture-tune-row"
@@ -370,7 +414,7 @@
                                                 id="textureTuneMetalnessVal">65%</span></span>
                                         <div class="range-wrap">
                                             <input type="range" id="textureTuneMetalness" min="0" max="100" step="1"
-                                                value="65">
+                                                data-snap-count="8" value="65">
                                         </div>
                                     </label>
                                 </div>
@@ -608,7 +652,7 @@
         <footer></footer>
     </div>
 
-    <script type="module" src="script.js?v=1.7.8"></script>
+    <script type="module" src="script.js?v=1.7.24"></script>
 
 </body>
 
