@@ -15,6 +15,13 @@ python3 -m http.server 8765
 # then open http://localhost:8765
 ```
 
+### Applying Default Settings
+If you want to spin up your own instance and override the default colors, camera angles, speeds, or lighting without modifying the codebase, simply click **Copy Settings**, copy the URL parameter string (e.g. `?bg=000000&sh=metal...`), and paste it inside `script.js` near the top:
+
+```javascript
+const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
+```
+
 ### Loading a model
 
 - Drag and drop any STL file onto the page, or click **Replace STL**
@@ -129,8 +136,8 @@ The Preview thumbnail and estimate label update immediately when you change form
 | Level | Resolution | FPS | Notes |
 |---|---|---|---|
 | Low | 480 px short edge | 15 fps | Smallest file |
-| Medium | 720 px short edge | 24 fps | Default |
-| High | 1080 px short edge | 30 fps | Largest file |
+| Medium | 1080 px short edge | 24 fps | Default |
+| High | 2048 px short edge | 30 fps | Largest file |
 
 All export is completely client-side — your STL file never leaves your machine.
 
