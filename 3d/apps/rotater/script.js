@@ -6,7 +6,7 @@ import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
-const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=340&thi=325&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000';
+const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
 // Export quality presets — base short-edge size + fps + bitrate.
@@ -261,6 +261,7 @@ const textureTuneMetalnessRow = document.getElementById('textureTuneMetalnessRow
 const APP_PARAM_KEYS = new Set([
     'c', 'b', 'op', 'sh', 'rm', 'sp', 'tr', 'wsr', 'sd', 'gl', 'ef', 'eq', 'ed', 'et', 'gd', 'jq',
     'tto', 'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh', 'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
+    'rv', 'ru', 'rl', 'rg',
     'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp'
 ]);
 const _passthroughParams = (() => {
@@ -281,6 +282,13 @@ let suppressSave = false;
 let activeModelPreset = 'custom';
 let activeBgPreset = 'custom';
 let isDynamicBg = false;
+let rulerEnabled = false;
+let rulerUnit = 'metric';
+let rulerLinesVisible = true;
+let rulerOverlayEl = null;
+let rulerGridHelper = null;
+let rulerGridSize = 0;
+const RULER_DYNAMIC_LINES_ENABLED = false;
 const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
 
 
@@ -571,6 +579,7 @@ function syncCanvasSize() {
         camera.updateProjectionMatrix();
     }
     updateEstimate();
+    updateLiveRulerOverlay();
     // Re-render immediately after setSize clears the buffer so the browser
     // never composites a blank canvas (prevents the dark-flash during resize).
     if (scene && camera && !isExporting) renderer.render(scene, camera);
@@ -798,6 +807,7 @@ function loadSTLBuffer(buffer, name) {
     }
     if (isDynamicBg) updateDynamicBg();
     updateRulerHUD();
+    updateLiveRulerOverlay();
 
     if (savedCamPos && camera) {
         // Maintain the user's current camera distance; preserve direction
@@ -980,6 +990,7 @@ function loop() {
         syncLightRig();
         renderer.render(scene, camera);
         drawExportFrame();
+        updateLiveRulerOverlay();
         updateExportPreview();
     }
 }
@@ -1104,6 +1115,7 @@ function updateExportPreview(force = false) {
                     // BR
                     ctx2d.moveTo(maxX - cm, maxY); ctx2d.lineTo(maxX, maxY); ctx2d.lineTo(maxX, maxY - cm);
                     ctx2d.stroke();
+                    drawRulerOverlay(ctx2d, pxW, pxH, camera);
                     return;
                 }
             }
@@ -1151,6 +1163,7 @@ function updateExportPreview(force = false) {
                     pxW,
                     pxH
                 );
+                drawRulerOverlay(ctx2d, pxW, pxH, camera);
                 return;
             }
         }
@@ -1240,6 +1253,7 @@ function updateExportPreview(force = false) {
         ctx2d.moveTo(maxX - cm, maxY); ctx2d.lineTo(maxX, maxY); ctx2d.lineTo(maxX, maxY - cm);
         ctx2d.stroke();
     }
+    drawRulerOverlay(ctx2d, pxW, pxH, _previewCam);
 }
 
 function refreshExportPreviewNow() {
@@ -1335,6 +1349,7 @@ function drawExportFrame() {
     const ctx = fc.getContext('2d');
 
     ctx.clearRect(0, 0, w, h);
+    drawRulerOverlay(ctx, w, h, camera);
 
     const cc = document.getElementById('cropControls');
     if (exportFrameEnabled) {
@@ -1408,12 +1423,544 @@ function clearExportFrame() {
 function updateRulerHUD() {
     const hud = document.getElementById('rulerHUD');
     if (!hud) return;
-    hud.hidden = !modelDims || !exportFrameEnabled;
+    hud.hidden = !modelDims || !rulerEnabled;
+    document.documentElement.classList.toggle('ruler-visible', !!modelDims && !!rulerEnabled);
+    const linesSwitch = document.getElementById('rulerLinesSwitch');
+    const linesToggle = document.getElementById('rulerLinesToggle');
+    if (linesSwitch) linesSwitch.hidden = !modelDims || !rulerEnabled;
+    if (linesToggle) {
+        linesToggle.checked = rulerLinesVisible;
+        linesToggle.setAttribute('aria-label', rulerLinesVisible ? 'Hide ruler grid' : 'Show ruler grid');
+    }
     if (!modelDims) return;
-    const fmt = v => v.toFixed(1);
-    document.getElementById('rulerW').textContent = fmt(modelDims.w);
-    document.getElementById('rulerD').textContent = fmt(modelDims.d);
-    document.getElementById('rulerH').textContent = fmt(modelDims.h);
+    const unitEl = document.getElementById('rulerUnitVal');
+    const unitToggle = document.getElementById('rulerUnitToggle');
+    if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';
+    if (unitToggle) {
+        const next = (rulerUnit === 'imperial') ? 'Metric' : 'Imperial';
+        unitToggle.textContent = next;
+        unitToggle.setAttribute('aria-label', `Switch to ${next.toLowerCase()} units`);
+    }
+    document.getElementById('rulerW').textContent = formatRulerValue(modelDims.w);
+    document.getElementById('rulerD').textContent = formatRulerValue(modelDims.d);
+    document.getElementById('rulerH').textContent = formatRulerValue(modelDims.h);
+}
+
+function rulerUnitSuffix() {
+    return (rulerUnit === 'imperial') ? 'in' : 'mm';
+}
+
+function formatRulerValue(mm) {
+    const raw = (rulerUnit === 'imperial') ? (mm / 25.4) : mm;
+    return (rulerUnit === 'imperial') ? raw.toFixed(2) : raw.toFixed(1);
+}
+
+function formatRulerLabel(prefix, mm) {
+    return `${formatRulerValue(mm)} ${rulerUnitSuffix()} ${prefix}`;
+}
+
+function projectToCanvas(point, cam, width, height) {
+    const projected = point.clone().project(cam);
+    return new THREE.Vector2(
+        (projected.x * 0.5 + 0.5) * width,
+        (-projected.y * 0.5 + 0.5) * height
+    );
+}
+
+function drawArrowCap(ctx, from, to, size = 7) {
+    const dir = to.clone().sub(from);
+    const len = dir.length();
+    if (len < 1e-3) return;
+    dir.divideScalar(len);
+    const perp = new THREE.Vector2(-dir.y, dir.x);
+    const back = to.clone().sub(dir.clone().multiplyScalar(size));
+    ctx.beginPath();
+    ctx.moveTo(to.x, to.y);
+    ctx.lineTo(back.x + perp.x * size * 0.55, back.y + perp.y * size * 0.55);
+    ctx.moveTo(to.x, to.y);
+    ctx.lineTo(back.x - perp.x * size * 0.55, back.y - perp.y * size * 0.55);
+    ctx.stroke();
+}
+
+function drawRoundedRectPath(ctx, x, y, width, height, radius) {
+    const r = Math.max(0, Math.min(radius, width * 0.5, height * 0.5));
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + width - r, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+    ctx.lineTo(x + width, y + height - r);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+    ctx.lineTo(x + r, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
+function drawMeasurementLabel(ctx, text, position, align = 'center') {
+    ctx.save();
+    const transform = typeof ctx.getTransform === 'function' ? ctx.getTransform() : null;
+    const scaleX = transform?.a || 1;
+    const scaleY = transform?.d || 1;
+    const logicalWidth = (ctx.canvas.width || 0) / Math.max(1, Math.abs(scaleX));
+    const logicalHeight = (ctx.canvas.height || 0) / Math.max(1, Math.abs(scaleY));
+    const canvasMin = Math.max(120, Math.min(logicalWidth, logicalHeight));
+    const isCompactCanvas = canvasMin < 260;
+    const scale = isCompactCanvas
+        ? Math.max(0.58, Math.min(0.82, canvasMin / 320))
+        : Math.max(0.72, Math.min(1, canvasMin / 560));
+    const fontSize = Math.round(13 * scale);
+    const padX = Math.round(10 * scale);
+    const padY = Math.round(7 * scale);
+    const radius = Math.round(10 * scale);
+    ctx.font = `600 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    ctx.textAlign = align;
+    ctx.textBaseline = 'alphabetic';
+    const metrics = ctx.measureText(text);
+    const ascent = metrics.actualBoundingBoxAscent || fontSize * 0.75;
+    const descent = metrics.actualBoundingBoxDescent || fontSize * 0.28;
+    const boxW = Math.ceil(metrics.width + padX * 2 + fontSize * 0.5);
+    const boxH = Math.max(fontSize + padY * 2, ascent + descent + padY * 2);
+    const edgePad = Math.max(4, Math.round(6 * scale));
+    let boxX = position.x - boxW / 2;
+    if (align === 'left') boxX = position.x;
+    else if (align === 'right') boxX = position.x - boxW;
+    boxX = Math.max(edgePad, Math.min(logicalWidth - edgePad - boxW, boxX));
+    const boxCenterX = boxX + boxW / 2;
+    const y = Math.max(edgePad + boxH / 2, Math.min(logicalHeight - edgePad - boxH / 2, position.y));
+    const boxY = y - boxH / 2;
+    const baselineY = y + (ascent - descent) * 0.5;
+    ctx.fillStyle = 'rgba(255,255,255,0.96)';
+    ctx.strokeStyle = 'rgba(20,20,28,0.12)';
+    ctx.lineWidth = 1;
+    drawRoundedRectPath(ctx, boxX, boxY, boxW, boxH, radius);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#15122b';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, boxCenterX, baselineY);
+    ctx.restore();
+}
+
+function drawMeasurement(ctx, start, end, text, center, options = {}) {
+    const { offset = 24, labelOffset = 22, extension = 6, align = 'center' } = options;
+    const edge = end.clone().sub(start);
+    const edgeLen = edge.length();
+    if (edgeLen < 8) return;
+    const dir = edge.clone().divideScalar(edgeLen);
+    let normal = new THREE.Vector2(-dir.y, dir.x);
+    const mid = start.clone().add(end).multiplyScalar(0.5);
+    const outward = mid.clone().sub(center);
+    if (outward.dot(normal) < 0) normal.multiplyScalar(-1);
+    const offsetVec = normal.clone().multiplyScalar(offset);
+    const a = start.clone().add(offsetVec);
+    const b = end.clone().add(offsetVec);
+
+    ctx.strokeStyle = 'rgba(35, 35, 42, 0.78)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(a.x, a.y);
+    ctx.moveTo(end.x, end.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+
+    drawArrowCap(ctx, b, a, extension);
+    drawArrowCap(ctx, a, b, extension);
+
+    const labelPos = a.clone().add(b).multiplyScalar(0.5).add(normal.multiplyScalar(labelOffset));
+    drawMeasurementLabel(ctx, text, labelPos, align);
+}
+
+function drawRulerOverlay(ctx, width, height, cam, options = {}) {
+    if (!RULER_DYNAMIC_LINES_ENABLED) return;
+    if (!rulerEnabled || !rulerLinesVisible || !modelDims) return;
+    try {
+        const layout = options.layout || getRulerScreenLayout(width, height, cam, options.safeArea);
+        if (!layout) return;
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(20, 20, 28, 0.82)';
+        ctx.lineWidth = layout.lineWidth;
+        ctx.beginPath();
+        ctx.moveTo(layout.widthLine.x1, layout.widthLine.y1);
+        ctx.lineTo(layout.widthLine.x2, layout.widthLine.y2);
+        ctx.moveTo(layout.heightLine.x1, layout.heightLine.y1);
+        ctx.lineTo(layout.heightLine.x2, layout.heightLine.y2);
+        ctx.moveTo(layout.depthLine.x1, layout.depthLine.y1);
+        ctx.lineTo(layout.depthLine.x2, layout.depthLine.y2);
+        ctx.stroke();
+
+        drawMeasurementLabel(ctx, formatRulerLabel('Width', modelDims.w), new THREE.Vector2(layout.widthLabel.x, layout.widthLabel.y), layout.widthLabel.align || 'center');
+        drawMeasurementLabel(ctx, formatRulerLabel('Height', modelDims.h), new THREE.Vector2(layout.heightLabel.x, layout.heightLabel.y), layout.heightLabel.align || 'left');
+        drawMeasurementLabel(ctx, formatRulerLabel('Length', modelDims.d), new THREE.Vector2(layout.depthLabel.x, layout.depthLabel.y), layout.depthLabel.align || 'left');
+        ctx.restore();
+    } catch (e) {
+        return;
+    }
+}
+
+function getRulerScreenLayout(width, height, cam = camera, safeArea = null) {
+    if (!modelDims) return null;
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const edge = 10;
+    const area = {
+        top: safeArea?.top ?? edge,
+        right: safeArea?.right ?? edge,
+        bottom: safeArea?.bottom ?? edge,
+        left: safeArea?.left ?? edge,
+    };
+    if (!mesh || !cam) return null;
+
+    const geometry = mesh.geometry;
+    if (!geometry) return null;
+    if (!geometry.boundingBox) geometry.computeBoundingBox();
+    const box = geometry.boundingBox;
+    if (!box || box.isEmpty()) return null;
+
+    const min = box.min;
+    const max = box.max;
+    const corners = [
+        new THREE.Vector3(min.x, min.y, min.z),
+        new THREE.Vector3(max.x, min.y, min.z),
+        new THREE.Vector3(min.x, max.y, min.z),
+        new THREE.Vector3(max.x, max.y, min.z),
+        new THREE.Vector3(min.x, min.y, max.z),
+        new THREE.Vector3(max.x, min.y, max.z),
+        new THREE.Vector3(min.x, max.y, max.z),
+        new THREE.Vector3(max.x, max.y, max.z),
+    ].map((point) => projectToCanvas(point.clone().applyMatrix4(mesh.matrixWorld), cam, width, height));
+
+    const valid = corners.filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
+    if (valid.length < 8) return null;
+
+    const minX = Math.min(...valid.map((p) => p.x));
+    const maxX = Math.max(...valid.map((p) => p.x));
+    const minY = Math.min(...valid.map((p) => p.y));
+    const maxY = Math.max(...valid.map((p) => p.y));
+
+    const useCompactLiveLayout = !!safeArea && typeof window !== 'undefined'
+        && (window.innerWidth < 1100 || window.innerHeight < 820);
+    if (useCompactLiveLayout) {
+        const spanX = Math.max(24, maxX - minX);
+        const spanY = Math.max(24, maxY - minY);
+        const pad = clamp(Math.min(width, height) * 0.05, 12, 30);
+        const depthOffsetX = clamp(spanX * 0.22, 14, 50);
+        const depthOffsetY = clamp(spanY * 0.16, 9, 34);
+        const widthY = clamp(maxY + pad * 0.85, edge, height - edge);
+        const heightX = clamp(maxX + pad, edge, width - edge);
+        const centerX = clamp((minX + maxX) / 2, edge, width - edge);
+        const centerY = clamp((minY + maxY) / 2, edge, height - edge);
+        const lineWidth = clamp(Math.min(width, height) * 0.0035, 1.5, 2.8);
+        const labelBottom = height - Math.min(area.bottom, 64);
+
+        return {
+            lineWidth,
+            widthLine: {
+                x1: clamp(minX, edge, width - edge),
+                y1: widthY,
+                x2: clamp(maxX, edge, width - edge),
+                y2: widthY
+            },
+            heightLine: {
+                x1: heightX,
+                y1: clamp(minY, edge, height - edge),
+                x2: heightX,
+                y2: clamp(maxY, edge, height - edge)
+            },
+            depthLine: {
+                x1: clamp(maxX - depthOffsetX, edge, width - edge),
+                y1: clamp(maxY - depthOffsetY * 0.5, edge, height - edge),
+                x2: clamp(maxX + pad * 0.45, edge, width - edge),
+                y2: clamp(maxY - depthOffsetY * 1.15, edge, height - edge)
+            },
+            widthLabel: {
+                x: centerX,
+                y: clamp(widthY + 22, area.top + 54, labelBottom),
+                align: 'center'
+            },
+            heightLabel: {
+                x: clamp(heightX + 12, area.left, width - area.right),
+                y: clamp(centerY, area.top + 20, labelBottom),
+                align: 'left'
+            },
+            depthLabel: {
+                x: clamp(heightX - 18, area.left, width - area.right),
+                y: clamp(maxY - depthOffsetY * 1.2 - 8, area.top + 20, labelBottom),
+                align: 'right'
+            },
+        };
+    }
+
+    const center = new THREE.Vector2(
+        valid.reduce((sum, p) => sum + p.x, 0) / valid.length,
+        valid.reduce((sum, p) => sum + p.y, 0) / valid.length
+    );
+
+    const getEdgeCandidates = (pairs) => {
+        const out = [];
+        for (const [a, b] of pairs) {
+            const p1 = corners[a];
+            const p2 = corners[b];
+            const len = p1.distanceTo(p2);
+            if (!Number.isFinite(len) || len < 10) continue;
+            const mid = p1.clone().add(p2).multiplyScalar(0.5);
+            out.push({ p1: p1.clone(), p2: p2.clone(), mid, len });
+        }
+        return out;
+    };
+
+    const pickEdge = (candidates, scoreFn) => {
+        let best = null;
+        let bestScore = -Infinity;
+        for (const edge of candidates) {
+            const score = scoreFn(edge.mid, edge.p1, edge.p2, edge.len);
+            if (score > bestScore) {
+                bestScore = score;
+                best = { p1: edge.p1.clone(), p2: edge.p2.clone(), mid: edge.mid.clone(), len: edge.len };
+            }
+        }
+        return best;
+    };
+
+    const xPairs = [[0, 1], [2, 3], [4, 5], [6, 7]];
+    const yPairs = [[0, 2], [1, 3], [4, 6], [5, 7]];
+    const zPairs = [[0, 4], [1, 5], [2, 6], [3, 7]];
+
+    const widthEdge = pickEdge(getEdgeCandidates(xPairs), (mid, _p1, _p2, len) => mid.y + len * 0.08);
+    const heightEdge = pickEdge(getEdgeCandidates(yPairs), (mid, _p1, _p2, len) => mid.x + len * 0.08);
+    const depthEdge = pickEdge(getEdgeCandidates(zPairs), (mid, p1, p2, len) => {
+        const slope = Math.abs((p2.y - p1.y) / Math.max(1e-3, p2.x - p1.x));
+        return mid.x + mid.y * 0.55 + slope * 24 + len * 0.04;
+    });
+
+    if (!widthEdge || !heightEdge || !depthEdge) return null;
+
+    const buildLine = (edgeData, offsetPx, labelOffsetPx, forceAlign = null) => {
+        const dir = edgeData.p2.clone().sub(edgeData.p1);
+        const len = dir.length();
+        if (len < 1) return null;
+        dir.multiplyScalar(1 / len);
+        let normal = new THREE.Vector2(-dir.y, dir.x);
+        const outward = edgeData.mid.clone().sub(center);
+        if (outward.dot(normal) < 0) normal.multiplyScalar(-1);
+        const lineStart = edgeData.p1.clone().add(normal.clone().multiplyScalar(offsetPx));
+        const lineEnd = edgeData.p2.clone().add(normal.clone().multiplyScalar(offsetPx));
+        const labelPos = lineStart.clone().add(lineEnd).multiplyScalar(0.5).add(normal.clone().multiplyScalar(labelOffsetPx));
+        return {
+            line: {
+                x1: clamp(lineStart.x, area.left, width - area.right),
+                y1: clamp(lineStart.y, area.top, height - area.bottom),
+                x2: clamp(lineEnd.x, area.left, width - area.right),
+                y2: clamp(lineEnd.y, area.top, height - area.bottom),
+            },
+            label: {
+                x: clamp(labelPos.x, area.left, width - area.right),
+                y: clamp(labelPos.y, area.top, height - area.bottom),
+                align: forceAlign || (Math.abs(normal.x) < 0.25 ? 'center' : (normal.x > 0 ? 'left' : 'right')),
+            }
+        };
+    };
+
+    const widthMeasure = buildLine(widthEdge, 18, 18, 'center');
+    const heightMeasure = buildLine(heightEdge, 16, 18, null);
+    const depthMeasure = buildLine(depthEdge, 12, 16, null);
+    if (!widthMeasure || !heightMeasure || !depthMeasure) return null;
+
+    const lineWidth = clamp(Math.min(width, height) * 0.0035, 1.5, 2.8);
+
+    return {
+        lineWidth,
+        widthLine: widthMeasure.line,
+        heightLine: heightMeasure.line,
+        depthLine: depthMeasure.line,
+        widthLabel: widthMeasure.label,
+        heightLabel: heightMeasure.label,
+        depthLabel: depthMeasure.label,
+    };
+}
+
+function getLiveRulerSafeArea(wrap) {
+    const safe = { top: 12, right: 12, bottom: 12, left: 12 };
+    if (!wrap) return safe;
+    const wrapRect = wrap.getBoundingClientRect();
+    const projectRect = (selector) => {
+        const el = document.querySelector(selector);
+        if (!el) return null;
+        const rect = el.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        return {
+            left: rect.left - wrapRect.left,
+            top: rect.top - wrapRect.top,
+            right: rect.right - wrapRect.left,
+            bottom: rect.bottom - wrapRect.top,
+            width: rect.width,
+            height: rect.height,
+        };
+    };
+
+    const topRight = projectRect('.canvas-top-right');
+    if (topRight) {
+        safe.top = Math.max(safe.top, topRight.bottom + 8);
+    }
+
+    const hint = projectRect('.orbit-hint-bar.visible');
+    if (hint) safe.top = Math.max(safe.top, hint.bottom + 8);
+
+    const bottomCenter = projectRect('.canvas-bottom-center');
+    if (bottomCenter) safe.bottom = Math.max(safe.bottom, Math.max(0, wrapRect.height - bottomCenter.top) + 8);
+
+    const bottomLeft = projectRect('.canvas-overlay-bl');
+    if (bottomLeft) {
+        safe.bottom = Math.max(safe.bottom, Math.max(0, wrapRect.height - bottomLeft.top) + 8);
+        safe.left = Math.max(safe.left, bottomLeft.right + 8);
+    }
+
+    const bottomRight = projectRect('.canvas-overlay-br');
+    if (bottomRight) {
+        safe.bottom = Math.max(safe.bottom, Math.max(0, wrapRect.height - bottomRight.top) + 8);
+    }
+
+    const camNav = projectRect('.cam-nav');
+    if (camNav) {
+        safe.right = Math.max(safe.right, Math.max(0, wrapRect.width - camNav.left) + 12);
+        safe.bottom = Math.max(safe.bottom, Math.max(0, wrapRect.height - camNav.top) + 8);
+    }
+
+    return safe;
+}
+
+function getProjectedMeshScreenBounds(width, height, cam = camera) {
+    if (!mesh || !cam) return null;
+    const pos = mesh.geometry?.attributes?.position;
+    if (!pos || pos.count < 8) return null;
+
+    const worldPoint = new THREE.Vector3();
+    const clipPoint = new THREE.Vector3();
+    const xs = [];
+    const ys = [];
+    const step = Math.max(1, Math.floor(pos.count / 2200));
+
+    for (let i = 0; i < pos.count; i += step) {
+        worldPoint.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+        clipPoint.copy(worldPoint).project(cam);
+        if (!Number.isFinite(clipPoint.x) || !Number.isFinite(clipPoint.y) || !Number.isFinite(clipPoint.z)) continue;
+        const x = (clipPoint.x * 0.5 + 0.5) * width;
+        const y = (-clipPoint.y * 0.5 + 0.5) * height;
+        if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+        xs.push(x);
+        ys.push(y);
+    }
+
+    if (xs.length < 24) return null;
+    xs.sort((a, b) => a - b);
+    ys.sort((a, b) => a - b);
+    const lo = Math.floor((xs.length - 1) * 0.02);
+    const hi = Math.ceil((xs.length - 1) * 0.98);
+
+    return {
+        minX: xs[lo],
+        maxX: xs[hi],
+        minY: ys[lo],
+        maxY: ys[hi],
+    };
+}
+
+function ensureRulerOverlayEl() {
+    if (rulerOverlayEl) return rulerOverlayEl;
+    const wrap = canvas?.parentElement;
+    if (!wrap) return null;
+    const overlay = document.createElement('canvas');
+    overlay.id = 'rulerOverlay';
+    Object.assign(overlay.style, {
+        position: 'absolute',
+        inset: '0',
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: '6',
+    });
+    wrap.appendChild(overlay);
+    rulerOverlayEl = overlay;
+    return overlay;
+}
+
+function updateLiveRulerOverlay() {
+    const overlay = ensureRulerOverlayEl();
+    if (!overlay) return;
+    updateRulerGrid();
+    if (!RULER_DYNAMIC_LINES_ENABLED) {
+        overlay.style.display = 'none';
+        const ctx = overlay.getContext?.('2d');
+        if (ctx) ctx.clearRect(0, 0, overlay.width || 0, overlay.height || 0);
+        return;
+    }
+    if (!rulerEnabled || !rulerLinesVisible || !modelDims || !viewerSec || viewerSec.classList.contains('hidden')) {
+        overlay.style.display = 'none';
+        const ctx = overlay.getContext?.('2d');
+        if (ctx) ctx.clearRect(0, 0, overlay.width || 0, overlay.height || 0);
+        return;
+    }
+    overlay.style.display = '';
+    const wrap = canvas?.parentElement;
+    if (!wrap) return;
+    const cssW = wrap.clientWidth;
+    const cssH = wrap.clientHeight;
+    const layout = getRulerScreenLayout(cssW, cssH, camera, getLiveRulerSafeArea(wrap));
+    if (!layout) {
+        overlay.style.display = 'none';
+        return;
+    }
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const pxW = Math.max(2, Math.round(cssW * dpr));
+    const pxH = Math.max(2, Math.round(cssH * dpr));
+    if (overlay.width !== pxW || overlay.height !== pxH) {
+        overlay.width = pxW;
+        overlay.height = pxH;
+    }
+    const ctx = overlay.getContext('2d');
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+    drawRulerOverlay(ctx, cssW, cssH, camera, { layout });
+}
+
+function updateRulerGrid() {
+    if (!scene) return;
+    const shouldShow = !!(rulerEnabled && rulerLinesVisible && mesh && modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
+    if (!shouldShow) {
+        if (rulerGridHelper) rulerGridHelper.visible = false;
+        return;
+    }
+
+    const worldBox = new THREE.Box3().setFromObject(mesh);
+    if (!worldBox || worldBox.isEmpty()) {
+        if (rulerGridHelper) rulerGridHelper.visible = false;
+        return;
+    }
+
+    const targetSize = Math.max(40, Math.ceil((Math.max(modelDims.w, modelDims.d) * 1.6) / 5) * 5);
+    const divisions = Math.max(8, Math.min(42, Math.round(targetSize / 6)));
+
+    if (!rulerGridHelper || Math.abs(rulerGridSize - targetSize) > 0.5) {
+        if (rulerGridHelper) scene.remove(rulerGridHelper);
+        rulerGridHelper = new THREE.GridHelper(targetSize, divisions, 0x3f3b52, 0x6f6a8f);
+        const mats = Array.isArray(rulerGridHelper.material) ? rulerGridHelper.material : [rulerGridHelper.material];
+        mats.forEach((mat) => {
+            mat.transparent = true;
+            mat.opacity = 0.5;
+            mat.depthWrite = false;
+        });
+        rulerGridHelper.renderOrder = -1;
+        scene.add(rulerGridHelper);
+        rulerGridSize = targetSize;
+    }
+
+    rulerGridHelper.visible = true;
+    rulerGridHelper.position.set(0, worldBox.min.y - 0.4, 0);
 }
 
 // ── Persistence (IndexedDB for binary, localStorage for settings) ───────────
@@ -1511,6 +2058,9 @@ function saveSettings() {
             exportCamElev: exportCamElev,
             exportCamZoom: exportCamZoom,
             autoBgAdjust: document.getElementById('autoBgCheck')?.checked ? '1' : '0',
+            rulerVisible: rulerEnabled ? '1' : '0',
+            rulerUnit: rulerUnit,
+            rulerGridVisible: rulerLinesVisible ? '1' : '0',
             activeBgPreset: activeBgPreset,
             activeModelPreset: activeModelPreset,
         }));
@@ -1721,6 +2271,19 @@ function restoreSettings() {
             if (el) el.checked = on;
             isDynamicBg = on;
         }
+        if (s.rulerVisible != null) {
+            const on = (s.rulerVisible === '1' || s.rulerVisible === true || s.rulerVisible === 1);
+            const el = document.getElementById('rulerToggle');
+            if (el) el.checked = on;
+            rulerEnabled = on;
+        }
+        if (s.rulerGridVisible != null) {
+            rulerLinesVisible = (s.rulerGridVisible === '1' || s.rulerGridVisible === true || s.rulerGridVisible === 1);
+        } else if (s.rulerLinesVisible != null) {
+            rulerLinesVisible = (s.rulerLinesVisible === '1' || s.rulerLinesVisible === true || s.rulerLinesVisible === 1);
+        }
+        if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
+        else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
         if (s.activeBgPreset) activeBgPreset = s.activeBgPreset;
         if (s.activeModelPreset) activeModelPreset = s.activeModelPreset;
 
@@ -1741,6 +2304,7 @@ function restoreSettings() {
         try { updateModelSelection(); } catch (e) { }
         // If auto-bg was restored, ensure the dynamic background is applied
         try { if (isDynamicBg) updateDynamicBg(); } catch (e) { }
+        updateRulerHUD();
         syncSliderTooltip(speedSlider);
         syncSliderTooltip(tiltRangeSlider);
         syncSliderTooltip(wobbleSpinRangeSlider);
@@ -1819,6 +2383,10 @@ function getURLSettings(searchStr = location.search) {
         exportCamZoom: g('ecz'),
         // Auto BG + active presets
         autoBgAdjust: g('aba'),
+        rulerVisible: g('rv'),
+        rulerUnit: g('ru'),
+        rulerGridVisible: g('rg'),
+        rulerLinesVisible: g('rl'),
         activeBgPreset: g('abp'),
         activeModelPreset: g('amp'),
     };
@@ -1876,6 +2444,9 @@ function settingsToURL() {
         p.set('ecz', exportCamZoom.toFixed(4));
     // Auto BG adjust + active presets
     if (isDynamicBg) p.set('aba', '1');
+    if (rulerEnabled) p.set('rv', '1');
+    if (rulerUnit === 'imperial') p.set('ru', 'i');
+    if (!rulerLinesVisible) p.set('rg', '0');
     if (activeBgPreset && activeBgPreset !== 'custom') p.set('abp', activeBgPreset);
     if (activeModelPreset && activeModelPreset !== 'custom') p.set('amp', activeModelPreset);
     // Re-inject passthrough params captured at startup (e.g. debug=1)
@@ -3037,6 +3608,7 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     outCtx.imageSmoothingEnabled = true;
     outCtx.imageSmoothingQuality = 'high';
     outCtx.drawImage(canvas, 0, 0, W, H); // downscale 2× → SSAA
+    drawRulerOverlay(outCtx, W, H, camera);
 
     // Restore scene + camera exactly as the user had them, synchronously.
     if (transparent) {
@@ -3167,6 +3739,7 @@ async function captureFrames(n, dims = null, transparent = false) {
         renderer.render(scene, camera);
         outCtx.clearRect(0, 0, W, H);
         outCtx.drawImage(canvas, 0, 0, W, H);
+        drawRulerOverlay(outCtx, W, H, camera);
         frames.push(new Uint8ClampedArray(outCtx.getImageData(0, 0, W, H).data));
 
         if (i % 12 === 0) {
@@ -3414,6 +3987,7 @@ btnVideo.addEventListener('click', async () => {
             renderer.render(scene, camera);
             outCtx.clearRect(0, 0, W, H);
             outCtx.drawImage(canvas, 0, 0, W, H);
+            drawRulerOverlay(outCtx, W, H, camera);
 
             const timestamp = Math.round(f * (1_000_000 / fps));
             const frame = new VideoFrame(out, { timestamp });
@@ -3854,6 +4428,38 @@ if (autoBgCheckEl) {
     });
 }
 
+const rulerToggleEl = document.getElementById('rulerToggle');
+if (rulerToggleEl) {
+    rulerToggleEl.addEventListener('change', () => {
+        rulerEnabled = rulerToggleEl.checked;
+        updateRulerHUD();
+        updateLiveRulerOverlay();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
+
+const rulerUnitToggleEl = document.getElementById('rulerUnitToggle');
+if (rulerUnitToggleEl) {
+    rulerUnitToggleEl.addEventListener('click', () => {
+        rulerUnit = (rulerUnit === 'metric') ? 'imperial' : 'metric';
+        updateRulerHUD();
+        updateLiveRulerOverlay();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
+
+const rulerLinesToggleEl = document.getElementById('rulerLinesToggle');
+if (rulerLinesToggleEl) {
+    rulerLinesToggleEl.addEventListener('change', () => {
+        rulerLinesVisible = !!rulerLinesToggleEl.checked;
+        updateRulerHUD();
+        updateLiveRulerOverlay();
+        saveSettings();
+    });
+}
+
 
 function renderBgPresets() {
     const bar = document.getElementById('bgPresetsBar');
@@ -4018,43 +4624,3 @@ function initPresetGallery() {
     renderModelShadeSelector();
 }
 initPresetGallery();
-
-
-
-
-document.getElementById('btnDownloadArchive')?.addEventListener('click', async () => {
-    if (!currentModel) {
-        alert("Upload an STL to export first.");
-        return;
-    }
-
-    // We already have STLExporter from THREE (loaded in index.html ideally, or we can use JS Blob if we retained original File)
-    // Actually, what does "download settings that captures the settings plus the STL for re-upload" mean?
-    // Probably a zip? We don't have JSZip. We could download a JSON file, or we just save the current `settings` as a json.
-    // For now, let's just create a JSON export of all current variables.
-
-    const settings = {
-        modelColor: colorPick.value,
-        modelTone: opacitySlider ? opacitySlider.value : 0,
-        modelShading: shadingEl.value,
-        bgColor: bgPick.value,
-        bgTone: document.getElementById('bgOpacitySlider') ? document.getElementById('bgOpacitySlider').value : 0,
-        isDynamicBg,
-        rotSpeed: rotXSlider.value,
-        rotType: document.querySelector('input[name="rot_type"]:checked')?.value || 'local',
-        rotAxisX: document.getElementById('chkAxisX').checked,
-        rotAxisY: document.getElementById('chkAxisY').checked,
-        rotAxisZ: document.getElementById('chkAxisZ').checked,
-        cameraPosZ: camera.position.z,
-        lightIntensity: lightIntensitySlider.value,
-        pointLightIntensity: pointLightIntensitySlider.value
-    };
-
-    const blob = new Blob([JSON.stringify(settings, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = "rotater-theme-settings.json";
-    a.click();
-    URL.revokeObjectURL(url);
-});

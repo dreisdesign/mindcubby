@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.32] - 2026-04-29
+
+### Changed
+- **Ruler lines replaced with 3D grid reference** — the "Lines" toggle is now a "Grid" toggle; enabling it drops a `GridHelper` plane beneath the model in the Three.js scene for a stable positional reference instead of the previous projected edge-line overlay
+- **Grid state persisted** — grid visibility is now stored in the `rg` URL parameter and localStorage (`rulerGridVisible`) with backward-compatible fallback from the old `rl` / `rulerLinesVisible` keys
+- **Dynamic ruler overlay disabled** — the canvas-2D projection-line drawing path (`drawRulerOverlay`, `getRulerScreenLayout`) is retained in code but permanently disabled via `RULER_DYNAMIC_LINES_ENABLED = false`; the W/D/H numeric HUD remains unchanged
+
 ## [1.7.20] - 2026-04-30
 
 ### Fixed
