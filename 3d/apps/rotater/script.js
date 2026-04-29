@@ -1534,7 +1534,18 @@ function restoreSettings() {
                 if (bgValEl) bgValEl.textContent = (actualBgTone >= 0 ? '+' : '') + actualBgTone;
             }
             if (s.bg) bgPick.value = s.bg;
-            if (s.shading) shadingEl.value = s.shading;
+            if (s.shading) {
+                shadingEl.value = s.shading;
+                // Ensure the preview material matches the restored shading immediately.
+                // Some restores set UI values programmatically which do not fire the
+                // shading change handler; update mesh material directly when a
+                // mesh is present so the preview no longer shows the wrong shader.
+                if (mesh) {
+                    try { if (mesh.material) mesh.material.dispose(); } catch (e) { }
+                    mesh.material = getMaterial(shadingEl.value, colorPick.value);
+                    applyCurrentTextureTuning();
+                }
+            }
             if (s.speed != null) {
                 speedSlider.value = s.speed; // browser quantizes to nearest step (0–4)
                 speedVal.textContent = getSpeed() + '×';
