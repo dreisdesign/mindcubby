@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.7.19** · April 29, 2026
+**Version 1.7.20** · April 30, 2026
 
 ---
 

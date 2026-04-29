@@ -3666,7 +3666,7 @@ html.loaded .sidebar-tabs {
 .light-sliders {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 14px;
     margin-top: 10px;
 }
 

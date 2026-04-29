@@ -656,16 +656,16 @@ function applyCurrentTextureTuning() {
     if (!mat.isMeshStandardMaterial) return;
     if (mode === 'metallic') {
         mat.metalness = textureTuneState.metallicMetalness / 100;
-        mat.roughness = textureTuneState.metallicRoughness / 100;
+        mat.roughness = (100 - textureTuneState.metallicRoughness) / 100;
         mat.envMapIntensity = textureTuneState.metallicReflection / 100;
     } else if (mode === 'phong') {
         mat.metalness = 0;
-        mat.roughness = textureTuneState.phongRoughness / 100;
+        mat.roughness = (100 - textureTuneState.phongRoughness) / 100;
         mat.envMapIntensity = textureTuneState.phongReflection / 100;
     } else {
         // Clay: matte non-metal baseline with faint environment response.
         mat.metalness = 0;
-        mat.roughness = textureTuneState.clayRoughness / 100;
+        mat.roughness = (100 - textureTuneState.clayRoughness) / 100;
         mat.envMapIntensity = textureTuneState.clayReflection / 100;
     }
     mat.needsUpdate = true;
@@ -694,7 +694,7 @@ function getMaterial(shading, baseColor) {
         return new THREE.MeshStandardMaterial({
             ...base,
             metalness: 0,
-            roughness: textureTuneState.clayRoughness / 100,
+            roughness: (100 - textureTuneState.clayRoughness) / 100,
             envMapIntensity: textureTuneState.clayReflection / 100,
         });
     }
@@ -702,14 +702,14 @@ function getMaterial(shading, baseColor) {
         return new THREE.MeshStandardMaterial({
             ...base,
             metalness: 0,
-            roughness: (textureTuneState.phongRoughness || 10) / 100,
+            roughness: (100 - (textureTuneState.phongRoughness || 10)) / 100,
             envMapIntensity: (textureTuneState.phongReflection || 80) / 100,
         });
     }
     return new THREE.MeshStandardMaterial({
         ...base,
         metalness: (textureTuneState.metallicMetalness || 65) / 100,
-        roughness: (textureTuneState.metallicRoughness || 30) / 100,
+        roughness: (100 - (textureTuneState.metallicRoughness || 30)) / 100,
         envMapIntensity: (textureTuneState.metallicReflection || 100) / 100,
     });
 }// ── STL Loading ───────────────────────────────────────────────────────────────
@@ -1466,6 +1466,9 @@ function saveSettings() {
             exportCamDist: exportCamDist,
             exportCamElev: exportCamElev,
             exportCamZoom: exportCamZoom,
+            autoBgAdjust: document.getElementById('autoBgCheck')?.checked ? '1' : '0',
+            activeBgPreset: activeBgPreset,
+            activeModelPreset: activeModelPreset,
         }));
     } catch (e) { }
     settingsToURL();
@@ -1632,6 +1635,16 @@ function restoreSettings() {
                 if (Number.isFinite(z) && z > 0) exportCamZoom = z;
             }
         }
+        // Restore auto BG adjust and preset selections
+        if (s.autoBgAdjust != null) {
+            const on = (s.autoBgAdjust === '1' || s.autoBgAdjust === true || s.autoBgAdjust === 1);
+            const el = document.getElementById('autoBgCheck');
+            if (el) el.checked = on;
+            isDynamicBg = on;
+        }
+        if (s.activeBgPreset) activeBgPreset = s.activeBgPreset;
+        if (s.activeModelPreset) activeModelPreset = s.activeModelPreset;
+
         // Always apply mode-based classes/slider setup — even when s is null (settings reset)
         const curMode = rotateModeEl.value;
         document.documentElement.classList.toggle('tilt-mode', curMode === 'tilt' || curMode === 'spin' || curMode === 'wobble');
@@ -1702,6 +1715,10 @@ function getURLSettings(searchStr = location.search) {
         exportCamDist: g('ecd'),
         exportCamElev: g('ece'),
         exportCamZoom: g('ecz'),
+        // Auto BG + active presets
+        autoBgAdjust: g('aba'),
+        activeBgPreset: g('abp'),
+        activeModelPreset: g('amp'),
     };
 }
 
@@ -1755,6 +1772,10 @@ function settingsToURL() {
         p.set('ece', exportCamElev.toFixed(4));
     if (exportCamZoom != null && Number.isFinite(exportCamZoom) && exportCamZoom !== 1)
         p.set('ecz', exportCamZoom.toFixed(4));
+    // Auto BG adjust + active presets
+    if (isDynamicBg) p.set('aba', '1');
+    if (activeBgPreset && activeBgPreset !== 'custom') p.set('abp', activeBgPreset);
+    if (activeModelPreset && activeModelPreset !== 'custom') p.set('amp', activeModelPreset);
     history.replaceState(null, '', '?' + p.toString());
 }
 
@@ -2106,7 +2127,9 @@ function updateTextureTuneUI() {
         }
         textureTuneRoughnessSlider.value = String(rough);
         textureTuneReflectionSlider.value = String(refl);
-        if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = `Glossy ${Math.round(100 - rough)}%`;
+        if (textureTuneRoughnessVal) {
+            textureTuneRoughnessVal.textContent = rough <= 10 ? 'Matte' : rough >= 90 ? 'Glossy' : '';
+        }
         if (textureTuneReflectionVal) textureTuneReflectionVal.textContent = `${Math.round(refl)}%`;
         syncSliderTooltip(textureTuneRoughnessSlider);
         syncSliderTooltip(textureTuneReflectionSlider);
@@ -2270,7 +2293,10 @@ textureTuneRoughnessSlider?.addEventListener('input', () => {
     if (mode === 'metallic') textureTuneState.metallicRoughness = v;
     if (mode === 'phong') textureTuneState.phongRoughness = v;
     if (mode === 'clay') textureTuneState.clayRoughness = v;
-    if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = `Glossy ${Math.round(100 - v)}%`;
+    if (textureTuneRoughnessVal) {
+        const roughLabel = v <= 10 ? 'Matte' : v >= 90 ? 'Glossy' : '';
+        textureTuneRoughnessVal.textContent = roughLabel;
+    }
     updateTextureTuneUI();
     applyCurrentTextureTuning();
     saveSettings();
@@ -2577,6 +2603,15 @@ const fineTuningCheckEl = document.getElementById('fineTuningCheck');
 if (fineTuningCheckEl) {
     fineTuningCheckEl.addEventListener('change', () => {
         fineTuningMode = fineTuningCheckEl.checked;
+        // Toggle step attribute so browser doesn't snap when fine tuning is on
+        document.querySelectorAll('input[type="range"][data-snap-count]').forEach(slider => {
+            if (fineTuningMode) {
+                if (!slider.dataset.originalStep) slider.dataset.originalStep = slider.step;
+                slider.step = 'any';
+            } else {
+                if (slider.dataset.originalStep) slider.step = slider.dataset.originalStep;
+            }
+        });
         // Show/hide snap dots based on mode
         document.querySelectorAll('.snap-dots').forEach(el => {
             el.style.opacity = fineTuningMode ? '0' : '';
@@ -3357,22 +3392,25 @@ const QUICK_PRESETS = [
 const BG_PRESETS = [
     { id: 'white', name: 'White', color: '#ffffff' },
     { id: 'black', name: 'Black', color: '#000000' },
-    { id: 'modelcolor', name: 'Model', color: null }  // syncs with model color
+    { id: 'modelcolor', name: 'Model Sync', color: null }  // syncs with model color
 ];
 
 let isDynamicBg = false;
 
 function updateDynamicBg() {
     if (!isDynamicBg || !renderer) return;
-    let baseColor;
+    let baseHex;
     if (activeBgPreset === 'modelcolor') {
-        // Lighter shade of the model color
-        baseColor = new THREE.Color(colorPick.value).lerp(new THREE.Color(0xffffff), 0.55);
+        baseHex = colorPick.value;
     } else {
-        // Lighter shade of the selected preset/custom bg color
-        baseColor = new THREE.Color(bgPick.value).lerp(new THREE.Color(0xffffff), 0.45);
+        baseHex = bgPick.value;
     }
-    renderer.setClearColor(baseColor, 1);
+    const c = new THREE.Color(baseHex);
+    const hsl = {};
+    c.getHSL(hsl);
+    // Push L toward white while preserving H and S (no desaturation)
+    hsl.l = hsl.l + (0.92 - hsl.l) * 0.75;
+    renderer.setClearColor(new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l), 1);
 }
 
 // Hook model color changes to update dynamic bg and Model preset swatch
@@ -3520,11 +3558,11 @@ function renderModelPresets() {
 
             // Chrome preset: apply appropriate roughness for the active shading mode
             if (preset.id === 'chrome' && textureTuneRoughnessSlider) {
-                textureTuneRoughnessSlider.value = '0';
-                if (getActiveShadingMode() === 'metallic') textureTuneState.metallicRoughness = 0;
-                else if (getActiveShadingMode() === 'phong') textureTuneState.phongRoughness = 0;
-                else textureTuneState.clayRoughness = 0;
-                if (textureTuneRoughnessVal) textureTuneRoughnessVal.innerText = 'Glossy 100%';
+                textureTuneRoughnessSlider.value = '100';
+                if (getActiveShadingMode() === 'metallic') textureTuneState.metallicRoughness = 100;
+                else if (getActiveShadingMode() === 'phong') textureTuneState.phongRoughness = 100;
+                else textureTuneState.clayRoughness = 100;
+                if (textureTuneRoughnessVal) textureTuneRoughnessVal.innerText = 'Glossy';
                 applyCurrentTextureTuning();
             }
 

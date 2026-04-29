@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.20] - 2026-04-30
+
+### Fixed
+- **Fine tuning no longer snaps** — toggling fine tuning now also sets `step="any"` on all range inputs (restoring original step on deactivate), so the browser itself no longer snaps to grid positions
+- **Hard refresh no longer reverts settings** — `isDynamicBg` (auto adjust), `activeBgPreset`, and `activeModelPreset` are now saved to `localStorage` and encoded in the shareable URL so they survive a full refresh
+- **Auto adjust preserves saturation** — background lightening now uses HSL `L` adjustment (adds ~75 % of the gap to white) instead of `lerp(white)`, which was desaturating vivid model colors
+- **Matte/Glossy slider inverted correctly** — slider left = Matte (high roughness), slider right = Glossy (low roughness); Chrome preset now defaults to the Glossy end
+- **Matte slider value display** — removed the percentage; shows "Matte" at the far-left and "Glossy" at the far-right, blank in between
+
+### Changed
+- **Background "Model" preset renamed to "Model Sync"** — clarifies that the BG color tracks the model color
+- **Reflection slider removed** — the Reflection row is hidden from the Model card (underlying state is still saved/restored for preset compatibility)
+- **Slider group spacing increased** — gap between distinct slider rows in Model and Lighting Effects cards increased from 6 px to 14 px for easier scanning
+
+### Removed
+- **Leftover fix/patch scripts deleted** — `fix_*.py`, `fix_*.js`, `plan*.py`, `rewrite_presets.py`, `update_*.js`, `update_*.py`, `layout.txt`, and the `presets/` directory have been removed from the repo root
+
 ## [1.7.19] - 2026-04-29
 
 ### Added
