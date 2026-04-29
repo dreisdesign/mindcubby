@@ -1673,6 +1673,11 @@ function restoreSettings() {
         updateColorSwatches();
         updateTextureTuneUI();
         applyTextureLighting();
+        // Ensure preset/thumb UI reflects restored selections
+        try { updateModelSelection(); } catch (e) { }
+        try { updateBgSelection(); } catch (e) { }
+        // If auto-bg was restored, ensure the dynamic background is applied
+        try { if (isDynamicBg) updateDynamicBg(); } catch (e) { }
         syncSliderTooltip(speedSlider);
         syncSliderTooltip(tiltRangeSlider);
         syncSliderTooltip(wobbleSpinRangeSlider);
@@ -3415,10 +3420,37 @@ const THUMB_STYLES = {
 };
 
 let QUICK_PRESETS = [];
+
+function reconcileModelPresetFromSettings() {
+    // If presets aren't loaded yet or the user already has a non-custom active
+    // preset, nothing to do.
+    if (!QUICK_PRESETS || QUICK_PRESETS.length === 0) return;
+    if (activeModelPreset && activeModelPreset !== 'custom') return;
+
+    const curShade = shadingEl?.value;
+    const curColor = colorPick?.value ? colorPick.value.toLowerCase() : null;
+    for (const preset of QUICK_PRESETS) {
+        if (!preset || !preset.url) continue;
+        try {
+            const p = getURLSettings(preset.url);
+            if (!p) continue;
+            // Match by shading first, then color when provided by preset
+            if (p.shading && curShade && p.shading === curShade) {
+                if (!p.color || (curColor && p.color.toLowerCase() === curColor)) {
+                    activeModelPreset = preset.id;
+                    return;
+                }
+            }
+        } catch (e) { /* ignore parsing errors */ }
+    }
+}
+
 fetch('presets.json')
     .then(r => r.json())
     .then(data => {
         QUICK_PRESETS = data;
+        // Try to infer which preset matches restored settings before rendering
+        try { reconcileModelPresetFromSettings(); } catch (e) { }
         renderModelPresets();
     })
     .catch(err => console.error("Could not load presets.json", err));
