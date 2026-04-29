@@ -6,7 +6,7 @@ import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
-const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=clay&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=340&thi=325&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000';
+const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=340&thi=325&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000';
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
 // Export quality presets — base short-edge size + fps + bitrate.
@@ -139,8 +139,8 @@ const TEXTURE_TUNE_DEFAULTS = {
     metallicReflection: 100,
     phongRoughness: 62,
     phongReflection: 40,
-    clayRoughness: 88,
-    clayReflection: 10,
+    matteRoughness: 88,
+    matteReflection: 10,
     lightLock: true,
 };
 
@@ -355,8 +355,8 @@ const textureTuneState = {
     metallicReflection: TEXTURE_TUNE_DEFAULTS.metallicReflection,
     phongRoughness: TEXTURE_TUNE_DEFAULTS.phongRoughness,
     phongReflection: TEXTURE_TUNE_DEFAULTS.phongReflection,
-    clayRoughness: TEXTURE_TUNE_DEFAULTS.clayRoughness,
-    clayReflection: TEXTURE_TUNE_DEFAULTS.clayReflection,
+    matteRoughness: TEXTURE_TUNE_DEFAULTS.matteRoughness,
+    matteReflection: TEXTURE_TUNE_DEFAULTS.matteReflection,
     lightLock: TEXTURE_TUNE_DEFAULTS.lightLock,
 };
 
@@ -548,7 +548,7 @@ function syncCanvasSize() {
 
 // ── Material ─────────────────────────────────────────────────────────────────
 function getActiveShadingMode() {
-    if (shadingEl.value === 'flat' || shadingEl.value === 'toon') return 'clay';
+    if (shadingEl.value === 'flat' || shadingEl.value === 'toon') return 'matte';
     return shadingEl.value;
 }
 
@@ -665,14 +665,14 @@ function applyCurrentTextureTuning() {
     } else {
         // Clay: matte non-metal baseline with faint environment response.
         mat.metalness = 0;
-        mat.roughness = (100 - textureTuneState.clayRoughness) / 100;
-        mat.envMapIntensity = textureTuneState.clayReflection / 100;
+        mat.roughness = (100 - textureTuneState.matteRoughness) / 100;
+        mat.envMapIntensity = textureTuneState.matteReflection / 100;
     }
     mat.needsUpdate = true;
 }
 
 function getMaterial(shading, baseColor) {
-    if (shading === "flat" || shading === "toon") shading = "clay"; // legacy value
+    if (shading === "flat" || shading === "toon") shading = "matte"; // legacy value
 
     // Tone: -100 = full white, 0 = original color, +100 = full black
     const toneVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
@@ -690,12 +690,12 @@ function getMaterial(shading, baseColor) {
         depthWrite: !isClear
     };
 
-    if (shading === "clay") {
+    if (shading === "matte") {
         return new THREE.MeshStandardMaterial({
             ...base,
             metalness: 0,
-            roughness: (100 - textureTuneState.clayRoughness) / 100,
-            envMapIntensity: textureTuneState.clayReflection / 100,
+            roughness: (100 - textureTuneState.matteRoughness) / 100,
+            envMapIntensity: textureTuneState.matteReflection / 100,
         });
     }
     if (shading === "phong" || shading === "clear" || shading === "glass") {
@@ -1461,8 +1461,8 @@ function saveSettings() {
             textureTuneMetallicReflection: String(textureTuneState.metallicReflection),
             textureTunePhongRoughness: String(textureTuneState.phongRoughness),
             textureTunePhongReflection: String(textureTuneState.phongReflection),
-            textureTuneClayRoughness: String(textureTuneState.clayRoughness),
-            textureTuneClayReflection: String(textureTuneState.clayReflection),
+            textureTuneMatteRoughness: String(textureTuneState.matteRoughness),
+            textureTuneMatteReflection: String(textureTuneState.matteReflection),
             exportCamDist: exportCamDist,
             exportCamElev: exportCamElev,
             exportCamZoom: exportCamZoom,
@@ -1502,7 +1502,7 @@ function restoreSettings() {
         };
 
         if (s && Object.keys(s).length > 0) {
-            if (s.shading === 'flat' || s.shading === 'toon') s.shading = 'clay'; // migrate legacy modes
+            if (s.shading === 'flat' || s.shading === 'toon') s.shading = 'matte'; // migrate legacy modes
             if (s.color) colorPick.value = s.color;
             if ((s.tone !== undefined || s.opacity !== undefined) && opacitySlider) {
                 let toneRestored;
@@ -1549,8 +1549,8 @@ function restoreSettings() {
             if (s.textureTuneMetallicReflection != null) textureTuneState.metallicReflection = clamp(s.textureTuneMetallicReflection, 0, 200, TEXTURE_TUNE_DEFAULTS.metallicReflection);
             if (s.textureTunePhongRoughness != null) textureTuneState.phongRoughness = clamp(s.textureTunePhongRoughness, 0, 100, TEXTURE_TUNE_DEFAULTS.phongRoughness);
             if (s.textureTunePhongReflection != null) textureTuneState.phongReflection = clamp(s.textureTunePhongReflection, 0, 200, TEXTURE_TUNE_DEFAULTS.phongReflection);
-            if (s.textureTuneClayRoughness != null) textureTuneState.clayRoughness = clamp(s.textureTuneClayRoughness, 0, 100, TEXTURE_TUNE_DEFAULTS.clayRoughness);
-            if (s.textureTuneClayReflection != null) textureTuneState.clayReflection = clamp(s.textureTuneClayReflection, 0, 200, TEXTURE_TUNE_DEFAULTS.clayReflection);
+            if (s.textureTuneMatteRoughness != null) textureTuneState.matteRoughness = clamp(s.textureTuneMatteRoughness, 0, 100, TEXTURE_TUNE_DEFAULTS.matteRoughness);
+            if (s.textureTuneMatteReflection != null) textureTuneState.matteReflection = clamp(s.textureTuneMatteReflection, 0, 200, TEXTURE_TUNE_DEFAULTS.matteReflection);
 
             if (textureTunePanel && s.textureTuneOpen != null) {
                 const isOpen = (s.textureTuneOpen === true || s.textureTuneOpen === '1' || s.textureTuneOpen === 1);
@@ -1709,8 +1709,8 @@ function getURLSettings(searchStr = location.search) {
         textureTuneMetallicReflection: g('tme'),
         textureTunePhongRoughness: g('tpr'),
         textureTunePhongReflection: g('tpe'),
-        textureTuneClayRoughness: g('tcr'),
-        textureTuneClayReflection: g('tce'),
+        textureTuneMatteRoughness: g('tcr'),
+        textureTuneMatteReflection: g('tce'),
         // Export camera framing
         exportCamDist: g('ecd'),
         exportCamElev: g('ece'),
@@ -1763,8 +1763,8 @@ function settingsToURL() {
     if (tt.metallicReflection !== D.metallicReflection) p.set('tme', String(tt.metallicReflection));
     if (tt.phongRoughness !== D.phongRoughness) p.set('tpr', String(tt.phongRoughness));
     if (tt.phongReflection !== D.phongReflection) p.set('tpe', String(tt.phongReflection));
-    if (tt.clayRoughness !== D.clayRoughness) p.set('tcr', String(tt.clayRoughness));
-    if (tt.clayReflection !== D.clayReflection) p.set('tce', String(tt.clayReflection));
+    if (tt.matteRoughness !== D.matteRoughness) p.set('tcr', String(tt.matteRoughness));
+    if (tt.matteReflection !== D.matteReflection) p.set('tce', String(tt.matteReflection));
     // Export camera framing
     if (exportCamDist != null && Number.isFinite(exportCamDist) && exportCamDist > 0)
         p.set('ecd', exportCamDist.toFixed(4));
@@ -2064,7 +2064,7 @@ function initTextureNewsUI() {
 
 function updateTextureTuneUI() {
     const mode = getActiveShadingMode();
-    const isStandard = mode === 'metallic' || mode === 'phong' || mode === 'clay';
+    const isStandard = mode === 'metallic' || mode === 'phong' || mode === 'matte';
     if (textureTuneContrastRow) textureTuneContrastRow.hidden = false;
     if (textureTuneHighlightsRow) textureTuneHighlightsRow.hidden = false;
     if (textureTuneShadowRow) textureTuneShadowRow.hidden = false;
@@ -2121,9 +2121,9 @@ function updateTextureTuneUI() {
         if (mode === 'metallic') {
             rough = textureTuneState.metallicRoughness;
             refl = textureTuneState.metallicReflection;
-        } else if (mode === 'clay') {
-            rough = textureTuneState.clayRoughness;
-            refl = textureTuneState.clayReflection;
+        } else if (mode === 'matte') {
+            rough = textureTuneState.matteRoughness;
+            refl = textureTuneState.matteReflection;
         }
         textureTuneRoughnessSlider.value = String(rough);
         textureTuneReflectionSlider.value = String(refl);
@@ -2292,7 +2292,7 @@ textureTuneRoughnessSlider?.addEventListener('input', () => {
     const v = parseFloat(textureTuneRoughnessSlider.value);
     if (mode === 'metallic') textureTuneState.metallicRoughness = v;
     if (mode === 'phong') textureTuneState.phongRoughness = v;
-    if (mode === 'clay') textureTuneState.clayRoughness = v;
+    if (mode === 'matte') textureTuneState.matteRoughness = v;
     if (textureTuneRoughnessVal) {
         const roughLabel = v <= 10 ? 'Matte' : v >= 90 ? 'Glossy' : '';
         textureTuneRoughnessVal.textContent = roughLabel;
@@ -2307,7 +2307,7 @@ textureTuneReflectionSlider?.addEventListener('input', () => {
     const v = parseFloat(textureTuneReflectionSlider.value);
     if (mode === 'metallic') textureTuneState.metallicReflection = v;
     if (mode === 'phong') textureTuneState.phongReflection = v;
-    if (mode === 'clay') textureTuneState.clayReflection = v;
+    if (mode === 'matte') textureTuneState.matteReflection = v;
     updateTextureTuneUI();
     applyCurrentTextureTuning();
     saveSettings();
@@ -2321,7 +2321,7 @@ textureTuneMetalnessSlider?.addEventListener('input', () => {
 });
 
 shadingEl.addEventListener('change', () => {
-    if (shadingEl.value === 'flat' || shadingEl.value === 'toon') shadingEl.value = 'clay';
+    if (shadingEl.value === 'flat' || shadingEl.value === 'toon') shadingEl.value = 'matte';
     updateTextureTuneUI();
     if (mesh) {
         mesh.material.dispose();
@@ -3380,13 +3380,13 @@ const THUMB_STYLES = {
 };
 
 const QUICK_PRESETS = [
-    { id: 'ceramic', name: 'Ceramic', color: '#fff8f0', shading: 'clay', tone: 0, finish: 'low-gloss' },
-    { id: 'ink', name: 'Ink', color: '#0a0a0a', shading: 'metallic', tone: 0, finish: 'high-gloss' },
-    { id: 'chrome', name: 'Chrome', color: '#d9d9d9', shading: 'metallic', tone: 0, finish: 'high-gloss' },
-    { id: 'glass', name: 'Clear', color: '#e0f7fa', shading: 'clear', tone: 0, finish: 'high-gloss' },
-    { id: 'chocolate', name: 'Chocolate', color: '#4e300d', shading: 'clay', tone: 0, finish: 'low-gloss' },
-    { id: 'gumball', name: 'Gumball', color: '#ff9dbb', shading: 'clay', tone: 0, finish: 'matte' },
-    { id: 'gold', name: 'Gold', color: '#ffd700', shading: 'metallic', tone: 0, finish: 'high-gloss' }
+    { id: 'ceramic', name: 'Ceramic', url: '?c=fff8f0&b=ffffff&op=50&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=400&thi=130&ts=25&tsa=90&tsh=130&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.4686&abp=white' },
+    { id: 'ink', name: 'Ink', url: '?c=0a0a0a&sh=metallic&tmr=100&tme=200' },
+    { id: 'chrome', name: 'Chrome', url: '?c=d9d9d9&sh=metallic&tmr=100&tme=200' },
+    { id: 'glass', name: 'Clear', url: '?c=e0f7fa&sh=clear&tpr=100&tpe=200' },
+    { id: 'chocolate', name: 'Chocolate', url: '?c=4e300d&sh=matte&tcr=0&tce=20' },
+    { id: 'gumball', name: 'Gumball', url: '?c=ff9dbb&sh=matte&tcr=0&tce=10' },
+    { id: 'gold', name: 'Gold', url: '?c=ffd700&sh=metallic&tmr=90&tme=180' }
 ];
 
 const BG_PRESETS = [
@@ -3545,30 +3545,22 @@ function renderModelPresets() {
             </label>
             <span class="thumb-label">${preset.name}</span>
         `;
-        const actionArea = wrap.querySelector('.shading-option');
+                const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
             if (activeModelPreset === 'custom') storeCustomSettings();
             activeModelPreset = preset.id;
 
-            colorPick.value = preset.color;
-            // Apply preset-defined tone when present, otherwise default to 0
-            const presetTone = (preset.tone !== undefined && preset.tone !== null) ? preset.tone : (preset.opacity !== undefined ? preset.opacity : 0);
-            if (opacitySlider) opacitySlider.value = String(presetTone);
-            shadingEl.value = preset.shading;
-
-            // Chrome preset: apply appropriate roughness for the active shading mode
-            if (preset.id === 'chrome' && textureTuneRoughnessSlider) {
-                textureTuneRoughnessSlider.value = '100';
-                if (getActiveShadingMode() === 'metallic') textureTuneState.metallicRoughness = 100;
-                else if (getActiveShadingMode() === 'phong') textureTuneState.phongRoughness = 100;
-                else textureTuneState.clayRoughness = 100;
-                if (textureTuneRoughnessVal) textureTuneRoughnessVal.innerText = 'Glossy';
+            if (preset.url) {
+                history.replaceState(null, '', preset.url);
+                restoreSettings();
+                saveSettings();
+                colorPick.dispatchEvent(new Event('input', { bubbles: true }));
+                if (opacitySlider) opacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
+                shadingEl.dispatchEvent(new Event('change', { bubbles: true }));
+                if (bgPick) bgPick.dispatchEvent(new Event('input', { bubbles: true }));
                 applyCurrentTextureTuning();
+                updateDynamicBg();
             }
-
-            colorPick.dispatchEvent(new Event('input', { bubbles: true }));
-            if (opacitySlider) opacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
-            shadingEl.dispatchEvent(new Event('change', { bubbles: true }));
 
             updateModelSelection();
         });

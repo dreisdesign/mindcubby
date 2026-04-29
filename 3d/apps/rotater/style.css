@@ -1973,7 +1973,7 @@ box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
 
-.shading-thumb--clay {
+.shading-thumb--matte {
     background: radial-gradient(circle at 36% 32%, #ffffffc2 5%, #7f7ad2 34%, #55509a 70%, #3c3774 100%);
 }
 
