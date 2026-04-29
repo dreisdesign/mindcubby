@@ -677,16 +677,16 @@ function getMaterial(shading, baseColor) {
     // Tone: -100 = full white, 0 = original color, +100 = full black
     const toneVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
     const baseC = new THREE.Color(baseColor);
-                if (toneVal !== 0) {
-                const hsl = {};
-                baseC.getHSL(hsl);
-                if (toneVal > 0) {
-                    hsl.l = hsl.l * (1 - toneVal / 100);
-                } else {
-                    hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
-                }
-                baseC.setHSL(hsl.h, hsl.s, hsl.l);
-            }
+    if (toneVal !== 0) {
+        const hsl = {};
+        baseC.getHSL(hsl);
+        if (toneVal > 0) {
+            hsl.l = hsl.l * (1 - toneVal / 100);
+        } else {
+            hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
+        }
+        baseC.setHSL(hsl.h, hsl.s, hsl.l);
+    }
 
     const isClear = (shading === "clear" || shading === "glass");
     const finalAlpha = isClear ? 0.35 : 1.0;
@@ -1676,6 +1676,9 @@ function restoreSettings() {
         // Ensure preset/thumb UI reflects restored selections
         try { updateModelSelection(); } catch (e) { }
         try { updateBgSelection(); } catch (e) { }
+        // Try to infer a matching quick preset now that settings have been restored
+        try { reconcileModelPresetFromSettings(); } catch (e) { }
+        try { updateModelSelection(); } catch (e) { }
         // If auto-bg was restored, ensure the dynamic background is applied
         try { if (isDynamicBg) updateDynamicBg(); } catch (e) { }
         syncSliderTooltip(speedSlider);
@@ -2194,16 +2197,16 @@ colorPick.addEventListener('input', () => {
     if (mesh) {
         const toneVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
         const baseC = new THREE.Color(colorPick.value);
-                    if (toneVal !== 0) {
-                const hsl = {};
-                baseC.getHSL(hsl);
-                if (toneVal > 0) {
-                    hsl.l = hsl.l * (1 - toneVal / 100);
-                } else {
-                    hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
-                }
-                baseC.setHSL(hsl.h, hsl.s, hsl.l);
+        if (toneVal !== 0) {
+            const hsl = {};
+            baseC.getHSL(hsl);
+            if (toneVal > 0) {
+                hsl.l = hsl.l * (1 - toneVal / 100);
+            } else {
+                hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
             }
+            baseC.setHSL(hsl.h, hsl.s, hsl.l);
+        }
         mesh.material.color.set(baseC);
         mesh.material.needsUpdate = true;
     }
@@ -2218,7 +2221,7 @@ if (opacitySlider) {
         syncSliderTooltip(opacitySlider);
         if (mesh && mesh.material) {
             const baseC = new THREE.Color(colorPick.value);
-                        if (toneVal !== 0) {
+            if (toneVal !== 0) {
                 const hsl = {};
                 baseC.getHSL(hsl);
                 if (toneVal > 0) {
@@ -3436,9 +3439,20 @@ function reconcileModelPresetFromSettings() {
             if (!p) continue;
             // Match by shading first, then color when provided by preset
             if (p.shading && curShade && p.shading === curShade) {
+                // If the preset encodes matte/roughness values, prefer a stricter match
+                const presetRough = p.textureTuneMatteRoughness != null ? String(p.textureTuneMatteRoughness) : null;
+                const presetRefl = p.textureTuneMatteReflection != null ? String(p.textureTuneMatteReflection) : null;
+                const curRough = typeof textureTuneState !== 'undefined' && textureTuneState.matteRoughness != null ? String(textureTuneState.matteRoughness) : null;
+                const curRefl = typeof textureTuneState !== 'undefined' && textureTuneState.matteReflection != null ? String(textureTuneState.matteReflection) : null;
+
+                const roughMatches = !presetRough || (curRough && presetRough === curRough);
+                const reflMatches = !presetRefl || (curRefl && presetRefl === curRefl);
+
                 if (!p.color || (curColor && p.color.toLowerCase() === curColor)) {
-                    activeModelPreset = preset.id;
-                    return;
+                    if (roughMatches && reflMatches) {
+                        activeModelPreset = preset.id;
+                        return;
+                    }
                 }
             }
         } catch (e) { /* ignore parsing errors */ }
@@ -3611,7 +3625,7 @@ function renderModelPresets() {
             </label>
             <span class="thumb-label">${preset.name}</span>
         `;
-                        const actionArea = wrap.querySelector('.shading-option');
+        const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
             if (activeModelPreset === 'custom') storeCustomSettings();
 
@@ -3619,20 +3633,20 @@ function renderModelPresets() {
                 const currentAuto = isDynamicBg ? '1' : '0';
                 const finalUrl = preset.url + '&amp=' + preset.id + '&aba=' + currentAuto;
                 history.replaceState(null, '', finalUrl);
-                
+
                 // Enforce state immediately so restore/save capture it
-                activeModelPreset = preset.id; 
+                activeModelPreset = preset.id;
                 restoreSettings();
-                
+
                 // Enforce again in case restoreSettings overrides it fallback
-                activeModelPreset = preset.id; 
+                activeModelPreset = preset.id;
                 saveSettings(); // This rewrites history with current UI state, using the preset ID
 
                 colorPick.dispatchEvent(new Event('input', { bubbles: true }));
                 if (opacitySlider) opacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
                 shadingEl.dispatchEvent(new Event('change', { bubbles: true }));
                 if (bgPick) bgPick.dispatchEvent(new Event('input', { bubbles: true }));
-                
+
                 applyCurrentTextureTuning();
                 updateDynamicBg();
             } else {
