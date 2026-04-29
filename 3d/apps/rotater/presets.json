@@ -1,0 +1,37 @@
+[
+    {
+        "id": "ceramic",
+        "name": "Ceramic",
+        "url": "?c=fff8f0&b=ffffff&op=50&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=400&thi=130&ts=25&tsa=90&tsh=130&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.4686&abp=white"
+    },
+    {
+        "id": "ink",
+        "name": "Ink",
+        "url": "?c=0a0a0a&sh=metallic&tmr=100&tme=200"
+    },
+    {
+        "id": "chrome",
+        "name": "Chrome",
+        "url": "?c=d9d9d9&sh=metallic&tmr=100&tme=200"
+    },
+    {
+        "id": "glass",
+        "name": "Clear",
+        "url": "?c=e0f7fa&sh=clear&tpr=100&tpe=200"
+    },
+    {
+        "id": "chocolate",
+        "name": "Chocolate",
+        "url": "?c=4e300d&sh=matte&tcr=0&tce=20"
+    },
+    {
+        "id": "gumball",
+        "name": "Gumball",
+        "url": "?c=ff9dbb&sh=matte&tcr=0&tce=10"
+    },
+    {
+        "id": "gold",
+        "name": "Gold",
+        "url": "?c=ffd700&sh=metallic&tmr=90&tme=180"
+    }
+]

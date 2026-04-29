@@ -1681,7 +1681,7 @@ function restoreSettings() {
 function getURLSettings(searchStr = location.search) {
     const p = new URLSearchParams(searchStr);
     // Require at least one known key to treat URL as settings-bearing
-    if (!p.has('c') && !p.has('sh') && !p.has('rm') && !p.has('re') && !p.has('ef')) return null;
+    if (!p.has('c') && !p.has('sh') && !p.has('rm') && !p.has('amp') && !p.has('ef')) return null;
     const g = (k) => p.has(k) ? p.get(k) : null;
     return {
         // Core appearance
@@ -3403,15 +3403,14 @@ const THUMB_STYLES = {
     }
 };
 
-const QUICK_PRESETS = [
-    { id: 'ceramic', name: 'Ceramic', url: '?c=fff8f0&b=ffffff&op=50&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=400&thi=130&ts=25&tsa=90&tsh=130&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.4686&abp=white' },
-    { id: 'ink', name: 'Ink', url: '?c=0a0a0a&sh=metallic&tmr=100&tme=200' },
-    { id: 'chrome', name: 'Chrome', url: '?c=d9d9d9&sh=metallic&tmr=100&tme=200' },
-    { id: 'glass', name: 'Clear', url: '?c=e0f7fa&sh=clear&tpr=100&tpe=200' },
-    { id: 'chocolate', name: 'Chocolate', url: '?c=4e300d&sh=matte&tcr=0&tce=20' },
-    { id: 'gumball', name: 'Gumball', url: '?c=ff9dbb&sh=matte&tcr=0&tce=10' },
-    { id: 'gold', name: 'Gold', url: '?c=ffd700&sh=metallic&tmr=90&tme=180' }
-];
+let QUICK_PRESETS = [];
+fetch('presets.json')
+    .then(r => r.json())
+    .then(data => {
+        QUICK_PRESETS = data;
+        renderModelPresets();
+    })
+    .catch(err => console.error("Could not load presets.json", err));
 
 const BG_PRESETS = [
     { id: 'white', name: 'White', color: '#ffffff' },
@@ -3574,16 +3573,18 @@ function renderModelPresets() {
             if (activeModelPreset === 'custom') storeCustomSettings();
 
             if (preset.url) {
-                // Goal 2: Preserve current auto adjust state instead of using the preset's or defaulting
                 const currentAuto = isDynamicBg ? '1' : '0';
-                // Attach preset id so restoreSettings doesn't fallback to legacy 'custom'
                 const finalUrl = preset.url + '&amp=' + preset.id + '&aba=' + currentAuto;
-                
                 history.replaceState(null, '', finalUrl);
-                restoreSettings();
-                saveSettings();
                 
-                // Force events to visually update custom swatch picks if needed
+                // Enforce state immediately so restore/save capture it
+                activeModelPreset = preset.id; 
+                restoreSettings();
+                
+                // Enforce again in case restoreSettings overrides it fallback
+                activeModelPreset = preset.id; 
+                saveSettings(); // This rewrites history with current UI state, using the preset ID
+
                 colorPick.dispatchEvent(new Event('input', { bubbles: true }));
                 if (opacitySlider) opacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
                 shadingEl.dispatchEvent(new Event('change', { bubbles: true }));
@@ -3591,10 +3592,11 @@ function renderModelPresets() {
                 
                 applyCurrentTextureTuning();
                 updateDynamicBg();
+            } else {
+                activeModelPreset = preset.id;
             }
-
-            activeModelPreset = preset.id; // Enforce it
             updateModelSelection();
+            saveSettings();
         });
         bar.appendChild(wrap);
     });
@@ -3735,13 +3737,10 @@ function renderBgPresets() {
 
         let swatchInner;
         if (preset.id === 'modelcolor') {
-            // Use same sphere style as the active model preset
-            const activeTs = THUMB_STYLES[activeModelPreset] || {
-                bg: colorPick.value,
-                overlay: 'radial-gradient(circle at 36% 32%, rgba(255,255,255,0.6) 5%, transparent 40%, rgba(0,0,0,0.3) 100%)'
-            };
-            const bgCol = activeTs.bg !== colorPick.value ? colorPick.value : activeTs.bg;
-            swatchInner = `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${colorPick.value};${activeTs.extra || ''}"><span style="position:absolute;inset:0;background:${activeTs.overlay};"></span></span>`;
+            // No sphere styling, just the raw color and SVG
+            swatchInner = `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:8px;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:transparent;display:flex;align-items:center;justify-content:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M6.1752 12.025C6.1752 12.675 6.29186 13.3208 6.5252 13.9625C6.75853 14.6042 7.11686 15.2 7.6002 15.75L7.6502 15.8V15.025C7.6502 14.6583 7.77936 14.3458 8.0377 14.0875C8.29603 13.8292 8.60853 13.7 8.9752 13.7C9.34186 13.7 9.65436 13.8292 9.9127 14.0875C10.171 14.3458 10.3002 14.6583 10.3002 15.025V19.225C10.3002 19.5917 10.171 19.9042 9.9127 20.1625C9.65436 20.4208 9.34186 20.55 8.9752 20.55H4.7752C4.40853 20.55 4.09603 20.4208 3.8377 20.1625C3.57936 19.9042 3.4502 19.5917 3.4502 19.225C3.4502 18.8583 3.57936 18.5458 3.8377 18.2875C4.09603 18.0292 4.40853 17.9 4.7752 17.9H6.0502L6.0002 17.85C5.1502 17 4.5252 16.0792 4.1252 15.0875C3.7252 14.0958 3.5252 13.075 3.5252 12.025C3.5252 10.3583 3.95853 8.82918 4.8252 7.43751C5.69186 6.04585 6.85853 5.00001 8.3252 4.30001C8.6252 4.15001 8.9252 4.16668 9.2252 4.35001C9.5252 4.53335 9.73353 4.80001 9.8502 5.15001C9.9502 5.48335 9.9377 5.81668 9.8127 6.15001C9.6877 6.48335 9.46686 6.74168 9.1502 6.92501C8.2502 7.44168 7.52936 8.15001 6.9877 9.05001C6.44603 9.95001 6.1752 10.9417 6.1752 12.025ZM17.8252 11.975C17.8252 11.325 17.7085 10.6792 17.4752 10.0375C17.2419 9.39585 16.8835 8.80001 16.4002 8.25001L16.3502 8.20001V8.97501C16.3502 9.34168 16.221 9.65418 15.9627 9.91251C15.7044 10.1708 15.3919 10.3 15.0252 10.3C14.6585 10.3 14.346 10.1708 14.0877 9.91251C13.8294 9.65418 13.7002 9.34168 13.7002 8.97501V4.77501C13.7002 4.40835 13.8294 4.09585 14.0877 3.83751C14.346 3.57918 14.6585 3.45001 15.0252 3.45001H19.2252C19.5919 3.45001 19.9044 3.57918 20.1627 3.83751C20.421 4.09585 20.5502 4.40835 20.5502 4.77501C20.5502 5.14168 20.421 5.45418 20.1627 5.71251C19.9044 5.97085 19.5919 6.10001 19.2252 6.10001H17.9502L18.0002 6.15001C18.8502 7.00001 19.4752 7.92085 19.8752 8.91251C20.2752 9.90418 20.4752 10.925 20.4752 11.975C20.4752 13.6417 20.0419 15.1708 19.1752 16.5625C18.3085 17.9542 17.1419 19 15.6752 19.7C15.3752 19.85 15.0752 19.8333 14.7752 19.65C14.4752 19.4667 14.2669 19.2 14.1502 18.85C14.0502 18.5167 14.0627 18.1833 14.1877 17.85C14.3127 17.5167 14.5335 17.2583 14.8502 17.075C15.7502 16.5583 16.471 15.85 17.0127 14.95C17.5544 14.05 17.8252 13.0583 17.8252 11.975Z" fill="#1C1B1F"/>
+</svg></span>`;
         } else {
             swatchInner = `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};"></span>`;
         }
