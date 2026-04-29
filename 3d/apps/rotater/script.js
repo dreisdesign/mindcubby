@@ -620,12 +620,12 @@ function applyTextureLighting() {
     const shadowRimFactor = 1 - 0.62 * shadowsAmt;
 
     if (ambientLight) ambientLight.intensity = LIGHT_BASE.ambient * gain * inv * shadowBodyFactor;
-    if (keyLight) keyLight.intensity = LIGHT_BASE.key * gain * contrast * Math.pow(highlights, 0.95);
+    if (keyLight) keyLight.intensity = LIGHT_BASE.key * gain * contrast;
     if (fillLight) fillLight.intensity = LIGHT_BASE.fill * gain * inv * shadowBodyFactor * 0.92;
-    if (rimLight) rimLight.intensity = LIGHT_BASE.rim * gain * fwd * Math.pow(highlights, 1.08) * shadowRimFactor;
+    if (rimLight) rimLight.intensity = LIGHT_BASE.rim * gain * fwd * Math.pow(highlights, 1.5) * shadowRimFactor;
     if (renderer) {
         renderer.toneMappingExposure = Math.max(0.2, Math.min(2.8,
-            LIGHT_BASE.exposure * Math.pow(gain, 0.92) * Math.pow(highlights, 0.28)
+            LIGHT_BASE.exposure * Math.pow(gain, 0.92)
         ));
         renderer.shadowMap.enabled = shadowsOn;
         renderer.shadowMap.needsUpdate = true;
@@ -657,16 +657,16 @@ function applyCurrentTextureTuning() {
     if (mode === 'metallic') {
         mat.metalness = textureTuneState.metallicMetalness / 100;
         mat.roughness = (100 - textureTuneState.metallicRoughness) / 100;
-        mat.envMapIntensity = textureTuneState.metallicReflection / 100;
+        mat.envMapIntensity = (textureTuneState.metallicReflection / 100) * (textureTuneState.highlights / 100);
     } else if (mode === 'phong') {
         mat.metalness = 0;
         mat.roughness = (100 - textureTuneState.phongRoughness) / 100;
-        mat.envMapIntensity = textureTuneState.phongReflection / 100;
+        mat.envMapIntensity = (textureTuneState.phongReflection / 100) * (textureTuneState.highlights / 100);
     } else {
         // Clay: matte non-metal baseline with faint environment response.
         mat.metalness = 0;
         mat.roughness = (100 - textureTuneState.matteRoughness) / 100;
-        mat.envMapIntensity = textureTuneState.matteReflection / 100;
+        mat.envMapIntensity = (textureTuneState.matteReflection / 100) * (textureTuneState.highlights / 100);
     }
     mat.needsUpdate = true;
 }
@@ -677,8 +677,16 @@ function getMaterial(shading, baseColor) {
     // Tone: -100 = full white, 0 = original color, +100 = full black
     const toneVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
     const baseC = new THREE.Color(baseColor);
-    if (toneVal > 0) baseC.lerp(new THREE.Color(0x000000), toneVal / 100);
-    else if (toneVal < 0) baseC.lerp(new THREE.Color(0xffffff), -toneVal / 100);
+                if (toneVal !== 0) {
+                const hsl = {};
+                baseC.getHSL(hsl);
+                if (toneVal > 0) {
+                    hsl.l = hsl.l * (1 - toneVal / 100);
+                } else {
+                    hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
+                }
+                baseC.setHSL(hsl.h, hsl.s, hsl.l);
+            }
 
     const isClear = (shading === "clear" || shading === "glass");
     const finalAlpha = isClear ? 0.35 : 1.0;
@@ -695,7 +703,7 @@ function getMaterial(shading, baseColor) {
             ...base,
             metalness: 0,
             roughness: (100 - textureTuneState.matteRoughness) / 100,
-            envMapIntensity: textureTuneState.matteReflection / 100,
+            envMapIntensity: ((textureTuneState.matteReflection || 0) / 100) * (textureTuneState.highlights / 100),
         });
     }
     if (shading === "phong" || shading === "clear" || shading === "glass") {
@@ -703,14 +711,14 @@ function getMaterial(shading, baseColor) {
             ...base,
             metalness: 0,
             roughness: (100 - (textureTuneState.phongRoughness || 10)) / 100,
-            envMapIntensity: (textureTuneState.phongReflection || 80) / 100,
+            envMapIntensity: ((textureTuneState.phongReflection || 80) / 100) * (textureTuneState.highlights / 100),
         });
     }
     return new THREE.MeshStandardMaterial({
         ...base,
         metalness: (textureTuneState.metallicMetalness || 65) / 100,
         roughness: (100 - (textureTuneState.metallicRoughness || 30)) / 100,
-        envMapIntensity: (textureTuneState.metallicReflection || 100) / 100,
+        envMapIntensity: ((textureTuneState.metallicReflection || 100) / 100) * (textureTuneState.highlights / 100),
     });
 }// ── STL Loading ───────────────────────────────────────────────────────────────
 function loadSTLBuffer(buffer, name) {
@@ -2170,8 +2178,16 @@ colorPick.addEventListener('input', () => {
     if (mesh) {
         const toneVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
         const baseC = new THREE.Color(colorPick.value);
-        if (toneVal > 0) baseC.lerp(new THREE.Color(0x000000), toneVal / 100);
-        else if (toneVal < 0) baseC.lerp(new THREE.Color(0xffffff), -toneVal / 100);
+                    if (toneVal !== 0) {
+                const hsl = {};
+                baseC.getHSL(hsl);
+                if (toneVal > 0) {
+                    hsl.l = hsl.l * (1 - toneVal / 100);
+                } else {
+                    hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
+                }
+                baseC.setHSL(hsl.h, hsl.s, hsl.l);
+            }
         mesh.material.color.set(baseC);
         mesh.material.needsUpdate = true;
     }
@@ -2186,8 +2202,16 @@ if (opacitySlider) {
         syncSliderTooltip(opacitySlider);
         if (mesh && mesh.material) {
             const baseC = new THREE.Color(colorPick.value);
-            if (toneVal > 0) baseC.lerp(new THREE.Color(0x000000), toneVal / 100);
-            else if (toneVal < 0) baseC.lerp(new THREE.Color(0xffffff), -toneVal / 100);
+                        if (toneVal !== 0) {
+                const hsl = {};
+                baseC.getHSL(hsl);
+                if (toneVal > 0) {
+                    hsl.l = hsl.l * (1 - toneVal / 100);
+                } else {
+                    hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
+                }
+                baseC.setHSL(hsl.h, hsl.s, hsl.l);
+            }
             mesh.material.color.set(baseC);
             mesh.material.needsUpdate = true;
         }
@@ -3545,23 +3569,31 @@ function renderModelPresets() {
             </label>
             <span class="thumb-label">${preset.name}</span>
         `;
-                const actionArea = wrap.querySelector('.shading-option');
+                        const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
             if (activeModelPreset === 'custom') storeCustomSettings();
-            activeModelPreset = preset.id;
 
             if (preset.url) {
-                history.replaceState(null, '', preset.url);
+                // Goal 2: Preserve current auto adjust state instead of using the preset's or defaulting
+                const currentAuto = isDynamicBg ? '1' : '0';
+                // Attach preset id so restoreSettings doesn't fallback to legacy 'custom'
+                const finalUrl = preset.url + '&amp=' + preset.id + '&aba=' + currentAuto;
+                
+                history.replaceState(null, '', finalUrl);
                 restoreSettings();
                 saveSettings();
+                
+                // Force events to visually update custom swatch picks if needed
                 colorPick.dispatchEvent(new Event('input', { bubbles: true }));
                 if (opacitySlider) opacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
                 shadingEl.dispatchEvent(new Event('change', { bubbles: true }));
                 if (bgPick) bgPick.dispatchEvent(new Event('input', { bubbles: true }));
+                
                 applyCurrentTextureTuning();
                 updateDynamicBg();
             }
 
+            activeModelPreset = preset.id; // Enforce it
             updateModelSelection();
         });
         bar.appendChild(wrap);

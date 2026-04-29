@@ -289,21 +289,20 @@
                             <!-- Model sliders: always expanded -->
                             <div class="model-sliders">
                                 <label class="control-label range-label">
-                                    <span>Tone<span class="slider-tooltip" id="opacityVal">0</span></span>
+                                    <span>Shade<span class="slider-tooltip" id="opacityVal">0</span></span>
                                     <div class="range-wrap">
-                                        <input type="range" id="opacitySlider" min="-100" max="100" step="50"
-                                            value="0" data-snap-count="5" data-fine-step="1" data-group="object">
+                                        <input type="range" id="opacitySlider" min="-100" max="100" step="50" value="0"
+                                            data-snap-count="5" data-fine-step="1" data-group="object">
                                     </div>
                                 </label>
                                 <label class="control-label range-label" id="textureTuneRoughnessRow">
-                                    <span>Matte<span class="slider-tooltip"
-                                            id="textureTuneRoughnessVal"></span></span>
+                                    <span>Matte<span class="slider-tooltip" id="textureTuneRoughnessVal"></span></span>
                                     <div class="range-wrap">
                                         <input type="range" id="textureTuneRoughness" min="0" max="100" step="25"
                                             data-snap-count="5" data-fine-step="1" value="30" data-group="object">
                                     </div>
                                 </label>
-                                <label class="control-label range-label" id="textureTuneReflectionRow" hidden>
+                                <label class="control-label range-label" id="textureTuneReflectionRow">
                                     <span>Reflection<span class="slider-tooltip"
                                             id="textureTuneReflectionVal">100%</span></span>
                                     <div class="range-wrap">
@@ -352,7 +351,8 @@
                             <div class="box-heading">Background</div>
                             <div class="preset-group" id="bgPresetsBar"></div>
                             <label class="gif-option-check adv-section-check" style="margin-top:10px;">
-                                <input type="checkbox" id="autoBgCheck" data-group="scene"> Automatically adjust brightness
+                                <input type="checkbox" id="autoBgCheck" data-group="scene"> Automatically adjust
+                                brightness
                             </label>
                             <!-- bgOpacitySlider kept hidden for JS compatibility -->
                             <label style="display:none;" aria-hidden="true">
