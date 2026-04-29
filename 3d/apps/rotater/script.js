@@ -276,6 +276,11 @@ try {
     else if (localStorage.getItem('rotater_devlog') === '1') DEV_LOG = true;
 } catch (e) { }
 let suppressSave = false;
+// Declared early so restoreSettings() (called before these would otherwise be
+// initialized by their let declarations later in the file) can safely read/write them.
+let activeModelPreset = 'custom';
+let activeBgPreset = 'custom';
+let isDynamicBg = false;
 const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
 
 
@@ -3547,8 +3552,6 @@ const BG_PRESETS = [
     { id: 'modelcolor', name: 'Model Sync', color: null }  // syncs with model color
 ];
 
-let isDynamicBg = false;
-
 function updateDynamicBg() {
     if (!isDynamicBg || !renderer) return;
     let baseHex;
@@ -3597,7 +3600,6 @@ function rainbowRingSvg(svgId, fillColor) {
     return `<svg id="${svgId}" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none" style="display:block;cursor:pointer;"><circle cx="22" cy="22" r="19.5" fill="${fillColor}" stroke="url(#${gid})" stroke-width="3"/><defs><radialGradient id="${gid}" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(43 18) rotate(156.894) scale(43.7)"><stop stop-color="#FF0909"/><stop offset="0.240385" stop-color="#FF9D00"/><stop offset="0.538462" stop-color="#FFF718"/><stop offset="0.740385" stop-color="#84FF00"/><stop offset="0.9375" stop-color="#8C00FF"/></radialGradient></defs></svg>`;
 }
 
-let activeModelPreset = 'custom';
 let customModelSettings = null; // Stores last custom color/shading/opacity
 
 function storeCustomSettings() {
@@ -3786,8 +3788,6 @@ function renderModelPresets() {
     requestAnimationFrame(updateModelSelection);
 }
 
-
-let activeBgPreset = 'custom';
 
 function updateBgSelection() {
     document.querySelectorAll('#bgPresetsBar .shading-option').forEach(el => el.classList.remove('is-selected'));
