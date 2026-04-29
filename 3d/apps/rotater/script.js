@@ -1456,9 +1456,9 @@ async function clearIDB() {
 const SETTINGS_KEY = 'rotater_settings';
 
 function saveSettings() {
-    if (DEV_LOG) console.debug(`[rotater] saveSettings called at ${Date.now()}`);
+    if (DEV_LOG) console.log(`[rotater] saveSettings called at ${Date.now()}`);
     if (suppressSave) {
-        if (DEV_LOG) console.debug(`[rotater] saveSettings suppressed at ${Date.now()}`);
+        if (DEV_LOG) console.log(`[rotater] saveSettings suppressed at ${Date.now()}`);
         return;
     }
     try {
@@ -1508,7 +1508,7 @@ function saveSettings() {
     } catch (e) { }
     if (DEV_LOG) {
         try {
-            console.debug('[rotater] saveSettings ->', {
+            console.log('[rotater] saveSettings ->', {
                 color: colorPick?.value,
                 shading: shadingEl?.value,
                 activeModelPreset,
@@ -1524,7 +1524,7 @@ function saveSettings() {
 
 function restoreSettings() {
     suppressSave = true;
-    if (DEV_LOG) console.debug(`[rotater] restoreSettings start at ${Date.now()}`);
+    if (DEV_LOG) console.log(`[rotater] restoreSettings start at ${Date.now()}`);
     try {
         const urlS = getURLSettings(location.search);
         let localS = {};
@@ -1553,7 +1553,7 @@ function restoreSettings() {
                 }
             });
         }
-        if (DEV_LOG) console.debug('[rotater] merged settings', s);
+        if (DEV_LOG) console.log('[rotater] merged settings', s);
 
         const clamp = (v, min, max, fallback) => {
             const n = parseFloat(v);
@@ -1748,7 +1748,7 @@ function restoreSettings() {
     // Done applying restored settings; re-enable saves and persist final state
     try {
         suppressSave = false;
-        if (DEV_LOG) console.debug(`[rotater] restoreSettings applied, final state at ${Date.now()}`,
+        if (DEV_LOG) console.log(`[rotater] restoreSettings applied, final state at ${Date.now()}`,
             {
                 activeModelPreset,
                 activeBgPreset,
@@ -1875,12 +1875,12 @@ function settingsToURL() {
 }
 
 async function restoreSession() {
-    if (DEV_LOG) console.debug(`[rotater] restoreSession: calling restoreSettings at ${Date.now()}`);
+    if (DEV_LOG) console.log(`[rotater] restoreSession: calling restoreSettings at ${Date.now()}`);
     restoreSettings();
     updateColorSwatches(); // guaranteed init even if restoreSettings throws
     const saved = await loadFileFromIDB();
     if (!saved) {
-        if (DEV_LOG) console.debug(`[rotater] restoreSession: loading demo model at ${Date.now()}`);
+        if (DEV_LOG) console.log(`[rotater] restoreSession: loading demo model at ${Date.now()}`);
         // Load the demo model (not saved to IDB — user's own files take priority)
         try {
             const resp = await fetch('./benchy.stl');
@@ -1891,7 +1891,7 @@ async function restoreSession() {
             currentFileName = '3dbenchy';
             if (!renderer) initThree();
             controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
-            if (DEV_LOG) console.debug(`[rotater] restoreSession: calling loadSTLBuffer for demo at ${Date.now()}`);
+            if (DEV_LOG) console.log(`[rotater] restoreSession: calling loadSTLBuffer for demo at ${Date.now()}`);
             loadSTLBuffer(buffer, '3dbenchy.stl');
             saveSettings();
         } catch (e) { /* no demo available — stay on landing page */ }
@@ -1902,7 +1902,7 @@ async function restoreSession() {
     currentFileName = saved.name.replace(/\.stl$/i, '');
     if (!renderer) initThree();
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
-    if (DEV_LOG) console.debug(`[rotater] restoreSession: calling loadSTLBuffer for user file at ${Date.now()}`);
+    if (DEV_LOG) console.log(`[rotater] restoreSession: calling loadSTLBuffer for user file at ${Date.now()}`);
     loadSTLBuffer(saved.buffer, saved.name);
 }
 
