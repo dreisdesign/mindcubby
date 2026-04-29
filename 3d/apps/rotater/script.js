@@ -259,9 +259,9 @@ const textureTuneMetalnessRow = document.getElementById('textureTuneMetalnessRow
 // Capture passthrough URL params (e.g. debug=1) once at startup so they survive
 // URL rewrites done by settingsToURL().
 const APP_PARAM_KEYS = new Set([
-    'c','b','op','sh','rm','sp','tr','wsr','sd','gl','ef','eq','ed','et','gd','jq',
-    'tto','tl','tc','thi','ts','tsa','tll','tsh','tmr','tmm','tme','tpr','tpe','tcr','tce',
-    'ecd','ece','ecz','aba','abp','amp'
+    'c', 'b', 'op', 'sh', 'rm', 'sp', 'tr', 'wsr', 'sd', 'gl', 'ef', 'eq', 'ed', 'et', 'gd', 'jq',
+    'tto', 'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh', 'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
+    'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp'
 ]);
 const _passthroughParams = (() => {
     const p = new URLSearchParams(location.search);
