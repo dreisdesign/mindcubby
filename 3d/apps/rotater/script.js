@@ -256,7 +256,12 @@ const textureTuneReflectionRow = document.getElementById('textureTuneReflectionR
 const textureTuneMetalnessRow = document.getElementById('textureTuneMetalnessRow');
 // Dev logging and a flag used to suppress saveSettings() while programmatically
 // applying restored settings so we don't overwrite localStorage/URL mid-restore.
-const DEV_LOG = location.search.includes('debug=1');
+// DEV_LOG: also persist in localStorage so it survives URL rewrites
+let DEV_LOG = location.search.includes('debug=1');
+try {
+    if (DEV_LOG) localStorage.setItem('rotater_devlog', '1');
+    else if (localStorage.getItem('rotater_devlog') === '1') DEV_LOG = true;
+} catch (e) { }
 let suppressSave = false;
 const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
 
@@ -1438,8 +1443,9 @@ async function clearIDB() {
 const SETTINGS_KEY = 'rotater_settings';
 
 function saveSettings() {
+    if (DEV_LOG) console.debug(`[rotater] saveSettings called at ${Date.now()}`);
     if (suppressSave) {
-        if (DEV_LOG) console.debug('[rotater] saveSettings suppressed');
+        if (DEV_LOG) console.debug(`[rotater] saveSettings suppressed at ${Date.now()}`);
         return;
     }
     try {
@@ -1494,7 +1500,9 @@ function saveSettings() {
                 shading: shadingEl?.value,
                 activeModelPreset,
                 activeBgPreset,
-                textureTuneState
+                textureTuneState,
+                url: location.search,
+                localStorage: localStorage.getItem(SETTINGS_KEY)
             });
         } catch (e) { }
     }
@@ -1502,9 +1510,8 @@ function saveSettings() {
 }
 
 function restoreSettings() {
-    // Prevent intermediate saves while programmatically applying restored values
     suppressSave = true;
-    if (DEV_LOG) console.debug('[rotater] restoreSettings start');
+    if (DEV_LOG) console.debug(`[rotater] restoreSettings start at ${Date.now()}`);
     try {
         const urlS = getURLSettings(location.search);
         let localS = {};
@@ -1521,8 +1528,16 @@ function restoreSettings() {
         let s = { ...defaultS, ...localS };
         if (urlS) {
             s = { ...s };
+            const urlParams = new URLSearchParams(location.search);
             Object.entries(urlS).forEach(([k, v]) => {
-                if (v !== null && v !== undefined) s[k] = v;
+                if (v !== null && v !== undefined) {
+                    // Only override activeModelPreset/activeBgPreset from URL if
+                    // they were explicitly present in the URL (amp/abp params).
+                    // Otherwise keep the localStorage value.
+                    if (k === 'activeModelPreset' && !urlParams.has('amp')) return;
+                    if (k === 'activeBgPreset' && !urlParams.has('abp')) return;
+                    s[k] = v;
+                }
             });
         }
         if (DEV_LOG) console.debug('[rotater] merged settings', s);
@@ -1720,13 +1735,16 @@ function restoreSettings() {
     // Done applying restored settings; re-enable saves and persist final state
     try {
         suppressSave = false;
-        if (DEV_LOG) console.debug('[rotater] restoreSettings applied, final state', {
-            activeModelPreset,
-            activeBgPreset,
-            shading: shadingEl?.value,
-            color: colorPick?.value,
-            textureTuneState
-        });
+        if (DEV_LOG) console.debug(`[rotater] restoreSettings applied, final state at ${Date.now()}`,
+            {
+                activeModelPreset,
+                activeBgPreset,
+                shading: shadingEl?.value,
+                color: colorPick?.value,
+                textureTuneState,
+                url: location.search,
+                localStorage: localStorage.getItem(SETTINGS_KEY)
+            });
         saveSettings();
     } catch (e) { /* non-fatal */ }
 }
@@ -1838,14 +1856,19 @@ function settingsToURL() {
     if (isDynamicBg) p.set('aba', '1');
     if (activeBgPreset && activeBgPreset !== 'custom') p.set('abp', activeBgPreset);
     if (activeModelPreset && activeModelPreset !== 'custom') p.set('amp', activeModelPreset);
+    // Preserve non-app params (like debug=1) that the app doesn't own
+    const existingP = new URLSearchParams(location.search);
+    existingP.forEach((v, k) => { if (!p.has(k)) p.set(k, v); });
     history.replaceState(null, '', '?' + p.toString());
 }
 
 async function restoreSession() {
+    if (DEV_LOG) console.debug(`[rotater] restoreSession: calling restoreSettings at ${Date.now()}`);
     restoreSettings();
     updateColorSwatches(); // guaranteed init even if restoreSettings throws
     const saved = await loadFileFromIDB();
     if (!saved) {
+        if (DEV_LOG) console.debug(`[rotater] restoreSession: loading demo model at ${Date.now()}`);
         // Load the demo model (not saved to IDB — user's own files take priority)
         try {
             const resp = await fetch('./benchy.stl');
@@ -1856,6 +1879,7 @@ async function restoreSession() {
             currentFileName = '3dbenchy';
             if (!renderer) initThree();
             controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
+            if (DEV_LOG) console.debug(`[rotater] restoreSession: calling loadSTLBuffer for demo at ${Date.now()}`);
             loadSTLBuffer(buffer, '3dbenchy.stl');
             saveSettings();
         } catch (e) { /* no demo available — stay on landing page */ }
@@ -1866,6 +1890,7 @@ async function restoreSession() {
     currentFileName = saved.name.replace(/\.stl$/i, '');
     if (!renderer) initThree();
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
+    if (DEV_LOG) console.debug(`[rotater] restoreSession: calling loadSTLBuffer for user file at ${Date.now()}`);
     loadSTLBuffer(saved.buffer, saved.name);
 }
 
