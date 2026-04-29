@@ -907,12 +907,13 @@ html.loaded footer {
     color: var(--color-label, #666);
     letter-spacing: 0.01em;
     gap: 10px;
+    min-width: 0;
 }
 
 .range-label {
     flex: 1;
     min-width: 140px;
-    gap: 4px;
+    gap: 2px;
 }
 
 .speed-label {
@@ -1915,6 +1916,13 @@ html.none-mode .gif-loop-label {
 }
 
 /* ── Shading thumbnail cards ── */
+
+left: 0;
+right: 0;
+bottom: 0;
+border-radius: 5px;
+box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
 
 .shading-group {
     display: flex;
@@ -3478,3 +3486,249 @@ select {
 
 
 /* ── Rotation re-click pause hint ── */
+
+.preset-group .thumb-card-wrap {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.preset-group .thumb-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-size: 10px;
+}
+
+.preset-add-slot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px dashed var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.preset-add-slot:hover {
+    border-color: var(--palette-blueberry-400);
+    color: var(--palette-blueberry-500);
+}
+
+/* ── Advanced Settings (compact collapsible inside Theme box) ── */
+.adv-settings {
+    margin-top: 12px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 4px;
+}
+
+.adv-settings>summary {
+    cursor: pointer;
+    font-size: var(--text-sm, 12px);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    outline: none;
+    user-select: none;
+    padding: 8px 0 4px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.adv-settings>summary::before {
+    content: '›';
+    display: inline-block;
+    transition: transform 0.15s;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.adv-settings[open]>summary::before {
+    transform: rotate(90deg);
+}
+
+/* ── Programmatic selection state for preset thumbs ── */
+.shading-option.is-selected {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+/* ── Custom slot overwrite button ── */
+.preset-save-btn {
+    display: none;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: inherit;
+    color: var(--color-primary);
+    background: none;
+    border: 1px solid var(--color-primary);
+    border-radius: 4px;
+    padding: 1px 5px;
+    cursor: pointer;
+    margin-top: 2px;
+    white-space: nowrap;
+    line-height: 1.4;
+    transition: background 0.12s, color 0.12s;
+}
+
+.thumb-card-wrap:hover .preset-save-btn {
+    display: block;
+}
+
+.preset-save-btn:hover {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+/* ── Sidebar tabs ─────────────────────────────────────────────────────────── */
+
+.sidebar-tabs {
+    display: none;
+    /* hidden until app loaded */
+    flex-shrink: 0;
+    border-bottom: 2px solid var(--border-color);
+    background: var(--color-surface);
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 9;
+}
+
+html.loaded .sidebar-tabs {
+    display: flex;
+}
+
+.sidebar-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    padding: 10px 8px;
+    font-size: var(--text-sm, 12px);
+    font-weight: 600;
+    color: var(--color-label);
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.01em;
+    transition: color 0.12s, border-color 0.12s;
+}
+
+.sidebar-tab.is-active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+.sidebar-tab:hover:not(.is-active) {
+    color: var(--color-on-surface, var(--color-text));
+}
+
+/* ── Tab panels ── */
+
+.tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tab-panel[hidden] {
+    display: none;
+}
+
+/* ── Box headings (Model / Environment cards) ── */
+.box-heading {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+}
+
+.box-sub-heading {
+    font-size: var(--text-sm, 12px);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    opacity: 0.7;
+}
+
+/* ── Slider sections (always expanded) ── */
+.adv-section {
+    margin-top: 12px;
+}
+
+.model-sliders,
+.light-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+/* Extra sliders revealed by Show All */
+.adv-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 4px;
+}
+
+.adv-extra[hidden] {
+    display: none;
+}
+
+/* Show All / Show Less underlined text link */
+.show-all-link {
+    display: inline-block;
+    background: none;
+    border: none;
+    padding: 4px 0;
+    margin-top: 10px;
+    font-size: var(--text-sm, 12px);
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--color-text-muted);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.show-all-link:hover {
+    color: var(--color-text);
+}
+
+/* Fine Tuning row at bottom of Theme panel */
+.fine-tuning-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 0 4px;
+}
+
+.fine-tuning-hint {
+    font-size: var(--text-xs, 10px);
+    color: var(--color-text-muted);
+    opacity: 0.65;
+    padding-left: 22px;
+}
+
+/* Checkbox row */
+.adv-section-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--text-sm, 12px);
+    color: var(--color-text);
+    padding: 4px 0;
+}
+
+/* ── Preset group inside new cards (no extra margin needed) ── */
+#modelBox .preset-group,
+#environmentBox .preset-group {
+    margin-top: 0;
+    margin-bottom: 0;
+}

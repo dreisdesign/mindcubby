@@ -11,6 +11,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.19] - 2026-04-29
+
+### Added
+- **Model background preset** — new "Model" swatch in the Background card syncs the canvas background to the active model color; swatch renders with the same per-material sphere overlay as the model selector so the pairing is visually obvious
+- **Fine tuning mode** — checkbox "Fine tuning for precise control" (tooltip: "Remove snap points") hides snap-point dots and disables grid-snap so sliders can be dragged to any value
+- **5-point snap enforcement** — all sliders snap to five evenly-spaced positions via a capture-phase `input` listener; bypassed when fine tuning is active
+- **Per-material sphere visuals** — Chrome, Ink, Ceramic, Clear, Chocolate, Gumball, and Gold presets each render a physically-plausible multi-layer radial-gradient sphere thumbnail using a shared `THUMB_STYLES` map
+- **Contrast and Highlights moved to Model card** — now grouped with Tone, Matte, and Reflection for a single place to tune model appearance
+
+### Changed
+- **Sidebar cards always expanded** — removed Show All / Show Less collapsible sections; all sliders are permanently visible
+- **Matte slider** (was Roughness) — label renamed to "Matte"; value display shows `Glossy X%` (inverted: 0 roughness = Glossy 100%, full roughness = Glossy 0%)
+- **Lighting labels** — "Light" → "Brightness", "Shadows" → "Shadow Intensity", "Light Source" → "Light Position"
+- **Lock light always on** — removed the "Lock light to camera" checkbox; light lock is permanently enabled (camera-relative lighting is always active)
+- **Automatically adjust brightness** — renamed from "Auto adjust based on model color"; applies a lighter shade of the selected background (or model color when Model preset is active) rather than a complementary tint
+- **Custom swatches blank when unselected** — both the model and background Custom swatches show only the rainbow ring until selected; sphere fill and overlay appear only when active
+- **Preset order** — Ceramic is now slot 1, Ink slot 2, Chrome slot 3 (unchanged: Clear 4, Chocolate 5, Gumball 6, Gold 7)
+- **Removed sub-headings** — "Material" and "Background Fill Color" section labels removed from their cards
+- **Reduced slider row spacing** — gap between label rows tightened from 10 px to 6 px; label-to-track gap from 4 px to 2 px
+
+### Fixed
+- **Preset not showing as selected** — synthetic `input` / `change` dispatches from preset click handlers no longer reset `activeModelPreset` to `'custom'` (guarded by `ev.isTrusted`)
+- **Auto adjust checkbox acting on wrong color** — preset clicks no longer unconditionally force `isDynamicBg = false`; checkbox state is read on every preset click so auto-adjust persists across preset switches
+- **Model BG swatch sphere overlay** — swatch updates both background color and gradient overlay whenever the model color picker changes
+
 ## [1.7.18] - 2026-04-27
 
 ### Added

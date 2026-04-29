@@ -141,7 +141,7 @@ const TEXTURE_TUNE_DEFAULTS = {
     phongReflection: 40,
     clayRoughness: 88,
     clayReflection: 10,
-    lightLock: false,
+    lightLock: true,
 };
 
 // Returns frame count that gives 1 revolution matching the live rotation speed
@@ -188,12 +188,12 @@ const fileInput = document.getElementById('fileInput');
 const dropZone = document.getElementById('dropZone');
 const viewerSec = document.getElementById('viewerSection');
 const colorPick = document.getElementById('colorPicker');
+const opacitySlider = document.getElementById('opacitySlider');
+const opacityVal = document.getElementById('opacityVal');
+const quickPresetsBar = document.getElementById('quickPresetsBar');
 const bgPick = document.getElementById('bgPicker');
-const shadingEl = {
-    get value() { return document.querySelector('input[name="shading"]:checked')?.value ?? 'phong'; },
-    set value(v) { const el = document.querySelector(`input[name="shading"][value="${v}"]`); if (el) el.checked = true; },
-    addEventListener(type, fn) { document.querySelectorAll('input[name="shading"]').forEach(el => el.addEventListener(type, fn)); },
-};
+const bgOpacitySlider = document.getElementById('bgOpacitySlider');
+const shadingEl = document.getElementById('shadingSelect');
 const speedSlider = document.getElementById('speedSlider');
 const speedVal = document.getElementById('speedVal');
 
@@ -292,8 +292,33 @@ function addSnapDots(slider) {
     wrap.appendChild(dotsEl);
 }
 
-// Add snap dots to all range sliders at startup
+// Add snap dots and enforce snap behavior on all range sliders
 document.querySelectorAll('input[type="range"]').forEach(addSnapDots);
+
+// ── Snap-to-grid enforcement ──────────────────────────────────────────────────
+let fineTuningMode = false;
+
+function snapToGrid(slider) {
+    if (fineTuningMode) return;
+    const n = parseInt(slider.dataset.snapCount, 10) || 5;
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    const v = parseFloat(slider.value);
+    let closest = min;
+    let minDist = Infinity;
+    for (let i = 0; i < n; i++) {
+        const pos = min + (i / (n - 1)) * (max - min);
+        const d = Math.abs(v - pos);
+        if (d < minDist) { minDist = d; closest = pos; }
+    }
+    const rounded = Math.round(closest);
+    if (parseFloat(slider.value) !== rounded) slider.value = String(rounded);
+}
+
+// Attach snap in capture phase (runs before all bubble-phase input listeners)
+document.querySelectorAll('input[type="range"][data-snap-count]').forEach(slider => {
+    slider.addEventListener('input', () => snapToGrid(slider), true);
+});
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let renderer, scene, camera, controls, mesh;
@@ -404,7 +429,7 @@ function syncExportCameraFromViewport() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = false;
@@ -420,7 +445,15 @@ function initThree() {
     pmrem.dispose();
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(bgPick.value);
+    scene.background = null;
+
+    {
+        const c = new THREE.Color(bgPick.value);
+        let tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
+        if (tone > 0) c.lerp(new THREE.Color(0x000000), tone / 100);
+        else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
+        if (renderer) renderer.setClearColor(c, 1);
+    }
     scene.environment = roomEnv; // IBL for metallic shading
 
     camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
@@ -638,10 +671,26 @@ function applyCurrentTextureTuning() {
     mat.needsUpdate = true;
 }
 
-function getMaterial(shading, color) {
-    if (shading === 'flat' || shading === 'toon') shading = 'clay'; // legacy value
-    const base = { color, side: THREE.DoubleSide, shadowSide: THREE.FrontSide };
-    if (shading === 'clay') {
+function getMaterial(shading, baseColor) {
+    if (shading === "flat" || shading === "toon") shading = "clay"; // legacy value
+
+    // Tone: -100 = full white, 0 = original color, +100 = full black
+    const toneVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
+    const baseC = new THREE.Color(baseColor);
+    if (toneVal > 0) baseC.lerp(new THREE.Color(0x000000), toneVal / 100);
+    else if (toneVal < 0) baseC.lerp(new THREE.Color(0xffffff), -toneVal / 100);
+
+    const isClear = (shading === "clear" || shading === "glass");
+    const finalAlpha = isClear ? 0.35 : 1.0;
+
+    const base = {
+        color: baseC, side: THREE.DoubleSide, shadowSide: THREE.FrontSide,
+        transparent: isClear,
+        opacity: finalAlpha,
+        depthWrite: !isClear
+    };
+
+    if (shading === "clay") {
         return new THREE.MeshStandardMaterial({
             ...base,
             metalness: 0,
@@ -649,27 +698,21 @@ function getMaterial(shading, color) {
             envMapIntensity: textureTuneState.clayReflection / 100,
         });
     }
-    // Phong: PBR non-metal with moderate roughness. Using MeshStandardMaterial
-    // so the RoomEnvironment IBL provides indirect specular — this makes dark/
-    // black models readable via env reflections regardless of albedo.
-    if (shading === 'phong') {
+    if (shading === "phong" || shading === "clear" || shading === "glass") {
         return new THREE.MeshStandardMaterial({
             ...base,
             metalness: 0,
-            roughness: textureTuneState.phongRoughness / 100,
-            envMapIntensity: textureTuneState.phongReflection / 100,
+            roughness: (textureTuneState.phongRoughness || 10) / 100,
+            envMapIntensity: (textureTuneState.phongReflection || 80) / 100,
         });
     }
-    // metallic
     return new THREE.MeshStandardMaterial({
         ...base,
-        metalness: textureTuneState.metallicMetalness / 100,
-        roughness: textureTuneState.metallicRoughness / 100,
-        envMapIntensity: textureTuneState.metallicReflection / 100,
+        metalness: (textureTuneState.metallicMetalness || 65) / 100,
+        roughness: (textureTuneState.metallicRoughness || 30) / 100,
+        envMapIntensity: (textureTuneState.metallicReflection || 100) / 100,
     });
-}
-
-// ── STL Loading ───────────────────────────────────────────────────────────────
+}// ── STL Loading ───────────────────────────────────────────────────────────────
 function loadSTLBuffer(buffer, name) {
     const geo = new STLLoader().parse(buffer);
 
@@ -706,7 +749,15 @@ function loadSTLBuffer(buffer, name) {
     applyCurrentTextureTuning();
 
     // Sync background color (matters when restoring settings before initThree)
-    if (scene) scene.background.set(bgPick.value);
+    scene.background = null;
+
+    {
+        const c = new THREE.Color(bgPick.value);
+        let tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
+        if (tone > 0) c.lerp(new THREE.Color(0x000000), tone / 100);
+        else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
+        if (renderer) renderer.setClearColor(c, 1);
+    }
     updateRulerHUD();
 
     if (savedCamPos && camera) {
@@ -1378,6 +1429,8 @@ function saveSettings() {
     try {
         localStorage.setItem(SETTINGS_KEY, JSON.stringify({
             color: colorPick.value,
+            tone: opacitySlider ? opacitySlider.value : 0,
+            bgOpacity: bgOpacitySlider ? bgOpacitySlider.value : "0",
             bg: bgPick.value,
             shading: shadingEl.value,
             speed: speedSlider.value,
@@ -1448,6 +1501,27 @@ function restoreSettings() {
         if (s && Object.keys(s).length > 0) {
             if (s.shading === 'flat' || s.shading === 'toon') s.shading = 'clay'; // migrate legacy modes
             if (s.color) colorPick.value = s.color;
+            if ((s.tone !== undefined || s.opacity !== undefined) && opacitySlider) {
+                let toneRestored;
+                if (s.tone !== undefined) {
+                    // New format: tone is -100..100
+                    toneRestored = clamp(s.tone, -100, 100, 0);
+                } else {
+                    // Old format: opacity was 0-100; values like 100 (fully opaque) map to tone 0
+                    const oldVal = parseFloat(s.opacity);
+                    toneRestored = (Number.isFinite(oldVal) && oldVal > 0 && oldVal <= 100) ? 0 : clamp(s.opacity, -100, 100, 0);
+                }
+                opacitySlider.value = toneRestored;
+                const actualTone = parseInt(opacitySlider.value, 10);
+                opacityVal.textContent = (actualTone >= 0 ? '+' : '') + actualTone;
+            }
+            if (s.bgOpacity !== undefined && bgOpacitySlider) {
+                const bgTone = Math.max(-100, Math.min(100, parseInt(s.bgOpacity, 10) || 0));
+                bgOpacitySlider.value = bgTone;
+                const actualBgTone = parseInt(bgOpacitySlider.value, 10);
+                const bgValEl = document.getElementById('bgOpacityVal');
+                if (bgValEl) bgValEl.textContent = (actualBgTone >= 0 ? '+' : '') + actualBgTone;
+            }
             if (s.bg) bgPick.value = s.bg;
             if (s.shading) shadingEl.value = s.shading;
             if (s.speed != null) {
@@ -1570,6 +1644,8 @@ function restoreSettings() {
         syncSliderTooltip(speedSlider);
         syncSliderTooltip(tiltRangeSlider);
         syncSliderTooltip(wobbleSpinRangeSlider);
+        if (opacitySlider) syncSliderTooltip(opacitySlider);
+        if (bgOpacitySlider) syncSliderTooltip(bgOpacitySlider);
         updateTiltRangeReset();
         wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
         speedResetBtn.classList.toggle('is-changed', parseInt(speedSlider.value) !== SPEED_DEFAULT);
@@ -1590,6 +1666,7 @@ function getURLSettings(searchStr = location.search) {
         // Core appearance
         color: p.has('c') ? '#' + p.get('c') : null,
         bg: p.has('b') ? '#' + p.get('b') : null,
+        tone: p.has('op') ? p.get('op') : null,
         shading: g('sh'),
         // Animation
         rotateMode: g('rm'),
@@ -1633,6 +1710,7 @@ function settingsToURL() {
     // Core appearance
     p.set('c', colorPick.value.replace('#', ''));
     p.set('b', bgPick.value.replace('#', ''));
+    if (opacitySlider && opacitySlider.value !== '0') p.set('op', opacitySlider.value);
     p.set('sh', shadingEl.value);
     // Animation
     p.set('rm', rotateModeEl.value);
@@ -1928,8 +2006,8 @@ function updateShadingThumbs() {
 }
 
 function updateColorSwatches() {
-    document.getElementById('colorSwatch').style.background = colorPick.value;
-    document.getElementById('bgSwatch').style.background = bgPick.value;
+    //    document.getElementById('colorSwatch').style.background = colorPick.value;
+    //    document.getElementById('bgSwatch').style.background = bgPick.value;
 }
 
 function setTextureTunePanelOpen(open) {
@@ -2028,7 +2106,7 @@ function updateTextureTuneUI() {
         }
         textureTuneRoughnessSlider.value = String(rough);
         textureTuneReflectionSlider.value = String(refl);
-        if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = `${Math.round(rough)}%`;
+        if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = `Glossy ${Math.round(100 - rough)}%`;
         if (textureTuneReflectionVal) textureTuneReflectionVal.textContent = `${Math.round(refl)}%`;
         syncSliderTooltip(textureTuneRoughnessSlider);
         syncSliderTooltip(textureTuneReflectionSlider);
@@ -2066,13 +2144,61 @@ function updateRangeSliderForMode(mode) {
 }
 
 colorPick.addEventListener('input', () => {
-    if (mesh) mesh.material.color.set(colorPick.value);
+    if (mesh) {
+        const toneVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
+        const baseC = new THREE.Color(colorPick.value);
+        if (toneVal > 0) baseC.lerp(new THREE.Color(0x000000), toneVal / 100);
+        else if (toneVal < 0) baseC.lerp(new THREE.Color(0xffffff), -toneVal / 100);
+        mesh.material.color.set(baseC);
+        mesh.material.needsUpdate = true;
+    }
     updateShadingThumbs();
     updateColorSwatches();
     saveSettings();
 });
+if (opacitySlider) {
+    opacitySlider.addEventListener('input', () => {
+        const toneVal = parseInt(opacitySlider.value, 10);
+        opacityVal.textContent = (toneVal >= 0 ? '+' : '') + toneVal;
+        syncSliderTooltip(opacitySlider);
+        if (mesh && mesh.material) {
+            const baseC = new THREE.Color(colorPick.value);
+            if (toneVal > 0) baseC.lerp(new THREE.Color(0x000000), toneVal / 100);
+            else if (toneVal < 0) baseC.lerp(new THREE.Color(0xffffff), -toneVal / 100);
+            mesh.material.color.set(baseC);
+            mesh.material.needsUpdate = true;
+        }
+        updateShadingThumbs();
+        saveSettings();
+    });
+}
+
+if (bgOpacitySlider) {
+    bgOpacitySlider.addEventListener('input', () => {
+        const bgTone = parseInt(bgOpacitySlider.value, 10);
+        document.getElementById('bgOpacityVal').textContent = (bgTone >= 0 ? '+' : '') + bgTone;
+        syncSliderTooltip(bgOpacitySlider);
+        const c = new THREE.Color(bgPick.value);
+        let tone = parseInt(bgOpacitySlider.value, 10);
+        if (tone > 0) c.lerp(new THREE.Color(0x000000), tone / 100);
+        else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
+        if (renderer) renderer.setClearColor(c, 1);
+        if (isDynamicBg) updateDynamicBg();
+        saveSettings();
+    });
+}
+
+
 bgPick.addEventListener('input', () => {
-    if (scene) scene.background.set(bgPick.value);
+    scene.background = null;
+
+    {
+        const c = new THREE.Color(bgPick.value);
+        let tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
+        if (tone > 0) c.lerp(new THREE.Color(0x000000), tone / 100);
+        else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
+        if (renderer) renderer.setClearColor(c, 1);
+    }
     updateShadingThumbs();
     updateColorSwatches();
     saveSettings();
@@ -2122,7 +2248,9 @@ textureTuneLightSourceSlider?.addEventListener('input', () => {
 });
 
 textureTuneLightLockBox?.addEventListener('change', () => {
-    textureTuneState.lightLock = textureTuneLightLockBox.checked;
+    // Light lock is always on; ignore user changes to hidden checkbox
+    textureTuneState.lightLock = true;
+    if (textureTuneLightLockBox) textureTuneLightLockBox.checked = true;
     updateTextureTuneUI();
     if (!isExporting) renderer.render(scene, camera);
     saveSettings();
@@ -2142,6 +2270,7 @@ textureTuneRoughnessSlider?.addEventListener('input', () => {
     if (mode === 'metallic') textureTuneState.metallicRoughness = v;
     if (mode === 'phong') textureTuneState.phongRoughness = v;
     if (mode === 'clay') textureTuneState.clayRoughness = v;
+    if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = `Glossy ${Math.round(100 - v)}%`;
     updateTextureTuneUI();
     applyCurrentTextureTuning();
     saveSettings();
@@ -2393,7 +2522,70 @@ speedResetBtn.addEventListener('click', (e) => {
     speedSlider.dispatchEvent(new Event('input'));
 });
 
-// ── Sidebar collapse toggle ───────────────────────────────────────────────────
+// ── Sidebar tabs ───────────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+    document.querySelectorAll('.sidebar-tab').forEach(btn => {
+        const active = btn.dataset.tab === tab;
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-selected', String(active));
+    });
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.hidden = panel.dataset.panel !== tab;
+    });
+    try { localStorage.setItem('rotater_activeTab', tab); } catch (_) { }
+}
+
+document.querySelectorAll('.sidebar-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// Restore active tab
+try {
+    const savedTab = localStorage.getItem('rotater_activeTab');
+    if (savedTab && document.querySelector(`.sidebar-tab[data-tab="${savedTab}"]`)) {
+        switchTab(savedTab);
+    }
+} catch (_) { }
+
+// ── Show All / Show Less toggles for slider sections ─────────────────────────
+function initShowAll(toggleId, extraId, storeKey) {
+    const toggle = document.getElementById(toggleId);
+    const extra = document.getElementById(extraId);
+    if (!toggle || !extra) return;
+    const labelAll = toggle.dataset.labelAll || 'Show All';
+    const labelLess = toggle.dataset.labelLess || 'Show Less';
+    // Restore persisted expanded state
+    try {
+        if (localStorage.getItem(storeKey) === '1') {
+            extra.hidden = false;
+            toggle.textContent = labelLess;
+        }
+    } catch (_) { }
+    toggle.addEventListener('click', () => {
+        const wasHidden = extra.hidden;
+        extra.hidden = !wasHidden;
+        toggle.textContent = wasHidden ? labelLess : labelAll;
+        try { localStorage.setItem(storeKey, wasHidden ? '1' : '0'); } catch (_) { }
+    });
+}
+initShowAll('advModelToggle', 'advModelExtra', 'rotater_advModelCollapsed');
+initShowAll('advLightToggle', 'advLightExtra', 'rotater_advLightCollapsed');
+
+// Fine Tuning toggle
+const fineTuningCheckEl = document.getElementById('fineTuningCheck');
+if (fineTuningCheckEl) {
+    fineTuningCheckEl.addEventListener('change', () => {
+        fineTuningMode = fineTuningCheckEl.checked;
+        // Show/hide snap dots based on mode
+        document.querySelectorAll('.snap-dots').forEach(el => {
+            el.style.opacity = fineTuningMode ? '0' : '';
+            el.style.pointerEvents = fineTuningMode ? 'none' : '';
+        });
+    });
+}
+
+// ── Sidebar collapse toggle ──────────────────────────────────────────────────────
 document.getElementById('btnCollapseSidebar')?.addEventListener('click', () => {
     const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
     const btn = document.getElementById('btnCollapseSidebar');
@@ -3116,4 +3308,554 @@ restoreSession().finally(() => {
     // Ensure preview reflects restored transparent setting immediately
     try { syncTransparentCheckboxes('exportTransparent'); } catch (e) { }
     document.documentElement.classList.remove('has-session');
+});
+
+// ── Preset Gallery ──────────────────────────────────────────────────────────
+// Accurate per-material sphere visuals (used by model presets + BG model swatch)
+const THUMB_STYLES = {
+    chrome: {
+        bg: '#d0d0d0',
+        overlay: 'radial-gradient(circle at 30% 25%, #fff 0%, rgba(255,255,255,0.8) 6%, rgba(180,180,180,0.2) 22%, transparent 45%), radial-gradient(circle at 70% 75%, rgba(0,0,0,0.7) 0%, transparent 55%)'
+    },
+    ink: {
+        bg: '#0d0d0d',
+        overlay: 'radial-gradient(circle at 32% 27%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.35) 8%, transparent 28%), radial-gradient(circle at 68% 72%, rgba(255,255,255,0.04) 0%, transparent 40%)'
+    },
+    ceramic: {
+        bg: '#fef8f0',
+        overlay: 'radial-gradient(circle at 38% 30%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.35) 22%, rgba(230,210,190,0.25) 50%, rgba(190,165,140,0.45) 100%)'
+    },
+    glass: {
+        bg: 'rgba(210,245,252,0.35)',
+        overlay: 'radial-gradient(circle at 28% 24%, #fff 0%, rgba(255,255,255,0.6) 7%, rgba(200,242,255,0.15) 28%, transparent 48%), radial-gradient(circle at 68% 70%, rgba(200,242,255,0.3) 0%, transparent 50%), radial-gradient(circle at 52% 52%, rgba(100,200,240,0.08) 0%, transparent 70%)',
+        extra: 'border: 1px solid rgba(130,210,240,0.55);'
+    },
+    chocolate: {
+        bg: '#3a1c06',
+        overlay: 'radial-gradient(circle at 36% 30%, rgba(180,110,50,0.55) 0%, rgba(120,65,20,0.25) 18%, transparent 48%), radial-gradient(circle at 65% 70%, rgba(0,0,0,0.7) 0%, transparent 55%)'
+    },
+    gumball: {
+        bg: '#ff8fb5',
+        overlay: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.78) 0%, rgba(255,230,240,0.45) 18%, transparent 46%), radial-gradient(circle at 66% 72%, rgba(210,60,110,0.28) 0%, transparent 50%)'
+    },
+    gold: {
+        bg: '#f5c400',
+        overlay: 'radial-gradient(circle at 30% 26%, rgba(255,255,220,0.95) 0%, rgba(255,235,100,0.6) 10%, rgba(240,190,0,0.2) 28%, transparent 48%), radial-gradient(circle at 68% 72%, rgba(140,90,0,0.75) 0%, transparent 55%)'
+    }
+};
+
+const QUICK_PRESETS = [
+    { id: 'ceramic', name: 'Ceramic', color: '#fff8f0', shading: 'clay', tone: 0, finish: 'low-gloss' },
+    { id: 'ink', name: 'Ink', color: '#0a0a0a', shading: 'metallic', tone: 0, finish: 'high-gloss' },
+    { id: 'chrome', name: 'Chrome', color: '#d9d9d9', shading: 'metallic', tone: 0, finish: 'high-gloss' },
+    { id: 'glass', name: 'Clear', color: '#e0f7fa', shading: 'clear', tone: 0, finish: 'high-gloss' },
+    { id: 'chocolate', name: 'Chocolate', color: '#4e300d', shading: 'clay', tone: 0, finish: 'low-gloss' },
+    { id: 'gumball', name: 'Gumball', color: '#ff9dbb', shading: 'clay', tone: 0, finish: 'matte' },
+    { id: 'gold', name: 'Gold', color: '#ffd700', shading: 'metallic', tone: 0, finish: 'high-gloss' }
+];
+
+const BG_PRESETS = [
+    { id: 'white', name: 'White', color: '#ffffff' },
+    { id: 'black', name: 'Black', color: '#000000' },
+    { id: 'modelcolor', name: 'Model', color: null }  // syncs with model color
+];
+
+let isDynamicBg = false;
+
+function updateDynamicBg() {
+    if (!isDynamicBg || !renderer) return;
+    let baseColor;
+    if (activeBgPreset === 'modelcolor') {
+        // Lighter shade of the model color
+        baseColor = new THREE.Color(colorPick.value).lerp(new THREE.Color(0xffffff), 0.55);
+    } else {
+        // Lighter shade of the selected preset/custom bg color
+        baseColor = new THREE.Color(bgPick.value).lerp(new THREE.Color(0xffffff), 0.45);
+    }
+    renderer.setClearColor(baseColor, 1);
+}
+
+// Hook model color changes to update dynamic bg and Model preset swatch
+colorPick.addEventListener('input', updateDynamicBg);
+colorPick.addEventListener('input', () => {
+    // Update model custom swatch fill
+    const svgCircle = document.querySelector('#customModelThumb circle');
+    if (svgCircle) svgCircle.setAttribute('fill', colorPick.value);
+    // Update Model BG preset swatch if visible
+    const modelBgThumb = document.getElementById('bg-preset-modelcolor');
+    if (modelBgThumb) {
+        modelBgThumb.style.backgroundColor = colorPick.value;
+        // Also update sphere overlay to match current active preset
+        const activeTs = THUMB_STYLES[activeModelPreset] || null;
+        const overlaySpan = modelBgThumb.querySelector('span');
+        if (overlaySpan && activeTs) overlaySpan.style.background = activeTs.overlay;
+    }
+    // If Model bg preset is active, update the actual bg
+    if (activeBgPreset === 'modelcolor') {
+        bgPick.value = colorPick.value;
+        // Only apply directly to renderer if auto-adjust is off
+        // (updateDynamicBg above handles it when isDynamicBg is true)
+        if (!isDynamicBg) {
+            renderer && renderer.setClearColor(new THREE.Color(colorPick.value), 1);
+        }
+    }
+});
+
+// SVG rainbow ring for custom swatches — matches the provided design SVG
+function rainbowRingSvg(svgId, fillColor) {
+    const gid = `rr-${svgId}`;
+    return `<svg id="${svgId}" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none" style="display:block;cursor:pointer;"><circle cx="22" cy="22" r="19.5" fill="${fillColor}" stroke="url(#${gid})" stroke-width="3"/><defs><radialGradient id="${gid}" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(43 18) rotate(156.894) scale(43.7)"><stop stop-color="#FF0909"/><stop offset="0.240385" stop-color="#FF9D00"/><stop offset="0.538462" stop-color="#FFF718"/><stop offset="0.740385" stop-color="#84FF00"/><stop offset="0.9375" stop-color="#8C00FF"/></radialGradient></defs></svg>`;
+}
+
+let activeModelPreset = 'custom';
+let customModelSettings = null; // Stores last custom color/shading/opacity
+
+function storeCustomSettings() {
+    customModelSettings = {
+        color: colorPick.value,
+        tone: opacitySlider ? opacitySlider.value : 0,
+        shading: shadingEl.value
+    };
+}
+
+function updateModelSelection() {
+    document.querySelectorAll('#quickPresetsBar .shading-option').forEach(el => el.classList.remove('is-selected'));
+
+    if (activeModelPreset === 'custom') {
+        const customOpt = document.querySelector('#quickPresetsBar .custom-color-option');
+        if (customOpt) customOpt.classList.add('is-selected');
+        // Show sphere fill + overlay when selected
+        const svgCircle = document.querySelector('#customModelThumb circle');
+        if (svgCircle) svgCircle.setAttribute('fill', colorPick.value);
+        const overlay = document.getElementById('customModelSphereOverlay');
+        if (overlay) {
+            overlay.style.display = 'block';
+            overlay.style.background = 'radial-gradient(circle at 36% 32%, rgba(255,255,255,0.6) 5%, transparent 40%, rgba(0,0,0,0.3) 100%)';
+        }
+    } else {
+        // Blank the custom swatch when not selected
+        const svgCircle = document.querySelector('#customModelThumb circle');
+        if (svgCircle) svgCircle.setAttribute('fill', 'transparent');
+        const overlay = document.getElementById('customModelSphereOverlay');
+        if (overlay) overlay.style.display = 'none';
+
+        if (activeModelPreset.startsWith('custom-slot-')) {
+            const slotIdx = activeModelPreset.replace('custom-slot-', '');
+            const slotInner = document.getElementById('custom-slot-' + slotIdx);
+            if (slotInner) {
+                const parentOpt = slotInner.closest('.shading-option');
+                if (parentOpt) parentOpt.classList.add('is-selected');
+            }
+        } else {
+            const presetInner = document.getElementById('model-preset-' + activeModelPreset);
+            if (presetInner) {
+                const parentOpt = presetInner.closest('.shading-option');
+                if (parentOpt) parentOpt.classList.add('is-selected');
+            }
+        }
+    }
+}
+
+// Hook all manual changes to revert to custom mode (trusted user events only)
+[colorPick, shadingEl].forEach(el => {
+    if (el) el.addEventListener('input', (ev) => {
+        if (!ev.isTrusted) return;
+        activeModelPreset = 'custom';
+        storeCustomSettings();
+        updateModelSelection();
+    });
+    if (el) el.addEventListener('change', (ev) => {
+        if (!ev.isTrusted) return;
+        activeModelPreset = 'custom';
+        storeCustomSettings();
+        updateModelSelection();
+    });
+});
+if (opacitySlider) {
+    opacitySlider.addEventListener('input', (ev) => {
+        if (!ev.isTrusted) return;
+        activeModelPreset = 'custom';
+        storeCustomSettings();
+        updateModelSelection();
+    });
+}
+
+
+function renderModelPresets() {
+    const bar = document.getElementById('quickPresetsBar');
+    if (!bar) return;
+
+    bar.innerHTML = '';
+    bar.style.display = 'grid';
+    bar.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    bar.style.gap = '8px';
+
+    // Always show all 7 named presets + Custom (8 total)
+    QUICK_PRESETS.forEach((preset) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'thumb-card-wrap';
+        wrap.style.display = 'flex';
+        wrap.style.flexDirection = 'column';
+        wrap.style.alignItems = 'center';
+
+        const ts = THUMB_STYLES[preset.id] || { bg: preset.color, overlay: 'radial-gradient(circle at 36% 32%, rgba(255,255,255,0.6) 5%, transparent 40%, rgba(0,0,0,0.3) 100%)' };
+        wrap.innerHTML = `
+            <label class="shading-option preset-option" title="Apply ${preset.name}">
+                <span class="shading-thumb" id="model-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;background-color:${ts.bg};position:relative;overflow:hidden;background-clip:padding-box;${ts.extra || ''}">
+                    <span style="position:absolute;inset:0;background:${ts.overlay};"></span>
+                </span>
+            </label>
+            <span class="thumb-label">${preset.name}</span>
+        `;
+        const actionArea = wrap.querySelector('.shading-option');
+        actionArea.addEventListener('click', () => {
+            if (activeModelPreset === 'custom') storeCustomSettings();
+            activeModelPreset = preset.id;
+
+            colorPick.value = preset.color;
+            // Apply preset-defined tone when present, otherwise default to 0
+            const presetTone = (preset.tone !== undefined && preset.tone !== null) ? preset.tone : (preset.opacity !== undefined ? preset.opacity : 0);
+            if (opacitySlider) opacitySlider.value = String(presetTone);
+            shadingEl.value = preset.shading;
+
+            // Chrome preset: apply appropriate roughness for the active shading mode
+            if (preset.id === 'chrome' && textureTuneRoughnessSlider) {
+                textureTuneRoughnessSlider.value = '0';
+                if (getActiveShadingMode() === 'metallic') textureTuneState.metallicRoughness = 0;
+                else if (getActiveShadingMode() === 'phong') textureTuneState.phongRoughness = 0;
+                else textureTuneState.clayRoughness = 0;
+                if (textureTuneRoughnessVal) textureTuneRoughnessVal.innerText = 'Glossy 100%';
+                applyCurrentTextureTuning();
+            }
+
+            colorPick.dispatchEvent(new Event('input', { bubbles: true }));
+            if (opacitySlider) opacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
+            shadingEl.dispatchEvent(new Event('change', { bubbles: true }));
+
+            updateModelSelection();
+        });
+        bar.appendChild(wrap);
+    });
+
+    // Custom preset slot (always at position 8) — blank until selected
+    const customWrap = document.createElement('div');
+    customWrap.className = 'thumb-card-wrap';
+    customWrap.style.display = 'flex';
+    customWrap.style.flexDirection = 'column';
+    customWrap.style.alignItems = 'center';
+
+    // Always render with transparent fill; updateModelSelection will fill when active
+    customWrap.innerHTML = `
+        <label class="shading-option custom-color-option" title="Custom color — click to pick" style="cursor:pointer;position:relative;">
+            ${rainbowRingSvg('customModelThumb', 'transparent')}
+            <span id="customModelSphereOverlay" style="position:absolute;inset:3px;border-radius:50%;pointer-events:none;display:none;"></span>
+        </label>
+        <span class="thumb-label">Custom</span>
+    `;
+
+    customWrap.querySelector('.shading-option').addEventListener('click', () => {
+        activeModelPreset = 'custom';
+        const details = document.getElementById('advSettingsDetails');
+        if (details) details.open = true;
+        // Expand the extra sliders if hidden
+        const advExtra = document.getElementById('advModelExtra');
+        const advToggle = document.getElementById('advModelToggle');
+        if (advExtra && advExtra.hidden) {
+            advExtra.hidden = false;
+            if (advToggle) advToggle.textContent = advToggle.dataset.labelLess || 'Show Less';
+            try { localStorage.setItem('rotater_advModelCollapsed', '1'); } catch (_) { }
+        }
+        if (customModelSettings) {
+            colorPick.value = customModelSettings.color;
+            if (opacitySlider) opacitySlider.value = customModelSettings.tone ?? customModelSettings.opacity ?? 0;
+            shadingEl.value = customModelSettings.shading;
+            colorPick.dispatchEvent(new Event('input'));
+            if (opacitySlider) opacitySlider.dispatchEvent(new Event('input'));
+            shadingEl.dispatchEvent(new Event('change'));
+        }
+        updateModelSelection();
+        // Open the model color picker
+        colorPick.style.width = '1px';
+        colorPick.style.height = '1px';
+        colorPick.style.pointerEvents = 'auto';
+        try { colorPick.showPicker(); } catch (e) { colorPick.click(); }
+        setTimeout(() => {
+            colorPick.style.width = '0';
+            colorPick.style.height = '0';
+            colorPick.style.pointerEvents = 'none';
+        }, 200);
+    });
+    bar.appendChild(customWrap);
+
+    // Initial call
+    requestAnimationFrame(updateModelSelection);
+}
+
+
+let activeBgPreset = 'custom';
+
+function updateBgSelection() {
+    document.querySelectorAll('#bgPresetsBar .shading-option').forEach(el => el.classList.remove('is-selected'));
+
+    if (activeBgPreset === 'custom') {
+        const customBgInner = document.getElementById('customBgThumb');
+        if (customBgInner) {
+            const parentOpt = customBgInner.closest('.shading-option');
+            if (parentOpt) parentOpt.classList.add('is-selected');
+        }
+        // Fill the swatch with current bg color + sphere overlay when selected
+        const svgCircle = document.querySelector('#customBgThumb circle');
+        if (svgCircle) svgCircle.setAttribute('fill', bgPick.value);
+        const overlay = document.getElementById('customBgSphereOverlay');
+        if (overlay) {
+            overlay.style.display = 'block';
+            overlay.style.background = 'radial-gradient(circle at 36% 32%, rgba(255,255,255,0.5) 5%, transparent 40%, rgba(0,0,0,0.25) 100%)';
+        }
+    } else {
+        // Blank the custom swatch
+        const svgCircle = document.querySelector('#customBgThumb circle');
+        if (svgCircle) svgCircle.setAttribute('fill', 'transparent');
+        const overlay = document.getElementById('customBgSphereOverlay');
+        if (overlay) overlay.style.display = 'none';
+
+        const bgInner = document.getElementById('bg-preset-' + activeBgPreset);
+        if (bgInner) {
+            const parentOpt = bgInner.closest('.shading-option');
+            if (parentOpt) parentOpt.classList.add('is-selected');
+        }
+    }
+}
+
+// Hook manual color-picker changes to switch to custom (only real user interaction, not preset dispatch)
+bgPick.addEventListener('input', (ev) => {
+    if (ev.isTrusted) {
+        activeBgPreset = 'custom';
+        updateBgSelection();
+    }
+});
+
+// Wire Auto-adjust checkbox
+const autoBgCheckEl = document.getElementById('autoBgCheck');
+if (autoBgCheckEl) {
+    autoBgCheckEl.addEventListener('change', () => {
+        isDynamicBg = autoBgCheckEl.checked;
+        if (isDynamicBg) updateDynamicBg();
+        else {
+            // Restore base preset color when turning auto-adjust off
+            if (activeBgPreset === 'modelcolor') {
+                renderer && renderer.setClearColor(new THREE.Color(colorPick.value), 1);
+            } else if (activeBgPreset === 'custom') {
+                bgPick.dispatchEvent(new Event('input', { bubbles: true }));
+            } else {
+                const preset = BG_PRESETS.find(p => p.id === activeBgPreset);
+                if (preset && preset.color) bgPick.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+    });
+}
+
+
+function renderBgPresets() {
+    const bar = document.getElementById('bgPresetsBar');
+    if (!bar) return;
+
+    bar.innerHTML = '';
+    bar.style.display = 'grid';
+    bar.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    bar.style.gap = '6px';
+
+    BG_PRESETS.forEach((preset) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'thumb-card-wrap';
+        wrap.style.display = 'flex';
+        wrap.style.flexDirection = 'column';
+        wrap.style.alignItems = 'center';
+
+        let swatchInner;
+        if (preset.id === 'modelcolor') {
+            // Use same sphere style as the active model preset
+            const activeTs = THUMB_STYLES[activeModelPreset] || {
+                bg: colorPick.value,
+                overlay: 'radial-gradient(circle at 36% 32%, rgba(255,255,255,0.6) 5%, transparent 40%, rgba(0,0,0,0.3) 100%)'
+            };
+            const bgCol = activeTs.bg !== colorPick.value ? colorPick.value : activeTs.bg;
+            swatchInner = `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${colorPick.value};${activeTs.extra || ''}"><span style="position:absolute;inset:0;background:${activeTs.overlay};"></span></span>`;
+        } else {
+            swatchInner = `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};"></span>`;
+        }
+
+        wrap.innerHTML = `
+            <label class="shading-option preset-option" title="${preset.name} background">
+                ${swatchInner}
+            </label>
+            <span class="thumb-label">${preset.name}</span>
+        `;
+
+        const actionArea = wrap.querySelector('.shading-option');
+        actionArea.addEventListener('click', () => {
+            activeBgPreset = preset.id;
+            // Respect existing auto-adjust state
+            const autoBg = document.getElementById('autoBgCheck');
+            isDynamicBg = autoBg ? autoBg.checked : false;
+            if (preset.id === 'modelcolor') {
+                bgPick.value = colorPick.value;
+                bgPick.dispatchEvent(new Event('input', { bubbles: false }));
+                if (isDynamicBg) updateDynamicBg();
+                else renderer && renderer.setClearColor(new THREE.Color(colorPick.value), 1);
+            } else {
+                bgPick.value = preset.color;
+                bgPick.dispatchEvent(new Event('input', { bubbles: true }));
+                if (isDynamicBg) updateDynamicBg();
+            }
+            updateBgSelection();
+        });
+        bar.appendChild(wrap);
+    });
+
+    // Custom Bg swatch — blank until selected
+    const customWrap = document.createElement('div');
+    customWrap.className = 'thumb-card-wrap';
+    customWrap.style.display = 'flex';
+    customWrap.style.flexDirection = 'column';
+    customWrap.style.alignItems = 'center';
+
+    customWrap.innerHTML = `
+        <label class="shading-option custom-color-option" title="Custom background — click to pick" style="cursor:pointer;position:relative;">
+            ${rainbowRingSvg('customBgThumb', 'transparent')}
+            <span id="customBgSphereOverlay" style="position:absolute;inset:3px;border-radius:50%;pointer-events:none;display:none;"></span>
+        </label>
+        <span class="thumb-label">Custom</span>
+    `;
+    bar.appendChild(customWrap);
+
+    const labelEl = customWrap.querySelector('.shading-option');
+    if (labelEl) {
+        labelEl.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            isDynamicBg = false;
+            activeBgPreset = 'custom';
+            updateBgSelection();
+            const input = document.getElementById('bgPicker');
+            if (!input) return;
+            if (typeof input.showPicker === 'function') {
+                try { input.showPicker(); } catch (e) { input.click(); }
+                return;
+            }
+            const thumb = customWrap.querySelector('.shading-thumb');
+            if (thumb) {
+                const rect = thumb.getBoundingClientRect();
+                const prev = { position: input.style.position, left: input.style.left, top: input.style.top, width: input.style.width, height: input.style.height, clip: input.style.clip, pointerEvents: input.style.pointerEvents };
+                Object.assign(input.style, { position: 'absolute', left: `${rect.left + window.scrollX}px`, top: `${rect.top + window.scrollY}px`, width: `${rect.width}px`, height: `${rect.height}px`, clip: 'auto', pointerEvents: 'auto' });
+                input.click();
+                setTimeout(() => {
+                    Object.assign(input.style, { position: prev.position || 'absolute', left: prev.left || '', top: prev.top || '', width: prev.width || '0px', height: prev.height || '0px', clip: prev.clip || 'rect(0,0,0,0)', pointerEvents: prev.pointerEvents || 'none' });
+                }, 800);
+            } else {
+                input.click();
+            }
+        });
+    }
+
+    if (!bgPick._presetListenerAdded) {
+        bgPick.addEventListener('input', () => {
+            const svgCircle = document.querySelector('#customBgThumb circle');
+            if (svgCircle && activeBgPreset === 'custom') svgCircle.setAttribute('fill', bgPick.value);
+        });
+        bgPick._presetListenerAdded = true;
+    }
+
+    requestAnimationFrame(updateBgSelection);
+}
+
+
+
+function renderModelShadeSelector() {
+    const sel = document.getElementById('modelShadeSelector');
+    if (!sel) return;
+    sel.innerHTML = '';
+    // Tone dots: -100 (lightest/white) to +100 (darkest/black), 9 steps
+    const values = [-100, -75, -50, -25, 0, 25, 50, 75, 100];
+    const currentVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
+    values.forEach((val) => {
+        const dot = document.createElement('div');
+        dot.style.width = '12px';
+        dot.style.height = '12px';
+        dot.style.borderRadius = '50%';
+        dot.style.cursor = 'pointer';
+        // Show actual model color lerped toward white (negative) or black (positive)
+        const baseC = new THREE.Color(colorPick ? colorPick.value : '#2e2b74');
+        if (val > 0) baseC.lerp(new THREE.Color(0x000000), val / 100);
+        else if (val < 0) baseC.lerp(new THREE.Color(0xffffff), -val / 100);
+        dot.style.backgroundColor = '#' + baseC.getHexString();
+        dot.onclick = () => {
+            if (opacitySlider) {
+                opacitySlider.value = String(val);
+                opacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            renderModelShadeSelector();
+        };
+        // active state
+        if (currentVal === val) {
+            dot.style.border = '2px solid var(--palette-blueberry-500)';
+            dot.style.transform = 'scale(1.2)';
+        } else {
+            dot.style.border = '1px solid var(--border-color)';
+            dot.style.transform = 'scale(1)';
+        }
+        sel.appendChild(dot);
+    });
+}
+
+// Add an event listener to opacitySlider to re-render the dots when loaded from localstorage
+if (opacitySlider) {
+    opacitySlider.addEventListener('input', () => {
+        renderModelShadeSelector();
+    });
+}
+
+function initPresetGallery() {
+    renderModelPresets();
+    renderBgPresets();
+    renderModelShadeSelector();
+}
+initPresetGallery();
+
+
+
+
+document.getElementById('btnDownloadArchive')?.addEventListener('click', async () => {
+    if (!currentModel) {
+        alert("Upload an STL to export first.");
+        return;
+    }
+
+    // We already have STLExporter from THREE (loaded in index.html ideally, or we can use JS Blob if we retained original File)
+    // Actually, what does "download settings that captures the settings plus the STL for re-upload" mean?
+    // Probably a zip? We don't have JSZip. We could download a JSON file, or we just save the current `settings` as a json.
+    // For now, let's just create a JSON export of all current variables.
+
+    const settings = {
+        modelColor: colorPick.value,
+        modelTone: opacitySlider ? opacitySlider.value : 0,
+        modelShading: shadingEl.value,
+        bgColor: bgPick.value,
+        bgTone: document.getElementById('bgOpacitySlider') ? document.getElementById('bgOpacitySlider').value : 0,
+        isDynamicBg,
+        rotSpeed: rotXSlider.value,
+        rotType: document.querySelector('input[name="rot_type"]:checked')?.value || 'local',
+        rotAxisX: document.getElementById('chkAxisX').checked,
+        rotAxisY: document.getElementById('chkAxisY').checked,
+        rotAxisZ: document.getElementById('chkAxisZ').checked,
+        cameraPosZ: camera.position.z,
+        lightIntensity: lightIntensitySlider.value,
+        pointLightIntensity: pointLightIntensitySlider.value
+    };
+
+    const blob = new Blob([JSON.stringify(settings, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "rotater-theme-settings.json";
+    a.click();
+    URL.revokeObjectURL(url);
 });

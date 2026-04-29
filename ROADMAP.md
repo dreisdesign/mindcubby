@@ -106,6 +106,17 @@ Recommendation: Implement Option 1 first (bounding-box ruler) to deliver immedia
 6. Multiple STLs at once with positioning options
    - Support loading more than one STL simultaneously. Provide basic positioning (translate, rotate per-model) and a re-ordering UI (drag-to-reorder stack).
 
+15. Benchy reset / Replace-STL UX change
+   - Current behavior: clicking the "X" next to the filename resets the scene to Benchy (demo model). This is discoverable but also surprising and destructive when users expect the filename X to simply remove or replace the current model.
+   - Change requested: move the Benchy reset out of the inline filename control and into the Replace / Drag-and-Drop overlay (or a dedicated, less-prominent "Load Benchy" quick action). The filename X should instead behave as a simple remove/clear or replace trigger and not auto-load Benchy.
+   - Rationale: when adding multi-part / multi-color workflows, a destructive inline reset can accidentally discard parts or per-part materials. Keeping Benchy as an explicit quick-load in the import overlay or a small utility menu reduces accidental data loss and centralizes demo-model actions.
+   - Implementation notes:
+     - Update the Replace STL overlay to include a clear "Reset to Benchy" control and a separate "Cancel" action.
+     - Change the filename-line X button to: (A) open the Replace overlay, or (B) remove the current model from the scene (show a confirmation if unsaved changes or multiple parts exist).
+     - Audit any code paths that assume the X triggers a Benchy load (tests, telemetry) and update accordingly.
+     - Add a small UI affordance in the sidebar or top bar labeled "Load Benchy" (optional) for power users; keep it intentionally less prominent than an inline destructive control.
+
+
 7. Dedicated Benchy button
    - Add a dedicated "Load Benchy" quick-load button so the test model can always be recalled in one click.
 
@@ -154,3 +165,67 @@ Recommendation: Implement Option 1 first (bounding-box ruler) to deliver immedia
 ---
 
 _Last updated: April 2026_
+
+## Preset gallery & Surface-Finish — design + built-in presets
+
+Decision: implement Presets as Shortcuts (Option A — non-breaking, recommended). A preset card applies both a model color and a texture/shader (plus optional visual params). Users can still tweak Color and Texture after applying a preset; any manual changes set the state to "Custom" and deselect the builtin preset.
+
+- Persistence: built-in presets are shipped with the app. User-saved presets persist to `localStorage` (guest mode).
+- Export settings: presets do NOT change export format or quality. Default export quality should be set to **High** globally.
+- Surface Finish: introduce a high-level "Surface Finish" control with discrete snap points to reduce complexity:
+   - High Gloss (gl ≈ 1.0)
+   - Medium Gloss (gl ≈ 0.6)
+   - Low Gloss (gl ≈ 0.3)
+   - Matte (gl ≈ 0.0)
+   - Transparent/Glass — handled by a shader (sh=glass) + transparency flag (et=1).
+
+Built-in preset gallery (preview URLs for local testing)
+- Notes: preview URLs use the local dev server `http://localhost:8765/` and include `eq=high` for preview fidelity. These example URLs include visual params used by current exporter; actual preset application in-app will only set color, texture, and finish-related params.
+
+| Preset | Color (hex) | Shader | Finish | Preview URL |
+|---|---:|---|---|---|
+| Chrome | d9d9d9 | metallic | High Gloss | http://localhost:8765/?c=d9d9d9&b=8d8ab7&sh=metallic&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=1&ef=png&eq=high&ed=square&et=1&gd=0&jq=90&tto=1&tl=60&tc=200&thi=250&ts=100&tsa=60&tll=1&tsh=115&tmr=0&tmm=100&tme=200&tpr=100&tpe=125&tcr=100&tce=0&ecd=95.7923&ece=0.0000 |
+| Chocolate | 4e300d | clay | Low Gloss | http://localhost:8765/?c=4e300d&b=8d8ab7&sh=clay&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=0.3&ef=png&eq=high&ed=square&et=0&gd=0&jq=90&tto=0&tl=75&tc=200&thi=250&ts=100&tsa=60&tll=1&tsh=115&tmr=0&tmm=100&tme=200&tpr=100&tpe=125&tcr=100&tce=200&ecd=93.5470&ece=0.0000 |
+| Ceramic | fff8f0 | clay | Low Gloss | http://localhost:8765/?c=fff8f0&b=8d8ab7&sh=clay&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=0.3&ef=png&eq=high&ed=square&et=0&gd=0&jq=90&tto=0&tl=75&tc=200&thi=250&ts=100&tsa=60&tll=1&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=93.5470&ece=0.0000 |
+| Ink | 0a0a0a | metallic | High Gloss (dark) | http://localhost:8765/?c=0a0a0a&b=8d8ab7&sh=metallic&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=1&ef=png&eq=high&ed=square&et=1&gd=0&jq=90&tto=1&tl=60&tc=200&thi=250&ts=100&tsa=60&tll=1&tsh=115&tmr=0&tmm=100&tme=200&tpr=100&tpe=125&tcr=100&tce=0&ecd=95.7923&ece=0.0000 |
+| Earth (Matte Green) | 2e8b57 | clay | Matte | http://localhost:8765/?c=2e8b57&b=8d8ab7&sh=clay&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=0.0&ef=png&eq=high&ed=square&et=0&gd=0&jq=90 |
+| MCM / Retro Orange | ff6f00 | metallic | Medium Gloss | http://localhost:8765/?c=ff6f00&b=8d8ab7&sh=metallic&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=0.6&ef=png&eq=high&ed=square&et=1&gd=0&jq=90 |
+| 90's Purple | 5b2b8a | clay | Low/Medium | http://localhost:8765/?c=5b2b8a&b=8d8ab7&sh=clay&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=0.4&ef=png&eq=high&ed=square&et=0&gd=0&jq=90 |
+| Neon Yellow | ffff00 | metallic | High Gloss (neon) | http://localhost:8765/?c=ffff00&b=8d8ab7&sh=metallic&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=1&ef=png&eq=high&ed=square&et=1&gd=0&jq=90 |
+| Glass (transparent) | e6f7ff | glass | Transparent / High Gloss | http://localhost:8765/?c=e6f7ff&b=8d8ab7&sh=glass&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=1&ef=png&eq=high&ed=square&et=1&gd=0&jq=90&transparent=1 |
+| Paper (matte white) | ffffff | clay | Matte | http://localhost:8765/?c=ffffff&b=8d8ab7&sh=clay&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=0.0&ef=png&eq=high&ed=square&et=0&gd=0&jq=90 |
+| Firetruck (Glossy Red) | ff0000 | metallic | High Gloss | http://localhost:8765/?c=ff0000&b=8d8ab7&sh=metallic&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=1&ef=png&eq=high&ed=square&et=1&gd=0&jq=90 |
+| Gumball (Matte Pink) | ff9dbb | clay | Matte | http://localhost:8765/?c=ff9dbb&b=8d8ab7&sh=clay&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=0.0&ef=png&eq=high&ed=square&et=0&gd=0&jq=90 |
+| Gold | ffd700 | metallic | High Gloss (metallic) | http://localhost:8765/?c=ffd700&b=8d8ab7&sh=metallic&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=1&ef=png&eq=high&ed=square&et=1&gd=0&jq=90 |
+| Platinum | e6e6e6 | metallic | High Gloss (metallic) | http://localhost:8765/?c=e6e6e6&b=8d8ab7&sh=metallic&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=1&ef=png&eq=high&ed=square&et=1&gd=0&jq=90 |
+| Blue | 3b82f6 | metallic | Medium Gloss | http://localhost:8765/?c=3b82f6&b=8d8ab7&sh=metallic&rm=spin&sp=3&tr=360&wsr=360&sd=1&gl=0.6&ef=png&eq=high&ed=square&et=1&gd=0&jq=90 |
+
+Implementation notes:
+- Thumbnails: generate small 3D mini-renders (circle tokens) using the same render pipeline as the main preview; cache as data-URLs shipped with the builtins.
+- UI: gallery grid with keyboard focus and ARIA labels; selecting a preset applies color+shader and marks the preset active. Manual edits convert to "Custom" and show a "Save preset" CTA.
+- Surface Finish: replace many fine-grain sliders with a single discrete control exposing the four finish snap points (plus a "Custom" mode if the user wants fine control).
+- Transparent: treat as a shader (sh=glass) + an "alpha" flag. Provide a small guidance tooltip describing that "Glass" can change export behavior (background transparency, compositing).
+
+## Multi-Color Models — roadmap
+
+Goal: support models exported as multiple parts (from CAD) that preserve their transforms so they load as one multi-part object. Users can style each part independently with presets.
+
+High-level design:
+- Import: accept multi-part STL/OBJ/GLB exported as a single file containing multiple meshes, or accept multiple files dropped together (detect matching transforms). Do NOT attempt automatic assembly; rely on parts exported together to preserve relative placement.
+- Scene model: `scene.parts = [{ id, name, geometryRef, transform, material }]`. Each part keeps its local transform and material reference.
+- UI: `Parts` panel (left or right) showing thumbnails and part names. Selecting a part focuses it in the viewport and exposes per-part Material/Color/Preset controls. Support multi-select + "apply to all".
+- Presets: use the same Preset Gallery per-part (apply color+shader). Allow copying a material from one part and pasting to another.
+- Export: options to export single combined file (original geometry with per-part colors baked if supported), or export separate files per part. Document limitations (baking vs. per-part meshes).
+
+Next steps / milestones:
+1. Add Preset Gallery UI component, wire to color+texture state (low-risk).
+2. Add localStorage-based preset saving & listing.
+3. Add Surface-Finish control with snap presets and optional advanced sliders.
+4. Implement parts panel and per-part material assignment; support loading multi-part STLs.
+5. Add "Save as preset" modal, thumbnail generation, and edge-case QA (accessibility, export parity).
+
+UX decisions pending:
+- Confirm whether the "Parts" panel should be collapsed by default on single-part imports.
+- Confirm desired default behavior for glass transparency in exported PNG/PNG sequence (flatten vs keep alpha).
+
+_Roadmap updated with presets + multi-color plan — default export quality set to High._

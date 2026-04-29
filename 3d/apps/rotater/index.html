@@ -30,6 +30,12 @@
 </head>
 
 <body>
+
+
+    <!-- Keep bg hidden since Custom opens it directly -->
+    <input type="color" id="bgPicker" value="#dbd7ff"
+        style="position:absolute; width:0; height:0; padding:0; margin:0; border:none; overflow:hidden; clip:rect(0,0,0,0); pointer-events:none;">
+
     <div class="container">
         <header>
             <img src="rotater.svg" alt="ROTATER" class="logo">
@@ -266,332 +272,320 @@
                         Copy Settings
                     </button>
                 </div>
+                <div class="sidebar-tabs" role="tablist">
+                    <button class="sidebar-tab is-active" data-tab="theme" role="tab"
+                        aria-selected="true">Theme</button>
+                    <button class="sidebar-tab" data-tab="animation" role="tab" aria-selected="false">Animation</button>
+                    <button class="sidebar-tab" data-tab="export" role="tab" aria-selected="false">Export</button>
+                </div>
                 <div id="controlsBar" class="controls-bar hidden">
-                    <div class="controls-section-box">
-                        <div class="controls-row">
-                            <div class="control-label" style="flex: 1">
-                                Color
-                                <div class="color-group">
-                                    <div class="thumb-card-wrap">
-                                        <label class="color-option" title="Choose model color">
-                                            <input type="color" id="colorPicker" value="#2e2b74">
-                                            <span class="color-swatch" id="colorSwatch"></span>
-                                            <span class="color-edit-icon" aria-hidden="true"><svg viewBox="0 0 24 24"
-                                                    fill="currentColor">
-                                                    <path
-                                                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                                </svg></span>
-                                        </label>
-                                        <span class="thumb-label">Model</span>
+                    <div class="tab-panel tab-panel--theme" data-panel="theme">
+
+                        <!-- ── Model Card ── -->
+                        <div class="controls-section-box" id="modelBox">
+                            <div class="box-heading">Model</div>
+                            <div class="preset-group" id="quickPresetsBar"></div>
+
+                            <!-- Model sliders: always expanded -->
+                            <div class="model-sliders">
+                                <label class="control-label range-label">
+                                    <span>Tone<span class="slider-tooltip" id="opacityVal">0</span></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="opacitySlider" min="-100" max="100" step="50"
+                                            value="0" data-snap-count="5" data-fine-step="1" data-group="object">
                                     </div>
-                                    <div class="thumb-card-wrap">
-                                        <label class="color-option" title="Choose background color">
-                                            <input type="color" id="bgPicker" value="#dbd7ff">
-                                            <span class="color-swatch" id="bgSwatch"></span>
-                                            <span class="color-edit-icon" aria-hidden="true"><svg viewBox="0 0 24 24"
-                                                    fill="currentColor">
-                                                    <path
-                                                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                                </svg></span>
-                                        </label>
-                                        <span class="thumb-label">Background</span>
+                                </label>
+                                <label class="control-label range-label" id="textureTuneRoughnessRow">
+                                    <span>Matte<span class="slider-tooltip"
+                                            id="textureTuneRoughnessVal">Glossy 70%</span></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="textureTuneRoughness" min="0" max="100" step="25"
+                                            data-snap-count="5" data-fine-step="1" value="30" data-group="object">
                                     </div>
-                                </div>
+                                </label>
+                                <label class="control-label range-label" id="textureTuneReflectionRow">
+                                    <span>Reflection<span class="slider-tooltip"
+                                            id="textureTuneReflectionVal">100%</span></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="textureTuneReflection" min="0" max="200" step="50"
+                                            data-snap-count="5" data-fine-step="5" value="100" data-group="object">
+                                    </div>
+                                </label>
+                                <label class="control-label range-label" id="textureTuneContrastRow">
+                                    <span>Contrast<span class="slider-tooltip"
+                                            id="textureTuneContrastVal">100%</span></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="textureTuneContrast" min="50" max="400" step="5"
+                                            data-snap-count="5" data-fine-step="5" value="100" data-group="scene">
+                                    </div>
+                                </label>
+                                <label class="control-label range-label" id="textureTuneHighlightsRow">
+                                    <span>Highlights<span class="slider-tooltip"
+                                            id="textureTuneHighlightsVal">100%</span></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="textureTuneHighlights" min="40" max="400" step="5"
+                                            data-snap-count="5" data-fine-step="5" value="100" data-group="scene">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Hidden elements kept for JS compatibility -->
+                            <input type="color" id="colorPicker" value="#2e2b74" data-group="object"
+                                style="position:absolute;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;"
+                                tabindex="-1">
+                            <span id="colorSwatch" style="display:none;" aria-hidden="true"></span>
+                            <input type="hidden" id="shadingSelect" value="metallic" data-group="object">
+                            <button id="btnTextureTune" style="display:none;" aria-hidden="true" tabindex="-1"></button>
+                            <span id="textureTuneNewBadge" style="display:none;" aria-hidden="true"></span>
+                            <details id="advSettingsDetails" style="display:none;" aria-hidden="true"></details>
+                            <div id="textureTunePanel" style="display:none;" hidden aria-hidden="true">
+                                <label id="textureTuneMetalnessRow" style="display:none;">
+                                    <span class="slider-tooltip" id="textureTuneMetalnessVal">65%</span>
+                                    <input type="range" id="textureTuneMetalness" min="0" max="100" step="1" value="65"
+                                        data-group="object">
+                                </label>
                             </div>
                         </div>
-                    </div>
-                    <div class="controls-section-box">
-                        <div class="controls-row">
-                            <div class="control-label texture-control" style="flex: 1">
-                                <div class="texture-head">
-                                    <span>Texture</span>
-                                    <div class="texture-tune-wrap" id="textureTuneWrap">
-                                        <button id="btnTextureTune" class="texture-tune-btn" type="button"
-                                            title="Customize texture tuning" aria-label="Customize texture tuning"
-                                            aria-expanded="false" aria-controls="textureTunePanel">
-                                            <img src="tune.svg" alt="" aria-hidden="true">
-                                        </button>
-                                        <span id="textureTuneNewBadge" class="texture-new-badge"
-                                            aria-hidden="true">NEW</span>
-                                    </div>
-                                </div>
-                                <div class="shading-group">
-                                    <div class="thumb-card-wrap">
-                                        <label class="shading-option">
-                                            <input type="radio" name="shading" value="metallic" checked>
-                                            <span class="shading-thumb shading-thumb--metallic"></span>
-                                        </label>
-                                        <span class="thumb-label">Metal</span>
-                                    </div>
-                                    <div class="thumb-card-wrap">
-                                        <label class="shading-option">
-                                            <input type="radio" name="shading" value="phong">
-                                            <span class="shading-thumb shading-thumb--phong"></span>
-                                        </label>
-                                        <span class="thumb-label">Phong</span>
-                                    </div>
-                                    <div class="thumb-card-wrap">
-                                        <label class="shading-option">
-                                            <input type="radio" name="shading" value="clay">
-                                            <span class="shading-thumb shading-thumb--clay"></span>
-                                        </label>
-                                        <span class="thumb-label">Clay</span>
-                                    </div>
-                                </div>
-                                <div id="textureTunePanel" class="texture-tune-panel" hidden>
-                                    <label class="control-label range-label texture-tune-row" id="textureTuneLightRow">
-                                        <span>Light<span class="slider-tooltip"
-                                                id="textureTuneLightVal">100%</span></span>
-                                        <div class="range-wrap">
-                                            <input type="range" id="textureTuneLight" min="40" max="200" step="5"
-                                                data-snap-count="8" value="100">
-                                        </div>
-                                    </label>
-                                    <label class="control-label range-label texture-tune-row"
-                                        id="textureTuneContrastRow">
-                                        <span>Contrast<span class="slider-tooltip"
-                                                id="textureTuneContrastVal">100%</span></span>
-                                        <div class="range-wrap">
-                                            <input type="range" id="textureTuneContrast" min="50" max="400" step="5"
-                                                data-snap-count="8" value="100">
-                                        </div>
-                                    </label>
-                                    <label class="control-label range-label texture-tune-row"
-                                        id="textureTuneHighlightsRow">
-                                        <span>Highlights<span class="slider-tooltip"
-                                                id="textureTuneHighlightsVal">100%</span></span>
-                                        <div class="range-wrap">
-                                            <input type="range" id="textureTuneHighlights" min="40" max="400" step="5"
-                                                data-snap-count="8" value="100">
-                                        </div>
-                                    </label>
-                                    <label class="control-label range-label texture-tune-row" id="textureTuneShadowRow">
-                                        <span>Shadows<span class="slider-tooltip"
-                                                id="textureTuneShadowsVal">45%</span></span>
-                                        <div class="range-wrap">
-                                            <input type="range" id="textureTuneShadows" min="0" max="100" step="5"
-                                                data-snap-count="8" value="45">
-                                        </div>
-                                    </label>
-                                    <label class="control-label range-label texture-tune-row"
-                                        id="textureTuneLightSourceRow">
-                                        <span>Light Source<span class="slider-tooltip"
-                                                id="textureTuneLightSourceVal">48°</span></span>
-                                        <div class="range-wrap">
-                                            <input type="range" id="textureTuneLightSource" min="0" max="360" step="5"
-                                                data-snap-count="8" value="48">
-                                        </div>
-                                    </label>
-                                    <label class="texture-tune-row gif-option-check"
-                                        id="textureTuneLightLockRow">
-                                        <input type="checkbox" id="textureTuneLightLock"> Lock light to camera
-                                    </label>
-                                    <label class="control-label range-label texture-tune-row"
-                                        id="textureTuneLightHeightRow">
-                                        <span>Light Height<span class="slider-tooltip"
-                                                id="textureTuneLightHeightVal">100%</span></span>
-                                        <div class="range-wrap">
-                                            <input type="range" id="textureTuneLightHeight" min="40" max="220" step="5"
-                                                data-snap-count="8" value="100">
-                                        </div>
-                                    </label>
-                                    <label class="control-label range-label texture-tune-row"
-                                        id="textureTuneRoughnessRow">
-                                        <span>Roughness<span class="slider-tooltip"
-                                                id="textureTuneRoughnessVal">30%</span></span>
-                                        <div class="range-wrap">
-                                            <input type="range" id="textureTuneRoughness" min="0" max="100" step="1"
-                                                data-snap-count="8" value="30">
-                                        </div>
-                                    </label>
-                                    <label class="control-label range-label texture-tune-row"
-                                        id="textureTuneReflectionRow">
-                                        <span>Reflection<span class="slider-tooltip"
-                                                id="textureTuneReflectionVal">100%</span></span>
-                                        <div class="range-wrap">
-                                            <input type="range" id="textureTuneReflection" min="0" max="200" step="5"
-                                                data-snap-count="8" value="100">
-                                        </div>
-                                    </label>
-                                    <label class="control-label range-label texture-tune-row"
-                                        id="textureTuneMetalnessRow">
-                                        <span>Metalness<span class="slider-tooltip"
-                                                id="textureTuneMetalnessVal">65%</span></span>
-                                        <div class="range-wrap">
-                                            <input type="range" id="textureTuneMetalness" min="0" max="100" step="1"
-                                                data-snap-count="8" value="65">
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="controls-section-box">
-                        <div class="controls-row controls-row--section-header">
-                            <div class="section-heading">Animation</div>
-                        </div>
-                        <div class="controls-row controls-row--motion">
-                            <div class="control-label" style="flex: 1">
-                                <div class="rotation-group">
-                                    <div class="thumb-card-wrap">
-                                        <label class="rotation-option" id="spinModeLabel"
-                                            title="Switch to counter-clockwise">
-                                            <input type="radio" name="rotateMode" value="spin" checked>
-                                            <span class="rotation-thumb rotation-thumb--spin">
-                                                <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor"
-                                                    aria-hidden="true">
-                                                    <path
-                                                        d="M12 4C9.4 4 7.05 5.08 5.37 6.84L7 8.5H2.5V4l1.71 1.71C5.96 3.66 8.83 2 12 2c4.42 0 8.17 2.87 9.5 6.84l-1.93.64A8 8 0 0 0 12 4zm0 16a8 8 0 0 0 7.57-5.48l1.93.64C20.17 19.13 16.42 22 12 22c-3.17 0-6.04-1.66-7.79-4.21L2.5 19.5V15H7l-1.63 1.66C7.05 18.92 9.4 20 12 20z" />
-                                                </svg>
-                                            </span>
-                                        </label>
-                                        <span class="thumb-label">Spin</span>
-                                    </div>
-                                    <div class="thumb-card-wrap">
-                                        <label class="rotation-option">
-                                            <input type="radio" name="rotateMode" value="tilt">
-                                            <span class="rotation-thumb rotation-thumb--tilt">
-                                                <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor"
-                                                    aria-hidden="true">
-                                                    <path
-                                                        d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z" />
-                                                </svg>
-                                            </span>
-                                        </label>
-                                        <span class="thumb-label">Tilt</span>
-                                    </div>
-                                    <div class="thumb-card-wrap">
-                                        <label class="rotation-option">
-                                            <input type="radio" name="rotateMode" value="wobble">
-                                            <span class="rotation-thumb rotation-thumb--wobble">
-                                                <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor"
-                                                    aria-hidden="true">
-                                                    <path
-                                                        d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
-                                                </svg>
-                                            </span>
-                                        </label>
-                                        <span class="thumb-label">Wobble</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <label class="control-label range-label speed-label">
-                                <span>Speed<span class="slider-tooltip" id="speedVal">1.0×</span><button
-                                        class="slider-reset-btn" id="speedResetBtn" type="button"
-                                        title="Reset to default" aria-label="Reset speed to default"><svg
-                                            viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                            <path
-                                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
-                                        </svg></button></span>
-                                <div class="range-wrap">
-                                    <input type="range" id="speedSlider" min="0" max="4" step="1" value="1">
-                                </div>
+
+                        <!-- ── Background Card ── -->
+                        <div class="controls-section-box" id="environmentBox">
+                            <div class="box-heading">Background</div>
+                            <div class="preset-group" id="bgPresetsBar"></div>
+                            <label class="gif-option-check adv-section-check" style="margin-top:10px;">
+                                <input type="checkbox" id="autoBgCheck" data-group="scene"> Automatically adjust brightness
                             </label>
-                            <label class="control-label range-label tilt-range-label">
-                                <span><span id="tiltRangeLabelText">Range</span><span class="slider-tooltip"
-                                        id="tiltRangeVal">360°</span><button class="slider-reset-btn"
-                                        id="tiltRangeResetBtn" type="button" title="Reset to default"
-                                        aria-label="Reset range to default"><svg viewBox="0 0 24 24" fill="currentColor"
-                                            aria-hidden="true">
-                                            <path
-                                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
-                                        </svg></button></span>
-                                <div class="range-wrap">
-                                    <input type="range" id="tiltRangeSlider" min="45" max="360" step="45" value="360">
-                                </div>
-                            </label>
-                            <label class="control-label range-label wobble-spin-range-label">
-                                <span>Spin Range<span class="slider-tooltip" id="wobbleSpinRangeVal">360°</span><button
-                                        class="slider-reset-btn" id="wobbleSpinRangeResetBtn" type="button"
-                                        title="Reset to default" aria-label="Reset spin range to default"><svg
-                                            viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                            <path
-                                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
-                                        </svg></button></span>
-                                <div class="range-wrap">
-                                    <input type="range" id="wobbleSpinRangeSlider" min="45" max="360" step="45"
-                                        value="360">
-                                </div>
+                            <!-- bgOpacitySlider kept hidden for JS compatibility -->
+                            <label style="display:none;" aria-hidden="true">
+                                <input type="range" id="bgOpacitySlider" min="-100" max="100" step="50" value="0"
+                                    data-snap-count="5" data-group="scene">
+                                <span id="bgOpacityVal">0</span>
                             </label>
                         </div>
-                    </div>
-                    <!-- ── Export section ── -->
-                    <div class="controls-section-box">
-                        <div class="section-heading">Export</div>
-                        <!-- Format + Quality row -->
-                        <div class="export-selects-row">
-                            <div class="export-select-group">
-                                <label class="export-select-label" for="exportFormat">Format</label>
-                                <select id="exportFormat" class="export-select">
-                                    <option value="gif" selected>Animated GIF</option>
-                                    <option value="mp4">MP4 Video</option>
-                                    <option value="png">PNG Image</option>
-                                    <option value="jpg">JPEG Image</option>
-                                </select>
-                            </div>
-                            <div class="export-select-group">
-                                <label class="export-select-label" for="exportQuality">Quality</label>
-                                <select id="exportQuality" class="export-select">
-                                    <option value="web">Low</option>
-                                    <option value="std" selected>Medium</option>
-                                    <option value="high">High</option>
-                                </select>
+
+                        <!-- ── Lighting Effects Card ── -->
+                        <div class="controls-section-box" id="lightingBox">
+                            <div class="box-heading">Lighting Effects</div>
+                            <!-- Lock light always on — checkbox hidden but preserved for JS -->
+                            <input type="checkbox" id="textureTuneLightLock" data-group="scene" checked
+                                style="display:none;" aria-hidden="true" tabindex="-1">
+                            <div class="light-sliders">
+                                <label class="control-label range-label" id="textureTuneShadowRow">
+                                    <span>Shadow Intensity<span class="slider-tooltip"
+                                            id="textureTuneShadowsVal">45%</span></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="textureTuneShadows" min="0" max="100" step="25"
+                                            data-snap-count="5" data-fine-step="5" value="45" data-group="scene">
+                                    </div>
+                                </label>
+                                <label class="control-label range-label" id="textureTuneLightSourceRow">
+                                    <span>Light Position<span class="slider-tooltip"
+                                            id="textureTuneLightSourceVal">48°</span></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="textureTuneLightSource" min="0" max="360" step="90"
+                                            data-snap-count="5" data-fine-step="5" value="48" data-group="scene">
+                                    </div>
+                                </label>
+                                <label class="control-label range-label" id="textureTuneLightRow">
+                                    <span>Brightness<span class="slider-tooltip"
+                                            id="textureTuneLightVal">100%</span></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="textureTuneLight" min="40" max="200" step="40"
+                                            data-snap-count="5" data-fine-step="5" value="100" data-group="scene">
+                                    </div>
+                                </label>
+                                <label class="control-label range-label" id="textureTuneLightHeightRow">
+                                    <span>Light Height<span class="slider-tooltip"
+                                            id="textureTuneLightHeightVal">100%</span></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="textureTuneLightHeight" min="40" max="220" step="45"
+                                            data-snap-count="5" data-fine-step="5" value="100" data-group="scene">
+                                    </div>
+                                </label>
                             </div>
                         </div>
-                        <!-- GIF options -->
-                        <div id="exportOpts-gif" class="export-format-opts">
-                            <div class="gif-options-row">
-                                <label class="gif-option-check"><input type="checkbox" id="gifLoop" checked>
-                                    Loop</label>
-                                <label class="gif-option-check"><input type="checkbox" id="gifDither"> Dither</label>
-                                <label class="gif-option-check"><input type="checkbox" id="exportTransparent">
-                                    Transparent</label>
-                            </div>
-                            <div class="export-size-est-row"><span id="gifEst"></span></div>
-                        </div>
-                        <!-- MP4 options -->
-                        <div id="exportOpts-mp4" class="export-format-opts" hidden>
-                            <div class="export-size-est-row"><span id="mp4Est"></span></div>
-                        </div>
-                        <!-- PNG options -->
-                        <div id="exportOpts-png" class="export-format-opts" hidden>
-                            <div class="gif-options-row">
-                                <label class="gif-option-check"><input type="checkbox" id="exportTransparentPng">
-                                    Transparent</label>
-                            </div>
-                            <div class="export-size-est-row"><span id="imgEstPng"></span></div>
-                        </div>
-                        <!-- JPEG options -->
-                        <div id="exportOpts-jpg" class="export-format-opts" hidden>
-                            <label class="control-label range-label" id="jpegQualityRow">
-                                <span>JPEG Compression<span class="slider-tooltip" id="jpegQualityVal">92%</span></span>
-                                <div class="range-wrap">
-                                    <input type="range" id="jpegQuality" min="50" max="100" step="5" value="92">
-                                </div>
+
+                        <!-- ── Fine Tuning toggle ── -->
+                        <div class="fine-tuning-row">
+                            <label class="gif-option-check adv-section-check" title="Remove snap points">
+                                <input type="checkbox" id="fineTuningCheck"> Fine tuning for precise control
                             </label>
-                            <div class="export-size-est-row"><span id="imgEstJpg"></span></div>
                         </div>
-                        <!-- Main export button -->
-                        <button id="btnExport" class="export-btn export-btn--main">Export Animated GIF</button>
-                        <!-- Live preview thumbnail -->
-                        <label class="export-select-label export-preview-label">Preview</label>
-                        <div class="export-preview-wrap">
-                            <canvas id="exportPreview" class="export-preview-canvas"></canvas>
-                        </div>
-                        <!-- Hidden legacy trigger buttons -->
-                        <button id="btnExportGif" hidden style="display:none"></button>
-                        <button id="btnExportVideo" hidden style="display:none"></button>
-                        <button id="btnExportPng" hidden style="display:none"></button>
-                        <button id="btnExportJpeg" hidden style="display:none"></button>
-                        <!-- Progress + status -->
-                        <div class="anim-export-footer">
-                            <div id="animProgress" class="anim-progress" hidden>
-                                <div class="anim-progress-fill" id="animProgressFill"></div>
+
+                    </div><!-- /.tab-panel--theme -->
+                    <div class="tab-panel tab-panel--animation" data-panel="animation" hidden>
+                        <div class="controls-section-box">
+                            <div class="controls-row controls-row--section-header">
+                                <div class="section-heading">Animation</div>
                             </div>
-                            <span id="exportStatusAnim" class="export-status"></span>
+                            <div class="controls-row controls-row--motion">
+                                <div class="control-label" style="flex: 1">
+                                    <div class="rotation-group">
+                                        <div class="thumb-card-wrap">
+                                            <label class="rotation-option" id="spinModeLabel"
+                                                title="Switch to counter-clockwise">
+                                                <input type="radio" name="rotateMode" value="spin" checked>
+                                                <span class="rotation-thumb rotation-thumb--spin">
+                                                    <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor"
+                                                        aria-hidden="true">
+                                                        <path
+                                                            d="M12 4C9.4 4 7.05 5.08 5.37 6.84L7 8.5H2.5V4l1.71 1.71C5.96 3.66 8.83 2 12 2c4.42 0 8.17 2.87 9.5 6.84l-1.93.64A8 8 0 0 0 12 4zm0 16a8 8 0 0 0 7.57-5.48l1.93.64C20.17 19.13 16.42 22 12 22c-3.17 0-6.04-1.66-7.79-4.21L2.5 19.5V15H7l-1.63 1.66C7.05 18.92 9.4 20 12 20z" />
+                                                    </svg>
+                                                </span>
+                                            </label>
+                                            <span class="thumb-label">Spin</span>
+                                        </div>
+                                        <div class="thumb-card-wrap">
+                                            <label class="rotation-option">
+                                                <input type="radio" name="rotateMode" value="tilt">
+                                                <span class="rotation-thumb rotation-thumb--tilt">
+                                                    <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor"
+                                                        aria-hidden="true">
+                                                        <path
+                                                            d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z" />
+                                                    </svg>
+                                                </span>
+                                            </label>
+                                            <span class="thumb-label">Tilt</span>
+                                        </div>
+                                        <div class="thumb-card-wrap">
+                                            <label class="rotation-option">
+                                                <input type="radio" name="rotateMode" value="wobble">
+                                                <span class="rotation-thumb rotation-thumb--wobble">
+                                                    <svg class="rot-icon" viewBox="0 0 24 24" fill="currentColor"
+                                                        aria-hidden="true">
+                                                        <path
+                                                            d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
+                                                    </svg>
+                                                </span>
+                                            </label>
+                                            <span class="thumb-label">Wobble</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <label class="control-label range-label speed-label">
+                                    <span>Speed<span class="slider-tooltip" id="speedVal">1.0×</span><button
+                                            class="slider-reset-btn" id="speedResetBtn" type="button"
+                                            title="Reset to default" aria-label="Reset speed to default"><svg
+                                                viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                <path
+                                                    d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                                            </svg></button></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="speedSlider" min="0" max="4" step="1" value="1">
+                                    </div>
+                                </label>
+                                <label class="control-label range-label tilt-range-label">
+                                    <span><span id="tiltRangeLabelText">Range</span><span class="slider-tooltip"
+                                            id="tiltRangeVal">360°</span><button class="slider-reset-btn"
+                                            id="tiltRangeResetBtn" type="button" title="Reset to default"
+                                            aria-label="Reset range to default"><svg viewBox="0 0 24 24"
+                                                fill="currentColor" aria-hidden="true">
+                                                <path
+                                                    d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                                            </svg></button></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="tiltRangeSlider" min="45" max="360" step="45"
+                                            value="360">
+                                    </div>
+                                </label>
+                                <label class="control-label range-label wobble-spin-range-label">
+                                    <span>Spin Range<span class="slider-tooltip"
+                                            id="wobbleSpinRangeVal">360°</span><button class="slider-reset-btn"
+                                            id="wobbleSpinRangeResetBtn" type="button" title="Reset to default"
+                                            aria-label="Reset spin range to default"><svg viewBox="0 0 24 24"
+                                                fill="currentColor" aria-hidden="true">
+                                                <path
+                                                    d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                                            </svg></button></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="wobbleSpinRangeSlider" min="45" max="360" step="45"
+                                            value="360">
+                                    </div>
+                                </label>
+                            </div>
                         </div>
-                        <span id="exportStatus" class="export-status"></span>
-                    </div>
+                    </div><!-- /.tab-panel--animation -->
+                    <div class="tab-panel tab-panel--export" data-panel="export" hidden>
+                        <!-- ── Export section ── -->
+                        <div class="controls-section-box">
+                            <div class="section-heading">Export</div>
+                            <!-- Format + Quality row -->
+                            <div class="export-selects-row">
+                                <div class="export-select-group">
+                                    <label class="export-select-label" for="exportFormat">Format</label>
+                                    <select id="exportFormat" class="export-select">
+                                        <option value="gif" selected>Animated GIF</option>
+                                        <option value="mp4">MP4 Video</option>
+                                        <option value="png">PNG Image</option>
+                                        <option value="jpg">JPEG Image</option>
+                                    </select>
+                                </div>
+                                <div class="export-select-group">
+                                    <label class="export-select-label" for="exportQuality">Quality</label>
+                                    <select id="exportQuality" class="export-select">
+                                        <option value="web">Low</option>
+                                        <option value="std" selected>Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- GIF options -->
+                            <div id="exportOpts-gif" class="export-format-opts">
+                                <div class="gif-options-row">
+                                    <label class="gif-option-check"><input type="checkbox" id="gifLoop" checked>
+                                        Loop</label>
+                                    <label class="gif-option-check"><input type="checkbox" id="gifDither">
+                                        Dither</label>
+                                    <label class="gif-option-check"><input type="checkbox" id="exportTransparent">
+                                        Transparent</label>
+                                </div>
+                                <div class="export-size-est-row"><span id="gifEst"></span></div>
+                            </div>
+                            <!-- MP4 options -->
+                            <div id="exportOpts-mp4" class="export-format-opts" hidden>
+                                <div class="export-size-est-row"><span id="mp4Est"></span></div>
+                            </div>
+                            <!-- PNG options -->
+                            <div id="exportOpts-png" class="export-format-opts" hidden>
+                                <div class="gif-options-row">
+                                    <label class="gif-option-check"><input type="checkbox" id="exportTransparentPng">
+                                        Transparent</label>
+                                </div>
+                                <div class="export-size-est-row"><span id="imgEstPng"></span></div>
+                            </div>
+                            <!-- JPEG options -->
+                            <div id="exportOpts-jpg" class="export-format-opts" hidden>
+                                <label class="control-label range-label" id="jpegQualityRow">
+                                    <span>JPEG Compression<span class="slider-tooltip"
+                                            id="jpegQualityVal">92%</span></span>
+                                    <div class="range-wrap">
+                                        <input type="range" id="jpegQuality" min="50" max="100" step="5" value="92">
+                                    </div>
+                                </label>
+                                <div class="export-size-est-row"><span id="imgEstJpg"></span></div>
+                            </div>
+                            <!-- Main export button -->
+                            <button id="btnExport" class="export-btn export-btn--main">Export Animated GIF</button>
+                            <!-- Live preview thumbnail -->
+                            <label class="export-select-label export-preview-label">Preview</label>
+                            <div class="export-preview-wrap">
+                                <canvas id="exportPreview" class="export-preview-canvas"></canvas>
+                            </div>
+                            <!-- Hidden legacy trigger buttons -->
+                            <button id="btnExportGif" hidden style="display:none"></button>
+                            <button id="btnExportVideo" hidden style="display:none"></button>
+                            <button id="btnExportPng" hidden style="display:none"></button>
+                            <button id="btnExportJpeg" hidden style="display:none"></button>
+                            <!-- Progress + status -->
+                            <div class="anim-export-footer">
+                                <div id="animProgress" class="anim-progress" hidden>
+                                    <div class="anim-progress-fill" id="animProgressFill"></div>
+                                </div>
+                                <span id="exportStatusAnim" class="export-status"></span>
+                            </div>
+                            <span id="exportStatus" class="export-status"></span>
+                        </div>
+                    </div><!-- /.tab-panel--export -->
                     <!-- Info button row -->
                     <div class="info-btn-row">
                         <button id="btnInfo" class="info-icon-btn" aria-label="About Rotater" title="About Rotater">
