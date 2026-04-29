@@ -256,8 +256,21 @@ const textureTuneReflectionRow = document.getElementById('textureTuneReflectionR
 const textureTuneMetalnessRow = document.getElementById('textureTuneMetalnessRow');
 // Dev logging and a flag used to suppress saveSettings() while programmatically
 // applying restored settings so we don't overwrite localStorage/URL mid-restore.
+// Capture passthrough URL params (e.g. debug=1) once at startup so they survive
+// URL rewrites done by settingsToURL().
+const APP_PARAM_KEYS = new Set([
+    'c','b','op','sh','rm','sp','tr','wsr','sd','gl','ef','eq','ed','et','gd','jq',
+    'tto','tl','tc','thi','ts','tsa','tll','tsh','tmr','tmm','tme','tpr','tpe','tcr','tce',
+    'ecd','ece','ecz','aba','abp','amp'
+]);
+const _passthroughParams = (() => {
+    const p = new URLSearchParams(location.search);
+    const out = new URLSearchParams();
+    p.forEach((v, k) => { if (!APP_PARAM_KEYS.has(k)) out.set(k, v); });
+    return out;
+})();
 // DEV_LOG: also persist in localStorage so it survives URL rewrites
-let DEV_LOG = location.search.includes('debug=1');
+let DEV_LOG = _passthroughParams.has('debug') || location.search.includes('debug=1');
 try {
     if (DEV_LOG) localStorage.setItem('rotater_devlog', '1');
     else if (localStorage.getItem('rotater_devlog') === '1') DEV_LOG = true;
@@ -1856,9 +1869,8 @@ function settingsToURL() {
     if (isDynamicBg) p.set('aba', '1');
     if (activeBgPreset && activeBgPreset !== 'custom') p.set('abp', activeBgPreset);
     if (activeModelPreset && activeModelPreset !== 'custom') p.set('amp', activeModelPreset);
-    // Preserve non-app params (like debug=1) that the app doesn't own
-    const existingP = new URLSearchParams(location.search);
-    existingP.forEach((v, k) => { if (!p.has(k)) p.set(k, v); });
+    // Re-inject passthrough params captured at startup (e.g. debug=1)
+    _passthroughParams.forEach((v, k) => { if (!p.has(k)) p.set(k, v); });
     history.replaceState(null, '', '?' + p.toString());
 }
 
@@ -3691,7 +3703,9 @@ function renderModelPresets() {
 
             if (preset.url) {
                 const currentAuto = isDynamicBg ? '1' : '0';
-                const finalUrl = preset.url + '&amp=' + preset.id + '&aba=' + currentAuto;
+                // Build the URL from the preset, injecting passthrough params (e.g. debug=1)
+                let finalUrl = preset.url + '&amp=' + preset.id + '&aba=' + currentAuto;
+                if (_passthroughParams.toString()) finalUrl += '&' + _passthroughParams.toString();
                 history.replaceState(null, '', finalUrl);
 
                 // Enforce state immediately so restore/save capture it

@@ -6,7 +6,12 @@ Planned improvements and design goals for the Rotater app.
 
 ## Ready to build
 
-1. Ruler / grid to see the scale of a model
+1. Stop spinning on still-image export format selection
+   - When PNG or JPEG is selected in the Export tab, pause the model rotation automatically (the same as pressing the pause button).
+   - Resume rotation when the user switches back to GIF or MP4.
+   - UX note: show a subtle "Paused for export" indicator near the pause button so the user knows why it stopped.
+
+2. Ruler / grid to see the scale of a model
    - Add an on-screen ruler or grid overlay with metric/imperial markings and an optional snapping guide so users can quickly judge model scale.
 2. Replace / Drag-and-Drop overlay (Replace STL UX)
    - Replace the current inline "Replace STL" flow with a small overlay/modal that exposes the drag-and-drop area and the file picker.
