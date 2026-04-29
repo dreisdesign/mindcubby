@@ -254,6 +254,10 @@ const textureTuneLightHeightRow = document.getElementById('textureTuneLightHeigh
 const textureTuneRoughnessRow = document.getElementById('textureTuneRoughnessRow');
 const textureTuneReflectionRow = document.getElementById('textureTuneReflectionRow');
 const textureTuneMetalnessRow = document.getElementById('textureTuneMetalnessRow');
+// Dev logging and a flag used to suppress saveSettings() while programmatically
+// applying restored settings so we don't overwrite localStorage/URL mid-restore.
+const DEV_LOG = location.search.includes('debug=1');
+let suppressSave = false;
 const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
 
 
@@ -1434,6 +1438,10 @@ async function clearIDB() {
 const SETTINGS_KEY = 'rotater_settings';
 
 function saveSettings() {
+    if (suppressSave) {
+        if (DEV_LOG) console.debug('[rotater] saveSettings suppressed');
+        return;
+    }
     try {
         localStorage.setItem(SETTINGS_KEY, JSON.stringify({
             color: colorPick.value,
@@ -1479,10 +1487,24 @@ function saveSettings() {
             activeModelPreset: activeModelPreset,
         }));
     } catch (e) { }
+    if (DEV_LOG) {
+        try {
+            console.debug('[rotater] saveSettings ->', {
+                color: colorPick?.value,
+                shading: shadingEl?.value,
+                activeModelPreset,
+                activeBgPreset,
+                textureTuneState
+            });
+        } catch (e) { }
+    }
     settingsToURL();
 }
 
 function restoreSettings() {
+    // Prevent intermediate saves while programmatically applying restored values
+    suppressSave = true;
+    if (DEV_LOG) console.debug('[rotater] restoreSettings start');
     try {
         const urlS = getURLSettings(location.search);
         let localS = {};
@@ -1503,6 +1525,7 @@ function restoreSettings() {
                 if (v !== null && v !== undefined) s[k] = v;
             });
         }
+        if (DEV_LOG) console.debug('[rotater] merged settings', s);
 
         const clamp = (v, min, max, fallback) => {
             const n = parseFloat(v);
@@ -1694,6 +1717,18 @@ function restoreSettings() {
             applyExportFormat('gif');
         }
     } catch (e) { }
+    // Done applying restored settings; re-enable saves and persist final state
+    try {
+        suppressSave = false;
+        if (DEV_LOG) console.debug('[rotater] restoreSettings applied, final state', {
+            activeModelPreset,
+            activeBgPreset,
+            shading: shadingEl?.value,
+            color: colorPick?.value,
+            textureTuneState
+        });
+        saveSettings();
+    } catch (e) { /* non-fatal */ }
 }
 
 // ── URL / shareable settings ─────────────────────────────────────────────────────────────
