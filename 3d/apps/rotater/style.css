@@ -1917,13 +1917,6 @@ html.none-mode .gif-loop-label {
 
 /* ── Shading thumbnail cards ── */
 
-left: 0;
-right: 0;
-bottom: 0;
-border-radius: 5px;
-box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
-}
-
 .shading-group {
     display: flex;
     gap: 10px;
@@ -2703,28 +2696,28 @@ html.crop-mode .orbit-hint-bar {
 }
 
 html.crop-mode .ruler-hud {
-    top: 10px;
+    bottom: 58px;
 }
 
 /* ── Ruler / dimensions HUD ── */
 
 .ruler-hud {
     position: absolute;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 5;
+    left: 10px;
+    bottom: 58px;
+    z-index: 7;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 14px;
-    border-radius: 20px;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 14px;
     background: rgba(10, 9, 28, 0.72);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(179, 168, 247, 0.22);
-    pointer-events: none;
+    pointer-events: auto;
     white-space: nowrap;
+    max-width: min(92vw, 560px);
 }
 
 .ruler-hud[hidden] {
@@ -2763,11 +2756,129 @@ html.crop-mode .ruler-hud {
 
 .ruler-unit {
     font-size: 10px;
-    font-weight: 500;
+    font-weight: 700;
     color: rgba(255, 255, 255, 0.45);
     letter-spacing: 0.04em;
-    align-self: flex-end;
-    padding-bottom: 2px;
+    align-self: center;
+}
+
+.ruler-unit-toggle {
+    margin-left: 2px;
+    border: 1px solid rgba(179, 168, 247, 0.35);
+    background: rgba(46, 43, 116, 0.35);
+    color: #fff;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+}
+
+.ruler-unit-toggle:hover {
+    background: rgba(46, 43, 116, 0.58);
+}
+
+.ruler-lines-switch[hidden] {
+    display: none;
+}
+
+.ruler-lines-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 4px;
+    cursor: pointer;
+}
+
+.ruler-lines-text {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.02em;
+}
+
+.ruler-lines-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    border: 0;
+    padding: 0;
+    clip: rect(0 0 0 0);
+    overflow: hidden;
+}
+
+.ruler-lines-ui {
+    position: relative;
+    width: 56px;
+    height: 32px;
+    border-radius: 999px;
+    background: #cdcdcd;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+    transition: background 0.18s ease;
+}
+
+.ruler-lines-ui::after {
+    content: '';
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    top: 2px;
+    left: 2px;
+    border-radius: 50%;
+    background: #f2f2f2;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: transform 0.18s ease;
+}
+
+.ruler-lines-input:checked + .ruler-lines-ui {
+    background: #8c88b2;
+}
+
+.ruler-lines-input:checked + .ruler-lines-ui::after {
+    transform: translateX(24px);
+}
+
+@media (max-width: 700px) {
+    .ruler-hud {
+        left: 8px;
+        bottom: 54px;
+        gap: 6px;
+        padding: 5px 8px;
+    }
+
+    .ruler-axis {
+        font-size: 8px;
+    }
+
+    .ruler-val {
+        font-size: 11px;
+    }
+
+    .ruler-unit-toggle {
+        padding: 2px 7px;
+        font-size: 9px;
+    }
+
+    .ruler-lines-text {
+        font-size: 9px;
+    }
+
+    .ruler-lines-ui {
+        width: 48px;
+        height: 28px;
+    }
+
+    .ruler-lines-ui::after {
+        width: 22px;
+        height: 22px;
+    }
+
+    .ruler-lines-input:checked + .ruler-lines-ui::after {
+        transform: translateX(20px);
+    }
 }
 
 .frame-dim-region {
@@ -3244,6 +3355,50 @@ html.crop-mode .crop-corner {
 
     .orbit-hint-bar.visible+.cam-nav {
         margin-top: 12px;
+    }
+
+    .cam-nav {
+        align-self: flex-end;
+        margin-right: 18px;
+        transform: none;
+    }
+}
+
+@media (max-width: 1180px), (max-height: 820px) {
+    .canvas-bottom-center {
+        bottom: 72px;
+    }
+
+    .cam-nav {
+        transform: translateX(28px);
+    }
+
+    .ruler-hud {
+        max-width: min(44vw, 340px);
+        gap: 5px;
+        padding: 5px 8px;
+    }
+
+    .ruler-lines-text {
+        display: none;
+    }
+
+    .ruler-lines-switch {
+        margin-left: 2px;
+    }
+
+    .ruler-lines-ui {
+        width: 46px;
+        height: 28px;
+    }
+
+    .ruler-lines-ui::after {
+        width: 22px;
+        height: 22px;
+    }
+
+    .ruler-lines-input:checked + .ruler-lines-ui::after {
+        transform: translateX(18px);
     }
 }
 
