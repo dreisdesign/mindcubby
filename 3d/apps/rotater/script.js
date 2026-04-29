@@ -481,6 +481,9 @@ function initThree() {
         else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
         if (renderer) renderer.setClearColor(c, 1);
     }
+    // restoreSettings() can run before WebGL is initialized; re-apply here so
+    // first paint honors auto-adjusted background immediately after hard refresh.
+    if (isDynamicBg) updateDynamicBg();
     scene.environment = roomEnv; // IBL for metallic shading
 
     camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
@@ -793,6 +796,7 @@ function loadSTLBuffer(buffer, name) {
         else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
         if (renderer) renderer.setClearColor(c, 1);
     }
+    if (isDynamicBg) updateDynamicBg();
     updateRulerHUD();
 
     if (savedCamPos && camera) {
@@ -2342,6 +2346,7 @@ bgPick.addEventListener('input', () => {
         else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
         if (renderer) renderer.setClearColor(c, 1);
     }
+    if (isDynamicBg) updateDynamicBg();
     updateShadingThumbs();
     updateColorSwatches();
     saveSettings();
@@ -3924,7 +3929,9 @@ function renderBgPresets() {
     if (labelEl) {
         labelEl.addEventListener('click', (ev) => {
             ev.preventDefault();
-            isDynamicBg = false;
+            // Keep custom background aligned with the visible auto-adjust toggle.
+            const autoBg = document.getElementById('autoBgCheck');
+            isDynamicBg = autoBg ? autoBg.checked : false;
             activeBgPreset = 'custom';
             updateBgSelection();
             const input = document.getElementById('bgPicker');
