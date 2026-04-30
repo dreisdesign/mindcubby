@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.7.34** · April 30, 2026
+**Version 1.7.35** · April 30, 2026
 
 ---
 
@@ -24,17 +24,19 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 
 ### Loading a model
 
-- Drag and drop any STL file onto the page, or click **Replace STL**
+- Drag and drop any STL file onto the page, or click **Upload STL**
 - Multi-part import: select or drop multiple STL files at once to load them as one aligned object (keeps original CAD offsets for multi-color part stacks)
 - Multi-part editing: use **Part Color Target** in the Model card to choose which part you are editing
 - Model preset cards support hover preview for the selected part before clicking to apply
 - The model and all settings persist across page refreshes — no re-upload needed
 - The filename chip (top-right of canvas) shows the active file
+  - For multipart models, click the chevron to expand all part filenames
+  - Each expanded row supports **Replace** for an individual part and **×** to remove that part (when 3+ parts are loaded)
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
-- **Reset Settings** (sidebar header, left) clears all saved settings and restores defaults
-- **Export** (sidebar header, right) opens the Export modal
-- **Copy Settings Link** is available inside the Export modal
+- **Export** (sidebar header, left) opens the Export modal
+- **Reset Settings** (bottom-right of sidebar) clears all saved settings and restores defaults
+- **Copy Settings** is available in the Model card header and inside the Export modal
 
 ### Viewer controls
 
@@ -56,10 +58,10 @@ A dashed overlay on the viewer always shows exactly which square region will be 
 
 ### Appearance
 
-Sidebar tabs: **Theme → Light → Animation**
+Sidebar tabs: **Theme → Lighting → Animation**
 
 - **Theme** includes model + background controls
-- **Light** includes lighting controls only
+- **Lighting** includes lighting controls only
 - **Export** is now a modal opened from the header button
 
 When a multi-part model is loaded:

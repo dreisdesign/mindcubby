@@ -11,6 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.35] - 2026-04-30
+
+### Added
+- **Inline tab icons** — Theme, Lighting, and Animation tabs now use inline SVG icons for tighter visual weight control and fewer external icon dependencies
+- **Model header quick action** — Copy Settings is back inside the Model card header, aligned to the right for faster sharing while tuning
+- **Multipart filename expansion menu** — the filename chip can now expand in multipart mode to list every part, with per-part Replace and Remove actions
+
+### Changed
+- **Upload language normalized** — Select/Replace STL labels are now consistently `Upload STL`
+- **Header action priority updated** — Export is now emphasized at the top-left of the sidebar header with a larger button and the download icon path
+- **Reset Settings relocated** — moved to the bottom-right of the control panel for cleaner top-of-panel hierarchy
+- **Tab naming clarity** — tab label `Light` renamed to `Lighting`
+
+### Fixed
+- **Background model-sync dropdown reliability** — source-part selector now maintains visible selected text and stable open/close behavior
+- **Part thumbnail framing in Model dropdown** — thumbnails now frame each part using per-part bounds so previews are no longer zoomed out
+- **Thumbnail artifacts removed** — ruler/grid helper visibility is suppressed during thumbnail rendering so previews show only STL geometry
+- **Background white/black swatch contrast** — White and Black background preset circles now include visible outline strokes
+
 ## [1.7.33] - 2026-04-30
 
 ### Changed
