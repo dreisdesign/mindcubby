@@ -3735,6 +3735,17 @@ html.crop-mode .crop-corner {
     background: color-mix(in srgb, var(--color-label, #666) 6%, transparent);
 }
 
+.copy-link-btn--export {
+    color: #fff;
+    background: var(--color-export);
+    border-color: color-mix(in srgb, var(--color-export) 70%, #fff 30%);
+}
+
+.copy-link-btn--export:hover {
+    background: var(--color-export-hover);
+    border-color: color-mix(in srgb, var(--color-export-hover) 70%, #fff 30%);
+}
+
 html.none-mode .range-label {
     opacity: 0.38;
     pointer-events: none;
@@ -4050,6 +4061,10 @@ html.loaded .sidebar-tabs {
 
 .sidebar-tab {
     flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
@@ -4062,6 +4077,16 @@ html.loaded .sidebar-tabs {
     font-family: inherit;
     letter-spacing: 0.01em;
     transition: color 0.12s, border-color 0.12s;
+}
+
+.sidebar-tab-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.75;
+}
+
+.sidebar-tab.is-active .sidebar-tab-icon {
+    opacity: 1;
 }
 
 .sidebar-tab.is-active {
@@ -4083,6 +4108,19 @@ html.loaded .sidebar-tabs {
 
 .tab-panel[hidden] {
     display: none;
+}
+
+.export-overlay {
+    z-index: 70;
+}
+
+.export-modal-panel {
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100vh - 40px);
+}
+
+.export-modal-body {
+    overflow: auto;
 }
 
 /* ── Box headings (Model / Environment cards) ── */

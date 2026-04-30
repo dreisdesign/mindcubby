@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.7.32** · April 29, 2026
+**Version 1.7.34** · April 30, 2026
 
 ---
 
@@ -33,7 +33,8 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
 - **Reset Settings** (sidebar header, left) clears all saved settings and restores defaults
-- **Copy Settings** (sidebar header, right) copies a shareable URL with current settings baked in
+- **Export** (sidebar header, right) opens the Export modal
+- **Copy Settings Link** is available inside the Export modal
 
 ### Viewer controls
 
@@ -55,13 +56,17 @@ A dashed overlay on the viewer always shows exactly which square region will be 
 
 ### Appearance
 
-Sidebar order: **Color → Texture → Animation → Export**
+Sidebar tabs: **Theme → Light → Animation**
+
+- **Theme** includes model + background controls
+- **Light** includes lighting controls only
+- **Export** is now a modal opened from the header button
 
 When a multi-part model is loaded:
 
 - **Model** controls are part-aware (color, shade/tone, shading mode, and finish/reflection values are stored per selected part)
 - **Model presets** are model-only (they no longer force background or lighting changes)
-- **Background → Model Sync** can follow a chosen part via **Model Sync Source** (defaults to Part 1)
+- **Background → Model** preset can follow a chosen part via **Model Sync Source** (defaults to Part 1)
 
 | Control | Description |
 |---|---|

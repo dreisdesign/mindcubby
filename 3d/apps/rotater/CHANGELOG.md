@@ -25,6 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Part/source thumbnails no longer show drop shadows** — thumbnail rendering now suppresses shadow-catcher contribution so the mini previews match the cleaner no-shadow UI cards
 
+## [1.7.34] - 2026-04-30
+
+### Added
+- **Icon tabs for primary control groups** — sidebar tabs now include dedicated icons for Theme, Light, and Animation
+
+### Changed
+- **Lighting controls moved to dedicated Light tab** — Lighting Effects is no longer inside Theme and now lives in its own tab for clearer separation
+- **Export moved out of sidebar tab into modal** — Export controls now open from a dedicated header button and render in a modal while preserving the same format/options/preview workflow
+- **Header primary action switched to Export** — the top-right header action is now an orange Export button, and Copy Settings moved into the Export modal
+
 ## [1.7.32] - 2026-04-29
 
 ### Added

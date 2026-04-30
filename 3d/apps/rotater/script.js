@@ -4175,6 +4175,19 @@ try {
     }
 } catch (e) { }
 
+document.getElementById('btnOpenExportModal')?.addEventListener('click', () => {
+    document.getElementById('exportOverlay').hidden = false;
+    refreshExportPreviewNow();
+});
+
+document.getElementById('btnExportClose')?.addEventListener('click', () => {
+    document.getElementById('exportOverlay').hidden = true;
+});
+
+document.getElementById('exportOverlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) document.getElementById('exportOverlay').hidden = true;
+});
+
 document.getElementById('btnCopyLink')?.addEventListener('click', () => {
     settingsToURL();
     navigator.clipboard.writeText(location.href).then(() => {
@@ -4196,6 +4209,10 @@ document.getElementById('infoOverlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) document.getElementById('infoOverlay').hidden = true;
 });
 document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !document.getElementById('exportOverlay').hidden) {
+        document.getElementById('exportOverlay').hidden = true;
+        return;
+    }
     if (e.key === 'Escape' && !document.getElementById('infoOverlay').hidden) {
         document.getElementById('infoOverlay').hidden = true;
     }
