@@ -319,6 +319,7 @@ let partThumbRenderTarget = null;
 let partThumbCamera = null;
 let partThumbScratchCanvas = null;
 let partThumbScratchCtx = null;
+let multipartPartBounds = null;
 let pendingReplacePartIndex = -1;
 let currentModelBuffer = null;
 
@@ -349,17 +350,98 @@ function addSnapDots(slider) {
     }
     const dotsEl = document.createElement('div');
     dotsEl.className = 'snap-dots';
-    dotsEl.setAttribute('aria-hidden', 'true');
+    dotsEl.setAttribute('role', 'presentation');
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    const step = parseFloat(slider.step) || 1;
+
+    const applySnapValue = (rawValue) => {
+        const bounded = Math.max(min, Math.min(max, rawValue));
+        const stepped = min + Math.round((bounded - min) / step) * step;
+        const decimals = (String(step).split('.')[1] || '').length;
+        slider.value = stepped.toFixed(Math.min(decimals, 6));
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
+        slider.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
     for (let i = 0; i < n; i++) {
-        const dot = document.createElement('span');
-        dot.style.left = `calc(10px + ${(i / (n - 1))} * (100% - 20px))`;
+        const ratio = i / (n - 1);
+        const valueAtDot = min + ratio * (max - min);
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'snap-dot-btn';
+        dot.style.left = `calc((var(--slider-thumb-size, 16px) / 2) + ${ratio} * (100% - var(--slider-thumb-size, 16px)))`;
+        dot.setAttribute('tabindex', '-1');
+        dot.setAttribute('aria-label', `Set to ${Math.round(valueAtDot)}`);
+        dot.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            applySnapValue(valueAtDot);
+        });
         dotsEl.appendChild(dot);
     }
     wrap.appendChild(dotsEl);
 }
 
+function setSliderValueFromClientX(slider, clientX) {
+    const rect = slider.getBoundingClientRect();
+    if (!rect.width) return;
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const raw = min + ratio * (max - min);
+    const next = raw.toFixed(4);
+    if (String(slider.value) === next) return;
+    slider.value = next;
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function enableImmediateRangeDrag(slider) {
+    if (!slider || slider.dataset.immediateDragBound === '1') return;
+    slider.dataset.immediateDragBound = '1';
+
+    let draggingPointerId = null;
+    let restoreStepValue = null;
+
+    slider.addEventListener('pointerdown', (ev) => {
+        if (ev.button !== 0) return;
+        draggingPointerId = ev.pointerId;
+        if (slider.dataset.snapCount && restoreStepValue == null) {
+            restoreStepValue = slider.step;
+            slider.step = 'any';
+        }
+        try { slider.setPointerCapture(ev.pointerId); } catch (e) { }
+        setSliderValueFromClientX(slider, ev.clientX);
+        ev.preventDefault();
+    });
+
+    slider.addEventListener('pointermove', (ev) => {
+        if (draggingPointerId !== ev.pointerId) return;
+        setSliderValueFromClientX(slider, ev.clientX);
+        ev.preventDefault();
+    });
+
+    const finishDrag = (ev) => {
+        if (draggingPointerId !== ev.pointerId) return;
+        setSliderValueFromClientX(slider, ev.clientX);
+        if (restoreStepValue != null) {
+            slider.step = restoreStepValue;
+            restoreStepValue = null;
+        }
+        try { slider.releasePointerCapture(ev.pointerId); } catch (e) { }
+        draggingPointerId = null;
+        slider.dispatchEvent(new Event('change', { bubbles: true }));
+        ev.preventDefault();
+    };
+
+    slider.addEventListener('pointerup', finishDrag);
+    slider.addEventListener('pointercancel', finishDrag);
+}
+
 // Add snap dots and enforce snap behavior on all range sliders
-document.querySelectorAll('input[type="range"]').forEach(addSnapDots);
+document.querySelectorAll('input[type="range"]').forEach((slider) => {
+    addSnapDots(slider);
+    enableImmediateRangeDrag(slider);
+});
 
 // ── Snap-to-grid enforcement ──────────────────────────────────────────────────
 let fineTuningMode = false;
@@ -377,13 +459,20 @@ function snapToGrid(slider) {
         const d = Math.abs(v - pos);
         if (d < minDist) { minDist = d; closest = pos; }
     }
-    const rounded = Math.round(closest);
-    if (parseFloat(slider.value) !== rounded) slider.value = String(rounded);
+    const snapped = Number(closest.toFixed(4));
+    if (parseFloat(slider.value) !== snapped) slider.value = String(snapped);
 }
 
-// Attach snap in capture phase (runs before all bubble-phase input listeners)
+// Snap sliders when the interaction commits (mouse/touch release or keyboard commit).
+// This preserves smooth dragging while still landing on the nearest snap point.
 document.querySelectorAll('input[type="range"][data-snap-count]').forEach(slider => {
-    slider.addEventListener('input', () => snapToGrid(slider), true);
+    slider.addEventListener('change', () => {
+        const before = String(slider.value);
+        snapToGrid(slider);
+        if (String(slider.value) !== before) {
+            slider.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
 });
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -871,7 +960,7 @@ function rebuildFileChipPartsMenu() {
     modelPartNames.forEach((name, idx) => {
         const row = document.createElement('div');
         row.className = 'file-chip-part-row';
-        const canRemove = canMutateFiles && modelPartNames.length > 2;
+        const canRemove = canMutateFiles && modelPartNames.length > 1;
         const nameEl = document.createElement('span');
         nameEl.className = 'file-chip-part-name';
         nameEl.textContent = name;
@@ -891,7 +980,7 @@ function rebuildFileChipPartsMenu() {
         removeBtn.dataset.action = 'remove';
         removeBtn.dataset.partIndex = String(idx);
         removeBtn.disabled = !canRemove;
-        removeBtn.title = canMutateFiles ? (canRemove ? 'Remove this part' : 'At least 2 parts are required') : 'Part source files are unavailable for editing';
+        removeBtn.title = canMutateFiles ? (canRemove ? 'Remove this part' : 'A single remaining part cannot be removed here') : 'Part source files are unavailable for editing';
         removeBtn.setAttribute('aria-label', 'Remove this part');
         removeBtn.textContent = '×';
 
@@ -932,13 +1021,34 @@ const FINISH_MODE_STOPS = {
     glossy: [80, 90, 98],
 };
 const FINISH_MODE_DEFAULT_STRENGTH = {
-    matte: 3,
+    matte: 2,
     satin: 2,
-    glossy: 1,
+    glossy: 2,
 };
+const FINISH_MODE_ORDER = ['matte', 'satin', 'glossy'];
 
 function clampFinishStrength(value) {
     return Math.max(1, Math.min(3, Math.round(value || 1)));
+}
+
+function clampFinishSliderValue(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return 5;
+    return Math.max(1, Math.min(9, num));
+}
+
+function modeStrengthToFinishSliderValue(mode, strength) {
+    const idx = Math.max(0, FINISH_MODE_ORDER.indexOf(mode));
+    return (idx * 3) + clampFinishStrength(strength);
+}
+
+function finishSliderValueToModeStrength(value) {
+    const v = clampFinishSliderValue(value);
+    const idx = Math.max(0, Math.min(FINISH_MODE_ORDER.length - 1, Math.floor((v - 1) / 3)));
+    const mode = FINISH_MODE_ORDER[idx] || 'satin';
+    const local = v - (idx * 3);
+    const strength = clampFinishStrength(local);
+    return { mode, strength };
 }
 
 function setFinishModeUI(mode) {
@@ -947,6 +1057,8 @@ function setFinishModeUI(mode) {
         btn.classList.toggle('is-active', active);
         btn.setAttribute('aria-pressed', String(active));
     });
+    const group = document.getElementById('finishControlGroup');
+    if (group) group.dataset.activeMode = mode;
 }
 
 function getFinishModeFromPartSettings(settings) {
@@ -981,24 +1093,31 @@ function finishStrengthFromPartSettings(settings) {
     return nearest;
 }
 
-function applyFinishControlsToSelectedPart() {
+function finishSliderValueFromPartSettings(settings) {
+    const mode = getFinishModeFromPartSettings(settings);
+    const strength = finishStrengthFromPartSettings(settings);
+    return modeStrengthToFinishSliderValue(mode, strength);
+}
+
+function applyFinishControlsToSelectedPart(commit = false) {
     const s = getSelectedPartSettings();
-    const mode = getSelectedFinishMode();
-    const isFineTuning = !!fineTuningCheckEl?.checked;
-    const defaultStrength = FINISH_MODE_DEFAULT_STRENGTH[mode] || 2;
-    const strength = isFineTuning
-        ? clampFinishStrength(parseInt(textureTuneRoughnessSlider?.value || String(defaultStrength), 10))
-        : defaultStrength;
+    const defaultMode = getSelectedFinishMode();
+    const defaultStrength = FINISH_MODE_DEFAULT_STRENGTH[defaultMode] || 2;
+    const defaultValue = modeStrengthToFinishSliderValue(defaultMode, defaultStrength);
+    const { mode, strength } = finishSliderValueToModeStrength(textureTuneRoughnessSlider?.value || defaultValue);
     const rough = (FINISH_MODE_STOPS[mode] || FINISH_MODE_STOPS.glossy)[strength - 1];
 
-    if (textureTuneRoughnessSlider) textureTuneRoughnessSlider.value = String(strength);
+    if (commit && textureTuneRoughnessSlider) {
+        textureTuneRoughnessSlider.value = String(modeStrengthToFinishSliderValue(mode, strength));
+    }
+    setFinishModeUI(mode);
 
     s.shading = mode === 'matte' ? 'matte' : mode === 'satin' ? 'phong' : 'metallic';
     shadingEl.value = s.shading;
     s.matteRoughness = rough;
     s.metallicRoughness = rough;
     s.phongRoughness = rough;
-    if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = String(strength);
+    if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = String(modeStrengthToFinishSliderValue(mode, strength));
 }
 
 function updateShadeSliderVisual() {
@@ -1006,14 +1125,8 @@ function updateShadeSliderVisual() {
     const s = getSelectedPartSettings();
     const baseHex = s?.color || colorPick.value;
     const toneVal = parseInt(s?.tone ?? opacitySlider.value ?? 0, 10) || 0;
-    const leftHex = `#${computeTonedColor(baseHex, -100).getHexString()}`;
-    const midHex = `#${new THREE.Color(baseHex).getHexString()}`;
-    const rightHex = `#${computeTonedColor(baseHex, 100).getHexString()}`;
     const tonedHex = `#${computeTonedColor(baseHex, toneVal).getHexString()}`;
-    opacitySlider.style.setProperty('--shade-left', leftHex);
-    opacitySlider.style.setProperty('--shade-mid', midHex);
-    opacitySlider.style.setProperty('--shade-right', rightHex);
-    opacitySlider.style.setProperty('--shade-thumb', tonedHex);
+    opacitySlider.style.setProperty('--slider-fill', tonedHex);
 }
 
 function syncUIFromSelectedPart() {
@@ -1038,7 +1151,7 @@ function syncUIFromSelectedPart() {
     const finishMode = getFinishModeFromPartSettings(s);
     setFinishModeUI(finishMode);
     if (textureTuneRoughnessSlider) {
-        textureTuneRoughnessSlider.value = String(finishStrengthFromPartSettings(s));
+        textureTuneRoughnessSlider.value = String(finishSliderValueFromPartSettings(s));
     }
     if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = textureTuneRoughnessSlider?.value || '1';
     updateShadeSliderVisual();
@@ -1091,6 +1204,14 @@ function getDefaultThumbCameraDistance() {
 }
 
 function getPartBounds(partIdx) {
+    const cached = Array.isArray(multipartPartBounds) ? multipartPartBounds[partIdx] : null;
+    if (cached?.center && Number.isFinite(cached?.radius)) {
+        return {
+            center: cached.center.clone(),
+            radius: Math.max(0.001, cached.radius),
+        };
+    }
+
     if (!mesh?.geometry?.attributes?.position) {
         return { center: new THREE.Vector3(0, 0, 0), radius: Math.max(1, modelRadius || 1) };
     }
@@ -1183,18 +1304,26 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     const partBounds = getPartBounds(partIdx);
     const fov = camera.fov;
     const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(fov / 2));
-    const dist = Math.max(getDefaultThumbCameraDistance() * 0.25, (partBounds.radius / Math.max(0.01, tanHalfFov)) * 1.65);
-    partThumbCamera.fov = camera.fov;
-    partThumbCamera.near = camera.near;
-    partThumbCamera.far = camera.far;
-    partThumbCamera.aspect = 1;
-    partThumbCamera.up.set(0, 1, 0);
-    partThumbCamera.position.set(partBounds.center.x, partBounds.center.y, partBounds.center.z + dist);
-    partThumbCamera.lookAt(partBounds.center);
-    partThumbCamera.updateProjectionMatrix();
+    const dist = (partBounds.radius / Math.max(0.01, tanHalfFov)) * 1.65;
 
     // Always render thumbnails from the imported baseline orientation.
     mesh.rotation.set(tiltBaseMeshRx, 0, 0);
+
+    // Transform the geometry-local bounds center into world space using the baseline
+    // mesh rotation (Z-up → Y-up, i.e. rotateX(-π/2)). Without this, the thumb camera
+    // aims at the Z-up local position while the rendered mesh is already in Y-up world
+    // space, which causes small offset parts (like a chain) to fall completely out of frame.
+    const meshRotMatrix = new THREE.Matrix4().makeRotationX(tiltBaseMeshRx);
+    const worldCenter = partBounds.center.clone().applyMatrix4(meshRotMatrix);
+
+    partThumbCamera.fov = camera.fov;
+    partThumbCamera.near = Math.max(0.0001, Math.min(camera.near || 0.1, dist * 0.2, partBounds.radius * 0.12));
+    partThumbCamera.far = Math.max(partThumbCamera.near + 1, dist + Math.max(partBounds.radius * 6, 1));
+    partThumbCamera.aspect = 1;
+    partThumbCamera.up.set(0, 1, 0);
+    partThumbCamera.position.set(worldCenter.x, worldCenter.y, worldCenter.z + dist);
+    partThumbCamera.lookAt(worldCenter);
+    partThumbCamera.updateProjectionMatrix();
     if (lightRig) lightRig.rotation.y = 0;
     if (scene?.environmentRotation) scene.environmentRotation.y = 0;
     if (shadowCatcher) shadowCatcher.visible = false;
@@ -1219,7 +1348,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
             imageData.data.set(pixelBuf.subarray(srcRow, srcRow + rtW * 4), dstRow);
             for (let x = 0; x < rtW; x++) {
                 const a = pixelBuf[srcRow + (x * 4) + 3];
-                if (a > 2) {
+                if (a > 0) {
                     if (x < minX) minX = x;
                     if (x > maxX) maxX = x;
                     if (y < minY) minY = y;
@@ -1271,7 +1400,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
 
 function renderModelPartThumbnails() {
     if (!modelPartThumbsWrap) return;
-    const visible = isMultipartModel() && activeBgPreset === 'modelcolor' && !!mesh && !!renderer && !!camera;
+    const visible = isMultipartModel() && !!mesh && !!renderer && !!camera;
     modelPartThumbsWrap.hidden = !visible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!visible));
     if (!visible) return;
@@ -1442,7 +1571,7 @@ function rebuildMeshMaterialsForCurrentShading() {
 
 function syncModelPartSelectorUI() {
     if (!modelPartThumbsWrap || !modelPartSelectorMenu || !modelPartSelectorBtn) return;
-    const isVisible = isMultipartModel() && activeBgPreset === 'modelcolor';
+    const isVisible = isMultipartModel();
     modelPartThumbsWrap.hidden = !isVisible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!isVisible));
     if (!isVisible) {
@@ -1581,10 +1710,6 @@ function clearPresetHoverPreview() {
 
 function attachPresetHoverPreview(el, preset) {
     if (!el || !preset?.url) return;
-    el.addEventListener('mouseenter', () => applyPresetHoverPreview(preset));
-    el.addEventListener('mouseleave', clearPresetHoverPreview);
-    el.addEventListener('focus', () => applyPresetHoverPreview(preset));
-    el.addEventListener('blur', clearPresetHoverPreview);
 }
 
 function loadPreparedGeometry(geo, name) {
@@ -1710,6 +1835,7 @@ function loadSTLBuffer(buffer, name) {
     modelPartSettings = [createPartSettings(colorPick.value)];
     customModelSettingsByPart = {};
     modelPartFiles = null;
+    multipartPartBounds = null;
     currentModelBuffer = buffer;
     modelPartSelected = 0;
 
@@ -1741,10 +1867,24 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
     }
 
     const center = unionBox.getCenter(new THREE.Vector3());
+    const computedPartBounds = [];
     for (const geo of parsed) {
         geo.translate(-center.x, -center.y, -center.z);
+        geo.computeBoundingBox();
+        const box = geo.boundingBox;
+        if (box) {
+            const boundsCenter = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            computedPartBounds.push({
+                center: boundsCenter,
+                radius: Math.max(size.length() * 0.5, 0.001),
+            });
+        } else {
+            computedPartBounds.push({ center: new THREE.Vector3(0, 0, 0), radius: Math.max(0.001, modelRadius || 1) });
+        }
         geo.computeVertexNormals();
     }
+    multipartPartBounds = computedPartBounds;
 
     const merged = BufferGeometryUtils.mergeGeometries(parsed, true);
     if (!merged) throw new Error('Could not merge multi-part STL geometry.');
@@ -3506,7 +3646,7 @@ async function replaceMultipartPart(partIdx, file) {
 
 async function removeMultipartPart(partIdx) {
     if (!isMultipartModel() || !modelPartFiles || modelPartFiles.length !== modelPartNames.length) return;
-    if (modelPartFiles.length <= 2) return;
+    if (modelPartFiles.length <= 1) return;
     const index = Math.max(0, Math.min(partIdx, modelPartFiles.length - 1));
     if (!confirm(`Remove part \"${modelPartNames[index]}\"?`)) return;
     const nextFiles = modelPartFiles.filter((_, idx) => idx !== index);
@@ -3838,7 +3978,7 @@ function updateTextureTuneUI() {
     if (textureTuneLightSourceRow) textureTuneLightSourceRow.hidden = false;
     if (textureTuneLightLockBox) textureTuneLightLockBox.checked = textureTuneState.lightLock;
     if (textureTuneLightHeightRow) textureTuneLightHeightRow.hidden = false;
-    if (textureTuneRoughnessRow) textureTuneRoughnessRow.hidden = !isStandard || !fineTuningMode;
+    if (textureTuneRoughnessRow) textureTuneRoughnessRow.hidden = !isStandard;
     if (textureTuneMetalnessRow) textureTuneMetalnessRow.hidden = mode !== 'metallic';
 
     if (textureTuneLightSlider) {
@@ -3884,7 +4024,7 @@ function updateTextureTuneUI() {
     if (isStandard && textureTuneRoughnessSlider) {
         const s = getSelectedPartSettings();
         setFinishModeUI(getFinishModeFromPartSettings(s));
-        textureTuneRoughnessSlider.value = String(finishStrengthFromPartSettings(s));
+        textureTuneRoughnessSlider.value = String(finishSliderValueFromPartSettings(s));
         if (textureTuneRoughnessVal) {
             textureTuneRoughnessVal.textContent = textureTuneRoughnessSlider.value;
         }
@@ -4059,9 +4199,15 @@ textureTuneLightHeightSlider?.addEventListener('input', () => {
 });
 
 textureTuneRoughnessSlider?.addEventListener('input', () => {
-    applyFinishControlsToSelectedPart();
-    syncUIFromSelectedPart();
-    updateTextureTuneUI();
+    applyFinishControlsToSelectedPart(false);
+    applyCurrentTextureTuning();
+    persistCurrentMultipartParts();
+    queueModelPartThumbsRender();
+    saveSettings();
+});
+
+textureTuneRoughnessSlider?.addEventListener('change', () => {
+    applyFinishControlsToSelectedPart(true);
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
     queueModelPartThumbsRender();
@@ -4069,10 +4215,13 @@ textureTuneRoughnessSlider?.addEventListener('input', () => {
 });
 
 finishModeButtons.forEach((btn) => btn.addEventListener('click', () => {
-    setFinishModeUI(btn.dataset.finishMode || 'glossy');
-    applyFinishControlsToSelectedPart();
-    syncUIFromSelectedPart();
-    updateTextureTuneUI();
+    const mode = btn.dataset.finishMode || 'satin';
+    setFinishModeUI(mode);
+    if (textureTuneRoughnessSlider) {
+        textureTuneRoughnessSlider.value = String(modeStrengthToFinishSliderValue(mode, 2));
+    }
+    applyFinishControlsToSelectedPart(true);
+    syncSliderTooltip(textureTuneRoughnessSlider);
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
     queueModelPartThumbsRender();
@@ -4365,25 +4514,33 @@ function initShowAll(toggleId, extraId, storeKey) {
 initShowAll('advModelToggle', 'advModelExtra', 'rotater_advModelCollapsed');
 initShowAll('advLightToggle', 'advLightExtra', 'rotater_advLightCollapsed');
 
+function applyFineTuningUIState(enabled) {
+    fineTuningMode = !!enabled;
+    document.documentElement.classList.toggle('fine-tuning-enabled', fineTuningMode);
+
+    // Toggle step attribute so browser doesn't snap when fine tuning is on.
+    document.querySelectorAll('input[type="range"][data-snap-count]').forEach(slider => {
+        if (fineTuningMode) {
+            if (!slider.dataset.originalStep) slider.dataset.originalStep = slider.step;
+            slider.step = 'any';
+        } else if (slider.dataset.originalStep) {
+            slider.step = slider.dataset.originalStep;
+        }
+    });
+
+    // Show/hide snap dots based on mode.
+    document.querySelectorAll('.snap-dots').forEach(el => {
+        el.style.opacity = fineTuningMode ? '0' : '';
+        el.style.pointerEvents = fineTuningMode ? 'none' : '';
+    });
+}
+
 // Fine Tuning toggle
 const fineTuningCheckEl = document.getElementById('fineTuningCheck');
 if (fineTuningCheckEl) {
+    applyFineTuningUIState(fineTuningCheckEl.checked);
     fineTuningCheckEl.addEventListener('change', () => {
-        fineTuningMode = fineTuningCheckEl.checked;
-        // Toggle step attribute so browser doesn't snap when fine tuning is on
-        document.querySelectorAll('input[type="range"][data-snap-count]').forEach(slider => {
-            if (fineTuningMode) {
-                if (!slider.dataset.originalStep) slider.dataset.originalStep = slider.step;
-                slider.step = 'any';
-            } else {
-                if (slider.dataset.originalStep) slider.step = slider.dataset.originalStep;
-            }
-        });
-        // Show/hide snap dots based on mode
-        document.querySelectorAll('.snap-dots').forEach(el => {
-            el.style.opacity = fineTuningMode ? '0' : '';
-            el.style.pointerEvents = fineTuningMode ? 'none' : '';
-        });
+        applyFineTuningUIState(fineTuningCheckEl.checked);
 
         if (!fineTuningMode) {
             applyFinishControlsToSelectedPart();
@@ -5446,7 +5603,6 @@ function renderModelPresets() {
             <span class="thumb-label">${preset.name}</span>
         `;
         const actionArea = wrap.querySelector('.shading-option');
-        attachPresetHoverPreview(actionArea, preset);
         actionArea.addEventListener('click', () => {
             clearPresetHoverPreview();
             if (activeModelPreset === 'custom') storeCustomSettings();

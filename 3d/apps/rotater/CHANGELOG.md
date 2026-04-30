@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.8.1] - 2026-04-30
+
+### Changed
+- **Final Theme panel polish pass** — sidebar cards, dropdowns, tabs, and primary actions now share a tighter 16 px card radius and more consistent button geometry
+- **Unified model slider presentation** — Shade, Sheen, Contrast, and Highlights now use the same thumb size, track height, and snap-dot alignment logic for a cleaner visual rhythm
+- **Header action cleanup** — Export and Download buttons now use the same sizing system as the rest of the sidebar controls for a more cohesive top bar
+
+### Fixed
+- **Multipart part removal flow** — filename dropdown rows can now remove parts all the way down to a single remaining STL instead of stopping at two parts
+- **Model preset hover confusion removed** — model preset cards now apply only on click, preventing accidental preview changes while interacting with nearby UI
+
 ## [1.8.0] - 2026-04-30
 
 ### Added

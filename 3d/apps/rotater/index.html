@@ -354,20 +354,20 @@
                                             data-snap-count="5" data-fine-step="1" data-group="object">
                                     </div>
                                 </label>
-                                <div class="finish-control-group" id="finishControlGroup">
-                                    <div class="finish-mode-wrap" id="finishModeWrap" role="group" aria-label="Finish mode">
+                                <div class="finish-control-group" id="finishControlGroup" data-active-mode="matte">
+                                    <div class="finish-mode-wrap" id="finishModeWrap" role="group" aria-label="Sheen">
                                         <button type="button" class="finish-mode-btn" id="finishModeMatte"
                                             data-finish-mode="matte" aria-pressed="false">Matte</button>
                                         <button type="button" class="finish-mode-btn" id="finishModeSatin"
-                                            data-finish-mode="satin" aria-pressed="true">Satin</button>
+                                            data-finish-mode="satin" aria-pressed="false">Satin</button>
                                         <button type="button" class="finish-mode-btn" id="finishModeGlossy"
-                                            data-finish-mode="glossy" aria-pressed="false">Glossy</button>
+                                            data-finish-mode="glossy" aria-pressed="false">Gloss</button>
                                     </div>
                                     <label class="control-label range-label" id="textureTuneRoughnessRow">
-                                        <span>Finish Strength<span class="slider-tooltip" id="textureTuneRoughnessVal">1</span></span>
                                         <div class="range-wrap">
-                                            <input type="range" id="textureTuneRoughness" min="1" max="3" step="1"
-                                                data-snap-count="3" data-fine-step="1" value="1" data-group="object">
+                                            <input type="range" id="textureTuneRoughness" min="1" max="9" step="1"
+                                                data-snap-count="9" data-fine-step="1" value="5" data-group="object"
+                                                aria-label="Finish strength">
                                         </div>
                                     </label>
                                 </div>

@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.8.0** · April 30, 2026
+**Version 1.8.1** · April 30, 2026
 
 ---
 
@@ -27,11 +27,11 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 - Drag and drop any STL file onto the page, or click **Upload STL**
 - Multi-part import: select or drop multiple STL files at once to load them as one aligned object (keeps original CAD offsets for multi-color part stacks)
 - Multi-part editing: use **Part Color Target** in the Model card to choose which part you are editing
-- Model preset cards support hover preview for the selected part before clicking to apply
+- Model preset cards now apply on click only
 - The model and all settings persist across page refreshes — no re-upload needed
 - The filename chip (top-right of canvas) shows the active file
   - For multipart models, click the chevron to expand all part filenames
-  - Each expanded row supports **Replace** for an individual part and **×** to remove that part (when 3+ parts are loaded)
+  - Each expanded row supports **Replace** for an individual part and **×** to remove that part (when 2+ parts are loaded)
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
 - **Export** (sidebar header, left) opens the Export modal
@@ -66,6 +66,7 @@ Sidebar tabs: **Theme → Lighting → Animation**
 - **Lighting** includes lighting controls only
 - **Export** is now a modal opened from the header button
 - **Download** exports a reusable ZIP package for future import/export workflows
+- The Theme sidebar uses unified slider styling and shared snap behavior across Shade, Sheen, Contrast, and Highlights
 
 When a multi-part model is loaded:
 
