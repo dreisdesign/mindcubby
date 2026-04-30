@@ -4089,6 +4089,11 @@ colorPick.addEventListener('input', (ev) => {
     updateColorSwatches();
     updateShadeSliderVisual();
     queueModelPartThumbsRender();
+    if (activeBgPreset === 'modelcolor') {
+        bgPick.value = getModelSyncSourceColor();
+        if (isDynamicBg) updateDynamicBg();
+        else renderer && renderer.setClearColor(new THREE.Color(bgPick.value), 1);
+    }
     saveSettings();
 });
 if (opacitySlider) {
@@ -5561,6 +5566,13 @@ function applyModelPresetOnly(preset) {
     storeCustomSettings();
 
     activeModelPreset = preset.id;
+
+    // If background is already synced to model color, re-sync to the new color.
+    if (activeBgPreset === 'modelcolor') {
+        bgPick.value = getModelSyncSourceColor();
+        if (isDynamicBg) updateDynamicBg();
+        else renderer && renderer.setClearColor(new THREE.Color(bgPick.value), 1);
+    }
 
     updateTextureTuneUI();
     updateShadingThumbs();
