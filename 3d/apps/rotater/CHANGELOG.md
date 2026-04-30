@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.32] - 2026-04-29
 
+### Added
+- **Multi-part STL import** — selecting/dropping multiple STL files now loads them as a single aligned object, preserving shared CAD coordinates so multi-color part sets remain stacked correctly
+
 ### Changed
 - **Ruler lines replaced with 3D grid reference** — the "Lines" toggle is now a "Grid" toggle; enabling it drops a `GridHelper` plane beneath the model in the Three.js scene for a stable positional reference instead of the previous projected edge-line overlay
 - **Grid state persisted** — grid visibility is now stored in the `rg` URL parameter and localStorage (`rulerGridVisible`) with backward-compatible fallback from the old `rl` / `rulerLinesVisible` keys

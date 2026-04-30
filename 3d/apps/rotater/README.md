@@ -25,6 +25,7 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 ### Loading a model
 
 - Drag and drop any STL file onto the page, or click **Replace STL**
+- Multi-part import: select or drop multiple STL files at once to load them as one aligned object (keeps original CAD offsets for multi-color part stacks)
 - The model and all settings persist across page refreshes — no re-upload needed
 - The filename chip (top-right of canvas) shows the active file
   - Click **×** while showing the demo to open the file picker

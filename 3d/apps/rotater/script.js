@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
@@ -759,9 +760,50 @@ function getMaterial(shading, baseColor) {
         roughness: (100 - (textureTuneState.metallicRoughness || 30)) / 100,
         envMapIntensity: ((textureTuneState.metallicReflection || 100) / 100) * (textureTuneState.highlights / 100),
     });
-}// ── STL Loading ───────────────────────────────────────────────────────────────
-function loadSTLBuffer(buffer, name) {
-    const geo = new STLLoader().parse(buffer);
+}
+
+function stemFromFileName(name) {
+    return String(name || 'model').replace(/\.stl$/i, '').trim() || 'model';
+}
+
+function inferMultipartBaseName(names) {
+    const stems = (Array.isArray(names) ? names : [])
+        .map(stemFromFileName)
+        .filter(Boolean);
+    if (!stems.length) return 'model';
+    if (stems.length === 1) return stems[0];
+
+    let prefix = stems[0];
+    for (let i = 1; i < stems.length; i++) {
+        let j = 0;
+        const next = stems[i];
+        const max = Math.min(prefix.length, next.length);
+        while (j < max && prefix[j].toLowerCase() === next[j].toLowerCase()) j += 1;
+        prefix = prefix.slice(0, j);
+        if (!prefix) break;
+    }
+
+    prefix = prefix.replace(/[\s_\-+([.{]+$/g, '').trim();
+    if (prefix.length < 3) return stems[0];
+    return prefix;
+}
+
+function getMultipartDisplayName(names) {
+    const count = names?.length ?? 0;
+    const base = inferMultipartBaseName(names);
+    if (count <= 1) return `${base}.stl`;
+    return `${base} (${count} parts).stl`;
+}
+
+function buildMultipartFileBase(names) {
+    const count = names?.length ?? 0;
+    const base = inferMultipartBaseName(names);
+    return count > 1 ? `${base}_${count}parts` : base;
+}
+
+function loadPreparedGeometry(geo, name) {
+    geo.computeBoundingBox();
+    if (!geo.boundingBox) throw new Error('Could not compute model bounds.');
 
     // Preserve camera distance when replacing a model (maintain user's zoom level)
     let savedCamPos = null;
@@ -772,13 +814,6 @@ function loadSTLBuffer(buffer, name) {
         mesh.geometry.dispose();
         mesh.material.dispose();
     }
-
-    // Center and orient (STL files from slicers are Z-up; Three.js is Y-up)
-    geo.computeBoundingBox();
-    const center = new THREE.Vector3();
-    geo.boundingBox.getCenter(center);
-    geo.translate(-center.x, -center.y, -center.z);
-    geo.computeVertexNormals();
 
     const sz = new THREE.Vector3();
     geo.boundingBox.getSize(sz);
@@ -861,6 +896,47 @@ function loadSTLBuffer(buffer, name) {
         clearBtn.title = clearLabel;
         clearBtn.setAttribute('aria-label', clearLabel);
     }
+}
+
+// ── STL Loading ───────────────────────────────────────────────────────────────
+function loadSTLBuffer(buffer, name) {
+    const geo = new STLLoader().parse(buffer);
+
+    // Preserve camera distance when replacing a model (maintain user's zoom level)
+    // Center and orient (STL files from slicers are Z-up; Three.js is Y-up)
+    geo.computeBoundingBox();
+    const center = new THREE.Vector3();
+    geo.boundingBox.getCenter(center);
+    geo.translate(-center.x, -center.y, -center.z);
+    geo.computeVertexNormals();
+
+    loadPreparedGeometry(geo, name);
+}
+
+function loadMultipartSTLBuffers(buffers, names) {
+    if (!Array.isArray(buffers) || !buffers.length) return;
+
+    const parsed = [];
+    const unionBox = new THREE.Box3();
+    const loader = new STLLoader();
+    for (const buffer of buffers) {
+        const geo = loader.parse(buffer);
+        geo.computeBoundingBox();
+        if (geo.boundingBox) unionBox.union(geo.boundingBox);
+        parsed.push(geo);
+    }
+
+    const center = unionBox.getCenter(new THREE.Vector3());
+    for (const geo of parsed) {
+        geo.translate(-center.x, -center.y, -center.z);
+        geo.computeVertexNormals();
+    }
+
+    const merged = BufferGeometryUtils.mergeGeometries(parsed, false);
+    if (!merged) throw new Error('Could not merge multi-part STL geometry.');
+    parsed.forEach(g => { if (g !== merged) g.dispose(); });
+
+    loadPreparedGeometry(merged, getMultipartDisplayName(names));
 }
 
 function placeCamera() {
@@ -1986,6 +2062,20 @@ async function saveFileToIDB(name, buffer) {
     }
 }
 
+async function saveFilesToIDB(parts, displayName) {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).put({
+            kind: 'multipart',
+            name: displayName,
+            parts: parts.map(p => ({ name: p.name, buffer: p.buffer }))
+        }, 'stl');
+    } catch (e) {
+        console.warn('Could not save multi-part STL to IndexedDB:', e);
+    }
+}
+
 async function loadFileFromIDB() {
     try {
         const db = await openDB();
@@ -2477,33 +2567,83 @@ async function restoreSession() {
         } catch (e) { /* no demo available — stay on landing page */ }
         return;
     }
-    fileNameEl.textContent = saved.name;
-    fileNameEl.title = saved.name;
-    currentFileName = saved.name.replace(/\.stl$/i, '');
+    const isMultipart = Array.isArray(saved.parts) && saved.parts.length > 1;
+    const displayName = isMultipart
+        ? (saved.name || getMultipartDisplayName(saved.parts.map(p => p.name)))
+        : saved.name;
+    fileNameEl.textContent = displayName;
+    fileNameEl.title = displayName;
+    currentFileName = isMultipart
+        ? buildMultipartFileBase(saved.parts.map(p => p.name))
+        : stemFromFileName(saved.name);
     if (!renderer) initThree();
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
     if (DEV_LOG) console.log(`[rotater] restoreSession: calling loadSTLBuffer for user file at ${Date.now()}`);
-    loadSTLBuffer(saved.buffer, saved.name);
+    if (isMultipart) {
+        loadMultipartSTLBuffers(saved.parts.map(p => p.buffer), saved.parts.map(p => p.name));
+    } else {
+        loadSTLBuffer(saved.buffer, saved.name);
+    }
 }
 
 // ── UI events ─────────────────────────────────────────────────────────────────
-function handleFile(file) {
-    if (!file?.name.toLowerCase().endsWith('.stl')) return;
-    fileNameEl.textContent = file.name;
-    fileNameEl.title = file.name;
-    currentFileName = file.name.replace(/\.stl$/i, '');
-    if (!renderer) initThree();
-    const reader = new FileReader();
-    reader.onload = e => {
-        const buffer = e.target.result;
-        saveFileToIDB(file.name, buffer);
-        saveSettings();
-        loadSTLBuffer(buffer, file.name);
-    };
-    reader.readAsArrayBuffer(file);
+function readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = () => reject(reader.error || new Error('Failed to read STL file.'));
+        reader.readAsArrayBuffer(file);
+    });
 }
 
-fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+async function handleFiles(fileList) {
+    const files = Array.from(fileList || []).filter(f => f?.name?.toLowerCase?.().endsWith('.stl'));
+    if (!files.length) return;
+
+    const isMultipart = files.length > 1;
+    const displayName = isMultipart ? getMultipartDisplayName(files.map(f => f.name)) : files[0].name;
+    fileNameEl.textContent = displayName;
+    fileNameEl.title = displayName;
+    currentFileName = isMultipart
+        ? buildMultipartFileBase(files.map(f => f.name))
+        : stemFromFileName(files[0].name);
+    if (!renderer) initThree();
+
+    if (isMultipart) {
+        try {
+            const parts = await Promise.all(files.map(async (file) => ({
+                name: file.name,
+                buffer: await readFileAsArrayBuffer(file),
+            })));
+            await saveFilesToIDB(parts, displayName);
+            saveSettings();
+            loadMultipartSTLBuffers(parts.map(p => p.buffer), parts.map(p => p.name));
+        } catch (err) {
+            setStatus('Error: ' + (err?.message || 'Failed to load STL parts.'));
+            console.error(err);
+            setTimeout(() => setStatus(''), 5000);
+        }
+        return;
+    }
+
+    try {
+        const file = files[0];
+        const buffer = await readFileAsArrayBuffer(file);
+        await saveFileToIDB(file.name, buffer);
+        saveSettings();
+        loadSTLBuffer(buffer, file.name);
+    } catch (err) {
+        setStatus('Error: ' + (err?.message || 'Failed to load STL file.'));
+        console.error(err);
+        setTimeout(() => setStatus(''), 5000);
+    }
+}
+
+fileInput.addEventListener('change', e => {
+    handleFiles(e.target.files);
+    // Allow re-selecting the same file(s) to retrigger change.
+    e.target.value = '';
+});
 
 function togglePause() {
     if (rotateModeEl.value === 'off') return;
@@ -2698,7 +2838,7 @@ dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-ove
 dropZone.addEventListener('drop', e => {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
-    handleFile(e.dataTransfer.files[0]);
+    handleFiles(e.dataTransfer.files);
 });
 
 function updateShadingThumbs() {
