@@ -5662,11 +5662,25 @@ function renderModelPresets() {
             try { localStorage.setItem('rotater_advModelCollapsed', '1'); } catch (_) { }
         }
         const idx = Math.max(0, modelPartSelected || 0);
-        const customModelSettings = customModelSettingsByPart[idx] || { ...getSelectedPartSettings() };
-        modelPartSettings[idx] = { ...customModelSettings };
-        modelPartBaseColors[idx] = customModelSettings.color || modelPartBaseColors[idx] || colorPick.value;
-        syncUIFromSelectedPart();
+        const currentSettings = { ...getSelectedPartSettings() };
+        const customModelSettings = customModelSettingsByPart[idx] || { ...currentSettings };
+
+        // Restore the part's custom profile but preserve the current finish state
+        // so clicking Custom never forces Gloss/Satin/Matte changes.
+        modelPartSettings[idx] = {
+            ...customModelSettings,
+            shading: currentSettings.shading,
+            metallicRoughness: currentSettings.metallicRoughness,
+            metallicMetalness: currentSettings.metallicMetalness,
+            metallicReflection: currentSettings.metallicReflection,
+            phongRoughness: currentSettings.phongRoughness,
+            phongReflection: currentSettings.phongReflection,
+            matteRoughness: currentSettings.matteRoughness,
+            matteReflection: currentSettings.matteReflection,
+        };
+        modelPartBaseColors[idx] = modelPartSettings[idx].color || modelPartBaseColors[idx] || colorPick.value;
         activeModelPreset = 'custom';
+        syncUIFromSelectedPart();
         if (mesh) rebuildMeshMaterialsForCurrentShading();
         persistCurrentMultipartParts();
         queueModelPartThumbsRender();
