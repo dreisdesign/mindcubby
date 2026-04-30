@@ -34,8 +34,8 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
   - Each expanded row supports **Replace** for an individual part and **×** to remove that part (when 2+ parts are loaded)
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
-- **Export** (sidebar header, left) opens the Export modal
-- **Download** (sidebar header, right) saves a single ZIP package containing `package.json` plus the original STL file(s)
+- **Export** (sidebar header) opens the Export modal
+- **Download Package** (inside the Export modal) saves a single ZIP package containing `package.json` plus the original STL file(s)
 - **Reset Settings** (bottom-right of sidebar) clears all saved settings and restores defaults
 
 See also: [ROADMAP.md](ROADMAP.md)
@@ -60,12 +60,12 @@ A dashed overlay on the viewer always shows exactly which square region will be 
 
 ### Appearance
 
-Sidebar tabs: **Theme → Lighting → Animation**
+Sidebar tabs: **Theme → Effects**
 
 - **Theme** includes model + background controls
-- **Lighting** includes lighting controls only
+- **Effects** combines lighting controls and animation controls in one panel
 - **Export** is now a modal opened from the header button
-- **Download** exports a reusable ZIP package for future import/export workflows
+- **Download Package** lives inside the Export modal and exports a reusable ZIP package for future import/export workflows
 - The Theme sidebar uses unified slider styling and shared snap behavior across Shade, Sheen, Contrast, and Highlights
 
 When a multi-part model is loaded:
@@ -96,7 +96,7 @@ Texture tuning (tune icon in the Texture card) includes:
 
 On first visit after texture updates, the tune icon shows a small **NEW** badge with a quick hover/focus changelog popover. Dismiss with **×**.
 
-### Animation controls
+### Effects: Animation controls
 
 | Control | Description |
 |---|---|
@@ -121,7 +121,7 @@ The Export section uses a **Format** dropdown and a **Quality** dropdown. Select
 
 ### Download package
 
-The header **Download** button saves one ZIP package that contains:
+The **Download Package** action inside the Export modal saves one ZIP package that contains:
 
 - `package.json` with the current Rotater settings, part names, selected part, and share URL
 - the currently loaded STL file, or all STL parts for multipart models

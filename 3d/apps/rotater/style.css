@@ -4255,6 +4255,12 @@ html.loaded .sidebar-tabs {
     margin: 0 auto;
 }
 
+.export-download-btn {
+    width: 100%;
+    margin-top: 10px;
+    justify-content: center;
+}
+
 /* ── Box headings (Model / Environment cards) ── */
 .box-heading {
     font-size: 22px;

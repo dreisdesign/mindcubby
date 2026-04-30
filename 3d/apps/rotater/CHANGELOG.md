@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.8.2] - 2026-04-30
+
+### Changed
+- **Tab consolidation to segmented pair** — sidebar primary tabs are now `Theme` and `Effects`, with lighting and animation controls grouped under Effects
+- **Export stays as primary action button** — Export remains a standalone header button instead of becoming a tab
+- **Download moved into Export panel** — package download is now located inside the Export modal for a single export-focused workflow
+
+### Fixed
+- **Model Sync live update after preset changes** — when Background is set to Model Sync, changing model preset/color now updates the synced background immediately without needing refresh
+
 ## [1.8.1] - 2026-04-30
 
 ### Changed

@@ -4471,16 +4471,22 @@ speedResetBtn.addEventListener('click', (e) => {
 
 // ── Sidebar tabs ───────────────────────────────────────────────────────────────────
 
+function normalizeSidebarTab(tab) {
+    if (tab === 'light' || tab === 'animation' || tab === 'studio') return 'effects';
+    return tab;
+}
+
 function switchTab(tab) {
+    const normalizedTab = normalizeSidebarTab(tab);
     document.querySelectorAll('.sidebar-tab').forEach(btn => {
-        const active = btn.dataset.tab === tab;
+        const active = btn.dataset.tab === normalizedTab;
         btn.classList.toggle('is-active', active);
         btn.setAttribute('aria-selected', String(active));
     });
     document.querySelectorAll('.tab-panel').forEach(panel => {
-        panel.hidden = panel.dataset.panel !== tab;
+        panel.hidden = panel.dataset.panel !== normalizedTab;
     });
-    try { localStorage.setItem('rotater_activeTab', tab); } catch (_) { }
+    try { localStorage.setItem('rotater_activeTab', normalizedTab); } catch (_) { }
 }
 
 document.querySelectorAll('.sidebar-tab').forEach(btn => {
@@ -4490,8 +4496,9 @@ document.querySelectorAll('.sidebar-tab').forEach(btn => {
 // Restore active tab
 try {
     const savedTab = localStorage.getItem('rotater_activeTab');
-    if (savedTab && document.querySelector(`.sidebar-tab[data-tab="${savedTab}"]`)) {
-        switchTab(savedTab);
+    const normalizedSavedTab = normalizeSidebarTab(savedTab);
+    if (normalizedSavedTab && document.querySelector(`.sidebar-tab[data-tab="${normalizedSavedTab}"]`)) {
+        switchTab(normalizedSavedTab);
     }
 } catch (_) { }
 
