@@ -217,6 +217,10 @@ const cropDimensionsDock = document.getElementById('cropDimensionsDock');
 const statusEl = document.getElementById('exportStatus');
 const animStatusEl = document.getElementById('exportStatusAnim');
 const fileNameEl = document.getElementById('fileName');
+const fileChipEl = document.getElementById('fileChip');
+const fileChipPartsMenu = document.getElementById('fileChipPartsMenu');
+const btnFileChipExpand = document.getElementById('btnFileChipExpand');
+const partReplaceInput = document.getElementById('partReplaceInput');
 const btnPause = document.getElementById('btnPause');
 const iconPause = document.getElementById('iconPause');
 const iconPlay = document.getElementById('iconPlay');
@@ -313,6 +317,7 @@ let partThumbRenderTarget = null;
 let partThumbCamera = null;
 let partThumbScratchCanvas = null;
 let partThumbScratchCtx = null;
+let pendingReplacePartIndex = -1;
 
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
@@ -830,6 +835,60 @@ function isMultipartModel() {
     return Array.isArray(modelPartNames) && modelPartNames.length > 1;
 }
 
+function setDisplayedFileName(name) {
+    const safeName = String(name || 'model.stl');
+    fileNameEl.textContent = safeName;
+    fileNameEl.title = safeName;
+}
+
+function closeFileChipPartsMenu() {
+    if (!fileChipPartsMenu) return;
+    fileChipPartsMenu.hidden = true;
+    if (btnFileChipExpand) btnFileChipExpand.setAttribute('aria-expanded', 'false');
+}
+
+function syncFileChipMultipartUI() {
+    const multipart = isMultipartModel() && !!modelPartFiles && modelPartFiles.length === modelPartNames.length;
+    if (btnFileChipExpand) btnFileChipExpand.hidden = !multipart;
+    if (!multipart) closeFileChipPartsMenu();
+}
+
+function rebuildFileChipPartsMenu() {
+    if (!fileChipPartsMenu) return;
+    fileChipPartsMenu.innerHTML = '';
+    if (!isMultipartModel() || !modelPartFiles || modelPartFiles.length !== modelPartNames.length) return;
+
+    modelPartNames.forEach((name, idx) => {
+        const row = document.createElement('div');
+        row.className = 'file-chip-part-row';
+        const canRemove = modelPartNames.length > 2;
+        const nameEl = document.createElement('span');
+        nameEl.className = 'file-chip-part-name';
+        nameEl.textContent = name;
+        nameEl.title = name;
+
+        const replaceBtn = document.createElement('button');
+        replaceBtn.type = 'button';
+        replaceBtn.className = 'file-chip-part-btn';
+        replaceBtn.dataset.action = 'replace';
+        replaceBtn.dataset.partIndex = String(idx);
+        replaceBtn.textContent = 'Replace';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'file-chip-part-btn file-chip-part-btn--remove';
+        removeBtn.dataset.action = 'remove';
+        removeBtn.dataset.partIndex = String(idx);
+        removeBtn.disabled = !canRemove;
+        removeBtn.title = canRemove ? 'Remove this part' : 'At least 2 parts are required';
+        removeBtn.setAttribute('aria-label', 'Remove this part');
+        removeBtn.textContent = '×';
+
+        row.append(nameEl, replaceBtn, removeBtn);
+        fileChipPartsMenu.appendChild(row);
+    });
+}
+
 function createPartSettings(colorHex = colorPick.value) {
     return {
         color: colorHex,
@@ -1020,6 +1079,46 @@ function getDefaultThumbCameraDistance() {
     return modelRadius * Math.max(1, 1 / 1) / tanHalfFov * VIEWPORT_FIT_SCALE;
 }
 
+function getPartBounds(partIdx) {
+    if (!mesh?.geometry?.attributes?.position) {
+        return { center: new THREE.Vector3(0, 0, 0), radius: Math.max(1, modelRadius || 1) };
+    }
+    const geometry = mesh.geometry;
+    const posAttr = geometry.attributes.position;
+    const groups = Array.isArray(geometry.groups) ? geometry.groups : [];
+    const indexAttr = geometry.index;
+    const box = new THREE.Box3();
+    const v = new THREE.Vector3();
+    let hasVertices = false;
+
+    groups.forEach((group) => {
+        if ((group?.materialIndex ?? 0) !== partIdx) return;
+        const start = Math.max(0, group.start || 0);
+        const end = Math.min(group.start + group.count, indexAttr ? indexAttr.count : posAttr.count);
+        for (let i = start; i < end; i++) {
+            const vertexIndex = indexAttr ? indexAttr.getX(i) : i;
+            v.fromBufferAttribute(posAttr, vertexIndex);
+            box.expandByPoint(v);
+            hasVertices = true;
+        }
+    });
+
+    if (!hasVertices) {
+        const fallback = new THREE.Sphere();
+        geometry.computeBoundingSphere();
+        if (geometry.boundingSphere) fallback.copy(geometry.boundingSphere);
+        return {
+            center: fallback.center.clone(),
+            radius: Math.max(0.001, fallback.radius || modelRadius || 1),
+        };
+    }
+
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const radius = Math.max(size.length() * 0.5, 0.001);
+    return { center, radius };
+}
+
 function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (!canvasEl || !mesh || !renderer || !camera) return;
     const ctx = canvasEl.getContext('2d');
@@ -1042,6 +1141,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     const savedLightRigY = lightRig?.rotation?.y;
     const savedEnvRotY = scene?.environmentRotation?.y;
     const savedShadowCatcherVisible = shadowCatcher?.visible;
+    const savedRulerGridVisible = rulerGridHelper?.visible;
     const saved = mats.map((m) => ({
         mat: m,
         transparent: m?.transparent,
@@ -1069,14 +1169,17 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
         m.needsUpdate = true;
     });
 
-    const dist = getDefaultThumbCameraDistance();
+    const partBounds = getPartBounds(partIdx);
+    const fov = camera.fov;
+    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(fov / 2));
+    const dist = Math.max(getDefaultThumbCameraDistance() * 0.25, (partBounds.radius / Math.max(0.01, tanHalfFov)) * 1.65);
     partThumbCamera.fov = camera.fov;
     partThumbCamera.near = camera.near;
     partThumbCamera.far = camera.far;
     partThumbCamera.aspect = 1;
     partThumbCamera.up.set(0, 1, 0);
-    partThumbCamera.position.set(0, 0, dist);
-    partThumbCamera.lookAt(0, 0, 0);
+    partThumbCamera.position.set(partBounds.center.x, partBounds.center.y, partBounds.center.z + dist);
+    partThumbCamera.lookAt(partBounds.center);
     partThumbCamera.updateProjectionMatrix();
 
     // Always render thumbnails from the imported baseline orientation.
@@ -1084,6 +1187,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (lightRig) lightRig.rotation.y = 0;
     if (scene?.environmentRotation) scene.environmentRotation.y = 0;
     if (shadowCatcher) shadowCatcher.visible = false;
+    if (rulerGridHelper) rulerGridHelper.visible = false;
 
     scene.background = null;
     renderer.setClearColor(0x000000, 0);
@@ -1150,6 +1254,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (lightRig && Number.isFinite(savedLightRigY)) lightRig.rotation.y = savedLightRigY;
     if (scene?.environmentRotation && Number.isFinite(savedEnvRotY)) scene.environmentRotation.y = savedEnvRotY;
     if (shadowCatcher && typeof savedShadowCatcherVisible === 'boolean') shadowCatcher.visible = savedShadowCatcherVisible;
+    if (rulerGridHelper && typeof savedRulerGridVisible === 'boolean') rulerGridHelper.visible = savedRulerGridVisible;
     renderer.render(scene, camera);
 }
 
@@ -1219,6 +1324,11 @@ bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
 
 document.addEventListener('click', () => {
     closeThumbSelectMenus();
+    closeFileChipPartsMenu();
+});
+
+fileChipEl?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
 });
 
 function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
@@ -1384,6 +1494,7 @@ function syncBgModelSyncSourceUI() {
         bgModelSyncSelectorMenu.innerHTML = '';
         bgModelSyncSelectorMenu.hidden = true;
         bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
+        if (bgModelSyncSelectorText) bgModelSyncSelectorText.textContent = '';
         return;
     }
 
@@ -1416,6 +1527,11 @@ function syncBgModelSyncSourceUI() {
     if (bgModelSyncSelectorThumb) {
         bgModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
         bgModelSyncSelectorThumb.dataset.partIndex = String(bgSyncPartIndex);
+    }
+    if (bgModelSyncSelectorText) {
+        const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
+        bgModelSyncSelectorText.textContent = selectedName;
+        bgModelSyncSelectorBtn.title = selectedName;
     }
     queueModelPartThumbsRender();
 }
@@ -1519,7 +1635,7 @@ function loadPreparedGeometry(geo, name) {
     // first and camera.aspect is correct before we compute the fit distance.
     document.documentElement.classList.add('loaded');
     try { localStorage.setItem('rotater_hasSession', '1'); } catch (e) { }
-    document.getElementById('compactBtnLabel').textContent = 'Replace STL';
+    document.getElementById('compactBtnLabel').textContent = 'Upload STL';
     // Reset pause state on new load
     isPaused = false;
     controls.autoRotate = rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360);
@@ -1562,6 +1678,8 @@ function loadPreparedGeometry(geo, name) {
         clearBtn.title = clearLabel;
         clearBtn.setAttribute('aria-label', clearLabel);
     }
+    syncFileChipMultipartUI();
+    rebuildFileChipPartsMenu();
 }
 
 // ── STL Loading ───────────────────────────────────────────────────────────────
@@ -3249,8 +3367,7 @@ async function restoreSession() {
             const resp = await fetch('./benchy.stl');
             if (!resp.ok) return;
             const buffer = await resp.arrayBuffer();
-            fileNameEl.textContent = '3dbenchy.stl';
-            fileNameEl.title = '3dbenchy.stl';
+            setDisplayedFileName('3dbenchy.stl');
             currentFileName = '3dbenchy';
             modelPartNames = ['3dbenchy.stl'];
             modelPartBaseColors = [colorPick.value];
@@ -3269,8 +3386,7 @@ async function restoreSession() {
     const displayName = isMultipart
         ? (saved.name || getMultipartDisplayName(saved.parts.map(p => p.name)))
         : saved.name;
-    fileNameEl.textContent = displayName;
-    fileNameEl.title = displayName;
+    setDisplayedFileName(displayName);
     currentFileName = isMultipart
         ? buildMultipartFileBase(saved.parts.map(p => p.name))
         : stemFromFileName(saved.name);
@@ -3307,8 +3423,7 @@ async function handleFiles(fileList) {
 
     const isMultipart = files.length > 1;
     const displayName = isMultipart ? getMultipartDisplayName(files.map(f => f.name)) : files[0].name;
-    fileNameEl.textContent = displayName;
-    fileNameEl.title = displayName;
+    setDisplayedFileName(displayName);
     currentFileName = isMultipart
         ? buildMultipartFileBase(files.map(f => f.name))
         : stemFromFileName(files[0].name);
@@ -3348,10 +3463,120 @@ async function handleFiles(fileList) {
     }
 }
 
+async function replaceMultipartPart(partIdx, file) {
+    if (!file || !isMultipartModel() || !modelPartFiles || modelPartFiles.length !== modelPartNames.length) return;
+    const index = Math.max(0, Math.min(partIdx, modelPartFiles.length - 1));
+    const buffer = await readFileAsArrayBuffer(file);
+
+    const nextFiles = modelPartFiles.map((part) => ({ ...part }));
+    nextFiles[index] = { name: file.name, buffer };
+    const nextNames = nextFiles.map((part) => part.name);
+    const nextColors = modelPartBaseColors.map((c) => c || colorPick.value);
+    const nextSettings = modelPartSettings.map((s, idx) => ({ ...getPartSettings(idx), ...s, color: nextColors[idx] || colorPick.value }));
+    const displayName = getMultipartDisplayName(nextNames);
+
+    await saveFilesToIDB(nextFiles.map((part, idx) => ({
+        name: part.name,
+        buffer: part.buffer,
+        color: nextColors[idx] || colorPick.value,
+        settings: nextSettings[idx] || createPartSettings(nextColors[idx] || colorPick.value),
+    })), displayName);
+
+    modelPartFiles = nextFiles;
+    pendingModelPartSelected = Math.min(index, nextFiles.length - 1);
+    setDisplayedFileName(displayName);
+    currentFileName = buildMultipartFileBase(nextNames);
+    loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
+    rebuildFileChipPartsMenu();
+    syncFileChipMultipartUI();
+}
+
+async function removeMultipartPart(partIdx) {
+    if (!isMultipartModel() || !modelPartFiles || modelPartFiles.length !== modelPartNames.length) return;
+    if (modelPartFiles.length <= 2) return;
+    const index = Math.max(0, Math.min(partIdx, modelPartFiles.length - 1));
+    if (!confirm(`Remove part \"${modelPartNames[index]}\"?`)) return;
+    const nextFiles = modelPartFiles.filter((_, idx) => idx !== index);
+    const nextNames = nextFiles.map((part) => part.name);
+    const nextColors = modelPartBaseColors.filter((_, idx) => idx !== index);
+    const nextSettings = modelPartSettings.filter((_, idx) => idx !== index).map((s, idx) => ({ ...s, color: nextColors[idx] || s.color || colorPick.value }));
+
+    if (nextFiles.length === 1) {
+        await saveFileToIDB(nextFiles[0].name, nextFiles[0].buffer);
+        currentFileName = stemFromFileName(nextFiles[0].name);
+        setDisplayedFileName(nextFiles[0].name);
+        modelPartFiles = null;
+        loadSTLBuffer(nextFiles[0].buffer, nextFiles[0].name);
+    } else {
+        const displayName = getMultipartDisplayName(nextNames);
+        await saveFilesToIDB(nextFiles.map((part, idx) => ({
+            name: part.name,
+            buffer: part.buffer,
+            color: nextColors[idx] || colorPick.value,
+            settings: nextSettings[idx] || createPartSettings(nextColors[idx] || colorPick.value),
+        })), displayName);
+        modelPartFiles = nextFiles;
+        pendingModelPartSelected = Math.max(0, Math.min(modelPartSelected, nextFiles.length - 1));
+        setDisplayedFileName(displayName);
+        currentFileName = buildMultipartFileBase(nextNames);
+        loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
+    }
+
+    rebuildFileChipPartsMenu();
+    syncFileChipMultipartUI();
+}
+
 fileInput.addEventListener('change', e => {
     handleFiles(e.target.files);
     // Allow re-selecting the same file(s) to retrigger change.
     e.target.value = '';
+});
+
+btnFileChipExpand?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const isOpen = fileChipPartsMenu && !fileChipPartsMenu.hidden;
+    closeFileChipPartsMenu();
+    if (!isOpen && fileChipPartsMenu) {
+        rebuildFileChipPartsMenu();
+        fileChipPartsMenu.hidden = false;
+        btnFileChipExpand.setAttribute('aria-expanded', 'true');
+    }
+});
+
+fileChipPartsMenu?.addEventListener('click', async (ev) => {
+    ev.stopPropagation();
+    const targetBtn = ev.target?.closest?.('button[data-action][data-part-index]');
+    if (!targetBtn) return;
+    const partIdx = parseInt(targetBtn.dataset.partIndex || '-1', 10);
+    if (!Number.isFinite(partIdx) || partIdx < 0) return;
+    const action = targetBtn.dataset.action;
+
+    if (action === 'replace') {
+        pendingReplacePartIndex = partIdx;
+        partReplaceInput?.click();
+        return;
+    }
+    if (action === 'remove') {
+        await removeMultipartPart(partIdx);
+    }
+});
+
+partReplaceInput?.addEventListener('change', async (ev) => {
+    const idx = pendingReplacePartIndex;
+    pendingReplacePartIndex = -1;
+    const file = ev.target?.files?.[0];
+    if (!file || idx < 0) {
+        ev.target.value = '';
+        return;
+    }
+    try {
+        await replaceMultipartPart(idx, file);
+    } catch (err) {
+        setStatus('Error: ' + (err?.message || 'Failed to replace STL part.'));
+        console.error(err);
+        setTimeout(() => setStatus(''), 5000);
+    }
+    ev.target.value = '';
 });
 
 function togglePause() {
@@ -4027,8 +4252,7 @@ document.getElementById('btnClearModel').addEventListener('click', async (e) => 
         if (!resp.ok) return;
         const buffer = await resp.arrayBuffer();
         await clearIDB();
-        fileNameEl.textContent = '3dbenchy.stl';
-        fileNameEl.title = '3dbenchy.stl';
+        setDisplayedFileName('3dbenchy.stl');
         currentFileName = '3dbenchy';
         if (!renderer) initThree();
         controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
@@ -4188,14 +4412,15 @@ document.getElementById('exportOverlay')?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) document.getElementById('exportOverlay').hidden = true;
 });
 
-document.getElementById('btnCopyLink')?.addEventListener('click', () => {
-    settingsToURL();
-    navigator.clipboard.writeText(location.href).then(() => {
-        const btn = document.getElementById('btnCopyLink');
-        const prev = btn.innerHTML;
-        btn.textContent = 'Copied!';
-        setTimeout(() => { btn.innerHTML = prev; }, 1800);
-    }).catch(() => { });
+document.querySelectorAll('.js-copy-settings').forEach((btn) => {
+    btn.addEventListener('click', () => {
+        settingsToURL();
+        navigator.clipboard.writeText(location.href).then(() => {
+            const prev = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = prev; }, 1800);
+        }).catch(() => { });
+    });
 });
 
 // ── Info overlay ──────────────────────────────────────────────────────────────
@@ -5379,7 +5604,7 @@ function renderBgPresets() {
 
         const swatchInner = preset.id === 'modelcolor'
             ? `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:transparent;display:flex;align-items:center;justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.2 12.05C7.2 12.65 7.308 13.246 7.524 13.838C7.74 14.43 8.072 14.979 8.52 15.485L8.565 15.53V14.815C8.565 14.476 8.685 14.186 8.925 13.945C9.165 13.705 9.455 13.585 9.795 13.585C10.135 13.585 10.425 13.705 10.665 13.945C10.905 14.186 11.025 14.476 11.025 14.815V18.695C11.025 19.034 10.905 19.324 10.665 19.565C10.425 19.805 10.135 19.925 9.795 19.925H5.91C5.57 19.925 5.28 19.805 5.04 19.565C4.8 19.324 4.68 19.034 4.68 18.695C4.68 18.355 4.8 18.065 5.04 17.825C5.28 17.584 5.57 17.464 5.91 17.464H7.08L7.035 17.419C6.249 16.633 5.671 15.783 5.301 14.869C4.931 13.955 4.746 13.015 4.746 12.05C4.746 10.515 5.145 9.106 5.943 7.823C6.741 6.539 7.816 5.575 9.168 4.931C9.445 4.793 9.722 4.808 10 4.978C10.277 5.147 10.469 5.393 10.577 5.715C10.669 6.023 10.657 6.331 10.542 6.639C10.426 6.947 10.223 7.186 9.93 7.355C9.1 7.832 8.435 8.485 7.935 9.315C7.435 10.146 7.2 11.057 7.2 12.05ZM16.8 12C16.8 11.4 16.692 10.804 16.476 10.212C16.26 9.62 15.928 9.071 15.48 8.565L15.435 8.52V9.235C15.435 9.575 15.315 9.864 15.075 10.105C14.835 10.345 14.545 10.465 14.205 10.465C13.865 10.465 13.575 10.345 13.335 10.105C13.095 9.864 12.975 9.575 12.975 9.235V5.35C12.975 5.01 13.095 4.72 13.335 4.48C13.575 4.239 13.865 4.12 14.205 4.12H18.09C18.43 4.12 18.72 4.239 18.96 4.48C19.2 4.72 19.32 5.01 19.32 5.35C19.32 5.689 19.2 5.979 18.96 6.22C18.72 6.46 18.43 6.58 18.09 6.58H16.92L16.965 6.625C17.751 7.411 18.329 8.261 18.699 9.175C19.069 10.089 19.254 11.03 19.254 12C19.254 13.535 18.855 14.944 18.057 16.227C17.259 17.511 16.184 18.475 14.832 19.119C14.555 19.257 14.277 19.242 14 19.073C13.723 18.903 13.531 18.657 13.423 18.335C13.331 18.028 13.343 17.72 13.458 17.412C13.574 17.104 13.777 16.864 14.07 16.695C14.9 16.218 15.565 15.565 16.065 14.735C16.565 13.905 16.8 12.993 16.8 12Z" fill="currentColor"/></svg></span>`
-            : `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};"></span>`;
+            : `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? '#b8b6ca' : (preset.id === 'black' ? '#5d5a74' : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
             <label class="shading-option preset-option" title="${preset.name} background">
