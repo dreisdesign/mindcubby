@@ -307,11 +307,16 @@
                         <!-- ── Model Card ── -->
                         <div class="controls-section-box" id="modelBox">
                             <div class="box-heading">Model</div>
-                            <div id="modelPartSelectorWrap" class="export-selects-row" hidden aria-hidden="true"
-                                style="margin: 6px 0 2px;">
-                                <div class="export-select-group" style="width:100%;">
-                                    <label class="export-select-label" for="modelPartSelector">Part Color Target</label>
-                                    <select id="modelPartSelector" class="export-select"></select>
+                            <div id="modelPartThumbsWrap" class="thumb-select-wrap" hidden aria-hidden="true">
+                                <div id="modelPartSelector" class="thumb-select" aria-haspopup="listbox">
+                                    <button type="button" id="modelPartSelectorBtn" class="thumb-select-btn"
+                                        aria-expanded="false" aria-controls="modelPartSelectorMenu">
+                                        <canvas id="modelPartSelectorThumb" class="thumb-select-canvas" width="96"
+                                            height="96" aria-hidden="true"></canvas>
+                                        <span id="modelPartSelectorText" class="thumb-select-text"></span>
+                                        <span class="thumb-select-chevron" aria-hidden="true">▾</span>
+                                    </button>
+                                    <div id="modelPartSelectorMenu" class="thumb-select-menu" hidden role="listbox"></div>
                                 </div>
                             </div>
                             <div class="preset-group" id="quickPresetsBar"></div>
@@ -325,21 +330,23 @@
                                             data-snap-count="5" data-fine-step="1" data-group="object">
                                     </div>
                                 </label>
-                                <label class="control-label range-label" id="textureTuneRoughnessRow">
-                                    <span>Finish<span class="slider-tooltip" id="textureTuneRoughnessVal"></span></span>
-                                    <div class="range-wrap">
-                                        <input type="range" id="textureTuneRoughness" min="0" max="100" step="25"
-                                            data-snap-count="5" data-fine-step="1" value="30" data-group="object">
+                                <div class="finish-control-group" id="finishControlGroup">
+                                    <div class="finish-mode-wrap" id="finishModeWrap" role="group" aria-label="Finish mode">
+                                        <button type="button" class="finish-mode-btn" id="finishModeMatte"
+                                            data-finish-mode="matte" aria-pressed="false">Matte</button>
+                                        <button type="button" class="finish-mode-btn" id="finishModeSatin"
+                                            data-finish-mode="satin" aria-pressed="true">Satin</button>
+                                        <button type="button" class="finish-mode-btn" id="finishModeGlossy"
+                                            data-finish-mode="glossy" aria-pressed="false">Glossy</button>
                                     </div>
-                                </label>
-                                <label class="control-label range-label" id="textureTuneReflectionRow">
-                                    <span>Reflection<span class="slider-tooltip"
-                                            id="textureTuneReflectionVal">100%</span></span>
-                                    <div class="range-wrap">
-                                        <input type="range" id="textureTuneReflection" min="0" max="200" step="50"
-                                            data-snap-count="5" data-fine-step="5" value="100" data-group="object">
-                                    </div>
-                                </label>
+                                    <label class="control-label range-label" id="textureTuneRoughnessRow">
+                                        <span>Finish Strength<span class="slider-tooltip" id="textureTuneRoughnessVal">1</span></span>
+                                        <div class="range-wrap">
+                                            <input type="range" id="textureTuneRoughness" min="1" max="3" step="1"
+                                                data-snap-count="3" data-fine-step="1" value="1" data-group="object">
+                                        </div>
+                                    </label>
+                                </div>
                                 <label class="control-label range-label" id="textureTuneContrastRow">
                                     <span>Contrast<span class="slider-tooltip"
                                             id="textureTuneContrastVal">100%</span></span>
@@ -363,7 +370,7 @@
                                 style="position:absolute;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;"
                                 tabindex="-1">
                             <span id="colorSwatch" style="display:none;" aria-hidden="true"></span>
-                            <input type="hidden" id="shadingSelect" value="metallic" data-group="object">
+                            <input type="hidden" id="shadingSelect" value="phong" data-group="object">
                             <button id="btnTextureTune" style="display:none;" aria-hidden="true" tabindex="-1"></button>
                             <span id="textureTuneNewBadge" style="display:none;" aria-hidden="true"></span>
                             <details id="advSettingsDetails" style="display:none;" aria-hidden="true"></details>
@@ -380,11 +387,16 @@
                         <div class="controls-section-box" id="environmentBox">
                             <div class="box-heading">Background</div>
                             <div class="preset-group" id="bgPresetsBar"></div>
-                            <div id="bgModelSyncSourceWrap" class="export-selects-row" hidden aria-hidden="true"
-                                style="margin: 8px 0 2px;">
-                                <div class="export-select-group" style="width:100%;">
-                                    <label class="export-select-label" for="bgModelSyncSource">Model Sync Source</label>
-                                    <select id="bgModelSyncSource" class="export-select"></select>
+                            <div id="bgModelSyncSourceWrap" class="thumb-select-wrap" hidden aria-hidden="true">
+                                <div id="bgModelSyncSelector" class="thumb-select" aria-haspopup="listbox">
+                                    <button type="button" id="bgModelSyncSelectorBtn" class="thumb-select-btn"
+                                        aria-expanded="false" aria-controls="bgModelSyncSelectorMenu">
+                                        <canvas id="bgModelSyncSelectorThumb" class="thumb-select-canvas" width="84"
+                                            height="84" aria-hidden="true"></canvas>
+                                        <span id="bgModelSyncSelectorText" class="thumb-select-text"></span>
+                                        <span class="thumb-select-chevron" aria-hidden="true">▾</span>
+                                    </button>
+                                    <div id="bgModelSyncSelectorMenu" class="thumb-select-menu" hidden role="listbox"></div>
                                 </div>
                             </div>
                             <label class="gif-option-check adv-section-check" style="margin-top:10px;">

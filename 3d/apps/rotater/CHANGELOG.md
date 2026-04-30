@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.7.33] - 2026-04-30
+
+### Changed
+- **Background model-sync flow moved back to preset thumbnail** — removed the separate "Sync Background to Model" checkbox row and restored model-sync as a dedicated background preset card that reveals the source-part dropdown only while active
+- **Model-sync source dropdown compacted** — reduced selected/option thumbnail sizes and text scale so the source selector no longer dominates the Background card or clips near section boundaries
+- **Dropdown chrome simplified** — removed filled card backgrounds from the part/source dropdown buttons and their internal canvases for a lighter outline-first treatment
+- **Thumbnail cards switched to outline style** — model/background preset cards now use transparent card fills (no light-purple blocks)
+- **Finish selector restyled to iOS-like segmented control** — sheen mode now sits on a solid segmented track with active-pill emphasis and no extra wrapper outline
+- **Finish strength behavior updated for density** — finish strength is now hidden unless "Fine tuning for precise control" is enabled; when fine tuning is off, Matte/Satin/Glossy map to high/mid/low built-in strengths
+- **Default sheen updated to Satin** — default shading baseline now initializes to Satin (`phong`) for new sessions
+
+### Fixed
+- **Part/source thumbnails no longer show drop shadows** — thumbnail rendering now suppresses shadow-catcher contribution so the mini previews match the cleaner no-shadow UI cards
+
 ## [1.7.32] - 2026-04-29
 
 ### Added

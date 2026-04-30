@@ -7,7 +7,7 @@ import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
-const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
+const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=phong&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
 // Export quality presets — base short-edge size + fps + bitrate.
@@ -192,10 +192,16 @@ const colorPick = document.getElementById('colorPicker');
 const opacitySlider = document.getElementById('opacitySlider');
 const opacityVal = document.getElementById('opacityVal');
 const quickPresetsBar = document.getElementById('quickPresetsBar');
-const modelPartSelectorWrap = document.getElementById('modelPartSelectorWrap');
-const modelPartSelector = document.getElementById('modelPartSelector');
+const modelPartThumbsWrap = document.getElementById('modelPartThumbsWrap');
+const modelPartSelectorBtn = document.getElementById('modelPartSelectorBtn');
+const modelPartSelectorMenu = document.getElementById('modelPartSelectorMenu');
+const modelPartSelectorThumb = document.getElementById('modelPartSelectorThumb');
+const modelPartSelectorText = document.getElementById('modelPartSelectorText');
 const bgModelSyncSourceWrap = document.getElementById('bgModelSyncSourceWrap');
-const bgModelSyncSource = document.getElementById('bgModelSyncSource');
+const bgModelSyncSelectorBtn = document.getElementById('bgModelSyncSelectorBtn');
+const bgModelSyncSelectorMenu = document.getElementById('bgModelSyncSelectorMenu');
+const bgModelSyncSelectorThumb = document.getElementById('bgModelSyncSelectorThumb');
+const bgModelSyncSelectorText = document.getElementById('bgModelSyncSelectorText');
 const bgPick = document.getElementById('bgPicker');
 const bgOpacitySlider = document.getElementById('bgOpacitySlider');
 const shadingEl = document.getElementById('shadingSelect');
@@ -240,8 +246,8 @@ const textureTuneLightSourceSlider = document.getElementById('textureTuneLightSo
 const textureTuneLightLockBox = document.getElementById('textureTuneLightLock');
 const textureTuneLightHeightSlider = document.getElementById('textureTuneLightHeight');
 const textureTuneRoughnessSlider = document.getElementById('textureTuneRoughness');
-const textureTuneReflectionSlider = document.getElementById('textureTuneReflection');
 const textureTuneMetalnessSlider = document.getElementById('textureTuneMetalness');
+const finishModeButtons = Array.from(document.querySelectorAll('.finish-mode-btn'));
 const textureTuneLightVal = document.getElementById('textureTuneLightVal');
 const textureTuneContrastVal = document.getElementById('textureTuneContrastVal');
 const textureTuneHighlightsVal = document.getElementById('textureTuneHighlightsVal');
@@ -249,7 +255,6 @@ const textureTuneShadowsVal = document.getElementById('textureTuneShadowsVal');
 const textureTuneLightSourceVal = document.getElementById('textureTuneLightSourceVal');
 const textureTuneLightHeightVal = document.getElementById('textureTuneLightHeightVal');
 const textureTuneRoughnessVal = document.getElementById('textureTuneRoughnessVal');
-const textureTuneReflectionVal = document.getElementById('textureTuneReflectionVal');
 const textureTuneMetalnessVal = document.getElementById('textureTuneMetalnessVal');
 const textureTuneContrastRow = document.getElementById('textureTuneContrastRow');
 const textureTuneHighlightsRow = document.getElementById('textureTuneHighlightsRow');
@@ -257,7 +262,6 @@ const textureTuneShadowRow = document.getElementById('textureTuneShadowRow');
 const textureTuneLightSourceRow = document.getElementById('textureTuneLightSourceRow');
 const textureTuneLightHeightRow = document.getElementById('textureTuneLightHeightRow');
 const textureTuneRoughnessRow = document.getElementById('textureTuneRoughnessRow');
-const textureTuneReflectionRow = document.getElementById('textureTuneReflectionRow');
 const textureTuneMetalnessRow = document.getElementById('textureTuneMetalnessRow');
 // Dev logging and a flag used to suppress saveSettings() while programmatically
 // applying restored settings so we don't overwrite localStorage/URL mid-restore.
@@ -302,7 +306,13 @@ let modelPartFiles = null;
 let modelPartSelected = 0;
 let pendingModelPartSelected = 0;
 let bgSyncPartIndex = 0;
+let lastNonModelBgPreset = 'white';
 let presetHoverPreviewSnapshot = null;
+let modelPartThumbsQueued = false;
+let partThumbRenderTarget = null;
+let partThumbCamera = null;
+let partThumbScratchCanvas = null;
+let partThumbScratchCtx = null;
 
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
@@ -824,7 +834,7 @@ function createPartSettings(colorHex = colorPick.value) {
     return {
         color: colorHex,
         tone: parseInt(opacitySlider ? opacitySlider.value : 0, 10) || 0,
-        shading: shadingEl?.value || 'metallic',
+        shading: shadingEl?.value || 'phong',
         metallicRoughness: textureTuneState.metallicRoughness,
         metallicMetalness: textureTuneState.metallicMetalness,
         metallicReflection: textureTuneState.metallicReflection,
@@ -846,6 +856,96 @@ function getSelectedPartSettings() {
     return getPartSettings(modelPartSelected);
 }
 
+const FINISH_MODE_STOPS = {
+    matte: [35, 25, 15],
+    satin: [55, 65, 75],
+    glossy: [80, 90, 98],
+};
+const FINISH_MODE_DEFAULT_STRENGTH = {
+    matte: 3,
+    satin: 2,
+    glossy: 1,
+};
+
+function clampFinishStrength(value) {
+    return Math.max(1, Math.min(3, Math.round(value || 1)));
+}
+
+function setFinishModeUI(mode) {
+    finishModeButtons.forEach((btn) => {
+        const active = btn.dataset.finishMode === mode;
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-pressed', String(active));
+    });
+}
+
+function getFinishModeFromPartSettings(settings) {
+    const shade = settings?.shading;
+    if (shade === 'matte' || shade === 'flat' || shade === 'toon') return 'matte';
+    if (shade === 'phong') return 'satin';
+    return 'glossy';
+}
+
+function getSelectedFinishMode() {
+    const active = finishModeButtons.find((btn) => btn.classList.contains('is-active'));
+    return active?.dataset.finishMode || 'satin';
+}
+
+function finishStrengthFromPartSettings(settings) {
+    const mode = getFinishModeFromPartSettings(settings);
+    const rough = mode === 'matte'
+        ? settings.matteRoughness
+        : mode === 'satin'
+            ? settings.phongRoughness
+            : settings.metallicRoughness;
+    const stops = FINISH_MODE_STOPS[mode] || FINISH_MODE_STOPS.glossy;
+    let nearest = 1;
+    let best = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < stops.length; i++) {
+        const d = Math.abs((rough ?? stops[0]) - stops[i]);
+        if (d < best) {
+            best = d;
+            nearest = i + 1;
+        }
+    }
+    return nearest;
+}
+
+function applyFinishControlsToSelectedPart() {
+    const s = getSelectedPartSettings();
+    const mode = getSelectedFinishMode();
+    const isFineTuning = !!fineTuningCheckEl?.checked;
+    const defaultStrength = FINISH_MODE_DEFAULT_STRENGTH[mode] || 2;
+    const strength = isFineTuning
+        ? clampFinishStrength(parseInt(textureTuneRoughnessSlider?.value || String(defaultStrength), 10))
+        : defaultStrength;
+    const rough = (FINISH_MODE_STOPS[mode] || FINISH_MODE_STOPS.glossy)[strength - 1];
+
+    if (textureTuneRoughnessSlider) textureTuneRoughnessSlider.value = String(strength);
+
+    s.shading = mode === 'matte' ? 'matte' : mode === 'satin' ? 'phong' : 'metallic';
+    shadingEl.value = s.shading;
+    s.matteRoughness = rough;
+    s.metallicRoughness = rough;
+    s.phongRoughness = rough;
+    if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = String(strength);
+}
+
+function updateShadeSliderVisual() {
+    if (!opacitySlider) return;
+    const s = getSelectedPartSettings();
+    const baseHex = s?.color || colorPick.value;
+    const toneVal = parseInt(s?.tone ?? opacitySlider.value ?? 0, 10) || 0;
+    const leftHex = `#${computeTonedColor(baseHex, -100).getHexString()}`;
+    const midHex = `#${new THREE.Color(baseHex).getHexString()}`;
+    const rightHex = `#${computeTonedColor(baseHex, 100).getHexString()}`;
+    const tonedHex = `#${computeTonedColor(baseHex, toneVal).getHexString()}`;
+    opacitySlider.style.setProperty('--shade-left', leftHex);
+    opacitySlider.style.setProperty('--shade-mid', midHex);
+    opacitySlider.style.setProperty('--shade-right', rightHex);
+    opacitySlider.style.setProperty('--shade-thumb', tonedHex);
+}
+
 function syncUIFromSelectedPart() {
     const s = getSelectedPartSettings();
     colorPick.value = s.color || colorPick.value;
@@ -865,9 +965,261 @@ function syncUIFromSelectedPart() {
     textureTuneState.matteRoughness = s.matteRoughness;
     textureTuneState.matteReflection = s.matteReflection;
 
+    const finishMode = getFinishModeFromPartSettings(s);
+    setFinishModeUI(finishMode);
+    if (textureTuneRoughnessSlider) {
+        textureTuneRoughnessSlider.value = String(finishStrengthFromPartSettings(s));
+    }
+    if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = textureTuneRoughnessSlider?.value || '1';
+    updateShadeSliderVisual();
+
     updateTextureTuneUI();
     updateColorSwatches();
+    reconcileModelPresetFromSettings(true);
+    updateModelSelection();
 }
+
+function queueModelPartThumbsRender() {
+    if (!modelPartSelectorBtn && !bgModelSyncSelectorBtn) return;
+    if (modelPartThumbsQueued) return;
+    modelPartThumbsQueued = true;
+    requestAnimationFrame(() => {
+        modelPartThumbsQueued = false;
+        renderModelPartThumbnails();
+    });
+}
+
+function ensurePartThumbRenderResources() {
+    const size = 512;
+    if (!partThumbRenderTarget || partThumbRenderTarget.width !== size || partThumbRenderTarget.height !== size) {
+        if (partThumbRenderTarget) partThumbRenderTarget.dispose();
+        partThumbRenderTarget = new THREE.WebGLRenderTarget(size, size, {
+            depthBuffer: true,
+            stencilBuffer: false,
+            samples: renderer?.capabilities?.isWebGL2 ? 4 : 0,
+        });
+        partThumbRenderTarget.texture.colorSpace = THREE.SRGBColorSpace;
+        partThumbRenderTarget.texture.minFilter = THREE.LinearFilter;
+        partThumbRenderTarget.texture.magFilter = THREE.LinearFilter;
+        partThumbRenderTarget.texture.generateMipmaps = false;
+    }
+    if (!partThumbCamera) {
+        partThumbCamera = new THREE.PerspectiveCamera(camera?.fov || 45, 1, camera?.near || 0.1, camera?.far || 5000);
+    }
+    if (!partThumbScratchCanvas) {
+        partThumbScratchCanvas = document.createElement('canvas');
+        partThumbScratchCanvas.width = size;
+        partThumbScratchCanvas.height = size;
+        partThumbScratchCtx = partThumbScratchCanvas.getContext('2d', { willReadFrequently: true });
+    }
+}
+
+function getDefaultThumbCameraDistance() {
+    const fov = partThumbCamera?.fov || camera?.fov || 45;
+    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(fov / 2));
+    return modelRadius * Math.max(1, 1 / 1) / tanHalfFov * VIEWPORT_FIT_SCALE;
+}
+
+function renderSinglePartThumbnail(canvasEl, partIdx) {
+    if (!canvasEl || !mesh || !renderer || !camera) return;
+    const ctx = canvasEl.getContext('2d');
+    if (!ctx) return;
+    ensurePartThumbRenderResources();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    const dstW = canvasEl.width;
+    const dstH = canvasEl.height;
+    const rtW = partThumbRenderTarget.width;
+    const rtH = partThumbRenderTarget.height;
+    const pixelBuf = new Uint8Array(rtW * rtH * 4);
+    const mats = getMeshMaterials();
+    const savedBg = scene.background;
+    const savedClearColor = renderer.getClearColor(new THREE.Color());
+    const savedClearAlpha = renderer.getClearAlpha();
+    const savedTarget = renderer.getRenderTarget();
+    const savedMeshRot = mesh.rotation.clone();
+    const savedLightRigY = lightRig?.rotation?.y;
+    const savedEnvRotY = scene?.environmentRotation?.y;
+    const savedShadowCatcherVisible = shadowCatcher?.visible;
+    const saved = mats.map((m) => ({
+        mat: m,
+        transparent: m?.transparent,
+        opacity: m?.opacity,
+        depthWrite: m?.depthWrite,
+        emissiveHex: m?.emissive?.getHex?.() ?? 0,
+        emissiveIntensity: m?.emissiveIntensity ?? 1,
+        wireframe: m?.wireframe ?? false,
+    }));
+
+    mats.forEach((m, idx) => {
+        if (!m) return;
+        if (idx === partIdx) {
+            m.transparent = false;
+            m.opacity = 1;
+            m.depthWrite = true;
+        } else {
+            m.transparent = true;
+            m.opacity = 0;
+            m.depthWrite = false;
+        }
+        m.emissive.setHex(0x000000);
+        m.emissiveIntensity = 1;
+        m.wireframe = false;
+        m.needsUpdate = true;
+    });
+
+    const dist = getDefaultThumbCameraDistance();
+    partThumbCamera.fov = camera.fov;
+    partThumbCamera.near = camera.near;
+    partThumbCamera.far = camera.far;
+    partThumbCamera.aspect = 1;
+    partThumbCamera.up.set(0, 1, 0);
+    partThumbCamera.position.set(0, 0, dist);
+    partThumbCamera.lookAt(0, 0, 0);
+    partThumbCamera.updateProjectionMatrix();
+
+    // Always render thumbnails from the imported baseline orientation.
+    mesh.rotation.set(tiltBaseMeshRx, 0, 0);
+    if (lightRig) lightRig.rotation.y = 0;
+    if (scene?.environmentRotation) scene.environmentRotation.y = 0;
+    if (shadowCatcher) shadowCatcher.visible = false;
+
+    scene.background = null;
+    renderer.setClearColor(0x000000, 0);
+    renderer.setRenderTarget(partThumbRenderTarget);
+    renderer.clear(true, true, true);
+    renderer.render(scene, partThumbCamera);
+    renderer.readRenderTargetPixels(partThumbRenderTarget, 0, 0, rtW, rtH, pixelBuf);
+    renderer.setRenderTarget(savedTarget);
+
+    ctx.clearRect(0, 0, dstW, dstH);
+
+    if (partThumbScratchCtx) {
+        const imageData = partThumbScratchCtx.createImageData(rtW, rtH);
+        let minX = rtW, minY = rtH, maxX = -1, maxY = -1;
+        for (let y = 0; y < rtH; y++) {
+            const srcRow = (rtH - 1 - y) * rtW * 4;
+            const dstRow = y * rtW * 4;
+            imageData.data.set(pixelBuf.subarray(srcRow, srcRow + rtW * 4), dstRow);
+            for (let x = 0; x < rtW; x++) {
+                const a = pixelBuf[srcRow + (x * 4) + 3];
+                if (a > 2) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+        partThumbScratchCtx.putImageData(imageData, 0, 0);
+
+        if (maxX >= minX && maxY >= minY) {
+            const w = maxX - minX + 1;
+            const h = maxY - minY + 1;
+            const side = Math.max(w, h);
+            const pad = Math.max(6, Math.floor(side * 0.14));
+            const cropSide = Math.min(Math.max(side + pad * 2, 1), rtW);
+            const cx = Math.floor((minX + maxX) / 2);
+            const cy = Math.floor((minY + maxY) / 2);
+            let sx = Math.max(0, cx - Math.floor(cropSide / 2));
+            let sy = Math.max(0, cy - Math.floor(cropSide / 2));
+            if (sx + cropSide > rtW) sx = rtW - cropSide;
+            if (sy + cropSide > rtH) sy = rtH - cropSide;
+            ctx.drawImage(partThumbScratchCanvas, sx, sy, cropSide, cropSide, 0, 0, dstW, dstH);
+        } else {
+            ctx.drawImage(partThumbScratchCanvas, 0, 0, rtW, rtH, 0, 0, dstW, dstH);
+        }
+    }
+
+    saved.forEach((s) => {
+        if (!s?.mat) return;
+        s.mat.transparent = s.transparent;
+        s.mat.opacity = s.opacity;
+        s.mat.depthWrite = s.depthWrite;
+        s.mat.emissive.setHex(s.emissiveHex);
+        s.mat.emissiveIntensity = s.emissiveIntensity;
+        s.mat.wireframe = s.wireframe;
+        s.mat.needsUpdate = true;
+    });
+
+    scene.background = savedBg;
+    renderer.setClearColor(savedClearColor, savedClearAlpha);
+    renderer.setRenderTarget(savedTarget);
+    mesh.rotation.copy(savedMeshRot);
+    if (lightRig && Number.isFinite(savedLightRigY)) lightRig.rotation.y = savedLightRigY;
+    if (scene?.environmentRotation && Number.isFinite(savedEnvRotY)) scene.environmentRotation.y = savedEnvRotY;
+    if (shadowCatcher && typeof savedShadowCatcherVisible === 'boolean') shadowCatcher.visible = savedShadowCatcherVisible;
+    renderer.render(scene, camera);
+}
+
+function renderModelPartThumbnails() {
+    if (!modelPartThumbsWrap) return;
+    const visible = isMultipartModel() && !!mesh && !!renderer && !!camera;
+    modelPartThumbsWrap.hidden = !visible;
+    modelPartThumbsWrap.setAttribute('aria-hidden', String(!visible));
+    if (!visible) return;
+
+    document.querySelectorAll('.js-part-thumb-preview').forEach((canvasEl) => {
+        const idx = parseInt(canvasEl.dataset.partIndex, 10);
+        if (Number.isFinite(idx)) renderSinglePartThumbnail(canvasEl, idx);
+    });
+
+    if (modelPartSelectorMenu) {
+        modelPartSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
+            const idx = parseInt(opt.dataset.partIndex, 10);
+            opt.classList.toggle('is-selected', idx === modelPartSelected);
+        });
+    }
+    if (bgModelSyncSelectorMenu && activeBgPreset === 'modelcolor') {
+        bgModelSyncSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
+            const idx = parseInt(opt.dataset.partIndex, 10);
+            opt.classList.toggle('is-selected', idx === bgSyncPartIndex);
+        });
+    }
+
+    if (modelPartSelectorText) {
+        const selectedName = modelPartNames[modelPartSelected] || `Part ${modelPartSelected + 1}`;
+        modelPartSelectorText.textContent = selectedName;
+        modelPartSelectorBtn.title = selectedName;
+    }
+    if (bgModelSyncSelectorText && activeBgPreset === 'modelcolor') {
+        const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
+        bgModelSyncSelectorText.textContent = selectedName;
+        bgModelSyncSelectorBtn.title = selectedName;
+    }
+}
+
+function closeThumbSelectMenus() {
+    if (modelPartSelectorMenu) modelPartSelectorMenu.hidden = true;
+    if (modelPartSelectorBtn) modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
+    if (bgModelSyncSelectorMenu) bgModelSyncSelectorMenu.hidden = true;
+    if (bgModelSyncSelectorBtn) bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
+}
+
+modelPartSelectorBtn?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const open = modelPartSelectorMenu && !modelPartSelectorMenu.hidden;
+    closeThumbSelectMenus();
+    if (modelPartSelectorMenu && !open) {
+        modelPartSelectorMenu.hidden = false;
+        modelPartSelectorBtn.setAttribute('aria-expanded', 'true');
+    }
+});
+
+bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const open = bgModelSyncSelectorMenu && !bgModelSyncSelectorMenu.hidden;
+    closeThumbSelectMenus();
+    if (bgModelSyncSelectorMenu && !open) {
+        bgModelSyncSelectorMenu.hidden = false;
+        bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
+    }
+});
+
+document.addEventListener('click', () => {
+    closeThumbSelectMenus();
+});
 
 function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
     partSettings.color = presetUrlSettings.color || partSettings.color;
@@ -903,16 +1255,42 @@ function disposeMaterials(materialLike) {
 
 function computeTonedColor(baseHex, toneVal) {
     const baseC = new THREE.Color(baseHex);
-    if (toneVal !== 0) {
-        const hsl = {};
-        baseC.getHSL(hsl);
-        if (toneVal > 0) {
-            hsl.l = hsl.l * (1 - toneVal / 100);
-        } else {
-            hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
-        }
-        baseC.setHSL(hsl.h, hsl.s, hsl.l);
+    const rgb = { r: baseC.r, g: baseC.g, b: baseC.b };
+    const max = Math.max(rgb.r, rgb.g, rgb.b);
+    const min = Math.min(rgb.r, rgb.g, rgb.b);
+    const delta = max - min;
+
+    let h = 0;
+    if (delta > 1e-6) {
+        if (max === rgb.r) h = ((rgb.g - rgb.b) / delta) % 6;
+        else if (max === rgb.g) h = ((rgb.b - rgb.r) / delta) + 2;
+        else h = ((rgb.r - rgb.g) / delta) + 4;
+        h /= 6;
+        if (h < 0) h += 1;
     }
+    const s = max <= 1e-6 ? 0 : delta / max;
+    const v = max;
+
+    const amount = Math.max(0, Math.min(1, Math.abs(toneVal) / 100));
+    const factor = 1 + (0.5 * amount); // 0 -> 1.0, 50 -> 1.25, 100 -> 1.5
+    let outV = v;
+    if (toneVal < 0) outV = Math.min(1, v * factor); // lighter
+    if (toneVal > 0) outV = Math.max(0, v / factor); // darker
+
+    const i = Math.floor(h * 6);
+    const f = (h * 6) - i;
+    const p = outV * (1 - s);
+    const q = outV * (1 - f * s);
+    const t = outV * (1 - (1 - f) * s);
+    const sextant = ((i % 6) + 6) % 6;
+    let r = outV, g = t, b = p;
+    if (sextant === 1) { r = q; g = outV; b = p; }
+    if (sextant === 2) { r = p; g = outV; b = t; }
+    if (sextant === 3) { r = p; g = q; b = outV; }
+    if (sextant === 4) { r = t; g = p; b = outV; }
+    if (sextant === 5) { r = outV; g = p; b = q; }
+
+    baseC.setRGB(r, g, b);
     return baseC;
 }
 
@@ -942,26 +1320,53 @@ function rebuildMeshMaterialsForCurrentShading() {
 }
 
 function syncModelPartSelectorUI() {
-    if (!modelPartSelectorWrap || !modelPartSelector) return;
+    if (!modelPartThumbsWrap || !modelPartSelectorMenu || !modelPartSelectorBtn) return;
     const isMulti = isMultipartModel();
-    modelPartSelectorWrap.hidden = !isMulti;
-    modelPartSelectorWrap.setAttribute('aria-hidden', String(!isMulti));
+    modelPartThumbsWrap.hidden = !isMulti;
+    modelPartThumbsWrap.setAttribute('aria-hidden', String(!isMulti));
     if (!isMulti) {
-        modelPartSelector.innerHTML = '';
+        modelPartSelectorMenu.innerHTML = '';
+        modelPartSelectorBtn.hidden = true;
+        modelPartSelectorMenu.hidden = true;
+        modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
         return;
     }
 
+    modelPartSelectorBtn.hidden = false;
+    modelPartSelectorMenu.hidden = true;
+    modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
+
     modelPartSelected = Math.max(0, Math.min(modelPartSelected, modelPartNames.length - 1));
-    modelPartSelector.innerHTML = '';
+    modelPartSelectorMenu.innerHTML = '';
     modelPartNames.forEach((name, idx) => {
-        const opt = document.createElement('option');
-        opt.value = String(idx);
-        opt.textContent = `Part ${idx + 1}: ${stemFromFileName(name)}`;
-        modelPartSelector.appendChild(opt);
+        const opt = document.createElement('button');
+        opt.type = 'button';
+        opt.className = 'thumb-select-option';
+        opt.dataset.partIndex = String(idx);
+        opt.setAttribute('role', 'option');
+        opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span>`;
+        opt.addEventListener('click', () => {
+            if (!isMultipartModel()) return;
+            clearPresetHoverPreview();
+            modelPartSelected = idx;
+            syncUIFromSelectedPart();
+            applyPartColorsToMesh();
+            applyCurrentTextureTuning();
+            closeThumbSelectMenus();
+            syncModelPartSelectorUI();
+            saveSettings();
+        });
+        modelPartSelectorMenu.appendChild(opt);
     });
-    modelPartSelector.value = String(modelPartSelected);
+
+    if (modelPartSelectorThumb) {
+        modelPartSelectorThumb.classList.add('js-part-thumb-preview');
+        modelPartSelectorThumb.dataset.partIndex = String(modelPartSelected);
+    }
+
     syncUIFromSelectedPart();
     syncBgModelSyncSourceUI();
+    queueModelPartThumbsRender();
 }
 
 function getModelSyncSourceColor() {
@@ -971,24 +1376,48 @@ function getModelSyncSourceColor() {
 }
 
 function syncBgModelSyncSourceUI() {
-    if (!bgModelSyncSourceWrap || !bgModelSyncSource) return;
+    if (!bgModelSyncSourceWrap || !bgModelSyncSelectorMenu || !bgModelSyncSelectorBtn) return;
     const visible = activeBgPreset === 'modelcolor' && isMultipartModel();
     bgModelSyncSourceWrap.hidden = !visible;
     bgModelSyncSourceWrap.setAttribute('aria-hidden', String(!visible));
     if (!visible) {
-        bgModelSyncSource.innerHTML = '';
+        bgModelSyncSelectorMenu.innerHTML = '';
+        bgModelSyncSelectorMenu.hidden = true;
+        bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
         return;
     }
 
     bgSyncPartIndex = Math.max(0, Math.min(bgSyncPartIndex, modelPartNames.length - 1));
-    bgModelSyncSource.innerHTML = '';
+    bgModelSyncSelectorMenu.innerHTML = '';
+    bgModelSyncSelectorMenu.hidden = true;
+    bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
     modelPartNames.forEach((name, idx) => {
-        const opt = document.createElement('option');
-        opt.value = String(idx);
-        opt.textContent = `Part ${idx + 1}: ${stemFromFileName(name)}`;
-        bgModelSyncSource.appendChild(opt);
+        const opt = document.createElement('button');
+        opt.type = 'button';
+        opt.className = 'thumb-select-option';
+        opt.dataset.partIndex = String(idx);
+        opt.setAttribute('role', 'option');
+        opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="68" height="68" aria-hidden="true"></canvas><span class="thumb-select-option-text">${name}</span>`;
+        opt.addEventListener('click', () => {
+            bgSyncPartIndex = idx;
+            if (activeBgPreset === 'modelcolor') {
+                const syncColor = getModelSyncSourceColor();
+                bgPick.value = syncColor;
+                if (isDynamicBg) updateDynamicBg();
+                else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+            }
+            closeThumbSelectMenus();
+            syncBgModelSyncSourceUI();
+            saveSettings();
+        });
+        bgModelSyncSelectorMenu.appendChild(opt);
     });
-    bgModelSyncSource.value = String(bgSyncPartIndex);
+
+    if (bgModelSyncSelectorThumb) {
+        bgModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
+        bgModelSyncSelectorThumb.dataset.partIndex = String(bgSyncPartIndex);
+    }
+    queueModelPartThumbsRender();
 }
 
 function applyPresetHoverPreview(preset) {
@@ -1105,6 +1534,7 @@ function loadPreparedGeometry(geo, name) {
     }
     updateCropHintUI();
     syncModelPartSelectorUI();
+    queueModelPartThumbsRender();
     updateEstimate();
     requestAnimationFrame(() => {
         syncCanvasSize();
@@ -1122,6 +1552,7 @@ function loadPreparedGeometry(geo, name) {
         } else {
             storeExportCamera();
         }
+        queueModelPartThumbsRender();
     });
 
     const clearBtn = document.getElementById('btnClearModel');
@@ -1148,6 +1579,7 @@ function loadSTLBuffer(buffer, name) {
     modelPartNames = [name];
     modelPartBaseColors = [colorPick.value];
     modelPartSettings = [createPartSettings(colorPick.value)];
+    customModelSettingsByPart = {};
     modelPartFiles = null;
     modelPartSelected = 0;
 
@@ -1164,6 +1596,7 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
         if (partSettings?.[idx]) return { ...base, ...partSettings[idx], color: partSettings[idx].color || base.color };
         return base;
     });
+    customModelSettingsByPart = {};
     modelPartSelected = Math.max(0, Math.min(pendingModelPartSelected, modelPartNames.length - 1));
 
     const parsed = [];
@@ -3166,8 +3599,7 @@ function updateTextureTuneUI() {
     if (textureTuneLightSourceRow) textureTuneLightSourceRow.hidden = false;
     if (textureTuneLightLockBox) textureTuneLightLockBox.checked = textureTuneState.lightLock;
     if (textureTuneLightHeightRow) textureTuneLightHeightRow.hidden = false;
-    if (textureTuneRoughnessRow) textureTuneRoughnessRow.hidden = !isStandard;
-    if (textureTuneReflectionRow) textureTuneReflectionRow.hidden = !isStandard;
+    if (textureTuneRoughnessRow) textureTuneRoughnessRow.hidden = !isStandard || !fineTuningMode;
     if (textureTuneMetalnessRow) textureTuneMetalnessRow.hidden = mode !== 'metallic';
 
     if (textureTuneLightSlider) {
@@ -3210,24 +3642,14 @@ function updateTextureTuneUI() {
     }
     if (textureTuneLightHeightVal) textureTuneLightHeightVal.textContent = `${Math.round(textureTuneState.shadowHeight)}%`;
 
-    if (isStandard && textureTuneRoughnessSlider && textureTuneReflectionSlider) {
-        let rough = textureTuneState.phongRoughness;
-        let refl = textureTuneState.phongReflection;
-        if (mode === 'metallic') {
-            rough = textureTuneState.metallicRoughness;
-            refl = textureTuneState.metallicReflection;
-        } else if (mode === 'matte') {
-            rough = textureTuneState.matteRoughness;
-            refl = textureTuneState.matteReflection;
-        }
-        textureTuneRoughnessSlider.value = String(rough);
-        textureTuneReflectionSlider.value = String(refl);
+    if (isStandard && textureTuneRoughnessSlider) {
+        const s = getSelectedPartSettings();
+        setFinishModeUI(getFinishModeFromPartSettings(s));
+        textureTuneRoughnessSlider.value = String(finishStrengthFromPartSettings(s));
         if (textureTuneRoughnessVal) {
-            textureTuneRoughnessVal.textContent = rough <= 10 ? 'Matte' : rough >= 90 ? 'Glossy' : '';
+            textureTuneRoughnessVal.textContent = textureTuneRoughnessSlider.value;
         }
-        if (textureTuneReflectionVal) textureTuneReflectionVal.textContent = `${Math.round(refl)}%`;
         syncSliderTooltip(textureTuneRoughnessSlider);
-        syncSliderTooltip(textureTuneReflectionSlider);
     }
 
     if (textureTuneMetalnessSlider) {
@@ -3272,33 +3694,6 @@ function persistCurrentMultipartParts() {
     })), displayName);
 }
 
-modelPartSelector?.addEventListener('change', () => {
-    if (!isMultipartModel()) return;
-    clearPresetHoverPreview();
-    const idx = parseInt(modelPartSelector.value, 10);
-    modelPartSelected = Number.isFinite(idx)
-        ? Math.max(0, Math.min(idx, modelPartNames.length - 1))
-        : 0;
-    syncUIFromSelectedPart();
-    applyPartColorsToMesh();
-    applyCurrentTextureTuning();
-    saveSettings();
-});
-
-bgModelSyncSource?.addEventListener('change', () => {
-    const idx = parseInt(bgModelSyncSource.value, 10);
-    bgSyncPartIndex = Number.isFinite(idx)
-        ? Math.max(0, Math.min(idx, modelPartNames.length - 1))
-        : 0;
-    if (activeBgPreset === 'modelcolor') {
-        const syncColor = getModelSyncSourceColor();
-        bgPick.value = syncColor;
-        if (isDynamicBg) updateDynamicBg();
-        else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
-    }
-    saveSettings();
-});
-
 colorPick.addEventListener('input', (ev) => {
     if (isMultipartModel()) {
         const s = getSelectedPartSettings();
@@ -3313,6 +3708,8 @@ colorPick.addEventListener('input', (ev) => {
     persistCurrentMultipartParts();
     updateShadingThumbs();
     updateColorSwatches();
+    updateShadeSliderVisual();
+    queueModelPartThumbsRender();
     saveSettings();
 });
 if (opacitySlider) {
@@ -3324,6 +3721,8 @@ if (opacitySlider) {
         if (mesh) applyPartColorsToMesh();
         updateShadingThumbs();
         persistCurrentMultipartParts();
+        updateShadeSliderVisual();
+        queueModelPartThumbsRender();
         saveSettings();
     });
 }
@@ -3421,40 +3820,25 @@ textureTuneLightHeightSlider?.addEventListener('input', () => {
 });
 
 textureTuneRoughnessSlider?.addEventListener('input', () => {
-    const mode = (getSelectedPartSettings().shading === 'flat' || getSelectedPartSettings().shading === 'toon')
-        ? 'matte'
-        : getSelectedPartSettings().shading;
-    const v = parseFloat(textureTuneRoughnessSlider.value);
-    const s = getSelectedPartSettings();
-    if (mode === 'metallic') s.metallicRoughness = v;
-    if (mode === 'phong') s.phongRoughness = v;
-    if (mode === 'matte') s.matteRoughness = v;
-    if (textureTuneRoughnessVal) {
-        const roughLabel = v <= 10 ? 'Matte' : v >= 90 ? 'Glossy' : '';
-        textureTuneRoughnessVal.textContent = roughLabel;
-    }
+    applyFinishControlsToSelectedPart();
     syncUIFromSelectedPart();
     updateTextureTuneUI();
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
+    queueModelPartThumbsRender();
     saveSettings();
 });
 
-textureTuneReflectionSlider?.addEventListener('input', () => {
-    const mode = (getSelectedPartSettings().shading === 'flat' || getSelectedPartSettings().shading === 'toon')
-        ? 'matte'
-        : getSelectedPartSettings().shading;
-    const v = parseFloat(textureTuneReflectionSlider.value);
-    const s = getSelectedPartSettings();
-    if (mode === 'metallic') s.metallicReflection = v;
-    if (mode === 'phong') s.phongReflection = v;
-    if (mode === 'matte') s.matteReflection = v;
+finishModeButtons.forEach((btn) => btn.addEventListener('click', () => {
+    setFinishModeUI(btn.dataset.finishMode || 'glossy');
+    applyFinishControlsToSelectedPart();
     syncUIFromSelectedPart();
     updateTextureTuneUI();
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
+    queueModelPartThumbsRender();
     saveSettings();
-});
+}));
 
 textureTuneMetalnessSlider?.addEventListener('input', () => {
     getSelectedPartSettings().metallicMetalness = parseFloat(textureTuneMetalnessSlider.value);
@@ -3462,6 +3846,7 @@ textureTuneMetalnessSlider?.addEventListener('input', () => {
     updateTextureTuneUI();
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
+    queueModelPartThumbsRender();
     saveSettings();
 });
 
@@ -3471,6 +3856,7 @@ shadingEl.addEventListener('change', () => {
     updateTextureTuneUI();
     if (mesh) rebuildMeshMaterialsForCurrentShading();
     persistCurrentMultipartParts();
+    queueModelPartThumbsRender();
     saveSettings();
 });
 
@@ -3760,6 +4146,15 @@ if (fineTuningCheckEl) {
             el.style.opacity = fineTuningMode ? '0' : '';
             el.style.pointerEvents = fineTuningMode ? 'none' : '';
         });
+
+        if (!fineTuningMode) {
+            applyFinishControlsToSelectedPart();
+            if (mesh) rebuildMeshMaterialsForCurrentShading();
+        }
+        updateTextureTuneUI();
+        persistCurrentMultipartParts();
+        queueModelPartThumbsRender();
+        saveSettings();
     });
 }
 
@@ -4527,11 +4922,13 @@ const THUMB_STYLES = {
 
 let QUICK_PRESETS = [];
 
-function reconcileModelPresetFromSettings() {
+function reconcileModelPresetFromSettings(force = false) {
     // If presets aren't loaded yet or the user already has a non-custom active
     // preset, nothing to do.
     if (!QUICK_PRESETS || QUICK_PRESETS.length === 0) return;
-    if (activeModelPreset && activeModelPreset !== 'custom') return;
+    if (!force && activeModelPreset && activeModelPreset !== 'custom') return;
+
+    activeModelPreset = 'custom';
 
     const curShade = shadingEl?.value;
     const curColor = colorPick?.value ? colorPick.value.toLowerCase() : null;
@@ -4575,7 +4972,7 @@ fetch('presets.json')
 const BG_PRESETS = [
     { id: 'white', name: 'White', color: '#ffffff' },
     { id: 'black', name: 'Black', color: '#000000' },
-    { id: 'modelcolor', name: 'Model Sync', color: null }  // syncs with model color
+    { id: 'modelcolor', name: 'Model', color: null }
 ];
 
 function updateDynamicBg() {
@@ -4600,15 +4997,6 @@ colorPick.addEventListener('input', () => {
     // Update model custom swatch fill
     const svgCircle = document.querySelector('#customModelThumb circle');
     if (svgCircle) svgCircle.setAttribute('fill', colorPick.value);
-    // Update Model BG preset swatch if visible
-    const modelBgThumb = document.getElementById('bg-preset-modelcolor');
-    if (modelBgThumb) {
-        modelBgThumb.style.backgroundColor = colorPick.value;
-        // Also update sphere overlay to match current active preset
-        const activeTs = THUMB_STYLES[activeModelPreset] || null;
-        const overlaySpan = modelBgThumb.querySelector('span');
-        if (overlaySpan && activeTs) overlaySpan.style.background = activeTs.overlay;
-    }
     // If Model bg preset is active, update the actual bg
     if (activeBgPreset === 'modelcolor') {
         const syncColor = getModelSyncSourceColor();
@@ -4627,14 +5015,12 @@ function rainbowRingSvg(svgId, fillColor) {
     return `<svg id="${svgId}" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none" style="display:block;cursor:pointer;"><circle cx="22" cy="22" r="19.5" fill="${fillColor}" stroke="url(#${gid})" stroke-width="3"/><defs><radialGradient id="${gid}" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(43 18) rotate(156.894) scale(43.7)"><stop stop-color="#FF0909"/><stop offset="0.240385" stop-color="#FF9D00"/><stop offset="0.538462" stop-color="#FFF718"/><stop offset="0.740385" stop-color="#84FF00"/><stop offset="0.9375" stop-color="#8C00FF"/></radialGradient></defs></svg>`;
 }
 
-let customModelSettings = null; // Stores last custom color/shading/opacity
+let customModelSettingsByPart = {};
 
 function storeCustomSettings() {
-    customModelSettings = {
-        color: colorPick.value,
-        tone: opacitySlider ? opacitySlider.value : 0,
-        shading: shadingEl.value
-    };
+    const idx = Math.max(0, modelPartSelected || 0);
+    const s = getSelectedPartSettings();
+    customModelSettingsByPart[idx] = { ...s };
 }
 
 function updateModelSelection() {
@@ -4712,6 +5098,9 @@ function applyModelPresetOnly(preset) {
     if (mesh) rebuildMeshMaterialsForCurrentShading();
     persistCurrentMultipartParts();
 
+    // Keep each part's custom baseline aligned to its latest preset-applied state.
+    storeCustomSettings();
+
     activeModelPreset = preset.id;
     activeBgPreset = 'modelcolor';
     bgPick.value = getModelSyncSourceColor();
@@ -4721,6 +5110,7 @@ function applyModelPresetOnly(preset) {
     updateTextureTuneUI();
     updateShadingThumbs();
     updateColorSwatches();
+    queueModelPartThumbsRender();
     updateModelSelection();
     updateBgSelection();
     saveSettings();
@@ -4798,25 +5188,58 @@ function renderModelPresets() {
             if (advToggle) advToggle.textContent = advToggle.dataset.labelLess || 'Show Less';
             try { localStorage.setItem('rotater_advModelCollapsed', '1'); } catch (_) { }
         }
-        if (customModelSettings) {
-            colorPick.value = customModelSettings.color;
-            if (opacitySlider) opacitySlider.value = customModelSettings.tone ?? customModelSettings.opacity ?? 0;
-            shadingEl.value = customModelSettings.shading;
-            colorPick.dispatchEvent(new Event('input'));
-            if (opacitySlider) opacitySlider.dispatchEvent(new Event('input'));
-            shadingEl.dispatchEvent(new Event('change'));
-        }
+        const idx = Math.max(0, modelPartSelected || 0);
+        const customModelSettings = customModelSettingsByPart[idx] || { ...getSelectedPartSettings() };
+        modelPartSettings[idx] = { ...customModelSettings };
+        modelPartBaseColors[idx] = customModelSettings.color || modelPartBaseColors[idx] || colorPick.value;
+        syncUIFromSelectedPart();
+        activeModelPreset = 'custom';
+        if (mesh) rebuildMeshMaterialsForCurrentShading();
+        persistCurrentMultipartParts();
+        queueModelPartThumbsRender();
         updateModelSelection();
-        // Open the model color picker
-        colorPick.style.width = '1px';
-        colorPick.style.height = '1px';
-        colorPick.style.pointerEvents = 'auto';
+        // Open picker near the clicked swatch so browser anchoring is stable.
+        const swatch = customWrap.querySelector('.shading-option');
+        const rect = swatch?.getBoundingClientRect?.();
+        const prev = {
+            position: colorPick.style.position,
+            left: colorPick.style.left,
+            top: colorPick.style.top,
+            width: colorPick.style.width,
+            height: colorPick.style.height,
+            clip: colorPick.style.clip,
+            pointerEvents: colorPick.style.pointerEvents,
+            opacity: colorPick.style.opacity,
+        };
+        if (rect) {
+            Object.assign(colorPick.style, {
+                position: 'absolute',
+                left: `${rect.left + window.scrollX}px`,
+                top: `${rect.top + window.scrollY}px`,
+                width: `${Math.max(1, Math.floor(rect.width))}px`,
+                height: `${Math.max(1, Math.floor(rect.height))}px`,
+                clip: 'auto',
+                pointerEvents: 'auto',
+                opacity: '0',
+            });
+        } else {
+            colorPick.style.width = '1px';
+            colorPick.style.height = '1px';
+            colorPick.style.pointerEvents = 'auto';
+        }
         try { colorPick.showPicker(); } catch (e) { colorPick.click(); }
         setTimeout(() => {
-            colorPick.style.width = '0';
-            colorPick.style.height = '0';
-            colorPick.style.pointerEvents = 'none';
-        }, 200);
+            Object.assign(colorPick.style, {
+                position: prev.position || 'absolute',
+                left: prev.left || '',
+                top: prev.top || '',
+                width: prev.width || '0px',
+                height: prev.height || '0px',
+                clip: prev.clip || 'rect(0,0,0,0)',
+                pointerEvents: prev.pointerEvents || 'none',
+                opacity: prev.opacity || '0',
+            });
+        }, 240);
     });
     customWrap.querySelector('.shading-option').addEventListener('mouseenter', clearPresetHoverPreview);
     customWrap.querySelector('.shading-option').addEventListener('focus', clearPresetHoverPreview);
@@ -4937,15 +5360,9 @@ function renderBgPresets() {
         wrap.style.flexDirection = 'column';
         wrap.style.alignItems = 'center';
 
-        let swatchInner;
-        if (preset.id === 'modelcolor') {
-            // No sphere styling, just the raw color and SVG
-            swatchInner = `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:8px;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:transparent;display:flex;align-items:center;justify-content:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M6.1752 12.025C6.1752 12.675 6.29186 13.3208 6.5252 13.9625C6.75853 14.6042 7.11686 15.2 7.6002 15.75L7.6502 15.8V15.025C7.6502 14.6583 7.77936 14.3458 8.0377 14.0875C8.29603 13.8292 8.60853 13.7 8.9752 13.7C9.34186 13.7 9.65436 13.8292 9.9127 14.0875C10.171 14.3458 10.3002 14.6583 10.3002 15.025V19.225C10.3002 19.5917 10.171 19.9042 9.9127 20.1625C9.65436 20.4208 9.34186 20.55 8.9752 20.55H4.7752C4.40853 20.55 4.09603 20.4208 3.8377 20.1625C3.57936 19.9042 3.4502 19.5917 3.4502 19.225C3.4502 18.8583 3.57936 18.5458 3.8377 18.2875C4.09603 18.0292 4.40853 17.9 4.7752 17.9H6.0502L6.0002 17.85C5.1502 17 4.5252 16.0792 4.1252 15.0875C3.7252 14.0958 3.5252 13.075 3.5252 12.025C3.5252 10.3583 3.95853 8.82918 4.8252 7.43751C5.69186 6.04585 6.85853 5.00001 8.3252 4.30001C8.6252 4.15001 8.9252 4.16668 9.2252 4.35001C9.5252 4.53335 9.73353 4.80001 9.8502 5.15001C9.9502 5.48335 9.9377 5.81668 9.8127 6.15001C9.6877 6.48335 9.46686 6.74168 9.1502 6.92501C8.2502 7.44168 7.52936 8.15001 6.9877 9.05001C6.44603 9.95001 6.1752 10.9417 6.1752 12.025ZM17.8252 11.975C17.8252 11.325 17.7085 10.6792 17.4752 10.0375C17.2419 9.39585 16.8835 8.80001 16.4002 8.25001L16.3502 8.20001V8.97501C16.3502 9.34168 16.221 9.65418 15.9627 9.91251C15.7044 10.1708 15.3919 10.3 15.0252 10.3C14.6585 10.3 14.346 10.1708 14.0877 9.91251C13.8294 9.65418 13.7002 9.34168 13.7002 8.97501V4.77501C13.7002 4.40835 13.8294 4.09585 14.0877 3.83751C14.346 3.57918 14.6585 3.45001 15.0252 3.45001H19.2252C19.5919 3.45001 19.9044 3.57918 20.1627 3.83751C20.421 4.09585 20.5502 4.40835 20.5502 4.77501C20.5502 5.14168 20.421 5.45418 20.1627 5.71251C19.9044 5.97085 19.5919 6.10001 19.2252 6.10001H17.9502L18.0002 6.15001C18.8502 7.00001 19.4752 7.92085 19.8752 8.91251C20.2752 9.90418 20.4752 10.925 20.4752 11.975C20.4752 13.6417 20.0419 15.1708 19.1752 16.5625C18.3085 17.9542 17.1419 19 15.6752 19.7C15.3752 19.85 15.0752 19.8333 14.7752 19.65C14.4752 19.4667 14.2669 19.2 14.1502 18.85C14.0502 18.5167 14.0627 18.1833 14.1877 17.85C14.3127 17.5167 14.5335 17.2583 14.8502 17.075C15.7502 16.5583 16.471 15.85 17.0127 14.95C17.5544 14.05 17.8252 13.0583 17.8252 11.975Z" fill="#1C1B1F"/>
-</svg></span>`;
-        } else {
-            swatchInner = `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};"></span>`;
-        }
+        const swatchInner = preset.id === 'modelcolor'
+            ? `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:transparent;display:flex;align-items:center;justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.2 12.05C7.2 12.65 7.308 13.246 7.524 13.838C7.74 14.43 8.072 14.979 8.52 15.485L8.565 15.53V14.815C8.565 14.476 8.685 14.186 8.925 13.945C9.165 13.705 9.455 13.585 9.795 13.585C10.135 13.585 10.425 13.705 10.665 13.945C10.905 14.186 11.025 14.476 11.025 14.815V18.695C11.025 19.034 10.905 19.324 10.665 19.565C10.425 19.805 10.135 19.925 9.795 19.925H5.91C5.57 19.925 5.28 19.805 5.04 19.565C4.8 19.324 4.68 19.034 4.68 18.695C4.68 18.355 4.8 18.065 5.04 17.825C5.28 17.584 5.57 17.464 5.91 17.464H7.08L7.035 17.419C6.249 16.633 5.671 15.783 5.301 14.869C4.931 13.955 4.746 13.015 4.746 12.05C4.746 10.515 5.145 9.106 5.943 7.823C6.741 6.539 7.816 5.575 9.168 4.931C9.445 4.793 9.722 4.808 10 4.978C10.277 5.147 10.469 5.393 10.577 5.715C10.669 6.023 10.657 6.331 10.542 6.639C10.426 6.947 10.223 7.186 9.93 7.355C9.1 7.832 8.435 8.485 7.935 9.315C7.435 10.146 7.2 11.057 7.2 12.05ZM16.8 12C16.8 11.4 16.692 10.804 16.476 10.212C16.26 9.62 15.928 9.071 15.48 8.565L15.435 8.52V9.235C15.435 9.575 15.315 9.864 15.075 10.105C14.835 10.345 14.545 10.465 14.205 10.465C13.865 10.465 13.575 10.345 13.335 10.105C13.095 9.864 12.975 9.575 12.975 9.235V5.35C12.975 5.01 13.095 4.72 13.335 4.48C13.575 4.239 13.865 4.12 14.205 4.12H18.09C18.43 4.12 18.72 4.239 18.96 4.48C19.2 4.72 19.32 5.01 19.32 5.35C19.32 5.689 19.2 5.979 18.96 6.22C18.72 6.46 18.43 6.58 18.09 6.58H16.92L16.965 6.625C17.751 7.411 18.329 8.261 18.699 9.175C19.069 10.089 19.254 11.03 19.254 12C19.254 13.535 18.855 14.944 18.057 16.227C17.259 17.511 16.184 18.475 14.832 19.119C14.555 19.257 14.277 19.242 14 19.073C13.723 18.903 13.531 18.657 13.423 18.335C13.331 18.028 13.343 17.72 13.458 17.412C13.574 17.104 13.777 16.864 14.07 16.695C14.9 16.218 15.565 15.565 16.065 14.735C16.565 13.905 16.8 12.993 16.8 12Z" fill="currentColor"/></svg></span>`
+            : `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};"></span>`;
 
         wrap.innerHTML = `
             <label class="shading-option preset-option" title="${preset.name} background">
@@ -4957,19 +5374,20 @@ function renderBgPresets() {
         const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
             activeBgPreset = preset.id;
+            if (preset.id !== 'modelcolor') lastNonModelBgPreset = preset.id;
             // Respect existing auto-adjust state
             const autoBg = document.getElementById('autoBgCheck');
             isDynamicBg = autoBg ? autoBg.checked : false;
             if (preset.id === 'modelcolor') {
-                bgPick.value = getModelSyncSourceColor();
-                bgPick.dispatchEvent(new Event('input', { bubbles: false }));
+                const syncColor = getModelSyncSourceColor();
+                bgPick.value = syncColor;
                 if (isDynamicBg) updateDynamicBg();
-                else renderer && renderer.setClearColor(new THREE.Color(getModelSyncSourceColor()), 1);
+                else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
             } else {
                 bgPick.value = preset.color;
                 bgPick.dispatchEvent(new Event('input', { bubbles: true }));
-                if (isDynamicBg) updateDynamicBg();
             }
+            if (isDynamicBg) updateDynamicBg();
             updateBgSelection();
         });
         bar.appendChild(wrap);
@@ -4999,6 +5417,7 @@ function renderBgPresets() {
             const autoBg = document.getElementById('autoBgCheck');
             isDynamicBg = autoBg ? autoBg.checked : false;
             activeBgPreset = 'custom';
+            lastNonModelBgPreset = 'custom';
             updateBgSelection();
             const input = document.getElementById('bgPicker');
             if (!input) return;
