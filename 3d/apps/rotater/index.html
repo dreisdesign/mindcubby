@@ -307,6 +307,13 @@
                         <!-- ── Model Card ── -->
                         <div class="controls-section-box" id="modelBox">
                             <div class="box-heading">Model</div>
+                            <div id="modelPartSelectorWrap" class="export-selects-row" hidden aria-hidden="true"
+                                style="margin: 6px 0 2px;">
+                                <div class="export-select-group" style="width:100%;">
+                                    <label class="export-select-label" for="modelPartSelector">Part Color Target</label>
+                                    <select id="modelPartSelector" class="export-select"></select>
+                                </div>
+                            </div>
                             <div class="preset-group" id="quickPresetsBar"></div>
 
                             <!-- Model sliders: always expanded -->
@@ -373,6 +380,13 @@
                         <div class="controls-section-box" id="environmentBox">
                             <div class="box-heading">Background</div>
                             <div class="preset-group" id="bgPresetsBar"></div>
+                            <div id="bgModelSyncSourceWrap" class="export-selects-row" hidden aria-hidden="true"
+                                style="margin: 8px 0 2px;">
+                                <div class="export-select-group" style="width:100%;">
+                                    <label class="export-select-label" for="bgModelSyncSource">Model Sync Source</label>
+                                    <select id="bgModelSyncSource" class="export-select"></select>
+                                </div>
+                            </div>
                             <label class="gif-option-check adv-section-check" style="margin-top:10px;">
                                 <input type="checkbox" id="autoBgCheck" data-group="scene"> Automatically adjust
                                 brightness

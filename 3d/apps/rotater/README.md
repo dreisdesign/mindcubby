@@ -26,6 +26,8 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 
 - Drag and drop any STL file onto the page, or click **Replace STL**
 - Multi-part import: select or drop multiple STL files at once to load them as one aligned object (keeps original CAD offsets for multi-color part stacks)
+- Multi-part editing: use **Part Color Target** in the Model card to choose which part you are editing
+- Model preset cards support hover preview for the selected part before clicking to apply
 - The model and all settings persist across page refreshes — no re-upload needed
 - The filename chip (top-right of canvas) shows the active file
   - Click **×** while showing the demo to open the file picker
@@ -54,6 +56,12 @@ A dashed overlay on the viewer always shows exactly which square region will be 
 ### Appearance
 
 Sidebar order: **Color → Texture → Animation → Export**
+
+When a multi-part model is loaded:
+
+- **Model** controls are part-aware (color, shade/tone, shading mode, and finish/reflection values are stored per selected part)
+- **Model presets** are model-only (they no longer force background or lighting changes)
+- **Background → Model Sync** can follow a chosen part via **Model Sync Source** (defaults to Part 1)
 
 | Control | Description |
 |---|---|

@@ -192,6 +192,10 @@ const colorPick = document.getElementById('colorPicker');
 const opacitySlider = document.getElementById('opacitySlider');
 const opacityVal = document.getElementById('opacityVal');
 const quickPresetsBar = document.getElementById('quickPresetsBar');
+const modelPartSelectorWrap = document.getElementById('modelPartSelectorWrap');
+const modelPartSelector = document.getElementById('modelPartSelector');
+const bgModelSyncSourceWrap = document.getElementById('bgModelSyncSourceWrap');
+const bgModelSyncSource = document.getElementById('bgModelSyncSource');
 const bgPick = document.getElementById('bgPicker');
 const bgOpacitySlider = document.getElementById('bgOpacitySlider');
 const shadingEl = document.getElementById('shadingSelect');
@@ -263,7 +267,7 @@ const APP_PARAM_KEYS = new Set([
     'c', 'b', 'op', 'sh', 'rm', 'sp', 'tr', 'wsr', 'sd', 'gl', 'ef', 'eq', 'ed', 'et', 'gd', 'jq',
     'tto', 'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh', 'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
     'rv', 'ru', 'rl', 'rg',
-    'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp'
+    'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp', 'bsp'
 ]);
 const _passthroughParams = (() => {
     const p = new URLSearchParams(location.search);
@@ -291,6 +295,14 @@ let rulerGridHelper = null;
 let rulerGridSize = 0;
 const RULER_DYNAMIC_LINES_ENABLED = false;
 const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
+let modelPartNames = [];
+let modelPartBaseColors = [];
+let modelPartSettings = [];
+let modelPartFiles = null;
+let modelPartSelected = 0;
+let pendingModelPartSelected = 0;
+let bgSyncPartIndex = 0;
+let presetHoverPreviewSnapshot = null;
 
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
@@ -690,25 +702,28 @@ function applyTextureLighting() {
 
 function applyCurrentTextureTuning() {
     applyTextureLighting();
-    if (!mesh || !mesh.material) return;
-    const mode = getActiveShadingMode();
-    const mat = mesh.material;
-    if (!mat.isMeshStandardMaterial) return;
-    if (mode === 'metallic') {
-        mat.metalness = textureTuneState.metallicMetalness / 100;
-        mat.roughness = (100 - textureTuneState.metallicRoughness) / 100;
-        mat.envMapIntensity = (textureTuneState.metallicReflection / 100) * (textureTuneState.highlights / 100);
-    } else if (mode === 'phong') {
-        mat.metalness = 0;
-        mat.roughness = (100 - textureTuneState.phongRoughness) / 100;
-        mat.envMapIntensity = (textureTuneState.phongReflection / 100) * (textureTuneState.highlights / 100);
-    } else {
-        // Clay: matte non-metal baseline with faint environment response.
-        mat.metalness = 0;
-        mat.roughness = (100 - textureTuneState.matteRoughness) / 100;
-        mat.envMapIntensity = (textureTuneState.matteReflection / 100) * (textureTuneState.highlights / 100);
-    }
-    mat.needsUpdate = true;
+    const mats = getMeshMaterials();
+    if (!mats.length) return;
+    mats.forEach((mat, idx) => {
+        if (!mat || !mat.isMeshStandardMaterial) return;
+        const s = getPartSettings(idx);
+        const mode = (s.shading === 'flat' || s.shading === 'toon') ? 'matte' : (s.shading || getActiveShadingMode());
+        if (mode === 'metallic') {
+            mat.metalness = s.metallicMetalness / 100;
+            mat.roughness = (100 - s.metallicRoughness) / 100;
+            mat.envMapIntensity = (s.metallicReflection / 100) * (textureTuneState.highlights / 100);
+        } else if (mode === 'phong') {
+            mat.metalness = 0;
+            mat.roughness = (100 - s.phongRoughness) / 100;
+            mat.envMapIntensity = (s.phongReflection / 100) * (textureTuneState.highlights / 100);
+        } else {
+            // Clay: matte non-metal baseline with faint environment response.
+            mat.metalness = 0;
+            mat.roughness = (100 - s.matteRoughness) / 100;
+            mat.envMapIntensity = (s.matteReflection / 100) * (textureTuneState.highlights / 100);
+        }
+        mat.needsUpdate = true;
+    });
 }
 
 function getMaterial(shading, baseColor) {
@@ -801,6 +816,221 @@ function buildMultipartFileBase(names) {
     return count > 1 ? `${base}_${count}parts` : base;
 }
 
+function isMultipartModel() {
+    return Array.isArray(modelPartNames) && modelPartNames.length > 1;
+}
+
+function createPartSettings(colorHex = colorPick.value) {
+    return {
+        color: colorHex,
+        tone: parseInt(opacitySlider ? opacitySlider.value : 0, 10) || 0,
+        shading: shadingEl?.value || 'metallic',
+        metallicRoughness: textureTuneState.metallicRoughness,
+        metallicMetalness: textureTuneState.metallicMetalness,
+        metallicReflection: textureTuneState.metallicReflection,
+        phongRoughness: textureTuneState.phongRoughness,
+        phongReflection: textureTuneState.phongReflection,
+        matteRoughness: textureTuneState.matteRoughness,
+        matteReflection: textureTuneState.matteReflection,
+    };
+}
+
+function getPartSettings(index) {
+    if (!modelPartSettings[index]) {
+        modelPartSettings[index] = createPartSettings(modelPartBaseColors[index] || colorPick.value);
+    }
+    return modelPartSettings[index];
+}
+
+function getSelectedPartSettings() {
+    return getPartSettings(modelPartSelected);
+}
+
+function syncUIFromSelectedPart() {
+    const s = getSelectedPartSettings();
+    colorPick.value = s.color || colorPick.value;
+    if (opacitySlider) {
+        opacitySlider.value = String(s.tone ?? 0);
+        const toneVal = parseInt(opacitySlider.value, 10);
+        opacityVal.textContent = (toneVal >= 0 ? '+' : '') + toneVal;
+        syncSliderTooltip(opacitySlider);
+    }
+    if (shadingEl) shadingEl.value = s.shading || shadingEl.value;
+
+    textureTuneState.metallicRoughness = s.metallicRoughness;
+    textureTuneState.metallicMetalness = s.metallicMetalness;
+    textureTuneState.metallicReflection = s.metallicReflection;
+    textureTuneState.phongRoughness = s.phongRoughness;
+    textureTuneState.phongReflection = s.phongReflection;
+    textureTuneState.matteRoughness = s.matteRoughness;
+    textureTuneState.matteReflection = s.matteReflection;
+
+    updateTextureTuneUI();
+    updateColorSwatches();
+}
+
+function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
+    partSettings.color = presetUrlSettings.color || partSettings.color;
+    if (presetUrlSettings.shading) {
+        const sh = presetUrlSettings.shading;
+        partSettings.shading = (sh === 'flat' || sh === 'toon') ? 'matte' : sh;
+    }
+    if (presetUrlSettings.tone != null) {
+        const t = parseInt(presetUrlSettings.tone, 10);
+        if (Number.isFinite(t)) partSettings.tone = Math.max(-100, Math.min(100, t));
+    }
+    if (presetUrlSettings.textureTuneMetallicRoughness != null) partSettings.metallicRoughness = Number(presetUrlSettings.textureTuneMetallicRoughness);
+    if (presetUrlSettings.textureTuneMetallicMetalness != null) partSettings.metallicMetalness = Number(presetUrlSettings.textureTuneMetallicMetalness);
+    if (presetUrlSettings.textureTuneMetallicReflection != null) partSettings.metallicReflection = Number(presetUrlSettings.textureTuneMetallicReflection);
+    if (presetUrlSettings.textureTunePhongRoughness != null) partSettings.phongRoughness = Number(presetUrlSettings.textureTunePhongRoughness);
+    if (presetUrlSettings.textureTunePhongReflection != null) partSettings.phongReflection = Number(presetUrlSettings.textureTunePhongReflection);
+    if (presetUrlSettings.textureTuneMatteRoughness != null) partSettings.matteRoughness = Number(presetUrlSettings.textureTuneMatteRoughness);
+    if (presetUrlSettings.textureTuneMatteReflection != null) partSettings.matteReflection = Number(presetUrlSettings.textureTuneMatteReflection);
+}
+
+function getMeshMaterials() {
+    if (!mesh || !mesh.material) return [];
+    return Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+}
+
+function disposeMaterials(materialLike) {
+    if (!materialLike) return;
+    const mats = Array.isArray(materialLike) ? materialLike : [materialLike];
+    mats.forEach(mat => {
+        try { mat?.dispose?.(); } catch (e) { }
+    });
+}
+
+function computeTonedColor(baseHex, toneVal) {
+    const baseC = new THREE.Color(baseHex);
+    if (toneVal !== 0) {
+        const hsl = {};
+        baseC.getHSL(hsl);
+        if (toneVal > 0) {
+            hsl.l = hsl.l * (1 - toneVal / 100);
+        } else {
+            hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
+        }
+        baseC.setHSL(hsl.h, hsl.s, hsl.l);
+    }
+    return baseC;
+}
+
+function applyPartColorsToMesh() {
+    const mats = getMeshMaterials();
+    if (!mats.length) return;
+    mats.forEach((mat, idx) => {
+        if (!mat || !mat.color) return;
+        const s = getPartSettings(idx);
+        const baseHex = s.color || modelPartBaseColors[idx] || colorPick.value;
+        mat.color.set(computeTonedColor(baseHex, s.tone ?? 0));
+        mat.needsUpdate = true;
+    });
+}
+
+function rebuildMeshMaterialsForCurrentShading() {
+    if (!mesh) return;
+    disposeMaterials(mesh.material);
+    if (isMultipartModel()) {
+        mesh.material = modelPartSettings.map((s, idx) => getMaterial(s.shading || shadingEl.value, s.color || modelPartBaseColors[idx]));
+    } else {
+        const s = getPartSettings(0);
+        mesh.material = getMaterial(s.shading || shadingEl.value, s.color || colorPick.value);
+    }
+    applyPartColorsToMesh();
+    applyCurrentTextureTuning();
+}
+
+function syncModelPartSelectorUI() {
+    if (!modelPartSelectorWrap || !modelPartSelector) return;
+    const isMulti = isMultipartModel();
+    modelPartSelectorWrap.hidden = !isMulti;
+    modelPartSelectorWrap.setAttribute('aria-hidden', String(!isMulti));
+    if (!isMulti) {
+        modelPartSelector.innerHTML = '';
+        return;
+    }
+
+    modelPartSelected = Math.max(0, Math.min(modelPartSelected, modelPartNames.length - 1));
+    modelPartSelector.innerHTML = '';
+    modelPartNames.forEach((name, idx) => {
+        const opt = document.createElement('option');
+        opt.value = String(idx);
+        opt.textContent = `Part ${idx + 1}: ${stemFromFileName(name)}`;
+        modelPartSelector.appendChild(opt);
+    });
+    modelPartSelector.value = String(modelPartSelected);
+    syncUIFromSelectedPart();
+    syncBgModelSyncSourceUI();
+}
+
+function getModelSyncSourceColor() {
+    if (!isMultipartModel()) return colorPick.value;
+    const idx = Math.max(0, Math.min(bgSyncPartIndex, modelPartBaseColors.length - 1));
+    return modelPartBaseColors[idx] || colorPick.value;
+}
+
+function syncBgModelSyncSourceUI() {
+    if (!bgModelSyncSourceWrap || !bgModelSyncSource) return;
+    const visible = activeBgPreset === 'modelcolor' && isMultipartModel();
+    bgModelSyncSourceWrap.hidden = !visible;
+    bgModelSyncSourceWrap.setAttribute('aria-hidden', String(!visible));
+    if (!visible) {
+        bgModelSyncSource.innerHTML = '';
+        return;
+    }
+
+    bgSyncPartIndex = Math.max(0, Math.min(bgSyncPartIndex, modelPartNames.length - 1));
+    bgModelSyncSource.innerHTML = '';
+    modelPartNames.forEach((name, idx) => {
+        const opt = document.createElement('option');
+        opt.value = String(idx);
+        opt.textContent = `Part ${idx + 1}: ${stemFromFileName(name)}`;
+        bgModelSyncSource.appendChild(opt);
+    });
+    bgModelSyncSource.value = String(bgSyncPartIndex);
+}
+
+function applyPresetHoverPreview(preset) {
+    if (!preset?.url || !mesh) return;
+    const p = getURLSettings(preset.url);
+    if (!p) return;
+
+    if (!presetHoverPreviewSnapshot) {
+        presetHoverPreviewSnapshot = {
+            idx: modelPartSelected,
+            settings: { ...getSelectedPartSettings() },
+        };
+    }
+
+    const s = getSelectedPartSettings();
+    applyPresetIntoPartSettings(s, p);
+    modelPartBaseColors[modelPartSelected] = s.color;
+    if (activeBgPreset === 'modelcolor') bgPick.value = getModelSyncSourceColor();
+    rebuildMeshMaterialsForCurrentShading();
+    if (isDynamicBg) updateDynamicBg();
+}
+
+function clearPresetHoverPreview() {
+    if (!presetHoverPreviewSnapshot) return;
+    const idx = presetHoverPreviewSnapshot.idx;
+    modelPartSettings[idx] = { ...presetHoverPreviewSnapshot.settings };
+    modelPartBaseColors[idx] = modelPartSettings[idx].color;
+    if (idx === modelPartSelected) syncUIFromSelectedPart();
+    if (activeBgPreset === 'modelcolor') bgPick.value = getModelSyncSourceColor();
+    presetHoverPreviewSnapshot = null;
+    rebuildMeshMaterialsForCurrentShading();
+    if (isDynamicBg) updateDynamicBg();
+}
+
+function attachPresetHoverPreview(el, preset) {
+    if (!el || !preset?.url) return;
+    el.addEventListener('mouseenter', () => applyPresetHoverPreview(preset));
+    el.addEventListener('mouseleave', clearPresetHoverPreview);
+    el.addEventListener('focus', () => applyPresetHoverPreview(preset));
+    el.addEventListener('blur', clearPresetHoverPreview);
+}
+
 function loadPreparedGeometry(geo, name) {
     geo.computeBoundingBox();
     if (!geo.boundingBox) throw new Error('Could not compute model bounds.');
@@ -812,7 +1042,7 @@ function loadPreparedGeometry(geo, name) {
     if (mesh) {
         scene.remove(mesh);
         mesh.geometry.dispose();
-        mesh.material.dispose();
+        disposeMaterials(mesh.material);
     }
 
     const sz = new THREE.Vector3();
@@ -820,13 +1050,17 @@ function loadPreparedGeometry(geo, name) {
     modelRadius = Math.max(sz.x, sz.y, sz.z) / 2;
     modelDims = { w: sz.x, d: sz.y, h: sz.z };
 
-    mesh = new THREE.Mesh(geo, getMaterial(shadingEl.value, colorPick.value));
+    const initialMaterial = isMultipartModel()
+        ? modelPartSettings.map((s, idx) => getMaterial(s.shading || shadingEl.value, s.color || modelPartBaseColors[idx]))
+        : getMaterial(getPartSettings(0).shading || shadingEl.value, getPartSettings(0).color || colorPick.value);
+    mesh = new THREE.Mesh(geo, initialMaterial);
     mesh.rotation.x = -Math.PI / 2; // Z-up → Y-up
     mesh.castShadow = true;
     mesh.receiveShadow = false;
     tiltBaseMeshRx = -Math.PI / 2;
     tiltPhase = 0;
     scene.add(mesh);
+    applyPartColorsToMesh();
     updateShadowCatcherPlacement();
     applyCurrentTextureTuning();
 
@@ -870,6 +1104,7 @@ function loadPreparedGeometry(geo, name) {
         orbitHintBarEl?.classList.add('visible');
     }
     updateCropHintUI();
+    syncModelPartSelectorUI();
     updateEstimate();
     requestAnimationFrame(() => {
         syncCanvasSize();
@@ -910,11 +1145,26 @@ function loadSTLBuffer(buffer, name) {
     geo.translate(-center.x, -center.y, -center.z);
     geo.computeVertexNormals();
 
+    modelPartNames = [name];
+    modelPartBaseColors = [colorPick.value];
+    modelPartSettings = [createPartSettings(colorPick.value)];
+    modelPartFiles = null;
+    modelPartSelected = 0;
+
     loadPreparedGeometry(geo, name);
 }
 
-function loadMultipartSTLBuffers(buffers, names) {
+function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings = null) {
     if (!Array.isArray(buffers) || !buffers.length) return;
+
+    modelPartNames = [...names];
+    modelPartBaseColors = names.map((_, idx) => partColors?.[idx] || colorPick.value);
+    modelPartSettings = names.map((_, idx) => {
+        const base = createPartSettings(modelPartBaseColors[idx]);
+        if (partSettings?.[idx]) return { ...base, ...partSettings[idx], color: partSettings[idx].color || base.color };
+        return base;
+    });
+    modelPartSelected = Math.max(0, Math.min(pendingModelPartSelected, modelPartNames.length - 1));
 
     const parsed = [];
     const unionBox = new THREE.Box3();
@@ -932,7 +1182,7 @@ function loadMultipartSTLBuffers(buffers, names) {
         geo.computeVertexNormals();
     }
 
-    const merged = BufferGeometryUtils.mergeGeometries(parsed, false);
+    const merged = BufferGeometryUtils.mergeGeometries(parsed, true);
     if (!merged) throw new Error('Could not merge multi-part STL geometry.');
     parsed.forEach(g => { if (g !== merged) g.dispose(); });
 
@@ -2069,7 +2319,7 @@ async function saveFilesToIDB(parts, displayName) {
         tx.objectStore(DB_STORE).put({
             kind: 'multipart',
             name: displayName,
-            parts: parts.map(p => ({ name: p.name, buffer: p.buffer }))
+            parts: parts.map(p => ({ name: p.name, buffer: p.buffer, color: p.color, settings: p.settings }))
         }, 'stl');
     } catch (e) {
         console.warn('Could not save multi-part STL to IndexedDB:', e);
@@ -2153,6 +2403,8 @@ function saveSettings() {
             rulerGridVisible: rulerLinesVisible ? '1' : '0',
             activeBgPreset: activeBgPreset,
             activeModelPreset: activeModelPreset,
+            modelPartSelected: String(modelPartSelected || 0),
+            bgSyncPartIndex: String(bgSyncPartIndex || 0),
         }));
     } catch (e) { }
     if (DEV_LOG) {
@@ -2238,12 +2490,10 @@ function restoreSettings() {
                 shadingEl.value = s.shading;
                 // Ensure the preview material matches the restored shading immediately.
                 // Some restores set UI values programmatically which do not fire the
-                // shading change handler; update mesh material directly when a
+                // shading change handler; rebuild material(s) directly when a
                 // mesh is present so the preview no longer shows the wrong shader.
                 if (mesh) {
-                    try { if (mesh.material) mesh.material.dispose(); } catch (e) { }
-                    mesh.material = getMaterial(shadingEl.value, colorPick.value);
-                    applyCurrentTextureTuning();
+                    rebuildMeshMaterialsForCurrentShading();
                 }
             }
             if (s.speed != null) {
@@ -2376,6 +2626,14 @@ function restoreSettings() {
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
         if (s.activeBgPreset) activeBgPreset = s.activeBgPreset;
         if (s.activeModelPreset) activeModelPreset = s.activeModelPreset;
+        if (s.modelPartSelected != null) {
+            const idx = parseInt(s.modelPartSelected, 10);
+            pendingModelPartSelected = Number.isFinite(idx) ? Math.max(0, idx) : 0;
+        }
+        if (s.bgSyncPartIndex != null || s.modelSyncPart != null) {
+            const idx = parseInt(s.bgSyncPartIndex ?? s.modelSyncPart, 10);
+            bgSyncPartIndex = Number.isFinite(idx) ? Math.max(0, idx) : 0;
+        }
 
         // Always apply mode-based classes/slider setup — even when s is null (settings reset)
         const curMode = rotateModeEl.value;
@@ -2479,6 +2737,7 @@ function getURLSettings(searchStr = location.search) {
         rulerLinesVisible: g('rl'),
         activeBgPreset: g('abp'),
         activeModelPreset: g('amp'),
+        modelSyncPart: g('bsp'),
     };
 }
 
@@ -2539,6 +2798,7 @@ function settingsToURL() {
     if (!rulerLinesVisible) p.set('rg', '0');
     if (activeBgPreset && activeBgPreset !== 'custom') p.set('abp', activeBgPreset);
     if (activeModelPreset && activeModelPreset !== 'custom') p.set('amp', activeModelPreset);
+    if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
     // Re-inject passthrough params captured at startup (e.g. debug=1)
     _passthroughParams.forEach((v, k) => { if (!p.has(k)) p.set(k, v); });
     history.replaceState(null, '', '?' + p.toString());
@@ -2559,6 +2819,11 @@ async function restoreSession() {
             fileNameEl.textContent = '3dbenchy.stl';
             fileNameEl.title = '3dbenchy.stl';
             currentFileName = '3dbenchy';
+            modelPartNames = ['3dbenchy.stl'];
+            modelPartBaseColors = [colorPick.value];
+            modelPartSettings = [createPartSettings(colorPick.value)];
+            modelPartFiles = null;
+            modelPartSelected = 0;
             if (!renderer) initThree();
             controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
             if (DEV_LOG) console.log(`[rotater] restoreSession: calling loadSTLBuffer for demo at ${Date.now()}`);
@@ -2580,8 +2845,15 @@ async function restoreSession() {
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
     if (DEV_LOG) console.log(`[rotater] restoreSession: calling loadSTLBuffer for user file at ${Date.now()}`);
     if (isMultipart) {
-        loadMultipartSTLBuffers(saved.parts.map(p => p.buffer), saved.parts.map(p => p.name));
+        modelPartFiles = saved.parts.map(p => ({ name: p.name, buffer: p.buffer }));
+        loadMultipartSTLBuffers(
+            saved.parts.map(p => p.buffer),
+            saved.parts.map(p => p.name),
+            saved.parts.map(p => p.color || colorPick.value),
+            saved.parts.map(p => p.settings || null),
+        );
     } else {
+        modelPartFiles = null;
         loadSTLBuffer(saved.buffer, saved.name);
     }
 }
@@ -2614,10 +2886,13 @@ async function handleFiles(fileList) {
             const parts = await Promise.all(files.map(async (file) => ({
                 name: file.name,
                 buffer: await readFileAsArrayBuffer(file),
+                color: colorPick.value,
+                settings: createPartSettings(colorPick.value),
             })));
             await saveFilesToIDB(parts, displayName);
             saveSettings();
-            loadMultipartSTLBuffers(parts.map(p => p.buffer), parts.map(p => p.name));
+            modelPartFiles = parts.map(p => ({ name: p.name, buffer: p.buffer }));
+            loadMultipartSTLBuffers(parts.map(p => p.buffer), parts.map(p => p.name), parts.map(p => p.color));
         } catch (err) {
             setStatus('Error: ' + (err?.message || 'Failed to load STL parts.'));
             console.error(err);
@@ -2630,6 +2905,7 @@ async function handleFiles(fileList) {
         const file = files[0];
         const buffer = await readFileAsArrayBuffer(file);
         await saveFileToIDB(file.name, buffer);
+        modelPartFiles = null;
         saveSettings();
         loadSTLBuffer(buffer, file.name);
     } catch (err) {
@@ -2985,23 +3261,56 @@ function updateRangeSliderForMode(mode) {
     updateTiltRangeReset();
 }
 
-colorPick.addEventListener('input', () => {
-    if (mesh) {
-        const toneVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
-        const baseC = new THREE.Color(colorPick.value);
-        if (toneVal !== 0) {
-            const hsl = {};
-            baseC.getHSL(hsl);
-            if (toneVal > 0) {
-                hsl.l = hsl.l * (1 - toneVal / 100);
-            } else {
-                hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
-            }
-            baseC.setHSL(hsl.h, hsl.s, hsl.l);
-        }
-        mesh.material.color.set(baseC);
-        mesh.material.needsUpdate = true;
+function persistCurrentMultipartParts() {
+    if (!isMultipartModel() || !modelPartFiles || modelPartFiles.length !== modelPartNames.length) return;
+    const displayName = getMultipartDisplayName(modelPartNames);
+    saveFilesToIDB(modelPartFiles.map((part, idx) => ({
+        name: part.name,
+        buffer: part.buffer,
+        color: modelPartBaseColors[idx] || colorPick.value,
+        settings: modelPartSettings[idx] ? { ...modelPartSettings[idx] } : createPartSettings(modelPartBaseColors[idx] || colorPick.value),
+    })), displayName);
+}
+
+modelPartSelector?.addEventListener('change', () => {
+    if (!isMultipartModel()) return;
+    clearPresetHoverPreview();
+    const idx = parseInt(modelPartSelector.value, 10);
+    modelPartSelected = Number.isFinite(idx)
+        ? Math.max(0, Math.min(idx, modelPartNames.length - 1))
+        : 0;
+    syncUIFromSelectedPart();
+    applyPartColorsToMesh();
+    applyCurrentTextureTuning();
+    saveSettings();
+});
+
+bgModelSyncSource?.addEventListener('change', () => {
+    const idx = parseInt(bgModelSyncSource.value, 10);
+    bgSyncPartIndex = Number.isFinite(idx)
+        ? Math.max(0, Math.min(idx, modelPartNames.length - 1))
+        : 0;
+    if (activeBgPreset === 'modelcolor') {
+        const syncColor = getModelSyncSourceColor();
+        bgPick.value = syncColor;
+        if (isDynamicBg) updateDynamicBg();
+        else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
     }
+    saveSettings();
+});
+
+colorPick.addEventListener('input', (ev) => {
+    if (isMultipartModel()) {
+        const s = getSelectedPartSettings();
+        s.color = colorPick.value;
+        modelPartBaseColors[modelPartSelected] = colorPick.value;
+    } else {
+        modelPartBaseColors = [colorPick.value];
+        getPartSettings(0).color = colorPick.value;
+    }
+
+    if (mesh) applyPartColorsToMesh();
+    persistCurrentMultipartParts();
     updateShadingThumbs();
     updateColorSwatches();
     saveSettings();
@@ -3011,22 +3320,10 @@ if (opacitySlider) {
         const toneVal = parseInt(opacitySlider.value, 10);
         opacityVal.textContent = (toneVal >= 0 ? '+' : '') + toneVal;
         syncSliderTooltip(opacitySlider);
-        if (mesh && mesh.material) {
-            const baseC = new THREE.Color(colorPick.value);
-            if (toneVal !== 0) {
-                const hsl = {};
-                baseC.getHSL(hsl);
-                if (toneVal > 0) {
-                    hsl.l = hsl.l * (1 - toneVal / 100);
-                } else {
-                    hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
-                }
-                baseC.setHSL(hsl.h, hsl.s, hsl.l);
-            }
-            mesh.material.color.set(baseC);
-            mesh.material.needsUpdate = true;
-        }
+        getSelectedPartSettings().tone = toneVal;
+        if (mesh) applyPartColorsToMesh();
         updateShadingThumbs();
+        persistCurrentMultipartParts();
         saveSettings();
     });
 }
@@ -3124,46 +3421,56 @@ textureTuneLightHeightSlider?.addEventListener('input', () => {
 });
 
 textureTuneRoughnessSlider?.addEventListener('input', () => {
-    const mode = getActiveShadingMode();
+    const mode = (getSelectedPartSettings().shading === 'flat' || getSelectedPartSettings().shading === 'toon')
+        ? 'matte'
+        : getSelectedPartSettings().shading;
     const v = parseFloat(textureTuneRoughnessSlider.value);
-    if (mode === 'metallic') textureTuneState.metallicRoughness = v;
-    if (mode === 'phong') textureTuneState.phongRoughness = v;
-    if (mode === 'matte') textureTuneState.matteRoughness = v;
+    const s = getSelectedPartSettings();
+    if (mode === 'metallic') s.metallicRoughness = v;
+    if (mode === 'phong') s.phongRoughness = v;
+    if (mode === 'matte') s.matteRoughness = v;
     if (textureTuneRoughnessVal) {
         const roughLabel = v <= 10 ? 'Matte' : v >= 90 ? 'Glossy' : '';
         textureTuneRoughnessVal.textContent = roughLabel;
     }
+    syncUIFromSelectedPart();
     updateTextureTuneUI();
     applyCurrentTextureTuning();
+    persistCurrentMultipartParts();
     saveSettings();
 });
 
 textureTuneReflectionSlider?.addEventListener('input', () => {
-    const mode = getActiveShadingMode();
+    const mode = (getSelectedPartSettings().shading === 'flat' || getSelectedPartSettings().shading === 'toon')
+        ? 'matte'
+        : getSelectedPartSettings().shading;
     const v = parseFloat(textureTuneReflectionSlider.value);
-    if (mode === 'metallic') textureTuneState.metallicReflection = v;
-    if (mode === 'phong') textureTuneState.phongReflection = v;
-    if (mode === 'matte') textureTuneState.matteReflection = v;
+    const s = getSelectedPartSettings();
+    if (mode === 'metallic') s.metallicReflection = v;
+    if (mode === 'phong') s.phongReflection = v;
+    if (mode === 'matte') s.matteReflection = v;
+    syncUIFromSelectedPart();
     updateTextureTuneUI();
     applyCurrentTextureTuning();
+    persistCurrentMultipartParts();
     saveSettings();
 });
 
 textureTuneMetalnessSlider?.addEventListener('input', () => {
-    textureTuneState.metallicMetalness = parseFloat(textureTuneMetalnessSlider.value);
+    getSelectedPartSettings().metallicMetalness = parseFloat(textureTuneMetalnessSlider.value);
+    syncUIFromSelectedPart();
     updateTextureTuneUI();
     applyCurrentTextureTuning();
+    persistCurrentMultipartParts();
     saveSettings();
 });
 
 shadingEl.addEventListener('change', () => {
     if (shadingEl.value === 'flat' || shadingEl.value === 'toon') shadingEl.value = 'matte';
+    getSelectedPartSettings().shading = shadingEl.value;
     updateTextureTuneUI();
-    if (mesh) {
-        mesh.material.dispose();
-        mesh.material = getMaterial(shadingEl.value, colorPick.value);
-        applyCurrentTextureTuning();
-    }
+    if (mesh) rebuildMeshMaterialsForCurrentShading();
+    persistCurrentMultipartParts();
     saveSettings();
 });
 
@@ -4275,7 +4582,7 @@ function updateDynamicBg() {
     if (!isDynamicBg || !renderer) return;
     let baseHex;
     if (activeBgPreset === 'modelcolor') {
-        baseHex = colorPick.value;
+        baseHex = getModelSyncSourceColor();
     } else {
         baseHex = bgPick.value;
     }
@@ -4304,11 +4611,12 @@ colorPick.addEventListener('input', () => {
     }
     // If Model bg preset is active, update the actual bg
     if (activeBgPreset === 'modelcolor') {
-        bgPick.value = colorPick.value;
+        const syncColor = getModelSyncSourceColor();
+        bgPick.value = syncColor;
         // Only apply directly to renderer if auto-adjust is off
         // (updateDynamicBg above handles it when isDynamicBg is true)
         if (!isDynamicBg) {
-            renderer && renderer.setClearColor(new THREE.Color(colorPick.value), 1);
+            renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
         }
     }
 });
@@ -4391,6 +4699,33 @@ if (opacitySlider) {
     });
 }
 
+function applyModelPresetOnly(preset) {
+    if (!preset?.url) return;
+    const p = getURLSettings(preset.url);
+    if (!p) return;
+
+    const s = getSelectedPartSettings();
+    applyPresetIntoPartSettings(s, p);
+    modelPartBaseColors[modelPartSelected] = s.color;
+    syncUIFromSelectedPart();
+
+    if (mesh) rebuildMeshMaterialsForCurrentShading();
+    persistCurrentMultipartParts();
+
+    activeModelPreset = preset.id;
+    activeBgPreset = 'modelcolor';
+    bgPick.value = getModelSyncSourceColor();
+    if (isDynamicBg) updateDynamicBg();
+    else renderer && renderer.setClearColor(new THREE.Color(bgPick.value), 1);
+
+    updateTextureTuneUI();
+    updateShadingThumbs();
+    updateColorSwatches();
+    updateModelSelection();
+    updateBgSelection();
+    saveSettings();
+}
+
 
 function renderModelPresets() {
     const bar = document.getElementById('quickPresetsBar');
@@ -4419,31 +4754,13 @@ function renderModelPresets() {
             <span class="thumb-label">${preset.name}</span>
         `;
         const actionArea = wrap.querySelector('.shading-option');
+        attachPresetHoverPreview(actionArea, preset);
         actionArea.addEventListener('click', () => {
+            clearPresetHoverPreview();
             if (activeModelPreset === 'custom') storeCustomSettings();
 
             if (preset.url) {
-                const currentAuto = isDynamicBg ? '1' : '0';
-                // Build the URL from the preset, injecting passthrough params (e.g. debug=1)
-                let finalUrl = preset.url + '&amp=' + preset.id + '&aba=' + currentAuto;
-                if (_passthroughParams.toString()) finalUrl += '&' + _passthroughParams.toString();
-                history.replaceState(null, '', finalUrl);
-
-                // Enforce state immediately so restore/save capture it
-                activeModelPreset = preset.id;
-                restoreSettings();
-
-                // Enforce again in case restoreSettings overrides it fallback
-                activeModelPreset = preset.id;
-                saveSettings(); // This rewrites history with current UI state, using the preset ID
-
-                colorPick.dispatchEvent(new Event('input', { bubbles: true }));
-                if (opacitySlider) opacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
-                shadingEl.dispatchEvent(new Event('change', { bubbles: true }));
-                if (bgPick) bgPick.dispatchEvent(new Event('input', { bubbles: true }));
-
-                applyCurrentTextureTuning();
-                updateDynamicBg();
+                applyModelPresetOnly(preset);
             } else {
                 activeModelPreset = preset.id;
             }
@@ -4501,6 +4818,8 @@ function renderModelPresets() {
             colorPick.style.pointerEvents = 'none';
         }, 200);
     });
+    customWrap.querySelector('.shading-option').addEventListener('mouseenter', clearPresetHoverPreview);
+    customWrap.querySelector('.shading-option').addEventListener('focus', clearPresetHoverPreview);
     bar.appendChild(customWrap);
 
     // Initial call
@@ -4538,6 +4857,7 @@ function updateBgSelection() {
             if (parentOpt) parentOpt.classList.add('is-selected');
         }
     }
+    syncBgModelSyncSourceUI();
 }
 
 // Hook manual color-picker changes to switch to custom (only real user interaction, not preset dispatch)
@@ -4557,7 +4877,7 @@ if (autoBgCheckEl) {
         else {
             // Restore base preset color when turning auto-adjust off
             if (activeBgPreset === 'modelcolor') {
-                renderer && renderer.setClearColor(new THREE.Color(colorPick.value), 1);
+                renderer && renderer.setClearColor(new THREE.Color(getModelSyncSourceColor()), 1);
             } else if (activeBgPreset === 'custom') {
                 bgPick.dispatchEvent(new Event('input', { bubbles: true }));
             } else {
@@ -4641,10 +4961,10 @@ function renderBgPresets() {
             const autoBg = document.getElementById('autoBgCheck');
             isDynamicBg = autoBg ? autoBg.checked : false;
             if (preset.id === 'modelcolor') {
-                bgPick.value = colorPick.value;
+                bgPick.value = getModelSyncSourceColor();
                 bgPick.dispatchEvent(new Event('input', { bubbles: false }));
                 if (isDynamicBg) updateDynamicBg();
-                else renderer && renderer.setClearColor(new THREE.Color(colorPick.value), 1);
+                else renderer && renderer.setClearColor(new THREE.Color(getModelSyncSourceColor()), 1);
             } else {
                 bgPick.value = preset.color;
                 bgPick.dispatchEvent(new Event('input', { bubbles: true }));
