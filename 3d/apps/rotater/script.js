@@ -5,6 +5,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
+import JSZip from 'jszip';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=phong&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
@@ -221,6 +222,7 @@ const fileChipEl = document.getElementById('fileChip');
 const fileChipPartsMenu = document.getElementById('fileChipPartsMenu');
 const btnFileChipExpand = document.getElementById('btnFileChipExpand');
 const partReplaceInput = document.getElementById('partReplaceInput');
+const btnDownloadPackage = document.getElementById('btnDownloadPackage');
 const btnPause = document.getElementById('btnPause');
 const iconPause = document.getElementById('iconPause');
 const iconPlay = document.getElementById('iconPlay');
@@ -318,6 +320,7 @@ let partThumbCamera = null;
 let partThumbScratchCanvas = null;
 let partThumbScratchCtx = null;
 let pendingReplacePartIndex = -1;
+let currentModelBuffer = null;
 
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
@@ -848,20 +851,27 @@ function closeFileChipPartsMenu() {
 }
 
 function syncFileChipMultipartUI() {
-    const multipart = isMultipartModel() && !!modelPartFiles && modelPartFiles.length === modelPartNames.length;
+    const multipart = isMultipartModel();
     if (btnFileChipExpand) btnFileChipExpand.hidden = !multipart;
     if (!multipart) closeFileChipPartsMenu();
+}
+
+function safeDownloadFileName(name, fallback = 'model.stl') {
+    const raw = String(name || '').trim() || fallback;
+    return raw.replace(/[\\/:*?"<>|]/g, '_');
 }
 
 function rebuildFileChipPartsMenu() {
     if (!fileChipPartsMenu) return;
     fileChipPartsMenu.innerHTML = '';
-    if (!isMultipartModel() || !modelPartFiles || modelPartFiles.length !== modelPartNames.length) return;
+    if (!isMultipartModel()) return;
+
+    const canMutateFiles = !!modelPartFiles && modelPartFiles.length === modelPartNames.length;
 
     modelPartNames.forEach((name, idx) => {
         const row = document.createElement('div');
         row.className = 'file-chip-part-row';
-        const canRemove = modelPartNames.length > 2;
+        const canRemove = canMutateFiles && modelPartNames.length > 2;
         const nameEl = document.createElement('span');
         nameEl.className = 'file-chip-part-name';
         nameEl.textContent = name;
@@ -873,6 +883,7 @@ function rebuildFileChipPartsMenu() {
         replaceBtn.dataset.action = 'replace';
         replaceBtn.dataset.partIndex = String(idx);
         replaceBtn.textContent = 'Replace';
+        replaceBtn.disabled = !canMutateFiles;
 
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
@@ -880,7 +891,7 @@ function rebuildFileChipPartsMenu() {
         removeBtn.dataset.action = 'remove';
         removeBtn.dataset.partIndex = String(idx);
         removeBtn.disabled = !canRemove;
-        removeBtn.title = canRemove ? 'Remove this part' : 'At least 2 parts are required';
+        removeBtn.title = canMutateFiles ? (canRemove ? 'Remove this part' : 'At least 2 parts are required') : 'Part source files are unavailable for editing';
         removeBtn.setAttribute('aria-label', 'Remove this part');
         removeBtn.textContent = '×';
 
@@ -1260,7 +1271,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
 
 function renderModelPartThumbnails() {
     if (!modelPartThumbsWrap) return;
-    const visible = isMultipartModel() && !!mesh && !!renderer && !!camera;
+    const visible = isMultipartModel() && activeBgPreset === 'modelcolor' && !!mesh && !!renderer && !!camera;
     modelPartThumbsWrap.hidden = !visible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!visible));
     if (!visible) return;
@@ -1431,10 +1442,10 @@ function rebuildMeshMaterialsForCurrentShading() {
 
 function syncModelPartSelectorUI() {
     if (!modelPartThumbsWrap || !modelPartSelectorMenu || !modelPartSelectorBtn) return;
-    const isMulti = isMultipartModel();
-    modelPartThumbsWrap.hidden = !isMulti;
-    modelPartThumbsWrap.setAttribute('aria-hidden', String(!isMulti));
-    if (!isMulti) {
+    const isVisible = isMultipartModel() && activeBgPreset === 'modelcolor';
+    modelPartThumbsWrap.hidden = !isVisible;
+    modelPartThumbsWrap.setAttribute('aria-hidden', String(!isVisible));
+    if (!isVisible) {
         modelPartSelectorMenu.innerHTML = '';
         modelPartSelectorBtn.hidden = true;
         modelPartSelectorMenu.hidden = true;
@@ -1699,6 +1710,7 @@ function loadSTLBuffer(buffer, name) {
     modelPartSettings = [createPartSettings(colorPick.value)];
     customModelSettingsByPart = {};
     modelPartFiles = null;
+    currentModelBuffer = buffer;
     modelPartSelected = 0;
 
     loadPreparedGeometry(geo, name);
@@ -1715,6 +1727,7 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
         return base;
     });
     customModelSettingsByPart = {};
+    currentModelBuffer = null;
     modelPartSelected = Math.max(0, Math.min(pendingModelPartSelected, modelPartNames.length - 1));
 
     const parsed = [];
@@ -3534,6 +3547,7 @@ fileInput.addEventListener('change', e => {
 
 btnFileChipExpand?.addEventListener('click', (ev) => {
     ev.stopPropagation();
+    if (btnFileChipExpand.hidden) return;
     const isOpen = fileChipPartsMenu && !fileChipPartsMenu.hidden;
     closeFileChipPartsMenu();
     if (!isOpen && fileChipPartsMenu) {
@@ -4412,15 +4426,61 @@ document.getElementById('exportOverlay')?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) document.getElementById('exportOverlay').hidden = true;
 });
 
-document.querySelectorAll('.js-copy-settings').forEach((btn) => {
-    btn.addEventListener('click', () => {
+btnDownloadPackage?.addEventListener('click', async () => {
+    if (!mesh) return;
+    let prev = '';
+    try {
+        prev = btnDownloadPackage.innerHTML;
+        btnDownloadPackage.textContent = 'Packaging...';
+        btnDownloadPackage.disabled = true;
+        saveSettings();
         settingsToURL();
-        navigator.clipboard.writeText(location.href).then(() => {
-            const prev = btn.textContent;
-            btn.textContent = 'Copied!';
-            setTimeout(() => { btn.textContent = prev; }, 1800);
-        }).catch(() => { });
-    });
+        const settings = (() => {
+            try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); }
+            catch (_) { return {}; }
+        })();
+        const base = safeDownloadFileName(currentFileName || stemFromFileName(modelPartNames[0] || 'model'));
+        const zip = new JSZip();
+        const packageJson = {
+            app: 'rotater',
+            version: typeof ROTATER_BUILD !== 'undefined' ? ROTATER_BUILD : 'dev',
+            exportedAt: new Date().toISOString(),
+            shareURL: location.href,
+            multipart: isMultipartModel(),
+            model: {
+                currentFileName,
+                partNames: [...modelPartNames],
+                selectedPart: modelPartSelected,
+            },
+            settings,
+        };
+
+        zip.file(`${base}/package.json`, JSON.stringify(packageJson, null, 2));
+
+        if (isMultipartModel() && modelPartFiles && modelPartFiles.length) {
+            modelPartFiles.forEach((part, idx) => {
+                const partName = safeDownloadFileName(part.name || `part-${idx + 1}.stl`, `part-${idx + 1}.stl`);
+                zip.file(`${base}/models/${partName}`, part.buffer);
+            });
+        } else if (currentModelBuffer) {
+            const singleName = safeDownloadFileName(modelPartNames[0] || `${base}.stl`, `${base}.stl`);
+            zip.file(`${base}/models/${singleName}`, currentModelBuffer);
+        } else {
+            packageJson.warning = 'STL source unavailable in current session; settings only.';
+            zip.file(`${base}/package.json`, JSON.stringify(packageJson, null, 2));
+        }
+
+        const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+        download(zipBlob, `${base}_rotater-package.zip`, 'application/zip');
+        btnDownloadPackage.textContent = 'Downloaded';
+        setTimeout(() => { btnDownloadPackage.innerHTML = prev; }, 1600);
+    } catch (err) {
+        console.error(err);
+        setStatus('Could not build ZIP package.');
+        btnDownloadPackage.innerHTML = prev;
+    } finally {
+        btnDownloadPackage.disabled = false;
+    }
 });
 
 // ── Info overlay ──────────────────────────────────────────────────────────────
@@ -5523,6 +5583,7 @@ function updateBgSelection() {
         }
     }
     syncBgModelSyncSourceUI();
+    syncModelPartSelectorUI();
 }
 
 // Hook manual color-picker changes to switch to custom (only real user interaction, not preset dispatch)

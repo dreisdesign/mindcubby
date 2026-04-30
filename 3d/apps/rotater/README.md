@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.7.35** · April 30, 2026
+**Version 1.8.0** · April 30, 2026
 
 ---
 
@@ -16,7 +16,7 @@ python3 -m http.server 8765
 ```
 
 ### Applying Default Settings
-If you want to spin up your own instance and override the default colors, camera angles, speeds, or lighting without modifying the codebase, simply click **Copy Settings**, copy the URL parameter string (e.g. `?bg=000000&sh=metal...`), and paste it inside `script.js` near the top:
+If you want to spin up your own instance and override the default colors, camera angles, speeds, or lighting without modifying the codebase, download a package from the app header and copy the `shareURL` value from `package.json`, then paste that URL parameter string inside `script.js` near the top:
 
 ```javascript
 const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
@@ -35,8 +35,10 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
 - **Export** (sidebar header, left) opens the Export modal
+- **Download** (sidebar header, right) saves a single ZIP package containing `package.json` plus the original STL file(s)
 - **Reset Settings** (bottom-right of sidebar) clears all saved settings and restores defaults
-- **Copy Settings** is available in the Model card header and inside the Export modal
+
+See also: [ROADMAP.md](ROADMAP.md)
 
 ### Viewer controls
 
@@ -63,12 +65,14 @@ Sidebar tabs: **Theme → Lighting → Animation**
 - **Theme** includes model + background controls
 - **Lighting** includes lighting controls only
 - **Export** is now a modal opened from the header button
+- **Download** exports a reusable ZIP package for future import/export workflows
 
 When a multi-part model is loaded:
 
 - **Model** controls are part-aware (color, shade/tone, shading mode, and finish/reflection values are stored per selected part)
 - **Model presets** are model-only (they no longer force background or lighting changes)
 - **Background → Model** preset can follow a chosen part via **Model Sync Source** (defaults to Part 1)
+- The part dropdowns only appear when they are contextually needed: multipart + Model Sync background
 
 | Control | Description |
 |---|---|
@@ -113,6 +117,15 @@ The sidebar **Preview** thumbnail always shows exactly what will be exported:
 ### Export
 
 The Export section uses a **Format** dropdown and a **Quality** dropdown. Selecting a format reveals its specific options. A live **Preview** thumbnail shows the export frame crop in real time.
+
+### Download package
+
+The header **Download** button saves one ZIP package that contains:
+
+- `package.json` with the current Rotater settings, part names, selected part, and share URL
+- the currently loaded STL file, or all STL parts for multipart models
+
+This package is designed to support a future import flow.
 
 | Format | Output |
 |---|---|

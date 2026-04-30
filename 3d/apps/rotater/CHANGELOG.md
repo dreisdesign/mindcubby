@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.8.0] - 2026-04-30
+
+### Added
+- **Download package ZIP** — the header Download action now exports a single ZIP containing `package.json` plus the original STL file or all multipart STL source files
+- **Dedicated roadmap** — added `ROADMAP.md` to track recently completed work and the upcoming ZIP import workflow
+
+### Changed
+- **Large workflow release consolidation** — multi-part model editing, contextual dropdowns, inline tab icons, the Lighting tab split, and the Export modal are now documented together as the current default experience
+- **Export modal density refined** — format/quality controls and preview area are now constrained to a tighter content column for a cleaner, less stretched layout
+- **Packaging direction reset** — share/copy behavior has been replaced by file-based package export in preparation for future package import
+
+### Fixed
+- **Multipart filename expander gating** — the filename expansion affordance now only appears for multipart models and correctly opens its part list menu
+- **Contextual dropdown visibility** — part selector UI now stays hidden for single-STL sessions and only appears when multipart + Background Model Sync requires it
+
 ## [1.7.35] - 2026-04-30
 
 ### Added
