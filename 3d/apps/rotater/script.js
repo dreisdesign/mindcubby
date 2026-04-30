@@ -5561,10 +5561,6 @@ function applyModelPresetOnly(preset) {
     storeCustomSettings();
 
     activeModelPreset = preset.id;
-    activeBgPreset = 'modelcolor';
-    bgPick.value = getModelSyncSourceColor();
-    if (isDynamicBg) updateDynamicBg();
-    else renderer && renderer.setClearColor(new THREE.Color(bgPick.value), 1);
 
     updateTextureTuneUI();
     updateShadingThumbs();
