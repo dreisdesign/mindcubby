@@ -1581,7 +1581,7 @@ function computeTonedColor(baseHex, toneVal) {
     const v = max;
 
     const amount = Math.max(0, Math.min(1, Math.abs(toneVal) / 100));
-    const maxShift = 0.20; // slider extremes are +/-20% brightness from baseline
+    const maxShift = 0.30; // slider extremes are +/-30% brightness from baseline
     let outV = v;
     if (toneVal < 0) outV = Math.min(1, v * (1 + (maxShift * amount))); // brighter side
     if (toneVal > 0) outV = Math.max(0, v * (1 - (maxShift * amount))); // darker side
