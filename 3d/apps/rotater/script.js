@@ -212,7 +212,16 @@ const speedVal = document.getElementById('speedVal');
 const btnGif = document.getElementById('btnExportGif');
 const btnVideo = document.getElementById('btnExportVideo');
 const btnPng = document.getElementById('btnExportPng');
+const btnExportLabel = document.getElementById('btnExportLabel');
 const exportFormatEl = document.getElementById('exportFormat');
+const exportFormatCollapsedEl = document.getElementById('exportFormatCollapsed');
+const exportPanelEl = document.querySelector('.export-modal-panel');
+const exportPanelBodyEl = document.getElementById('exportPanelBody');
+const btnToggleExportPanel = document.getElementById('btnToggleExportPanel');
+const exportPanelCollapsedBarEl = document.getElementById('exportPanelCollapsedBar');
+const btnExportCollapsedLabel = document.getElementById('btnExportCollapsedLabel');
+const exportHighQualityEl = document.getElementById('exportHighQuality');
+const exportGridEl = document.getElementById('exportGrid');
 const exportDimensionInputs = Array.from(document.querySelectorAll('input[name="exportDimensions"]'));
 const cropDimensionsDock = document.getElementById('cropDimensionsDock');
 const statusEl = document.getElementById('exportStatus');
@@ -297,7 +306,7 @@ let suppressSave = false;
 let activeModelPreset = 'custom';
 let activeBgPreset = 'custom';
 let isDynamicBg = false;
-let rulerEnabled = false;
+let rulerEnabled = true;
 let rulerUnit = 'metric';
 let rulerLinesVisible = true;
 let rulerOverlayEl = null;
@@ -927,6 +936,10 @@ function isMultipartModel() {
     return Array.isArray(modelPartNames) && modelPartNames.length > 1;
 }
 
+function hasModelParts() {
+    return Array.isArray(modelPartNames) && modelPartNames.length > 0;
+}
+
 function setDisplayedFileName(name) {
     const safeName = String(name || 'model.stl');
     fileNameEl.textContent = safeName;
@@ -994,6 +1007,7 @@ function createPartSettings(colorHex = colorPick.value) {
         color: colorHex,
         tone: parseInt(opacitySlider ? opacitySlider.value : 0, 10) || 0,
         shading: shadingEl?.value || 'phong',
+        hidden: false,
         metallicRoughness: textureTuneState.metallicRoughness,
         metallicMetalness: textureTuneState.metallicMetalness,
         metallicReflection: textureTuneState.metallicReflection,
@@ -1400,7 +1414,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
 
 function renderModelPartThumbnails() {
     if (!modelPartThumbsWrap) return;
-    const visible = isMultipartModel() && !!mesh && !!renderer && !!camera;
+    const visible = hasModelParts() && !!mesh && !!renderer && !!camera;
     modelPartThumbsWrap.hidden = !visible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!visible));
     if (!visible) return;
@@ -1440,6 +1454,40 @@ function closeThumbSelectMenus() {
     if (modelPartSelectorBtn) modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
     if (bgModelSyncSelectorMenu) bgModelSyncSelectorMenu.hidden = true;
     if (bgModelSyncSelectorBtn) bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
+    closeModelPartActionMenus();
+}
+
+function closeModelPartActionMenus() {
+    document.querySelectorAll('.part-option-actions').forEach((menu) => {
+        menu.hidden = true;
+        menu.style.left = '';
+        menu.style.top = '';
+    });
+}
+
+function positionModelPartActionMenu(menuEl, anchorEl) {
+    if (!menuEl || !anchorEl) return;
+
+    const anchorRect = anchorEl.getBoundingClientRect();
+    const sideGap = 10;
+    const maxMenuW = Math.max(160, Math.min(220, window.innerWidth - (sideGap * 2)));
+    menuEl.style.width = `${maxMenuW}px`;
+
+    const menuRect = menuEl.getBoundingClientRect();
+    const menuW = Math.max(160, Math.min(maxMenuW, menuRect.width || maxMenuW));
+    const menuH = Math.max(120, menuRect.height || 138);
+
+    let left = anchorRect.right - menuW;
+    left = Math.max(sideGap, Math.min(left, window.innerWidth - menuW - sideGap));
+
+    let top = anchorRect.bottom + 8;
+    if (top + menuH > window.innerHeight - sideGap) {
+        top = anchorRect.top - menuH - 8;
+    }
+    top = Math.max(sideGap, Math.min(top, window.innerHeight - menuH - sideGap));
+
+    menuEl.style.left = `${Math.round(left)}px`;
+    menuEl.style.top = `${Math.round(top)}px`;
 }
 
 modelPartSelectorBtn?.addEventListener('click', (ev) => {
@@ -1465,6 +1513,19 @@ bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
 document.addEventListener('click', () => {
     closeThumbSelectMenus();
     closeFileChipPartsMenu();
+    closeModelPartActionMenus();
+});
+
+window.addEventListener('resize', () => {
+    closeModelPartActionMenus();
+});
+
+window.addEventListener('scroll', () => {
+    closeModelPartActionMenus();
+}, true);
+
+document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') closeModelPartActionMenus();
 });
 
 fileChipEl?.addEventListener('click', (ev) => {
@@ -1552,6 +1613,7 @@ function applyPartColorsToMesh() {
         const s = getPartSettings(idx);
         const baseHex = s.color || modelPartBaseColors[idx] || colorPick.value;
         mat.color.set(computeTonedColor(baseHex, s.tone ?? 0));
+        mat.visible = s.hidden !== true;
         mat.needsUpdate = true;
     });
 }
@@ -1571,7 +1633,7 @@ function rebuildMeshMaterialsForCurrentShading() {
 
 function syncModelPartSelectorUI() {
     if (!modelPartThumbsWrap || !modelPartSelectorMenu || !modelPartSelectorBtn) return;
-    const isVisible = isMultipartModel();
+    const isVisible = hasModelParts();
     modelPartThumbsWrap.hidden = !isVisible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!isVisible));
     if (!isVisible) {
@@ -1585,18 +1647,21 @@ function syncModelPartSelectorUI() {
     modelPartSelectorBtn.hidden = false;
     modelPartSelectorMenu.hidden = true;
     modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
+    closeModelPartActionMenus();
 
     modelPartSelected = Math.max(0, Math.min(modelPartSelected, modelPartNames.length - 1));
     modelPartSelectorMenu.innerHTML = '';
+
     modelPartNames.forEach((name, idx) => {
-        const opt = document.createElement('button');
-        opt.type = 'button';
+        const opt = document.createElement('div');
         opt.className = 'thumb-select-option';
         opt.dataset.partIndex = String(idx);
         opt.setAttribute('role', 'option');
-        opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span>`;
-        opt.addEventListener('click', () => {
-            if (!isMultipartModel()) return;
+        const settings = getPartSettings(idx);
+        const hideLabel = settings.hidden ? 'Show' : 'Hide';
+        opt.innerHTML = `<button type="button" class="thumb-select-option-main" data-part-select="${idx}"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">\u22ee</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}">Replace STL</button><button type="button" class="part-option-action" data-part-action="hide" data-part-index="${idx}">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}">Delete Model</button></div>`;
+
+        opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
             clearPresetHoverPreview();
             modelPartSelected = idx;
             syncUIFromSelectedPart();
@@ -1606,6 +1671,45 @@ function syncModelPartSelectorUI() {
             syncModelPartSelectorUI();
             saveSettings();
         });
+
+        opt.querySelector('[data-part-more]')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            const menu = opt.querySelector('.part-option-actions');
+            const willOpen = !!menu?.hidden;
+            closeModelPartActionMenus();
+            if (!menu || !willOpen) return;
+            menu.hidden = false;
+            positionModelPartActionMenu(menu, ev.currentTarget);
+        });
+
+        opt.querySelectorAll('.part-option-action').forEach((actionBtn) => {
+            actionBtn.addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                const action = actionBtn.dataset.partAction;
+                const partIdx = parseInt(actionBtn.dataset.partIndex || '-1', 10);
+                if (!Number.isFinite(partIdx) || partIdx < 0) return;
+
+                if (action === 'replace') {
+                    pendingReplacePartIndex = partIdx;
+                    partReplaceInput?.click();
+                    return;
+                }
+
+                if (action === 'hide') {
+                    const partSettings = getPartSettings(partIdx);
+                    partSettings.hidden = !partSettings.hidden;
+                    applyPartColorsToMesh();
+                    syncModelPartSelectorUI();
+                    saveSettings();
+                    return;
+                }
+
+                if (action === 'remove') {
+                    await removeMultipartPart(partIdx);
+                }
+            });
+        });
+
         modelPartSelectorMenu.appendChild(opt);
     });
 
@@ -1942,6 +2046,8 @@ function storeExportCamera() {
 }
 
 // ── Render loop ───────────────────────────────────────────────────────────────
+let _lastRulerOverlayUpdateMs = 0;
+
 function loop() {
     requestAnimationFrame(loop);
     if (!isExporting) {
@@ -2019,8 +2125,14 @@ function loop() {
         }
         syncLightRig();
         renderer.render(scene, camera);
-        drawExportFrame();
-        updateLiveRulerOverlay();
+        if (exportFrameEnabled) drawExportFrame();
+        if (rulerEnabled) {
+            const now = performance.now();
+            if (now - _lastRulerOverlayUpdateMs >= 120) {
+                updateLiveRulerOverlay();
+                _lastRulerOverlayUpdateMs = now;
+            }
+        }
         updateExportPreview();
     }
 }
@@ -2032,14 +2144,32 @@ let _previewRtWidth = 0;
 let _previewRtHeight = 0;
 let _previewCam = null;
 
+function isExportPreviewActive() {
+    const pv = document.getElementById('exportPreview');
+    if (!pv || !renderer || !camera || !scene) return false;
+
+    const exportOverlay = document.getElementById('exportOverlay');
+    if (exportOverlay?.hidden) return false;
+
+    const previewDetails = document.getElementById('exportPreviewDetails');
+    if (previewDetails && !previewDetails.open) return false;
+
+    const panelBody = pv.closest('.export-modal-body');
+    if (!panelBody) return false;
+    if (panelBody.offsetParent === null) return false;
+
+    return true;
+}
+
 function updateExportPreview(force = false) {
+    if (!isExportPreviewActive()) return;
     if (force) _previewTick = 0;
     if (!force) {
         const stride = exportFrameEnabled ? 1 : 4;
         if (++_previewTick % stride !== 0) return;
     }
     const pv = document.getElementById('exportPreview');
-    if (!pv || !renderer || !camera || !scene) return;
+    if (!pv) return;
     if (exportCamDist === null) return; // not ready yet
 
     const fmt = exportFormatEl?.value ?? 'gif';
@@ -2287,6 +2417,7 @@ function updateExportPreview(force = false) {
 }
 
 function refreshExportPreviewNow() {
+    if (!isExportPreviewActive()) return;
     try { updateExportPreview(true); } catch (e) { }
     requestAnimationFrame(() => {
         try { updateExportPreview(true); } catch (e) { }
@@ -3326,6 +3457,7 @@ function restoreSettings() {
         } else if (s.rulerLinesVisible != null) {
             rulerLinesVisible = (s.rulerLinesVisible === '1' || s.rulerLinesVisible === true || s.rulerLinesVisible === 1);
         }
+        if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
         if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
         if (s.activeBgPreset) activeBgPreset = s.activeBgPreset;
@@ -3348,6 +3480,7 @@ function restoreSettings() {
         updateColorSwatches();
         updateTextureTuneUI();
         applyTextureLighting();
+        if (exportHighQualityEl) exportHighQualityEl.checked = (document.getElementById('exportQuality')?.value === 'high');
         // Ensure preset/thumb UI reflects restored selections
         try { updateModelSelection(); } catch (e) { }
         try { updateBgSelection(); } catch (e) { }
@@ -4257,8 +4390,36 @@ document.querySelectorAll('#gifLoop, #gifDither').forEach(el =>
     el.addEventListener('change', saveSettings)
 );
 
+if (exportHighQualityEl) {
+    const q = document.getElementById('exportQuality');
+    exportHighQualityEl.checked = (q?.value === 'high');
+}
+
+if (exportGridEl) {
+    exportGridEl.checked = rulerLinesVisible;
+}
+
 document.getElementById('exportQuality')?.addEventListener('change', () => {
+    if (exportHighQualityEl) exportHighQualityEl.checked = (document.getElementById('exportQuality')?.value === 'high');
     updateEstimate();
+    refreshExportPreviewNow();
+    saveSettings();
+});
+
+exportHighQualityEl?.addEventListener('change', () => {
+    const q = document.getElementById('exportQuality');
+    if (q) q.value = exportHighQualityEl.checked ? 'high' : 'std';
+    updateEstimate();
+    refreshExportPreviewNow();
+    saveSettings();
+});
+
+exportGridEl?.addEventListener('change', () => {
+    rulerLinesVisible = !!exportGridEl.checked;
+    const linesToggle = document.getElementById('rulerLinesToggle');
+    if (linesToggle) linesToggle.checked = rulerLinesVisible;
+    updateRulerHUD();
+    updateLiveRulerOverlay();
     refreshExportPreviewNow();
     saveSettings();
 });
@@ -4279,17 +4440,95 @@ const FORMAT_LABELS = {
     png: 'Export PNG Image',
     jpg: 'Export JPEG Image',
 };
+const FORMAT_SHORT_LABELS = {
+    gif: 'GIF',
+    mp4: 'MP4',
+    png: 'PNG',
+    jpg: 'JPEG',
+};
 const FORMAT_BTNS = { gif: 'btnExportGif', mp4: 'btnExportVideo', png: 'btnExportPng', jpg: 'btnExportJpeg' };
 
+const EXPORT_OPTION_VISIBILITY = {
+    gif: {
+        exportHighQuality: true,
+        gifLoop: true,
+        gifDither: true,
+        exportTransparent: true,
+        exportGrid: true,
+    },
+    mp4: {
+        exportHighQuality: false,
+        gifLoop: false,
+        gifDither: false,
+        exportTransparent: false,
+        exportGrid: true,
+    },
+    png: {
+        exportHighQuality: false,
+        gifLoop: false,
+        gifDither: false,
+        exportTransparent: true,
+        exportGrid: true,
+    },
+    jpg: {
+        exportHighQuality: false,
+        gifLoop: false,
+        gifDither: false,
+        exportTransparent: false,
+        exportGrid: true,
+    },
+};
+
+function setExportQuickOptionVisible(inputId, visible) {
+    const input = document.getElementById(inputId);
+    const label = input?.closest('.gif-option-check');
+    if (!input || !label) return;
+    label.hidden = !visible;
+    input.disabled = !visible;
+}
+
+function applyExportQuickOptionsForFormat(fmt) {
+    const vis = EXPORT_OPTION_VISIBILITY[fmt] || EXPORT_OPTION_VISIBILITY.gif;
+    Object.keys(EXPORT_OPTION_VISIBILITY.gif).forEach((inputId) => {
+        setExportQuickOptionVisible(inputId, !!vis[inputId]);
+    });
+}
+
+function updateExportActionLabels(fmt = exportFormatEl?.value ?? exportFormatCollapsedEl?.value ?? 'gif') {
+    const panelWidth = exportPanelEl?.offsetWidth ?? 0;
+    const useShortPrimaryLabel = !!exportPanelEl?.classList.contains('is-collapsed') || (panelWidth > 0 && panelWidth < 360);
+    if (btnExportLabel) btnExportLabel.textContent = (useShortPrimaryLabel ? FORMAT_SHORT_LABELS[fmt] : FORMAT_LABELS[fmt]) ?? 'Export';
+    if (btnExportCollapsedLabel) btnExportCollapsedLabel.textContent = FORMAT_SHORT_LABELS[fmt] ?? 'Export';
+}
+
 function applyExportFormat(fmt) {
+    if (exportFormatEl && exportFormatEl.value !== fmt) exportFormatEl.value = fmt;
+    if (exportFormatCollapsedEl && exportFormatCollapsedEl.value !== fmt) exportFormatCollapsedEl.value = fmt;
     document.querySelectorAll('.export-format-opts').forEach(el => { el.hidden = true; });
     const opts = document.getElementById(`exportOpts-${fmt}`);
     if (opts) opts.hidden = false;
+    applyExportQuickOptionsForFormat(fmt);
     updateCropDimensionsDock();
-    const mainBtn = document.getElementById('btnExport');
-    if (mainBtn) mainBtn.textContent = FORMAT_LABELS[fmt] ?? 'Export';
+    updateExportActionLabels(fmt);
     updateEstimate();
     refreshExportPreviewNow();
+    queueDesktopV2RailLayoutSync();
+}
+
+function applyExportPanelState(collapsed) {
+    if (!exportPanelEl || !exportPanelBodyEl || !btnToggleExportPanel) return;
+
+    exportPanelEl.classList.toggle('is-collapsed', !!collapsed);
+    exportPanelBodyEl.hidden = !!collapsed;
+    btnToggleExportPanel.setAttribute('aria-expanded', String(!collapsed));
+    if (exportPanelCollapsedBarEl) {
+        exportPanelCollapsedBarEl.hidden = !collapsed;
+        exportPanelCollapsedBarEl.setAttribute('aria-hidden', String(!collapsed));
+    }
+
+    updateExportActionLabels();
+    if (!collapsed) refreshExportPreviewNow();
+    queueDesktopV2RailLayoutSync();
 }
 
 exportFormatEl?.addEventListener('change', function () {
@@ -4297,11 +4536,35 @@ exportFormatEl?.addEventListener('change', function () {
     saveSettings();
 });
 
+exportFormatCollapsedEl?.addEventListener('change', function () {
+    applyExportFormat(this.value);
+    saveSettings();
+});
+
+document.getElementById('exportPreviewDetails')?.addEventListener('toggle', () => {
+    refreshExportPreviewNow();
+    queueDesktopV2RailLayoutSync();
+});
+
+btnToggleExportPanel?.addEventListener('click', () => {
+    if (!exportPanelEl) return;
+    const collapsed = !exportPanelEl.classList.contains('is-collapsed');
+    applyExportPanelState(collapsed);
+    try { localStorage.setItem('rotater_exportPanelCollapsed', collapsed ? '1' : '0'); } catch (_) { }
+});
+
 // Main export button dispatches to hidden per-format button
 document.getElementById('btnExport')?.addEventListener('click', () => {
     const fmt = exportFormatEl?.value ?? 'gif';
     document.getElementById(FORMAT_BTNS[fmt])?.click();
 });
+
+document.getElementById('btnExportCollapsed')?.addEventListener('click', () => {
+    const fmt = exportFormatCollapsedEl?.value ?? exportFormatEl?.value ?? 'gif';
+    document.getElementById(FORMAT_BTNS[fmt])?.click();
+});
+
+window.addEventListener('resize', () => updateExportActionLabels());
 
 // exportTransparent / exportTransparentPng toggles: sync each other + update estimate
 function syncTransparentCheckboxes(sourceId) {
@@ -4451,6 +4714,7 @@ applyTheme(document.documentElement.classList.contains('theme-dark') ? 'dark' : 
 
 document.getElementById('btnThemeToggle').addEventListener('click', () => {
     applyTheme(document.documentElement.classList.contains('theme-dark') ? 'light' : 'dark');
+    queueDesktopV2RailLayoutSync();
 });
 
 speedSlider.addEventListener('input', () => {
@@ -4476,8 +4740,145 @@ function normalizeSidebarTab(tab) {
     return tab;
 }
 
+function isDesktopV2Layout() {
+    return window.matchMedia('(min-width: 1200px)').matches;
+}
+
+function isTabletTabsLayout() {
+    return window.matchMedia('(min-width: 900px) and (max-width: 1199px)').matches;
+}
+
+let desktopV2RailObserver = null;
+let desktopV2RailRafId = 0;
+let desktopV2DockDefaultApplied = false;
+
+function syncDesktopV2RailLayout() {
+    const root = document.documentElement;
+    if (!root.classList.contains('layout-v2-desktop')) {
+        root.style.removeProperty('--desktop-v2-effects-top');
+        root.style.removeProperty('--desktop-v2-effects-max-height');
+        return;
+    }
+
+    const appDock = document.getElementById('appSettingsDock');
+    if (!appDock) return;
+
+    const railTop = 16;
+    const railBottom = 16;
+    const railGap = 12;
+
+    const appDockHeight = Math.ceil(appDock.getBoundingClientRect().height || 0);
+    const effectsTop = railTop;
+    const effectsMaxHeight = Math.max(150, Math.floor(window.innerHeight - effectsTop - railGap - appDockHeight - railBottom));
+
+    root.style.setProperty('--desktop-v2-effects-top', `${effectsTop}px`);
+    root.style.setProperty('--desktop-v2-effects-max-height', `${effectsMaxHeight}px`);
+}
+
+function queueDesktopV2RailLayoutSync() {
+    if (desktopV2RailRafId) cancelAnimationFrame(desktopV2RailRafId);
+    desktopV2RailRafId = requestAnimationFrame(() => {
+        desktopV2RailRafId = 0;
+        syncDesktopV2RailLayout();
+    });
+}
+
+function disconnectDesktopV2RailObserver() {
+    if (desktopV2RailObserver) {
+        desktopV2RailObserver.disconnect();
+        desktopV2RailObserver = null;
+    }
+}
+
+function ensureDesktopV2RailObserver() {
+    if (!window.ResizeObserver || desktopV2RailObserver) return;
+
+    desktopV2RailObserver = new ResizeObserver(() => {
+        queueDesktopV2RailLayoutSync();
+    });
+
+    const exportPanel = document.querySelector('.export-modal-panel');
+    const appDock = document.getElementById('appSettingsDock');
+    if (exportPanel) desktopV2RailObserver.observe(exportPanel);
+    if (appDock) desktopV2RailObserver.observe(appDock);
+}
+
+function applyMobileAccordionState(panelName) {
+    const panel = normalizeSidebarTab(panelName || 'theme');
+    document.querySelectorAll('.mobile-panel-toggle').forEach((btn) => {
+        const expanded = btn.dataset.mobilePanel === panel;
+        btn.setAttribute('aria-expanded', String(expanded));
+    });
+    document.querySelectorAll('.tab-panel').forEach((panelEl) => {
+        panelEl.hidden = panelEl.dataset.panel !== panel;
+    });
+    try { localStorage.setItem('rotater_mobileAccordionPanel', panel); } catch (_) { }
+}
+
+function applyDesktopV2Layout() {
+    const desktopV2 = isDesktopV2Layout();
+    const tabletTabs = isTabletTabsLayout();
+    document.documentElement.classList.toggle('layout-v2-desktop', desktopV2);
+    document.documentElement.classList.toggle('layout-tablet-tabs', tabletTabs);
+    document.documentElement.classList.toggle('layout-mobile-accordion', !desktopV2 && !tabletTabs);
+
+    const exportOverlayEl = document.getElementById('exportOverlay');
+    const openExportBtn = document.getElementById('btnOpenExportModal');
+    if (desktopV2) {
+        document.documentElement.classList.remove('sidebar-collapsed');
+        try { localStorage.setItem('rotater_sidebarCollapsed', '0'); } catch (_) { }
+        if (exportOverlayEl) exportOverlayEl.hidden = false;
+        if (openExportBtn) openExportBtn.hidden = true;
+        refreshExportPreviewNow();
+        switchTab('theme');
+        if (!desktopV2DockDefaultApplied) {
+            applyAppSettingsDockState(true);
+            try { localStorage.setItem('rotater_appSettingsCollapsed', '1'); } catch (_) { }
+            desktopV2DockDefaultApplied = true;
+        }
+        ensureDesktopV2RailObserver();
+        queueDesktopV2RailLayoutSync();
+    } else {
+        if (tabletTabs) {
+            document.documentElement.classList.remove('sidebar-collapsed');
+            try { localStorage.setItem('rotater_sidebarCollapsed', '0'); } catch (_) { }
+        }
+        if (openExportBtn) openExportBtn.hidden = false;
+        if (exportOverlayEl) exportOverlayEl.hidden = true;
+        disconnectDesktopV2RailObserver();
+        document.documentElement.style.removeProperty('--desktop-v2-effects-top');
+        document.documentElement.style.removeProperty('--desktop-v2-effects-max-height');
+        desktopV2DockDefaultApplied = false;
+        let panel = 'theme';
+        try {
+            panel = localStorage.getItem('rotater_mobileAccordionPanel')
+                || localStorage.getItem('rotater_activeTab')
+                || 'theme';
+        } catch (_) { }
+        if (tabletTabs) switchTab(panel);
+        else applyMobileAccordionState(panel);
+    }
+}
+
+function applyAppSettingsDockState(collapsed) {
+    const dock = document.getElementById('appSettingsDock');
+    const body = document.getElementById('appSettingsDockBody');
+    const toggle = document.getElementById('btnToggleAppSettings');
+    if (!dock || !body || !toggle) return;
+
+    dock.classList.toggle('is-collapsed', !!collapsed);
+    body.hidden = !!collapsed;
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    queueDesktopV2RailLayoutSync();
+}
+
 function switchTab(tab) {
     const normalizedTab = normalizeSidebarTab(tab);
+    if (document.documentElement.classList.contains('layout-mobile-accordion')) {
+        applyMobileAccordionState(normalizedTab);
+        try { localStorage.setItem('rotater_activeTab', normalizedTab); } catch (_) { }
+        return;
+    }
     document.querySelectorAll('.sidebar-tab').forEach(btn => {
         const active = btn.dataset.tab === normalizedTab;
         btn.classList.toggle('is-active', active);
@@ -4493,6 +4894,12 @@ document.querySelectorAll('.sidebar-tab').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
+document.querySelectorAll('.mobile-panel-toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+        applyMobileAccordionState(btn.dataset.mobilePanel || 'theme');
+    });
+});
+
 // Restore active tab
 try {
     const savedTab = localStorage.getItem('rotater_activeTab');
@@ -4501,6 +4908,37 @@ try {
         switchTab(normalizedSavedTab);
     }
 } catch (_) { }
+
+try {
+    const dockCollapsed = localStorage.getItem('rotater_appSettingsCollapsed');
+    applyAppSettingsDockState(dockCollapsed !== '0');
+} catch (_) {
+    applyAppSettingsDockState(true);
+}
+
+try {
+    const exportCollapsed = localStorage.getItem('rotater_exportPanelCollapsed');
+    applyExportPanelState(exportCollapsed === '1');
+} catch (_) {
+    applyExportPanelState(false);
+}
+
+document.getElementById('btnToggleAppSettings')?.addEventListener('click', () => {
+    const dock = document.getElementById('appSettingsDock');
+    if (!dock) return;
+    const collapsed = !dock.classList.contains('is-collapsed');
+    applyAppSettingsDockState(collapsed);
+    try { localStorage.setItem('rotater_appSettingsCollapsed', collapsed ? '1' : '0'); } catch (_) { }
+});
+
+document.getElementById('btnThemeToggleRail')?.addEventListener('click', () => {
+    document.getElementById('btnThemeToggle')?.click();
+});
+
+applyDesktopV2Layout();
+window.addEventListener('resize', () => {
+    applyDesktopV2Layout();
+});
 
 // ── Show All / Show Less toggles for slider sections ─────────────────────────
 function initShowAll(toggleId, extraId, storeKey) {
@@ -4588,10 +5026,12 @@ document.getElementById('btnOpenExportModal')?.addEventListener('click', () => {
 });
 
 document.getElementById('btnExportClose')?.addEventListener('click', () => {
+    if (isDesktopV2Layout()) return;
     document.getElementById('exportOverlay').hidden = true;
 });
 
 document.getElementById('exportOverlay')?.addEventListener('click', (e) => {
+    if (isDesktopV2Layout()) return;
     if (e.target === e.currentTarget) document.getElementById('exportOverlay').hidden = true;
 });
 
@@ -4663,7 +5103,7 @@ document.getElementById('infoOverlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) document.getElementById('infoOverlay').hidden = true;
 });
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !document.getElementById('exportOverlay').hidden) {
+    if (e.key === 'Escape' && !isDesktopV2Layout() && !document.getElementById('exportOverlay').hidden) {
         document.getElementById('exportOverlay').hidden = true;
         return;
     }
@@ -5801,6 +6241,7 @@ if (autoBgCheckEl) {
 
 const rulerToggleEl = document.getElementById('rulerToggle');
 if (rulerToggleEl) {
+    rulerToggleEl.checked = !!rulerEnabled;
     rulerToggleEl.addEventListener('change', () => {
         rulerEnabled = rulerToggleEl.checked;
         updateRulerHUD();
