@@ -27,6 +27,8 @@ build/
 # Local ignore folders (large assets, scratch files, private exports)
 #_gitignore/
 **/#_gitignore/
+_ignore/
+**/_ignore/
 _IGNORE/
 **/_IGNORE/
 
