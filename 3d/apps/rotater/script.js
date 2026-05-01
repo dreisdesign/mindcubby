@@ -510,6 +510,7 @@ let _cropBackupCameraZoom = 1;
 let _cropBackupEnableRotate = true;
 let _cropBackupMouseButtons = null;
 let _cropBackupTouches = null;
+let _cropShiftOrbit = false;
 let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, updated each frame
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
@@ -2444,7 +2445,7 @@ function updateFrameOverlayButtonUI() {
 function updateCropHintUI() {
     if (orbitHintTextEl) {
         orbitHintTextEl.textContent = exportFrameEnabled
-            ? 'Drag to pan crop · Scroll to zoom'
+            ? 'Drag to pan crop · Scroll to zoom · Hold Shift + drag to orbit'
             : 'Drag to orbit · Scroll to zoom · Right-drag to pan';
     }
     if (!orbitHintBarEl) return;
@@ -2457,6 +2458,27 @@ function updateCropHintUI() {
     }
     if (_hintVisibleBeforeCrop === false) orbitHintBarEl.classList.remove('visible');
     _hintVisibleBeforeCrop = null;
+}
+
+function setCropInteractionMode(orbitMode) {
+    if (!controls) return;
+    controls.enablePan = true;
+    controls.screenSpacePanning = true;
+    controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
+    controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+
+    if (orbitMode) {
+        controls.enableRotate = true;
+        controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+        controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+        controls.touches.ONE = THREE.TOUCH.ROTATE;
+        return;
+    }
+
+    controls.enableRotate = false;
+    controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+    controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+    controls.touches.ONE = THREE.TOUCH.PAN;
 }
 
 function updateCropDimensionsDock(frameRect = null) {
@@ -5150,14 +5172,8 @@ frameOverlayBtn?.addEventListener('click', () => {
             _cropBackupEnableRotate = controls.enableRotate;
             _cropBackupMouseButtons = { ...controls.mouseButtons };
             _cropBackupTouches = { ...controls.touches };
-            controls.enableRotate = false;
-            controls.enablePan = true;
-            controls.screenSpacePanning = true;
-            controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
-            controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
-            controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
-            controls.touches.ONE = THREE.TOUCH.PAN;
-            controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+            _cropShiftOrbit = false;
+            setCropInteractionMode(false);
         }
         _cropLiveSyncArmed = true;
         syncExportCameraFromViewport();
@@ -5186,6 +5202,7 @@ function cancelCropMode() {
         if (_cropBackupMouseButtons) controls.mouseButtons = { ..._cropBackupMouseButtons };
         if (_cropBackupTouches) controls.touches = { ..._cropBackupTouches };
     }
+    _cropShiftOrbit = false;
     exportFrameEnabled = false;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
@@ -5209,6 +5226,7 @@ function confirmCropMode() {
         if (_cropBackupMouseButtons) controls.mouseButtons = { ..._cropBackupMouseButtons };
         if (_cropBackupTouches) controls.touches = { ..._cropBackupTouches };
     }
+    _cropShiftOrbit = false;
     exportFrameEnabled = false;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
@@ -5225,8 +5243,25 @@ updateFrameOverlayButtonUI();
 // Click outside (dim regions) intentionally does NOT cancel — use the buttons or Esc/Enter
 
 document.addEventListener('keydown', e => {
+    if (e.key === 'Shift' && exportFrameEnabled && !_cropShiftOrbit) {
+        _cropShiftOrbit = true;
+        setCropInteractionMode(true);
+    }
     if (e.key === 'Escape' && exportFrameEnabled) cancelCropMode();
     if ((e.key === 'Enter' || e.key === 'Return') && exportFrameEnabled) confirmCropMode();
+});
+
+document.addEventListener('keyup', e => {
+    if (e.key === 'Shift' && exportFrameEnabled && _cropShiftOrbit) {
+        _cropShiftOrbit = false;
+        setCropInteractionMode(false);
+    }
+});
+
+window.addEventListener('blur', () => {
+    if (!exportFrameEnabled || !_cropShiftOrbit) return;
+    _cropShiftOrbit = false;
+    setCropInteractionMode(false);
 });
 
 // ── Crop corner drag to snap aspect ratio ─────────────────────────────────────
