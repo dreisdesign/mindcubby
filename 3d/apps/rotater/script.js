@@ -198,6 +198,7 @@ const modelPartSelectorBtn = document.getElementById('modelPartSelectorBtn');
 const modelPartSelectorMenu = document.getElementById('modelPartSelectorMenu');
 const modelPartSelectorThumb = document.getElementById('modelPartSelectorThumb');
 const modelPartSelectorText = document.getElementById('modelPartSelectorText');
+const modelPartsSyncBtn = document.getElementById('modelPartsSyncBtn');
 const bgModelSyncSourceWrap = document.getElementById('bgModelSyncSourceWrap');
 const bgModelSyncSelectorBtn = document.getElementById('bgModelSyncSelectorBtn');
 const bgModelSyncSelectorMenu = document.getElementById('bgModelSyncSelectorMenu');
@@ -320,6 +321,7 @@ let modelPartSettings = [];
 let modelPartFiles = null;
 let modelPartSelected = 0;
 let pendingModelPartSelected = 0;
+let modelPartsSync = false;
 let bgSyncPartIndex = 0;
 let lastNonModelBgPreset = 'white';
 let presetHoverPreviewSnapshot = null;
@@ -478,6 +480,8 @@ document.querySelectorAll('input[type="range"][data-snap-count]').forEach(slider
     slider.addEventListener('change', () => {
         const before = String(slider.value);
         snapToGrid(slider);
+        // Always sync fill to snapped position, even if value didn't change
+        syncSliderTooltip(slider);
         if (String(slider.value) !== before) {
             slider.dispatchEvent(new Event('input', { bubbles: true }));
         }
@@ -1029,6 +1033,30 @@ function getSelectedPartSettings() {
     return getPartSettings(modelPartSelected);
 }
 
+function syncAllPartsFromCurrent() {
+    if (!isMultipartModel()) return;
+    const src = getSelectedPartSettings();
+    for (let i = 0; i < modelPartNames.length; i++) {
+        if (i === modelPartSelected) continue;
+        const dst = getPartSettings(i);
+        Object.assign(dst, {
+            color: src.color,
+            tone: src.tone,
+            shading: src.shading,
+            metallicRoughness: src.metallicRoughness,
+            metallicMetalness: src.metallicMetalness,
+            metallicReflection: src.metallicReflection,
+            phongRoughness: src.phongRoughness,
+            phongReflection: src.phongReflection,
+            matteRoughness: src.matteRoughness,
+            matteReflection: src.matteReflection,
+        });
+        modelPartBaseColors[i] = src.color;
+    }
+    if (mesh) applyPartColorsToMesh();
+    queueModelPartThumbsRender();
+}
+
 const FINISH_MODE_STOPS = {
     matte: [35, 25, 15],
     satin: [55, 65, 75],
@@ -1507,6 +1535,12 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
         modelPartSelectorMenu.hidden = false;
         modelPartSelectorBtn.setAttribute('aria-expanded', 'true');
     }
+});
+
+modelPartsSyncBtn?.addEventListener('click', () => {
+    modelPartsSync = !modelPartsSync;
+    modelPartsSyncBtn.setAttribute('aria-pressed', String(modelPartsSync));
+    if (modelPartsSync) syncAllPartsFromCurrent();
 });
 
 bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
@@ -4226,6 +4260,7 @@ colorPick.addEventListener('input', (ev) => {
     }
 
     if (mesh) applyPartColorsToMesh();
+    if (modelPartsSync) syncAllPartsFromCurrent();
     persistCurrentMultipartParts();
     updateShadingThumbs();
     updateColorSwatches();
@@ -4245,6 +4280,7 @@ if (opacitySlider) {
         syncSliderTooltip(opacitySlider);
         getSelectedPartSettings().tone = toneVal;
         if (mesh) applyPartColorsToMesh();
+        if (modelPartsSync) syncAllPartsFromCurrent();
         updateShadingThumbs();
         persistCurrentMultipartParts();
         updateShadeSliderVisual();
@@ -4350,6 +4386,7 @@ textureTuneLightHeightSlider?.addEventListener('input', () => {
 textureTuneRoughnessSlider?.addEventListener('input', () => {
     syncSliderTooltip(textureTuneRoughnessSlider);
     applyFinishControlsToSelectedPart(false);
+    if (modelPartsSync) syncAllPartsFromCurrent();
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
     queueModelPartThumbsRender();
@@ -4358,6 +4395,7 @@ textureTuneRoughnessSlider?.addEventListener('input', () => {
 
 textureTuneRoughnessSlider?.addEventListener('change', () => {
     applyFinishControlsToSelectedPart(true);
+    if (modelPartsSync) syncAllPartsFromCurrent();
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
     queueModelPartThumbsRender();
@@ -4371,6 +4409,7 @@ finishModeButtons.forEach((btn) => btn.addEventListener('click', () => {
         textureTuneRoughnessSlider.value = String(modeStrengthToFinishSliderValue(mode, 2));
     }
     applyFinishControlsToSelectedPart(true);
+    if (modelPartsSync) syncAllPartsFromCurrent();
     syncSliderTooltip(textureTuneRoughnessSlider);
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
@@ -6017,6 +6056,7 @@ function applyModelPresetOnly(preset) {
     applyPresetIntoPartSettings(s, p);
     modelPartBaseColors[modelPartSelected] = s.color;
     syncUIFromSelectedPart();
+    if (modelPartsSync) syncAllPartsFromCurrent();
 
     if (mesh) rebuildMeshMaterialsForCurrentShading();
     persistCurrentMultipartParts();
@@ -6119,9 +6159,12 @@ function renderModelPresets() {
 
         // Restore the part's custom profile but preserve the current finish state
         // so clicking Custom never forces Gloss/Satin/Matte changes.
+        // If coming from Clear/Glass, reset to phong so custom color is solid.
+        const resolvedShading = (currentSettings.shading === 'clear' || currentSettings.shading === 'glass')
+            ? 'phong' : currentSettings.shading;
         modelPartSettings[idx] = {
             ...customModelSettings,
-            shading: currentSettings.shading,
+            shading: resolvedShading,
             metallicRoughness: currentSettings.metallicRoughness,
             metallicMetalness: currentSettings.metallicMetalness,
             metallicReflection: currentSettings.metallicReflection,
@@ -6133,6 +6176,7 @@ function renderModelPresets() {
         modelPartBaseColors[idx] = modelPartSettings[idx].color || modelPartBaseColors[idx] || colorPick.value;
         activeModelPreset = 'custom';
         syncUIFromSelectedPart();
+        if (modelPartsSync) syncAllPartsFromCurrent();
         if (mesh) rebuildMeshMaterialsForCurrentShading();
         persistCurrentMultipartParts();
         queueModelPartThumbsRender();

@@ -855,16 +855,48 @@ html.loaded .controls-bar.hidden {
 }
 
 .thumb-select-wrap {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .thumb-select-wrap[hidden] {
     display: none !important;
 }
 
+.parts-sync-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1.5px solid var(--color-border, #d4d0e8);
+    background: transparent;
+    color: var(--color-text-muted, #888);
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.parts-sync-btn:hover {
+    background: var(--color-surface-hover, #f0eef8);
+    color: var(--color-text, #333);
+}
+
+.parts-sync-btn[aria-pressed="true"] {
+    background: var(--color-primary, #7c6fc7);
+    border-color: var(--color-primary, #7c6fc7);
+    color: #fff;
+}
+
 #modelPartSelector,
 #bgModelSyncSelector {
     margin: 8px 0 10px;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .part-thumbs-head {
