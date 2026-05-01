@@ -428,11 +428,13 @@
                             <label class="gif-option-check adv-section-check" style="margin-top:8px;">
                                 <input type="checkbox" id="rulerToggle" data-group="scene"> Show ruler overlay
                             </label>
-                            <!-- bgOpacitySlider kept hidden for JS compatibility -->
-                            <label style="display:none;" aria-hidden="true">
-                                <input type="range" id="bgOpacitySlider" min="-100" max="100" step="50" value="0"
-                                    data-snap-count="5" data-group="scene">
-                                <span id="bgOpacityVal">0</span>
+                            <!-- bgOpacitySlider — visible shade slider for background -->
+                            <label class="control-label range-label" style="margin-top:10px;">
+                                <span>Shade<span class="slider-tooltip" id="bgOpacityVal">0</span></span>
+                                <div class="range-wrap">
+                                    <input type="range" id="bgOpacitySlider" min="-100" max="100" step="50" value="0"
+                                        data-snap-count="5" data-fine-step="1" data-group="scene">
+                                </div>
                             </label>
                         </div>
 

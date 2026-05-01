@@ -231,6 +231,17 @@ input[type="file"] {
     display: none;
 }
 
+/* Hidden file inputs used for programmatic .click() must not be display:none */
+#partReplaceInput {
+    display: block;
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
 /* ── Viewer + controls: hidden in default state ── */
 
 .viewer-section {

@@ -1143,6 +1143,15 @@ function updateShadeSliderVisual() {
     opacitySlider.style.setProperty('--slider-fill', tonedHex);
 }
 
+function updateBgShadeSliderVisual() {
+    if (!bgOpacitySlider || !bgPick) return;
+    const toneVal = parseInt(bgOpacitySlider.value, 10) || 0;
+    const c = new THREE.Color(bgPick.value);
+    if (toneVal > 0) c.lerp(new THREE.Color(0x000000), toneVal / 100);
+    else if (toneVal < 0) c.lerp(new THREE.Color(0xffffff), -toneVal / 100);
+    bgOpacitySlider.style.setProperty('--slider-fill', `#${c.getHexString()}`);
+}
+
 function syncUIFromSelectedPart() {
     const s = getSelectedPartSettings();
     colorPick.value = s.color || colorPick.value;
@@ -3494,7 +3503,7 @@ function restoreSettings() {
         syncSliderTooltip(tiltRangeSlider);
         syncSliderTooltip(wobbleSpinRangeSlider);
         if (opacitySlider) syncSliderTooltip(opacitySlider);
-        if (bgOpacitySlider) syncSliderTooltip(bgOpacitySlider);
+        if (bgOpacitySlider) { syncSliderTooltip(bgOpacitySlider); updateBgShadeSliderVisual(); }
         updateTiltRangeReset();
         wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
         speedResetBtn.classList.toggle('is-changed', parseInt(speedSlider.value) !== SPEED_DEFAULT);
@@ -4249,6 +4258,7 @@ if (bgOpacitySlider) {
         const bgTone = parseInt(bgOpacitySlider.value, 10);
         document.getElementById('bgOpacityVal').textContent = (bgTone >= 0 ? '+' : '') + bgTone;
         syncSliderTooltip(bgOpacitySlider);
+        updateBgShadeSliderVisual();
         const c = new THREE.Color(bgPick.value);
         let tone = parseInt(bgOpacitySlider.value, 10);
         if (tone > 0) c.lerp(new THREE.Color(0x000000), tone / 100);
@@ -4270,6 +4280,7 @@ bgPick.addEventListener('input', () => {
         else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
         if (renderer) renderer.setClearColor(c, 1);
     }
+    updateBgShadeSliderVisual();
     if (isDynamicBg) updateDynamicBg();
     updateShadingThumbs();
     updateColorSwatches();
@@ -4337,6 +4348,7 @@ textureTuneLightHeightSlider?.addEventListener('input', () => {
 });
 
 textureTuneRoughnessSlider?.addEventListener('input', () => {
+    syncSliderTooltip(textureTuneRoughnessSlider);
     applyFinishControlsToSelectedPart(false);
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
