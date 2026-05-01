@@ -23,3 +23,19 @@ package-lock.json
 # Build outputs
 dist/
 build/
+
+# Local ignore folders (large assets, scratch files, private exports)
+#_gitignore/
+**/#_gitignore/
+_IGNORE/
+**/_IGNORE/
+
+# Secrets & credentials — never commit these
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.*
+credentials.*
