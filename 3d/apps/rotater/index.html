@@ -667,6 +667,7 @@
                             </svg>
                             <span id="btnExportLabel">Export Animated GIF</span>
                         </button>
+                        <!-- Hidden backing select kept for URL/save compatibility -->
                         <div class="export-select-group export-select-group--quality" hidden>
                             <label class="export-select-label" for="exportQuality">Quality</label>
                             <select id="exportQuality" class="export-select">
@@ -689,6 +690,14 @@
                         <label class="gif-option-check"><input type="checkbox" id="exportGrid" checked>
                             Grid</label>
                     </div>
+
+                    <label class="control-label range-label" id="exportQualitySliderRow">
+                        <span>Quality<span class="slider-tooltip" id="exportQualityVal">Medium</span></span>
+                        <div class="range-wrap">
+                            <input type="range" id="exportQualitySlider" min="0" max="2" step="1" value="1"
+                                data-snap-count="3" data-fine-step="1" data-group="scene">
+                        </div>
+                    </label>
 
                     <div id="exportOpts-gif" class="export-format-opts">
                         <div class="export-size-est-row"><span id="gifEst"></span></div>

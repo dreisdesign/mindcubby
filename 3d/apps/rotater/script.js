@@ -220,6 +220,8 @@ const exportPanelBodyEl = document.getElementById('exportPanelBody');
 const btnToggleExportPanel = document.getElementById('btnToggleExportPanel');
 const exportPanelCollapsedBarEl = document.getElementById('exportPanelCollapsedBar');
 const btnExportCollapsedLabel = document.getElementById('btnExportCollapsedLabel');
+const exportQualitySliderEl = document.getElementById('exportQualitySlider');
+const exportQualityValEl = document.getElementById('exportQualityVal');
 const exportHighQualityEl = document.getElementById('exportHighQuality');
 const exportGridEl = document.getElementById('exportGrid');
 const exportDimensionInputs = Array.from(document.querySelectorAll('input[name="exportDimensions"]'));
@@ -3394,7 +3396,7 @@ function restoreSettings() {
             // Restore quality selects (legacy: exportQuality/exportRes → both gif and video)
             const legacyQ = s.exportQuality ?? (s.exportRes === '1080' ? 'high' : s.exportRes === '480' ? 'web' : null) ?? 'std';
             const eq = s.exportQuality ?? s.gifQuality ?? s.videoQuality ?? legacyQ;
-            { const el = document.getElementById('exportQuality'); if (el) el.value = eq; }
+            setExportQualityValue(eq);
             if (s.exportDimensions) setSelectedExportDimensionsId(s.exportDimensions);
             // Restore export format
             if (s.exportFormat && exportFormatEl) {
@@ -3491,7 +3493,7 @@ function restoreSettings() {
         updateColorSwatches();
         updateTextureTuneUI();
         applyTextureLighting();
-        if (exportHighQualityEl) exportHighQualityEl.checked = (document.getElementById('exportQuality')?.value === 'high');
+        syncExportQualitySliderFromSelect();
         // Ensure preset/thumb UI reflects restored selections
         try { updateModelSelection(); } catch (e) { }
         try { updateBgSelection(); } catch (e) { }
@@ -4404,9 +4406,35 @@ document.querySelectorAll('#gifLoop, #gifDither').forEach(el =>
     el.addEventListener('change', saveSettings)
 );
 
-if (exportHighQualityEl) {
+const EXPORT_QUALITY_ORDER = ['web', 'std', 'high'];
+const EXPORT_QUALITY_LABELS = {
+    web: 'Low',
+    std: 'Medium',
+    high: 'High',
+};
+
+function syncExportQualitySliderFromSelect() {
     const q = document.getElementById('exportQuality');
-    exportHighQualityEl.checked = (q?.value === 'high');
+    if (!q) return;
+    const value = EXPORT_QUALITY_ORDER.includes(q.value) ? q.value : 'std';
+    const idx = Math.max(0, EXPORT_QUALITY_ORDER.indexOf(value));
+    if (exportQualitySliderEl) {
+        exportQualitySliderEl.value = String(idx);
+        syncSliderTooltip(exportQualitySliderEl);
+    }
+    if (exportQualityValEl) exportQualityValEl.textContent = EXPORT_QUALITY_LABELS[value] || 'Medium';
+    if (exportHighQualityEl) exportHighQualityEl.checked = (value === 'high');
+}
+
+function setExportQualityValue(value) {
+    const q = document.getElementById('exportQuality');
+    if (!q) return;
+    q.value = EXPORT_QUALITY_ORDER.includes(value) ? value : 'std';
+    syncExportQualitySliderFromSelect();
+}
+
+if (exportHighQualityEl) {
+    syncExportQualitySliderFromSelect();
 }
 
 if (exportGridEl) {
@@ -4414,15 +4442,22 @@ if (exportGridEl) {
 }
 
 document.getElementById('exportQuality')?.addEventListener('change', () => {
-    if (exportHighQualityEl) exportHighQualityEl.checked = (document.getElementById('exportQuality')?.value === 'high');
+    syncExportQualitySliderFromSelect();
+    updateEstimate();
+    refreshExportPreviewNow();
+    saveSettings();
+});
+
+exportQualitySliderEl?.addEventListener('input', () => {
+    const idx = Math.max(0, Math.min(2, parseInt(exportQualitySliderEl.value, 10) || 1));
+    setExportQualityValue(EXPORT_QUALITY_ORDER[idx]);
     updateEstimate();
     refreshExportPreviewNow();
     saveSettings();
 });
 
 exportHighQualityEl?.addEventListener('change', () => {
-    const q = document.getElementById('exportQuality');
-    if (q) q.value = exportHighQualityEl.checked ? 'high' : 'std';
+    setExportQualityValue(exportHighQualityEl.checked ? 'high' : 'std');
     updateEstimate();
     refreshExportPreviewNow();
     saveSettings();
