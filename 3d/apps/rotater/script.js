@@ -615,10 +615,8 @@ function initThree() {
     scene.background = null;
 
     {
-        const c = new THREE.Color(bgPick.value);
-        let tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
-        if (tone > 0) c.lerp(new THREE.Color(0x000000), tone / 100);
-        else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
+        const tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
+        const c = computeTonedColor(bgPick.value, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
     // restoreSettings() can run before WebGL is initialized; re-apply here so
@@ -848,19 +846,9 @@ function applyCurrentTextureTuning() {
 function getMaterial(shading, baseColor) {
     if (shading === "flat" || shading === "toon") shading = "matte"; // legacy value
 
-    // Tone: -100 = full white, 0 = original color, +100 = full black
+    // Tone: keep hue/sat, only adjust brightness around the original color.
     const toneVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
-    const baseC = new THREE.Color(baseColor);
-    if (toneVal !== 0) {
-        const hsl = {};
-        baseC.getHSL(hsl);
-        if (toneVal > 0) {
-            hsl.l = hsl.l * (1 - toneVal / 100);
-        } else {
-            hsl.l = hsl.l + (1.0 - hsl.l) * (-toneVal / 100);
-        }
-        baseC.setHSL(hsl.h, hsl.s, hsl.l);
-    }
+    const baseC = computeTonedColor(baseColor, toneVal);
 
     const isClear = (shading === "clear" || shading === "glass");
     const finalAlpha = isClear ? 0.35 : 1.0;
@@ -1149,9 +1137,7 @@ function updateShadeSliderVisual() {
 function updateBgShadeSliderVisual() {
     if (!bgOpacitySlider || !bgPick) return;
     const toneVal = parseInt(bgOpacitySlider.value, 10) || 0;
-    const c = new THREE.Color(bgPick.value);
-    if (toneVal > 0) c.lerp(new THREE.Color(0x000000), toneVal / 100);
-    else if (toneVal < 0) c.lerp(new THREE.Color(0xffffff), -toneVal / 100);
+    const c = computeTonedColor(bgPick.value, toneVal);
     bgOpacitySlider.style.setProperty('--slider-fill', `#${c.getHexString()}`);
 }
 
@@ -1595,10 +1581,10 @@ function computeTonedColor(baseHex, toneVal) {
     const v = max;
 
     const amount = Math.max(0, Math.min(1, Math.abs(toneVal) / 100));
-    const factor = 1 + (0.5 * amount); // 0 -> 1.0, 50 -> 1.25, 100 -> 1.5
+    const maxShift = 0.20; // slider extremes are +/-20% brightness from baseline
     let outV = v;
-    if (toneVal < 0) outV = Math.min(1, v * factor); // lighter
-    if (toneVal > 0) outV = Math.max(0, v / factor); // darker
+    if (toneVal < 0) outV = Math.min(1, v * (1 + (maxShift * amount))); // brighter side
+    if (toneVal > 0) outV = Math.max(0, v * (1 - (maxShift * amount))); // darker side
 
     const i = Math.floor(h * 6);
     const f = (h * 6) - i;
@@ -1865,10 +1851,8 @@ function loadPreparedGeometry(geo, name) {
     scene.background = null;
 
     {
-        const c = new THREE.Color(bgPick.value);
-        let tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
-        if (tone > 0) c.lerp(new THREE.Color(0x000000), tone / 100);
-        else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
+        const tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
+        const c = computeTonedColor(bgPick.value, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
     if (isDynamicBg) updateDynamicBg();
@@ -4262,10 +4246,8 @@ if (bgOpacitySlider) {
         document.getElementById('bgOpacityVal').textContent = (bgTone >= 0 ? '+' : '') + bgTone;
         syncSliderTooltip(bgOpacitySlider);
         updateBgShadeSliderVisual();
-        const c = new THREE.Color(bgPick.value);
-        let tone = parseInt(bgOpacitySlider.value, 10);
-        if (tone > 0) c.lerp(new THREE.Color(0x000000), tone / 100);
-        else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
+        const tone = parseInt(bgOpacitySlider.value, 10);
+        const c = computeTonedColor(bgPick.value, tone);
         if (renderer) renderer.setClearColor(c, 1);
         if (isDynamicBg) updateDynamicBg();
         saveSettings();
@@ -4277,10 +4259,8 @@ bgPick.addEventListener('input', () => {
     scene.background = null;
 
     {
-        const c = new THREE.Color(bgPick.value);
-        let tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
-        if (tone > 0) c.lerp(new THREE.Color(0x000000), tone / 100);
-        else if (tone < 0) c.lerp(new THREE.Color(0xffffff), -tone / 100);
+        const tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
+        const c = computeTonedColor(bgPick.value, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
     updateBgShadeSliderVisual();
@@ -6423,7 +6403,7 @@ function renderModelShadeSelector() {
     const sel = document.getElementById('modelShadeSelector');
     if (!sel) return;
     sel.innerHTML = '';
-    // Tone dots: -100 (lightest/white) to +100 (darkest/black), 9 steps
+    // Tone dots: 0 is baseline color; ends are bounded +/-20% brightness.
     const values = [-100, -75, -50, -25, 0, 25, 50, 75, 100];
     const currentVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
     values.forEach((val) => {
@@ -6432,10 +6412,8 @@ function renderModelShadeSelector() {
         dot.style.height = '12px';
         dot.style.borderRadius = '50%';
         dot.style.cursor = 'pointer';
-        // Show actual model color lerped toward white (negative) or black (positive)
-        const baseC = new THREE.Color(colorPick ? colorPick.value : '#2e2b74');
-        if (val > 0) baseC.lerp(new THREE.Color(0x000000), val / 100);
-        else if (val < 0) baseC.lerp(new THREE.Color(0xffffff), -val / 100);
+        // Show actual model color at each tone stop.
+        const baseC = computeTonedColor(colorPick ? colorPick.value : '#2e2b74', val);
         dot.style.backgroundColor = '#' + baseC.getHexString();
         dot.onclick = () => {
             if (opacitySlider) {
