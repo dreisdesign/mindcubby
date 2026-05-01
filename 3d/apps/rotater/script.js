@@ -222,7 +222,6 @@ const exportPanelCollapsedBarEl = document.getElementById('exportPanelCollapsedB
 const btnExportCollapsedLabel = document.getElementById('btnExportCollapsedLabel');
 const exportQualitySliderEl = document.getElementById('exportQualitySlider');
 const exportQualityValEl = document.getElementById('exportQualityVal');
-const exportHighQualityEl = document.getElementById('exportHighQuality');
 const exportGridEl = document.getElementById('exportGrid');
 const exportDimensionInputs = Array.from(document.querySelectorAll('input[name="exportDimensions"]'));
 const cropDimensionsDock = document.getElementById('cropDimensionsDock');
@@ -4423,7 +4422,6 @@ function syncExportQualitySliderFromSelect() {
         syncSliderTooltip(exportQualitySliderEl);
     }
     if (exportQualityValEl) exportQualityValEl.textContent = EXPORT_QUALITY_LABELS[value] || 'Medium';
-    if (exportHighQualityEl) exportHighQualityEl.checked = (value === 'high');
 }
 
 function setExportQualityValue(value) {
@@ -4433,9 +4431,7 @@ function setExportQualityValue(value) {
     syncExportQualitySliderFromSelect();
 }
 
-if (exportHighQualityEl) {
-    syncExportQualitySliderFromSelect();
-}
+syncExportQualitySliderFromSelect();
 
 if (exportGridEl) {
     exportGridEl.checked = rulerLinesVisible;
@@ -4451,13 +4447,6 @@ document.getElementById('exportQuality')?.addEventListener('change', () => {
 exportQualitySliderEl?.addEventListener('input', () => {
     const idx = Math.max(0, Math.min(2, parseInt(exportQualitySliderEl.value, 10) || 1));
     setExportQualityValue(EXPORT_QUALITY_ORDER[idx]);
-    updateEstimate();
-    refreshExportPreviewNow();
-    saveSettings();
-});
-
-exportHighQualityEl?.addEventListener('change', () => {
-    setExportQualityValue(exportHighQualityEl.checked ? 'high' : 'std');
     updateEstimate();
     refreshExportPreviewNow();
     saveSettings();
@@ -4499,28 +4488,24 @@ const FORMAT_BTNS = { gif: 'btnExportGif', mp4: 'btnExportVideo', png: 'btnExpor
 
 const EXPORT_OPTION_VISIBILITY = {
     gif: {
-        exportHighQuality: true,
         gifLoop: true,
         gifDither: true,
         exportTransparent: true,
         exportGrid: true,
     },
     mp4: {
-        exportHighQuality: false,
         gifLoop: false,
         gifDither: false,
         exportTransparent: false,
         exportGrid: true,
     },
     png: {
-        exportHighQuality: false,
         gifLoop: false,
         gifDither: false,
         exportTransparent: true,
         exportGrid: true,
     },
     jpg: {
-        exportHighQuality: false,
         gifLoop: false,
         gifDither: false,
         exportTransparent: false,
