@@ -4136,9 +4136,9 @@ function updateTextureTuneUI() {
     if (textureTuneLightSourceRow) textureTuneLightSourceRow.hidden = false;
     if (textureTuneLightLockBox) textureTuneLightLockBox.checked = textureTuneState.lightLock;
     if (textureTuneLightHeightRow) textureTuneLightHeightRow.hidden = false;
-    const showFinishControls = isStandard && fineTuningMode;
-    if (finishControlGroupEl) finishControlGroupEl.hidden = !showFinishControls;
-    if (textureTuneRoughnessRow) textureTuneRoughnessRow.hidden = !showFinishControls;
+    const showFinishSlider = isStandard && fineTuningMode;
+    if (finishControlGroupEl) finishControlGroupEl.hidden = !isStandard;
+    if (textureTuneRoughnessRow) textureTuneRoughnessRow.hidden = !showFinishSlider;
     if (textureTuneMetalnessRow) textureTuneMetalnessRow.hidden = mode !== 'metallic';
 
     if (textureTuneLightSlider) {
@@ -4181,7 +4181,7 @@ function updateTextureTuneUI() {
     }
     if (textureTuneLightHeightVal) textureTuneLightHeightVal.textContent = `${Math.round(textureTuneState.shadowHeight)}%`;
 
-    if (showFinishControls && textureTuneRoughnessSlider) {
+    if (showFinishSlider && textureTuneRoughnessSlider) {
         const s = getSelectedPartSettings();
         setFinishModeUI(getFinishModeFromPartSettings(s));
         textureTuneRoughnessSlider.value = String(finishSliderValueFromPartSettings(s));
@@ -5095,7 +5095,6 @@ initShowAll('advLightToggle', 'advLightExtra', 'rotater_advLightCollapsed');
 function applyFineTuningUIState(enabled) {
     fineTuningMode = !!enabled;
     document.documentElement.classList.toggle('fine-tuning-enabled', fineTuningMode);
-    if (finishControlGroupEl) finishControlGroupEl.hidden = !fineTuningMode;
 
     // Toggle step attribute so browser doesn't snap when fine tuning is on.
     document.querySelectorAll('input[type="range"][data-snap-count]').forEach(slider => {
