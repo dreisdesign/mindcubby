@@ -507,10 +507,9 @@ let _cropBackupDist = null; // exportCamDist saved on crop-mode enter, restored 
 let _cropBackupElev = 0;
 let _cropBackupZoom = 1;
 let _cropBackupCameraZoom = 1;
-let _cropBackupEnableRotate = true;
-let _cropBackupMouseButtons = null;
-let _cropBackupTouches = null;
-let _cropShiftOrbit = false;
+let _controlsDefaultMouseButtons = null;
+let _controlsDefaultTouches = null;
+let _shiftPanActive = false;
 let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, updated each frame
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
@@ -679,6 +678,8 @@ function initThree() {
     controls.autoRotate = true;
     controls.autoRotateSpeed = 2.5;
     controls.enableZoom = true;
+    _controlsDefaultMouseButtons = { ...controls.mouseButtons };
+    _controlsDefaultTouches = { ...controls.touches };
     controls.addEventListener('start', () => {
         if (!exportFrameEnabled) return;
         _cropLiveSyncArmed = true;
@@ -2445,8 +2446,8 @@ function updateFrameOverlayButtonUI() {
 function updateCropHintUI() {
     if (orbitHintTextEl) {
         orbitHintTextEl.textContent = exportFrameEnabled
-            ? 'Drag to pan crop · Scroll to zoom · Hold Shift + drag to orbit'
-            : 'Drag to orbit · Scroll to zoom · Right-drag to pan';
+            ? 'Drag to orbit · Scroll to zoom · Hold Shift + drag to pan'
+            : 'Drag to orbit · Scroll to zoom · Right-drag to pan · Hold Shift + drag to pan';
     }
     if (!orbitHintBarEl) return;
     if (exportFrameEnabled) {
@@ -2460,25 +2461,16 @@ function updateCropHintUI() {
     _hintVisibleBeforeCrop = null;
 }
 
-function setCropInteractionMode(orbitMode) {
+function setShiftPanInteraction(active) {
     if (!controls) return;
-    controls.enablePan = true;
-    controls.screenSpacePanning = true;
-    controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
-    controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
-
-    if (orbitMode) {
-        controls.enableRotate = true;
-        controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
-        controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
-        controls.touches.ONE = THREE.TOUCH.ROTATE;
+    if (active) {
+        controls.enablePan = true;
+        controls.screenSpacePanning = true;
+        controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
         return;
     }
-
-    controls.enableRotate = false;
-    controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
-    controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
-    controls.touches.ONE = THREE.TOUCH.PAN;
+    if (_controlsDefaultMouseButtons) controls.mouseButtons = { ..._controlsDefaultMouseButtons };
+    if (_controlsDefaultTouches) controls.touches = { ..._controlsDefaultTouches };
 }
 
 function updateCropDimensionsDock(frameRect = null) {
@@ -5168,13 +5160,6 @@ frameOverlayBtn?.addEventListener('click', () => {
             camera.zoom = _cropBackupCameraZoom * CROP_FRAME_UI_SCALE;
             camera.updateProjectionMatrix();
         }
-        if (controls) {
-            _cropBackupEnableRotate = controls.enableRotate;
-            _cropBackupMouseButtons = { ...controls.mouseButtons };
-            _cropBackupTouches = { ...controls.touches };
-            _cropShiftOrbit = false;
-            setCropInteractionMode(false);
-        }
         _cropLiveSyncArmed = true;
         syncExportCameraFromViewport();
     }
@@ -5197,12 +5182,6 @@ function cancelCropMode() {
         camera.zoom = _cropBackupCameraZoom || 1;
         camera.updateProjectionMatrix();
     }
-    if (controls) {
-        controls.enableRotate = _cropBackupEnableRotate;
-        if (_cropBackupMouseButtons) controls.mouseButtons = { ..._cropBackupMouseButtons };
-        if (_cropBackupTouches) controls.touches = { ..._cropBackupTouches };
-    }
-    _cropShiftOrbit = false;
     exportFrameEnabled = false;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
@@ -5221,12 +5200,6 @@ function confirmCropMode() {
         camera.zoom = (camera.zoom || 1) / CROP_FRAME_UI_SCALE;
         camera.updateProjectionMatrix();
     }
-    if (controls) {
-        controls.enableRotate = _cropBackupEnableRotate;
-        if (_cropBackupMouseButtons) controls.mouseButtons = { ..._cropBackupMouseButtons };
-        if (_cropBackupTouches) controls.touches = { ..._cropBackupTouches };
-    }
-    _cropShiftOrbit = false;
     exportFrameEnabled = false;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
@@ -5243,25 +5216,52 @@ updateFrameOverlayButtonUI();
 // Click outside (dim regions) intentionally does NOT cancel — use the buttons or Esc/Enter
 
 document.addEventListener('keydown', e => {
-    if (e.key === 'Shift' && exportFrameEnabled && !_cropShiftOrbit) {
-        _cropShiftOrbit = true;
-        setCropInteractionMode(true);
-    }
     if (e.key === 'Escape' && exportFrameEnabled) cancelCropMode();
     if ((e.key === 'Enter' || e.key === 'Return') && exportFrameEnabled) confirmCropMode();
 });
 
 document.addEventListener('keyup', e => {
-    if (e.key === 'Shift' && exportFrameEnabled && _cropShiftOrbit) {
-        _cropShiftOrbit = false;
-        setCropInteractionMode(false);
+    if (e.key === 'Shift' && _shiftPanActive) {
+        _shiftPanActive = false;
+        setShiftPanInteraction(false);
     }
 });
 
 window.addEventListener('blur', () => {
-    if (!exportFrameEnabled || !_cropShiftOrbit) return;
-    _cropShiftOrbit = false;
-    setCropInteractionMode(false);
+    if (!_shiftPanActive) return;
+    _shiftPanActive = false;
+    setShiftPanInteraction(false);
+});
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Shift' && !_shiftPanActive) {
+        _shiftPanActive = true;
+        setShiftPanInteraction(true);
+    }
+});
+
+const exportPreviewCanvas = document.getElementById('exportPreview');
+const exportPreviewWrap = exportPreviewCanvas?.closest('.export-preview-wrap');
+[exportPreviewCanvas, exportPreviewWrap].forEach((el) => {
+    el?.addEventListener('wheel', (e) => {
+        if (!canvas || !controls) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const forwarded = new WheelEvent('wheel', {
+            deltaX: e.deltaX,
+            deltaY: e.deltaY,
+            deltaZ: e.deltaZ,
+            clientX: e.clientX,
+            clientY: e.clientY,
+            ctrlKey: e.ctrlKey,
+            shiftKey: e.shiftKey,
+            altKey: e.altKey,
+            metaKey: e.metaKey,
+            bubbles: true,
+            cancelable: true,
+        });
+        canvas.dispatchEvent(forwarded);
+    }, { passive: false });
 });
 
 // ── Crop corner drag to snap aspect ratio ─────────────────────────────────────
