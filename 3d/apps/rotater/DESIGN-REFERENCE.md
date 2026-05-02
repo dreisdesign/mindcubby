@@ -73,6 +73,20 @@ Buttons floating over the 3D canvas use a translucent dark blueberry background 
 
 ---
 
+## Theme Toggle Icons
+
+- Theme toggle icons use Material `bedtime` and `bedtime_off` paths.
+- Both canvas and App Settings theme buttons share the same icon path state and label state.
+
+---
+
+## Precision Control Visibility
+
+- Finish strength controls are intentionally hidden unless `Fine tuning for precise control` is enabled.
+- This keeps the default surface controls simpler while preserving fine-grain finish adjustment when requested.
+
+---
+
 ## Typography
 
 Source Sans 3 is the only typeface. Size tokens:

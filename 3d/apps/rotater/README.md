@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.8.1** · April 30, 2026
+**Version 1.8.3** · May 2, 2026
 
 ---
 
@@ -36,9 +36,9 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
 - **Export** (sidebar header) opens the Export modal
 - **Download Package** (inside the Export modal) saves a single ZIP package containing `package.json` plus the original STL file(s)
-- **Reset Settings** (bottom-right of sidebar) clears all saved settings and restores defaults
+- **Load 3D Benchy** is available in App Settings for a quick test-model reset
 
-See also: [ROADMAP.md](ROADMAP.md)
+See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 
 ### Viewer controls
 
@@ -94,6 +94,8 @@ Texture tuning (tune icon in the Texture card) includes:
 - Roughness / Reflection (all modes)
 - Metalness (Metal mode only)
 
+Finish strength controls are shown only when **Fine tuning for precise control** is enabled in App Settings.
+
 On first visit after texture updates, the tune icon shows a small **NEW** badge with a quick hover/focus changelog popover. Dismiss with **×**.
 
 ### Effects: Animation controls
@@ -104,7 +106,7 @@ On first visit after texture updates, the tune icon shows a small **NEW** badge 
 | **Spin** | Object rotates continuously around its vertical axis (like a spinning top). Camera can orbit freely. Range slider < 360° makes it oscillate side to side instead of spinning fully. |
 | **Tilt** | Object rocks on its X axis (like a juggled bowling pin). Camera stays put. Range controls how far it tilts. |
 | **Wobble** | Spin + Tilt combined — continuous spin with a simultaneous tilt oscillation. |
-| Speed | Playback speed: 0.5× · 1× · 2× · 3× · 5× |
+| Speed | Playback speed in seconds per full rotation: 5s · 10s · 15s · 20s · 25s · 30s |
 | Range | Oscillation amplitude for Tilt (10°–50°) and arc width for Spin (45°–360°); controls tilt depth for Wobble |
 
 ### Export preview
@@ -147,19 +149,26 @@ Still-image formats (PNG/JPEG) support these built-in aspect presets:
 
 The Preview thumbnail and estimate label update immediately when you change format, quality, or dimensions.
 
+#### Export quick options (all formats)
+
+| Control | Description |
+|---|---|
+| Background | Toggle background color on/off for export preview and compatible outputs |
+| Grid | Toggle ruler grid visibility in export preview/output |
+
 #### GIF options
 
 | Control | Description |
 |---|---|
 | Loop | GIF loops forever (default: on) |
 | Dither | Floyd-Steinberg dithering for smoother gradients |
-| Transparent | Check for transparent background (no fill) |
+| Transparent | Controlled by the shared Background toggle |
 
 #### PNG options
 
 | Control | Description |
 |---|---|
-| Transparent | Check for transparent background (alpha channel) |
+| Transparent | Controlled by the shared Background toggle |
 
 #### Export quality settings
 

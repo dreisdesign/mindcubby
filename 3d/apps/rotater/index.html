@@ -142,12 +142,6 @@
                             <span class="ruler-unit" id="rulerUnitVal">mm</span>
                             <button id="rulerUnitToggle" class="ruler-unit-toggle" type="button"
                                 aria-label="Switch to imperial units">Imperial</button>
-                            <label id="rulerLinesSwitch" class="ruler-lines-switch" for="rulerLinesToggle" hidden>
-                                <span class="ruler-lines-text">Grid</span>
-                                <input id="rulerLinesToggle" class="ruler-lines-input" type="checkbox"
-                                    aria-label="Show ruler grid">
-                                <span class="ruler-lines-ui" aria-hidden="true"></span>
-                            </label>
                         </div>
                         <div id="frameDimTop" class="frame-dim-region" aria-hidden="true"></div>
                         <div id="frameDimBottom" class="frame-dim-region" aria-hidden="true"></div>
@@ -418,7 +412,7 @@
                                 brightness
                             </label>
                             <label class="gif-option-check adv-section-check" style="margin-top:8px;">
-                                <input type="checkbox" id="rulerToggle" data-group="scene"> Show ruler overlay
+                                <input type="checkbox" id="rulerToggle" data-group="scene"> Grid
                             </label>
                             <!-- bgOpacitySlider — visible shade slider for background -->
                             <label class="control-label range-label" style="margin-top:10px;">
@@ -613,7 +607,14 @@
                             </div>
                             <div class="app-settings-actions-row">
                                 <button id="btnThemeToggleRail" class="copy-link-btn copy-link-btn--secondary"
-                                    type="button" aria-label="Toggle dark mode">Dark mode</button>
+                                    type="button" aria-label="Toggle dark mode">
+                                    <svg id="themeToggleRailIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                        aria-hidden="true">
+                                        <path id="themeToggleRailIconPath"
+                                            d="M12.0998 22.325C10.6665 22.325 9.31647 22.05 8.0498 21.5C6.78314 20.95 5.67897 20.2041 4.7373 19.2625C3.79564 18.3208 3.0498 17.2166 2.4998 15.95C1.9498 14.6833 1.6748 13.3333 1.6748 11.9C1.6748 9.76664 2.25814 7.81664 3.4248 6.04997C4.59147 4.28331 6.16647 3.01664 8.1498 2.24997C8.68314 2.03331 9.1873 2.07081 9.6623 2.36247C10.1373 2.65414 10.3831 3.06664 10.3998 3.59997C10.4331 4.94997 10.679 6.24164 11.1373 7.47498C11.5956 8.70831 12.2998 9.79998 13.2498 10.75C14.1998 11.7 15.2915 12.4083 16.5248 12.875C17.7581 13.3416 19.0498 13.575 20.3998 13.575C20.9331 13.575 21.3498 13.7875 21.6498 14.2125C21.9498 14.6375 22.0081 15.1 21.8248 15.6C21.0915 17.65 19.8331 19.2833 18.0498 20.5C16.2665 21.7166 14.2831 22.325 12.0998 22.325Z" />
+                                    </svg>
+                                    <span id="themeToggleRailLabel">Dark mode</span>
+                                </button>
                                 <button id="btnInfo" class="info-icon-btn" aria-label="About Rotater" title="About Rotater">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                         <path
@@ -693,8 +694,9 @@
                             Loop</label>
                         <label class="gif-option-check"><input type="checkbox" id="gifDither">
                             Dither</label>
-                        <label class="gif-option-check"><input type="checkbox" id="exportTransparent">
-                            Transparent</label>
+                        <label class="gif-option-check"><input type="checkbox" id="exportBgColor" checked>
+                            Background</label>
+                        <input type="checkbox" id="exportTransparent" hidden>
                         <label class="gif-option-check"><input type="checkbox" id="exportGrid" checked>
                             Grid</label>
                     </div>

@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.8.3] - 2026-05-02
+
+### Changed
+- **Grid toggle simplification** — removed the duplicate bottom HUD Grid switch; Grid is now controlled from Background and Export only
+- **Unified Grid labels** — Background toggle label now matches Export as `Grid`
+- **Export background toggle** — added a shared `Background` quick toggle visible for all export formats, with compatibility sync to existing transparent export settings
+- **Precision-gated finish controls** — finish strength slider/group now appears only when `Fine tuning for precise control` is enabled
+- **Theme button icon parity** — App Settings dark mode button now uses the same bedtime / bedtime_off icon pair as the canvas theme toggle
+
+### Documentation
+- Updated README usage details for speed units, export quick options, and roadmap location
+- Updated roadmap placement to Rotater `_IGNORE` path and cleaned the active roadmap to undone-only items
+
 ## [1.8.2] - 2026-04-30
 
 ### Changed
