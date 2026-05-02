@@ -3720,6 +3720,11 @@ async function handleFiles(fileList) {
     const files = Array.from(fileList || []).filter(f => f?.name?.toLowerCase?.().endsWith('.stl'));
     if (!files.length) return;
 
+    if (mesh) {
+        const incomingLabel = files.length > 1 ? `${files.length} STL files` : `"${files[0].name}"`;
+        if (!confirm(`Replace current model with ${incomingLabel}?`)) return;
+    }
+
     const isMultipart = files.length > 1;
     const displayName = isMultipart ? getMultipartDisplayName(files.map(f => f.name)) : files[0].name;
     setDisplayedFileName(displayName);
@@ -3852,6 +3857,10 @@ fileChipPartsMenu?.addEventListener('click', async (ev) => {
     const action = targetBtn.dataset.action;
 
     if (action === 'replace') {
+                    const partName = modelPartNames[partIdx] || `Part ${partIdx + 1}`;
+                    if (!confirm(`Replace STL for ${partName}?`)) return;
+        const partName = modelPartNames[partIdx] || `Part ${partIdx + 1}`;
+        if (!confirm(`Replace STL for ${partName}?`)) return;
         pendingReplacePartIndex = partIdx;
         partReplaceInput?.click();
         return;
@@ -5240,9 +5249,24 @@ document.addEventListener('keydown', e => {
     }
 });
 
+canvas?.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    if (e.shiftKey) {
+        _shiftPanActive = true;
+        setShiftPanInteraction(true);
+        return;
+    }
+    if (_shiftPanActive) {
+        _shiftPanActive = false;
+        setShiftPanInteraction(false);
+    }
+}, true);
+
 const exportPreviewCanvas = document.getElementById('exportPreview');
 const exportPreviewWrap = exportPreviewCanvas?.closest('.export-preview-wrap');
-[exportPreviewCanvas, exportPreviewWrap].forEach((el) => {
+const exportPreviewDetails = document.getElementById('exportPreviewDetails');
+const exportPreviewSummary = exportPreviewDetails?.querySelector('.export-preview-summary');
+[exportPreviewCanvas, exportPreviewWrap, exportPreviewDetails, exportPreviewSummary].forEach((el) => {
     el?.addEventListener('wheel', (e) => {
         if (!canvas || !controls) return;
         e.preventDefault();

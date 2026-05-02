@@ -1662,7 +1662,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 .export-select {
     width: 100%;
     padding: 6px 8px;
-    border-radius: 6px;
+    border-radius: var(--radius-control);
     border: 1.5px solid var(--color-border, rgba(0, 0, 0, 0.12));
     background: var(--color-surface-raised);
     color: var(--color-on-surface);
@@ -5024,7 +5024,7 @@ html.loaded.layout-v2-desktop .ruler-lines-input:checked + .ruler-lines-ui::afte
 }
 
 #modelBox .shading-option {
-    padding: 0;
+    padding: 3px;
     border: 3px solid transparent;
     border-radius: 16px;
     background: transparent;
