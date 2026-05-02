@@ -8,7 +8,7 @@ import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 import JSZip from 'jszip';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
-const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=phong&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
+const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=phong&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
 // Export quality presets — base short-edge size + fps + bitrate.
@@ -119,9 +119,12 @@ const EXPORT = {
     },
 };
 const BASE_ROTATE_SPEED = 2.5; // OrbitControls units: 2.0 = 1 rev/60s at 60fps
-const SPEED_VALS = [0.5, 1, 2, 3, 5]; // non-linear snap points for speed slider indices 0–4
-const SPEED_DEFAULT = 1; // index into SPEED_VALS
-function getSpeed() { return SPEED_VALS[parseInt(speedSlider.value)] ?? 1; }
+const SPEED_SECONDS_PER_REV = [5, 10, 15, 20, 25, 30];
+const SPEED_DEFAULT = 2; // 15 seconds per full rotation
+function getSecondsPerRevolution() {
+    return SPEED_SECONDS_PER_REV[parseInt(speedSlider.value, 10)] ?? SPEED_SECONDS_PER_REV[SPEED_DEFAULT];
+}
+function getSpeed() { return 60 / getSecondsPerRevolution(); }
 const TILT_RANGE_DEFAULT = 20;
 const SPIN_RANGE_DEFAULT = 360;
 const WOBBLE_SPIN_RANGE_DEFAULT = 360;
@@ -513,6 +516,7 @@ let _shiftPanActive = false;
 let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, updated each frame
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
+let _pausedBeforeStillExport = null;
 const textureTuneState = {
     light: TEXTURE_TUNE_DEFAULTS.light,
     contrast: TEXTURE_TUNE_DEFAULTS.contrast,
@@ -3345,8 +3349,8 @@ function restoreSettings() {
                 }
             }
             if (s.speed != null) {
-                speedSlider.value = s.speed; // browser quantizes to nearest step (0–4)
-                speedVal.textContent = getSpeed() + '×';
+                speedSlider.value = s.speed; // browser quantizes to nearest step
+                speedVal.textContent = `${getSecondsPerRevolution()}s`;
             }
 
             if (s.textureTuneLight != null) textureTuneState.light = clamp(s.textureTuneLight, 40, 200, TEXTURE_TUNE_DEFAULTS.light);
@@ -3857,8 +3861,6 @@ fileChipPartsMenu?.addEventListener('click', async (ev) => {
     const action = targetBtn.dataset.action;
 
     if (action === 'replace') {
-                    const partName = modelPartNames[partIdx] || `Part ${partIdx + 1}`;
-                    if (!confirm(`Replace STL for ${partName}?`)) return;
         const partName = modelPartNames[partIdx] || `Part ${partIdx + 1}`;
         if (!confirm(`Replace STL for ${partName}?`)) return;
         pendingReplacePartIndex = partIdx;
@@ -4534,6 +4536,23 @@ function applyExportQuickOptionsForFormat(fmt) {
     });
 }
 
+function handleExportFormatAutoPause(fmt) {
+    const isStill = fmt === 'png' || fmt === 'jpg';
+    const isAnimated = fmt === 'gif' || fmt === 'mp4';
+
+    if (isStill) {
+        if (_pausedBeforeStillExport === null) _pausedBeforeStillExport = isPaused;
+        if (!isPaused) togglePause();
+        return;
+    }
+
+    if (isAnimated && _pausedBeforeStillExport !== null) {
+        const wasPaused = _pausedBeforeStillExport;
+        _pausedBeforeStillExport = null;
+        if (isPaused !== wasPaused) togglePause();
+    }
+}
+
 function updateExportActionLabels(fmt = exportFormatEl?.value ?? exportFormatCollapsedEl?.value ?? 'gif') {
     const panelWidth = exportPanelEl?.offsetWidth ?? 0;
     const useShortPrimaryLabel = !!exportPanelEl?.classList.contains('is-collapsed') || (panelWidth > 0 && panelWidth < 360);
@@ -4548,6 +4567,7 @@ function applyExportFormat(fmt) {
     const opts = document.getElementById(`exportOpts-${fmt}`);
     if (opts) opts.hidden = false;
     applyExportQuickOptionsForFormat(fmt);
+    handleExportFormatAutoPause(fmt);
     updateCropDimensionsDock();
     updateExportActionLabels(fmt);
     updateEstimate();
@@ -4718,6 +4738,10 @@ document.getElementById('btnClearModel').addEventListener('click', async (e) => 
         return;
     }
     if (!confirm('Reset to 3D Benchy?')) return;
+    await loadBenchyModel();
+});
+
+async function loadBenchyModel() {
     try {
         const resp = await fetch('./benchy.stl');
         if (!resp.ok) return;
@@ -4729,6 +4753,13 @@ document.getElementById('btnClearModel').addEventListener('click', async (e) => 
         controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
         loadSTLBuffer(buffer, '3dbenchy.stl');
     } catch (e) { }
+}
+
+document.getElementById('btnLoadBenchy')?.addEventListener('click', async () => {
+    if (currentFileName !== '3dbenchy') {
+        if (!confirm('Load 3D Benchy test model?')) return;
+    }
+    await loadBenchyModel();
 });
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
@@ -4759,7 +4790,7 @@ document.getElementById('btnThemeToggle').addEventListener('click', () => {
 
 speedSlider.addEventListener('input', () => {
     const v = getSpeed();
-    speedVal.textContent = v + '×';
+    speedVal.textContent = `${getSecondsPerRevolution()}s`;
     syncSliderTooltip(speedSlider);
     if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * v * spinDir;
     speedResetBtn.classList.toggle('is-changed', parseInt(speedSlider.value) !== SPEED_DEFAULT);
