@@ -210,7 +210,6 @@ const bgPick = document.getElementById('bgPicker');
 const bgOpacitySlider = document.getElementById('bgOpacitySlider');
 const shadingEl = document.getElementById('shadingSelect');
 const speedSlider = document.getElementById('speedSlider');
-const speedVal = document.getElementById('speedVal');
 
 const btnGif = document.getElementById('btnExportGif');
 const btnVideo = document.getElementById('btnExportVideo');
@@ -3350,8 +3349,7 @@ function restoreSettings() {
                 }
             }
             if (s.speed != null) {
-                speedSlider.value = s.speed; // browser quantizes to nearest step
-                speedVal.textContent = `${getSecondsPerRevolution()}s`;
+                speedSlider.value = s.speed;
             }
 
             if (s.textureTuneLight != null) textureTuneState.light = clamp(s.textureTuneLight, 40, 200, TEXTURE_TUNE_DEFAULTS.light);
@@ -3508,14 +3506,14 @@ function restoreSettings() {
         // If auto-bg was restored, ensure the dynamic background is applied
         try { if (isDynamicBg) updateDynamicBg(); } catch (e) { }
         updateRulerHUD();
-        syncSliderTooltip(speedSlider);
+        if (speedSlider instanceof HTMLInputElement) syncSliderTooltip(speedSlider);
         syncSliderTooltip(tiltRangeSlider);
         syncSliderTooltip(wobbleSpinRangeSlider);
         if (opacitySlider) syncSliderTooltip(opacitySlider);
         if (bgOpacitySlider) { syncSliderTooltip(bgOpacitySlider); updateBgShadeSliderVisual(); }
         updateTiltRangeReset();
         wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
-        speedResetBtn.classList.toggle('is-changed', parseInt(speedSlider.value) !== SPEED_DEFAULT);
+        speedResetBtn?.classList.toggle('is-changed', parseInt(speedSlider.value, 10) !== SPEED_DEFAULT);
         // Init export format panel (if format wasn't restored above, default to gif)
         if (!exportFormatEl?.value || !document.getElementById(`exportOpts-${exportFormatEl.value}`)) {
             applyExportFormat('gif');
@@ -4482,16 +4480,16 @@ exportDimensionInputs.forEach(input => {
 
 // ── Export format switcher ────────────────────────────────────────────────────
 const FORMAT_LABELS = {
-    gif: 'Export Animated GIF',
-    mp4: 'Export MP4 Video',
-    png: 'Export PNG Image',
-    jpg: 'Export JPEG Image',
+    gif: 'Export',
+    mp4: 'Export',
+    png: 'Export',
+    jpg: 'Export',
 };
 const FORMAT_SHORT_LABELS = {
-    gif: 'GIF',
-    mp4: 'MP4',
-    png: 'PNG',
-    jpg: 'JPEG',
+    gif: 'Export',
+    mp4: 'Export',
+    png: 'Export',
+    jpg: 'Export',
 };
 const FORMAT_BTNS = { gif: 'btnExportGif', mp4: 'btnExportVideo', png: 'btnExportPng', jpg: 'btnExportJpeg' };
 
@@ -4772,8 +4770,9 @@ btnResetLightingCard?.addEventListener('click', () => {
 });
 
 btnResetAnimationCard?.addEventListener('click', () => {
+    speedSlider.value = String(SPEED_DEFAULT);
+    speedSlider.dispatchEvent(new Event('change'));
     resetCardSlidersToMiddle([
-        'speedSlider',
         'tiltRangeSlider',
         'wobbleSpinRangeSlider',
     ]);
@@ -4845,20 +4844,21 @@ document.getElementById('btnThemeToggle').addEventListener('click', () => {
     queueDesktopV2RailLayoutSync();
 });
 
-speedSlider.addEventListener('input', () => {
+function handleSpeedSelectionChange() {
     const v = getSpeed();
-    speedVal.textContent = `${getSecondsPerRevolution()}s`;
-    syncSliderTooltip(speedSlider);
     if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * v * spinDir;
-    speedResetBtn.classList.toggle('is-changed', parseInt(speedSlider.value) !== SPEED_DEFAULT);
+    speedResetBtn?.classList.toggle('is-changed', parseInt(speedSlider.value, 10) !== SPEED_DEFAULT);
     updateEstimate();
     saveSettings();
-});
+}
 
-speedResetBtn.addEventListener('click', (e) => {
+speedSlider.addEventListener('change', handleSpeedSelectionChange);
+speedSlider.addEventListener('input', handleSpeedSelectionChange);
+
+speedResetBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
     speedSlider.value = SPEED_DEFAULT;
-    speedSlider.dispatchEvent(new Event('input'));
+    speedSlider.dispatchEvent(new Event('change'));
 });
 
 // ── Sidebar tabs ───────────────────────────────────────────────────────────────────
