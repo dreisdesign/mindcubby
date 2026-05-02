@@ -282,6 +282,10 @@ const textureTuneLightSourceRow = document.getElementById('textureTuneLightSourc
 const textureTuneLightHeightRow = document.getElementById('textureTuneLightHeightRow');
 const textureTuneRoughnessRow = document.getElementById('textureTuneRoughnessRow');
 const textureTuneMetalnessRow = document.getElementById('textureTuneMetalnessRow');
+const btnResetModelCard = document.getElementById('btnResetModelCard');
+const btnResetBackgroundCard = document.getElementById('btnResetBackgroundCard');
+const btnResetLightingCard = document.getElementById('btnResetLightingCard');
+const btnResetAnimationCard = document.getElementById('btnResetAnimationCard');
 // Dev logging and a flag used to suppress saveSettings() while programmatically
 // applying restored settings so we don't overwrite localStorage/URL mid-restore.
 // Capture passthrough URL params (e.g. debug=1) once at startup so they survive
@@ -4713,15 +4717,55 @@ wobbleSpinRangeResetBtn.addEventListener('click', (e) => {
     wobbleSpinRangeSlider.dispatchEvent(new Event('input'));
 });
 
-document.getElementById('btnResetSettings').addEventListener('click', () => {
-    try {
-        localStorage.removeItem(SETTINGS_KEY);
-        // Keep session mode so reload does not briefly show the empty upload page.
-        localStorage.setItem('rotater_hasSession', '1');
-        localStorage.setItem('rotater_hintDismissed', '1');
-    } catch (e) { }
-    history.replaceState(null, '', location.pathname);
-    location.reload();
+function midpointForRangeInput(input) {
+    const min = parseFloat(input.min);
+    const max = parseFloat(input.max);
+    const step = parseFloat(input.step) || 1;
+    if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) return input.value;
+    const midpoint = (min + max) / 2;
+    const snapped = min + Math.round((midpoint - min) / step) * step;
+    return String(Math.max(min, Math.min(max, snapped)));
+}
+
+function resetCardSlidersToMiddle(sliderIds) {
+    sliderIds.forEach((id) => {
+        const input = document.getElementById(id);
+        if (!(input instanceof HTMLInputElement) || input.type !== 'range') return;
+        input.value = midpointForRangeInput(input);
+        input.dispatchEvent(new Event('input'));
+    });
+}
+
+btnResetModelCard?.addEventListener('click', () => {
+    resetCardSlidersToMiddle([
+        'opacitySlider',
+        'textureTuneRoughness',
+    ]);
+});
+
+btnResetBackgroundCard?.addEventListener('click', () => {
+    resetCardSlidersToMiddle([
+        'bgOpacitySlider',
+    ]);
+});
+
+btnResetLightingCard?.addEventListener('click', () => {
+    resetCardSlidersToMiddle([
+        'textureTuneShadows',
+        'textureTuneLightSource',
+        'textureTuneLight',
+        'textureTuneLightHeight',
+        'textureTuneContrast',
+        'textureTuneHighlights',
+    ]);
+});
+
+btnResetAnimationCard?.addEventListener('click', () => {
+    resetCardSlidersToMiddle([
+        'speedSlider',
+        'tiltRangeSlider',
+        'wobbleSpinRangeSlider',
+    ]);
 });
 
 document.querySelector('.orbit-hint-dismiss')?.addEventListener('click', () => {

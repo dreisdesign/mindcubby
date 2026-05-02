@@ -9,6 +9,8 @@ _Last updated: May 2026_
 ## Batch 1 — Quick Wins
 > Small, self-contained changes. Low risk, high value.
 
+- **Tabs white-fringe artifact** — Rounded tabs show a light edge/fringe against the tab background. Audit border radius + background clip + any outline/shadow bleed.
+- **Header button vertical alignment** — Export/Download buttons sit slightly higher than filename/Upload controls. Normalize shared button height, line-height, and icon alignment.
 - **Export format dropdown border radius** — Format dropdown in export panel doesn't match the border-radius of other controls. CSS-only fix.
 - **Selected model sphere padding** — Add padding inside the selection border ring on model part spheres so the border doesn't clip the thumbnail edge.
 - **Restore export quality slider** — Quality dropdown/slider was previously available and removed. Restore it as a visible control in the export panel (Low / Standard / High).
