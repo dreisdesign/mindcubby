@@ -384,11 +384,6 @@ function addSnapDots(slider) {
         slider.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
-    const formatSnapLabel = (rawValue) => {
-        if (Math.abs(rawValue - Math.round(rawValue)) < 1e-6) return String(Math.round(rawValue));
-        return rawValue.toFixed(2).replace(/\.00$/, '').replace(/0$/, '');
-    };
-
     for (let i = 0; i < n; i++) {
         const ratio = i / (n - 1);
         const valueAtDot = min + ratio * (max - min);
@@ -403,12 +398,6 @@ function addSnapDots(slider) {
             applySnapValue(valueAtDot);
         });
         dotsEl.appendChild(dot);
-
-        const label = document.createElement('span');
-        label.className = 'snap-dot-label';
-        label.style.left = `calc((var(--slider-thumb-size, 16px) / 2) + ${ratio} * (100% - var(--slider-thumb-size, 16px)))`;
-        label.textContent = formatSnapLabel(valueAtDot);
-        dotsEl.appendChild(label);
     }
     wrap.appendChild(dotsEl);
 }
