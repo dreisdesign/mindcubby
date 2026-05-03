@@ -4937,6 +4937,11 @@ function applyMobileAccordionState(panelName) {
         const expanded = btn.dataset.mobilePanel === panel;
         btn.setAttribute('aria-expanded', String(expanded));
     });
+    document.querySelectorAll('.sidebar-tab').forEach((btn) => {
+        const active = btn.dataset.tab === panel;
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-selected', String(active));
+    });
     document.querySelectorAll('.tab-panel').forEach((panelEl) => {
         panelEl.hidden = panelEl.dataset.panel !== panel;
     });
@@ -6321,52 +6326,25 @@ function renderModelPresets() {
         persistCurrentMultipartParts();
         queueModelPartThumbsRender();
         updateModelSelection();
-        // Open picker near the clicked swatch so browser anchoring is stable.
-        const swatch = customWrap.querySelector('.shading-option');
-        const rect = swatch?.getBoundingClientRect?.();
-        const prev = {
-            position: colorPick.style.position,
-            left: colorPick.style.left,
-            top: colorPick.style.top,
-            width: colorPick.style.width,
-            height: colorPick.style.height,
-            clip: colorPick.style.clip,
-            pointerEvents: colorPick.style.pointerEvents,
-            opacity: colorPick.style.opacity,
-        };
-        if (rect) {
-            Object.assign(colorPick.style, {
-                position: 'absolute',
-                left: `${rect.left + window.scrollX}px`,
-                top: `${rect.top + window.scrollY}px`,
-                width: `${Math.max(1, Math.floor(rect.width))}px`,
-                height: `${Math.max(1, Math.floor(rect.height))}px`,
-                clip: 'auto',
-                pointerEvents: 'auto',
-                opacity: '0',
-            });
-        } else {
-            colorPick.style.width = '1px';
-            colorPick.style.height = '1px';
-            colorPick.style.pointerEvents = 'auto';
-        }
-        try { colorPick.showPicker(); } catch (e) { colorPick.click(); }
-        setTimeout(() => {
-            Object.assign(colorPick.style, {
-                position: prev.position || 'absolute',
-                left: prev.left || '',
-                top: prev.top || '',
-                width: prev.width || '0px',
-                height: prev.height || '0px',
-                clip: prev.clip || 'rect(0,0,0,0)',
-                pointerEvents: prev.pointerEvents || 'none',
-                opacity: prev.opacity || '0',
-            });
-        }, 240);
     });
     customWrap.querySelector('.shading-option').addEventListener('mouseenter', clearPresetHoverPreview);
     customWrap.querySelector('.shading-option').addEventListener('focus', clearPresetHoverPreview);
     bar.appendChild(customWrap);
+
+    // Embed colorPick inside the custom swatch label so tapping the swatch
+    // directly activates the native color picker on all mobile browsers.
+    const customColorLabel = customWrap.querySelector('.custom-color-option');
+    if (customColorLabel && colorPick) {
+        Object.assign(colorPick.style, {
+            position: 'absolute',
+            top: '0', right: '0', bottom: '0', left: '0',
+            width: '100%', height: '100%',
+            opacity: '0', border: '0', padding: '0', margin: '0',
+            overflow: 'visible', clip: 'auto',
+            pointerEvents: 'auto', cursor: 'pointer',
+        });
+        customColorLabel.appendChild(colorPick);
+    }
 
     // Initial call
     requestAnimationFrame(updateModelSelection);
@@ -6525,33 +6503,28 @@ function renderBgPresets() {
 
     const labelEl = customWrap.querySelector('.shading-option');
     if (labelEl) {
-        labelEl.addEventListener('click', (ev) => {
-            ev.preventDefault();
+        labelEl.addEventListener('click', () => {
             // Keep custom background aligned with the visible auto-adjust toggle.
             const autoBg = document.getElementById('autoBgCheck');
             isDynamicBg = autoBg ? autoBg.checked : false;
             activeBgPreset = 'custom';
             lastNonModelBgPreset = 'custom';
             updateBgSelection();
-            const input = document.getElementById('bgPicker');
-            if (!input) return;
-            if (typeof input.showPicker === 'function') {
-                try { input.showPicker(); } catch (e) { input.click(); }
-                return;
-            }
-            const thumb = customWrap.querySelector('.shading-thumb');
-            if (thumb) {
-                const rect = thumb.getBoundingClientRect();
-                const prev = { position: input.style.position, left: input.style.left, top: input.style.top, width: input.style.width, height: input.style.height, clip: input.style.clip, pointerEvents: input.style.pointerEvents };
-                Object.assign(input.style, { position: 'absolute', left: `${rect.left + window.scrollX}px`, top: `${rect.top + window.scrollY}px`, width: `${rect.width}px`, height: `${rect.height}px`, clip: 'auto', pointerEvents: 'auto' });
-                input.click();
-                setTimeout(() => {
-                    Object.assign(input.style, { position: prev.position || 'absolute', left: prev.left || '', top: prev.top || '', width: prev.width || '0px', height: prev.height || '0px', clip: prev.clip || 'rect(0,0,0,0)', pointerEvents: prev.pointerEvents || 'none' });
-                }, 800);
-            } else {
-                input.click();
-            }
         });
+    }
+
+    // Embed bgPick inside the custom swatch label so tapping the swatch
+    // directly activates the native color picker on all mobile browsers.
+    if (labelEl && bgPick) {
+        Object.assign(bgPick.style, {
+            position: 'absolute',
+            top: '0', right: '0', bottom: '0', left: '0',
+            width: '100%', height: '100%',
+            opacity: '0', border: '0', padding: '0', margin: '0',
+            overflow: 'visible', clip: 'auto',
+            pointerEvents: 'auto', cursor: 'pointer',
+        });
+        labelEl.appendChild(bgPick);
     }
 
     if (!bgPick._presetListenerAdded) {
