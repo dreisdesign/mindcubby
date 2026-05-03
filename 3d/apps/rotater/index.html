@@ -338,7 +338,7 @@
                                         <span id="modelPartSelectorText" class="thumb-select-text"></span>
                                         <span class="thumb-select-chevron" aria-hidden="true">▾</span>
                                     </button>
-                                    <div id="modelPartSelectorMenu" class="thumb-select-menu" hidden role="listbox">
+                                    <div id="modelPartSelectorMenu" class="thumb-select-menu" hidden role="dialog" aria-modal="true" aria-labelledby="modelSelectorModalTitle">
                                         <div class="thumb-select-modal-header">
                                             <span class="thumb-select-modal-title" id="modelSelectorModalTitle">Models</span>
                                             <label for="fileInput" class="file-label compact-btn thumb-select-modal-upload-btn" title="Upload STL">
@@ -353,7 +353,7 @@
                                                 </svg>
                                             </button>
                                         </div>
-                                        <div id="modelPartMenuItems" class="thumb-select-modal-items" role="presentation"></div>
+                                        <div id="modelPartMenuItems" class="thumb-select-modal-items" role="listbox"></div>
                                         <div class="thumb-select-modal-footer">
                                             <button type="button" class="copy-link-btn copy-link-btn--secondary" id="btnModelSelectorReset">Reset to Benchy</button>
                                         </div>

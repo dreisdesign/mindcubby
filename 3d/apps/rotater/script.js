@@ -1672,7 +1672,7 @@ function syncModelPartSelectorUI() {
     modelPartThumbsWrap.hidden = !isVisible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!isVisible));
     if (!isVisible) {
-        if (modelPartMenuItems) modelPartMenuItems.innerHTML = '';
+        if (modelPartMenuItems) modelPartMenuItems.replaceChildren();
         modelPartSelectorBtn.hidden = true;
         modelPartSelectorMenu.hidden = true;
         if (modelSelectorBackdrop) modelSelectorBackdrop.hidden = true;
@@ -1688,7 +1688,7 @@ function syncModelPartSelectorUI() {
 
     modelPartSelected = Math.max(0, Math.min(modelPartSelected, modelPartNames.length - 1));
     const itemsContainer = modelPartMenuItems || modelPartSelectorMenu;
-    itemsContainer.innerHTML = '';
+    itemsContainer.replaceChildren();
 
     modelPartNames.forEach((name, idx) => {
         const opt = document.createElement('div');
