@@ -2588,19 +2588,6 @@ html.none-mode .gif-loop-label {
 
 .sidebar-header {
     display: none;
-    flex-shrink: 0;
-    justify-content: stretch;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 16px 0;
-    background: var(--color-surface);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-html.loaded .sidebar-header {
-    display: flex;
 }
 
 /* ── Sidebar collapse edge tab ── */
@@ -4499,6 +4486,19 @@ html.theme-dark .sidebar-tab:hover:not(.is-active) {
     background: color-mix(in srgb, var(--palette-blueberry-800) 50%, var(--palette-blueberry-500) 50%);
     border-color: rgba(179, 168, 247, 0.3);
     color: var(--palette-blueberry-200);
+}
+
+/* Export tab variant — orange active accent */
+.sidebar-tab--export.is-active {
+    color: #fff;
+    border-color: color-mix(in srgb, var(--color-export) 70%, #fff 30%);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-export) 86%, #fff 14%), color-mix(in srgb, var(--color-export) 94%, #000 6%));
+}
+
+html.theme-dark .sidebar-tab--export.is-active {
+    color: #fff;
+    background: linear-gradient(180deg, var(--color-export), var(--color-export-hover));
+    border-color: color-mix(in srgb, var(--color-export) 70%, #fff 30%);
 }
 
 .app-settings-dock {
