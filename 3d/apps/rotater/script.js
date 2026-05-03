@@ -2616,7 +2616,7 @@ function updateRulerHUD() {
     document.documentElement.classList.toggle('ruler-visible', !!modelDims && !!rulerEnabled);
     const unitMMBtn = document.getElementById('rulerUnitMM');
     const unitINBtn = document.getElementById('rulerUnitIN');
-    if (unitMMBtn) unitMMBtn.classList.toggle('is-active', rulerUnit !== 'imperial');
+    if (unitMMBtn) unitMMBtn.classList.toggle('is-active', rulerUnit === 'metric');
     if (unitINBtn) unitINBtn.classList.toggle('is-active', rulerUnit === 'imperial');
     if (!modelDims) return;
     document.getElementById('rulerW').textContent = formatRulerValue(modelDims.w);
@@ -2769,7 +2769,8 @@ async function drawWatermarkOverlay(ctx, width, height) {
     const margin = Math.round(height * 0.025);
     ctx.save();
     ctx.globalAlpha = 0.5;
-    ctx.filter = 'brightness(0) invert(1)'; // make it white
+    // brightness(0) converts to solid black, invert(1) flips to white
+    ctx.filter = 'brightness(0) invert(1)';
     ctx.drawImage(_watermarkImg, width - logoW - margin, height - logoH - margin, logoW, logoH);
     ctx.restore();
 }
@@ -4844,7 +4845,7 @@ document.getElementById('btnResetEverything')?.addEventListener('click', async (
         localStorage.removeItem('rotater_mobileAccordionPanel');
         localStorage.removeItem('rotater_sidebarCollapsed');
     } catch (e) { }
-    location.replace(location.pathname + '?' + ROTATER_DEFAULT_QUERY);
+    location.replace(location.pathname + (ROTATER_DEFAULT_QUERY ? '?' + ROTATER_DEFAULT_QUERY : ''));
 });
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
