@@ -465,6 +465,10 @@ document.querySelectorAll('input[type="range"]').forEach((slider) => {
 
 // ── Snap-to-grid enforcement ──────────────────────────────────────────────────
 let fineTuningMode = false;
+let watermarkEnabled = false;
+try {
+    watermarkEnabled = localStorage.getItem('rotater_watermark') === '1';
+} catch (e) { }
 
 function snapToGrid(slider) {
     if (fineTuningMode) return;
@@ -2610,16 +2614,11 @@ function updateRulerHUD() {
     if (!hud) return;
     hud.hidden = !modelDims || !rulerEnabled;
     document.documentElement.classList.toggle('ruler-visible', !!modelDims && !!rulerEnabled);
+    const unitMMBtn = document.getElementById('rulerUnitMM');
+    const unitINBtn = document.getElementById('rulerUnitIN');
+    if (unitMMBtn) unitMMBtn.classList.toggle('is-active', rulerUnit !== 'imperial');
+    if (unitINBtn) unitINBtn.classList.toggle('is-active', rulerUnit === 'imperial');
     if (!modelDims) return;
-    const unitEl = document.getElementById('rulerUnitVal');
-    const unitToggle = document.getElementById('rulerUnitToggle');
-    if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';
-    if (unitToggle) {
-        unitToggle.checked = (rulerUnit === 'imperial');
-        unitToggle.setAttribute('aria-label', rulerUnit === 'imperial'
-            ? 'Switch to metric units (currently imperial)'
-            : 'Switch to imperial units (currently metric)');
-    }
     document.getElementById('rulerW').textContent = formatRulerValue(modelDims.w);
     document.getElementById('rulerD').textContent = formatRulerValue(modelDims.d);
     document.getElementById('rulerH').textContent = formatRulerValue(modelDims.h);
@@ -2751,6 +2750,28 @@ function drawMeasurement(ctx, start, end, text, center, options = {}) {
 
     const labelPos = a.clone().add(b).multiplyScalar(0.5).add(normal.multiplyScalar(labelOffset));
     drawMeasurementLabel(ctx, text, labelPos, align);
+}
+
+let _watermarkImg = null;
+async function drawWatermarkOverlay(ctx, width, height) {
+    if (!_watermarkImg) {
+        _watermarkImg = await new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = './rotater.svg';
+        });
+    }
+    if (!_watermarkImg) return;
+    const logoH = Math.round(Math.max(20, height * 0.05));
+    const aspect = _watermarkImg.naturalWidth / _watermarkImg.naturalHeight;
+    const logoW = Math.round(logoH * aspect);
+    const margin = Math.round(height * 0.025);
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.filter = 'brightness(0) invert(1)'; // make it white
+    ctx.drawImage(_watermarkImg, width - logoW - margin, height - logoH - margin, logoW, logoH);
+    ctx.restore();
 }
 
 function drawRulerOverlay(ctx, width, height, cam, options = {}) {
@@ -4810,11 +4831,20 @@ async function loadBenchyModel() {
     } catch (e) { }
 }
 
-document.getElementById('btnLoadBenchy')?.addEventListener('click', async () => {
-    if (currentFileName !== '3dbenchy') {
-        if (!confirm('Load 3D Benchy test model?')) return;
-    }
-    await loadBenchyModel();
+document.getElementById('btnResetEverything')?.addEventListener('click', async () => {
+    if (!confirm('Reset everything? This will clear all settings and reload the default model.')) return;
+    try {
+        await clearIDB();
+        localStorage.removeItem(SETTINGS_KEY);
+        localStorage.removeItem('rotater_hasSession');
+        localStorage.removeItem('rotater_hintDismissed');
+        localStorage.removeItem('rotater_appSettingsCollapsed');
+        localStorage.removeItem('rotater_exportPanelCollapsed');
+        localStorage.removeItem('rotater_activeTab');
+        localStorage.removeItem('rotater_mobileAccordionPanel');
+        localStorage.removeItem('rotater_sidebarCollapsed');
+    } catch (e) { }
+    location.replace(location.pathname + '?' + ROTATER_DEFAULT_QUERY);
 });
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
@@ -5140,6 +5170,16 @@ if (fineTuningCheckEl) {
         persistCurrentMultipartParts();
         queueModelPartThumbsRender();
         saveSettings();
+    });
+}
+
+// Watermark toggle
+const watermarkCheckEl = document.getElementById('watermarkCheck');
+if (watermarkCheckEl) {
+    watermarkCheckEl.checked = watermarkEnabled;
+    watermarkCheckEl.addEventListener('change', () => {
+        watermarkEnabled = watermarkCheckEl.checked;
+        try { localStorage.setItem('rotater_watermark', watermarkEnabled ? '1' : '0'); } catch (e) { }
     });
 }
 
@@ -5561,6 +5601,11 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     outCtx.imageSmoothingQuality = 'high';
     outCtx.drawImage(canvas, 0, 0, W, H); // downscale 2× → SSAA
     drawRulerOverlay(outCtx, W, H, camera);
+
+    // Draw watermark overlay if enabled
+    if (watermarkEnabled) {
+        await drawWatermarkOverlay(outCtx, W, H);
+    }
 
     // Restore scene + camera exactly as the user had them, synchronously.
     if (transparent) {
@@ -6426,16 +6471,23 @@ if (rulerToggleEl) {
     });
 }
 
-const rulerUnitToggleEl = document.getElementById('rulerUnitToggle');
-if (rulerUnitToggleEl) {
-    rulerUnitToggleEl.addEventListener('change', () => {
-        rulerUnit = (rulerUnit === 'metric') ? 'imperial' : 'metric';
-        updateRulerHUD();
-        updateLiveRulerOverlay();
-        refreshExportPreviewNow();
-        saveSettings();
-    });
-}
+document.getElementById('rulerUnitMM')?.addEventListener('click', () => {
+    if (rulerUnit === 'metric') return;
+    rulerUnit = 'metric';
+    updateRulerHUD();
+    updateLiveRulerOverlay();
+    refreshExportPreviewNow();
+    saveSettings();
+});
+
+document.getElementById('rulerUnitIN')?.addEventListener('click', () => {
+    if (rulerUnit === 'imperial') return;
+    rulerUnit = 'imperial';
+    updateRulerHUD();
+    updateLiveRulerOverlay();
+    refreshExportPreviewNow();
+    saveSettings();
+});
 
 function renderBgPresets() {
     const bar = document.getElementById('bgPresetsBar');
