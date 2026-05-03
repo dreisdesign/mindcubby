@@ -2622,6 +2622,22 @@ function updateRulerHUD() {
     document.getElementById('rulerW').textContent = formatRulerValue(modelDims.w);
     document.getElementById('rulerD').textContent = formatRulerValue(modelDims.d);
     document.getElementById('rulerH').textContent = formatRulerValue(modelDims.h);
+    updateGridCellDisplay();
+}
+
+function updateGridCellDisplay() {
+    const cellEl = document.getElementById('rulerGridCell');
+    const cellWrapEl = document.getElementById('rulerGridCellWrap');
+    const cellSepEl = document.getElementById('rulerGridCellSep');
+    if (!cellEl) return;
+    const show = !!(rulerEnabled && rulerLinesVisible && rulerGridSize > 0 && modelDims);
+    if (cellWrapEl) cellWrapEl.hidden = !show;
+    if (cellSepEl) cellSepEl.hidden = !show;
+    if (show && rulerGridSize > 0) {
+        const divisions = Math.max(8, Math.min(42, Math.round(rulerGridSize / 6)));
+        const cellMm = rulerGridSize / divisions;
+        cellEl.textContent = `${formatRulerValue(cellMm)} ${rulerUnitSuffix()}`;
+    }
 }
 
 function rulerUnitSuffix() {
@@ -3093,6 +3109,7 @@ function updateLiveRulerOverlay() {
     const overlay = ensureRulerOverlayEl();
     if (!overlay) return;
     updateRulerGrid();
+    updateGridCellDisplay();
     if (!RULER_DYNAMIC_LINES_ENABLED) {
         overlay.style.display = 'none';
         const ctx = overlay.getContext?.('2d');
@@ -4993,7 +5010,7 @@ function applyDesktopV2Layout() {
         document.documentElement.classList.remove('sidebar-collapsed');
         try { localStorage.setItem('rotater_sidebarCollapsed', '0'); } catch (_) { }
         if (exportOverlayEl) exportOverlayEl.hidden = false;
-        if (openExportBtn) openExportBtn.hidden = true;
+        if (openExportBtn) { openExportBtn.hidden = true; openExportBtn.classList.remove('is-active'); }
         refreshExportPreviewNow();
         switchTab('theme');
         if (!desktopV2DockDefaultApplied) {
@@ -5010,6 +5027,7 @@ function applyDesktopV2Layout() {
         }
         if (openExportBtn) openExportBtn.hidden = false;
         if (exportOverlayEl) exportOverlayEl.hidden = true;
+        if (openExportBtn) openExportBtn.classList.remove('is-active');
         disconnectDesktopV2RailObserver();
         document.documentElement.style.removeProperty('--desktop-v2-effects-top');
         document.documentElement.style.removeProperty('--desktop-v2-effects-max-height');
@@ -5203,17 +5221,22 @@ try {
 
 document.getElementById('btnOpenExportModal')?.addEventListener('click', () => {
     document.getElementById('exportOverlay').hidden = false;
+    document.getElementById('btnOpenExportModal')?.classList.add('is-active');
     refreshExportPreviewNow();
 });
 
 document.getElementById('btnExportClose')?.addEventListener('click', () => {
     if (isDesktopV2Layout()) return;
     document.getElementById('exportOverlay').hidden = true;
+    document.getElementById('btnOpenExportModal')?.classList.remove('is-active');
 });
 
 document.getElementById('exportOverlay')?.addEventListener('click', (e) => {
     if (isDesktopV2Layout()) return;
-    if (e.target === e.currentTarget) document.getElementById('exportOverlay').hidden = true;
+    if (e.target === e.currentTarget) {
+        document.getElementById('exportOverlay').hidden = true;
+        document.getElementById('btnOpenExportModal')?.classList.remove('is-active');
+    }
 });
 
 btnDownloadPackage?.addEventListener('click', async () => {
@@ -5286,6 +5309,7 @@ document.getElementById('infoOverlay').addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !isDesktopV2Layout() && !document.getElementById('exportOverlay').hidden) {
         document.getElementById('exportOverlay').hidden = true;
+        document.getElementById('btnOpenExportModal')?.classList.remove('is-active');
         return;
     }
     if (e.key === 'Escape' && !document.getElementById('infoOverlay').hidden) {

@@ -11,7 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
-## [1.8.4] - 2026-05-03
+## [1.8.5] - 2026-05-03
+
+### Changed
+- **Mobile tab consolidation** — Export is now a first-class tab alongside Theme and Effects in a single persistent row on mobile/tablet; the separate sidebar-header row is removed, saving vertical space
+- **Export tab active state** — Export tab highlights with an orange accent (`--color-export`) while the export modal is open, matching the existing action-color convention; dismissing the modal (close button, backdrop click, or Escape) clears the active state
+- **Grid → Advanced Settings** — the Grid checkbox is moved from the Background card into the Advanced Settings section and relabelled "Show grid with dimensions", making it discoverable as a measurement tool rather than a background decoration
+- **Grid cell-size indicator** — when the grid is enabled and grid lines are visible, the dimensions HUD gains a `Cell` indicator showing the real-world size of each grid cell in the active unit (mm or in); the indicator updates automatically when the model changes or the unit is toggled
+
 
 ### Fixed
 - **Mobile color picker** — custom model and background color swatches now reliably open the native color picker on iOS and Android by embedding the hidden color input directly inside the swatch label, removing the need for `showPicker()` / programmatic `.click()`

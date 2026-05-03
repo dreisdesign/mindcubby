@@ -16,13 +16,13 @@ Last updated: 2026-05-03
 - Unified Upload / Import flow (STL + Rotater ZIP)
 - Textured background presets (checker/gradient/noise)
 - Build plate option under model
-- 3D ruler lines in viewport with projected labels
+- ~~3D ruler lines in viewport with projected labels~~ → shipped as grid cell-size indicator in HUD
 - Crop interactive handles (corner/edge drag, keyboard nudge, snapping)
 - Add STL to existing parts — dashed round rect with "+" and "Add STL" inside part selector
 - Upload multipart behavior — default is add; show confirmation with option to replace
 - Export panel dock — dock/undock button to embed Export panel in bottom of right panel
 - App Settings (now Advanced Settings) — reorganization complete; complex items remain (mobile hamburger, undo/redo)
-- Filename chip — remove from canvas top; Export/Theme/Effects row always visible on mobile; tab style like matte/satin with purple active color
+- ~~Filename chip — remove from canvas top; Export/Theme/Effects row always visible on mobile; tab style like matte/satin with purple active color~~ → shipped: Export tab consolidated into sidebar-tabs row (filename chip removal deferred)
 - Undo / Redo buttons for settings-only changes (sliders, colors)
 - Mobile hamburger menu for access to Advanced Settings
 
