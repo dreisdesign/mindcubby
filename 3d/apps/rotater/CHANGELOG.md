@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [1.8.4] - 2026-05-03
+
+### Fixed
+- **Mobile color picker** — custom model and background color swatches now reliably open the native color picker on iOS and Android by embedding the hidden color input directly inside the swatch label, removing the need for `showPicker()` / programmatic `.click()`
+- **Effects tab not accessible on mobile** — Theme/Effects tabs are now visible on narrow viewports; the old accordion toggle buttons (which were inside the hidden panel and unreachable) are removed from the layout
+- **Slider drag on mobile** — range inputs now have a larger thumb (28 px) and a 44 px minimum touch target on narrow viewports; `touch-action: pan-y` prevents page-scroll from interfering with horizontal dragging
+- **Small checkboxes on mobile** — checkbox size increased to 18 × 18 px on narrow viewports for easier tapping
+
 ## [1.8.3] - 2026-05-02
 
 ### Changed

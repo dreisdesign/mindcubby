@@ -612,6 +612,18 @@ html.loaded .canvas-logo {
         content: url('favicon.svg');
         height: 36px;
     }
+
+    /* Larger slider thumb and touch target on mobile */
+    input[type="range"] {
+        --slider-thumb-size: 28px;
+        min-height: 44px;
+    }
+
+    /* Larger checkboxes on mobile */
+    .gif-option-check input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+    }
 }
 
 .canvas-top-right {
@@ -1861,6 +1873,7 @@ input[type="range"] {
     appearance: none;
     background: transparent;
     cursor: pointer;
+    touch-action: pan-y;
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
@@ -4526,34 +4539,8 @@ html.loaded .sidebar-tabs {
     padding-top: 4px;
 }
 
-html.loaded.layout-mobile-accordion .sidebar-tabs {
-    display: none !important;
-}
-
 .mobile-panel-toggle {
     display: none;
-    width: 100%;
-    min-height: 44px;
-    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 52%, transparent);
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--palette-blueberry-100) 78%, #fff 22%);
-    color: var(--color-on-surface);
-    font-size: var(--text-md);
-    font-weight: 700;
-    text-align: left;
-    padding: 0 14px;
-    cursor: pointer;
-}
-
-.mobile-panel-toggle[aria-expanded="true"] {
-    border-color: color-mix(in srgb, var(--color-primary) 70%, #fff 30%);
-    box-shadow: var(--shadow-soft);
-}
-
-html.loaded.layout-mobile-accordion .mobile-panel-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
 }
 
 html.loaded.layout-mobile-accordion .tab-panel {
