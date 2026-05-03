@@ -2615,9 +2615,7 @@ function updateRulerHUD() {
     const unitToggle = document.getElementById('rulerUnitToggle');
     if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';
     if (unitToggle) {
-        const next = (rulerUnit === 'imperial') ? 'Metric' : 'Imperial';
-        unitToggle.textContent = next;
-        unitToggle.setAttribute('aria-label', `Switch to ${next.toLowerCase()} units`);
+        unitToggle.checked = (rulerUnit === 'imperial');
     }
     document.getElementById('rulerW').textContent = formatRulerValue(modelDims.w);
     document.getElementById('rulerD').textContent = formatRulerValue(modelDims.d);
@@ -6427,7 +6425,7 @@ if (rulerToggleEl) {
 
 const rulerUnitToggleEl = document.getElementById('rulerUnitToggle');
 if (rulerUnitToggleEl) {
-    rulerUnitToggleEl.addEventListener('click', () => {
+    rulerUnitToggleEl.addEventListener('change', () => {
         rulerUnit = (rulerUnit === 'metric') ? 'imperial' : 'metric';
         updateRulerHUD();
         updateLiveRulerOverlay();

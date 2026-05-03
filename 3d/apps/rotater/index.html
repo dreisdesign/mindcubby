@@ -16,7 +16,7 @@
         }
     </style>
     <script>const ROTATER_BUILD = '1.8.4';
-        const ROTATER_DEFAULT_QUERY = 'c=b4aed6&b=8d8ab7&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
+        const ROTATER_DEFAULT_QUERY = 'c=b4aed6&b=8d8ab7&sh=matte&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
         try {
             if (!location.search && !location.hash) {
                 history.replaceState(null, '', '?' + ROTATER_DEFAULT_QUERY);
@@ -140,8 +140,11 @@
                             <span class="ruler-dim"><span class="ruler-axis">H</span><span id="rulerH"
                                     class="ruler-val">—</span></span>
                             <span class="ruler-unit" id="rulerUnitVal">mm</span>
-                            <button id="rulerUnitToggle" class="ruler-unit-toggle" type="button"
-                                aria-label="Switch to imperial units">Imperial</button>
+                            <label class="ruler-unit-switch" title="Toggle imperial/metric units">
+                                <input type="checkbox" id="rulerUnitToggle" class="ruler-unit-input"
+                                    aria-label="Switch between metric and imperial units">
+                                <span class="ruler-unit-ui"></span>
+                            </label>
                         </div>
                         <div id="frameDimTop" class="frame-dim-region" aria-hidden="true"></div>
                         <div id="frameDimBottom" class="frame-dim-region" aria-hidden="true"></div>
