@@ -2616,6 +2616,9 @@ function updateRulerHUD() {
     if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';
     if (unitToggle) {
         unitToggle.checked = (rulerUnit === 'imperial');
+        unitToggle.setAttribute('aria-label', rulerUnit === 'imperial'
+            ? 'Switch to metric units (currently imperial)'
+            : 'Switch to imperial units (currently metric)');
     }
     document.getElementById('rulerW').textContent = formatRulerValue(modelDims.w);
     document.getElementById('rulerD').textContent = formatRulerValue(modelDims.d);
