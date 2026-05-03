@@ -13,18 +13,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.8.5] - 2026-05-03
 
-### Changed
-- **Mobile tab consolidation** — Export is now a first-class tab alongside Theme and Effects in a single persistent row on mobile/tablet; the separate sidebar-header row is removed, saving vertical space
-- **Export tab active state** — Export tab highlights with an orange accent (`--color-export`) while the export modal is open, matching the existing action-color convention; dismissing the modal (close button, backdrop click, or Escape) clears the active state
-- **Grid → Advanced Settings** — the Grid checkbox is moved from the Background card into the Advanced Settings section and relabelled "Show grid with dimensions", making it discoverable as a measurement tool rather than a background decoration
-- **Grid cell-size indicator** — when the grid is enabled and grid lines are visible, the dimensions HUD gains a `Cell` indicator showing the real-world size of each grid cell in the active unit (mm or in); the indicator updates automatically when the model changes or the unit is toggled
+### Added
+- **Background Build Plate (Phase 1)** — new `Build Plate` toggle in the Background card adds a solid slicer-style floor plane under the model, color-matched to the active background tone
+- **Build Plate texture controls (Phase 1)** — new `Texture` toggle + `Texture` strength slider (0–100%) in Background card, with live updates and persisted settings
 
+### Changed
+- **Background reset scope expanded** — Background card reset now also resets Build Plate and Build Plate Texture controls to defaults
+- **Settings persistence/URL coverage** — Build Plate state and texture strength are now saved/restored via local settings and URL params (`bp`, `bpt`, `bps`)
+
+## [1.8.4] - 2026-05-03
 
 ### Fixed
-- **Mobile color picker** — custom model and background color swatches now reliably open the native color picker on iOS and Android by embedding the hidden color input directly inside the swatch label, removing the need for `showPicker()` / programmatic `.click()`
-- **Effects tab not accessible on mobile** — Theme/Effects tabs are now visible on narrow viewports; the old accordion toggle buttons (which were inside the hidden panel and unreachable) are removed from the layout
-- **Slider drag on mobile** — range inputs now have a larger thumb (28 px) and a 44 px minimum touch target on narrow viewports; `touch-action: pan-y` prevents page-scroll from interfering with horizontal dragging
-- **Small checkboxes on mobile** — checkbox size increased to 18 × 18 px on narrow viewports for easier tapping
+- **Export duration mismatch** — exported GIF and MP4 duration now exactly matches the selected Rotation Time (was ~40% too short due to a `2.5×` speed multiplier being double-applied to both live rotation and the export frame count; multiplier removed and `exportFrames()` now derives duration directly from `getSecondsPerRevolution()`)
+- **Initial rotation speed on model load** — OrbitControls `autoRotateSpeed` is now initialised from the current Rotation Time setting instead of the hardcoded `2.5` fallback
+- **Pause state preserved on model upload** — replacing or uploading a new model while paused no longer auto-resumes rotation; `isPaused` is respected and `controls.autoRotate` stays `false`
+
+### Changed
+- **Whole dimensions HUD is now the unit toggle tap target** — clicking anywhere on the W · D · H strip switches between mm and Imperial (`in`); the small "Imperial / Metric" pill button is removed; HUD has `cursor: pointer` and a hover highlight; keyboard-accessible via Tab + Enter / Space
 
 ## [1.8.3] - 2026-05-02
 

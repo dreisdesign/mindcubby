@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.8.3** · May 2, 2026
+**Version 1.8.5** · May 3, 2026
 
 ---
 
@@ -79,6 +79,8 @@ When a multi-part model is loaded:
 |---|---|
 | Color → Model | Model face color (click swatch to open color picker) |
 | Color → BG | Background color (click swatch to open color picker) |
+| Build Plate | Solid slicer-style floor plane beneath the model (toggle in Background card) |
+| Background Texture | Optional subtle checker texture on the Build Plate with a single strength slider |
 | Texture → Clay | Matte clay-style shading |
 | Texture → Phong | PBR diffuse (non-metal) |
 | Texture → Metal | PBR metallic with environment reflections |

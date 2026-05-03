@@ -612,18 +612,6 @@ html.loaded .canvas-logo {
         content: url('favicon.svg');
         height: 36px;
     }
-
-    /* Larger slider thumb and touch target on mobile */
-    input[type="range"] {
-        --slider-thumb-size: 28px;
-        min-height: 44px;
-    }
-
-    /* Larger checkboxes on mobile */
-    .gif-option-check input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-    }
 }
 
 .canvas-top-right {
@@ -1873,7 +1861,6 @@ input[type="range"] {
     appearance: none;
     background: transparent;
     cursor: pointer;
-    touch-action: pan-y;
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
@@ -2588,6 +2575,19 @@ html.none-mode .gif-loop-label {
 
 .sidebar-header {
     display: none;
+    flex-shrink: 0;
+    justify-content: stretch;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px 0;
+    background: var(--color-surface);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+html.loaded .sidebar-header {
+    display: flex;
 }
 
 /* ── Sidebar collapse edge tab ── */
@@ -3336,6 +3336,7 @@ html.crop-mode .ruler-hud {
     align-items: center;
     gap: 8px;
     padding: 6px 10px;
+    min-height: 44px; /* iOS minimum tap target */
     border-radius: 14px;
     background: rgba(10, 9, 28, 0.72);
     backdrop-filter: blur(10px);
@@ -3344,6 +3345,18 @@ html.crop-mode .ruler-hud {
     pointer-events: auto;
     white-space: nowrap;
     max-width: min(92vw, 560px);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.ruler-hud:hover {
+    background: rgba(22, 19, 54, 0.85);
+    border-color: rgba(179, 168, 247, 0.42);
+}
+
+.ruler-hud:active {
+    background: rgba(46, 43, 116, 0.55);
 }
 
 .ruler-hud[hidden] {
@@ -3380,38 +3393,20 @@ html.crop-mode .ruler-hud {
     align-self: center;
 }
 
-.ruler-unit-toggle {
-    display: inline-flex;
-    align-self: center;
-    border-radius: 999px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    margin-left: 6px;
-    flex-shrink: 0;
-}
-
-.ruler-unit-btn {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 9px;
+.ruler-unit {
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    padding: 3px 7px;
-    cursor: pointer;
-    transition: background 140ms ease, color 140ms ease;
-    line-height: 1;
-    font-family: inherit;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.04em;
+    align-self: center;
 }
 
-.ruler-unit-btn.is-active {
-    background: rgba(255, 255, 255, 0.24);
-    color: #fff;
-}
-
-.ruler-unit-btn:hover:not(.is-active) {
-    color: rgba(255, 255, 255, 0.8);
+.ruler-unit-hint {
+    margin-left: 2px;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
 }
 
 .ruler-lines-switch[hidden] {
@@ -3492,9 +3487,9 @@ html.crop-mode .ruler-hud {
         font-size: 11px;
     }
 
-    .ruler-unit-btn {
-        font-size: 8px;
-        padding: 2px 6px;
+    .ruler-unit-toggle {
+        padding: 2px 7px;
+        font-size: 9px;
     }
 
     .ruler-lines-text {
@@ -4443,7 +4438,7 @@ html.loaded .sidebar-tabs {
     cursor: pointer;
     font-family: inherit;
     letter-spacing: 0.01em;
-    transition: color 0.12s, border-color 0.12s, background 0.12s;
+    transition: color 0.12s, border-color 0.12s;
 }
 
 .sidebar-tab-icon {
@@ -4467,38 +4462,6 @@ html.loaded .sidebar-tabs {
 .sidebar-tab:hover:not(.is-active) {
     color: var(--color-on-surface, var(--color-text));
     border-color: color-mix(in srgb, var(--palette-blueberry-400) 62%, transparent);
-}
-
-/* Dark mode: inactive tabs recede into the surface; active tab uses a bright accent fill */
-html.theme-dark .sidebar-tab {
-    background: color-mix(in srgb, var(--palette-blueberry-800) 70%, var(--palette-blueberry-900) 30%);
-    border-color: rgba(179, 168, 247, 0.18);
-    color: var(--palette-blueberry-300);
-}
-
-html.theme-dark .sidebar-tab.is-active {
-    color: var(--palette-blueberry-900);
-    background: linear-gradient(180deg, var(--palette-blueberry-200), var(--palette-blueberry-300));
-    border-color: var(--palette-blueberry-200);
-}
-
-html.theme-dark .sidebar-tab:hover:not(.is-active) {
-    background: color-mix(in srgb, var(--palette-blueberry-800) 50%, var(--palette-blueberry-500) 50%);
-    border-color: rgba(179, 168, 247, 0.3);
-    color: var(--palette-blueberry-200);
-}
-
-/* Export tab variant — orange active accent */
-.sidebar-tab--export.is-active {
-    color: #fff;
-    border-color: color-mix(in srgb, var(--color-export) 70%, #fff 30%);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-export) 86%, #fff 14%), color-mix(in srgb, var(--color-export) 94%, #000 6%));
-}
-
-html.theme-dark .sidebar-tab--export.is-active {
-    color: #fff;
-    background: linear-gradient(180deg, var(--color-export), var(--color-export-hover));
-    border-color: color-mix(in srgb, var(--color-export) 70%, #fff 30%);
 }
 
 .app-settings-dock {
@@ -4567,8 +4530,34 @@ html.theme-dark .sidebar-tab--export.is-active {
     padding-top: 4px;
 }
 
+html.loaded.layout-mobile-accordion .sidebar-tabs {
+    display: none !important;
+}
+
 .mobile-panel-toggle {
     display: none;
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 52%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--palette-blueberry-100) 78%, #fff 22%);
+    color: var(--color-on-surface);
+    font-size: var(--text-md);
+    font-weight: 700;
+    text-align: left;
+    padding: 0 14px;
+    cursor: pointer;
+}
+
+.mobile-panel-toggle[aria-expanded="true"] {
+    border-color: color-mix(in srgb, var(--color-primary) 70%, #fff 30%);
+    box-shadow: var(--shadow-soft);
+}
+
+html.loaded.layout-mobile-accordion .mobile-panel-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 html.loaded.layout-mobile-accordion .tab-panel {
@@ -4786,24 +4775,11 @@ html.loaded.layout-v2-desktop .ruler-val {
 }
 
 html.loaded.layout-v2-desktop .ruler-unit-toggle {
-    background: rgba(141, 138, 183, 0.32);
-    border-color: rgba(111, 104, 174, 0.42);
-    margin-left: 6px;
-}
-
-html.loaded.layout-v2-desktop .ruler-unit-btn {
-    color: var(--palette-blueberry-400);
-    font-size: 10px;
-    padding: 4px 8px;
-}
-
-html.loaded.layout-v2-desktop .ruler-unit-btn.is-active {
+    padding: 5px 12px;
+    font-size: 11px;
     background: var(--palette-blueberry-500);
+    border-color: var(--palette-blueberry-500);
     color: #fff;
-}
-
-html.loaded.layout-v2-desktop .ruler-unit-btn:hover:not(.is-active) {
-    color: var(--color-on-surface);
 }
 
 html.loaded.layout-v2-desktop .ruler-lines-switch {

@@ -118,7 +118,7 @@ const EXPORT = {
         };
     },
 };
-const BASE_ROTATE_SPEED = 2.5; // OrbitControls units: 2.0 = 1 rev/60s at 60fps
+const BASE_ROTATE_SPEED = 1; // Keep timing 1:1 with the selected seconds-per-revolution setting
 const SPEED_SECONDS_PER_REV = [5, 10, 15, 20, 25, 30];
 const SPEED_DEFAULT = 2; // 15 seconds per full rotation
 function getSecondsPerRevolution() {
@@ -149,11 +149,10 @@ const TEXTURE_TUNE_DEFAULTS = {
     lightLock: true,
 };
 
-// Returns frame count that gives 1 revolution matching the live rotation speed
+// Returns frame count for one cycle using the selected Rotation Time
 function exportFrames(fps = EXPORT.gif.fps) {
-    const speed = controls ? Math.abs(controls.autoRotateSpeed) : BASE_ROTATE_SPEED;
-    const secsPerRev = 60 / speed;
-    return Math.round(fps * secsPerRev);
+    const secsPerRev = getSecondsPerRevolution();
+    return Math.max(1, Math.round(fps * secsPerRev));
 }
 
 function updateEstimate() {
@@ -208,6 +207,10 @@ const bgModelSyncSelectorThumb = document.getElementById('bgModelSyncSelectorThu
 const bgModelSyncSelectorText = document.getElementById('bgModelSyncSelectorText');
 const bgPick = document.getElementById('bgPicker');
 const bgOpacitySlider = document.getElementById('bgOpacitySlider');
+const buildPlateToggleEl = document.getElementById('buildPlateToggle');
+const buildPlateTextureToggleEl = document.getElementById('buildPlateTextureToggle');
+const buildPlateTextureSliderEl = document.getElementById('buildPlateTextureSlider');
+const buildPlateTextureValEl = document.getElementById('buildPlateTextureVal');
 const shadingEl = document.getElementById('shadingSelect');
 const speedSlider = document.getElementById('speedSlider');
 
@@ -297,7 +300,8 @@ const APP_PARAM_KEYS = new Set([
     'c', 'b', 'op', 'sh', 'rm', 'sp', 'tr', 'wsr', 'sd', 'gl', 'ef', 'eq', 'ed', 'et', 'gd', 'jq',
     'tto', 'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh', 'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
     'rv', 'ru', 'rl', 'rg',
-    'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp', 'bsp'
+    'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp', 'bsp',
+    'bp', 'bpt', 'bps'
 ]);
 const _passthroughParams = (() => {
     const p = new URLSearchParams(location.search);
@@ -465,10 +469,6 @@ document.querySelectorAll('input[type="range"]').forEach((slider) => {
 
 // ── Snap-to-grid enforcement ──────────────────────────────────────────────────
 let fineTuningMode = false;
-let watermarkEnabled = false;
-try {
-    watermarkEnabled = localStorage.getItem('rotater_watermark') === '1';
-} catch (e) { }
 
 function snapToGrid(slider) {
     if (fineTuningMode) return;
@@ -505,6 +505,7 @@ document.querySelectorAll('input[type="range"][data-snap-count]').forEach(slider
 let renderer, scene, camera, controls, mesh;
 let ambientLight, keyLight, fillLight, rimLight, lightRig;
 let shadowCatcher;
+let buildPlateMesh;
 let isExporting = false;
 let isPaused = false;
 let modelRadius = 1;
@@ -528,6 +529,9 @@ let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, 
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
 let _pausedBeforeStillExport = null;
+let buildPlateEnabled = true;
+let buildPlateTextureEnabled = true;
+let buildPlateTextureStrength = 50;
 const textureTuneState = {
     light: TEXTURE_TUNE_DEFAULTS.light,
     contrast: TEXTURE_TUNE_DEFAULTS.contrast,
@@ -685,13 +689,26 @@ function initThree() {
     shadowCatcher.visible = false;
     scene.add(shadowCatcher);
 
+    buildPlateMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 1),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.96, metalness: 0.0, side: THREE.DoubleSide })
+    );
+    buildPlateMesh.rotation.x = -Math.PI / 2;
+    buildPlateMesh.receiveShadow = true;
+    buildPlateMesh.castShadow = false;
+    buildPlateMesh.visible = false;
+    buildPlateMesh.renderOrder = -2;
+    scene.add(buildPlateMesh);
+    updateBuildPlateMaterial();
+    updateBuildPlateTextureUI();
+
     applyTextureLighting();
 
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 2.5;
+    controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
     controls.enableZoom = true;
     _controlsDefaultMouseButtons = { ...controls.mouseButtons };
     _controlsDefaultTouches = { ...controls.touches };
@@ -741,6 +758,50 @@ function getActiveShadingMode() {
     return shadingEl.value;
 }
 
+function createBuildPlateTexture(strengthPct) {
+    const strength = Math.max(0, Math.min(100, strengthPct || 0)) / 100;
+    const c = document.createElement('canvas');
+    c.width = 128;
+    c.height = 128;
+    const ctx = c.getContext('2d');
+    if (!ctx) return null;
+    const delta = Math.round(6 + strength * 28);
+    const base = 128;
+    const c1 = Math.max(0, Math.min(255, base - delta));
+    const c2 = Math.max(0, Math.min(255, base + delta));
+    ctx.fillStyle = `rgb(${c1},${c1},${c1})`;
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = `rgb(${c2},${c2},${c2})`;
+    ctx.fillRect(0, 0, 64, 64);
+    ctx.fillRect(64, 64, 64, 64);
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+}
+
+function updateBuildPlateTextureUI() {
+    if (buildPlateTextureValEl) buildPlateTextureValEl.textContent = `${buildPlateTextureStrength}%`;
+    if (buildPlateTextureSliderEl) buildPlateTextureSliderEl.disabled = !buildPlateTextureEnabled;
+}
+
+function updateBuildPlateMaterial() {
+    if (!buildPlateMesh || !buildPlateMesh.material) return;
+    const tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
+    const c = computeTonedColor(bgPick.value, tone);
+    buildPlateMesh.material.color.copy(c);
+
+    if (buildPlateMesh.material.map) {
+        buildPlateMesh.material.map.dispose();
+        buildPlateMesh.material.map = null;
+    }
+    if (buildPlateTextureEnabled) {
+        buildPlateMesh.material.map = createBuildPlateTexture(buildPlateTextureStrength);
+    }
+    buildPlateMesh.material.needsUpdate = true;
+}
+
 function updateShadowCatcherPlacement() {
     if (!shadowCatcher || !mesh) return;
     const box = new THREE.Box3().setFromObject(mesh);
@@ -750,6 +811,16 @@ function updateShadowCatcherPlacement() {
     const footprint = Math.max(size.x, size.z, 0.001);
     const modelHeight = Math.max(size.y, 0.001);
     shadowCatcher.position.set(center.x, y, center.z);
+
+    if (buildPlateMesh) {
+        const plateSize = Math.max(1, footprint * 4.4);
+        buildPlateMesh.position.set(center.x, y - Math.max(0.0005, modelRadius * 0.0012), center.z);
+        buildPlateMesh.scale.set(plateSize, plateSize, 1);
+        if (buildPlateMesh.material?.map) {
+            const repeat = Math.max(4, Math.round(plateSize / 8));
+            buildPlateMesh.material.map.repeat.set(repeat, repeat);
+        }
+    }
 
     if (!keyLight) return;
 
@@ -829,11 +900,15 @@ function applyTextureLighting() {
         mesh.receiveShadow = false;
     }
     if (shadowCatcher) {
-        shadowCatcher.visible = shadowsOn;
+        shadowCatcher.visible = shadowsOn && !buildPlateEnabled;
         if (shadowCatcher.material && shadowCatcher.material.isShadowMaterial) {
             shadowCatcher.material.opacity = shadowsOn ? (0.02 + shadowsAmt * 0.16) : 0.02;
             shadowCatcher.material.needsUpdate = true;
         }
+    }
+    if (buildPlateMesh) {
+        buildPlateMesh.visible = !!(buildPlateEnabled && mesh);
+        if (buildPlateMesh.material) buildPlateMesh.material.needsUpdate = true;
     }
 }
 
@@ -1305,6 +1380,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     const savedLightRigY = lightRig?.rotation?.y;
     const savedEnvRotY = scene?.environmentRotation?.y;
     const savedShadowCatcherVisible = shadowCatcher?.visible;
+    const savedBuildPlateVisible = buildPlateMesh?.visible;
     const savedRulerGridVisible = rulerGridHelper?.visible;
     const saved = mats.map((m) => ({
         mat: m,
@@ -1359,6 +1435,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (lightRig) lightRig.rotation.y = 0;
     if (scene?.environmentRotation) scene.environmentRotation.y = 0;
     if (shadowCatcher) shadowCatcher.visible = false;
+    if (buildPlateMesh) buildPlateMesh.visible = false;
     if (rulerGridHelper) rulerGridHelper.visible = false;
 
     scene.background = null;
@@ -1426,6 +1503,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (lightRig && Number.isFinite(savedLightRigY)) lightRig.rotation.y = savedLightRigY;
     if (scene?.environmentRotation && Number.isFinite(savedEnvRotY)) scene.environmentRotation.y = savedEnvRotY;
     if (shadowCatcher && typeof savedShadowCatcherVisible === 'boolean') shadowCatcher.visible = savedShadowCatcherVisible;
+    if (buildPlateMesh && typeof savedBuildPlateVisible === 'boolean') buildPlateMesh.visible = savedBuildPlateVisible;
     if (rulerGridHelper && typeof savedRulerGridVisible === 'boolean') rulerGridHelper.visible = savedRulerGridVisible;
     renderer.render(scene, camera);
 }
@@ -1892,12 +1970,15 @@ function loadPreparedGeometry(geo, name) {
     document.documentElement.classList.add('loaded');
     try { localStorage.setItem('rotater_hasSession', '1'); } catch (e) { }
     document.getElementById('compactBtnLabel').textContent = 'Upload STL';
-    // Reset pause state on new load
-    isPaused = false;
-    controls.autoRotate = rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360);
-    document.documentElement.classList.remove('rotation-paused');
-    iconPause.style.display = '';
-    iconPlay.style.display = 'none';
+    // Preserve pause state on model replace; only resume if not already paused.
+    if (!isPaused) {
+        controls.autoRotate = rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360);
+        document.documentElement.classList.remove('rotation-paused');
+        iconPause.style.display = '';
+        iconPlay.style.display = 'none';
+    } else {
+        controls.autoRotate = false;
+    }
     viewerSec.classList.remove('hidden');
     document.getElementById('emptyState').classList.add('hidden');
     document.getElementById('controlsBar').classList.remove('hidden');
@@ -2614,30 +2695,16 @@ function updateRulerHUD() {
     if (!hud) return;
     hud.hidden = !modelDims || !rulerEnabled;
     document.documentElement.classList.toggle('ruler-visible', !!modelDims && !!rulerEnabled);
-    const unitMMBtn = document.getElementById('rulerUnitMM');
-    const unitINBtn = document.getElementById('rulerUnitIN');
-    if (unitMMBtn) unitMMBtn.classList.toggle('is-active', rulerUnit === 'metric');
-    if (unitINBtn) unitINBtn.classList.toggle('is-active', rulerUnit === 'imperial');
     if (!modelDims) return;
+    const unitEl = document.getElementById('rulerUnitVal');
+    const unitHint = hud.querySelector('.ruler-unit-hint');
+    if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';
+    const next = (rulerUnit === 'imperial') ? 'Metric' : 'Imperial';
+    if (unitHint) unitHint.textContent = next;
+    hud.setAttribute('aria-label', `Switch to ${next.toLowerCase()} units`);
     document.getElementById('rulerW').textContent = formatRulerValue(modelDims.w);
     document.getElementById('rulerD').textContent = formatRulerValue(modelDims.d);
     document.getElementById('rulerH').textContent = formatRulerValue(modelDims.h);
-    updateGridCellDisplay();
-}
-
-function updateGridCellDisplay() {
-    const cellEl = document.getElementById('rulerGridCell');
-    const cellWrapEl = document.getElementById('rulerGridCellWrap');
-    const cellSepEl = document.getElementById('rulerGridCellSep');
-    if (!cellEl) return;
-    const show = !!(rulerEnabled && rulerLinesVisible && rulerGridSize > 0 && modelDims);
-    if (cellWrapEl) cellWrapEl.hidden = !show;
-    if (cellSepEl) cellSepEl.hidden = !show;
-    if (show && rulerGridSize > 0) {
-        const divisions = Math.max(8, Math.min(42, Math.round(rulerGridSize / 6)));
-        const cellMm = rulerGridSize / divisions;
-        cellEl.textContent = `${formatRulerValue(cellMm)} ${rulerUnitSuffix()}`;
-    }
 }
 
 function rulerUnitSuffix() {
@@ -2766,29 +2833,6 @@ function drawMeasurement(ctx, start, end, text, center, options = {}) {
 
     const labelPos = a.clone().add(b).multiplyScalar(0.5).add(normal.multiplyScalar(labelOffset));
     drawMeasurementLabel(ctx, text, labelPos, align);
-}
-
-let _watermarkImg = null;
-async function drawWatermarkOverlay(ctx, width, height) {
-    if (!_watermarkImg) {
-        _watermarkImg = await new Promise(resolve => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = () => resolve(null);
-            img.src = './rotater.svg';
-        });
-    }
-    if (!_watermarkImg) return;
-    const logoH = Math.round(Math.max(20, height * 0.05));
-    const aspect = _watermarkImg.naturalWidth / _watermarkImg.naturalHeight;
-    const logoW = Math.round(logoH * aspect);
-    const margin = Math.round(height * 0.025);
-    ctx.save();
-    ctx.globalAlpha = 0.5;
-    // brightness(0) converts to solid black, invert(1) flips to white
-    ctx.filter = 'brightness(0) invert(1)';
-    ctx.drawImage(_watermarkImg, width - logoW - margin, height - logoH - margin, logoW, logoH);
-    ctx.restore();
 }
 
 function drawRulerOverlay(ctx, width, height, cam, options = {}) {
@@ -3109,7 +3153,6 @@ function updateLiveRulerOverlay() {
     const overlay = ensureRulerOverlayEl();
     if (!overlay) return;
     updateRulerGrid();
-    updateGridCellDisplay();
     if (!RULER_DYNAMIC_LINES_ENABLED) {
         overlay.style.display = 'none';
         const ctx = overlay.getContext?.('2d');
@@ -3293,6 +3336,9 @@ function saveSettings() {
             rulerVisible: rulerEnabled ? '1' : '0',
             rulerUnit: rulerUnit,
             rulerGridVisible: rulerLinesVisible ? '1' : '0',
+            buildPlate: buildPlateEnabled ? '1' : '0',
+            buildPlateTexture: buildPlateTextureEnabled ? '1' : '0',
+            buildPlateTextureStrength: String(buildPlateTextureStrength),
             activeBgPreset: activeBgPreset,
             activeModelPreset: activeModelPreset,
             modelPartSelected: String(modelPartSelected || 0),
@@ -3513,6 +3559,15 @@ function restoreSettings() {
         } else if (s.rulerLinesVisible != null) {
             rulerLinesVisible = (s.rulerLinesVisible === '1' || s.rulerLinesVisible === true || s.rulerLinesVisible === 1);
         }
+        if (s.buildPlate != null) {
+            buildPlateEnabled = (s.buildPlate === '1' || s.buildPlate === true || s.buildPlate === 1);
+        }
+        if (s.buildPlateTexture != null) {
+            buildPlateTextureEnabled = (s.buildPlateTexture === '1' || s.buildPlateTexture === true || s.buildPlateTexture === 1);
+        }
+        if (s.buildPlateTextureStrength != null) {
+            buildPlateTextureStrength = Math.max(0, Math.min(100, parseInt(s.buildPlateTextureStrength, 10) || 50));
+        }
         if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
         if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
@@ -3546,11 +3601,17 @@ function restoreSettings() {
         // If auto-bg was restored, ensure the dynamic background is applied
         try { if (isDynamicBg) updateDynamicBg(); } catch (e) { }
         updateRulerHUD();
+        if (buildPlateToggleEl) buildPlateToggleEl.checked = buildPlateEnabled;
+        if (buildPlateTextureToggleEl) buildPlateTextureToggleEl.checked = buildPlateTextureEnabled;
+        if (buildPlateTextureSliderEl) buildPlateTextureSliderEl.value = String(buildPlateTextureStrength);
+        updateBuildPlateTextureUI();
+        updateBuildPlateMaterial();
         if (speedSlider instanceof HTMLInputElement) syncSliderTooltip(speedSlider);
         syncSliderTooltip(tiltRangeSlider);
         syncSliderTooltip(wobbleSpinRangeSlider);
         if (opacitySlider) syncSliderTooltip(opacitySlider);
         if (bgOpacitySlider) { syncSliderTooltip(bgOpacitySlider); updateBgShadeSliderVisual(); }
+        if (buildPlateTextureSliderEl) syncSliderTooltip(buildPlateTextureSliderEl);
         updateTiltRangeReset();
         wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
         speedResetBtn?.classList.toggle('is-changed', parseInt(speedSlider.value, 10) !== SPEED_DEFAULT);
@@ -3627,6 +3688,9 @@ function getURLSettings(searchStr = location.search) {
         rulerVisible: g('rv'),
         rulerUnit: g('ru'),
         rulerGridVisible: g('rg'),
+        buildPlate: g('bp'),
+        buildPlateTexture: g('bpt'),
+        buildPlateTextureStrength: g('bps'),
         rulerLinesVisible: g('rl'),
         activeBgPreset: g('abp'),
         activeModelPreset: g('amp'),
@@ -3689,6 +3753,9 @@ function settingsToURL() {
     if (rulerEnabled) p.set('rv', '1');
     if (rulerUnit === 'imperial') p.set('ru', 'i');
     if (!rulerLinesVisible) p.set('rg', '0');
+    if (!buildPlateEnabled) p.set('bp', '0');
+    if (!buildPlateTextureEnabled) p.set('bpt', '0');
+    if (buildPlateTextureStrength !== 50) p.set('bps', String(buildPlateTextureStrength));
     if (activeBgPreset && activeBgPreset !== 'custom') p.set('abp', activeBgPreset);
     if (activeModelPreset && activeModelPreset !== 'custom') p.set('amp', activeModelPreset);
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
@@ -4318,6 +4385,7 @@ if (bgOpacitySlider) {
         const tone = parseInt(bgOpacitySlider.value, 10);
         const c = computeTonedColor(bgPick.value, tone);
         if (renderer) renderer.setClearColor(c, 1);
+        updateBuildPlateMaterial();
         if (isDynamicBg) updateDynamicBg();
         saveSettings();
     });
@@ -4332,6 +4400,7 @@ bgPick.addEventListener('input', () => {
         const c = computeTonedColor(bgPick.value, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
+    updateBuildPlateMaterial();
     updateBgShadeSliderVisual();
     if (isDynamicBg) updateDynamicBg();
     updateShadingThumbs();
@@ -4795,7 +4864,16 @@ btnResetModelCard?.addEventListener('click', () => {
 btnResetBackgroundCard?.addEventListener('click', () => {
     resetCardSlidersToMiddle([
         'bgOpacitySlider',
+        'buildPlateTextureSlider',
     ]);
+    if (buildPlateToggleEl) {
+        buildPlateToggleEl.checked = true;
+        buildPlateToggleEl.dispatchEvent(new Event('change'));
+    }
+    if (buildPlateTextureToggleEl) {
+        buildPlateTextureToggleEl.checked = true;
+        buildPlateTextureToggleEl.dispatchEvent(new Event('change'));
+    }
 });
 
 btnResetLightingCard?.addEventListener('click', () => {
@@ -4849,20 +4927,11 @@ async function loadBenchyModel() {
     } catch (e) { }
 }
 
-document.getElementById('btnResetEverything')?.addEventListener('click', async () => {
-    if (!confirm('Reset everything? This will clear all settings and reload the default model.')) return;
-    try {
-        await clearIDB();
-        localStorage.removeItem(SETTINGS_KEY);
-        localStorage.removeItem('rotater_hasSession');
-        localStorage.removeItem('rotater_hintDismissed');
-        localStorage.removeItem('rotater_appSettingsCollapsed');
-        localStorage.removeItem('rotater_exportPanelCollapsed');
-        localStorage.removeItem('rotater_activeTab');
-        localStorage.removeItem('rotater_mobileAccordionPanel');
-        localStorage.removeItem('rotater_sidebarCollapsed');
-    } catch (e) { }
-    location.replace(location.pathname + (ROTATER_DEFAULT_QUERY ? '?' + ROTATER_DEFAULT_QUERY : ''));
+document.getElementById('btnLoadBenchy')?.addEventListener('click', async () => {
+    if (currentFileName !== '3dbenchy') {
+        if (!confirm('Load 3D Benchy test model?')) return;
+    }
+    await loadBenchyModel();
 });
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
@@ -4986,11 +5055,6 @@ function applyMobileAccordionState(panelName) {
         const expanded = btn.dataset.mobilePanel === panel;
         btn.setAttribute('aria-expanded', String(expanded));
     });
-    document.querySelectorAll('.sidebar-tab').forEach((btn) => {
-        const active = btn.dataset.tab === panel;
-        btn.classList.toggle('is-active', active);
-        btn.setAttribute('aria-selected', String(active));
-    });
     document.querySelectorAll('.tab-panel').forEach((panelEl) => {
         panelEl.hidden = panelEl.dataset.panel !== panel;
     });
@@ -5010,7 +5074,7 @@ function applyDesktopV2Layout() {
         document.documentElement.classList.remove('sidebar-collapsed');
         try { localStorage.setItem('rotater_sidebarCollapsed', '0'); } catch (_) { }
         if (exportOverlayEl) exportOverlayEl.hidden = false;
-        if (openExportBtn) { openExportBtn.hidden = true; openExportBtn.classList.remove('is-active'); }
+        if (openExportBtn) openExportBtn.hidden = true;
         refreshExportPreviewNow();
         switchTab('theme');
         if (!desktopV2DockDefaultApplied) {
@@ -5027,7 +5091,6 @@ function applyDesktopV2Layout() {
         }
         if (openExportBtn) openExportBtn.hidden = false;
         if (exportOverlayEl) exportOverlayEl.hidden = true;
-        if (openExportBtn) openExportBtn.classList.remove('is-active');
         disconnectDesktopV2RailObserver();
         document.documentElement.style.removeProperty('--desktop-v2-effects-top');
         document.documentElement.style.removeProperty('--desktop-v2-effects-max-height');
@@ -5192,16 +5255,6 @@ if (fineTuningCheckEl) {
     });
 }
 
-// Watermark toggle
-const watermarkCheckEl = document.getElementById('watermarkCheck');
-if (watermarkCheckEl) {
-    watermarkCheckEl.checked = watermarkEnabled;
-    watermarkCheckEl.addEventListener('change', () => {
-        watermarkEnabled = watermarkCheckEl.checked;
-        try { localStorage.setItem('rotater_watermark', watermarkEnabled ? '1' : '0'); } catch (e) { }
-    });
-}
-
 // ── Sidebar collapse toggle ──────────────────────────────────────────────────────
 document.getElementById('btnCollapseSidebar')?.addEventListener('click', () => {
     const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
@@ -5221,22 +5274,17 @@ try {
 
 document.getElementById('btnOpenExportModal')?.addEventListener('click', () => {
     document.getElementById('exportOverlay').hidden = false;
-    document.getElementById('btnOpenExportModal')?.classList.add('is-active');
     refreshExportPreviewNow();
 });
 
 document.getElementById('btnExportClose')?.addEventListener('click', () => {
     if (isDesktopV2Layout()) return;
     document.getElementById('exportOverlay').hidden = true;
-    document.getElementById('btnOpenExportModal')?.classList.remove('is-active');
 });
 
 document.getElementById('exportOverlay')?.addEventListener('click', (e) => {
     if (isDesktopV2Layout()) return;
-    if (e.target === e.currentTarget) {
-        document.getElementById('exportOverlay').hidden = true;
-        document.getElementById('btnOpenExportModal')?.classList.remove('is-active');
-    }
+    if (e.target === e.currentTarget) document.getElementById('exportOverlay').hidden = true;
 });
 
 btnDownloadPackage?.addEventListener('click', async () => {
@@ -5309,7 +5357,6 @@ document.getElementById('infoOverlay').addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !isDesktopV2Layout() && !document.getElementById('exportOverlay').hidden) {
         document.getElementById('exportOverlay').hidden = true;
-        document.getElementById('btnOpenExportModal')?.classList.remove('is-active');
         return;
     }
     if (e.key === 'Escape' && !document.getElementById('infoOverlay').hidden) {
@@ -5626,11 +5673,6 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     outCtx.imageSmoothingQuality = 'high';
     outCtx.drawImage(canvas, 0, 0, W, H); // downscale 2× → SSAA
     drawRulerOverlay(outCtx, W, H, camera);
-
-    // Draw watermark overlay if enabled
-    if (watermarkEnabled) {
-        await drawWatermarkOverlay(outCtx, W, H);
-    }
 
     // Restore scene + camera exactly as the user had them, synchronously.
     if (transparent) {
@@ -6397,25 +6439,52 @@ function renderModelPresets() {
         persistCurrentMultipartParts();
         queueModelPartThumbsRender();
         updateModelSelection();
+        // Open picker near the clicked swatch so browser anchoring is stable.
+        const swatch = customWrap.querySelector('.shading-option');
+        const rect = swatch?.getBoundingClientRect?.();
+        const prev = {
+            position: colorPick.style.position,
+            left: colorPick.style.left,
+            top: colorPick.style.top,
+            width: colorPick.style.width,
+            height: colorPick.style.height,
+            clip: colorPick.style.clip,
+            pointerEvents: colorPick.style.pointerEvents,
+            opacity: colorPick.style.opacity,
+        };
+        if (rect) {
+            Object.assign(colorPick.style, {
+                position: 'absolute',
+                left: `${rect.left + window.scrollX}px`,
+                top: `${rect.top + window.scrollY}px`,
+                width: `${Math.max(1, Math.floor(rect.width))}px`,
+                height: `${Math.max(1, Math.floor(rect.height))}px`,
+                clip: 'auto',
+                pointerEvents: 'auto',
+                opacity: '0',
+            });
+        } else {
+            colorPick.style.width = '1px';
+            colorPick.style.height = '1px';
+            colorPick.style.pointerEvents = 'auto';
+        }
+        try { colorPick.showPicker(); } catch (e) { colorPick.click(); }
+        setTimeout(() => {
+            Object.assign(colorPick.style, {
+                position: prev.position || 'absolute',
+                left: prev.left || '',
+                top: prev.top || '',
+                width: prev.width || '0px',
+                height: prev.height || '0px',
+                clip: prev.clip || 'rect(0,0,0,0)',
+                pointerEvents: prev.pointerEvents || 'none',
+                opacity: prev.opacity || '0',
+            });
+        }, 240);
     });
     customWrap.querySelector('.shading-option').addEventListener('mouseenter', clearPresetHoverPreview);
     customWrap.querySelector('.shading-option').addEventListener('focus', clearPresetHoverPreview);
     bar.appendChild(customWrap);
-
-    // Embed colorPick inside the custom swatch label so tapping the swatch
-    // directly activates the native color picker on all mobile browsers.
-    const customColorLabel = customWrap.querySelector('.custom-color-option');
-    if (customColorLabel && colorPick) {
-        Object.assign(colorPick.style, {
-            position: 'absolute',
-            top: '0', right: '0', bottom: '0', left: '0',
-            width: '100%', height: '100%',
-            opacity: '0', border: '0', padding: '0', margin: '0',
-            overflow: 'visible', clip: 'auto',
-            pointerEvents: 'auto', cursor: 'pointer',
-        });
-        customColorLabel.appendChild(colorPick);
-    }
 
     // Initial call
     requestAnimationFrame(updateModelSelection);
@@ -6496,23 +6565,56 @@ if (rulerToggleEl) {
     });
 }
 
-document.getElementById('rulerUnitMM')?.addEventListener('click', () => {
-    if (rulerUnit === 'metric') return;
-    rulerUnit = 'metric';
-    updateRulerHUD();
-    updateLiveRulerOverlay();
-    refreshExportPreviewNow();
-    saveSettings();
-});
+if (buildPlateToggleEl) {
+    buildPlateToggleEl.checked = buildPlateEnabled;
+    buildPlateToggleEl.addEventListener('change', () => {
+        buildPlateEnabled = !!buildPlateToggleEl.checked;
+        updateBuildPlateMaterial();
+        applyTextureLighting();
+        updateShadowCatcherPlacement();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
 
-document.getElementById('rulerUnitIN')?.addEventListener('click', () => {
-    if (rulerUnit === 'imperial') return;
-    rulerUnit = 'imperial';
-    updateRulerHUD();
-    updateLiveRulerOverlay();
-    refreshExportPreviewNow();
-    saveSettings();
-});
+if (buildPlateTextureToggleEl) {
+    buildPlateTextureToggleEl.checked = buildPlateTextureEnabled;
+    buildPlateTextureToggleEl.addEventListener('change', () => {
+        buildPlateTextureEnabled = !!buildPlateTextureToggleEl.checked;
+        updateBuildPlateTextureUI();
+        updateBuildPlateMaterial();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
+
+if (buildPlateTextureSliderEl) {
+    buildPlateTextureSliderEl.value = String(buildPlateTextureStrength);
+    buildPlateTextureSliderEl.addEventListener('input', () => {
+        buildPlateTextureStrength = Math.max(0, Math.min(100, parseInt(buildPlateTextureSliderEl.value, 10) || 0));
+        syncSliderTooltip(buildPlateTextureSliderEl);
+        updateBuildPlateTextureUI();
+        updateBuildPlateMaterial();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
+updateBuildPlateTextureUI();
+
+const rulerHudEl = document.getElementById('rulerHUD');
+if (rulerHudEl) {
+    const _toggleRulerUnit = () => {
+        rulerUnit = (rulerUnit === 'metric') ? 'imperial' : 'metric';
+        updateRulerHUD();
+        updateLiveRulerOverlay();
+        refreshExportPreviewNow();
+        saveSettings();
+    };
+    rulerHudEl.addEventListener('click', _toggleRulerUnit);
+    rulerHudEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _toggleRulerUnit(); }
+    });
+}
 
 function renderBgPresets() {
     const bar = document.getElementById('bgPresetsBar');
@@ -6581,28 +6683,33 @@ function renderBgPresets() {
 
     const labelEl = customWrap.querySelector('.shading-option');
     if (labelEl) {
-        labelEl.addEventListener('click', () => {
+        labelEl.addEventListener('click', (ev) => {
+            ev.preventDefault();
             // Keep custom background aligned with the visible auto-adjust toggle.
             const autoBg = document.getElementById('autoBgCheck');
             isDynamicBg = autoBg ? autoBg.checked : false;
             activeBgPreset = 'custom';
             lastNonModelBgPreset = 'custom';
             updateBgSelection();
+            const input = document.getElementById('bgPicker');
+            if (!input) return;
+            if (typeof input.showPicker === 'function') {
+                try { input.showPicker(); } catch (e) { input.click(); }
+                return;
+            }
+            const thumb = customWrap.querySelector('.shading-thumb');
+            if (thumb) {
+                const rect = thumb.getBoundingClientRect();
+                const prev = { position: input.style.position, left: input.style.left, top: input.style.top, width: input.style.width, height: input.style.height, clip: input.style.clip, pointerEvents: input.style.pointerEvents };
+                Object.assign(input.style, { position: 'absolute', left: `${rect.left + window.scrollX}px`, top: `${rect.top + window.scrollY}px`, width: `${rect.width}px`, height: `${rect.height}px`, clip: 'auto', pointerEvents: 'auto' });
+                input.click();
+                setTimeout(() => {
+                    Object.assign(input.style, { position: prev.position || 'absolute', left: prev.left || '', top: prev.top || '', width: prev.width || '0px', height: prev.height || '0px', clip: prev.clip || 'rect(0,0,0,0)', pointerEvents: prev.pointerEvents || 'none' });
+                }, 800);
+            } else {
+                input.click();
+            }
         });
-    }
-
-    // Embed bgPick inside the custom swatch label so tapping the swatch
-    // directly activates the native color picker on all mobile browsers.
-    if (labelEl && bgPick) {
-        Object.assign(bgPick.style, {
-            position: 'absolute',
-            top: '0', right: '0', bottom: '0', left: '0',
-            width: '100%', height: '100%',
-            opacity: '0', border: '0', padding: '0', margin: '0',
-            overflow: 'visible', clip: 'auto',
-            pointerEvents: 'auto', cursor: 'pointer',
-        });
-        labelEl.appendChild(bgPick);
     }
 
     if (!bgPick._presetListenerAdded) {

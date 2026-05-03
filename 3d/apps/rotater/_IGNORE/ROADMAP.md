@@ -1,55 +1,39 @@
 # Rotater Roadmap (Undone Only)
 
-Last updated: 2026-05-03
+---
 
-## Quick Wins
+## Phase 1 — Build Now (scoped, no major design unknowns)
 
-- Tabs white-fringe artifact on rounded tab edges
-- Header button vertical alignment (Export/Download vs filename/Upload)
-- Investigate finish/gloss coupling side effects during preset changes
+### Grid / Ruler
+- **Bounding box model lines** — thin overlay lines that align with the grid floor plane, matching the model's W/D footprint (builds on existing GridHelper; no new raycast required)
 
-## Ready To Build
+### Background Card
+- **Build Plate** — solid-fill 3D mesh ground plane under the model; on/off toggle in Background card; inherits background color tint; builds directly on existing shadow-catcher plane
+- **Background Texture slider** — single intensity slider in Background card controlling a subtle surface pattern (checker / grain) overlaid on the background color; on/off switch; no new preset rows needed
 
-- Imperial / Metric switch style parity with Lines switch pattern
-- Single-click full-screen expand action
-- Advanced export toggle (basic vs advanced controls)
-- Unified Upload / Import flow (STL + Rotater ZIP)
-- Textured background presets (checker/gradient/noise)
-- Build plate option under model
-- ~~3D ruler lines in viewport with projected labels~~ → shipped as grid cell-size indicator in HUD
-- Crop interactive handles (corner/edge drag, keyboard nudge, snapping)
-- Add STL to existing parts — dashed round rect with "+" and "Add STL" inside part selector
-- Upload multipart behavior — default is add; show confirmation with option to replace
-- Export panel dock — dock/undock button to embed Export panel in bottom of right panel
-- App Settings (now Advanced Settings) — reorganization complete; complex items remain (mobile hamburger, undo/redo)
-- ~~Filename chip — remove from canvas top; Export/Theme/Effects row always visible on mobile; tab style like matte/satin with purple active color~~ → shipped: Export tab consolidated into sidebar-tabs row (filename chip removal deferred)
-- Undo / Redo buttons for settings-only changes (sliders, colors)
-- Mobile hamburger menu for access to Advanced Settings
+### Model Manager
+- **Floating part dropdown (no scroll)** — when the filename chip dropdown opens it floats upward/outward as a positioned panel (not clipped inside the sidebar card) so all parts are visible without scrolling; z-indexes above the card
+- **Multi-part bulk-edit** — add a checkbox to each row in the part list; when 2+ parts are checked, a "Bulk Edit" banner appears; changes to Color / Shade / Sheen / Finish apply to all checked parts simultaneously; uncheck to return to per-part editing; no link icon needed
 
-## Needs Design Decision
+---
 
-- Add STL to existing aligned assembly workflow
+## Phase 2 — Requires Design / Architecture
 
-## Design Decisions Made (Implemented or Ready to Implement)
+### Model Manager
+- **Full-screen model manager modal** — expand the part list into a full-screen overlay for managing large multipart assemblies; shows larger thumbnails, rename, reorder (drag), replace, remove; triggered by an expand icon in the Model card header
+- **Bounding box grid overlay (advanced)** — point-to-point measurement via raycast; click two points on the model surface and show a live distance label
 
-- Add STL to existing parts (+ button flow): inside part selector, dashed stroke round rect with plus sign and "Add STL"
-- Upload multipart behavior: default add; confirmation with option to replace
-- Export panel placement: already floating on desktop; add dock/undock button to embed in bottom of right panel
-- App Settings organization: renamed to Advanced Settings; precise checkbox stays (advanced settings); Load Benchy replaced with Reset Everything; Download Package moved to Export panel; dark mode stays in Advanced Settings only; mobile hamburger menu needed for mobile access
-- Download package placement: moved to Export panel footer
-- Undo scope: add standard forward/backward buttons for settings changes only
-- Filename chip X behavior: remove filename chip from canvas top entirely; Export/Theme/Effects always visible on mobile in one row; tab style matches matte/satin with purple active color
-- Watermark: ROTATER logo at 50% opacity, white, added to Advanced Settings toggle
-- Filename in export metadata: include STL filename(s) in exported image metadata
+### Export / Import
+- **Unified Upload / Import flow** — new "Import Package" button next to Download Package in the Export panel; accepts STL or Rotater ZIP; ZIP import replaces all current parts (with confirmation dialog); re-opens settings from `package.json`
+
+### General
+- **Watermark toggle** — checkbox in Export panel; when on, a small branded watermark is composited into the preview and all exported outputs
+- **Undo scope** — settings-only undo stack (Ctrl+Z / Cmd+Z); separate from model load actions
+
+---
 
 ## Later / Backlog
-
-- Re-open previously downloaded packages in one click
-- Multipart package preview before import
-- Package thumbnails and manifest metadata
+- Optional filename label burned into export output
+- Single-click full-screen canvas expand
 - Batch export presets for repeated listing generation
-- Point-to-point measurement via raycast
-- Workplane grid + ruler overlay hybrid
 - Preset gallery with save-as modal
-- Surface finish snap presets
-- Per-part material assignment for multi-color assembly
