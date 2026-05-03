@@ -1,6 +1,6 @@
 # Rotater Roadmap (Undone Only)
 
-Last updated: 2026-05-03
+Last updated: 2026-05-03 (v2)
 
 ## Quick Wins
 
@@ -10,19 +10,19 @@ Last updated: 2026-05-03
 
 ## Ready To Build
 
-- Imperial / Metric switch style parity with Lines switch pattern
+- ~~Imperial / Metric switch style parity with Lines switch pattern~~ → confirmed shipped
 - Single-click full-screen expand action
 - Advanced export toggle (basic vs advanced controls)
 - Unified Upload / Import flow (STL + Rotater ZIP)
 - Textured background presets (checker/gradient/noise)
 - Build plate option under model
 - ~~3D ruler lines in viewport with projected labels~~ → shipped as grid cell-size indicator in HUD
-- Crop interactive handles (corner/edge drag, keyboard nudge, snapping)
+- ~~Crop interactive handles (corner/edge drag, keyboard nudge, snapping)~~ → removed from roadmap
 - Add STL to existing parts — dashed round rect with "+" and "Add STL" inside part selector
 - Upload multipart behavior — default is add; show confirmation with option to replace
 - Export panel dock — dock/undock button to embed Export panel in bottom of right panel
 - App Settings (now Advanced Settings) — reorganization complete; complex items remain (mobile hamburger, undo/redo)
-- ~~Filename chip — remove from canvas top; Export/Theme/Effects row always visible on mobile; tab style like matte/satin with purple active color~~ → shipped: Export tab consolidated into sidebar-tabs row (filename chip removal deferred)
+- ~~Filename chip — remove from canvas top; Export/Theme/Effects row always visible on mobile; tab style like matte/satin with purple active color~~ → shipped: Export tab consolidated into sidebar-tabs row; filename chip removed from canvas; model dropdown now a full-screen modal for STL file management
 - Undo / Redo buttons for settings-only changes (sliders, colors)
 - Mobile hamburger menu for access to Advanced Settings
 

@@ -199,6 +199,8 @@ const quickPresetsBar = document.getElementById('quickPresetsBar');
 const modelPartThumbsWrap = document.getElementById('modelPartThumbsWrap');
 const modelPartSelectorBtn = document.getElementById('modelPartSelectorBtn');
 const modelPartSelectorMenu = document.getElementById('modelPartSelectorMenu');
+const modelSelectorBackdrop = document.getElementById('modelSelectorBackdrop');
+const modelPartMenuItems = document.getElementById('modelPartMenuItems');
 const modelPartSelectorThumb = document.getElementById('modelPartSelectorThumb');
 const modelPartSelectorText = document.getElementById('modelPartSelectorText');
 const bgModelSyncSourceWrap = document.getElementById('bgModelSyncSourceWrap');
@@ -1470,6 +1472,7 @@ function renderModelPartThumbnails() {
 function closeThumbSelectMenus() {
     if (modelPartSelectorMenu) modelPartSelectorMenu.hidden = true;
     if (modelPartSelectorBtn) modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
+    if (modelSelectorBackdrop) modelSelectorBackdrop.hidden = true;
     if (bgModelSyncSelectorMenu) bgModelSyncSelectorMenu.hidden = true;
     if (bgModelSyncSelectorBtn) bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
     closeModelPartActionMenus();
@@ -1515,6 +1518,7 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
     if (modelPartSelectorMenu && !open) {
         modelPartSelectorMenu.hidden = false;
         modelPartSelectorBtn.setAttribute('aria-expanded', 'true');
+        if (modelSelectorBackdrop) modelSelectorBackdrop.hidden = false;
     }
 });
 
@@ -1526,6 +1530,16 @@ bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
         bgModelSyncSelectorMenu.hidden = false;
         bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
     }
+});
+
+/* Prevent clicks inside the model selector modal from bubbling to the document handler */
+modelPartSelectorMenu?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+});
+
+/* Backdrop click closes the model selector modal */
+modelSelectorBackdrop?.addEventListener('click', () => {
+    closeThumbSelectMenus();
 });
 
 document.addEventListener('click', () => {
@@ -1543,7 +1557,10 @@ window.addEventListener('scroll', () => {
 }, true);
 
 document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape') closeModelPartActionMenus();
+    if (ev.key === 'Escape') {
+        closeModelPartActionMenus();
+        if (modelPartSelectorMenu && !modelPartSelectorMenu.hidden) closeThumbSelectMenus();
+    }
 });
 
 fileChipEl?.addEventListener('click', (ev) => {
@@ -1655,20 +1672,23 @@ function syncModelPartSelectorUI() {
     modelPartThumbsWrap.hidden = !isVisible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!isVisible));
     if (!isVisible) {
-        modelPartSelectorMenu.innerHTML = '';
+        if (modelPartMenuItems) modelPartMenuItems.innerHTML = '';
         modelPartSelectorBtn.hidden = true;
         modelPartSelectorMenu.hidden = true;
+        if (modelSelectorBackdrop) modelSelectorBackdrop.hidden = true;
         modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
         return;
     }
 
     modelPartSelectorBtn.hidden = false;
     modelPartSelectorMenu.hidden = true;
+    if (modelSelectorBackdrop) modelSelectorBackdrop.hidden = true;
     modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
     closeModelPartActionMenus();
 
     modelPartSelected = Math.max(0, Math.min(modelPartSelected, modelPartNames.length - 1));
-    modelPartSelectorMenu.innerHTML = '';
+    const itemsContainer = modelPartMenuItems || modelPartSelectorMenu;
+    itemsContainer.innerHTML = '';
 
     modelPartNames.forEach((name, idx) => {
         const opt = document.createElement('div');
@@ -1728,7 +1748,7 @@ function syncModelPartSelectorUI() {
             });
         });
 
-        modelPartSelectorMenu.appendChild(opt);
+        itemsContainer.appendChild(opt);
     });
 
     if (modelPartSelectorThumb) {
@@ -1933,6 +1953,11 @@ function loadPreparedGeometry(geo, name) {
         const clearLabel = isDemo ? 'Load your own model' : 'Reset to Benchy';
         clearBtn.title = clearLabel;
         clearBtn.setAttribute('aria-label', clearLabel);
+    }
+    const modalResetBtn = document.getElementById('btnModelSelectorReset');
+    if (modalResetBtn) {
+        const isDemo = (currentFileName === '3dbenchy');
+        modalResetBtn.textContent = isDemo ? 'Load your own model' : 'Reset to Benchy';
     }
     syncFileChipMultipartUI();
     rebuildFileChipPartsMenu();
@@ -4832,6 +4857,22 @@ document.getElementById('btnClearModel').addEventListener('click', async (e) => 
         return;
     }
     if (!confirm('Reset to 3D Benchy?')) return;
+    await loadBenchyModel();
+});
+
+document.getElementById('btnModelSelectorClose')?.addEventListener('click', () => {
+    closeThumbSelectMenus();
+});
+
+document.getElementById('btnModelSelectorReset')?.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (currentFileName === '3dbenchy') {
+        closeThumbSelectMenus();
+        document.getElementById('fileInput').click();
+        return;
+    }
+    if (!confirm('Reset to 3D Benchy?')) return;
+    closeThumbSelectMenus();
     await loadBenchyModel();
 });
 
