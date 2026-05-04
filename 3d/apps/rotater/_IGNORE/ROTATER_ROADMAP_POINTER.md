@@ -1,4 +1,7 @@
-# Rotater Roadmap
+# Rotater Roadmap Pointer
 
-> This roadmap has been consolidated into the root [`ROADMAP.md`](../../../ROADMAP.md).
-> All Rotater items are tracked there.
+The canonical Rotater roadmap is:
+
+- _IGNORE/ROADMAP.md
+
+Completed items belong in CHANGELOG.md.

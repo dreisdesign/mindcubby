@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 1.8.5** · May 3, 2026
+**Version 2.1.2** · May 8, 2026
 
 ---
 
@@ -25,17 +25,26 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 ### Loading a model
 
 - Drag and drop any STL file onto the page, or click **Upload STL**
+- When a model is already loaded, Upload STL opens a choice modal:
+  - **Add to existing plate** appends the incoming STL file(s) as new parts
+  - **Create new plate / replace** replaces the current model
+  - **Do not ask me again** stores your preferred default action
 - Multi-part import: select or drop multiple STL files at once to load them as one aligned object (keeps original CAD offsets for multi-color part stacks)
 - Multi-part editing: use **Part Color Target** in the Model card to choose which part you are editing
 - Model preset cards now apply on click only
 - The model and all settings persist across page refreshes — no re-upload needed
 - The filename chip (top-right of canvas) shows the active file
   - For multipart models, click the chevron to expand all part filenames
-  - Each expanded row supports **Replace** for an individual part and **×** to remove that part (when 2+ parts are loaded)
+  - Each expanded row supports **Replace**, **Add**, and **×** remove for individual part operations (remove when 2+ parts are loaded)
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
 - **Export** (sidebar header) opens the Export modal
 - **Download Package** (inside the Export modal) saves a single ZIP package containing `package.json` plus the original STL file(s)
+- **Import Package** (App Settings) accepts `.stl` and Rotater `.zip` packages for quick restore/testing
+- **Collapsed Export Assist** (App Settings) can auto-expand export when collapsed and show a one-time confirmation before continuing
+- **Reset all warnings** (App Settings) re-enables warning dialogs that were previously dismissed (for example collapsed export confirmation and upload choice prompt)
+- **Export Motion Controls** (App Settings) toggles curated mode/time/range controls directly inside the Export overlay
+- **Build Plate controls** are now in their own dedicated card (separate from Background)
 - **Load 3D Benchy** is available in App Settings for a quick test-model reset
 
 See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
@@ -80,7 +89,10 @@ When a multi-part model is loaded:
 | Color → Model | Model face color (click swatch to open color picker) |
 | Color → BG | Background color (click swatch to open color picker) |
 | Build Plate | Solid slicer-style floor plane beneath the model (toggle in Background card) |
-| Background Texture | Optional subtle checker texture on the Build Plate with a single strength slider |
+| Plate Color | Build plate color picker (shown when Build Plate is enabled) |
+| Plate Shade | Lighten/darken the selected plate color |
+| Plate Finish | Plate material finish: Matte, Satin, or Gloss |
+| Build Plate Size | App Settings preset dropdown (common sizes) with optional custom width/depth in mm |
 | Texture → Clay | Matte clay-style shading |
 | Texture → Phong | PBR diffuse (non-metal) |
 | Texture → Metal | PBR metallic with environment reflections |

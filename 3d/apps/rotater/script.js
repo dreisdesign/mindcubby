@@ -131,6 +131,12 @@ const WOBBLE_SPIN_RANGE_DEFAULT = 360;
 const ELEV_DEFAULT = 0; // Used by placeCamera() and fitToFrame() for default camera elevation
 const CROP_FRAME_UI_SCALE = 0.82; // Keeps a visual margin around the crop guide
 const VIEWPORT_FIT_SCALE = 1.55; // Smaller than 1.8 so default/reset framing is less zoomed out
+const VIEWPORT_AA_SCALE = 1.35; // Mild supersampling for cleaner edges on standard-DPI displays
+const BUILD_PLATE_TEXTURES_ENABLED = false; // Flat plate avoids extra texture work in dense multipart scenes
+const AUTO_LOAD_BENCHY_ON_IDLE = false;
+const AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS = 1800;
+const ORBIT_MIN_DISTANCE_FACTOR = 0.12;
+const ORBIT_MAX_DISTANCE_FACTOR = 6.0;
 const LIGHT_BASE = { ambient: 0.45, key: 1.9, fill: 0.30, rim: 0.92, exposure: 0.75 };
 const TEXTURE_TUNE_DEFAULTS = {
     light: 100,
@@ -147,6 +153,14 @@ const TEXTURE_TUNE_DEFAULTS = {
     matteRoughness: 88,
     matteReflection: 10,
     lightLock: true,
+};
+
+const BUILD_PLATE_SIZE_PRESETS = {
+    '180x180': { w: 180, d: 180 },
+    '220x220': { w: 220, d: 220 },
+    '235x235': { w: 235, d: 235 },
+    '256x256': { w: 256, d: 256 },
+    '300x300': { w: 300, d: 300 },
 };
 
 // Returns frame count for one cycle using the selected Rotation Time
@@ -208,9 +222,11 @@ const bgModelSyncSelectorText = document.getElementById('bgModelSyncSelectorText
 const bgPick = document.getElementById('bgPicker');
 const bgOpacitySlider = document.getElementById('bgOpacitySlider');
 const buildPlateToggleEl = document.getElementById('buildPlateToggle');
-const buildPlateTextureToggleEl = document.getElementById('buildPlateTextureToggle');
-const buildPlateTextureSliderEl = document.getElementById('buildPlateTextureSlider');
-const buildPlateTextureValEl = document.getElementById('buildPlateTextureVal');
+const buildPlateControlsEl = document.getElementById('buildPlateControls');
+const buildPlateColorPickerEl = document.getElementById('buildPlateColorPicker');
+const buildPlateShadeSliderEl = document.getElementById('buildPlateShadeSlider');
+const buildPlateShadeValEl = document.getElementById('buildPlateShadeVal');
+const buildPlateFinishWrapEl = document.getElementById('buildPlateFinishWrap');
 const shadingEl = document.getElementById('shadingSelect');
 const speedSlider = document.getElementById('speedSlider');
 
@@ -238,7 +254,37 @@ const fileChipEl = document.getElementById('fileChip');
 const fileChipPartsMenu = document.getElementById('fileChipPartsMenu');
 const btnFileChipExpand = document.getElementById('btnFileChipExpand');
 const partReplaceInput = document.getElementById('partReplaceInput');
+const partAppendInput = document.getElementById('partAppendInput');
+const uploadChoiceOverlayEl = document.getElementById('uploadChoiceOverlay');
+const uploadChoiceTextEl = document.getElementById('uploadChoiceText');
+const uploadChoiceDontShowEl = document.getElementById('uploadChoiceDontShow');
+const btnUploadChoiceClose = document.getElementById('btnUploadChoiceClose');
+const btnUploadChoiceCancel = document.getElementById('btnUploadChoiceCancel');
+const btnUploadChoiceAdd = document.getElementById('btnUploadChoiceAdd');
+const btnUploadChoiceReplace = document.getElementById('btnUploadChoiceReplace');
+const btnImportPackage = document.getElementById('btnImportPackage');
+const importPackageInput = document.getElementById('importPackageInput');
 const btnDownloadPackage = document.getElementById('btnDownloadPackage');
+const exportMotionControlsToggleEl = document.getElementById('exportMotionControlsToggle');
+const exportMotionControlsEl = document.getElementById('exportMotionControls');
+const exportMotionModeEl = document.getElementById('exportMotionMode');
+const exportMotionSpeedEl = document.getElementById('exportMotionSpeed');
+const exportMotionRangeEl = document.getElementById('exportMotionRange');
+const exportMotionRangeLabelEl = document.getElementById('exportMotionRangeLabel');
+const exportMotionRangeValEl = document.getElementById('exportMotionRangeVal');
+const autoUIAssistToggleEl = document.getElementById('autoUIAssistToggle');
+const exportCollapsedConfirmToggleEl = document.getElementById('exportCollapsedConfirmToggle');
+const resetWarningsToggleEl = document.getElementById('resetWarningsToggle');
+const exportCollapsedConfirmOverlayEl = document.getElementById('exportCollapsedConfirmOverlay');
+const exportCollapsedConfirmSummaryEl = document.getElementById('exportCollapsedConfirmSummary');
+const exportCollapsedDontShowEl = document.getElementById('exportCollapsedDontShow');
+const btnExportCollapsedConfirmClose = document.getElementById('btnExportCollapsedConfirmClose');
+const btnExportCollapsedConfirmCancel = document.getElementById('btnExportCollapsedConfirmCancel');
+const btnExportCollapsedConfirmContinue = document.getElementById('btnExportCollapsedConfirmContinue');
+const buildPlateSizePresetEl = document.getElementById('buildPlateSizePreset');
+const buildPlateCustomSizeRowEl = document.getElementById('buildPlateCustomSizeRow');
+const buildPlateCustomWidthEl = document.getElementById('buildPlateCustomWidth');
+const buildPlateCustomDepthEl = document.getElementById('buildPlateCustomDepth');
 const btnPause = document.getElementById('btnPause');
 const iconPause = document.getElementById('iconPause');
 const iconPlay = document.getElementById('iconPlay');
@@ -290,6 +336,7 @@ const themeToggleRailLabel = document.getElementById('themeToggleRailLabel');
 const themeToggleRailIconPath = document.getElementById('themeToggleRailIconPath');
 const btnResetModelCard = document.getElementById('btnResetModelCard');
 const btnResetBackgroundCard = document.getElementById('btnResetBackgroundCard');
+const btnResetBuildPlateCard = document.getElementById('btnResetBuildPlateCard');
 const btnResetLightingCard = document.getElementById('btnResetLightingCard');
 const btnResetAnimationCard = document.getElementById('btnResetAnimationCard');
 // Dev logging and a flag used to suppress saveSettings() while programmatically
@@ -301,7 +348,8 @@ const APP_PARAM_KEYS = new Set([
     'tto', 'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh', 'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
     'rv', 'ru', 'rl', 'rg',
     'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp', 'bsp',
-    'bp', 'bpt', 'bps'
+    'bp', 'bpc', 'bpt', 'bps',
+    'uap', 'uam'
 ]);
 const _passthroughParams = (() => {
     const p = new URLSearchParams(location.search);
@@ -528,10 +576,24 @@ let _shiftPanActive = false;
 let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, updated each frame
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
+let autoDemoLoadSuppressed = false;
+let autoDemoLoadScheduled = false;
 let _pausedBeforeStillExport = null;
 let buildPlateEnabled = true;
-let buildPlateTextureEnabled = true;
-let buildPlateTextureStrength = 50;
+let buildPlateColor = '#c2a164';
+let buildPlateShade = 0;
+let buildPlateFinish = 'satin'; // matte | satin | gloss
+let buildPlateSizePreset = '220x220';
+let buildPlateWidth = 220;
+let buildPlateDepth = 220;
+let exportMotionControlsEnabled = true;
+let _syncingExportMotionControls = false;
+let autoUIAssistEnabled = true;
+let exportCollapsedConfirmEnabled = true;
+let _exportCollapsedConfirmResolver = null;
+let uploadChoicePromptEnabled = true;
+let uploadDefaultAction = 'replace'; // replace | add
+let _uploadChoiceResolver = null;
 const textureTuneState = {
     light: TEXTURE_TUNE_DEFAULTS.light,
     contrast: TEXTURE_TUNE_DEFAULTS.contrast,
@@ -616,10 +678,69 @@ function syncExportCameraFromViewport() {
     exportCamZoom = (camera.zoom || 1) / cropScale;
 }
 
+function getViewportPixelRatio() {
+    const dpr = window.devicePixelRatio || 1;
+    // Floor at 2.0: on non-Retina (dpr=1), dpr*SCALE=1.35 isn't enough for clean AA.
+    // On Retina (dpr=2) it becomes 2.7, capped at 2.5.
+    return Math.min(Math.max(dpr * VIEWPORT_AA_SCALE, 2), 2.5);
+}
+
+function getViewportFitDistance() {
+    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera?.fov ? camera.fov / 2 : 22.5));
+    const aspect = camera?.aspect > 0 ? camera.aspect : 1;
+    return modelRadius * Math.max(1, 1 / aspect) / Math.max(1e-6, tanHalfFov) * VIEWPORT_FIT_SCALE;
+}
+
+function updateOrbitDistanceLimits(clampCurrent = true) {
+    if (!controls || !camera) return;
+    const fitDist = Math.max(0.02, getViewportFitDistance());
+    const minDist = Math.max(0.01, fitDist * ORBIT_MIN_DISTANCE_FACTOR);
+    const maxDist = Math.max(minDist + 0.01, fitDist * ORBIT_MAX_DISTANCE_FACTOR);
+    controls.minDistance = minDist;
+    controls.maxDistance = maxDist;
+
+    if (!clampCurrent) return;
+    const { target, dist, elev, az } = getOrbitFrameState();
+    const clampedDist = THREE.MathUtils.clamp(dist, minDist, maxDist);
+    if (Math.abs(clampedDist - dist) > 1e-4) {
+        setCameraFromOrbitState(camera, target, clampedDist, elev, az);
+        controls.target.copy(target);
+        controls.update();
+    }
+
+    updateCameraClipPlanes();
+}
+
+function updateCameraClipPlanes(force = false) {
+    if (!camera) return;
+    const tx = controls?.target?.x ?? 0;
+    const ty = controls?.target?.y ?? 0;
+    const tz = controls?.target?.z ?? 0;
+    const dx = camera.position.x - tx;
+    const dy = camera.position.y - ty;
+    const dz = camera.position.z - tz;
+    const dist = Math.max(0.001, Math.hypot(dx, dy, dz));
+    const radius = Math.max(modelRadius || 1, 0.001);
+
+    const clearance = dist - (radius * 1.08);
+    let nextNear = clearance > 0 ? (clearance * 0.22) : Math.max(0.003, dist * 0.002);
+    nextNear = Math.max(0.003, Math.min(nextNear, Math.max(0.8, radius * 0.6)));
+
+    let nextFar = Math.max(nextNear + 8, dist + (radius * 9.5) + 40);
+    if (buildPlateMesh?.visible) nextFar += Math.max(8, radius * 0.9);
+
+    if (!Number.isFinite(nextNear) || !Number.isFinite(nextFar) || nextNear <= 0 || nextFar <= nextNear) return;
+    if (!force && Math.abs(camera.near - nextNear) < 1e-5 && Math.abs(camera.far - nextFar) < 1e-2) return;
+
+    camera.near = nextNear;
+    camera.far = nextFar;
+    camera.updateProjectionMatrix();
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: false });
+    renderer.setPixelRatio(getViewportPixelRatio());
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = false;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -646,7 +767,7 @@ function initThree() {
     if (isDynamicBg) updateDynamicBg();
     scene.environment = roomEnv; // IBL for metallic shading
 
-    camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
+    camera = new THREE.PerspectiveCamera(45, 1, 0.02, 5000);
 
     // Three-point lighting
     // Warm key (slightly amber) + cool fill + cool rim creates warm/cool contrast
@@ -691,7 +812,13 @@ function initThree() {
 
     buildPlateMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(1, 1),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.96, metalness: 0.0, side: THREE.DoubleSide })
+        new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.96,
+            metalness: 0.0,
+            side: THREE.DoubleSide,
+            shadowSide: THREE.FrontSide,
+        })
     );
     buildPlateMesh.rotation.x = -Math.PI / 2;
     buildPlateMesh.receiveShadow = true;
@@ -700,7 +827,6 @@ function initThree() {
     buildPlateMesh.renderOrder = -2;
     scene.add(buildPlateMesh);
     updateBuildPlateMaterial();
-    updateBuildPlateTextureUI();
 
     applyTextureLighting();
 
@@ -710,6 +836,7 @@ function initThree() {
     controls.autoRotate = true;
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
     controls.enableZoom = true;
+    updateOrbitDistanceLimits(false);
     _controlsDefaultMouseButtons = { ...controls.mouseButtons };
     _controlsDefaultTouches = { ...controls.touches };
     controls.addEventListener('start', () => {
@@ -740,11 +867,13 @@ function syncCanvasSize() {
     const w = wrap.clientWidth;
     const h = wrap.clientHeight;
     if (w === 0 || h === 0) return;
+    renderer.setPixelRatio(getViewportPixelRatio());
     renderer.setSize(w, h, false); // false = don't touch CSS
     if (camera) {
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
     }
+    updateOrbitDistanceLimits();
     updateEstimate();
     updateLiveRulerOverlay();
     // Re-render immediately after setSize clears the buffer so the browser
@@ -758,48 +887,158 @@ function getActiveShadingMode() {
     return shadingEl.value;
 }
 
-function createBuildPlateTexture(strengthPct) {
-    const strength = Math.max(0, Math.min(100, strengthPct || 0)) / 100;
+function createBuildPlateTexture(hexColor = '#c2a164', finish = 'satin') {
     const c = document.createElement('canvas');
     c.width = 128;
     c.height = 128;
     const ctx = c.getContext('2d');
     if (!ctx) return null;
-    const delta = Math.round(6 + strength * 28);
-    const base = 128;
-    const c1 = Math.max(0, Math.min(255, base - delta));
-    const c2 = Math.max(0, Math.min(255, base + delta));
-    ctx.fillStyle = `rgb(${c1},${c1},${c1})`;
-    ctx.fillRect(0, 0, 128, 128);
-    ctx.fillStyle = `rgb(${c2},${c2},${c2})`;
-    ctx.fillRect(0, 0, 64, 64);
-    ctx.fillRect(64, 64, 64, 64);
+
+    const color = new THREE.Color(hexColor);
+    const base = {
+        r: Math.round(color.r * 255),
+        g: Math.round(color.g * 255),
+        b: Math.round(color.b * 255),
+    };
+    const variance = finish === 'matte' ? 18 : (finish === 'gloss' ? 8 : 12);
+
+    const img = ctx.createImageData(128, 128);
+    for (let y = 0; y < 128; y++) {
+        for (let x = 0; x < 128; x++) {
+            const idx = (y * 128 + x) * 4;
+            const noise = ((x * 73 + y * 151 + 97) % 37) - 18;
+            const n = Math.round((noise / 18) * variance);
+            img.data[idx] = Math.max(0, Math.min(255, base.r + n));
+            img.data[idx + 1] = Math.max(0, Math.min(255, base.g + n));
+            img.data[idx + 2] = Math.max(0, Math.min(255, base.b + n));
+            img.data[idx + 3] = 255;
+        }
+    }
+    ctx.putImageData(img, 0, 0);
+
+    ctx.strokeStyle = finish === 'gloss' ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    for (let y = 0; y <= 128; y += 16) {
+        ctx.beginPath();
+        ctx.moveTo(0, y + 0.5);
+        ctx.lineTo(128, y + 0.5);
+        ctx.stroke();
+    }
+    for (let x = 0; x <= 128; x += 16) {
+        ctx.beginPath();
+        ctx.moveTo(x + 0.5, 0);
+        ctx.lineTo(x + 0.5, 128);
+        ctx.stroke();
+    }
+
     const tex = new THREE.CanvasTexture(c);
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.RepeatWrapping;
     tex.colorSpace = THREE.SRGBColorSpace;
+    if (renderer?.capabilities?.getMaxAnisotropy) {
+        tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    }
     return tex;
-}
-
-function updateBuildPlateTextureUI() {
-    if (buildPlateTextureValEl) buildPlateTextureValEl.textContent = `${buildPlateTextureStrength}%`;
-    if (buildPlateTextureSliderEl) buildPlateTextureSliderEl.disabled = !buildPlateTextureEnabled;
 }
 
 function updateBuildPlateMaterial() {
     if (!buildPlateMesh || !buildPlateMesh.material) return;
-    const tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
-    const c = computeTonedColor(bgPick.value, tone);
-    buildPlateMesh.material.color.copy(c);
 
-    if (buildPlateMesh.material.map) {
-        buildPlateMesh.material.map.dispose();
+    const shade = Math.max(-100, Math.min(100, Number(buildPlateShade) || 0));
+    const toned = computeTonedColor(buildPlateColor || '#c2a164', shade);
+    buildPlateMesh.material.color.set(toned);
+
+    if (buildPlateFinish === 'matte') {
+        buildPlateMesh.material.roughness = 0.97;
+        buildPlateMesh.material.metalness = 0.0;
+    } else if (buildPlateFinish === 'gloss') {
+        buildPlateMesh.material.roughness = 0.64;
+        buildPlateMesh.material.metalness = 0.14;
+    } else {
+        buildPlateMesh.material.roughness = 0.84;
+        buildPlateMesh.material.metalness = 0.06;
+    }
+    buildPlateMesh.material.shadowSide = THREE.FrontSide;
+
+    const previousMap = buildPlateMesh.material.map;
+    const repeatX = previousMap?.repeat?.x || Math.max(4, Math.round((buildPlateMesh.scale?.x || buildPlateWidth || 220) / 8));
+    const repeatY = previousMap?.repeat?.y || Math.max(4, Math.round((buildPlateMesh.scale?.y || buildPlateDepth || 220) / 8));
+    if (previousMap) {
+        previousMap.dispose();
         buildPlateMesh.material.map = null;
     }
-    if (buildPlateTextureEnabled) {
-        buildPlateMesh.material.map = createBuildPlateTexture(buildPlateTextureStrength);
+    if (BUILD_PLATE_TEXTURES_ENABLED) {
+        buildPlateMesh.material.map = createBuildPlateTexture(toned, buildPlateFinish);
+        buildPlateMesh.material.map.repeat.set(repeatX, repeatY);
     }
     buildPlateMesh.material.needsUpdate = true;
+
+    if (buildPlateControlsEl) buildPlateControlsEl.hidden = !buildPlateEnabled;
+    if (buildPlateShadeValEl) {
+        const v = Number(buildPlateShade) || 0;
+        buildPlateShadeValEl.textContent = (v >= 0 ? '+' : '') + String(v);
+    }
+    if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(Number(buildPlateShade) || 0);
+    if (buildPlateColorPickerEl && /^#[0-9a-f]{6}$/i.test(buildPlateColor)) {
+        buildPlateColorPickerEl.value = buildPlateColor;
+    }
+    if (buildPlateFinishWrapEl) {
+        buildPlateFinishWrapEl.querySelectorAll('[data-plate-finish]').forEach((btn) => {
+            const isActive = btn.getAttribute('data-plate-finish') === buildPlateFinish;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+    }
+}
+
+function clampBuildPlateSize(v, fallback = 220) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(80, Math.min(500, Math.round(n)));
+}
+
+function applyBuildPlateSizePreset(preset) {
+    if (BUILD_PLATE_SIZE_PRESETS[preset]) {
+        buildPlateSizePreset = preset;
+        buildPlateWidth = BUILD_PLATE_SIZE_PRESETS[preset].w;
+        buildPlateDepth = BUILD_PLATE_SIZE_PRESETS[preset].d;
+        return;
+    }
+    buildPlateSizePreset = 'custom';
+    buildPlateWidth = clampBuildPlateSize(buildPlateWidth, 220);
+    buildPlateDepth = clampBuildPlateSize(buildPlateDepth, 220);
+}
+
+function syncBuildPlateSizeUI() {
+    if (buildPlateSizePresetEl) buildPlateSizePresetEl.value = buildPlateSizePreset;
+    if (buildPlateCustomSizeRowEl) buildPlateCustomSizeRowEl.hidden = buildPlateSizePreset !== 'custom';
+    if (buildPlateCustomWidthEl) buildPlateCustomWidthEl.value = String(buildPlateWidth);
+    if (buildPlateCustomDepthEl) buildPlateCustomDepthEl.value = String(buildPlateDepth);
+}
+
+function syncExportMotionControlsFromMain() {
+    if (_syncingExportMotionControls) return;
+    _syncingExportMotionControls = true;
+    try {
+        if (exportMotionControlsEl) exportMotionControlsEl.hidden = !exportMotionControlsEnabled;
+        const mode = rotateModeEl.value || 'spin';
+        if (exportMotionModeEl) exportMotionModeEl.value = mode;
+        if (exportMotionSpeedEl) exportMotionSpeedEl.value = speedSlider.value;
+
+        if (exportMotionRangeEl && exportMotionRangeValEl && exportMotionRangeLabelEl) {
+            const useWobbleRange = mode === 'wobble';
+            const src = useWobbleRange ? wobbleSpinRangeSlider : tiltRangeSlider;
+            exportMotionRangeEl.min = src.min;
+            exportMotionRangeEl.max = src.max;
+            exportMotionRangeEl.step = src.step;
+            exportMotionRangeEl.value = src.value;
+            exportMotionRangeValEl.textContent = `${src.value}°`;
+            exportMotionRangeLabelEl.textContent = useWobbleRange ? 'Spin Range' : 'Range';
+            syncSliderTooltip(exportMotionRangeEl);
+        }
+    } finally {
+        _syncingExportMotionControls = false;
+    }
 }
 
 function updateShadowCatcherPlacement() {
@@ -813,12 +1052,14 @@ function updateShadowCatcherPlacement() {
     shadowCatcher.position.set(center.x, y, center.z);
 
     if (buildPlateMesh) {
-        const plateSize = Math.max(1, footprint * 4.4);
+        const plateW = clampBuildPlateSize(buildPlateWidth, 220);
+        const plateD = clampBuildPlateSize(buildPlateDepth, 220);
         buildPlateMesh.position.set(center.x, y - Math.max(0.0005, modelRadius * 0.0012), center.z);
-        buildPlateMesh.scale.set(plateSize, plateSize, 1);
+        buildPlateMesh.scale.set(plateW, plateD, 1);
         if (buildPlateMesh.material?.map) {
-            const repeat = Math.max(4, Math.round(plateSize / 8));
-            buildPlateMesh.material.map.repeat.set(repeat, repeat);
+            const repeatX = Math.max(4, Math.round(plateW / 8));
+            const repeatY = Math.max(4, Math.round(plateD / 8));
+            buildPlateMesh.material.map.repeat.set(repeatX, repeatY);
         }
     }
 
@@ -938,12 +1179,22 @@ function applyCurrentTextureTuning() {
     });
 }
 
-function getMaterial(shading, baseColor) {
+function getMaterial(shading, baseColor, partSettings) {
     if (shading === "flat" || shading === "toon") shading = "matte"; // legacy value
 
-    // Tone: keep hue/sat, only adjust brightness around the original color.
-    const toneVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
+    // Use per-part tone if available, otherwise fall back to the UI slider.
+    const ps = partSettings || null;
+    const toneVal = ps != null && ps.tone != null ? ps.tone : parseInt(opacitySlider ? opacitySlider.value : 0, 10);
     const baseC = computeTonedColor(baseColor, toneVal);
+
+    // Per-part roughness/metalness when available; fall back to global textureTuneState.
+    const matteRoughness  = ps != null && ps.matteRoughness  != null ? ps.matteRoughness  : textureTuneState.matteRoughness;
+    const matteReflection = ps != null && ps.matteReflection != null ? ps.matteReflection : textureTuneState.matteReflection;
+    const phongRoughness  = ps != null && ps.phongRoughness  != null ? ps.phongRoughness  : (textureTuneState.phongRoughness || 10);
+    const phongReflection = ps != null && ps.phongReflection != null ? ps.phongReflection : (textureTuneState.phongReflection || 80);
+    const metallicRoughness  = ps != null && ps.metallicRoughness  != null ? ps.metallicRoughness  : (textureTuneState.metallicRoughness || 30);
+    const metallicMetalness  = ps != null && ps.metallicMetalness  != null ? ps.metallicMetalness  : (textureTuneState.metallicMetalness || 65);
+    const metallicReflection = ps != null && ps.metallicReflection != null ? ps.metallicReflection : (textureTuneState.metallicReflection || 100);
 
     const isClear = (shading === "clear" || shading === "glass");
     const finalAlpha = isClear ? 0.35 : 1.0;
@@ -959,23 +1210,23 @@ function getMaterial(shading, baseColor) {
         return new THREE.MeshStandardMaterial({
             ...base,
             metalness: 0,
-            roughness: (100 - textureTuneState.matteRoughness) / 100,
-            envMapIntensity: ((textureTuneState.matteReflection || 0) / 100) * (textureTuneState.highlights / 100),
+            roughness: (100 - matteRoughness) / 100,
+            envMapIntensity: ((matteReflection || 0) / 100) * (textureTuneState.highlights / 100),
         });
     }
     if (shading === "phong" || shading === "clear" || shading === "glass") {
         return new THREE.MeshStandardMaterial({
             ...base,
             metalness: 0,
-            roughness: (100 - (textureTuneState.phongRoughness || 10)) / 100,
-            envMapIntensity: ((textureTuneState.phongReflection || 80) / 100) * (textureTuneState.highlights / 100),
+            roughness: (100 - phongRoughness) / 100,
+            envMapIntensity: (phongReflection / 100) * (textureTuneState.highlights / 100),
         });
     }
     return new THREE.MeshStandardMaterial({
         ...base,
-        metalness: (textureTuneState.metallicMetalness || 65) / 100,
-        roughness: (100 - (textureTuneState.metallicRoughness || 30)) / 100,
-        envMapIntensity: ((textureTuneState.metallicReflection || 100) / 100) * (textureTuneState.highlights / 100),
+        metalness: metallicMetalness / 100,
+        roughness: (100 - metallicRoughness) / 100,
+        envMapIntensity: (metallicReflection / 100) * (textureTuneState.highlights / 100),
     });
 }
 
@@ -1073,6 +1324,15 @@ function rebuildFileChipPartsMenu() {
         replaceBtn.textContent = 'Replace';
         replaceBtn.disabled = !canMutateFiles;
 
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'file-chip-part-btn';
+        addBtn.dataset.action = 'add';
+        addBtn.dataset.partIndex = String(idx);
+        addBtn.textContent = 'Add';
+        addBtn.disabled = !canMutateFiles;
+        addBtn.title = canMutateFiles ? 'Add one or more STL parts' : 'Part source files are unavailable for editing';
+
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'file-chip-part-btn file-chip-part-btn--remove';
@@ -1083,7 +1343,7 @@ function rebuildFileChipPartsMenu() {
         removeBtn.setAttribute('aria-label', 'Remove this part');
         removeBtn.textContent = '×';
 
-        row.append(nameEl, replaceBtn, removeBtn);
+        row.append(nameEl, replaceBtn, addBtn, removeBtn);
         fileChipPartsMenu.appendChild(row);
     });
 }
@@ -1269,8 +1529,20 @@ function syncUIFromSelectedPart() {
     updateModelSelection();
 }
 
-function queueModelPartThumbsRender() {
+// null = all parts dirty; a Set = only the indices in the set need re-rendering
+let dirtyPartThumbs = null;
+
+function queueModelPartThumbsRender(partIndices = null) {
     if (!modelPartSelectorBtn && !bgModelSyncSelectorBtn) return;
+    // Accumulate dirty indices. null means "all".
+    if (dirtyPartThumbs !== null) {
+        if (partIndices === null) {
+            dirtyPartThumbs = null;
+        } else {
+            const arr = Array.isArray(partIndices) ? partIndices : [partIndices];
+            arr.forEach(i => dirtyPartThumbs.add(i));
+        }
+    }
     if (modelPartThumbsQueued) return;
     modelPartThumbsQueued = true;
     requestAnimationFrame(() => {
@@ -1505,7 +1777,8 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (shadowCatcher && typeof savedShadowCatcherVisible === 'boolean') shadowCatcher.visible = savedShadowCatcherVisible;
     if (buildPlateMesh && typeof savedBuildPlateVisible === 'boolean') buildPlateMesh.visible = savedBuildPlateVisible;
     if (rulerGridHelper && typeof savedRulerGridVisible === 'boolean') rulerGridHelper.visible = savedRulerGridVisible;
-    renderer.render(scene, camera);
+    // Live-view repaint is deferred to renderModelPartThumbnails() to avoid
+    // one full-scene render per part (22 renders for 22 parts).
 }
 
 function renderModelPartThumbnails() {
@@ -1515,10 +1788,20 @@ function renderModelPartThumbnails() {
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!visible));
     if (!visible) return;
 
+    const dirty = dirtyPartThumbs; // snapshot; null = all
+    dirtyPartThumbs = new Set(); // reset to empty (nothing newly dirty)
+
+    let anyRendered = false;
     document.querySelectorAll('.js-part-thumb-preview').forEach((canvasEl) => {
         const idx = parseInt(canvasEl.dataset.partIndex, 10);
-        if (Number.isFinite(idx)) renderSinglePartThumbnail(canvasEl, idx);
+        if (!Number.isFinite(idx)) return;
+        if (dirty !== null && !dirty.has(idx)) return; // skip clean parts
+        renderSinglePartThumbnail(canvasEl, idx);
+        anyRendered = true;
     });
+
+    // Single live-view repaint after all thumbnail renders are done.
+    if (anyRendered && scene && camera && !isExporting) renderer.render(scene, camera);
 
     if (modelPartSelectorMenu) {
         modelPartSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
@@ -1718,10 +2001,10 @@ function rebuildMeshMaterialsForCurrentShading() {
     if (!mesh) return;
     disposeMaterials(mesh.material);
     if (isMultipartModel()) {
-        mesh.material = modelPartSettings.map((s, idx) => getMaterial(s.shading || shadingEl.value, s.color || modelPartBaseColors[idx]));
+        mesh.material = modelPartSettings.map((s, idx) => getMaterial(s.shading || shadingEl.value, s.color || modelPartBaseColors[idx], s));
     } else {
         const s = getPartSettings(0);
-        mesh.material = getMaterial(s.shading || shadingEl.value, s.color || colorPick.value);
+        mesh.material = getMaterial(s.shading || shadingEl.value, s.color || colorPick.value, s);
     }
     applyPartColorsToMesh();
     applyCurrentTextureTuning();
@@ -1747,6 +2030,7 @@ function syncModelPartSelectorUI() {
 
     modelPartSelected = Math.max(0, Math.min(modelPartSelected, modelPartNames.length - 1));
     modelPartSelectorMenu.innerHTML = '';
+    const canMutateFiles = !!modelPartFiles && modelPartFiles.length === modelPartNames.length;
 
     modelPartNames.forEach((name, idx) => {
         const opt = document.createElement('div');
@@ -1755,7 +2039,8 @@ function syncModelPartSelectorUI() {
         opt.setAttribute('role', 'option');
         const settings = getPartSettings(idx);
         const hideLabel = settings.hidden ? 'Show' : 'Hide';
-        opt.innerHTML = `<button type="button" class="thumb-select-option-main" data-part-select="${idx}"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">\u22ee</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}">Replace STL</button><button type="button" class="part-option-action" data-part-action="hide" data-part-index="${idx}">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}">Delete Model</button></div>`;
+        const mutateDisabledAttr = canMutateFiles ? '' : ' disabled title="Part source files are unavailable for editing"';
+        opt.innerHTML = `<button type="button" class="thumb-select-option-main" data-part-select="${idx}"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">\u22ee</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action" data-part-action="add" data-part-index="${idx}"${mutateDisabledAttr}>Add STL</button><button type="button" class="part-option-action" data-part-action="hide" data-part-index="${idx}">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}">Delete Model</button></div>`;
 
         opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
             clearPresetHoverPreview();
@@ -1788,6 +2073,11 @@ function syncModelPartSelectorUI() {
                 if (action === 'replace') {
                     pendingReplacePartIndex = partIdx;
                     partReplaceInput?.click();
+                    return;
+                }
+
+                if (action === 'add') {
+                    partAppendInput?.click();
                     return;
                 }
 
@@ -1932,8 +2222,8 @@ function loadPreparedGeometry(geo, name) {
     modelDims = { w: sz.x, d: sz.y, h: sz.z };
 
     const initialMaterial = isMultipartModel()
-        ? modelPartSettings.map((s, idx) => getMaterial(s.shading || shadingEl.value, s.color || modelPartBaseColors[idx]))
-        : getMaterial(getPartSettings(0).shading || shadingEl.value, getPartSettings(0).color || colorPick.value);
+        ? modelPartSettings.map((s, idx) => getMaterial(s.shading || shadingEl.value, s.color || modelPartBaseColors[idx], s))
+        : getMaterial(getPartSettings(0).shading || shadingEl.value, getPartSettings(0).color || colorPick.value, getPartSettings(0));
     mesh = new THREE.Mesh(geo, initialMaterial);
     mesh.rotation.x = -Math.PI / 2; // Z-up → Y-up
     mesh.castShadow = true;
@@ -1963,11 +2253,13 @@ function loadPreparedGeometry(geo, name) {
         camera.position.copy(savedCamPos.clone().normalize().multiplyScalar(savedDist));
         camera.lookAt(0, 0, 0);
         controls.target.set(0, 0, 0);
+        updateOrbitDistanceLimits();
         controls.update();
     }
     // else: placeCamera() is deferred to the rAF below so syncCanvasSize() runs
     // first and camera.aspect is correct before we compute the fit distance.
     document.documentElement.classList.add('loaded');
+    dismissStartupSplash();
     try { localStorage.setItem('rotater_hasSession', '1'); } catch (e) { }
     document.getElementById('compactBtnLabel').textContent = 'Upload STL';
     // Preserve pause state on model replace; only resume if not already paused.
@@ -2096,12 +2388,8 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
 
 function placeCamera() {
     if (!camera || !controls) return;
-    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    const aspect = camera.aspect > 0 ? camera.aspect : 1;
-    // Pull back far enough so the full model fits with breathing room.
-    // Math.max(1, 1/aspect) pushes camera further on portrait-ish canvases
-    // where the horizontal axis is constraining.
-    const dist = modelRadius * Math.max(1, 1 / aspect) / tanHalfFov * VIEWPORT_FIT_SCALE;
+    updateOrbitDistanceLimits(false);
+    const dist = getViewportFitDistance();
     camera.up.set(0, 1, 0);
     camera.position.set(0, 0, dist);
     camera.lookAt(0, 0, 0);
@@ -2220,6 +2508,7 @@ function loop() {
                 swingLastAz = swingBaseAz;
             }
         }
+        updateCameraClipPlanes();
         syncLightRig();
         renderer.render(scene, camera);
         if (exportFrameEnabled) drawExportFrame();
@@ -2835,6 +3124,24 @@ function drawMeasurement(ctx, start, end, text, center, options = {}) {
     drawMeasurementLabel(ctx, text, labelPos, align);
 }
 
+function drawWatermark(ctx, W, H) {
+    if (!document.getElementById('exportWatermark')?.checked) return;
+    const margin = Math.round(Math.max(10, W * 0.022));
+    const size = Math.round(Math.max(11, W * 0.028));
+    ctx.save();
+    ctx.globalAlpha = 0.52;
+    ctx.font = `700 ${size}px "Source Sans 3", -apple-system, BlinkMacSystemFont, sans-serif`;
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'right';
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = Math.round(size * 0.55);
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('rotater', W - margin, H - margin);
+    ctx.restore();
+}
+
 function drawRulerOverlay(ctx, width, height, cam, options = {}) {
     if (!RULER_DYNAMIC_LINES_ENABLED) return;
     if (!rulerEnabled || !rulerLinesVisible || !modelDims) return;
@@ -3214,6 +3521,7 @@ function updateRulerGrid() {
             mat.transparent = true;
             mat.opacity = 0.5;
             mat.depthWrite = false;
+            mat.depthTest = true;
         });
         rulerGridHelper.renderOrder = -1;
         scene.add(rulerGridHelper);
@@ -3221,7 +3529,13 @@ function updateRulerGrid() {
     }
 
     rulerGridHelper.visible = true;
-    rulerGridHelper.position.set(0, worldBox.min.y - 0.4, 0);
+    const modelGap = Math.max(0.4, modelRadius * 0.02);
+    let gridY = worldBox.min.y - modelGap;
+    if (buildPlateMesh?.visible) {
+        const plateGap = Math.max(0.8, modelRadius * 0.04);
+        gridY = Math.min(gridY, buildPlateMesh.position.y - plateGap);
+    }
+    rulerGridHelper.position.set(0, gridY, 0);
 }
 
 // ── Persistence (IndexedDB for binary, localStorage for settings) ───────────
@@ -3312,6 +3626,7 @@ function saveSettings() {
             exportDimensions: getSelectedExportDimensionsId(),
             exportTransparent: document.getElementById('exportTransparent')?.checked ? '1' : '0',
             gifDither: document.getElementById('gifDither')?.checked ? '1' : '0',
+            exportWatermark: document.getElementById('exportWatermark')?.checked ? '1' : '0',
             jpegQuality: document.getElementById('jpegQuality')?.value ?? '92',
             textureTuneOpen: textureTunePanel && !textureTunePanel.hidden ? '1' : '0',
             textureTuneLight: String(textureTuneState.light),
@@ -3337,8 +3652,17 @@ function saveSettings() {
             rulerUnit: rulerUnit,
             rulerGridVisible: rulerLinesVisible ? '1' : '0',
             buildPlate: buildPlateEnabled ? '1' : '0',
-            buildPlateTexture: buildPlateTextureEnabled ? '1' : '0',
-            buildPlateTextureStrength: String(buildPlateTextureStrength),
+            buildPlateColor: buildPlateColor,
+            buildPlateShade: String(buildPlateShade),
+            buildPlateFinish: buildPlateFinish,
+            buildPlateSizePreset: buildPlateSizePreset,
+            buildPlateWidth: String(buildPlateWidth),
+            buildPlateDepth: String(buildPlateDepth),
+            exportMotionControls: exportMotionControlsEnabled ? '1' : '0',
+            autoUIAssist: autoUIAssistEnabled ? '1' : '0',
+            exportCollapsedConfirm: exportCollapsedConfirmEnabled ? '1' : '0',
+            uploadChoicePrompt: uploadChoicePromptEnabled ? '1' : '0',
+            uploadDefaultAction: uploadDefaultAction,
             activeBgPreset: activeBgPreset,
             activeModelPreset: activeModelPreset,
             modelPartSelected: String(modelPartSelected || 0),
@@ -3523,6 +3847,11 @@ function restoreSettings() {
                 const el = document.getElementById('gifDither');
                 if (el) el.checked = isOn;
             }
+            if (s.exportWatermark != null) {
+                const isOn = (s.exportWatermark === true || s.exportWatermark === '1' || s.exportWatermark === 1);
+                const el = document.getElementById('exportWatermark');
+                if (el) el.checked = isOn;
+            }
 
             // Restore persisted export framing (used by preview/export and crop mode).
             if (s.exportCamDist != null) {
@@ -3562,11 +3891,51 @@ function restoreSettings() {
         if (s.buildPlate != null) {
             buildPlateEnabled = (s.buildPlate === '1' || s.buildPlate === true || s.buildPlate === 1);
         }
-        if (s.buildPlateTexture != null) {
-            buildPlateTextureEnabled = (s.buildPlateTexture === '1' || s.buildPlateTexture === true || s.buildPlateTexture === 1);
+        if (typeof s.buildPlateColor === 'string' && /^[0-9a-f]{6}$/i.test(s.buildPlateColor)) {
+            buildPlateColor = `#${s.buildPlateColor}`;
+        } else if (typeof s.buildPlateColor === 'string' && /^#[0-9a-f]{6}$/i.test(s.buildPlateColor)) {
+            buildPlateColor = s.buildPlateColor;
+        } else if (s.buildPlateColor === 'black') {
+            buildPlateColor = '#1e1e22';
+        } else if (s.buildPlateColor === 'gold') {
+            buildPlateColor = '#c2a164';
+        } else if (s.buildPlateTexture != null) {
+            const oldTextureOn = (s.buildPlateTexture === '1' || s.buildPlateTexture === true || s.buildPlateTexture === 1);
+            buildPlateColor = oldTextureOn ? '#c2a164' : '#1e1e22';
         }
-        if (s.buildPlateTextureStrength != null) {
-            buildPlateTextureStrength = Math.max(0, Math.min(100, parseInt(s.buildPlateTextureStrength, 10) || 50));
+        if (s.buildPlateShade != null) {
+            const shade = parseInt(s.buildPlateShade, 10);
+            if (Number.isFinite(shade)) buildPlateShade = Math.max(-100, Math.min(100, shade));
+        }
+        if (s.buildPlateFinish === 'matte' || s.buildPlateFinish === 'satin' || s.buildPlateFinish === 'gloss') {
+            buildPlateFinish = s.buildPlateFinish;
+        }
+        if (s.buildPlateSizePreset != null) {
+            const preset = String(s.buildPlateSizePreset);
+            if (preset === 'custom' || BUILD_PLATE_SIZE_PRESETS[preset]) {
+                buildPlateSizePreset = preset;
+            }
+        }
+        if (s.buildPlateWidth != null) buildPlateWidth = clampBuildPlateSize(s.buildPlateWidth, 220);
+        if (s.buildPlateDepth != null) buildPlateDepth = clampBuildPlateSize(s.buildPlateDepth, 220);
+        if (buildPlateSizePreset !== 'custom' && BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset]) {
+            buildPlateWidth = BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset].w;
+            buildPlateDepth = BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset].d;
+        }
+        if (s.exportMotionControls != null) {
+            exportMotionControlsEnabled = (s.exportMotionControls === '1' || s.exportMotionControls === true || s.exportMotionControls === 1);
+        }
+        if (s.autoUIAssist != null) {
+            autoUIAssistEnabled = (s.autoUIAssist === '1' || s.autoUIAssist === true || s.autoUIAssist === 1);
+        }
+        if (s.exportCollapsedConfirm != null) {
+            exportCollapsedConfirmEnabled = (s.exportCollapsedConfirm === '1' || s.exportCollapsedConfirm === true || s.exportCollapsedConfirm === 1);
+        }
+        if (s.uploadChoicePrompt != null) {
+            uploadChoicePromptEnabled = (s.uploadChoicePrompt === '1' || s.uploadChoicePrompt === true || s.uploadChoicePrompt === 1);
+        }
+        if (s.uploadDefaultAction === 'add' || s.uploadDefaultAction === 'replace') {
+            uploadDefaultAction = s.uploadDefaultAction;
         }
         if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
         if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
@@ -3602,16 +3971,21 @@ function restoreSettings() {
         try { if (isDynamicBg) updateDynamicBg(); } catch (e) { }
         updateRulerHUD();
         if (buildPlateToggleEl) buildPlateToggleEl.checked = buildPlateEnabled;
-        if (buildPlateTextureToggleEl) buildPlateTextureToggleEl.checked = buildPlateTextureEnabled;
-        if (buildPlateTextureSliderEl) buildPlateTextureSliderEl.value = String(buildPlateTextureStrength);
-        updateBuildPlateTextureUI();
+        syncBuildPlateSizeUI();
+        if (exportMotionControlsToggleEl) exportMotionControlsToggleEl.checked = exportMotionControlsEnabled;
+        if (exportMotionControlsEl) exportMotionControlsEl.hidden = !exportMotionControlsEnabled;
+        if (autoUIAssistToggleEl) autoUIAssistToggleEl.checked = autoUIAssistEnabled;
+        if (exportCollapsedConfirmToggleEl) {
+            exportCollapsedConfirmToggleEl.checked = exportCollapsedConfirmEnabled;
+            exportCollapsedConfirmToggleEl.disabled = !autoUIAssistEnabled;
+        }
         updateBuildPlateMaterial();
+        syncExportMotionControlsFromMain();
         if (speedSlider instanceof HTMLInputElement) syncSliderTooltip(speedSlider);
         syncSliderTooltip(tiltRangeSlider);
         syncSliderTooltip(wobbleSpinRangeSlider);
         if (opacitySlider) syncSliderTooltip(opacitySlider);
         if (bgOpacitySlider) { syncSliderTooltip(bgOpacitySlider); updateBgShadeSliderVisual(); }
-        if (buildPlateTextureSliderEl) syncSliderTooltip(buildPlateTextureSliderEl);
         updateTiltRangeReset();
         wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
         speedResetBtn?.classList.toggle('is-changed', parseInt(speedSlider.value, 10) !== SPEED_DEFAULT);
@@ -3689,12 +4063,19 @@ function getURLSettings(searchStr = location.search) {
         rulerUnit: g('ru'),
         rulerGridVisible: g('rg'),
         buildPlate: g('bp'),
+        buildPlateColor: g('bpc'),
+        buildPlateShade: g('bps'),
+        buildPlateFinish: g('bpf'),
+        buildPlateSizePreset: g('bpp'),
+        buildPlateWidth: g('bpw'),
+        buildPlateDepth: g('bpd'),
         buildPlateTexture: g('bpt'),
-        buildPlateTextureStrength: g('bps'),
         rulerLinesVisible: g('rl'),
         activeBgPreset: g('abp'),
         activeModelPreset: g('amp'),
         modelSyncPart: g('bsp'),
+        uploadChoicePrompt: g('uap'),
+        uploadDefaultAction: p.has('uam') ? (p.get('uam') === 'a' ? 'add' : 'replace') : null,
     };
 }
 
@@ -3754,11 +4135,19 @@ function settingsToURL() {
     if (rulerUnit === 'imperial') p.set('ru', 'i');
     if (!rulerLinesVisible) p.set('rg', '0');
     if (!buildPlateEnabled) p.set('bp', '0');
-    if (!buildPlateTextureEnabled) p.set('bpt', '0');
-    if (buildPlateTextureStrength !== 50) p.set('bps', String(buildPlateTextureStrength));
+    if (buildPlateColor && /^#[0-9a-f]{6}$/i.test(buildPlateColor) && buildPlateColor.toLowerCase() !== '#c2a164') {
+        p.set('bpc', buildPlateColor.replace('#', ''));
+    }
+    if (buildPlateShade) p.set('bps', String(buildPlateShade));
+    if (buildPlateFinish && buildPlateFinish !== 'satin') p.set('bpf', buildPlateFinish);
+    if (buildPlateSizePreset && buildPlateSizePreset !== '220x220') p.set('bpp', buildPlateSizePreset);
+    if (buildPlateWidth !== 220) p.set('bpw', String(buildPlateWidth));
+    if (buildPlateDepth !== 220) p.set('bpd', String(buildPlateDepth));
     if (activeBgPreset && activeBgPreset !== 'custom') p.set('abp', activeBgPreset);
     if (activeModelPreset && activeModelPreset !== 'custom') p.set('amp', activeModelPreset);
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
+    if (!uploadChoicePromptEnabled) p.set('uap', '0');
+    if (uploadDefaultAction === 'add') p.set('uam', 'a');
     // Re-inject passthrough params captured at startup (e.g. debug=1)
     _passthroughParams.forEach((v, k) => { if (!p.has(k)) p.set(k, v); });
     history.replaceState(null, '', '?' + p.toString());
@@ -3770,25 +4159,7 @@ async function restoreSession() {
     updateColorSwatches(); // guaranteed init even if restoreSettings throws
     const saved = await loadFileFromIDB();
     if (!saved) {
-        if (DEV_LOG) console.log(`[rotater] restoreSession: loading demo model at ${Date.now()}`);
-        // Load the demo model (not saved to IDB — user's own files take priority)
-        try {
-            const resp = await fetch('./benchy.stl');
-            if (!resp.ok) return;
-            const buffer = await resp.arrayBuffer();
-            setDisplayedFileName('3dbenchy.stl');
-            currentFileName = '3dbenchy';
-            modelPartNames = ['3dbenchy.stl'];
-            modelPartBaseColors = [colorPick.value];
-            modelPartSettings = [createPartSettings(colorPick.value)];
-            modelPartFiles = null;
-            modelPartSelected = 0;
-            if (!renderer) initThree();
-            controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
-            if (DEV_LOG) console.log(`[rotater] restoreSession: calling loadSTLBuffer for demo at ${Date.now()}`);
-            loadSTLBuffer(buffer, '3dbenchy.stl');
-            saveSettings();
-        } catch (e) { /* no demo available — stay on landing page */ }
+        scheduleAutoDemoModelLoad();
         return;
     }
     const isMultipart = Array.isArray(saved.parts) && saved.parts.length > 1;
@@ -3816,6 +4187,52 @@ async function restoreSession() {
     }
 }
 
+function suppressAutoDemoModelLoad() {
+    autoDemoLoadSuppressed = true;
+}
+
+function runWhenBrowserIdle(task, timeoutMs = AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS) {
+    if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(() => task(), { timeout: timeoutMs });
+        return;
+    }
+    setTimeout(task, 0);
+}
+
+function scheduleAutoDemoModelLoad() {
+    if (autoDemoLoadScheduled || autoDemoLoadSuppressed) return;
+    autoDemoLoadScheduled = true;
+    if (DEV_LOG) console.log(`[rotater] restoreSession: scheduling demo model load at ${Date.now()}`);
+    const runLoad = async () => {
+        const hasExplicitModelName = !!currentFileName && currentFileName !== 'model' && currentFileName !== '3dbenchy';
+        if (autoDemoLoadSuppressed || mesh || hasExplicitModelName) {
+            dismissStartupSplash();
+            return;
+        }
+        try {
+            const loaded = await loadBenchyModel({ clearStoredModel: false });
+            if (!loaded) {
+                dismissStartupSplash();
+                return;
+            }
+            saveSettings();
+            dismissStartupSplash();
+        } catch (e) {
+            dismissStartupSplash();
+            /* no demo available — stay on landing page */
+        }
+    };
+
+    if (AUTO_LOAD_BENCHY_ON_IDLE) runWhenBrowserIdle(runLoad);
+    else requestAnimationFrame(() => setTimeout(runLoad, 0));
+}
+
+function dismissStartupSplash() {
+    requestAnimationFrame(() => {
+        document.documentElement.classList.remove('booting');
+    });
+}
+
 // ── UI events ─────────────────────────────────────────────────────────────────
 function readFileAsArrayBuffer(file) {
     return new Promise((resolve, reject) => {
@@ -3827,12 +4244,27 @@ function readFileAsArrayBuffer(file) {
 }
 
 async function handleFiles(fileList) {
+    dismissStartupSplash();
     const files = Array.from(fileList || []).filter(f => f?.name?.toLowerCase?.().endsWith('.stl'));
     if (!files.length) return;
 
+    let requestedAction = 'replace';
     if (mesh) {
-        const incomingLabel = files.length > 1 ? `${files.length} STL files` : `"${files[0].name}"`;
-        if (!confirm(`Replace current model with ${incomingLabel}?`)) return;
+        requestedAction = await promptUploadChoice(files);
+        if (requestedAction !== 'add' && requestedAction !== 'replace') {
+            return;
+        }
+    }
+
+    if (mesh && requestedAction === 'add') {
+        try {
+            await appendSTLPartsToCurrentModel(files);
+        } catch (err) {
+            setStatus('Error: ' + (err?.message || 'Failed to add STL part(s).'));
+            console.error(err);
+            setTimeout(() => setStatus(''), 5000);
+        }
+        return;
     }
 
     const isMultipart = files.length > 1;
@@ -3875,6 +4307,180 @@ async function handleFiles(fileList) {
         console.error(err);
         setTimeout(() => setStatus(''), 5000);
     }
+}
+
+async function appendSTLPartsToCurrentModel(fileList) {
+    const files = Array.from(fileList || []).filter((f) => f?.name?.toLowerCase?.().endsWith('.stl'));
+    if (!files.length) return;
+    if (!mesh) {
+        await handleFiles(files);
+        return;
+    }
+
+    const incoming = await Promise.all(files.map(async (file) => {
+        const color = colorPick.value;
+        return {
+            name: file.name,
+            buffer: await readFileAsArrayBuffer(file),
+            color,
+            settings: createPartSettings(color),
+        };
+    }));
+
+    let existingFiles = [];
+    let existingNames = [];
+    let existingColors = [];
+    let existingSettings = [];
+
+    if (isMultipartModel()) {
+        if (!modelPartFiles || modelPartFiles.length !== modelPartNames.length) {
+            throw new Error('Current multipart source files are unavailable for append. Re-import the package and try again.');
+        }
+        existingFiles = modelPartFiles.map((part) => ({ name: part.name, buffer: part.buffer }));
+        existingNames = [...modelPartNames];
+        existingColors = modelPartNames.map((_, idx) => {
+            const s = getPartSettings(idx);
+            return s.color || modelPartBaseColors[idx] || colorPick.value;
+        });
+        existingSettings = modelPartNames.map((_, idx) => {
+            const s = getPartSettings(idx);
+            const c = existingColors[idx] || colorPick.value;
+            return { ...createPartSettings(c), ...s, color: c };
+        });
+    } else {
+        const singleName = modelPartNames[0] || `${currentFileName || 'model'}.stl`;
+        if (!currentModelBuffer) {
+            throw new Error('Current model source is unavailable for append. Reload this model and try again.');
+        }
+        const s = getPartSettings(0);
+        const c = s.color || modelPartBaseColors[0] || colorPick.value;
+        existingFiles = [{ name: singleName, buffer: currentModelBuffer }];
+        existingNames = [singleName];
+        existingColors = [c];
+        existingSettings = [{ ...createPartSettings(c), ...s, color: c }];
+    }
+
+    const nextFiles = [
+        ...existingFiles,
+        ...incoming.map((part) => ({ name: part.name, buffer: part.buffer })),
+    ];
+    const nextNames = [...existingNames, ...incoming.map((part) => part.name)];
+    const nextColors = [...existingColors, ...incoming.map((part) => part.color || colorPick.value)];
+    const nextSettings = [
+        ...existingSettings,
+        ...incoming.map((part, idx) => {
+            const c = nextColors[existingSettings.length + idx] || colorPick.value;
+            return { ...createPartSettings(c), ...part.settings, color: c };
+        }),
+    ];
+
+    const displayName = getMultipartDisplayName(nextNames);
+
+    await saveFilesToIDB(nextFiles.map((part, idx) => ({
+        name: part.name,
+        buffer: part.buffer,
+        color: nextColors[idx] || colorPick.value,
+        settings: nextSettings[idx] || createPartSettings(nextColors[idx] || colorPick.value),
+    })), displayName);
+
+    modelPartFiles = nextFiles;
+    pendingModelPartSelected = Math.max(0, nextFiles.length - incoming.length);
+    setDisplayedFileName(displayName);
+    currentFileName = buildMultipartFileBase(nextNames);
+    loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
+    rebuildFileChipPartsMenu();
+    syncFileChipMultipartUI();
+    saveSettings();
+}
+
+function getZipEntryBaseName(path) {
+    const clean = String(path || '').replace(/\\/g, '/');
+    return clean.split('/').filter(Boolean).pop() || 'model.stl';
+}
+
+async function importRotaterPackage(zipFile) {
+    const zip = await JSZip.loadAsync(zipFile);
+    const entries = Object.values(zip.files || {}).filter((entry) => !entry.dir);
+    const stlEntries = entries.filter((entry) => /\.stl$/i.test(entry.name));
+    if (!stlEntries.length) throw new Error('No STL files found in package.');
+
+    let packageJson = null;
+    const packageEntry = entries.find((entry) => /package\.json$/i.test(entry.name));
+    if (packageEntry) {
+        try {
+            packageJson = JSON.parse(await packageEntry.async('string'));
+        } catch (_) { }
+    }
+
+    const modelOrder = Array.isArray(packageJson?.model?.partNames)
+        ? packageJson.model.partNames.map((n) => String(n || '').toLowerCase())
+        : null;
+
+    const parts = await Promise.all(stlEntries.map(async (entry, idx) => ({
+        idx,
+        name: getZipEntryBaseName(entry.name),
+        buffer: await entry.async('arraybuffer'),
+    })));
+
+    if (modelOrder && modelOrder.length) {
+        parts.sort((a, b) => {
+            const ai = modelOrder.indexOf(a.name.toLowerCase());
+            const bi = modelOrder.indexOf(b.name.toLowerCase());
+            const av = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+            const bv = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+            return av - bv || a.idx - b.idx;
+        });
+    }
+
+    const incomingLabel = parts.length > 1 ? `${parts.length} STL files` : `"${parts[0].name}"`;
+    if (mesh && !confirm(`Replace current model with ${incomingLabel}?`)) return;
+
+    if (packageJson?.settings && typeof packageJson.settings === 'object') {
+        try {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(packageJson.settings));
+            // Strip current URL params so restoreSettings() reads only the
+            // localStorage values we just wrote; saveSettings() inside
+            // restoreSettings() will update the URL from the applied state.
+            history.replaceState(null, '', location.pathname);
+            restoreSettings();
+        } catch (_) { }
+    }
+
+    if (!renderer) initThree();
+
+    if (parts.length > 1) {
+        const displayName = packageJson?.name || getMultipartDisplayName(parts.map((p) => p.name));
+        const importParts = parts.map((part, idx) => {
+            const savedColor = packageJson?.model?.partColors?.[idx] || colorPick.value;
+            const savedSettings = packageJson?.model?.partSettings?.[idx];
+            return {
+                name: part.name,
+                buffer: part.buffer,
+                color: savedColor,
+                settings: savedSettings
+                    ? { ...createPartSettings(savedColor), ...savedSettings, color: savedColor }
+                    : createPartSettings(savedColor),
+            };
+        });
+        await saveFilesToIDB(importParts, displayName);
+        modelPartFiles = importParts.map((part) => ({ name: part.name, buffer: part.buffer }));
+        setDisplayedFileName(displayName);
+        currentFileName = buildMultipartFileBase(importParts.map((part) => part.name));
+        loadMultipartSTLBuffers(
+            importParts.map((part) => part.buffer),
+            importParts.map((part) => part.name),
+            importParts.map((part) => part.color),
+            importParts.map((part) => part.settings),
+        );
+    } else {
+        await saveFileToIDB(parts[0].name, parts[0].buffer);
+        modelPartFiles = null;
+        setDisplayedFileName(parts[0].name);
+        currentFileName = stemFromFileName(parts[0].name);
+        loadSTLBuffer(parts[0].buffer, parts[0].name);
+    }
+
+    saveSettings();
 }
 
 async function replaceMultipartPart(partIdx, file) {
@@ -3940,9 +4546,38 @@ async function removeMultipartPart(partIdx) {
     syncFileChipMultipartUI();
 }
 
-fileInput.addEventListener('change', e => {
-    handleFiles(e.target.files);
+fileInput.addEventListener('change', async (e) => {
+    suppressAutoDemoModelLoad();
+    await handleFiles(e.target.files);
     // Allow re-selecting the same file(s) to retrigger change.
+    e.target.value = '';
+});
+
+btnImportPackage?.addEventListener('click', () => {
+    importPackageInput?.click();
+});
+
+importPackageInput?.addEventListener('change', async (e) => {
+    suppressAutoDemoModelLoad();
+    const files = Array.from(e.target?.files || []);
+    if (!files.length) {
+        e.target.value = '';
+        return;
+    }
+    try {
+        const stlFiles = files.filter((file) => /\.stl$/i.test(file.name || ''));
+        const zipFiles = files.filter((file) => /\.zip$/i.test(file.name || ''));
+
+        if (stlFiles.length) await handleFiles(stlFiles);
+
+        for (const zipFile of zipFiles) {
+            await importRotaterPackage(zipFile);
+        }
+    } catch (err) {
+        setStatus('Error: ' + (err?.message || 'Failed to import package.'));
+        console.error(err);
+        setTimeout(() => setStatus(''), 5000);
+    }
     e.target.value = '';
 });
 
@@ -3962,9 +4597,15 @@ fileChipPartsMenu?.addEventListener('click', async (ev) => {
     ev.stopPropagation();
     const targetBtn = ev.target?.closest?.('button[data-action][data-part-index]');
     if (!targetBtn) return;
+    const action = targetBtn.dataset.action;
+
+    if (action === 'add') {
+        partAppendInput?.click();
+        return;
+    }
+
     const partIdx = parseInt(targetBtn.dataset.partIndex || '-1', 10);
     if (!Number.isFinite(partIdx) || partIdx < 0) return;
-    const action = targetBtn.dataset.action;
 
     if (action === 'replace') {
         const partName = modelPartNames[partIdx] || `Part ${partIdx + 1}`;
@@ -3990,6 +4631,22 @@ partReplaceInput?.addEventListener('change', async (ev) => {
         await replaceMultipartPart(idx, file);
     } catch (err) {
         setStatus('Error: ' + (err?.message || 'Failed to replace STL part.'));
+        console.error(err);
+        setTimeout(() => setStatus(''), 5000);
+    }
+    ev.target.value = '';
+});
+
+partAppendInput?.addEventListener('change', async (ev) => {
+    const files = Array.from(ev.target?.files || []);
+    if (!files.length) {
+        ev.target.value = '';
+        return;
+    }
+    try {
+        await appendSTLPartsToCurrentModel(files);
+    } catch (err) {
+        setStatus('Error: ' + (err?.message || 'Failed to add STL part(s).'));
         console.error(err);
         setTimeout(() => setStatus(''), 5000);
     }
@@ -4189,6 +4846,7 @@ dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-ove
 dropZone.addEventListener('drop', e => {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
+    suppressAutoDemoModelLoad();
     handleFiles(e.dataTransfer.files);
 });
 
@@ -4353,7 +5011,7 @@ colorPick.addEventListener('input', (ev) => {
     updateShadingThumbs();
     updateColorSwatches();
     updateShadeSliderVisual();
-    queueModelPartThumbsRender();
+    queueModelPartThumbsRender(isMultipartModel() ? modelPartSelected : null);
     if (activeBgPreset === 'modelcolor') {
         bgPick.value = getModelSyncSourceColor();
         if (isDynamicBg) updateDynamicBg();
@@ -4371,7 +5029,7 @@ if (opacitySlider) {
         updateShadingThumbs();
         persistCurrentMultipartParts();
         updateShadeSliderVisual();
-        queueModelPartThumbsRender();
+        queueModelPartThumbsRender(isMultipartModel() ? modelPartSelected : null);
         saveSettings();
     });
 }
@@ -4608,24 +5266,28 @@ const EXPORT_OPTION_VISIBILITY = {
         gifDither: true,
         exportBgColor: true,
         exportGrid: true,
+        exportWatermark: true,
     },
     mp4: {
         gifLoop: false,
         gifDither: false,
         exportBgColor: true,
         exportGrid: true,
+        exportWatermark: true,
     },
     png: {
         gifLoop: false,
         gifDither: false,
         exportBgColor: true,
         exportGrid: true,
+        exportWatermark: true,
     },
     jpg: {
         gifLoop: false,
         gifDither: false,
         exportBgColor: true,
         exportGrid: true,
+        exportWatermark: true,
     },
 };
 
@@ -4721,15 +5383,139 @@ btnToggleExportPanel?.addEventListener('click', () => {
     try { localStorage.setItem('rotater_exportPanelCollapsed', collapsed ? '1' : '0'); } catch (_) { }
 });
 
-// Main export button dispatches to hidden per-format button
-document.getElementById('btnExport')?.addEventListener('click', () => {
+function getExportFormatDisplay(fmt) {
+    return ({ gif: 'Animated GIF', mp4: 'MP4 Video', png: 'PNG Image', jpg: 'JPEG Image' })[fmt] || 'Export';
+}
+
+function getCollapsedExportSummaryRows(fmt) {
+    const rows = [
+        ['Format', getExportFormatDisplay(fmt)],
+        ['Quality', EXPORT_QUALITY_LABELS[document.getElementById('exportQuality')?.value || 'std'] || 'Medium'],
+        ['Rotation Time', `${getSecondsPerRevolution()}s`],
+        ['Grid', exportGridEl?.checked ? 'On' : 'Off'],
+        ['Background', exportBgColorEl?.checked ? 'On' : 'Off'],
+    ];
+    if (fmt === 'gif') {
+        rows.push(['Loop', document.getElementById('gifLoop')?.checked ? 'On' : 'Off']);
+        rows.push(['Dither', document.getElementById('gifDither')?.checked ? 'On' : 'Off']);
+    }
+    if (fmt === 'jpg') {
+        rows.push(['JPEG Compression', `${document.getElementById('jpegQuality')?.value || '92'}%`]);
+    }
+    return rows;
+}
+
+function renderCollapsedExportSummary(fmt) {
+    if (!exportCollapsedConfirmSummaryEl) return;
+    const rows = getCollapsedExportSummaryRows(fmt);
+    exportCollapsedConfirmSummaryEl.innerHTML = rows.map(([label, value]) => (
+        `<div class="export-collapsed-confirm-line"><span>${label}</span><span>${value}</span></div>`
+    )).join('');
+}
+
+function closeCollapsedExportConfirm(shouldContinue) {
+    if (exportCollapsedConfirmOverlayEl) {
+        exportCollapsedConfirmOverlayEl.hidden = true;
+    }
+    if (_exportCollapsedConfirmResolver) {
+        const resolve = _exportCollapsedConfirmResolver;
+        _exportCollapsedConfirmResolver = null;
+        resolve(!!shouldContinue);
+    }
+}
+
+function promptCollapsedExportConfirm(fmt) {
+    if (!exportCollapsedConfirmOverlayEl || !exportCollapsedConfirmEnabled) return Promise.resolve(true);
+    renderCollapsedExportSummary(fmt);
+    if (exportCollapsedDontShowEl) exportCollapsedDontShowEl.checked = false;
+    exportCollapsedConfirmOverlayEl.hidden = false;
+    return new Promise((resolve) => {
+        _exportCollapsedConfirmResolver = resolve;
+    });
+}
+
+function getUploadIncomingLabel(files) {
+    const arr = Array.from(files || []).filter(Boolean);
+    return arr.length > 1 ? `${arr.length} STL files` : `"${arr[0]?.name || 'STL file'}"`;
+}
+
+function closeUploadChoicePrompt(action = 'cancel') {
+    if (uploadChoiceOverlayEl) uploadChoiceOverlayEl.hidden = true;
+    if (_uploadChoiceResolver) {
+        const resolve = _uploadChoiceResolver;
+        _uploadChoiceResolver = null;
+        resolve(action);
+    }
+}
+
+function applyUploadChoicePreference(action) {
+    if (!uploadChoiceDontShowEl?.checked) return;
+    uploadChoicePromptEnabled = false;
+    uploadDefaultAction = action === 'add' ? 'add' : 'replace';
+    saveSettings();
+}
+
+function promptUploadChoice(files) {
+    if (!mesh) return Promise.resolve('replace');
+    if (!uploadChoicePromptEnabled || !uploadChoiceOverlayEl) return Promise.resolve(uploadDefaultAction || 'replace');
+
+    if (uploadChoiceTextEl) {
+        const incomingLabel = getUploadIncomingLabel(files);
+        uploadChoiceTextEl.textContent = `Load ${incomingLabel}: add to existing plate, or create new plate and replace current model?`;
+    }
+    if (uploadChoiceDontShowEl) uploadChoiceDontShowEl.checked = false;
+    uploadChoiceOverlayEl.hidden = false;
+
+    return new Promise((resolve) => {
+        _uploadChoiceResolver = resolve;
+    });
+}
+
+function resetAllWarnings() {
+    exportCollapsedConfirmEnabled = true;
+    uploadChoicePromptEnabled = true;
+    uploadDefaultAction = 'replace';
+
+    if (exportCollapsedConfirmToggleEl) {
+        exportCollapsedConfirmToggleEl.checked = true;
+        exportCollapsedConfirmToggleEl.disabled = !autoUIAssistEnabled;
+    }
+    if (uploadChoiceDontShowEl) uploadChoiceDontShowEl.checked = false;
+
+    saveSettings();
+    setStatus('Warning dialogs reset.');
+    setTimeout(() => setStatus(''), 1800);
+}
+
+async function triggerExportWithAssist(fmt) {
+    const format = fmt || exportFormatEl?.value || exportFormatCollapsedEl?.value || 'gif';
+    const isCollapsed = !!exportPanelEl?.classList.contains('is-collapsed');
+
+    if (isCollapsed && autoUIAssistEnabled) {
+        applyExportFormat(format);
+        applyExportPanelState(false);
+        try { localStorage.setItem('rotater_exportPanelCollapsed', '0'); } catch (_) { }
+
+        const proceed = await promptCollapsedExportConfirm(format);
+        if (!proceed) return;
+        if (exportCollapsedDontShowEl?.checked) {
+            exportCollapsedConfirmEnabled = false;
+            if (exportCollapsedConfirmToggleEl) exportCollapsedConfirmToggleEl.checked = false;
+            saveSettings();
+        }
+    }
+
+    document.getElementById(FORMAT_BTNS[format])?.click();
+}
+
+document.getElementById('btnExport')?.addEventListener('click', async () => {
     const fmt = exportFormatEl?.value ?? 'gif';
-    document.getElementById(FORMAT_BTNS[fmt])?.click();
+    await triggerExportWithAssist(fmt);
 });
 
-document.getElementById('btnExportCollapsed')?.addEventListener('click', () => {
+document.getElementById('btnExportCollapsed')?.addEventListener('click', async () => {
     const fmt = exportFormatCollapsedEl?.value ?? exportFormatEl?.value ?? 'gif';
-    document.getElementById(FORMAT_BTNS[fmt])?.click();
+    await triggerExportWithAssist(fmt);
 });
 
 window.addEventListener('resize', () => updateExportActionLabels());
@@ -4770,6 +5556,33 @@ document.getElementById('jpegQuality').addEventListener('input', function () {
     saveSettings();
 });
 
+if (exportMotionModeEl) {
+    exportMotionModeEl.addEventListener('change', () => {
+        rotateModeEl.value = exportMotionModeEl.value;
+        document.querySelector(`input[name="rotateMode"][value="${exportMotionModeEl.value}"]`)?.dispatchEvent(new Event('change'));
+    });
+}
+
+if (exportMotionSpeedEl) {
+    exportMotionSpeedEl.addEventListener('change', () => {
+        speedSlider.value = exportMotionSpeedEl.value;
+        speedSlider.dispatchEvent(new Event('change'));
+    });
+}
+
+if (exportMotionRangeEl) {
+    exportMotionRangeEl.addEventListener('input', () => {
+        const mode = rotateModeEl.value || 'spin';
+        if (mode === 'wobble') {
+            wobbleSpinRangeSlider.value = exportMotionRangeEl.value;
+            wobbleSpinRangeSlider.dispatchEvent(new Event('input'));
+        } else {
+            tiltRangeSlider.value = exportMotionRangeEl.value;
+            tiltRangeSlider.dispatchEvent(new Event('input'));
+        }
+    });
+}
+
 rotateModeEl.addEventListener('change', () => {
     const m = rotateModeEl.value;
     // switching mode resumes rotation
@@ -4797,6 +5610,7 @@ rotateModeEl.addEventListener('change', () => {
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin' || m === 'wobble');
     document.documentElement.classList.toggle('wobble-mode', m === 'wobble');
     if (m === 'tilt' || m === 'spin' || m === 'wobble') updateRangeSliderForMode(m);
+    syncExportMotionControlsFromMain();
     saveSettings();
 });
 
@@ -4804,6 +5618,7 @@ tiltRangeSlider.addEventListener('input', () => {
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
     syncSliderTooltip(tiltRangeSlider);
     updateTiltRangeReset();
+    syncExportMotionControlsFromMain();
     saveSettings();
 });
 
@@ -4819,6 +5634,7 @@ wobbleSpinRangeSlider.addEventListener('input', () => {
             swingLastAz = swingBaseAz;
         }
     }
+    syncExportMotionControlsFromMain();
     saveSettings();
 });
 
@@ -4864,16 +5680,25 @@ btnResetModelCard?.addEventListener('click', () => {
 btnResetBackgroundCard?.addEventListener('click', () => {
     resetCardSlidersToMiddle([
         'bgOpacitySlider',
-        'buildPlateTextureSlider',
     ]);
+});
+
+btnResetBuildPlateCard?.addEventListener('click', () => {
+    const gridToggle = document.getElementById('rulerToggle');
+    if (gridToggle) {
+        gridToggle.checked = true;
+        gridToggle.dispatchEvent(new Event('change'));
+    }
     if (buildPlateToggleEl) {
         buildPlateToggleEl.checked = true;
         buildPlateToggleEl.dispatchEvent(new Event('change'));
     }
-    if (buildPlateTextureToggleEl) {
-        buildPlateTextureToggleEl.checked = true;
-        buildPlateTextureToggleEl.dispatchEvent(new Event('change'));
-    }
+    buildPlateColor = '#c2a164';
+    buildPlateShade = 0;
+    buildPlateFinish = 'satin';
+    updateBuildPlateMaterial();
+    refreshExportPreviewNow();
+    saveSettings();
 });
 
 btnResetLightingCard?.addEventListener('click', () => {
@@ -4913,18 +5738,21 @@ document.getElementById('btnClearModel').addEventListener('click', async (e) => 
     await loadBenchyModel();
 });
 
-async function loadBenchyModel() {
+async function loadBenchyModel({ clearStoredModel = true } = {}) {
     try {
         const resp = await fetch('./benchy.stl');
-        if (!resp.ok) return;
+        if (!resp.ok) return false;
         const buffer = await resp.arrayBuffer();
-        await clearIDB();
+        if (clearStoredModel) await clearIDB();
         setDisplayedFileName('3dbenchy.stl');
         currentFileName = '3dbenchy';
         if (!renderer) initThree();
         controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
         loadSTLBuffer(buffer, '3dbenchy.stl');
-    } catch (e) { }
+        return true;
+    } catch (e) {
+        return false;
+    }
 }
 
 document.getElementById('btnLoadBenchy')?.addEventListener('click', async () => {
@@ -4966,6 +5794,7 @@ function handleSpeedSelectionChange() {
     const v = getSpeed();
     if (controls) controls.autoRotateSpeed = BASE_ROTATE_SPEED * v * spinDir;
     speedResetBtn?.classList.toggle('is-changed', parseInt(speedSlider.value, 10) !== SPEED_DEFAULT);
+    syncExportMotionControlsFromMain();
     updateEstimate();
     saveSettings();
 }
@@ -5186,6 +6015,38 @@ window.addEventListener('resize', () => {
     applyDesktopV2Layout();
 });
 
+function setupCardHeaderControls() {
+    const cards = Array.from(document.querySelectorAll('.controls-section-box'));
+    cards.forEach((card) => {
+        const header = card.querySelector('.box-heading-row, .controls-row--section-header');
+        if (!header || header.querySelector('.card-collapse-btn')) return;
+
+        const heading = header.querySelector('.box-heading, .section-heading');
+        const resetBtn = header.querySelector('.copy-link-btn--compact');
+        if (heading && resetBtn) {
+            resetBtn.classList.add('card-reset-btn');
+            heading.insertAdjacentElement('afterend', resetBtn);
+        }
+
+        const collapseBtn = document.createElement('button');
+        collapseBtn.type = 'button';
+        collapseBtn.className = 'card-collapse-btn';
+        collapseBtn.setAttribute('aria-expanded', 'true');
+        collapseBtn.setAttribute('title', 'Collapse card');
+        collapseBtn.setAttribute('aria-label', 'Collapse card');
+        collapseBtn.innerHTML = '<span aria-hidden="true">▾</span>';
+        collapseBtn.addEventListener('click', () => {
+            const collapsed = card.classList.toggle('is-collapsed');
+            collapseBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            collapseBtn.title = collapsed ? 'Expand card' : 'Collapse card';
+            collapseBtn.setAttribute('aria-label', collapsed ? 'Expand card' : 'Collapse card');
+        });
+        header.appendChild(collapseBtn);
+    });
+}
+
+setupCardHeaderControls();
+
 // ── Show All / Show Less toggles for slider sections ─────────────────────────
 function initShowAll(toggleId, extraId, storeKey) {
     const toggle = document.getElementById(toggleId);
@@ -5255,6 +6116,101 @@ if (fineTuningCheckEl) {
     });
 }
 
+if (exportMotionControlsToggleEl) {
+    exportMotionControlsToggleEl.checked = exportMotionControlsEnabled;
+    exportMotionControlsToggleEl.addEventListener('change', () => {
+        exportMotionControlsEnabled = !!exportMotionControlsToggleEl.checked;
+        if (exportMotionControlsEl) exportMotionControlsEl.hidden = !exportMotionControlsEnabled;
+        saveSettings();
+    });
+}
+
+if (buildPlateSizePresetEl) {
+    buildPlateSizePresetEl.value = buildPlateSizePreset;
+    buildPlateSizePresetEl.addEventListener('change', () => {
+        applyBuildPlateSizePreset(buildPlateSizePresetEl.value);
+        syncBuildPlateSizeUI();
+        if (mesh) updateShadowCatcherPlacement();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
+
+if (buildPlateCustomWidthEl) {
+    buildPlateCustomWidthEl.addEventListener('input', () => {
+        buildPlateSizePreset = 'custom';
+        buildPlateWidth = clampBuildPlateSize(buildPlateCustomWidthEl.value, buildPlateWidth);
+        syncBuildPlateSizeUI();
+        if (mesh) updateShadowCatcherPlacement();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
+
+if (buildPlateCustomDepthEl) {
+    buildPlateCustomDepthEl.addEventListener('input', () => {
+        buildPlateSizePreset = 'custom';
+        buildPlateDepth = clampBuildPlateSize(buildPlateCustomDepthEl.value, buildPlateDepth);
+        syncBuildPlateSizeUI();
+        if (mesh) updateShadowCatcherPlacement();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
+
+syncBuildPlateSizeUI();
+syncExportMotionControlsFromMain();
+
+if (autoUIAssistToggleEl) {
+    autoUIAssistToggleEl.checked = autoUIAssistEnabled;
+    autoUIAssistToggleEl.addEventListener('change', () => {
+        autoUIAssistEnabled = !!autoUIAssistToggleEl.checked;
+        if (exportCollapsedConfirmToggleEl) {
+            exportCollapsedConfirmToggleEl.disabled = !autoUIAssistEnabled;
+        }
+        saveSettings();
+    });
+}
+
+if (exportCollapsedConfirmToggleEl) {
+    exportCollapsedConfirmToggleEl.checked = exportCollapsedConfirmEnabled;
+    exportCollapsedConfirmToggleEl.disabled = !autoUIAssistEnabled;
+    exportCollapsedConfirmToggleEl.addEventListener('change', () => {
+        exportCollapsedConfirmEnabled = !!exportCollapsedConfirmToggleEl.checked;
+        saveSettings();
+    });
+}
+
+btnExportCollapsedConfirmClose?.addEventListener('click', () => closeCollapsedExportConfirm(false));
+btnExportCollapsedConfirmCancel?.addEventListener('click', () => closeCollapsedExportConfirm(false));
+btnExportCollapsedConfirmContinue?.addEventListener('click', () => closeCollapsedExportConfirm(true));
+exportCollapsedConfirmOverlayEl?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeCollapsedExportConfirm(false);
+});
+
+btnUploadChoiceClose?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
+btnUploadChoiceCancel?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
+btnUploadChoiceAdd?.addEventListener('click', () => {
+    applyUploadChoicePreference('add');
+    closeUploadChoicePrompt('add');
+});
+btnUploadChoiceReplace?.addEventListener('click', () => {
+    applyUploadChoicePreference('replace');
+    closeUploadChoicePrompt('replace');
+});
+uploadChoiceOverlayEl?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeUploadChoicePrompt('cancel');
+});
+
+if (resetWarningsToggleEl) {
+    resetWarningsToggleEl.checked = false;
+    resetWarningsToggleEl.addEventListener('change', () => {
+        if (!resetWarningsToggleEl.checked) return;
+        resetAllWarnings();
+        resetWarningsToggleEl.checked = false;
+    });
+}
+
 // ── Sidebar collapse toggle ──────────────────────────────────────────────────────
 document.getElementById('btnCollapseSidebar')?.addEventListener('click', () => {
     const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
@@ -5311,6 +6267,10 @@ btnDownloadPackage?.addEventListener('click', async () => {
             model: {
                 currentFileName,
                 partNames: [...modelPartNames],
+                ...(isMultipartModel() && modelPartBaseColors.length > 1 ? {
+                    partColors: [...modelPartBaseColors],
+                    partSettings: modelPartSettings.map(s => ({ ...s })),
+                } : {}),
                 selectedPart: modelPartSelected,
             },
             settings,
@@ -5355,6 +6315,14 @@ document.getElementById('infoOverlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) document.getElementById('infoOverlay').hidden = true;
 });
 document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && exportCollapsedConfirmOverlayEl && !exportCollapsedConfirmOverlayEl.hidden) {
+        closeCollapsedExportConfirm(false);
+        return;
+    }
+    if (e.key === 'Escape' && uploadChoiceOverlayEl && !uploadChoiceOverlayEl.hidden) {
+        closeUploadChoicePrompt('cancel');
+        return;
+    }
     if (e.key === 'Escape' && !isDesktopV2Layout() && !document.getElementById('exportOverlay').hidden) {
         document.getElementById('exportOverlay').hidden = true;
         return;
@@ -5673,6 +6641,7 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     outCtx.imageSmoothingQuality = 'high';
     outCtx.drawImage(canvas, 0, 0, W, H); // downscale 2× → SSAA
     drawRulerOverlay(outCtx, W, H, camera);
+    drawWatermark(outCtx, W, H);
 
     // Restore scene + camera exactly as the user had them, synchronously.
     if (transparent) {
@@ -5804,6 +6773,7 @@ async function captureFrames(n, dims = null, transparent = false) {
         outCtx.clearRect(0, 0, W, H);
         outCtx.drawImage(canvas, 0, 0, W, H);
         drawRulerOverlay(outCtx, W, H, camera);
+        drawWatermark(outCtx, W, H);
         frames.push(new Uint8ClampedArray(outCtx.getImageData(0, 0, W, H).data));
 
         if (i % 12 === 0) {
@@ -6100,12 +7070,18 @@ btnVideo.addEventListener('click', async () => {
 // ── Restore on load ───────────────────────────────────────────────────────────
 initTextureNewsUI();
 
-restoreSession().finally(() => {
+function finishRestoreSessionState() {
     // Remove anti-FOUC guard once session restore attempt is complete,
     // whether it succeeded (html.loaded is set) or not.
     // Ensure preview reflects restored transparent setting immediately
     try { syncTransparentCheckboxes('exportTransparent'); } catch (e) { }
     document.documentElement.classList.remove('has-session');
+}
+
+requestAnimationFrame(() => {
+    setTimeout(() => {
+        restoreSession().finally(finishRestoreSessionState);
+    }, 0);
 });
 
 // ── Preset Gallery ──────────────────────────────────────────────────────────
@@ -6577,29 +7553,36 @@ if (buildPlateToggleEl) {
     });
 }
 
-if (buildPlateTextureToggleEl) {
-    buildPlateTextureToggleEl.checked = buildPlateTextureEnabled;
-    buildPlateTextureToggleEl.addEventListener('change', () => {
-        buildPlateTextureEnabled = !!buildPlateTextureToggleEl.checked;
-        updateBuildPlateTextureUI();
+if (buildPlateColorPickerEl) {
+    buildPlateColorPickerEl.addEventListener('input', () => {
+        buildPlateColor = buildPlateColorPickerEl.value;
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
         saveSettings();
     });
 }
 
-if (buildPlateTextureSliderEl) {
-    buildPlateTextureSliderEl.value = String(buildPlateTextureStrength);
-    buildPlateTextureSliderEl.addEventListener('input', () => {
-        buildPlateTextureStrength = Math.max(0, Math.min(100, parseInt(buildPlateTextureSliderEl.value, 10) || 0));
-        syncSliderTooltip(buildPlateTextureSliderEl);
-        updateBuildPlateTextureUI();
+if (buildPlateShadeSliderEl) {
+    buildPlateShadeSliderEl.addEventListener('input', () => {
+        buildPlateShade = Math.max(-100, Math.min(100, parseInt(buildPlateShadeSliderEl.value, 10) || 0));
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
         saveSettings();
     });
 }
-updateBuildPlateTextureUI();
+
+if (buildPlateFinishWrapEl) {
+    buildPlateFinishWrapEl.addEventListener('click', (ev) => {
+        const btn = ev.target?.closest?.('[data-plate-finish]');
+        if (!btn) return;
+        const finish = btn.getAttribute('data-plate-finish');
+        if (finish !== 'matte' && finish !== 'satin' && finish !== 'gloss') return;
+        buildPlateFinish = finish;
+        updateBuildPlateMaterial();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
 
 const rulerHudEl = document.getElementById('rulerHUD');
 if (rulerHudEl) {

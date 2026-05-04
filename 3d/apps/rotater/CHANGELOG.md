@@ -11,6 +11,141 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.2] - 2026-05-08
+
+### Added
+- **Upload STL decision modal** — when a model is already loaded, Upload STL now opens a modal with two explicit actions: `Add to existing plate` or `Create new plate / replace`
+- **"Do not ask me again" for Upload STL** — users can persist the chosen Upload STL action as default (`add` or `replace`) and skip the decision modal on subsequent uploads
+- **Reset all warnings switch (App Settings)** — new App Settings switch re-enables previously dismissed warning dialogs and resets upload decision prompting defaults
+
+### Changed
+- **Roadmap cleanup** — `_IGNORE/ROADMAP.md` is now open-items-only; completed work is tracked in `CHANGELOG.md`; stale roadmap pointer content was corrected
+- **README updates** — documentation now reflects Upload STL choice behavior, per-part `Add` action, and warning reset flow
+
+## [2.1.1] - 2026-05-08
+
+### Added
+- **Append STL workflow** — upload flow now supports adding incoming STL file(s) as new parts instead of only replacing; multipart action menus now include `Add STL`, and new parts are persisted to IndexedDB with per-part settings
+
+### Fixed
+- **Depth precision / layer overlap artifacts** — main camera clipping planes now auto-fit to orbit distance and model radius each frame instead of using a fixed `0.01..1e6` range; this significantly reduces z-fighting (grid/model/build plate overlap, especially visible from underside views)
+- **Grid-vs-plate overlap** — ruler grid is now placed farther below the model/build plate using model-scaled offsets, reducing coplanar shimmer and bleed-through
+- **Build plate underside shadow artifacts** — build plate material now uses `shadowSide = THREE.FrontSide` to avoid back-face shadow acne when viewing from below
+
+## [2.1.0] - 2026-05-08
+
+### Fixed
+- **Per-part color/settings bleeding** — `getMaterial()` now accepts a `partSettings` argument and reads per-part roughness, metalness, reflection, and tone values from it instead of the global `textureTuneState`; all three call sites that rebuild multipart mesh materials now pass the individual part's settings object, so applying a preset or changing finish on one part no longer bleeds to all other parts
+
+## [2.0.9] - 2026-05-08
+
+### Fixed
+- **Aliasing floor** — `getViewportPixelRatio()` now clamps to a minimum effective render resolution of `2.0×`, eliminating jagged edges on 1× DPR displays regardless of the `VIEWPORT_AA_SCALE` multiplier
+
+## [2.0.8] - 2026-05-08
+
+### Fixed
+- **Thumbnail render performance** — introduced `dirtyPartThumbs` dirty-set so only the parts whose color/tone changed are re-rendered on each animation frame tick; a single live-view repaint follows after all dirty thumbnails are flushed, reducing per-drag GPU work from O(n) to O(1) for 22-part models
+
+## [2.0.7] - 2026-05-08
+
+### Fixed
+- **Per-part colors round-trip** — package export now includes `model.partColors[]` and `model.partSettings[]`; import reconstructs each part's color and finish settings individually instead of applying a single global color to all parts
+- **Import URL override** — URL params are stripped before `restoreSettings()` runs during package import so stored localStorage values are not silently overridden by the current URL
+
+## [2.0.6] - 2026-05-07
+
+### Fixed
+- **Import settings restoration** — `importRotaterPackage()` now calls `history.replaceState` to clear URL query params before `restoreSettings()`, ensuring package-provided settings take effect instead of being overwritten by URL params
+
+## [2.0.5] - 2026-05-07
+
+### Added
+- **Watermark toggle** — new `Watermark` checkbox in the Export quick-options row composites a subtle `rotater` brand label in the lower-right corner of all exported images and animations (GIF, MP4, PNG, JPEG); unchecked by default; persisted in session settings
+
+### Fixed
+- **App Settings card desktop positioning** — the `App Settings` dock is now anchored to the bottom of the right rail in the desktop v2 layout (`bottom: 16px`) instead of floating at the top (`top: 72px`), eliminating overlap with the Lighting Effects panel
+
+## [2.0.4] - 2026-05-07
+
+### Fixed
+- **Splash dismiss tied to real render** — startup splash now fades out only after the first real frame is rendered (inside `loadPreparedGeometry`), not at bookkeeping completion, so the app is never shown in an unfinished state
+- **Benchy load reliability contract** — `loadBenchyModel` now explicitly returns `true` on success and `false` on failure; `scheduleAutoDemoModelLoad` dismisses the splash on all code paths, including failed or suppressed loads
+
+## [2.0.3] - 2026-05-06
+
+### Fixed
+- **Startup splash stuck on incognito / hard refresh** — `AUTO_LOAD_BENCHY_ON_IDLE` changed to `false` for deterministic startup; idle-callback dependency eliminated; splash is now always dismissed even if the auto-demo load is skipped
+
+## [2.0.2] - 2026-05-06
+
+### Fixed
+- **Cache versions fully aligned** — `style.css`, `script.js` query-string cache busters and the in-app `ROTATER_BUILD` constant were all bumped to `2.0.2` together; eliminates stale-asset state where a mix of old CSS and new JS was served from browser cache
+
+## [2.0.1] - 2026-05-06
+
+### Fixed
+- **Blank page regression** — `scheduleAutoDemoModelLoad` guard used `currentFileName !== '3dbenchy'` which blocked the auto-demo load when the default filename was `'model'`; guard updated to also allow `'model'` as a trigger name
+
+## [2.0.0] - 2026-05-06
+
+### Performance
+- **Lighthouse startup score: 39 → 82** — deferred all session-restore work behind `requestAnimationFrame + setTimeout(0)` so the browser can paint the first frame before any JS-heavy initialization
+- **Early first paint for returning users** — inline script in `<head>` restores theme, background colour, and `has-session` / `loaded` class flags synchronously from `localStorage`; returning users see a fully-styled viewport on the very first paint without waiting for the module
+- **Startup splash screen** — branded `#startupSplash` overlay (centred Rotater logo on a purple gradient, 180 ms fade) masks the intermediate loading state for first-time and incognito visitors; fades out when the first model frame is ready
+
+### Changed
+- **`ROTATER_BUILD` cache-busting constant** — added to the inline `<head>` script; when the stored build ID does not match the current build, stale localStorage settings are cleared to prevent mis-restoring outdated state
+- **Version bump to 2.0.x** — reflects the significant startup-path rewrite; `style.css` and `script.js` cache-busting query strings kept in sync with the build constant
+
+## [1.8.10] - 2026-05-03
+
+### Changed
+- **Viewport anti-aliasing improved** — live viewer now uses stronger edge smoothing (higher viewport pixel ratio + non-preserved drawing buffer) for cleaner model silhouettes and plate/grid edges
+- **Build Plate section introduced** — `Grid`, `Build Plate`, and plate appearance controls are now grouped in a dedicated `Build Plate` card instead of the `Background` card
+- **Card reset scope updated** — Background reset now only affects background settings; Build Plate reset now handles grid/plate toggles and plate appearance defaults
+
+## [1.8.9] - 2026-05-03
+
+### Added
+- **Curated motion controls in Export panel** — optional quick controls for mode, rotation time, and range are now available directly in the Export overlay
+- **App Settings toggle for Export motion controls** — enabled by default and can be turned off for a cleaner export panel
+- **Build plate size settings** — new preset dropdown with common bed sizes plus custom width/depth inputs
+
+### Changed
+- **Build plate default size** — plate now defaults to `220 x 220 mm` instead of auto-scaling very large from model footprint
+- **Build plate sizing behavior** — selected preset/custom dimensions now drive the plate footprint deterministically
+
+## [1.8.8] - 2026-05-03
+
+### Added
+- **Collapsed export safety prompt** — clicking `Export` while the export panel is collapsed now auto-expands the panel and shows a confirmation dialog with current export settings
+- **"Don't show again" support** — the collapsed-export confirmation includes a checkbox to suppress future prompts
+
+### Changed
+- **Advanced App Settings toggles** — added `Auto UI changes` and `Export collapsed confirmation` switches so the behavior can be disabled/reset without clearing storage
+
+## [1.8.7] - 2026-05-03
+
+### Added
+- **Fast import workflow** — new `Import Package` action in App Settings accepts both `.stl` and Rotater `.zip` package files for faster iteration/testing
+- **Build Plate advanced controls** — Build Plate now includes direct color picker, shade slider, and finish mode (`Matte` / `Satin` / `Gloss`)
+- **Collapsible control cards** — Model, Background, Lighting Effects, and Animation cards now support collapse/expand
+
+### Changed
+- **Background option layout** — key toggles (`Auto brightness`, `Grid`, `Build Plate`) are now arranged horizontally
+- **Card header actions** — reset controls are now icon-only and positioned directly after each card label; collapse control moved to the far right
+- **Build Plate rendering quality** — plate texture now uses anisotropic filtering for cleaner detail at glancing camera angles
+
+## [1.8.6] - 2026-05-03
+
+### Changed
+- **Build Plate controls simplified** — removed Build Plate texture toggle + strength slider and replaced them with a single `Gold Plate` toggle (Gold or Black finish)
+- **Build Plate texture rendering updated** — plate now always uses a CSS-style procedural textured finish with deterministic grain/grid detail for stable visuals
+
+### Compatibility
+- Legacy Build Plate URL keys (`bpt`, `bps`) are still read for migration; `bpc` is now used for color state (`gold` / `black`)
+
 ## [1.8.5] - 2026-05-03
 
 ### Added

@@ -1,39 +1,49 @@
-# Rotater Roadmap (Undone Only)
+# Rotater Roadmap (Open Items Only)
+
+Completed work is tracked in CHANGELOG.md. This roadmap should only list undone items.
 
 ---
 
-## Phase 1 — Build Now (scoped, no major design unknowns)
+## Phase 1 — Build Now
 
 ### Grid / Ruler
-- **Bounding box model lines** — thin overlay lines that align with the grid floor plane, matching the model's W/D footprint (builds on existing GridHelper; no new raycast required)
+- Bounding box model floor lines: draw thin model-footprint lines aligned to the grid floor plane and current ruler unit system.
 
 ### Background Card
-- **Build Plate** — solid-fill 3D mesh ground plane under the model; on/off toggle in Background card; inherits background color tint; builds directly on existing shadow-catcher plane
-- **Background Texture slider** — single intensity slider in Background card controlling a subtle surface pattern (checker / grain) overlaid on the background color; on/off switch; no new preset rows needed
+- Background Texture slider: one intensity control for subtle surface pattern overlays (checker/grain) on the background color.
 
 ### Model Manager
-- **Floating part dropdown (no scroll)** — when the filename chip dropdown opens it floats upward/outward as a positioned panel (not clipped inside the sidebar card) so all parts are visible without scrolling; z-indexes above the card
-- **Multi-part bulk-edit** — add a checkbox to each row in the part list; when 2+ parts are checked, a "Bulk Edit" banner appears; changes to Color / Shade / Sheen / Finish apply to all checked parts simultaneously; uncheck to return to per-part editing; no link icon needed
+- Multi-part bulk edit: checkbox per part row + bulk action banner so Color / Shade / Finish changes apply to all checked parts.
 
 ---
 
-## Phase 2 — Requires Design / Architecture
+## Phase 2 — Design / Architecture
 
 ### Model Manager
-- **Full-screen model manager modal** — expand the part list into a full-screen overlay for managing large multipart assemblies; shows larger thumbnails, rename, reorder (drag), replace, remove; triggered by an expand icon in the Model card header
-- **Bounding box grid overlay (advanced)** — point-to-point measurement via raycast; click two points on the model surface and show a live distance label
+- Full-screen model manager modal: larger thumbnails, rename, reorder (drag), replace, remove, and visibility in one workspace.
+- Advanced measure mode: click two mesh points and display live distance labels using raycast + ruler units.
 
-### Export / Import
-- **Unified Upload / Import flow** — new "Import Package" button next to Download Package in the Export panel; accepts STL or Rotater ZIP; ZIP import replaces all current parts (with confirmation dialog); re-opens settings from `package.json`
+### Import / Export UX
+- Import package placement decision: validate whether Import Package should remain in App Settings or move beside Download Package in Export.
+- Upload decision UX follow-up: evaluate segmented default action control (Always Add / Always Replace / Ask) to replace single-warning flow if users need more explicit control.
 
 ### General
-- **Watermark toggle** — checkbox in Export panel; when on, a small branded watermark is composited into the preview and all exported outputs
-- **Undo scope** — settings-only undo stack (Ctrl+Z / Cmd+Z); separate from model load actions
+- Undo scope: settings-only undo stack (Cmd/Ctrl+Z) separated from model file load/append/replace actions.
+
+---
+
+## Dependency Notes (Reconsidered)
+
+- Bulk edit depends on stable per-part persistence and append/replace workflows now in place.
+- Full-screen manager should include thumbnail virtualization before enabling very large multipart sessions.
+- Advanced measure mode depends on robust raycast hit filtering so hidden parts and transparent materials do not produce incorrect picks.
+- Import package placement should be validated against actual user flow now that Upload has explicit Add/Replace decisions.
 
 ---
 
 ## Later / Backlog
-- Optional filename label burned into export output
-- Single-click full-screen canvas expand
-- Batch export presets for repeated listing generation
-- Preset gallery with save-as modal
+
+- Optional filename label burned into export output.
+- Single-click full-screen canvas expand.
+- Batch export presets for repeated listing generation.
+- Preset gallery with save-as modal.
