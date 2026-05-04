@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version 2.1.2** · May 8, 2026
+**Version (current workspace): Unreleased**
 
 ---
 
@@ -25,12 +25,16 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 ### Loading a model
 
 - Drag and drop any STL file onto the page, or click **Upload STL**
-- When a model is already loaded, Upload STL opens a choice modal:
+- Upload STL buttons now open the Add/Replace choice modal **before** the file picker when a model is already loaded:
   - **Add to existing plate** appends the incoming STL file(s) as new parts
   - **Create new plate / replace** replaces the current model
   - **Do not ask me again** stores your preferred default action
 - Multi-part import: select or drop multiple STL files at once to load them as one aligned object (keeps original CAD offsets for multi-color part stacks)
 - Multi-part editing: use **Part Color Target** in the Model card to choose which part you are editing
+- Model card manager behavior:
+  - For multipart models, each part row keeps **Replace**, **Hide/Show**, and **Delete** in the 3-dot menu
+  - **Add STL** is now a dedicated card-level button (`Add Model`) instead of living in each 3-dot row
+  - For a single model, the part dropdown is hidden and an exposed 3-dot menu is shown instead
 - Model preset cards now apply on click only
 - The model and all settings persist across page refreshes — no re-upload needed
 - The filename chip (top-right of canvas) shows the active file
@@ -39,8 +43,9 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
 - **Export** (sidebar header) opens the Export modal
-- **Download Package** (inside the Export modal) saves a single ZIP package containing `package.json` plus the original STL file(s)
-- **Import Package** (App Settings) accepts `.stl` and Rotater `.zip` packages for quick restore/testing
+- **Download Project ZIP** (inside the Export modal) saves a single ZIP package containing `package.json` plus the original STL file(s)
+- **Import Package** is part of the Upload STL flow (choice modal button) and accepts Rotater `.zip` packages for quick restore/testing
+- ZIP package import now validates file paths, type allowlist (`.stl` + `package.json`), and archive size limits before loading
 - **Collapsed Export Assist** (App Settings) can auto-expand export when collapsed and show a one-time confirmation before continuing
 - **Reset all warnings** (App Settings) re-enables warning dialogs that were previously dismissed (for example collapsed export confirmation and upload choice prompt)
 - **Export Motion Controls** (App Settings) toggles curated mode/time/range controls directly inside the Export overlay
@@ -74,7 +79,7 @@ Sidebar tabs: **Theme → Effects**
 - **Theme** includes model + background controls
 - **Effects** combines lighting controls and animation controls in one panel
 - **Export** is now a modal opened from the header button
-- **Download Package** lives inside the Export modal and exports a reusable ZIP package for future import/export workflows
+- **Download Project ZIP** lives inside the Export modal and exports a reusable ZIP package for future import/export workflows
 - The Theme sidebar uses unified slider styling and shared snap behavior across Shade, Sheen, Contrast, and Highlights
 
 When a multi-part model is loaded:
@@ -82,7 +87,7 @@ When a multi-part model is loaded:
 - **Model** controls are part-aware (color, shade/tone, shading mode, and finish/reflection values are stored per selected part)
 - **Model presets** are model-only (they no longer force background or lighting changes)
 - **Background → Model** preset can follow a chosen part via **Model Sync Source** (defaults to Part 1)
-- The part dropdowns only appear when they are contextually needed: multipart + Model Sync background
+- The part selector dropdown appears only for multipart models; single-model sessions use an exposed 3-dot actions menu
 
 | Control | Description |
 |---|---|
@@ -92,6 +97,7 @@ When a multi-part model is loaded:
 | Plate Color | Build plate color picker (shown when Build Plate is enabled) |
 | Plate Shade | Lighten/darken the selected plate color |
 | Plate Finish | Plate material finish: Matte, Satin, or Gloss |
+| Plate Shape | Plate footprint mode: Rectangle, Rounded, or Circle |
 | Build Plate Size | App Settings preset dropdown (common sizes) with optional custom width/depth in mm |
 | Texture → Clay | Matte clay-style shading |
 | Texture → Phong | PBR diffuse (non-metal) |
@@ -135,9 +141,9 @@ The sidebar **Preview** thumbnail always shows exactly what will be exported:
 
 The Export section uses a **Format** dropdown and a **Quality** dropdown. Selecting a format reveals its specific options. A live **Preview** thumbnail shows the export frame crop in real time.
 
-### Download package
+### Download project ZIP
 
-The **Download Package** action inside the Export modal saves one ZIP package that contains:
+The **Download Project ZIP** action inside the Export modal saves one ZIP package that contains:
 
 - `package.json` with the current Rotater settings, part names, selected part, and share URL
 - the currently loaded STL file, or all STL parts for multipart models

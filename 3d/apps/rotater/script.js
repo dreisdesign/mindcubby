@@ -203,6 +203,9 @@ function updateEstimate() {
 // ── DOM ───────────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('canvas');
 const fileInput = document.getElementById('fileInput');
+const btnUploadStlPrimary = document.getElementById('btnUploadStlPrimary');
+const btnUploadStlCanvas = document.getElementById('btnUploadStlCanvas');
+const btnUploadStlSidebar = document.getElementById('btnUploadStlSidebar');
 const dropZone = document.getElementById('dropZone');
 const viewerSec = document.getElementById('viewerSection');
 const colorPick = document.getElementById('colorPicker');
@@ -210,10 +213,15 @@ const opacitySlider = document.getElementById('opacitySlider');
 const opacityVal = document.getElementById('opacityVal');
 const quickPresetsBar = document.getElementById('quickPresetsBar');
 const modelPartThumbsWrap = document.getElementById('modelPartThumbsWrap');
+const modelPartSelectorEl = document.getElementById('modelPartSelector');
 const modelPartSelectorBtn = document.getElementById('modelPartSelectorBtn');
 const modelPartSelectorMenu = document.getElementById('modelPartSelectorMenu');
 const modelPartSelectorThumb = document.getElementById('modelPartSelectorThumb');
 const modelPartSelectorText = document.getElementById('modelPartSelectorText');
+const modelPartSingleMenuRow = document.getElementById('modelPartSingleMenuRow');
+const modelPartSingleMenuBtn = document.getElementById('modelPartSingleMenuBtn');
+const modelPartSingleActions = document.getElementById('modelPartSingleActions');
+const modelPartAddNextBtn = document.getElementById('modelPartAddNextBtn');
 const bgModelSyncSourceWrap = document.getElementById('bgModelSyncSourceWrap');
 const bgModelSyncSelectorBtn = document.getElementById('bgModelSyncSelectorBtn');
 const bgModelSyncSelectorMenu = document.getElementById('bgModelSyncSelectorMenu');
@@ -224,9 +232,12 @@ const bgOpacitySlider = document.getElementById('bgOpacitySlider');
 const buildPlateToggleEl = document.getElementById('buildPlateToggle');
 const buildPlateControlsEl = document.getElementById('buildPlateControls');
 const buildPlateColorPickerEl = document.getElementById('buildPlateColorPicker');
+const buildPlateColorCustomBtnEl = document.getElementById('buildPlateColorCustomBtn');
+const buildPlateColorCustomCoreEl = document.getElementById('buildPlateColorCustomCore');
 const buildPlateShadeSliderEl = document.getElementById('buildPlateShadeSlider');
 const buildPlateShadeValEl = document.getElementById('buildPlateShadeVal');
 const buildPlateFinishWrapEl = document.getElementById('buildPlateFinishWrap');
+const buildPlateShapeWrapEl = document.getElementById('buildPlateShapeWrap');
 const shadingEl = document.getElementById('shadingSelect');
 const speedSlider = document.getElementById('speedSlider');
 
@@ -260,10 +271,9 @@ const uploadChoiceTextEl = document.getElementById('uploadChoiceText');
 const uploadChoiceDontShowEl = document.getElementById('uploadChoiceDontShow');
 const btnUploadChoiceClose = document.getElementById('btnUploadChoiceClose');
 const btnUploadChoiceCancel = document.getElementById('btnUploadChoiceCancel');
+const btnUploadChoiceImport = document.getElementById('btnUploadChoiceImport');
 const btnUploadChoiceAdd = document.getElementById('btnUploadChoiceAdd');
 const btnUploadChoiceReplace = document.getElementById('btnUploadChoiceReplace');
-const btnImportPackage = document.getElementById('btnImportPackage');
-const importPackageInput = document.getElementById('importPackageInput');
 const btnDownloadPackage = document.getElementById('btnDownloadPackage');
 const exportMotionControlsToggleEl = document.getElementById('exportMotionControlsToggle');
 const exportMotionControlsEl = document.getElementById('exportMotionControls');
@@ -348,7 +358,7 @@ const APP_PARAM_KEYS = new Set([
     'tto', 'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh', 'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
     'rv', 'ru', 'rl', 'rg',
     'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp', 'bsp',
-    'bp', 'bpc', 'bpt', 'bps',
+    'bp', 'bpc', 'bpt', 'bps', 'bpf', 'bpp', 'bpw', 'bpd', 'bpsh',
     'uap', 'uam'
 ]);
 const _passthroughParams = (() => {
@@ -400,11 +410,24 @@ let currentModelBuffer = null;
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
 function syncSliderTooltip(slider) {
-    const min = parseFloat(slider.min);
-    const max = parseFloat(slider.max);
-    const pct = (parseFloat(slider.value) - min) / (max - min);
+    const rawMin = parseFloat(slider.min);
+    const rawMax = parseFloat(slider.max);
+    const min = Number.isFinite(rawMin) ? rawMin : 0;
+    const max = Number.isFinite(rawMax) ? rawMax : 100;
+    const value = parseFloat(slider.value);
+    const safeValue = Number.isFinite(value) ? value : min;
+    const span = Math.max(1e-9, max - min);
+    const pct = Math.max(0, Math.min(1, (safeValue - min) / span));
     const wrap = slider.parentElement;
-    if (wrap && wrap.classList.contains('range-wrap')) wrap.style.setProperty('--pct', pct);
+    slider.style.setProperty('--pct', String(pct));
+    if (wrap && wrap.classList.contains('range-wrap')) wrap.style.setProperty('--pct', String(pct));
+}
+
+function syncAllRangeFillIndicators(root = document) {
+    const scope = root || document;
+    scope.querySelectorAll('input[type="range"]').forEach((slider) => {
+        syncSliderTooltip(slider);
+    });
 }
 
 // ── Slider snap-point dots ────────────────────────────────────────────────────
@@ -575,6 +598,8 @@ let _cropBackupCameraZoom = 1;
 let _controlsDefaultMouseButtons = null;
 let _controlsDefaultTouches = null;
 let _shiftPanActive = false;
+let _rightPanVerticalLockActive = false;
+let _rightPanVerticalLock = null;
 let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, updated each frame
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
@@ -585,6 +610,7 @@ let buildPlateEnabled = true;
 let buildPlateColor = '#c2a164';
 let buildPlateShade = 0;
 let buildPlateFinish = 'satin'; // matte | satin | gloss
+let buildPlateShape = 'rectangle'; // rectangle | rounded | circle
 let buildPlateSizePreset = '220x220';
 let buildPlateWidth = 220;
 let buildPlateDepth = 220;
@@ -596,6 +622,7 @@ let _exportCollapsedConfirmResolver = null;
 let uploadChoicePromptEnabled = true;
 let uploadDefaultAction = 'replace'; // replace | add
 let _uploadChoiceResolver = null;
+let pendingUploadAction = null; // replace | add | import (set before opening file picker)
 const textureTuneState = {
     light: TEXTURE_TUNE_DEFAULTS.light,
     contrast: TEXTURE_TUNE_DEFAULTS.contrast,
@@ -813,7 +840,7 @@ function initThree() {
     scene.add(shadowCatcher);
 
     buildPlateMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(1, 1),
+        createBuildPlateGeometry(buildPlateShape),
         new THREE.MeshStandardMaterial({
             color: 0xffffff,
             roughness: 0.96,
@@ -822,6 +849,7 @@ function initThree() {
             shadowSide: THREE.FrontSide,
         })
     );
+    buildPlateMesh.userData.shape = normalizeBuildPlateShape(buildPlateShape);
     buildPlateMesh.rotation.x = -Math.PI / 2;
     buildPlateMesh.receiveShadow = true;
     buildPlateMesh.castShadow = false;
@@ -845,6 +873,9 @@ function initThree() {
         if (!exportFrameEnabled) return;
         _cropLiveSyncArmed = true;
         syncExportCameraFromViewport();
+    });
+    controls.addEventListener('change', () => {
+        if (_rightPanVerticalLockActive) enforceRightPanVerticalLock();
     });
 
     syncCanvasSize();
@@ -887,6 +918,65 @@ function syncCanvasSize() {
 function getActiveShadingMode() {
     if (shadingEl.value === 'flat' || shadingEl.value === 'toon') return 'matte';
     return shadingEl.value;
+}
+
+function normalizeBuildPlateShape(shape) {
+    return (shape === 'rounded' || shape === 'circle') ? shape : 'rectangle';
+}
+
+function createBuildPlateGeometry(shape = 'rectangle') {
+    const normalized = normalizeBuildPlateShape(shape);
+    if (normalized === 'rectangle') return new THREE.PlaneGeometry(1, 1);
+
+    if (normalized === 'circle') {
+        const circle = new THREE.CircleGeometry(0.5, 56);
+        circle.computeBoundingBox();
+        return circle;
+    }
+
+    const hw = 0.5;
+    const hh = 0.5;
+    const r = 0.12;
+    const outline = new THREE.Shape();
+    outline.moveTo(-hw + r, -hh);
+    outline.lineTo(hw - r, -hh);
+    outline.quadraticCurveTo(hw, -hh, hw, -hh + r);
+    outline.lineTo(hw, hh - r);
+    outline.quadraticCurveTo(hw, hh, hw - r, hh);
+    outline.lineTo(-hw + r, hh);
+    outline.quadraticCurveTo(-hw, hh, -hw, hh - r);
+    outline.lineTo(-hw, -hh + r);
+    outline.quadraticCurveTo(-hw, -hh, -hw + r, -hh);
+
+    const geo = new THREE.ShapeGeometry(outline, 14);
+    geo.computeBoundingBox();
+    if (geo.boundingBox) {
+        const pos = geo.attributes.position;
+        const min = geo.boundingBox.min;
+        const max = geo.boundingBox.max;
+        const spanX = Math.max(1e-6, max.x - min.x);
+        const spanY = Math.max(1e-6, max.y - min.y);
+        const uv = new Float32Array(pos.count * 2);
+        for (let i = 0; i < pos.count; i++) {
+            const x = pos.getX(i);
+            const y = pos.getY(i);
+            uv[i * 2] = (x - min.x) / spanX;
+            uv[(i * 2) + 1] = (y - min.y) / spanY;
+        }
+        geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    }
+    return geo;
+}
+
+function syncBuildPlateShapeMesh() {
+    if (!buildPlateMesh) return;
+    const targetShape = normalizeBuildPlateShape(buildPlateShape);
+    const activeShape = normalizeBuildPlateShape(buildPlateMesh.userData.shape || 'rectangle');
+    if (activeShape === targetShape) return;
+    const oldGeometry = buildPlateMesh.geometry;
+    buildPlateMesh.geometry = createBuildPlateGeometry(targetShape);
+    buildPlateMesh.userData.shape = targetShape;
+    if (oldGeometry?.dispose) oldGeometry.dispose();
 }
 
 function createBuildPlateTexture(hexColor = '#c2a164', finish = 'satin') {
@@ -943,37 +1033,76 @@ function createBuildPlateTexture(hexColor = '#c2a164', finish = 'satin') {
     return tex;
 }
 
-function updateBuildPlateMaterial() {
-    if (!buildPlateMesh || !buildPlateMesh.material) return;
+function openAnchoredColorPicker(inputEl, anchorEl) {
+    if (!inputEl) return;
+    const rect = anchorEl?.getBoundingClientRect?.();
+    const prevInlineStyles = inputEl.style.cssText;
+    if (rect) {
+        Object.assign(inputEl.style, {
+            position: 'absolute',
+            left: `${rect.left + window.scrollX}px`,
+            top: `${rect.top + window.scrollY}px`,
+            width: `${Math.max(1, Math.floor(rect.width))}px`,
+            height: `${Math.max(1, Math.floor(rect.height))}px`,
+            clip: 'auto',
+            pointerEvents: 'auto',
+            opacity: '0',
+            zIndex: '200',
+        });
+    } else {
+        Object.assign(inputEl.style, {
+            width: '1px',
+            height: '1px',
+            pointerEvents: 'auto',
+            opacity: '0',
+        });
+    }
 
+    try { inputEl.showPicker(); } catch (_) { inputEl.click(); }
+
+    setTimeout(() => {
+        inputEl.style.cssText = prevInlineStyles;
+    }, 260);
+}
+
+function updateBuildPlateMaterial() {
     const shade = Math.max(-100, Math.min(100, Number(buildPlateShade) || 0));
     const toned = computeTonedColor(buildPlateColor || '#c2a164', shade);
-    buildPlateMesh.material.color.set(toned);
+    buildPlateShape = normalizeBuildPlateShape(buildPlateShape);
+    buildPlateFinish = (buildPlateFinish === 'matte' || buildPlateFinish === 'gloss') ? buildPlateFinish : 'satin';
 
-    if (buildPlateFinish === 'matte') {
-        buildPlateMesh.material.roughness = 0.97;
-        buildPlateMesh.material.metalness = 0.0;
-    } else if (buildPlateFinish === 'gloss') {
-        buildPlateMesh.material.roughness = 0.64;
-        buildPlateMesh.material.metalness = 0.14;
-    } else {
-        buildPlateMesh.material.roughness = 0.84;
-        buildPlateMesh.material.metalness = 0.06;
-    }
-    buildPlateMesh.material.shadowSide = THREE.FrontSide;
+    if (buildPlateMesh && buildPlateMesh.material) {
+        syncBuildPlateShapeMesh();
+        buildPlateMesh.material.color.set(toned);
 
-    const previousMap = buildPlateMesh.material.map;
-    const repeatX = previousMap?.repeat?.x || Math.max(4, Math.round((buildPlateMesh.scale?.x || buildPlateWidth || 220) / 8));
-    const repeatY = previousMap?.repeat?.y || Math.max(4, Math.round((buildPlateMesh.scale?.y || buildPlateDepth || 220) / 8));
-    if (previousMap) {
-        previousMap.dispose();
-        buildPlateMesh.material.map = null;
+        if (buildPlateFinish === 'matte') {
+            buildPlateMesh.material.roughness = 0.98;
+            buildPlateMesh.material.metalness = 0.02;
+            buildPlateMesh.material.envMapIntensity = 0.16;
+        } else if (buildPlateFinish === 'gloss') {
+            buildPlateMesh.material.roughness = 0.26;
+            buildPlateMesh.material.metalness = 0.52;
+            buildPlateMesh.material.envMapIntensity = 0.94;
+        } else {
+            buildPlateMesh.material.roughness = 0.72;
+            buildPlateMesh.material.metalness = 0.22;
+            buildPlateMesh.material.envMapIntensity = 0.56;
+        }
+        buildPlateMesh.material.shadowSide = THREE.FrontSide;
+
+        const previousMap = buildPlateMesh.material.map;
+        const repeatX = previousMap?.repeat?.x || Math.max(4, Math.round((buildPlateMesh.scale?.x || buildPlateWidth || 220) / 8));
+        const repeatY = previousMap?.repeat?.y || Math.max(4, Math.round((buildPlateMesh.scale?.y || buildPlateDepth || 220) / 8));
+        if (previousMap) {
+            previousMap.dispose();
+            buildPlateMesh.material.map = null;
+        }
+        if (BUILD_PLATE_TEXTURES_ENABLED) {
+            buildPlateMesh.material.map = createBuildPlateTexture(toned, buildPlateFinish);
+            buildPlateMesh.material.map.repeat.set(repeatX, repeatY);
+        }
+        buildPlateMesh.material.needsUpdate = true;
     }
-    if (BUILD_PLATE_TEXTURES_ENABLED) {
-        buildPlateMesh.material.map = createBuildPlateTexture(toned, buildPlateFinish);
-        buildPlateMesh.material.map.repeat.set(repeatX, repeatY);
-    }
-    buildPlateMesh.material.needsUpdate = true;
 
     if (buildPlateControlsEl) buildPlateControlsEl.hidden = !buildPlateEnabled;
     if (buildPlateShadeValEl) {
@@ -984,6 +1113,9 @@ function updateBuildPlateMaterial() {
     if (buildPlateColorPickerEl && /^#[0-9a-f]{6}$/i.test(buildPlateColor)) {
         buildPlateColorPickerEl.value = buildPlateColor;
     }
+    if (buildPlateColorCustomCoreEl && /^#[0-9a-f]{6}$/i.test(buildPlateColor)) {
+        buildPlateColorCustomCoreEl.style.background = buildPlateColor;
+    }
     if (buildPlateFinishWrapEl) {
         buildPlateFinishWrapEl.querySelectorAll('[data-plate-finish]').forEach((btn) => {
             const isActive = btn.getAttribute('data-plate-finish') === buildPlateFinish;
@@ -991,6 +1123,14 @@ function updateBuildPlateMaterial() {
             btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
         });
     }
+    if (buildPlateShapeWrapEl) {
+        buildPlateShapeWrapEl.querySelectorAll('[data-plate-shape]').forEach((btn) => {
+            const isActive = btn.getAttribute('data-plate-shape') === buildPlateShape;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+    }
+    updateCardResetButtonStates();
 }
 
 function clampBuildPlateSize(v, fallback = 220) {
@@ -1056,11 +1196,14 @@ function updateShadowCatcherPlacement() {
     if (buildPlateMesh) {
         const plateW = clampBuildPlateSize(buildPlateWidth, 220);
         const plateD = clampBuildPlateSize(buildPlateDepth, 220);
+        const shape = normalizeBuildPlateShape(buildPlateShape);
+        const scaleW = shape === 'circle' ? Math.min(plateW, plateD) : plateW;
+        const scaleD = shape === 'circle' ? Math.min(plateW, plateD) : plateD;
         buildPlateMesh.position.set(center.x, y - Math.max(0.0005, modelRadius * 0.0012), center.z);
-        buildPlateMesh.scale.set(plateW, plateD, 1);
+        buildPlateMesh.scale.set(scaleW, scaleD, 1);
         if (buildPlateMesh.material?.map) {
-            const repeatX = Math.max(4, Math.round(plateW / 8));
-            const repeatY = Math.max(4, Math.round(plateD / 8));
+            const repeatX = Math.max(4, Math.round(scaleW / 8));
+            const repeatY = Math.max(4, Math.round(scaleD / 8));
             buildPlateMesh.material.map.repeat.set(repeatX, repeatY);
         }
     }
@@ -1521,6 +1664,7 @@ function syncUIFromSelectedPart() {
     setFinishModeUI(finishMode);
     if (textureTuneRoughnessSlider) {
         textureTuneRoughnessSlider.value = String(finishSliderValueFromPartSettings(s));
+        syncSliderTooltip(textureTuneRoughnessSlider);
     }
     if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = textureTuneRoughnessSlider?.value || '1';
     updateShadeSliderVisual();
@@ -1529,6 +1673,7 @@ function syncUIFromSelectedPart() {
     updateColorSwatches();
     reconcileModelPresetFromSettings(true);
     updateModelSelection();
+    updateCardResetButtonStates();
 }
 
 // null = all parts dirty; a Set = only the indices in the set need re-rendering
@@ -1634,6 +1779,16 @@ function getPartBounds(partIdx) {
 
 function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (!canvasEl || !mesh || !renderer || !camera) return;
+    const rect = canvasEl.getBoundingClientRect();
+    const cssW = Math.max(1, Math.round(rect.width || canvasEl.clientWidth || canvasEl.width || 1));
+    const cssH = Math.max(1, Math.round(rect.height || canvasEl.clientHeight || canvasEl.height || 1));
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const targetW = Math.max(1, Math.round(cssW * dpr));
+    const targetH = Math.max(1, Math.round(cssH * dpr));
+    if (canvasEl.width !== targetW || canvasEl.height !== targetH) {
+        canvasEl.width = targetW;
+        canvasEl.height = targetH;
+    }
     const ctx = canvasEl.getContext('2d');
     if (!ctx) return;
     ensurePartThumbRenderResources();
@@ -1847,6 +2002,7 @@ function closeModelPartActionMenus() {
         menu.style.left = '';
         menu.style.top = '';
     });
+    if (modelPartSingleMenuBtn) modelPartSingleMenuBtn.setAttribute('aria-expanded', 'false');
 }
 
 function positionModelPartActionMenu(menuEl, anchorEl) {
@@ -1876,12 +2032,31 @@ function positionModelPartActionMenu(menuEl, anchorEl) {
 
 modelPartSelectorBtn?.addEventListener('click', (ev) => {
     ev.stopPropagation();
+    if (modelPartSelectorBtn.classList.contains('is-static')) return;
     const open = modelPartSelectorMenu && !modelPartSelectorMenu.hidden;
     closeThumbSelectMenus();
     if (modelPartSelectorMenu && !open) {
         modelPartSelectorMenu.hidden = false;
         modelPartSelectorBtn.setAttribute('aria-expanded', 'true');
     }
+});
+
+modelPartSingleMenuBtn?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const menu = modelPartSingleActions;
+    if (!menu) return;
+    const willOpen = !!menu.hidden;
+    closeThumbSelectMenus();
+    closeModelPartActionMenus();
+    if (!willOpen) return;
+    menu.hidden = false;
+    positionModelPartActionMenu(menu, ev.currentTarget);
+    modelPartSingleMenuBtn.setAttribute('aria-expanded', 'true');
+});
+
+modelPartAddNextBtn?.addEventListener('click', () => {
+    if (modelPartAddNextBtn.disabled) return;
+    partAppendInput?.click();
 });
 
 bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
@@ -2021,88 +2196,161 @@ function syncModelPartSelectorUI() {
     modelPartThumbsWrap.hidden = !isVisible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!isVisible));
     if (!isVisible) {
+        if (modelPartSelectorEl) modelPartSelectorEl.hidden = true;
         modelPartSelectorMenu.innerHTML = '';
         modelPartSelectorBtn.hidden = true;
+        modelPartSelectorBtn.classList.remove('is-static');
         modelPartSelectorMenu.hidden = true;
         modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
+        if (modelPartSingleMenuRow) {
+            modelPartSingleMenuRow.hidden = true;
+            modelPartSingleMenuRow.setAttribute('aria-hidden', 'true');
+        }
+        if (modelPartSingleActions) {
+            modelPartSingleActions.innerHTML = '';
+            modelPartSingleActions.hidden = true;
+        }
+        if (modelPartSingleMenuBtn) modelPartSingleMenuBtn.setAttribute('aria-expanded', 'false');
+        if (modelPartAddNextBtn) {
+            modelPartAddNextBtn.hidden = true;
+            modelPartAddNextBtn.disabled = true;
+            modelPartAddNextBtn.title = '';
+        }
         return;
     }
 
+    const partCount = modelPartNames.length;
+    const singleModel = partCount <= 1;
+    const canMutateFiles = !!modelPartFiles && modelPartFiles.length === partCount;
+    const canAppend = singleModel ? !!currentModelBuffer : canMutateFiles;
+
+    if (modelPartSelectorEl) modelPartSelectorEl.hidden = false;
     modelPartSelectorBtn.hidden = false;
+    modelPartSelectorBtn.classList.toggle('is-static', singleModel);
     modelPartSelectorMenu.hidden = true;
     modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
+
+    if (modelPartSingleMenuRow) {
+        modelPartSingleMenuRow.hidden = !singleModel;
+        modelPartSingleMenuRow.setAttribute('aria-hidden', String(!singleModel));
+    }
+    if (modelPartSingleActions) {
+        modelPartSingleActions.hidden = true;
+        modelPartSingleActions.style.left = '';
+        modelPartSingleActions.style.top = '';
+    }
+    if (modelPartSingleMenuBtn) modelPartSingleMenuBtn.setAttribute('aria-expanded', 'false');
+
+    if (modelPartAddNextBtn) {
+        modelPartAddNextBtn.hidden = false;
+        modelPartAddNextBtn.disabled = !canAppend;
+        modelPartAddNextBtn.title = canAppend
+            ? 'Add one or more STL files as new model parts'
+            : (singleModel
+                ? 'Current model source is unavailable for add. Reload the model and try again.'
+                : 'Part source files are unavailable for editing');
+    }
+
     closeModelPartActionMenus();
 
     modelPartSelected = Math.max(0, Math.min(modelPartSelected, modelPartNames.length - 1));
+    if (singleModel) modelPartSelected = 0;
     modelPartSelectorMenu.innerHTML = '';
-    const canMutateFiles = !!modelPartFiles && modelPartFiles.length === modelPartNames.length;
 
-    modelPartNames.forEach((name, idx) => {
-        const opt = document.createElement('div');
-        opt.className = 'thumb-select-option';
-        opt.dataset.partIndex = String(idx);
-        opt.setAttribute('role', 'option');
-        const settings = getPartSettings(idx);
-        const hideLabel = settings.hidden ? 'Show' : 'Hide';
-        const mutateDisabledAttr = canMutateFiles ? '' : ' disabled title="Part source files are unavailable for editing"';
-        opt.innerHTML = `<button type="button" class="thumb-select-option-main" data-part-select="${idx}"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">\u22ee</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action" data-part-action="add" data-part-index="${idx}"${mutateDisabledAttr}>Add STL</button><button type="button" class="part-option-action" data-part-action="hide" data-part-index="${idx}">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}">Delete Model</button></div>`;
+    if (!singleModel) {
+        modelPartNames.forEach((name, idx) => {
+            const opt = document.createElement('div');
+            opt.className = 'thumb-select-option';
+            opt.dataset.partIndex = String(idx);
+            opt.setAttribute('role', 'option');
+            const settings = getPartSettings(idx);
+            const hideLabel = settings.hidden ? 'Show' : 'Hide';
+            const mutateDisabledAttr = canMutateFiles ? '' : ' disabled title="Part source files are unavailable for editing"';
+            opt.innerHTML = `<button type="button" class="thumb-select-option-main" data-part-select="${idx}"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">\u22ee</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action" data-part-action="hide" data-part-index="${idx}">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}"${mutateDisabledAttr}>Delete Model</button></div>`;
 
-        opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
-            clearPresetHoverPreview();
-            modelPartSelected = idx;
-            syncUIFromSelectedPart();
-            applyPartColorsToMesh();
-            applyCurrentTextureTuning();
-            closeThumbSelectMenus();
-            syncModelPartSelectorUI();
-            saveSettings();
-        });
+            opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
+                clearPresetHoverPreview();
+                modelPartSelected = idx;
+                syncUIFromSelectedPart();
+                applyPartColorsToMesh();
+                applyCurrentTextureTuning();
+                closeThumbSelectMenus();
+                syncModelPartSelectorUI();
+                saveSettings();
+            });
 
-        opt.querySelector('[data-part-more]')?.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            const menu = opt.querySelector('.part-option-actions');
-            const willOpen = !!menu?.hidden;
-            closeModelPartActionMenus();
-            if (!menu || !willOpen) return;
-            menu.hidden = false;
-            positionModelPartActionMenu(menu, ev.currentTarget);
-        });
-
-        opt.querySelectorAll('.part-option-action').forEach((actionBtn) => {
-            actionBtn.addEventListener('click', async (ev) => {
+            opt.querySelector('[data-part-more]')?.addEventListener('click', (ev) => {
                 ev.stopPropagation();
-                const action = actionBtn.dataset.partAction;
-                const partIdx = parseInt(actionBtn.dataset.partIndex || '-1', 10);
-                if (!Number.isFinite(partIdx) || partIdx < 0) return;
+                const menu = opt.querySelector('.part-option-actions');
+                const willOpen = !!menu?.hidden;
+                closeModelPartActionMenus();
+                if (!menu || !willOpen) return;
+                menu.hidden = false;
+                positionModelPartActionMenu(menu, ev.currentTarget);
+            });
 
+            opt.querySelectorAll('.part-option-action').forEach((actionBtn) => {
+                actionBtn.addEventListener('click', async (ev) => {
+                    ev.stopPropagation();
+                    const action = actionBtn.dataset.partAction;
+                    const partIdx = parseInt(actionBtn.dataset.partIndex || '-1', 10);
+                    if (!Number.isFinite(partIdx) || partIdx < 0) return;
+
+                    if (action === 'replace') {
+                        pendingReplacePartIndex = partIdx;
+                        partReplaceInput?.click();
+                        return;
+                    }
+
+                    if (action === 'hide') {
+                        const partSettings = getPartSettings(partIdx);
+                        partSettings.hidden = !partSettings.hidden;
+                        applyPartColorsToMesh();
+                        syncModelPartSelectorUI();
+                        saveSettings();
+                        return;
+                    }
+
+                    if (action === 'remove') {
+                        await removeMultipartPart(partIdx);
+                    }
+                });
+            });
+
+            modelPartSelectorMenu.appendChild(opt);
+        });
+    } else if (modelPartSingleActions) {
+        const settings = getPartSettings(0);
+        const hideLabel = settings.hidden ? 'Show Model' : 'Hide Model';
+        const clearBtn = document.getElementById('btnClearModel');
+        const clearLabel = clearBtn?.title || 'Reset to Benchy';
+        modelPartSingleActions.innerHTML = `<button type="button" class="part-option-action" data-single-action="replace">Replace STL</button><button type="button" class="part-option-action" data-single-action="hide">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-single-action="clear">${clearLabel}</button>`;
+
+        modelPartSingleActions.querySelectorAll('.part-option-action').forEach((actionBtn) => {
+            actionBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const action = actionBtn.dataset.singleAction;
                 if (action === 'replace') {
-                    pendingReplacePartIndex = partIdx;
-                    partReplaceInput?.click();
+                    closeModelPartActionMenus();
+                    openUploadFilePicker('replace');
                     return;
                 }
-
-                if (action === 'add') {
-                    partAppendInput?.click();
-                    return;
-                }
-
                 if (action === 'hide') {
-                    const partSettings = getPartSettings(partIdx);
+                    const partSettings = getPartSettings(0);
                     partSettings.hidden = !partSettings.hidden;
                     applyPartColorsToMesh();
                     syncModelPartSelectorUI();
                     saveSettings();
+                    closeModelPartActionMenus();
                     return;
                 }
-
-                if (action === 'remove') {
-                    await removeMultipartPart(partIdx);
+                if (action === 'clear') {
+                    closeModelPartActionMenus();
+                    clearBtn?.click();
                 }
             });
         });
-
-        modelPartSelectorMenu.appendChild(opt);
-    });
+    }
 
     if (modelPartSelectorThumb) {
         modelPartSelectorThumb.classList.add('js-part-thumb-preview');
@@ -2837,7 +3085,7 @@ function updateCropHintUI() {
     if (orbitHintTextEl) {
         orbitHintTextEl.textContent = exportFrameEnabled
             ? 'Drag to orbit · Scroll to zoom · Hold Shift + drag to pan'
-            : 'Drag to orbit · Scroll to zoom · Right-drag to pan · Hold Shift + drag to pan';
+            : 'Drag to orbit · Scroll to zoom · Right-drag up/down · Hold Shift + drag to pan';
     }
     if (!orbitHintBarEl) return;
     if (exportFrameEnabled) {
@@ -2849,6 +3097,30 @@ function updateCropHintUI() {
     }
     if (_hintVisibleBeforeCrop === false) orbitHintBarEl.classList.remove('visible');
     _hintVisibleBeforeCrop = null;
+}
+
+function beginRightPanVerticalLock() {
+    if (!controls || !camera) return;
+    _rightPanVerticalLockActive = true;
+    _rightPanVerticalLock = {
+        targetX: controls.target.x,
+        targetZ: controls.target.z,
+        cameraX: camera.position.x,
+        cameraZ: camera.position.z,
+    };
+}
+
+function enforceRightPanVerticalLock() {
+    if (!_rightPanVerticalLockActive || !_rightPanVerticalLock || !controls || !camera) return;
+    controls.target.x = _rightPanVerticalLock.targetX;
+    controls.target.z = _rightPanVerticalLock.targetZ;
+    camera.position.x = _rightPanVerticalLock.cameraX;
+    camera.position.z = _rightPanVerticalLock.cameraZ;
+}
+
+function endRightPanVerticalLock() {
+    _rightPanVerticalLockActive = false;
+    _rightPanVerticalLock = null;
 }
 
 function setShiftPanInteraction(active) {
@@ -3779,6 +4051,7 @@ function saveSettings() {
             buildPlateColor: buildPlateColor,
             buildPlateShade: String(buildPlateShade),
             buildPlateFinish: buildPlateFinish,
+            buildPlateShape: buildPlateShape,
             buildPlateSizePreset: buildPlateSizePreset,
             buildPlateWidth: String(buildPlateWidth),
             buildPlateDepth: String(buildPlateDepth),
@@ -4034,6 +4307,9 @@ function restoreSettings() {
         if (s.buildPlateFinish === 'matte' || s.buildPlateFinish === 'satin' || s.buildPlateFinish === 'gloss') {
             buildPlateFinish = s.buildPlateFinish;
         }
+        if (s.buildPlateShape === 'rounded' || s.buildPlateShape === 'rectangle' || s.buildPlateShape === 'circle') {
+            buildPlateShape = s.buildPlateShape;
+        }
         if (s.buildPlateSizePreset != null) {
             const preset = String(s.buildPlateSizePreset);
             if (preset === 'custom' || BUILD_PLATE_SIZE_PRESETS[preset]) {
@@ -4105,11 +4381,8 @@ function restoreSettings() {
         }
         updateBuildPlateMaterial();
         syncExportMotionControlsFromMain();
-        if (speedSlider instanceof HTMLInputElement) syncSliderTooltip(speedSlider);
-        syncSliderTooltip(tiltRangeSlider);
-        syncSliderTooltip(wobbleSpinRangeSlider);
-        if (opacitySlider) syncSliderTooltip(opacitySlider);
-        if (bgOpacitySlider) { syncSliderTooltip(bgOpacitySlider); updateBgShadeSliderVisual(); }
+        syncAllRangeFillIndicators();
+        if (bgOpacitySlider) updateBgShadeSliderVisual();
         updateTiltRangeReset();
         wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
         speedResetBtn?.classList.toggle('is-changed', parseInt(speedSlider.value, 10) !== SPEED_DEFAULT);
@@ -4117,6 +4390,7 @@ function restoreSettings() {
         if (!exportFormatEl?.value || !document.getElementById(`exportOpts-${exportFormatEl.value}`)) {
             applyExportFormat('gif');
         }
+        updateCardResetButtonStates();
     } catch (e) { }
     // Done applying restored settings; re-enable saves and persist final state
     try {
@@ -4190,6 +4464,7 @@ function getURLSettings(searchStr = location.search) {
         buildPlateColor: g('bpc'),
         buildPlateShade: g('bps'),
         buildPlateFinish: g('bpf'),
+        buildPlateShape: g('bpsh'),
         buildPlateSizePreset: g('bpp'),
         buildPlateWidth: g('bpw'),
         buildPlateDepth: g('bpd'),
@@ -4264,6 +4539,7 @@ function settingsToURL() {
     }
     if (buildPlateShade) p.set('bps', String(buildPlateShade));
     if (buildPlateFinish && buildPlateFinish !== 'satin') p.set('bpf', buildPlateFinish);
+    if (buildPlateShape !== 'rectangle') p.set('bpsh', normalizeBuildPlateShape(buildPlateShape));
     if (buildPlateSizePreset && buildPlateSizePreset !== '220x220') p.set('bpp', buildPlateSizePreset);
     if (buildPlateWidth !== 220) p.set('bpw', String(buildPlateWidth));
     if (buildPlateDepth !== 220) p.set('bpd', String(buildPlateDepth));
@@ -4367,18 +4643,71 @@ function readFileAsArrayBuffer(file) {
     });
 }
 
-async function handleFiles(fileList) {
+function openUploadFilePicker(action = 'replace') {
+    pendingUploadAction = (action === 'add' || action === 'import') ? action : 'replace';
+    if (fileInput) fileInput.click();
+}
+
+async function requestUploadFlowFromButtons() {
+    suppressAutoDemoModelLoad();
+    dismissStartupSplash();
+
+    if (!mesh) {
+        openUploadFilePicker('replace');
+        return;
+    }
+
+    const requestedAction = await promptUploadChoice(null);
+    if (requestedAction === 'import') {
+        openUploadFilePicker('import');
+        return;
+    }
+    if (requestedAction !== 'add' && requestedAction !== 'replace') return;
+    openUploadFilePicker(requestedAction);
+}
+
+async function handlePickedUploadFiles(fileList, requestedActionOverride = null) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+
+    const stlFiles = files.filter((file) => /\.stl$/i.test(file?.name || ''));
+    const zipFiles = files.filter((file) => /\.zip$/i.test(file?.name || ''));
+    if (!stlFiles.length && !zipFiles.length) {
+        setStatus('Select STL or ZIP files only.');
+        setTimeout(() => setStatus(''), 2800);
+        return;
+    }
+
+    const stlActionOverride = (requestedActionOverride === 'add' || requestedActionOverride === 'replace')
+        ? requestedActionOverride
+        : (requestedActionOverride === 'import' ? 'replace' : null);
+
+    if (stlFiles.length) {
+        await handleFiles(stlFiles, stlActionOverride);
+    }
+
+    for (const zipFile of zipFiles) {
+        await importRotaterPackage(zipFile);
+    }
+}
+
+async function handleFiles(fileList, requestedActionOverride = null) {
     dismissStartupSplash();
     const files = Array.from(fileList || []).filter(f => f?.name?.toLowerCase?.().endsWith('.stl'));
     if (!files.length) return;
 
-    let requestedAction = 'replace';
-    if (mesh) {
+    let requestedAction = (requestedActionOverride === 'add' || requestedActionOverride === 'replace')
+        ? requestedActionOverride
+        : 'replace';
+
+    if (mesh && !requestedActionOverride) {
         requestedAction = await promptUploadChoice(files);
         if (requestedAction !== 'add' && requestedAction !== 'replace') {
             return;
         }
     }
+
+    if (!mesh) requestedAction = 'replace';
 
     if (mesh && requestedAction === 'add') {
         try {
@@ -4517,34 +4846,120 @@ async function appendSTLPartsToCurrentModel(fileList) {
     saveSettings();
 }
 
+const IMPORT_ZIP_LIMITS = {
+    maxArchiveBytes: 64 * 1024 * 1024,
+    maxEntryCount: 300,
+    maxStlCount: 120,
+    maxSingleEntryBytes: 96 * 1024 * 1024,
+    maxTotalExtractedBytes: 220 * 1024 * 1024,
+    maxPackageJsonChars: 1_000_000,
+};
+
+function normalizeZipEntryPath(path) {
+    const raw = String(path || '').replace(/\\/g, '/').trim();
+    if (!raw) return null;
+    if (/^[a-zA-Z]:\//.test(raw) || raw.startsWith('/')) return null;
+    const parts = raw.split('/').filter(Boolean);
+    if (!parts.length) return null;
+    if (parts.some((seg) => seg === '.' || seg === '..')) return null;
+    return parts.join('/');
+}
+
 function getZipEntryBaseName(path) {
-    const clean = String(path || '').replace(/\\/g, '/');
-    return clean.split('/').filter(Boolean).pop() || 'model.stl';
+    const clean = normalizeZipEntryPath(path);
+    const base = clean ? clean.split('/').pop() : 'model.stl';
+    return safeDownloadFileName(base || 'model.stl', 'model.stl');
 }
 
 async function importRotaterPackage(zipFile) {
-    const zip = await JSZip.loadAsync(zipFile);
+    if (!zipFile || !/\.zip$/i.test(zipFile.name || '')) {
+        throw new Error('Please select a valid .zip package.');
+    }
+    if (zipFile.size > IMPORT_ZIP_LIMITS.maxArchiveBytes) {
+        throw new Error('Package is too large. Use a ZIP smaller than 64 MB.');
+    }
+
+    const zip = await JSZip.loadAsync(zipFile, { createFolders: false });
     const entries = Object.values(zip.files || {}).filter((entry) => !entry.dir);
-    const stlEntries = entries.filter((entry) => /\.stl$/i.test(entry.name));
-    if (!stlEntries.length) throw new Error('No STL files found in package.');
+    if (!entries.length) throw new Error('Package is empty.');
+    if (entries.length > IMPORT_ZIP_LIMITS.maxEntryCount) {
+        throw new Error('Package has too many files.');
+    }
+
+    const packageEntries = [];
+    let packageJsonEntry = null;
+
+    for (const entry of entries) {
+        const safePath = normalizeZipEntryPath(entry.name);
+        if (!safePath) {
+            throw new Error('Package contains unsafe file paths.');
+        }
+        const lower = safePath.toLowerCase();
+        const isStl = lower.endsWith('.stl');
+        const isPackageJson = lower.endsWith('package.json');
+
+        if (!isStl && !isPackageJson) {
+            throw new Error(`Unsupported file in package: ${safePath}`);
+        }
+
+        const expectedSize = Number(entry?._data?.uncompressedSize);
+        if (Number.isFinite(expectedSize) && expectedSize > IMPORT_ZIP_LIMITS.maxSingleEntryBytes) {
+            throw new Error(`File is too large in package: ${safePath}`);
+        }
+
+        if (isPackageJson) {
+            if (packageJsonEntry) throw new Error('Package contains multiple package.json files.');
+            packageJsonEntry = entry;
+            continue;
+        }
+
+        packageEntries.push({ entry, safePath });
+    }
+
+    if (!packageEntries.length) throw new Error('No STL files found in package.');
+    if (packageEntries.length > IMPORT_ZIP_LIMITS.maxStlCount) {
+        throw new Error('Package contains too many STL files.');
+    }
 
     let packageJson = null;
-    const packageEntry = entries.find((entry) => /package\.json$/i.test(entry.name));
-    if (packageEntry) {
+    if (packageJsonEntry) {
         try {
-            packageJson = JSON.parse(await packageEntry.async('string'));
-        } catch (_) { }
+            const jsonText = await packageJsonEntry.async('string');
+            if (jsonText.length > IMPORT_ZIP_LIMITS.maxPackageJsonChars) {
+                throw new Error('package.json is too large.');
+            }
+            const parsed = JSON.parse(jsonText);
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                packageJson = parsed;
+            }
+        } catch (err) {
+            throw new Error('package.json is invalid.');
+        }
     }
 
     const modelOrder = Array.isArray(packageJson?.model?.partNames)
-        ? packageJson.model.partNames.map((n) => String(n || '').toLowerCase())
+        ? packageJson.model.partNames.slice(0, IMPORT_ZIP_LIMITS.maxStlCount).map((n) => String(n || '').toLowerCase())
         : null;
 
-    const parts = await Promise.all(stlEntries.map(async (entry, idx) => ({
-        idx,
-        name: getZipEntryBaseName(entry.name),
-        buffer: await entry.async('arraybuffer'),
-    })));
+    const parts = [];
+    let totalExtractedBytes = 0;
+    for (let idx = 0; idx < packageEntries.length; idx++) {
+        const item = packageEntries[idx];
+        const buffer = await item.entry.async('arraybuffer');
+        const size = buffer?.byteLength || 0;
+        if (size > IMPORT_ZIP_LIMITS.maxSingleEntryBytes) {
+            throw new Error(`File is too large in package: ${item.safePath}`);
+        }
+        totalExtractedBytes += size;
+        if (totalExtractedBytes > IMPORT_ZIP_LIMITS.maxTotalExtractedBytes) {
+            throw new Error('Package extract size is too large.');
+        }
+        parts.push({
+            idx,
+            name: getZipEntryBaseName(item.safePath),
+            buffer,
+        });
+    }
 
     if (modelOrder && modelOrder.length) {
         parts.sort((a, b) => {
@@ -4559,7 +4974,7 @@ async function importRotaterPackage(zipFile) {
     const incomingLabel = parts.length > 1 ? `${parts.length} STL files` : `"${parts[0].name}"`;
     if (mesh && !confirm(`Replace current model with ${incomingLabel}?`)) return;
 
-    if (packageJson?.settings && typeof packageJson.settings === 'object') {
+    if (packageJson?.settings && typeof packageJson.settings === 'object' && !Array.isArray(packageJson.settings)) {
         try {
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(packageJson.settings));
             // Strip current URL params so restoreSettings() reads only the
@@ -4573,10 +4988,17 @@ async function importRotaterPackage(zipFile) {
     if (!renderer) initThree();
 
     if (parts.length > 1) {
-        const displayName = packageJson?.name || getMultipartDisplayName(parts.map((p) => p.name));
+        const packageName = String(packageJson?.name || '').trim();
+        const displayName = packageName
+            ? safeDownloadFileName(packageName, getMultipartDisplayName(parts.map((p) => p.name)))
+            : getMultipartDisplayName(parts.map((p) => p.name));
         const importParts = parts.map((part, idx) => {
-            const savedColor = packageJson?.model?.partColors?.[idx] || colorPick.value;
-            const savedSettings = packageJson?.model?.partSettings?.[idx];
+            const rawColor = packageJson?.model?.partColors?.[idx];
+            const savedColor = /^#[0-9a-f]{6}$/i.test(String(rawColor || '')) ? String(rawColor) : colorPick.value;
+            const rawSettings = packageJson?.model?.partSettings?.[idx];
+            const savedSettings = (rawSettings && typeof rawSettings === 'object' && !Array.isArray(rawSettings))
+                ? rawSettings
+                : null;
             return {
                 name: part.name,
                 buffer: part.buffer,
@@ -4670,38 +5092,28 @@ async function removeMultipartPart(partIdx) {
     syncFileChipMultipartUI();
 }
 
+[
+    btnUploadStlPrimary,
+    btnUploadStlCanvas,
+    btnUploadStlSidebar,
+].forEach((btn) => {
+    btn?.addEventListener('click', () => {
+        requestUploadFlowFromButtons();
+    });
+});
+
 fileInput.addEventListener('change', async (e) => {
     suppressAutoDemoModelLoad();
-    await handleFiles(e.target.files);
-    // Allow re-selecting the same file(s) to retrigger change.
-    e.target.value = '';
-});
-
-btnImportPackage?.addEventListener('click', () => {
-    importPackageInput?.click();
-});
-
-importPackageInput?.addEventListener('change', async (e) => {
-    suppressAutoDemoModelLoad();
-    const files = Array.from(e.target?.files || []);
-    if (!files.length) {
-        e.target.value = '';
-        return;
-    }
+    const requestedAction = pendingUploadAction;
+    pendingUploadAction = null;
     try {
-        const stlFiles = files.filter((file) => /\.stl$/i.test(file.name || ''));
-        const zipFiles = files.filter((file) => /\.zip$/i.test(file.name || ''));
-
-        if (stlFiles.length) await handleFiles(stlFiles);
-
-        for (const zipFile of zipFiles) {
-            await importRotaterPackage(zipFile);
-        }
+        await handlePickedUploadFiles(e.target.files, requestedAction);
     } catch (err) {
-        setStatus('Error: ' + (err?.message || 'Failed to import package.'));
+        setStatus('Error: ' + (err?.message || 'Failed to import file(s).'));
         console.error(err);
         setTimeout(() => setStatus(''), 5000);
     }
+    // Allow re-selecting the same file(s) to retrigger change.
     e.target.value = '';
 });
 
@@ -5511,30 +5923,127 @@ function getExportFormatDisplay(fmt) {
     return ({ gif: 'Animated GIF', mp4: 'MP4 Video', png: 'PNG Image', jpg: 'JPEG Image' })[fmt] || 'Export';
 }
 
-function getCollapsedExportSummaryRows(fmt) {
-    const rows = [
-        ['Format', getExportFormatDisplay(fmt)],
-        ['Quality', EXPORT_QUALITY_LABELS[document.getElementById('exportQuality')?.value || 'std'] || 'Medium'],
-        ['Rotation Time', `${getSecondsPerRevolution()}s`],
-        ['Grid', exportGridEl?.checked ? 'On' : 'Off'],
-        ['Background', exportBgColorEl?.checked ? 'On' : 'Off'],
-    ];
-    if (fmt === 'gif') {
-        rows.push(['Loop', document.getElementById('gifLoop')?.checked ? 'On' : 'Off']);
-        rows.push(['Dither', document.getElementById('gifDither')?.checked ? 'On' : 'Off']);
-    }
-    if (fmt === 'jpg') {
-        rows.push(['JPEG Compression', `${document.getElementById('jpegQuality')?.value || '92'}%`]);
-    }
-    return rows;
-}
-
 function renderCollapsedExportSummary(fmt) {
     if (!exportCollapsedConfirmSummaryEl) return;
-    const rows = getCollapsedExportSummaryRows(fmt);
-    exportCollapsedConfirmSummaryEl.innerHTML = rows.map(([label, value]) => (
-        `<div class="export-collapsed-confirm-line"><span>${label}</span><span>${value}</span></div>`
-    )).join('');
+    const format = ({ gif: 'gif', mp4: 'mp4', png: 'png', jpg: 'jpg' })[fmt] || 'gif';
+    const qualityValue = document.getElementById('exportQuality')?.value || 'std';
+    const speedValue = String(parseInt(speedSlider?.value || String(SPEED_DEFAULT), 10) || SPEED_DEFAULT);
+    const gridChecked = !!exportGridEl?.checked;
+    const bgChecked = !!exportBgColorEl?.checked;
+    const gifLoopChecked = !!document.getElementById('gifLoop')?.checked;
+    const gifDitherChecked = !!document.getElementById('gifDither')?.checked;
+    const jpegQualityValue = document.getElementById('jpegQuality')?.value || '92';
+
+    const formatOptions = ['gif', 'mp4', 'png', 'jpg']
+        .map((key) => `<option value="${key}"${key === format ? ' selected' : ''}>${getExportFormatDisplay(key)}</option>`)
+        .join('');
+
+    const qualityOptions = EXPORT_QUALITY_ORDER
+        .map((key) => `<option value="${key}"${key === qualityValue ? ' selected' : ''}>${EXPORT_QUALITY_LABELS[key] || key}</option>`)
+        .join('');
+
+    const speedOptions = [5, 10, 15, 20, 25, 30]
+        .map((seconds) => {
+            const value = String(seconds);
+            return `<option value="${value}"${value === speedValue ? ' selected' : ''}>${seconds}s</option>`;
+        })
+        .join('');
+
+    const gifExtras = format === 'gif'
+        ? `<label class="export-collapsed-confirm-row export-collapsed-confirm-row--check"><span>Loop</span><input type="checkbox" data-export-review="gif-loop"${gifLoopChecked ? ' checked' : ''}></label><label class="export-collapsed-confirm-row export-collapsed-confirm-row--check"><span>Dither</span><input type="checkbox" data-export-review="gif-dither"${gifDitherChecked ? ' checked' : ''}></label>`
+        : '';
+
+    const jpgExtra = format === 'jpg'
+        ? `<label class="export-collapsed-confirm-row"><span>JPEG Compression</span><input type="range" min="50" max="100" step="5" value="${jpegQualityValue}" data-export-review="jpg-quality"></label>`
+        : '';
+
+    exportCollapsedConfirmSummaryEl.innerHTML = `
+        <label class="export-collapsed-confirm-row">
+            <span>Format</span>
+            <select class="export-select export-collapsed-confirm-control" data-export-review="format">${formatOptions}</select>
+        </label>
+        <label class="export-collapsed-confirm-row">
+            <span>Quality</span>
+            <select class="export-select export-collapsed-confirm-control" data-export-review="quality">${qualityOptions}</select>
+        </label>
+        <label class="export-collapsed-confirm-row">
+            <span>Rotation Time</span>
+            <select class="export-select export-collapsed-confirm-control" data-export-review="speed">${speedOptions}</select>
+        </label>
+        <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
+            <span>Grid</span>
+            <input type="checkbox" data-export-review="grid"${gridChecked ? ' checked' : ''}>
+        </label>
+        <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
+            <span>Background</span>
+            <input type="checkbox" data-export-review="bg"${bgChecked ? ' checked' : ''}>
+        </label>
+        ${gifExtras}
+        ${jpgExtra}
+    `;
+
+    const formatSelect = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="format"]');
+    formatSelect?.addEventListener('change', () => {
+        const nextFormat = formatSelect.value;
+        applyExportFormat(nextFormat);
+        renderCollapsedExportSummary(nextFormat);
+        saveSettings();
+    });
+
+    const qualitySelect = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="quality"]');
+    qualitySelect?.addEventListener('change', () => {
+        setExportQualityValue(qualitySelect.value);
+        updateEstimate();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+
+    const speedSelect = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="speed"]');
+    speedSelect?.addEventListener('change', () => {
+        if (!speedSlider) return;
+        speedSlider.value = speedSelect.value;
+        speedSlider.dispatchEvent(new Event('change'));
+    });
+
+    const gridCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="grid"]');
+    gridCheck?.addEventListener('change', () => {
+        if (!exportGridEl) return;
+        exportGridEl.checked = !!gridCheck.checked;
+        exportGridEl.dispatchEvent(new Event('change'));
+    });
+
+    const bgCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="bg"]');
+    bgCheck?.addEventListener('change', () => {
+        if (!exportBgColorEl) return;
+        exportBgColorEl.checked = !!bgCheck.checked;
+        exportBgColorEl.dispatchEvent(new Event('change'));
+    });
+
+    const gifLoopCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="gif-loop"]');
+    gifLoopCheck?.addEventListener('change', () => {
+        const loopEl = document.getElementById('gifLoop');
+        if (!loopEl) return;
+        loopEl.checked = !!gifLoopCheck.checked;
+        loopEl.dispatchEvent(new Event('change'));
+        refreshExportPreviewNow();
+    });
+
+    const gifDitherCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="gif-dither"]');
+    gifDitherCheck?.addEventListener('change', () => {
+        const ditherEl = document.getElementById('gifDither');
+        if (!ditherEl) return;
+        ditherEl.checked = !!gifDitherCheck.checked;
+        ditherEl.dispatchEvent(new Event('change'));
+        refreshExportPreviewNow();
+    });
+
+    const jpgQualitySlider = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="jpg-quality"]');
+    jpgQualitySlider?.addEventListener('input', () => {
+        const qualitySlider = document.getElementById('jpegQuality');
+        if (!qualitySlider) return;
+        qualitySlider.value = jpgQualitySlider.value;
+        qualitySlider.dispatchEvent(new Event('input'));
+    });
 }
 
 function closeCollapsedExportConfirm(shouldContinue) {
@@ -5560,6 +6069,7 @@ function promptCollapsedExportConfirm(fmt) {
 
 function getUploadIncomingLabel(files) {
     const arr = Array.from(files || []).filter(Boolean);
+    if (!arr.length) return 'your STL file(s)';
     return arr.length > 1 ? `${arr.length} STL files` : `"${arr[0]?.name || 'STL file'}"`;
 }
 
@@ -5585,7 +6095,11 @@ function promptUploadChoice(files) {
 
     if (uploadChoiceTextEl) {
         const incomingLabel = getUploadIncomingLabel(files);
-        uploadChoiceTextEl.textContent = `Load ${incomingLabel}: add to existing plate, or create new plate and replace current model?`;
+        if (Array.from(files || []).length) {
+            uploadChoiceTextEl.textContent = `Load ${incomingLabel}: add to existing plate, or create new plate and replace current model.`;
+        } else {
+            uploadChoiceTextEl.textContent = `Upload ${incomingLabel}: add to existing plate, or create a new plate and replace current model. You can also import a package (.zip).`;
+        }
     }
     if (uploadChoiceDontShowEl) uploadChoiceDontShowEl.checked = false;
     uploadChoiceOverlayEl.hidden = false;
@@ -5629,7 +6143,8 @@ async function triggerExportWithAssist(fmt) {
         }
     }
 
-    document.getElementById(FORMAT_BTNS[format])?.click();
+    const effectiveFormat = exportFormatEl?.value || exportFormatCollapsedEl?.value || format;
+    document.getElementById(FORMAT_BTNS[effectiveFormat])?.click();
 }
 
 document.getElementById('btnExport')?.addEventListener('click', async () => {
@@ -5794,17 +6309,74 @@ function resetCardSlidersToMiddle(sliderIds) {
     });
 }
 
+const CARD_RESET_LIGHTING_SLIDERS = [
+    'textureTuneShadows',
+    'textureTuneLightSource',
+    'textureTuneLight',
+    'textureTuneLightHeight',
+    'textureTuneContrast',
+    'textureTuneHighlights',
+];
+
+const CARD_RESET_ANIMATION_SLIDERS = [
+    'tiltRangeSlider',
+    'wobbleSpinRangeSlider',
+];
+
+function sliderMatchesResetMidpoint(id) {
+    const input = document.getElementById(id);
+    if (!(input instanceof HTMLInputElement) || input.type !== 'range') return true;
+    return String(input.value) === String(midpointForRangeInput(input));
+}
+
+function setCardResetButtonState(button, isDirty) {
+    if (!button) return;
+    button.disabled = !isDirty;
+    button.classList.toggle('is-active', isDirty);
+    button.setAttribute('aria-disabled', isDirty ? 'false' : 'true');
+}
+
+function updateCardResetButtonStates() {
+    const modelDirty = !sliderMatchesResetMidpoint('opacitySlider')
+        || !sliderMatchesResetMidpoint('textureTuneRoughness');
+
+    const backgroundDirty = !sliderMatchesResetMidpoint('bgOpacitySlider');
+
+    const rulerToggle = document.getElementById('rulerToggle');
+    const normalizedPlateColor = String(buildPlateColor || '#c2a164').toLowerCase();
+    const buildPlateDirty = !!(rulerToggle && !rulerToggle.checked)
+        || !!(buildPlateToggleEl && !buildPlateToggleEl.checked)
+        || normalizedPlateColor !== '#c2a164'
+        || (parseInt(String(buildPlateShade), 10) || 0) !== 0
+        || (buildPlateFinish || 'satin') !== 'satin'
+        || (buildPlateShape || 'rectangle') !== 'rectangle';
+
+    const lightingDirty = CARD_RESET_LIGHTING_SLIDERS.some((id) => !sliderMatchesResetMidpoint(id));
+
+    const speedValue = parseInt(speedSlider?.value || String(SPEED_DEFAULT), 10);
+    const animationDirty = speedValue !== SPEED_DEFAULT
+        || CARD_RESET_ANIMATION_SLIDERS.some((id) => !sliderMatchesResetMidpoint(id));
+
+    setCardResetButtonState(btnResetModelCard, modelDirty);
+    setCardResetButtonState(btnResetBackgroundCard, backgroundDirty);
+    setCardResetButtonState(btnResetBuildPlateCard, buildPlateDirty);
+    setCardResetButtonState(btnResetLightingCard, lightingDirty);
+    setCardResetButtonState(btnResetAnimationCard, animationDirty);
+}
+
 btnResetModelCard?.addEventListener('click', () => {
     resetCardSlidersToMiddle([
         'opacitySlider',
         'textureTuneRoughness',
     ]);
+    updateCardResetButtonStates();
 });
 
 btnResetBackgroundCard?.addEventListener('click', () => {
     resetCardSlidersToMiddle([
         'bgOpacitySlider',
     ]);
+    updateCardResetButtonStates();
 });
 
 btnResetBuildPlateCard?.addEventListener('click', () => {
@@ -5820,20 +6392,16 @@ btnResetBuildPlateCard?.addEventListener('click', () => {
     buildPlateColor = '#c2a164';
     buildPlateShade = 0;
     buildPlateFinish = 'satin';
+    buildPlateShape = 'rectangle';
     updateBuildPlateMaterial();
     refreshExportPreviewNow();
     saveSettings();
+    updateCardResetButtonStates();
 });
 
 btnResetLightingCard?.addEventListener('click', () => {
-    resetCardSlidersToMiddle([
-        'textureTuneShadows',
-        'textureTuneLightSource',
-        'textureTuneLight',
-        'textureTuneLightHeight',
-        'textureTuneContrast',
-        'textureTuneHighlights',
-    ]);
+    resetCardSlidersToMiddle(CARD_RESET_LIGHTING_SLIDERS);
+    updateCardResetButtonStates();
 });
 
 btnResetAnimationCard?.addEventListener('click', () => {
@@ -5843,7 +6411,34 @@ btnResetAnimationCard?.addEventListener('click', () => {
         'tiltRangeSlider',
         'wobbleSpinRangeSlider',
     ]);
+    updateCardResetButtonStates();
 });
+
+[
+    'opacitySlider',
+    'textureTuneRoughness',
+    'bgOpacitySlider',
+    'buildPlateShadeSlider',
+    'textureTuneShadows',
+    'textureTuneLightSource',
+    'textureTuneLight',
+    'textureTuneLightHeight',
+    'textureTuneContrast',
+    'textureTuneHighlights',
+    'tiltRangeSlider',
+    'wobbleSpinRangeSlider',
+    'speedSlider',
+].forEach((id) => {
+    const input = document.getElementById(id);
+    input?.addEventListener('input', updateCardResetButtonStates);
+    input?.addEventListener('change', updateCardResetButtonStates);
+});
+
+document.getElementById('rulerToggle')?.addEventListener('change', updateCardResetButtonStates);
+buildPlateToggleEl?.addEventListener('change', updateCardResetButtonStates);
+buildPlateColorPickerEl?.addEventListener('input', updateCardResetButtonStates);
+
+requestAnimationFrame(updateCardResetButtonStates);
 
 document.querySelector('.orbit-hint-dismiss')?.addEventListener('click', () => {
     orbitHintBarEl?.classList.remove('visible');
@@ -6130,6 +6725,21 @@ document.getElementById('btnToggleAppSettings')?.addEventListener('click', () =>
     try { localStorage.setItem('rotater_appSettingsCollapsed', collapsed ? '1' : '0'); } catch (_) { }
 });
 
+document.getElementById('btnAppSettingsCanvas')?.addEventListener('click', () => {
+    const root = document.documentElement;
+    if (root.classList.contains('layout-mobile-accordion')) applyMobileAccordionState('theme');
+    else switchTab('theme');
+
+    if (root.classList.contains('sidebar-collapsed')) {
+        root.classList.remove('sidebar-collapsed');
+        try { localStorage.setItem('rotater_sidebarCollapsed', '0'); } catch (_) { }
+    }
+
+    applyAppSettingsDockState(false);
+    try { localStorage.setItem('rotater_appSettingsCollapsed', '0'); } catch (_) { }
+    document.getElementById('appSettingsDock')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
 document.getElementById('btnThemeToggleRail')?.addEventListener('click', () => {
     document.getElementById('btnThemeToggle')?.click();
 });
@@ -6220,6 +6830,8 @@ function applyFineTuningUIState(enabled) {
 const fineTuningCheckEl = document.getElementById('fineTuningCheck');
 if (fineTuningCheckEl) {
     applyFineTuningUIState(fineTuningCheckEl.checked);
+    updateTextureTuneUI();
+    syncAllRangeFillIndicators();
     fineTuningCheckEl.addEventListener('change', () => {
         applyFineTuningUIState(fineTuningCheckEl.checked);
 
@@ -6314,6 +6926,7 @@ exportCollapsedConfirmOverlayEl?.addEventListener('click', (e) => {
 
 btnUploadChoiceClose?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
 btnUploadChoiceCancel?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
+btnUploadChoiceImport?.addEventListener('click', () => closeUploadChoicePrompt('import'));
 btnUploadChoiceAdd?.addEventListener('click', () => {
     applyUploadChoicePreference('add');
     closeUploadChoicePrompt('add');
@@ -6372,7 +6985,7 @@ btnDownloadPackage?.addEventListener('click', async () => {
     let prev = '';
     try {
         prev = btnDownloadPackage.innerHTML;
-        btnDownloadPackage.textContent = 'Packaging...';
+        btnDownloadPackage.textContent = 'Preparing ZIP...';
         btnDownloadPackage.disabled = true;
         saveSettings();
         settingsToURL();
@@ -6416,8 +7029,8 @@ btnDownloadPackage?.addEventListener('click', async () => {
         }
 
         const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
-        download(zipBlob, `${base}_rotater-package.zip`, 'application/zip');
-        btnDownloadPackage.textContent = 'Downloaded';
+        download(zipBlob, `${base}_rotater-project.zip`, 'application/zip');
+        btnDownloadPackage.textContent = 'ZIP downloaded';
         setTimeout(() => { btnDownloadPackage.innerHTML = prev; }, 1600);
     } catch (err) {
         console.error(err);
@@ -6541,9 +7154,11 @@ document.addEventListener('keyup', e => {
 });
 
 window.addEventListener('blur', () => {
-    if (!_shiftPanActive) return;
-    _shiftPanActive = false;
-    setShiftPanInteraction(false);
+    if (_shiftPanActive) {
+        _shiftPanActive = false;
+        setShiftPanInteraction(false);
+    }
+    endRightPanVerticalLock();
 });
 
 document.addEventListener('keydown', e => {
@@ -6554,6 +7169,10 @@ document.addEventListener('keydown', e => {
 });
 
 canvas?.addEventListener('pointerdown', (e) => {
+    if (e.button === 2) {
+        beginRightPanVerticalLock();
+        return;
+    }
     if (e.button !== 0) return;
     if (e.shiftKey) {
         _shiftPanActive = true;
@@ -6565,6 +7184,18 @@ canvas?.addEventListener('pointerdown', (e) => {
         setShiftPanInteraction(false);
     }
 }, true);
+
+window.addEventListener('pointerup', (e) => {
+    if (e.button === 2) endRightPanVerticalLock();
+}, true);
+
+window.addEventListener('pointercancel', () => {
+    endRightPanVerticalLock();
+}, true);
+
+canvas?.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+});
 
 const exportPreviewCanvas = document.getElementById('exportPreview');
 const exportPreviewWrap = exportPreviewCanvas?.closest('.export-preview-wrap');
@@ -7677,6 +8308,12 @@ if (buildPlateToggleEl) {
     });
 }
 
+if (buildPlateColorCustomBtnEl && buildPlateColorPickerEl) {
+    buildPlateColorCustomBtnEl.addEventListener('click', () => {
+        openAnchoredColorPicker(buildPlateColorPickerEl, buildPlateColorCustomBtnEl);
+    });
+}
+
 if (buildPlateColorPickerEl) {
     buildPlateColorPickerEl.addEventListener('input', () => {
         buildPlateColor = buildPlateColorPickerEl.value;
@@ -7703,6 +8340,20 @@ if (buildPlateFinishWrapEl) {
         if (finish !== 'matte' && finish !== 'satin' && finish !== 'gloss') return;
         buildPlateFinish = finish;
         updateBuildPlateMaterial();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
+
+if (buildPlateShapeWrapEl) {
+    buildPlateShapeWrapEl.addEventListener('click', (ev) => {
+        const btn = ev.target?.closest?.('[data-plate-shape]');
+        if (!btn) return;
+        const shape = btn.getAttribute('data-plate-shape');
+        if (shape !== 'rectangle' && shape !== 'rounded' && shape !== 'circle') return;
+        buildPlateShape = shape;
+        updateBuildPlateMaterial();
+        updateShadowCatcherPlacement();
         refreshExportPreviewNow();
         saveSettings();
     });

@@ -15,6 +15,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Model footprint floor guides** — ruler grid now includes thin footprint lines derived from the loaded model bounds, aligned to the active ruler unit system (`mm` metric spacing or `in` imperial spacing)
+- **Build plate shape control** — Build Plate card now supports `Rectangle`, `Rounded`, and `Circle` footprint modes with live geometry switching
+- **Card-level Add Model action** — Model card now includes a dedicated `Add Model` button for appending STL parts
+
+### Changed
+- **Upload STL modal timing** — Upload STL buttons now open the Add/Replace decision modal before opening the file picker when a model is already loaded
+- **Package action placement** — `Download Project ZIP` now lives in the Export panel, and package import is available directly from the Upload STL choice flow
+- **Model manager semantics** — per-part 3-dot menus removed `Add STL`; single-model sessions now hide the part dropdown and show an exposed 3-dot actions menu
+- **Collapsed Export review UX** — collapsed-review confirmation now uses actionable switches/dropdowns that update the live Export settings immediately
+- **Card reset affordance state** — Model, Background, Build Plate, Lighting, and Animation reset buttons are disabled until the corresponding card has changes to reset
+- **Chevron orientation consistency** — file chip, part selectors, export panel, and app settings chevrons now follow a single convention: right = collapsed, down = expanded
+- **Roadmap cleanup** — removed the obsolete background texture slider roadmap item
+- **Build plate color picker parity** — Build Plate now exposes a custom color swatch button that opens the native picker with the same anchored behavior used by Custom color swatches
+
+### Fixed
+- **Single-model actions menu alignment** — exposed 3-dot menu is now anchored and centered correctly on the single-model selector card
+- **Finish slider fill desync on hard refresh** — finish-strength slider track fill now re-syncs with the knob position on startup/restore (no user interaction required)
+- **Mobile App Settings quick action** — top-right App Settings icon now opens the settings dock reliably in mobile/tablet layouts
+- **Right-drag pan drift** — right-button drag is now constrained to vertical movement so framing stays horizontally centered
+
+### Security
+- **ZIP import hardening** — package import now validates entry paths (blocks traversal), enforces file-type allowlists (`.stl` + `package.json`), and applies archive/extract size and entry-count guards before loading STL buffers
 
 ## [2.1.2] - 2026-05-08
 

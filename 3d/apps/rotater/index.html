@@ -83,6 +83,8 @@
     <!-- Keep bg hidden since Custom opens it directly -->
     <input type="color" id="bgPicker" value="#dbd7ff"
         style="position:absolute; width:0; height:0; padding:0; margin:0; border:none; overflow:hidden; clip:rect(0,0,0,0); pointer-events:none;">
+    <input type="file" id="fileInput" accept=".stl,.zip" multiple
+        style="position:absolute; width:0; height:0; padding:0; margin:0; border:none; overflow:hidden; clip:rect(0,0,0,0); pointer-events:none;">
 
     <div class="container">
         <header>
@@ -93,15 +95,14 @@
         <div class="app-body">
             <main id="dropZone">
                 <div class="upload-section" id="emptyState">
-                    <label for="fileInput" class="file-label">
+                    <button type="button" id="btnUploadStlPrimary" class="file-label">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
                             style="display:inline;margin-right:8px;vertical-align:middle">
                             <path
                                 d="M12.0002 21.8C11.6335 21.8 11.321 21.6708 11.0627 21.4125C10.8044 21.1542 10.6752 20.8417 10.6752 20.475V13.35H3.5252C3.15853 13.35 2.84603 13.2208 2.5877 12.9625C2.32936 12.7042 2.2002 12.3917 2.2002 12.025C2.2002 11.6583 2.32936 11.3458 2.5877 11.0875C2.84603 10.8292 3.15853 10.7 3.5252 10.7H10.6502V3.52501C10.6502 3.15835 10.7794 2.84585 11.0377 2.58751C11.296 2.32918 11.6085 2.20001 11.9752 2.20001C12.3419 2.20001 12.6544 2.32918 12.9127 2.58751C13.171 2.84585 13.3002 3.15835 13.3002 3.52501V10.675H20.4752C20.8419 10.675 21.1544 10.8042 21.4127 11.0625C21.671 11.3208 21.8002 11.6333 21.8002 12C21.8002 12.3667 21.671 12.6792 21.4127 12.9375C21.1544 13.1958 20.8419 13.325 20.4752 13.325H13.3252V20.475C13.3252 20.8417 13.196 21.1542 12.9377 21.4125C12.6794 21.6708 12.3669 21.8 12.0002 21.8Z" />
                         </svg>
                         Upload STL
-                        <input type="file" id="fileInput" accept=".stl" multiple>
-                    </label>
+                    </button>
                     <p class="drop-hint">or drop one or more STL files here</p>
                 </div>
                 <div id="viewerSection" class="viewer-section hidden">
@@ -203,13 +204,13 @@
                                 </button>
                                 <div id="fileChipPartsMenu" class="file-chip-parts-menu" hidden></div>
                             </div>
-                            <label for="fileInput" class="file-label compact-btn canvas-replace-btn">
+                            <button type="button" id="btnUploadStlCanvas" class="file-label compact-btn canvas-replace-btn">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                     <path
                                         d="M4.5252 20.175H19.5002C19.8669 20.175 20.1752 20.3 20.4252 20.55C20.6752 20.8 20.8002 21.1083 20.8002 21.475C20.8002 21.8417 20.671 22.1542 20.4127 22.4125C20.1544 22.6708 19.8419 22.8 19.4752 22.8H4.5002C4.13353 22.8 3.8252 22.6708 3.5752 22.4125C3.3252 22.1542 3.2002 21.8417 3.2002 21.475C3.2002 21.1083 3.32936 20.8 3.5877 20.55C3.84603 20.3 4.15853 20.175 4.5252 20.175ZM9.6752 18.175C9.30853 18.175 8.99603 18.0458 8.7377 17.7875C8.47936 17.5292 8.3502 17.2167 8.3502 16.85V11.55H6.5252C5.9752 11.55 5.5752 11.3 5.3252 10.8C5.0752 10.3 5.1252 9.83333 5.4752 9.4L10.9752 2.5C11.1085 2.33333 11.2669 2.20833 11.4502 2.125C11.6335 2.04167 11.8169 2 12.0002 2C12.1835 2 12.3669 2.04167 12.5502 2.125C12.7335 2.20833 12.8919 2.33333 13.0252 2.5L18.5252 9.4C18.8752 9.83333 18.9252 10.3 18.6752 10.8C18.4252 11.3 18.0252 11.55 17.4752 11.55H15.6502V16.85C15.6502 17.2167 15.521 17.5292 15.2627 17.7875C15.0044 18.0458 14.6919 18.175 14.3252 18.175H9.6752Z" />
                                 </svg>
                                 <span id="compactBtnLabel">Upload STL</span>
-                            </label>
+                            </button>
                             <div class="canvas-utility-icons" aria-label="Quick actions">
                                 <button id="btnAppSettingsCanvas" class="info-icon-btn canvas-utility-btn" aria-label="App settings" title="App settings">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -230,7 +231,7 @@
                             style="position:absolute; width:0; height:0; padding:0; margin:0; border:none; overflow:hidden; clip:rect(0,0,0,0); pointer-events:none;">
                         <div class="canvas-bottom-center">
                             <div class="orbit-hint-bar">
-                                <span class="orbit-hint">Drag to orbit · Scroll to zoom · Right-drag to pan</span>
+                                <span class="orbit-hint">Drag to orbit · Scroll to zoom · Right-drag up/down</span>
                                 <button class="orbit-hint-dismiss" aria-label="Dismiss hint" title="Dismiss">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"
                                         aria-hidden="true">
@@ -330,13 +331,13 @@
             <div class="sidebar">
                 <div class="sidebar-brand-row">
                     <img src="rotater.svg" alt="ROTATER" class="logo sidebar-logo">
-                    <label for="fileInput" class="file-label compact-btn sidebar-upload-btn">
+                    <button type="button" id="btnUploadStlSidebar" class="file-label compact-btn sidebar-upload-btn">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
                                 d="M4.5252 20.175H19.5002C19.8669 20.175 20.1752 20.3 20.4252 20.55C20.6752 20.8 20.8002 21.1083 20.8002 21.475C20.8002 21.8417 20.671 22.1542 20.4127 22.4125C20.1544 22.6708 19.8419 22.8 19.4752 22.8H4.5002C4.13353 22.8 3.8252 22.6708 3.5752 22.4125C3.3252 22.1542 3.2002 21.8417 3.2002 21.475C3.2002 21.1083 3.32936 20.8 3.5877 20.55C3.84603 20.3 4.15853 20.175 4.5252 20.175ZM9.6752 18.175C9.30853 18.175 8.99603 18.0458 8.7377 17.7875C8.47936 17.5292 8.3502 17.2167 8.3502 16.85V11.55H6.5252C5.9752 11.55 5.5752 11.3 5.3252 10.8C5.0752 10.3 5.1252 9.83333 5.4752 9.4L10.9752 2.5C11.1085 2.33333 11.2669 2.20833 11.4502 2.125C11.6335 2.04167 11.8169 2 12.0002 2C12.1835 2 12.3669 2.04167 12.5502 2.125C12.7335 2.20833 12.8919 2.33333 13.0252 2.5L18.5252 9.4C18.8752 9.83333 18.9252 10.3 18.6752 10.8C18.4252 11.3 18.0252 11.55 17.4752 11.55H15.6502V16.85C15.6502 17.2167 15.521 17.5292 15.2627 17.7875C15.0044 18.0458 14.6919 18.175 14.3252 18.175H9.6752Z" />
                         </svg>
                         <span>Upload STL</span>
-                    </label>
+                    </button>
                 </div>
                 <div class="sidebar-header">
                     <button id="btnOpenExportModal" class="copy-link-btn copy-link-btn--export" title="Open export options"
@@ -378,13 +379,18 @@
                                 <div id="modelPartSelector" class="thumb-select" aria-haspopup="listbox">
                                     <button type="button" id="modelPartSelectorBtn" class="thumb-select-btn"
                                         aria-expanded="false" aria-controls="modelPartSelectorMenu">
-                                        <canvas id="modelPartSelectorThumb" class="thumb-select-canvas" width="96"
-                                            height="96" aria-hidden="true"></canvas>
+                                        <canvas id="modelPartSelectorThumb" class="thumb-select-canvas" width="224"
+                                            height="224" aria-hidden="true"></canvas>
                                         <span id="modelPartSelectorText" class="thumb-select-text"></span>
                                         <span class="thumb-select-chevron" aria-hidden="true">▾</span>
                                     </button>
                                     <div id="modelPartSelectorMenu" class="thumb-select-menu" hidden role="listbox"></div>
                                 </div>
+                                <div id="modelPartSingleMenuRow" class="model-single-menu-row" hidden aria-hidden="true">
+                                    <button type="button" id="modelPartSingleMenuBtn" class="part-option-more model-single-menu-btn" aria-label="Model actions" title="Model actions">⋮</button>
+                                    <div id="modelPartSingleActions" class="part-option-actions" hidden></div>
+                                </div>
+                                <button type="button" id="modelPartAddNextBtn" class="thumb-select-add-slot" hidden>Add Model</button>
                             </div>
                             <div class="preset-group" id="quickPresetsBar"></div>
 
@@ -486,8 +492,13 @@
 
                             <div id="buildPlateControls" class="build-plate-controls" style="margin-top:10px;">
                                 <label class="control-label range-label" style="margin-top:0;">
-                                    <span>Plate Color</span>
-                                    <input type="color" id="buildPlateColorPicker" value="#c2a164" data-group="scene" style="width:48px;height:32px;border:none;background:transparent;cursor:pointer;">
+                                    <span>
+                                        <span>Plate Color</span>
+                                        <button type="button" id="buildPlateColorCustomBtn" class="build-plate-color-custom" title="Custom plate color" aria-label="Custom plate color">
+                                            <span id="buildPlateColorCustomCore" class="build-plate-color-custom-core" aria-hidden="true"></span>
+                                        </button>
+                                    </span>
+                                    <input type="color" id="buildPlateColorPicker" class="build-plate-color-input-hidden" value="#c2a164" data-group="scene">
                                 </label>
                                 <label class="control-label range-label" style="margin-top:10px;">
                                     <span>Plate Shade<span class="slider-tooltip" id="buildPlateShadeVal">0</span></span>
@@ -500,6 +511,20 @@
                                     <button type="button" class="finish-mode-btn" id="buildPlateFinishMatte" data-plate-finish="matte" aria-pressed="false">Matte</button>
                                     <button type="button" class="finish-mode-btn" id="buildPlateFinishSatin" data-plate-finish="satin" aria-pressed="true">Satin</button>
                                     <button type="button" class="finish-mode-btn" id="buildPlateFinishGloss" data-plate-finish="gloss" aria-pressed="false">Gloss</button>
+                                </div>
+                                <div class="build-plate-shape-group" id="buildPlateShapeWrap" role="group" aria-label="Build plate shape" style="margin-top:10px;">
+                                    <button type="button" class="build-plate-shape-btn" id="buildPlateShapeRectangle" data-plate-shape="rectangle" aria-pressed="true">
+                                        <span class="build-plate-shape-icon build-plate-shape-icon--rectangle" aria-hidden="true"></span>
+                                        <span class="build-plate-shape-label">Rectangle</span>
+                                    </button>
+                                    <button type="button" class="build-plate-shape-btn" id="buildPlateShapeRounded" data-plate-shape="rounded" aria-pressed="false">
+                                        <span class="build-plate-shape-icon build-plate-shape-icon--rounded" aria-hidden="true"></span>
+                                        <span class="build-plate-shape-label">Rounded</span>
+                                    </button>
+                                    <button type="button" class="build-plate-shape-btn" id="buildPlateShapeCircle" data-plate-shape="circle" aria-pressed="false">
+                                        <span class="build-plate-shape-icon build-plate-shape-icon--circle" aria-hidden="true"></span>
+                                        <span class="build-plate-shape-label">Circle</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -713,26 +738,6 @@
                                     Load 3D Benchy
                                 </button>
                             </div>
-                            <div class="sidebar-footer-actions">
-                                <button id="btnImportPackage" class="copy-link-btn copy-link-btn--secondary"
-                                    title="Import STL or Rotater package" aria-label="Import package">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                        <path d="M12.0252 20.8C11.6585 20.8 11.346 20.6708 11.0877 20.4125C10.8294 20.1542 10.7002 19.8417 10.7002 19.475V12.9L8.8252 14.775C8.55853 15.0417 8.24603 15.1708 7.8877 15.1625C7.52936 15.1542 7.21686 15.0167 6.9502 14.75C6.68353 14.4833 6.5502 14.1708 6.5502 13.8125C6.5502 13.4542 6.68353 13.1417 6.9502 12.875L11.1002 8.75001C11.2324 8.61368 11.3755 8.51718 11.5297 8.46035C11.6839 8.40351 11.849 8.37501 12.0252 8.37501C12.2014 8.37501 12.3665 8.40351 12.5207 8.46035C12.6749 8.51718 12.818 8.61368 12.9502 8.75001L17.1002 12.875C17.3669 13.1432 17.496 13.4562 17.4877 13.8138C17.4794 14.1713 17.3419 14.4833 17.0752 14.75C16.8085 15.0167 16.496 15.15 16.1377 15.15C15.7794 15.15 15.4669 15.0167 15.2002 14.75L13.3502 12.875V19.475C13.3502 19.8417 13.221 20.1542 12.9627 20.4125C12.7044 20.6708 12.3919 20.8 12.0252 20.8ZM5.8502 6.85001V8.52501C5.8502 8.89168 5.72103 9.20418 5.4627 9.46251C5.20436 9.72084 4.89186 9.85001 4.5252 9.85001C4.15853 9.85001 3.84603 9.72084 3.5877 9.46251C3.32936 9.20418 3.2002 8.89168 3.2002 8.52501V6.85001C3.2002 6.12118 3.4597 5.49735 3.9787 4.97851C4.49753 4.45951 5.12136 4.20001 5.8502 4.20001H18.1502C18.8789 4.20001 19.5027 4.45951 20.0217 4.97851C20.5407 5.49735 20.8002 6.12118 20.8002 6.85001V8.52501C20.8002 8.89168 20.671 9.20418 20.4127 9.46251C20.1544 9.72084 19.8419 9.85001 19.4752 9.85001C19.1085 9.85001 18.796 9.72084 18.5377 9.46251C18.2794 9.20418 18.1502 8.89168 18.1502 8.52501V6.85001H5.8502Z"/>
-                                    </svg>
-                                    Import Package
-                                </button>
-                                <input type="file" id="importPackageInput" accept=".zip,.stl" multiple hidden>
-                            </div>
-                            <div class="sidebar-footer-actions">
-                                <button id="btnDownloadPackage" class="copy-link-btn copy-link-btn--secondary"
-                                    title="Download settings and STL files" aria-label="Download package">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                        <path
-                                            d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
-                                    </svg>
-                                    Download Package
-                                </button>
-                            </div>
                             <div class="app-settings-actions-row">
                                 <button id="btnThemeToggleRail" class="copy-link-btn copy-link-btn--secondary"
                                     type="button" aria-label="Toggle dark mode">
@@ -913,6 +918,17 @@
                     </div>
                     <span id="exportStatus" class="export-status"></span>
 
+                    <div class="sidebar-footer-actions export-panel-package-row">
+                        <button id="btnDownloadPackage" class="copy-link-btn copy-link-btn--secondary"
+                            title="Download settings and STL files as a ZIP" aria-label="Download project ZIP">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path
+                                    d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
+                            </svg>
+                            Download Project ZIP
+                        </button>
+                    </div>
+
                     <div class="settings-divider"></div>
                 </div>
             </div>
@@ -959,6 +975,7 @@
                     </label>
                     <div class="upload-choice-actions">
                         <button id="btnUploadChoiceCancel" class="copy-link-btn copy-link-btn--secondary" type="button">Cancel</button>
+                        <button id="btnUploadChoiceImport" class="copy-link-btn copy-link-btn--secondary" type="button">Import package (.zip)</button>
                         <button id="btnUploadChoiceAdd" class="copy-link-btn copy-link-btn--secondary" type="button">Add to existing plate</button>
                         <button id="btnUploadChoiceReplace" class="export-btn export-btn--main" type="button">Create new plate / replace</button>
                     </div>
