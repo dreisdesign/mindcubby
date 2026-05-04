@@ -375,6 +375,8 @@ let rulerLinesVisible = true;
 let rulerOverlayEl = null;
 let rulerGridHelper = null;
 let rulerGridSize = 0;
+let rulerFootprintHelper = null;
+let rulerFootprintSignature = '';
 const RULER_DYNAMIC_LINES_ENABLED = false;
 const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
 let modelPartNames = [];
@@ -1654,6 +1656,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     const savedShadowCatcherVisible = shadowCatcher?.visible;
     const savedBuildPlateVisible = buildPlateMesh?.visible;
     const savedRulerGridVisible = rulerGridHelper?.visible;
+    const savedRulerFootprintVisible = rulerFootprintHelper?.visible;
     const saved = mats.map((m) => ({
         mat: m,
         transparent: m?.transparent,
@@ -1709,6 +1712,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (shadowCatcher) shadowCatcher.visible = false;
     if (buildPlateMesh) buildPlateMesh.visible = false;
     if (rulerGridHelper) rulerGridHelper.visible = false;
+    if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
 
     scene.background = null;
     renderer.setClearColor(0x000000, 0);
@@ -1777,6 +1781,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (shadowCatcher && typeof savedShadowCatcherVisible === 'boolean') shadowCatcher.visible = savedShadowCatcherVisible;
     if (buildPlateMesh && typeof savedBuildPlateVisible === 'boolean') buildPlateMesh.visible = savedBuildPlateVisible;
     if (rulerGridHelper && typeof savedRulerGridVisible === 'boolean') rulerGridHelper.visible = savedRulerGridVisible;
+    if (rulerFootprintHelper && typeof savedRulerFootprintVisible === 'boolean') rulerFootprintHelper.visible = savedRulerFootprintVisible;
     // Live-view repaint is deferred to renderModelPartThumbnails() to avoid
     // one full-scene render per part (22 renders for 22 parts).
 }
@@ -3496,17 +3501,135 @@ function updateLiveRulerOverlay() {
     drawRulerOverlay(ctx, cssW, cssH, camera, { layout });
 }
 
+function disposeRulerFootprintHelper() {
+    if (!rulerFootprintHelper) return;
+    if (scene) scene.remove(rulerFootprintHelper);
+    rulerFootprintHelper.traverse((obj) => {
+        if (obj.geometry?.dispose) {
+            try { obj.geometry.dispose(); } catch (e) { }
+        }
+        if (obj.material) disposeMaterials(obj.material);
+    });
+    rulerFootprintHelper = null;
+    rulerFootprintSignature = '';
+}
+
+function getRulerFootprintStepMm(spanMm) {
+    const base = (rulerUnit === 'imperial') ? 25.4 : 10;
+    const maxGuides = 120;
+    let step = base;
+    while (spanMm / step > maxGuides) step *= 2;
+    return step;
+}
+
+function buildRulerFootprintHelper(minX, maxX, minZ, maxZ, stepMm) {
+    const group = new THREE.Group();
+    group.name = 'rulerFootprintHelper';
+
+    const edgePositions = [];
+    const guidePositions = [];
+    const addSegment = (arr, x1, z1, x2, z2) => {
+        arr.push(x1, 0, z1, x2, 0, z2);
+    };
+
+    addSegment(edgePositions, minX, minZ, maxX, minZ);
+    addSegment(edgePositions, maxX, minZ, maxX, maxZ);
+    addSegment(edgePositions, maxX, maxZ, minX, maxZ);
+    addSegment(edgePositions, minX, maxZ, minX, minZ);
+
+    const eps = 1e-3;
+    const edgeThreshold = Math.max(0.4, stepMm * 0.08);
+
+    const startX = Math.ceil((minX - eps) / stepMm) * stepMm;
+    for (let x = startX; x <= maxX + eps; x += stepMm) {
+        if (Math.abs(x - minX) <= edgeThreshold || Math.abs(x - maxX) <= edgeThreshold) continue;
+        addSegment(guidePositions, x, minZ, x, maxZ);
+    }
+
+    const startZ = Math.ceil((minZ - eps) / stepMm) * stepMm;
+    for (let z = startZ; z <= maxZ + eps; z += stepMm) {
+        if (Math.abs(z - minZ) <= edgeThreshold || Math.abs(z - maxZ) <= edgeThreshold) continue;
+        addSegment(guidePositions, minX, z, maxX, z);
+    }
+
+    const createLineSet = (positions, color, opacity, renderOrder) => {
+        if (!positions.length) return;
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        const mat = new THREE.LineBasicMaterial({
+            color,
+            transparent: true,
+            opacity,
+            depthWrite: false,
+            depthTest: true,
+            toneMapped: false,
+        });
+        const lines = new THREE.LineSegments(geo, mat);
+        lines.renderOrder = renderOrder;
+        group.add(lines);
+    };
+
+    createLineSet(guidePositions, 0x7e7a99, 0.26, -0.8);
+    createLineSet(edgePositions, 0xa9a4cb, 0.62, -0.75);
+    return group;
+}
+
+function updateRulerFootprintHelper(worldBox, gridY) {
+    if (!scene || !worldBox || worldBox.isEmpty()) {
+        if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
+        return;
+    }
+
+    const minX = worldBox.min.x;
+    const maxX = worldBox.max.x;
+    const minZ = worldBox.min.z;
+    const maxZ = worldBox.max.z;
+    const spanX = Math.max(0, maxX - minX);
+    const spanZ = Math.max(0, maxZ - minZ);
+    if (spanX < 0.2 || spanZ < 0.2) {
+        if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
+        return;
+    }
+
+    const span = Math.max(spanX, spanZ);
+    const stepMm = getRulerFootprintStepMm(span);
+    const quant = Math.max(0.5, stepMm * 0.25);
+    const q = (value) => Math.round(value / quant) * quant;
+    const signature = [
+        q(minX).toFixed(2),
+        q(maxX).toFixed(2),
+        q(minZ).toFixed(2),
+        q(maxZ).toFixed(2),
+        q(gridY).toFixed(2),
+        stepMm.toFixed(3),
+        rulerUnit,
+    ].join('|');
+
+    if (!rulerFootprintHelper || rulerFootprintSignature !== signature) {
+        disposeRulerFootprintHelper();
+        rulerFootprintHelper = buildRulerFootprintHelper(minX, maxX, minZ, maxZ, stepMm);
+        scene.add(rulerFootprintHelper);
+        rulerFootprintSignature = signature;
+    }
+
+    if (!rulerFootprintHelper) return;
+    rulerFootprintHelper.visible = true;
+    rulerFootprintHelper.position.set(0, gridY + 0.03, 0);
+}
+
 function updateRulerGrid() {
     if (!scene) return;
     const shouldShow = !!(rulerEnabled && rulerLinesVisible && mesh && modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
     if (!shouldShow) {
         if (rulerGridHelper) rulerGridHelper.visible = false;
+        if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
         return;
     }
 
     const worldBox = new THREE.Box3().setFromObject(mesh);
     if (!worldBox || worldBox.isEmpty()) {
         if (rulerGridHelper) rulerGridHelper.visible = false;
+        if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
         return;
     }
 
@@ -3536,6 +3659,7 @@ function updateRulerGrid() {
         gridY = Math.min(gridY, buildPlateMesh.position.y - plateGap);
     }
     rulerGridHelper.position.set(0, gridY, 0);
+    updateRulerFootprintHelper(worldBox, gridY);
 }
 
 // ── Persistence (IndexedDB for binary, localStorage for settings) ───────────

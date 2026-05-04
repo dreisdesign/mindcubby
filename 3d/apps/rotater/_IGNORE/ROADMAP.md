@@ -6,9 +6,6 @@ Completed work is tracked in CHANGELOG.md. This roadmap should only list undone 
 
 ## Phase 1 — Build Now
 
-### Grid / Ruler
-- Bounding box model floor lines: draw thin model-footprint lines aligned to the grid floor plane and current ruler unit system.
-
 ### Background Card
 - Background Texture slider: one intensity control for subtle surface pattern overlays (checker/grain) on the background color.
 
