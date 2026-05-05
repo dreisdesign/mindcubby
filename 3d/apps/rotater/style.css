@@ -1029,8 +1029,32 @@ html.loaded .controls-bar.hidden {
 
 .model-bulk-bar-actions {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: auto repeat(3, minmax(0, 1fr));
     gap: 6px;
+}
+
+.model-bulk-icon-btn {
+    width: 34px;
+    min-width: 34px;
+    min-height: 30px;
+    border: 1px solid color-mix(in srgb, var(--palette-blueberry-400) 68%, white 32%);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--color-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.model-bulk-icon-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.model-bulk-icon-btn:hover {
+    border-color: var(--palette-blueberry-500);
+    background: color-mix(in srgb, #fff 70%, var(--palette-blueberry-100) 30%);
 }
 
 .model-bulk-btn {
@@ -1108,6 +1132,15 @@ html.loaded .controls-bar.hidden {
 .thumb-select-option:hover {
     border-color: color-mix(in srgb, var(--palette-blueberry-300) 85%, white 15%);
     background: color-mix(in srgb, white 30%, var(--palette-blueberry-100) 70%);
+}
+
+.thumb-select-option.is-dragging {
+    opacity: 0.55;
+}
+
+.thumb-select-option.is-drop-target {
+    border-color: var(--palette-blueberry-500);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-300) 55%, transparent 45%);
 }
 
 .thumb-select-option.is-selected {
@@ -1208,6 +1241,16 @@ html.loaded .controls-bar.hidden {
 .thumb-select-add-slot:disabled {
     cursor: not-allowed;
     opacity: 0.48;
+}
+
+.thumb-select-menu-add-row {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 75%, white 25%);
+}
+
+.thumb-select-add-slot--menu {
+    min-height: 34px;
 }
 
 .build-plate-shape-group {
@@ -5182,6 +5225,7 @@ html.loaded.layout-mobile-accordion .tab-panel {
 
     html.loaded.layout-v2-desktop .tab-panel--theme {
         display: flex !important;
+        padding: 4px 8px 10px 8px;
     }
 
     html.loaded.layout-v2-desktop .tab-panel--effects {
@@ -5193,7 +5237,7 @@ html.loaded.layout-mobile-accordion .tab-panel {
         max-height: var(--desktop-v2-effects-max-height, calc(100vh - 220px));
         overflow-y: auto;
         z-index: 40;
-        padding: 4px 8px 40px 8px;
+        padding: 4px 10px 40px 10px;
     }
 
     html.loaded.layout-v2-desktop .tab-panel--effects[hidden] {

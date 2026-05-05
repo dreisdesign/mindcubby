@@ -349,6 +349,16 @@ const btnResetBackgroundCard = document.getElementById('btnResetBackgroundCard')
 const btnResetBuildPlateCard = document.getElementById('btnResetBuildPlateCard');
 const btnResetLightingCard = document.getElementById('btnResetLightingCard');
 const btnResetAnimationCard = document.getElementById('btnResetAnimationCard');
+const modelBoxEl = document.getElementById('modelBox');
+const environmentBoxEl = document.getElementById('environmentBox');
+
+// Keep Background first in the right panel flow.
+{
+    const themePanel = document.querySelector('.tab-panel--theme');
+    if (themePanel && modelBoxEl && environmentBoxEl && environmentBoxEl.parentElement === themePanel) {
+        themePanel.insertBefore(environmentBoxEl, modelBoxEl);
+    }
+}
 // Dev logging and a flag used to suppress saveSettings() while programmatically
 // applying restored settings so we don't overwrite localStorage/URL mid-restore.
 // Capture passthrough URL params (e.g. debug=1) once at startup so they survive
@@ -393,6 +403,8 @@ let modelPartNames = [];
 let modelPartBaseColors = [];
 let modelPartSettings = [];
 let modelPartFiles = null;
+let modelPartDisplayOrder = [];
+let pendingModelPartDisplayOrder = null;
 let modelPartSelected = 0;
 let pendingModelPartSelected = 0;
 let bgSyncPartIndex = 0;
@@ -407,6 +419,12 @@ let multipartPartBounds = null;
 let pendingReplacePartIndex = -1;
 let currentModelBuffer = null;
 let bulkSelectedPartIndices = new Set();
+
+const BULK_SELECT_ICON_PATHS = {
+    none: 'M5.00001 21.65C4.27117 21.65 3.64734 21.3905 3.12851 20.8715C2.60951 20.3526 2.35001 19.7288 2.35001 19V4.99998C2.35001 4.27131 2.60951 3.64748 3.12851 3.12848C3.64734 2.60948 4.27117 2.34998 5.00001 2.34998H19C19.7287 2.34998 20.3525 2.60948 20.8715 3.12848C21.3905 3.64748 21.65 4.27131 21.65 4.99998V19C21.65 19.7288 21.3905 20.3526 20.8715 20.8715C20.3525 21.3905 19.7287 21.65 19 21.65H5.00001ZM5.00001 19H19V4.99998H5.00001V19Z',
+    some: 'M8.82501 13.3H15.175C15.5417 13.3 15.8542 13.1708 16.1125 12.9125C16.3708 12.6541 16.5 12.3416 16.5 11.975C16.5 11.6083 16.3708 11.2958 16.1125 11.0375C15.8542 10.7791 15.5417 10.65 15.175 10.65H8.82501C8.45834 10.65 8.14584 10.7791 7.88751 11.0375C7.62917 11.2958 7.50001 11.6083 7.50001 11.975C7.50001 12.3416 7.62917 12.6541 7.88751 12.9125C8.14584 13.1708 8.45834 13.3 8.82501 13.3ZM5.00001 21.65C4.26667 21.65 3.64167 21.3916 3.12501 20.875C2.60834 20.3583 2.35001 19.7333 2.35001 19V4.99998C2.35001 4.26664 2.60834 3.64164 3.12501 3.12498C3.64167 2.60831 4.26667 2.34998 5.00001 2.34998H19C19.7333 2.34998 20.3583 2.60831 20.875 3.12498C21.3917 3.64164 21.65 4.26664 21.65 4.99998V19C21.65 19.7333 21.3917 20.3583 20.875 20.875C20.3583 21.3916 19.7333 21.65 19 21.65H5.00001ZM5.00001 19H19V4.99998H5.00001V19Z',
+    all: 'M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2Zm-9 14-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9Z',
+};
 
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
@@ -1463,7 +1481,79 @@ function setBulkPartSelected(index, selected) {
     else bulkSelectedPartIndices.delete(idx);
 }
 
-function applyBulkEditToSelectedParts(kind) {
+function ensureModelPartDisplayOrder() {
+    if (!Array.isArray(modelPartNames) || !modelPartNames.length) {
+        modelPartDisplayOrder = [];
+        return;
+    }
+    const count = modelPartNames.length;
+    const source = Array.isArray(pendingModelPartDisplayOrder) && pendingModelPartDisplayOrder.length === count
+        ? pendingModelPartDisplayOrder
+        : (Array.isArray(modelPartDisplayOrder) ? modelPartDisplayOrder : []);
+    const seen = new Set();
+    const next = [];
+    source.forEach((idx) => {
+        const n = parseInt(idx, 10);
+        if (!Number.isInteger(n) || n < 0 || n >= count || seen.has(n)) return;
+        seen.add(n);
+        next.push(n);
+    });
+    for (let i = 0; i < count; i += 1) {
+        if (seen.has(i)) continue;
+        seen.add(i);
+        next.push(i);
+    }
+    modelPartDisplayOrder = next;
+    pendingModelPartDisplayOrder = null;
+}
+
+function getOrderedPartIndices() {
+    ensureModelPartDisplayOrder();
+    return modelPartDisplayOrder.slice();
+}
+
+function movePartInDisplayOrder(fromIdx, toIdx) {
+    ensureModelPartDisplayOrder();
+    const source = modelPartDisplayOrder.indexOf(fromIdx);
+    const target = modelPartDisplayOrder.indexOf(toIdx);
+    if (source < 0 || target < 0 || source === target) return;
+    const next = modelPartDisplayOrder.slice();
+    const [moved] = next.splice(source, 1);
+    next.splice(target, 0, moved);
+    modelPartDisplayOrder = next;
+}
+
+function getBulkSelectionIconState(selectedCount, partCount) {
+    if (!partCount || selectedCount <= 0) return 'none';
+    if (selectedCount >= partCount) return 'all';
+    return 'some';
+}
+
+function getBulkSelectIconSVG(state) {
+    const path = BULK_SELECT_ICON_PATHS[state] || BULK_SELECT_ICON_PATHS.none;
+    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}" fill="currentColor"></path></svg>`;
+}
+
+function syncModelPartBulkUIState() {
+    if (!modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
+    const selectedIndices = getBulkSelectedPartIndices();
+    const selectedCount = selectedIndices.length;
+    const partCount = modelPartNames.length;
+    const countEl = modelPartSelectorMenu.querySelector('.model-bulk-bar-count');
+    if (countEl) countEl.textContent = `${selectedCount} selected`;
+    const iconBtn = modelPartSelectorMenu.querySelector('[data-bulk-action="toggle-all"]');
+    if (iconBtn) {
+        const state = getBulkSelectionIconState(selectedCount, partCount);
+        iconBtn.innerHTML = getBulkSelectIconSVG(state);
+        iconBtn.title = selectedCount >= partCount ? 'Clear selection' : 'Select all';
+        iconBtn.setAttribute('aria-label', iconBtn.title);
+    }
+    modelPartSelectorMenu.querySelectorAll('[data-bulk-action="color"], [data-bulk-action="shade"], [data-bulk-action="finish"]').forEach((btn) => {
+        btn.disabled = !selectedCount;
+    });
+}
+
+function applyBulkEditToSelectedParts(kind, opts = {}) {
     if (!isMultipartModel()) return;
     const selectedIndices = getBulkSelectedPartIndices();
     if (!selectedIndices.length) {
@@ -1553,7 +1643,9 @@ function applyBulkEditToSelectedParts(kind) {
     }
 
     persistCurrentMultipartParts();
-    syncModelPartSelectorUI(true);
+    const keepMenuOpen = !!opts.keepMenuOpen;
+    syncModelPartSelectorUI(keepMenuOpen);
+    if (!keepMenuOpen) closeThumbSelectMenus();
     saveSettings();
 
     const label = kind === 'color' ? 'color' : (kind === 'shade' ? 'shade' : 'finish');
@@ -2359,6 +2451,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
         return;
     }
 
+    ensureModelPartDisplayOrder();
     const partCount = modelPartNames.length;
     const singleModel = partCount <= 1;
     const canMutateFiles = !!modelPartFiles && modelPartFiles.length === partCount;
@@ -2383,7 +2476,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     if (modelPartSingleMenuBtn) modelPartSingleMenuBtn.setAttribute('aria-expanded', 'false');
 
     if (modelPartAddNextBtn) {
-        modelPartAddNextBtn.hidden = false;
+        modelPartAddNextBtn.hidden = true;
         modelPartAddNextBtn.disabled = !canAppend;
         modelPartAddNextBtn.title = canAppend
             ? 'Add one or more STL files as new model parts'
@@ -2401,19 +2494,20 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     if (!singleModel) {
         const selectedIndices = getBulkSelectedPartIndices();
         const selectedCount = selectedIndices.length;
+        const iconState = getBulkSelectionIconState(selectedCount, partCount);
         const bulkBar = document.createElement('div');
         bulkBar.className = 'model-bulk-bar';
-        bulkBar.innerHTML = `<div class="model-bulk-bar-head"><span class="model-bulk-bar-title">Bulk edit checked parts</span><span class="model-bulk-bar-count">${selectedCount} selected</span></div><div class="model-bulk-bar-actions"><button type="button" class="model-bulk-btn" data-bulk-action="select-all">Select all</button><button type="button" class="model-bulk-btn" data-bulk-action="clear">Clear</button><button type="button" class="model-bulk-btn" data-bulk-action="color"${selectedCount ? '' : ' disabled'}>Apply color</button><button type="button" class="model-bulk-btn" data-bulk-action="shade"${selectedCount ? '' : ' disabled'}>Apply shade</button><button type="button" class="model-bulk-btn" data-bulk-action="finish"${selectedCount ? '' : ' disabled'}>Apply finish</button></div>`;
+        bulkBar.innerHTML = `<div class="model-bulk-bar-head"><span class="model-bulk-bar-title">Bulk edit checked parts</span><span class="model-bulk-bar-count">${selectedCount} selected</span></div><div class="model-bulk-bar-actions"><button type="button" class="model-bulk-icon-btn" data-bulk-action="toggle-all" title="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}" aria-label="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}">${getBulkSelectIconSVG(iconState)}</button><button type="button" class="model-bulk-btn" data-bulk-action="color"${selectedCount ? '' : ' disabled'}>Apply color</button><button type="button" class="model-bulk-btn" data-bulk-action="shade"${selectedCount ? '' : ' disabled'}>Apply shade</button><button type="button" class="model-bulk-btn" data-bulk-action="finish"${selectedCount ? '' : ' disabled'}>Apply finish</button></div>`;
         bulkBar.addEventListener('click', (ev) => ev.stopPropagation());
-        bulkBar.querySelector('[data-bulk-action="select-all"]')?.addEventListener('click', (ev) => {
+        bulkBar.querySelector('[data-bulk-action="toggle-all"]')?.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            setBulkPartSelectionForAll(true);
-            syncModelPartSelectorUI(true);
-        });
-        bulkBar.querySelector('[data-bulk-action="clear"]')?.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            setBulkPartSelectionForAll(false);
-            syncModelPartSelectorUI(true);
+            const allSelected = getBulkSelectedPartIndices().length >= partCount;
+            setBulkPartSelectionForAll(!allSelected);
+            modelPartSelectorMenu.querySelectorAll('.thumb-select-option-check-input[data-part-bulk-select]').forEach((inputEl) => {
+                const partIdx = parseInt(inputEl.dataset.partBulkSelect || '-1', 10);
+                inputEl.checked = bulkSelectedPartIndices.has(partIdx);
+            });
+            syncModelPartBulkUIState();
         });
         bulkBar.querySelector('[data-bulk-action="color"]')?.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -2429,10 +2523,12 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
         });
         modelPartSelectorMenu.appendChild(bulkBar);
 
-        modelPartNames.forEach((name, idx) => {
+        getOrderedPartIndices().forEach((idx) => {
+            const name = modelPartNames[idx];
             const opt = document.createElement('div');
             opt.className = 'thumb-select-option';
             opt.dataset.partIndex = String(idx);
+            opt.draggable = true;
             opt.setAttribute('role', 'option');
             const settings = getPartSettings(idx);
             const hideLabel = settings.hidden ? 'Show' : 'Hide';
@@ -2449,9 +2545,36 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 bulkCheck.addEventListener('change', (ev) => {
                     ev.stopPropagation();
                     setBulkPartSelected(idx, bulkCheck.checked);
-                    syncModelPartSelectorUI(true);
+                    syncModelPartBulkUIState();
                 });
             }
+
+            opt.addEventListener('dragstart', (ev) => {
+                ev.dataTransfer?.setData('text/plain', String(idx));
+                ev.dataTransfer.effectAllowed = 'move';
+                opt.classList.add('is-dragging');
+            });
+            opt.addEventListener('dragend', () => {
+                opt.classList.remove('is-dragging');
+            });
+            opt.addEventListener('dragover', (ev) => {
+                ev.preventDefault();
+                ev.dataTransfer.dropEffect = 'move';
+                opt.classList.add('is-drop-target');
+            });
+            opt.addEventListener('dragleave', () => {
+                opt.classList.remove('is-drop-target');
+            });
+            opt.addEventListener('drop', (ev) => {
+                ev.preventDefault();
+                opt.classList.remove('is-drop-target');
+                const fromIdx = parseInt(ev.dataTransfer?.getData('text/plain') || '-1', 10);
+                const toIdx = idx;
+                if (!Number.isInteger(fromIdx) || fromIdx < 0 || fromIdx === toIdx) return;
+                movePartInDisplayOrder(fromIdx, toIdx);
+                syncModelPartSelectorUI(true);
+                saveSettings();
+            });
 
             opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
                 clearPresetHoverPreview();
@@ -2504,12 +2627,30 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
 
             modelPartSelectorMenu.appendChild(opt);
         });
+
+        const addRow = document.createElement('div');
+        addRow.className = 'thumb-select-menu-add-row';
+        addRow.innerHTML = `<button type="button" class="thumb-select-add-slot thumb-select-add-slot--menu"${canAppend ? '' : ' disabled'}>Add Model</button>`;
+        const addBtn = addRow.querySelector('button');
+        if (addBtn) {
+            addBtn.title = canAppend
+                ? 'Add one or more STL files as new model parts'
+                : (singleModel
+                    ? 'Current model source is unavailable for add. Reload the model and try again.'
+                    : 'Part source files are unavailable for editing');
+            addBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                if (addBtn.disabled) return;
+                partAppendInput?.click();
+            });
+        }
+        modelPartSelectorMenu.appendChild(addRow);
     } else if (modelPartSingleActions) {
         const settings = getPartSettings(0);
         const hideLabel = settings.hidden ? 'Show Model' : 'Hide Model';
         const clearBtn = document.getElementById('btnClearModel');
         const clearLabel = clearBtn?.title || 'Reset to Benchy';
-        modelPartSingleActions.innerHTML = `<button type="button" class="part-option-action" data-single-action="replace">Replace STL</button><button type="button" class="part-option-action" data-single-action="hide">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-single-action="clear">${clearLabel}</button>`;
+        modelPartSingleActions.innerHTML = `<button type="button" class="part-option-action" data-single-action="replace">Replace STL</button><button type="button" class="part-option-action" data-single-action="add"${canAppend ? '' : ' disabled'}>Add Model</button><button type="button" class="part-option-action" data-single-action="hide">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-single-action="clear">${clearLabel}</button>`;
 
         modelPartSingleActions.querySelectorAll('.part-option-action').forEach((actionBtn) => {
             actionBtn.addEventListener('click', (ev) => {
@@ -2527,6 +2668,12 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     syncModelPartSelectorUI();
                     saveSettings();
                     closeModelPartActionMenus();
+                    return;
+                }
+                if (action === 'add') {
+                    closeModelPartActionMenus();
+                    if (!canAppend) return;
+                    partAppendInput?.click();
                     return;
                 }
                 if (action === 'clear') {
@@ -2766,6 +2913,8 @@ function loadSTLBuffer(buffer, name) {
     modelPartSettings = [createPartSettings(colorPick.value)];
     customModelSettingsByPart = {};
     modelPartFiles = null;
+    modelPartDisplayOrder = [0];
+    pendingModelPartDisplayOrder = null;
     multipartPartBounds = null;
     currentModelBuffer = buffer;
     modelPartSelected = 0;
@@ -2783,6 +2932,7 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
         if (partSettings?.[idx]) return { ...base, ...partSettings[idx], color: partSettings[idx].color || base.color };
         return base;
     });
+    ensureModelPartDisplayOrder();
     customModelSettingsByPart = {};
     currentModelBuffer = null;
     modelPartSelected = Math.max(0, Math.min(pendingModelPartSelected, modelPartNames.length - 1));
@@ -5022,6 +5172,8 @@ async function appendSTLPartsToCurrentModel(fileList) {
     })), displayName);
 
     modelPartFiles = nextFiles;
+    ensureModelPartDisplayOrder();
+    pendingModelPartDisplayOrder = [...modelPartDisplayOrder, ...incoming.map((_, idx) => existingNames.length + idx)];
     pendingModelPartSelected = Math.max(0, nextFiles.length - incoming.length);
     setDisplayedFileName(displayName);
     currentFileName = buildMultipartFileBase(nextNames);
@@ -5247,6 +5399,7 @@ async function removeMultipartPart(partIdx) {
     if (modelPartFiles.length <= 1) return;
     const index = Math.max(0, Math.min(partIdx, modelPartFiles.length - 1));
     if (!confirm(`Remove part \"${modelPartNames[index]}\"?`)) return;
+    ensureModelPartDisplayOrder();
     const nextFiles = modelPartFiles.filter((_, idx) => idx !== index);
     const nextNames = nextFiles.map((part) => part.name);
     const nextColors = modelPartBaseColors.filter((_, idx) => idx !== index);
@@ -5259,6 +5412,9 @@ async function removeMultipartPart(partIdx) {
         modelPartFiles = null;
         loadSTLBuffer(nextFiles[0].buffer, nextFiles[0].name);
     } else {
+        pendingModelPartDisplayOrder = modelPartDisplayOrder
+            .filter((idx) => idx !== index)
+            .map((idx) => (idx > index ? idx - 1 : idx));
         const displayName = getMultipartDisplayName(nextNames);
         await saveFilesToIDB(nextFiles.map((part, idx) => ({
             name: part.name,
