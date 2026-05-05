@@ -933,6 +933,11 @@ html.loaded .controls-bar.hidden {
     cursor: pointer;
 }
 
+.thumb-select-btn.is-multipart-summary {
+    grid-template-columns: 88px minmax(0, 1fr) auto;
+    min-height: 96px;
+}
+
 .thumb-select-btn:hover {
     border-color: var(--palette-blueberry-500);
 }
@@ -957,6 +962,11 @@ html.loaded .controls-bar.hidden {
     border: none;
     background: transparent;
     display: block;
+}
+
+.thumb-select-btn.is-multipart-summary .thumb-select-canvas {
+    width: 88px;
+    height: 88px;
 }
 
 .thumb-select-text {
@@ -1158,13 +1168,15 @@ html.loaded .controls-bar.hidden {
 }
 
 #modelPartSelectorMenu.model-selector-view--list .thumb-select-option-main {
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
 }
 
 #modelPartSelectorMenu.model-selector-view--list .thumb-select-option-canvas {
-    width: 48px;
-    height: 48px;
-    border-radius: 10px;
+    display: none;
+}
+
+#modelPartSelectorMenu.model-selector-view--list .thumb-select-option {
+    grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid {
@@ -1200,19 +1212,25 @@ html.loaded .controls-bar.hidden {
 
 #modelPartSelectorMenu.model-selector-view--grid .part-option-more {
     position: absolute;
-    top: 6px;
-    right: 6px;
+    top: 10px;
+    right: 10px;
     background: rgba(255, 255, 255, 0.85);
+    z-index: 2;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-check {
     position: absolute;
-    top: 6px;
-    left: 6px;
+    top: 10px;
+    left: 10px;
     min-height: 24px;
     width: 24px;
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.85);
+    z-index: 2;
+}
+
+#modelPartSelectorMenu.model-selector-view--grid .thumb-select-option {
+    padding: 10px;
 }
 
 .thumb-select-option:hover {

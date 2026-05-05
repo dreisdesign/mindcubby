@@ -2103,12 +2103,83 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     // one full-scene render per part (22 renders for 22 parts).
 }
 
+function renderMultipartSummaryThumbnail(canvasEl) {
+    if (!canvasEl || !isMultipartModel()) return;
+    const rect = canvasEl.getBoundingClientRect();
+    const cssW = Math.max(1, Math.round(rect.width || canvasEl.clientWidth || canvasEl.width || 1));
+    const cssH = Math.max(1, Math.round(rect.height || canvasEl.clientHeight || canvasEl.height || 1));
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const targetW = Math.max(1, Math.round(cssW * dpr));
+    const targetH = Math.max(1, Math.round(cssH * dpr));
+    if (canvasEl.width !== targetW || canvasEl.height !== targetH) {
+        canvasEl.width = targetW;
+        canvasEl.height = targetH;
+    }
+    const ctx = canvasEl.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+    const ordered = getOrderedPartIndices();
+    const visible = ordered.slice(0, 3);
+    const remaining = Math.max(0, ordered.length - visible.length);
+    const cols = 2;
+    const rows = 2;
+    const pad = Math.max(4, Math.round(canvasEl.width * 0.035));
+    const gap = Math.max(4, Math.round(canvasEl.width * 0.03));
+    const cellW = Math.floor((canvasEl.width - pad * 2 - gap) / cols);
+    const cellH = Math.floor((canvasEl.height - pad * 2 - gap) / rows);
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = cellW;
+    tempCanvas.height = cellH;
+    tempCanvas.style.width = `${cellW}px`;
+    tempCanvas.style.height = `${cellH}px`;
+
+    const tiles = [...visible];
+    if (remaining > 0) tiles.push(`+${remaining}`);
+
+    tiles.forEach((tile, tileIndex) => {
+        const row = Math.floor(tileIndex / cols);
+        const col = tileIndex % cols;
+        const x = pad + col * (cellW + gap);
+        const y = pad + row * (cellH + gap);
+
+        ctx.fillStyle = 'rgba(245, 243, 255, 0.98)';
+        ctx.strokeStyle = 'rgba(92, 84, 164, 0.28)';
+        ctx.lineWidth = Math.max(1, Math.round(canvasEl.width * 0.01));
+        const radius = Math.max(8, Math.round(canvasEl.width * 0.07));
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + cellW, y, x + cellW, y + cellH, radius);
+        ctx.arcTo(x + cellW, y + cellH, x, y + cellH, radius);
+        ctx.arcTo(x, y + cellH, x, y, radius);
+        ctx.arcTo(x, y, x + cellW, y, radius);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        if (typeof tile === 'number') {
+            renderSinglePartThumbnail(tempCanvas, tile);
+            ctx.drawImage(tempCanvas, x + 2, y + 2, cellW - 4, cellH - 4);
+        } else {
+            ctx.fillStyle = '#1f1a47';
+            ctx.font = `700 ${Math.max(18, Math.round(cellW * 0.34))}px "Source Sans 3", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(tile, x + cellW / 2, y + cellH / 2);
+        }
+    });
+}
+
 function renderModelPartThumbnails() {
     if (!modelPartThumbsWrap) return;
     const visible = hasModelParts() && !!mesh && !!renderer && !!camera;
     modelPartThumbsWrap.hidden = !visible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!visible));
     if (!visible) return;
+
+    if (modelPartSelectorThumb && isMultipartModel()) {
+        renderMultipartSummaryThumbnail(modelPartSelectorThumb);
+    }
 
     const dirty = dirtyPartThumbs; // snapshot; null = all
     dirtyPartThumbs = new Set(); // reset to empty (nothing newly dirty)
@@ -2394,6 +2465,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     if (modelPartSelectorEl) modelPartSelectorEl.hidden = false;
     modelPartSelectorBtn.hidden = false;
     modelPartSelectorBtn.classList.toggle('is-static', singleModel);
+    modelPartSelectorBtn.classList.toggle('is-multipart-summary', !singleModel);
     modelPartSelectorMenu.hidden = !keepMenuOpen;
     modelPartSelectorBtn.setAttribute('aria-expanded', keepMenuOpen ? 'true' : 'false');
 
@@ -2611,8 +2683,13 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     }
 
     if (modelPartSelectorThumb) {
-        modelPartSelectorThumb.classList.add('js-part-thumb-preview');
-        modelPartSelectorThumb.dataset.partIndex = String(modelPartSelected);
+        if (singleModel) {
+            modelPartSelectorThumb.classList.add('js-part-thumb-preview');
+            modelPartSelectorThumb.dataset.partIndex = String(modelPartSelected);
+        } else {
+            modelPartSelectorThumb.classList.remove('js-part-thumb-preview');
+            delete modelPartSelectorThumb.dataset.partIndex;
+        }
     }
 
     syncUIFromSelectedPart();
@@ -8360,16 +8437,19 @@ function applyModelPresetOnly(preset) {
     const p = getURLSettings(preset.url);
     if (!p) return;
 
-    const s = getSelectedPartSettings();
-    applyPresetIntoPartSettings(s, p);
-    modelPartBaseColors[modelPartSelected] = s.color;
+    const targets = applyToModelPartEditTargets((partSettings, idx) => {
+        applyPresetIntoPartSettings(partSettings, p);
+        modelPartBaseColors[idx] = partSettings.color;
+    });
     syncUIFromSelectedPart();
 
     if (mesh) rebuildMeshMaterialsForCurrentShading();
-    persistCurrentMultipartParts();
+    persistCurrentMultipartParts({ immediate: true });
 
     // Keep each part's custom baseline aligned to its latest preset-applied state.
-    storeCustomSettings();
+    targets.forEach((idx) => {
+        customModelSettingsByPart[idx] = { ...getPartSettings(idx) };
+    });
 
     activeModelPreset = preset.id;
 
@@ -8383,7 +8463,7 @@ function applyModelPresetOnly(preset) {
     updateTextureTuneUI();
     updateShadingThumbs();
     updateColorSwatches();
-    queueModelPartThumbsRender();
+    queueModelPartThumbsRender(targets);
     updateModelSelection();
     updateBgSelection();
     saveSettings();
