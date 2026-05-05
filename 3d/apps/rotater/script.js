@@ -349,16 +349,6 @@ const btnResetBackgroundCard = document.getElementById('btnResetBackgroundCard')
 const btnResetBuildPlateCard = document.getElementById('btnResetBuildPlateCard');
 const btnResetLightingCard = document.getElementById('btnResetLightingCard');
 const btnResetAnimationCard = document.getElementById('btnResetAnimationCard');
-const modelBoxEl = document.getElementById('modelBox');
-const environmentBoxEl = document.getElementById('environmentBox');
-
-// Keep Background first in the right panel flow.
-{
-    const themePanel = document.querySelector('.tab-panel--theme');
-    if (themePanel && modelBoxEl && environmentBoxEl && environmentBoxEl.parentElement === themePanel) {
-        themePanel.insertBefore(environmentBoxEl, modelBoxEl);
-    }
-}
 // Dev logging and a flag used to suppress saveSettings() while programmatically
 // applying restored settings so we don't overwrite localStorage/URL mid-restore.
 // Capture passthrough URL params (e.g. debug=1) once at startup so they survive
@@ -419,12 +409,21 @@ let multipartPartBounds = null;
 let pendingReplacePartIndex = -1;
 let currentModelBuffer = null;
 let bulkSelectedPartIndices = new Set();
+let modelPartSelectorViewMode = 'card';
+let multipartPersistTimer = 0;
 
 const BULK_SELECT_ICON_PATHS = {
     none: 'M5.00001 21.65C4.27117 21.65 3.64734 21.3905 3.12851 20.8715C2.60951 20.3526 2.35001 19.7288 2.35001 19V4.99998C2.35001 4.27131 2.60951 3.64748 3.12851 3.12848C3.64734 2.60948 4.27117 2.34998 5.00001 2.34998H19C19.7287 2.34998 20.3525 2.60948 20.8715 3.12848C21.3905 3.64748 21.65 4.27131 21.65 4.99998V19C21.65 19.7288 21.3905 20.3526 20.8715 20.8715C20.3525 21.3905 19.7287 21.65 19 21.65H5.00001ZM5.00001 19H19V4.99998H5.00001V19Z',
     some: 'M8.82501 13.3H15.175C15.5417 13.3 15.8542 13.1708 16.1125 12.9125C16.3708 12.6541 16.5 12.3416 16.5 11.975C16.5 11.6083 16.3708 11.2958 16.1125 11.0375C15.8542 10.7791 15.5417 10.65 15.175 10.65H8.82501C8.45834 10.65 8.14584 10.7791 7.88751 11.0375C7.62917 11.2958 7.50001 11.6083 7.50001 11.975C7.50001 12.3416 7.62917 12.6541 7.88751 12.9125C8.14584 13.1708 8.45834 13.3 8.82501 13.3ZM5.00001 21.65C4.26667 21.65 3.64167 21.3916 3.12501 20.875C2.60834 20.3583 2.35001 19.7333 2.35001 19V4.99998C2.35001 4.26664 2.60834 3.64164 3.12501 3.12498C3.64167 2.60831 4.26667 2.34998 5.00001 2.34998H19C19.7333 2.34998 20.3583 2.60831 20.875 3.12498C21.3917 3.64164 21.65 4.26664 21.65 4.99998V19C21.65 19.7333 21.3917 20.3583 20.875 20.875C20.3583 21.3916 19.7333 21.65 19 21.65H5.00001ZM5.00001 19H19V4.99998H5.00001V19Z',
     all: 'M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2Zm-9 14-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9Z',
 };
+
+const MODEL_SELECTOR_VIEW_MODES = ['card', 'list', 'grid'];
+
+try {
+    const savedViewMode = localStorage.getItem('rotater_modelPartSelectorViewMode');
+    if (MODEL_SELECTOR_VIEW_MODES.includes(savedViewMode)) modelPartSelectorViewMode = savedViewMode;
+} catch (_) { }
 
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
@@ -1534,13 +1533,48 @@ function getBulkSelectIconSVG(state) {
     return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}" fill="currentColor"></path></svg>`;
 }
 
+function getBulkSelectionSummaryText() {
+    const total = modelPartNames.length;
+    const selected = getBulkSelectedPartIndices().length;
+    return `${selected}/${total} selected`;
+}
+
+function applyModelPartSelectorViewMode(mode, rerender = false) {
+    const nextMode = MODEL_SELECTOR_VIEW_MODES.includes(mode) ? mode : 'card';
+    modelPartSelectorViewMode = nextMode;
+    try { localStorage.setItem('rotater_modelPartSelectorViewMode', nextMode); } catch (_) { }
+    if (rerender) syncModelPartSelectorUI(true);
+}
+
+function getModelPartEditTargetIndices() {
+    if (isMultipartModel()) {
+        const selectedIndices = getBulkSelectedPartIndices();
+        if (selectedIndices.length) return selectedIndices;
+    }
+    return [Math.max(0, modelPartSelected)];
+}
+
+function applyToModelPartEditTargets(mutator) {
+    const targets = getModelPartEditTargetIndices();
+    const touched = [];
+    targets.forEach((idx) => {
+        const partSettings = getPartSettings(idx);
+        mutator(partSettings, idx);
+        if (customModelSettingsByPart && typeof customModelSettingsByPart === 'object') {
+            customModelSettingsByPart[idx] = { ...partSettings };
+        }
+        touched.push(idx);
+    });
+    return touched;
+}
+
 function syncModelPartBulkUIState() {
     if (!modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
-    const selectedIndices = getBulkSelectedPartIndices();
-    const selectedCount = selectedIndices.length;
+    const selectedCount = getBulkSelectedPartIndices().length;
     const partCount = modelPartNames.length;
     const countEl = modelPartSelectorMenu.querySelector('.model-bulk-bar-count');
-    if (countEl) countEl.textContent = `${selectedCount} selected`;
+    if (countEl) countEl.textContent = getBulkSelectionSummaryText();
+    if (modelPartSelectorText && isMultipartModel()) modelPartSelectorText.textContent = getBulkSelectionSummaryText();
     const iconBtn = modelPartSelectorMenu.querySelector('[data-bulk-action="toggle-all"]');
     if (iconBtn) {
         const state = getBulkSelectionIconState(selectedCount, partCount);
@@ -1548,109 +1582,6 @@ function syncModelPartBulkUIState() {
         iconBtn.title = selectedCount >= partCount ? 'Clear selection' : 'Select all';
         iconBtn.setAttribute('aria-label', iconBtn.title);
     }
-    modelPartSelectorMenu.querySelectorAll('[data-bulk-action="color"], [data-bulk-action="shade"], [data-bulk-action="finish"]').forEach((btn) => {
-        btn.disabled = !selectedCount;
-    });
-}
-
-function applyBulkEditToSelectedParts(kind, opts = {}) {
-    if (!isMultipartModel()) return;
-    const selectedIndices = getBulkSelectedPartIndices();
-    if (!selectedIndices.length) {
-        setStatus('Select one or more parts for bulk edit.');
-        setTimeout(() => setStatus(''), 1800);
-        return;
-    }
-
-    const source = getSelectedPartSettings();
-    const sourceColor = source.color || modelPartBaseColors[modelPartSelected] || colorPick.value;
-    const sourceTone = parseInt(source.tone ?? 0, 10) || 0;
-    let changed = false;
-
-    selectedIndices.forEach((idx) => {
-        const partSettings = getPartSettings(idx);
-
-        if (kind === 'color') {
-            if (partSettings.color !== sourceColor || modelPartBaseColors[idx] !== sourceColor) changed = true;
-            partSettings.color = sourceColor;
-            modelPartBaseColors[idx] = sourceColor;
-        }
-
-        if (kind === 'shade') {
-            const previousTone = parseInt(partSettings.tone ?? 0, 10) || 0;
-            if (previousTone !== sourceTone) changed = true;
-            partSettings.tone = sourceTone;
-        }
-
-        if (kind === 'finish') {
-            const before = [
-                partSettings.shading,
-                partSettings.metallicRoughness,
-                partSettings.metallicMetalness,
-                partSettings.metallicReflection,
-                partSettings.phongRoughness,
-                partSettings.phongReflection,
-                partSettings.matteRoughness,
-                partSettings.matteReflection,
-            ].join('|');
-
-            partSettings.shading = source.shading;
-            partSettings.metallicRoughness = source.metallicRoughness;
-            partSettings.metallicMetalness = source.metallicMetalness;
-            partSettings.metallicReflection = source.metallicReflection;
-            partSettings.phongRoughness = source.phongRoughness;
-            partSettings.phongReflection = source.phongReflection;
-            partSettings.matteRoughness = source.matteRoughness;
-            partSettings.matteReflection = source.matteReflection;
-
-            const after = [
-                partSettings.shading,
-                partSettings.metallicRoughness,
-                partSettings.metallicMetalness,
-                partSettings.metallicReflection,
-                partSettings.phongRoughness,
-                partSettings.phongReflection,
-                partSettings.matteRoughness,
-                partSettings.matteReflection,
-            ].join('|');
-
-            if (before !== after) changed = true;
-        }
-
-        if (customModelSettingsByPart && typeof customModelSettingsByPart === 'object') {
-            customModelSettingsByPart[idx] = { ...partSettings };
-        }
-    });
-
-    if (!changed) {
-        setStatus('Selected parts already match the active value.');
-        setTimeout(() => setStatus(''), 1800);
-        return;
-    }
-
-    if (kind === 'finish') {
-        if (mesh) rebuildMeshMaterialsForCurrentShading();
-    } else {
-        if (mesh) applyPartColorsToMesh();
-        applyCurrentTextureTuning();
-    }
-
-    if (activeBgPreset === 'modelcolor') {
-        const syncColor = getModelSyncSourceColor();
-        bgPick.value = syncColor;
-        if (isDynamicBg) updateDynamicBg();
-        else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
-    }
-
-    persistCurrentMultipartParts();
-    const keepMenuOpen = !!opts.keepMenuOpen;
-    syncModelPartSelectorUI(keepMenuOpen);
-    if (!keepMenuOpen) closeThumbSelectMenus();
-    saveSettings();
-
-    const label = kind === 'color' ? 'color' : (kind === 'shade' ? 'shade' : 'finish');
-    setStatus(`Applied ${label} to ${selectedIndices.length} part${selectedIndices.length === 1 ? '' : 's'}.`);
-    setTimeout(() => setStatus(''), 1800);
 }
 
 function setDisplayedFileName(name) {
@@ -2209,8 +2140,9 @@ function renderModelPartThumbnails() {
 
     if (modelPartSelectorText) {
         const selectedName = modelPartNames[modelPartSelected] || `Part ${modelPartSelected + 1}`;
-        modelPartSelectorText.textContent = selectedName;
-        modelPartSelectorBtn.title = selectedName;
+        const displayText = isMultipartModel() ? getBulkSelectionSummaryText() : selectedName;
+        modelPartSelectorText.textContent = displayText;
+        modelPartSelectorBtn.title = displayText;
     }
     if (bgModelSyncSelectorText && activeBgPreset === 'modelcolor') {
         const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
@@ -2457,6 +2389,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     const canMutateFiles = !!modelPartFiles && modelPartFiles.length === partCount;
     const canAppend = singleModel ? !!currentModelBuffer : canMutateFiles;
     pruneBulkPartSelection();
+    if (!singleModel && bulkSelectedPartIndices.size === 0) setBulkPartSelectionForAll(true);
 
     if (modelPartSelectorEl) modelPartSelectorEl.hidden = false;
     modelPartSelectorBtn.hidden = false;
@@ -2492,12 +2425,11 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     modelPartSelectorMenu.innerHTML = '';
 
     if (!singleModel) {
-        const selectedIndices = getBulkSelectedPartIndices();
-        const selectedCount = selectedIndices.length;
+        const selectedCount = getBulkSelectedPartIndices().length;
         const iconState = getBulkSelectionIconState(selectedCount, partCount);
         const bulkBar = document.createElement('div');
         bulkBar.className = 'model-bulk-bar';
-        bulkBar.innerHTML = `<div class="model-bulk-bar-head"><span class="model-bulk-bar-title">Bulk edit checked parts</span><span class="model-bulk-bar-count">${selectedCount} selected</span></div><div class="model-bulk-bar-actions"><button type="button" class="model-bulk-icon-btn" data-bulk-action="toggle-all" title="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}" aria-label="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}">${getBulkSelectIconSVG(iconState)}</button><button type="button" class="model-bulk-btn" data-bulk-action="color"${selectedCount ? '' : ' disabled'}>Apply color</button><button type="button" class="model-bulk-btn" data-bulk-action="shade"${selectedCount ? '' : ' disabled'}>Apply shade</button><button type="button" class="model-bulk-btn" data-bulk-action="finish"${selectedCount ? '' : ' disabled'}>Apply finish</button></div>`;
+        bulkBar.innerHTML = `<div class="model-bulk-bar-head"><span class="model-bulk-bar-count">${getBulkSelectionSummaryText()}</span></div><div class="model-bulk-bar-actions"><button type="button" class="model-bulk-icon-btn" data-bulk-action="toggle-all" title="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}" aria-label="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}">${getBulkSelectIconSVG(iconState)}</button><div class="model-bulk-view" role="group" aria-label="Model selector view"><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'card' ? ' is-active' : ''}" data-model-view="card">Card</button><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'list' ? ' is-active' : ''}" data-model-view="list">List</button><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'grid' ? ' is-active' : ''}" data-model-view="grid">Grid</button></div></div>`;
         bulkBar.addEventListener('click', (ev) => ev.stopPropagation());
         bulkBar.querySelector('[data-bulk-action="toggle-all"]')?.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -2509,19 +2441,13 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             });
             syncModelPartBulkUIState();
         });
-        bulkBar.querySelector('[data-bulk-action="color"]')?.addEventListener('click', (ev) => {
+        bulkBar.querySelectorAll('[data-model-view]').forEach((btn) => btn.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            applyBulkEditToSelectedParts('color');
-        });
-        bulkBar.querySelector('[data-bulk-action="shade"]')?.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            applyBulkEditToSelectedParts('shade');
-        });
-        bulkBar.querySelector('[data-bulk-action="finish"]')?.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            applyBulkEditToSelectedParts('finish');
-        });
+            applyModelPartSelectorViewMode(btn.dataset.modelView, true);
+        }));
         modelPartSelectorMenu.appendChild(bulkBar);
+        modelPartSelectorMenu.classList.remove('model-selector-view--card', 'model-selector-view--list', 'model-selector-view--grid');
+        modelPartSelectorMenu.classList.add(`model-selector-view--${modelPartSelectorViewMode}`);
 
         getOrderedPartIndices().forEach((idx) => {
             const name = modelPartNames[idx];
@@ -2690,6 +2616,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     }
 
     syncUIFromSelectedPart();
+    syncModelPartBulkUIState();
     syncBgModelSyncSourceUI();
     queueModelPartThumbsRender();
 }
@@ -5862,25 +5789,41 @@ function updateRangeSliderForMode(mode) {
     updateTiltRangeReset();
 }
 
-function persistCurrentMultipartParts() {
+function persistCurrentMultipartParts({ immediate = false } = {}) {
     if (!isMultipartModel() || !modelPartFiles || modelPartFiles.length !== modelPartNames.length) return;
-    const displayName = getMultipartDisplayName(modelPartNames);
-    saveFilesToIDB(modelPartFiles.map((part, idx) => ({
-        name: part.name,
-        buffer: part.buffer,
-        color: modelPartBaseColors[idx] || colorPick.value,
-        settings: modelPartSettings[idx] ? { ...modelPartSettings[idx] } : createPartSettings(modelPartBaseColors[idx] || colorPick.value),
-    })), displayName);
+    const commit = () => {
+        multipartPersistTimer = 0;
+        const displayName = getMultipartDisplayName(modelPartNames);
+        saveFilesToIDB(modelPartFiles.map((part, idx) => ({
+            name: part.name,
+            buffer: part.buffer,
+            color: modelPartBaseColors[idx] || colorPick.value,
+            settings: modelPartSettings[idx] ? { ...modelPartSettings[idx] } : createPartSettings(modelPartBaseColors[idx] || colorPick.value),
+        })), displayName);
+    };
+    if (immediate) {
+        if (multipartPersistTimer) {
+            clearTimeout(multipartPersistTimer);
+            multipartPersistTimer = 0;
+        }
+        commit();
+        return;
+    }
+    if (multipartPersistTimer) clearTimeout(multipartPersistTimer);
+    multipartPersistTimer = setTimeout(commit, 140);
 }
 
 colorPick.addEventListener('input', (ev) => {
     if (isMultipartModel()) {
-        const s = getSelectedPartSettings();
-        s.color = colorPick.value;
-        modelPartBaseColors[modelPartSelected] = colorPick.value;
+        const targets = applyToModelPartEditTargets((partSettings, idx) => {
+            partSettings.color = colorPick.value;
+            modelPartBaseColors[idx] = colorPick.value;
+        });
+        queueModelPartThumbsRender(targets);
     } else {
         modelPartBaseColors = [colorPick.value];
         getPartSettings(0).color = colorPick.value;
+        queueModelPartThumbsRender(0);
     }
 
     if (mesh) applyPartColorsToMesh();
@@ -5888,7 +5831,6 @@ colorPick.addEventListener('input', (ev) => {
     updateShadingThumbs();
     updateColorSwatches();
     updateShadeSliderVisual();
-    queueModelPartThumbsRender(isMultipartModel() ? modelPartSelected : null);
     if (activeBgPreset === 'modelcolor') {
         bgPick.value = getModelSyncSourceColor();
         if (isDynamicBg) updateDynamicBg();
@@ -5901,12 +5843,14 @@ if (opacitySlider) {
         const toneVal = parseInt(opacitySlider.value, 10);
         opacityVal.textContent = (toneVal >= 0 ? '+' : '') + toneVal;
         syncSliderTooltip(opacitySlider);
-        getSelectedPartSettings().tone = toneVal;
+        const targets = applyToModelPartEditTargets((partSettings) => {
+            partSettings.tone = toneVal;
+        });
         if (mesh) applyPartColorsToMesh();
         updateShadingThumbs();
         persistCurrentMultipartParts();
         updateShadeSliderVisual();
-        queueModelPartThumbsRender(isMultipartModel() ? modelPartSelected : null);
+        queueModelPartThumbsRender(targets);
         saveSettings();
     });
 }
@@ -6004,18 +5948,38 @@ textureTuneLightHeightSlider?.addEventListener('input', () => {
 
 textureTuneRoughnessSlider?.addEventListener('input', () => {
     syncSliderTooltip(textureTuneRoughnessSlider);
-    applyFinishControlsToSelectedPart(false);
+    const mode = getSelectedFinishMode();
+    const strength = parseInt(textureTuneRoughnessSlider?.value || '2', 10);
+    const finishFromSlider = modeStrengthToFinishValues(mode, strength);
+    const targets = applyToModelPartEditTargets((partSettings) => {
+        partSettings.metallicRoughness = finishFromSlider.metallicRoughness;
+        partSettings.metallicReflection = finishFromSlider.metallicReflection;
+        partSettings.phongRoughness = finishFromSlider.phongRoughness;
+        partSettings.phongReflection = finishFromSlider.phongReflection;
+        partSettings.matteRoughness = finishFromSlider.matteRoughness;
+        partSettings.matteReflection = finishFromSlider.matteReflection;
+    });
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
-    queueModelPartThumbsRender();
+    queueModelPartThumbsRender(targets);
     saveSettings();
 });
 
 textureTuneRoughnessSlider?.addEventListener('change', () => {
-    applyFinishControlsToSelectedPart(true);
+    const mode = getSelectedFinishMode();
+    const strength = parseInt(textureTuneRoughnessSlider?.value || '2', 10);
+    const finishFromSlider = modeStrengthToFinishValues(mode, strength);
+    const targets = applyToModelPartEditTargets((partSettings) => {
+        partSettings.metallicRoughness = finishFromSlider.metallicRoughness;
+        partSettings.metallicReflection = finishFromSlider.metallicReflection;
+        partSettings.phongRoughness = finishFromSlider.phongRoughness;
+        partSettings.phongReflection = finishFromSlider.phongReflection;
+        partSettings.matteRoughness = finishFromSlider.matteRoughness;
+        partSettings.matteReflection = finishFromSlider.matteReflection;
+    });
     applyCurrentTextureTuning();
-    persistCurrentMultipartParts();
-    queueModelPartThumbsRender();
+    persistCurrentMultipartParts({ immediate: true });
+    queueModelPartThumbsRender(targets);
     saveSettings();
 });
 
@@ -6025,31 +5989,43 @@ finishModeButtons.forEach((btn) => btn.addEventListener('click', () => {
     if (textureTuneRoughnessSlider) {
         textureTuneRoughnessSlider.value = String(modeStrengthToFinishSliderValue(mode, 2));
     }
-    applyFinishControlsToSelectedPart(true);
+    const finishValues = modeStrengthToFinishValues(mode, 2);
+    const targets = applyToModelPartEditTargets((partSettings) => {
+        partSettings.metallicRoughness = finishValues.metallicRoughness;
+        partSettings.metallicReflection = finishValues.metallicReflection;
+        partSettings.phongRoughness = finishValues.phongRoughness;
+        partSettings.phongReflection = finishValues.phongReflection;
+        partSettings.matteRoughness = finishValues.matteRoughness;
+        partSettings.matteReflection = finishValues.matteReflection;
+    });
     syncSliderTooltip(textureTuneRoughnessSlider);
     applyCurrentTextureTuning();
-    persistCurrentMultipartParts();
-    queueModelPartThumbsRender();
+    persistCurrentMultipartParts({ immediate: true });
+    queueModelPartThumbsRender(targets);
     saveSettings();
 }));
 
 textureTuneMetalnessSlider?.addEventListener('input', () => {
-    getSelectedPartSettings().metallicMetalness = parseFloat(textureTuneMetalnessSlider.value);
+    const targets = applyToModelPartEditTargets((partSettings) => {
+        partSettings.metallicMetalness = parseFloat(textureTuneMetalnessSlider.value);
+    });
     syncUIFromSelectedPart();
     updateTextureTuneUI();
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
-    queueModelPartThumbsRender();
+    queueModelPartThumbsRender(targets);
     saveSettings();
 });
 
 shadingEl.addEventListener('change', () => {
     if (shadingEl.value === 'flat' || shadingEl.value === 'toon') shadingEl.value = 'matte';
-    getSelectedPartSettings().shading = shadingEl.value;
+    const targets = applyToModelPartEditTargets((partSettings) => {
+        partSettings.shading = shadingEl.value;
+    });
     updateTextureTuneUI();
     if (mesh) rebuildMeshMaterialsForCurrentShading();
-    persistCurrentMultipartParts();
-    queueModelPartThumbsRender();
+    persistCurrentMultipartParts({ immediate: true });
+    queueModelPartThumbsRender(targets);
     saveSettings();
 });
 

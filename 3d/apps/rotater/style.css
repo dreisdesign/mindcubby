@@ -1010,7 +1010,7 @@ html.loaded .controls-bar.hidden {
 .model-bulk-bar-head {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 8px;
 }
 
@@ -1022,14 +1022,15 @@ html.loaded .controls-bar.hidden {
 }
 
 .model-bulk-bar-count {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--color-label);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-on-surface);
 }
 
 .model-bulk-bar-actions {
-    display: grid;
-    grid-template-columns: auto repeat(3, minmax(0, 1fr));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 6px;
 }
 
@@ -1055,6 +1056,33 @@ html.loaded .controls-bar.hidden {
 .model-bulk-icon-btn:hover {
     border-color: var(--palette-blueberry-500);
     background: color-mix(in srgb, #fff 70%, var(--palette-blueberry-100) 30%);
+}
+
+.model-bulk-view {
+    display: inline-grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 2px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--palette-blueberry-100) 70%, #fff 30%);
+    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 70%, white 30%);
+}
+
+.model-bulk-view-btn {
+    min-height: 26px;
+    min-width: 52px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-on-surface);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.model-bulk-view-btn.is-active {
+    background: #fff;
+    box-shadow: var(--shadow-soft);
 }
 
 .model-bulk-btn {
@@ -1127,6 +1155,64 @@ html.loaded .controls-bar.hidden {
     align-items: center;
     text-align: left;
     cursor: pointer;
+}
+
+#modelPartSelectorMenu.model-selector-view--list .thumb-select-option-main {
+    grid-template-columns: 48px minmax(0, 1fr);
+}
+
+#modelPartSelectorMenu.model-selector-view--list .thumb-select-option-canvas {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+}
+
+#modelPartSelectorMenu.model-selector-view--grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+#modelPartSelectorMenu.model-selector-view--grid .model-bulk-bar,
+#modelPartSelectorMenu.model-selector-view--grid .thumb-select-menu-add-row {
+    grid-column: 1 / -1;
+}
+
+#modelPartSelectorMenu.model-selector-view--grid .thumb-select-option {
+    grid-template-columns: 1fr;
+    gap: 6px;
+}
+
+#modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-main {
+    grid-template-columns: 1fr;
+    gap: 6px;
+}
+
+#modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+}
+
+#modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-text {
+    font-size: 12px;
+}
+
+#modelPartSelectorMenu.model-selector-view--grid .part-option-more {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+#modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-check {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    min-height: 24px;
+    width: 24px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.85);
 }
 
 .thumb-select-option:hover {
@@ -1420,6 +1506,25 @@ html.theme-dark .model-bulk-btn {
 html.theme-dark .model-bulk-btn:hover {
     border-color: var(--palette-blueberry-300);
     background: rgba(56, 48, 104, 0.56);
+}
+
+html.theme-dark .model-bulk-icon-btn {
+    background: rgba(30, 25, 62, 0.26);
+    border-color: rgba(179, 168, 247, 0.42);
+    color: var(--palette-blueberry-100);
+}
+
+html.theme-dark .model-bulk-view {
+    background: rgba(30, 25, 62, 0.24);
+    border-color: rgba(179, 168, 247, 0.38);
+}
+
+html.theme-dark .model-bulk-view-btn {
+    color: var(--palette-blueberry-100);
+}
+
+html.theme-dark .model-bulk-view-btn.is-active {
+    background: rgba(84, 72, 156, 0.58);
 }
 
 html.theme-dark .thumb-select-btn:hover,
