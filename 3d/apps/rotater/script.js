@@ -406,6 +406,7 @@ let partThumbScratchCtx = null;
 let multipartPartBounds = null;
 let pendingReplacePartIndex = -1;
 let currentModelBuffer = null;
+let bulkSelectedPartIndices = new Set();
 
 
 // ── Slider tooltip sync ───────────────────────────────────────────────────────
@@ -1422,6 +1423,144 @@ function hasModelParts() {
     return Array.isArray(modelPartNames) && modelPartNames.length > 0;
 }
 
+function pruneBulkPartSelection() {
+    if (!isMultipartModel()) {
+        bulkSelectedPartIndices.clear();
+        return;
+    }
+    const maxIndex = Math.max(0, modelPartNames.length - 1);
+    const next = new Set();
+    bulkSelectedPartIndices.forEach((idx) => {
+        if (Number.isInteger(idx) && idx >= 0 && idx <= maxIndex) next.add(idx);
+    });
+    bulkSelectedPartIndices = next;
+}
+
+function getBulkSelectedPartIndices() {
+    pruneBulkPartSelection();
+    return Array.from(bulkSelectedPartIndices).sort((a, b) => a - b);
+}
+
+function setBulkPartSelectionForAll(selected) {
+    if (!isMultipartModel()) {
+        bulkSelectedPartIndices.clear();
+        return;
+    }
+    if (!selected) {
+        bulkSelectedPartIndices.clear();
+        return;
+    }
+    const next = new Set();
+    for (let i = 0; i < modelPartNames.length; i += 1) next.add(i);
+    bulkSelectedPartIndices = next;
+}
+
+function setBulkPartSelected(index, selected) {
+    if (!isMultipartModel()) return;
+    const idx = parseInt(index, 10);
+    if (!Number.isInteger(idx) || idx < 0 || idx >= modelPartNames.length) return;
+    if (selected) bulkSelectedPartIndices.add(idx);
+    else bulkSelectedPartIndices.delete(idx);
+}
+
+function applyBulkEditToSelectedParts(kind) {
+    if (!isMultipartModel()) return;
+    const selectedIndices = getBulkSelectedPartIndices();
+    if (!selectedIndices.length) {
+        setStatus('Select one or more parts for bulk edit.');
+        setTimeout(() => setStatus(''), 1800);
+        return;
+    }
+
+    const source = getSelectedPartSettings();
+    const sourceColor = source.color || modelPartBaseColors[modelPartSelected] || colorPick.value;
+    const sourceTone = parseInt(source.tone ?? 0, 10) || 0;
+    let changed = false;
+
+    selectedIndices.forEach((idx) => {
+        const partSettings = getPartSettings(idx);
+
+        if (kind === 'color') {
+            if (partSettings.color !== sourceColor || modelPartBaseColors[idx] !== sourceColor) changed = true;
+            partSettings.color = sourceColor;
+            modelPartBaseColors[idx] = sourceColor;
+        }
+
+        if (kind === 'shade') {
+            const previousTone = parseInt(partSettings.tone ?? 0, 10) || 0;
+            if (previousTone !== sourceTone) changed = true;
+            partSettings.tone = sourceTone;
+        }
+
+        if (kind === 'finish') {
+            const before = [
+                partSettings.shading,
+                partSettings.metallicRoughness,
+                partSettings.metallicMetalness,
+                partSettings.metallicReflection,
+                partSettings.phongRoughness,
+                partSettings.phongReflection,
+                partSettings.matteRoughness,
+                partSettings.matteReflection,
+            ].join('|');
+
+            partSettings.shading = source.shading;
+            partSettings.metallicRoughness = source.metallicRoughness;
+            partSettings.metallicMetalness = source.metallicMetalness;
+            partSettings.metallicReflection = source.metallicReflection;
+            partSettings.phongRoughness = source.phongRoughness;
+            partSettings.phongReflection = source.phongReflection;
+            partSettings.matteRoughness = source.matteRoughness;
+            partSettings.matteReflection = source.matteReflection;
+
+            const after = [
+                partSettings.shading,
+                partSettings.metallicRoughness,
+                partSettings.metallicMetalness,
+                partSettings.metallicReflection,
+                partSettings.phongRoughness,
+                partSettings.phongReflection,
+                partSettings.matteRoughness,
+                partSettings.matteReflection,
+            ].join('|');
+
+            if (before !== after) changed = true;
+        }
+
+        if (customModelSettingsByPart && typeof customModelSettingsByPart === 'object') {
+            customModelSettingsByPart[idx] = { ...partSettings };
+        }
+    });
+
+    if (!changed) {
+        setStatus('Selected parts already match the active value.');
+        setTimeout(() => setStatus(''), 1800);
+        return;
+    }
+
+    if (kind === 'finish') {
+        if (mesh) rebuildMeshMaterialsForCurrentShading();
+    } else {
+        if (mesh) applyPartColorsToMesh();
+        applyCurrentTextureTuning();
+    }
+
+    if (activeBgPreset === 'modelcolor') {
+        const syncColor = getModelSyncSourceColor();
+        bgPick.value = syncColor;
+        if (isDynamicBg) updateDynamicBg();
+        else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+    }
+
+    persistCurrentMultipartParts();
+    syncModelPartSelectorUI(true);
+    saveSettings();
+
+    const label = kind === 'color' ? 'color' : (kind === 'shade' ? 'shade' : 'finish');
+    setStatus(`Applied ${label} to ${selectedIndices.length} part${selectedIndices.length === 1 ? '' : 's'}.`);
+    setTimeout(() => setStatus(''), 1800);
+}
+
 function setDisplayedFileName(name) {
     const safeName = String(name || 'model.stl');
     fileNameEl.textContent = safeName;
@@ -2190,12 +2329,13 @@ function rebuildMeshMaterialsForCurrentShading() {
     applyCurrentTextureTuning();
 }
 
-function syncModelPartSelectorUI() {
+function syncModelPartSelectorUI(keepMenuOpen = false) {
     if (!modelPartThumbsWrap || !modelPartSelectorMenu || !modelPartSelectorBtn) return;
     const isVisible = hasModelParts();
     modelPartThumbsWrap.hidden = !isVisible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!isVisible));
     if (!isVisible) {
+        bulkSelectedPartIndices.clear();
         if (modelPartSelectorEl) modelPartSelectorEl.hidden = true;
         modelPartSelectorMenu.innerHTML = '';
         modelPartSelectorBtn.hidden = true;
@@ -2223,12 +2363,13 @@ function syncModelPartSelectorUI() {
     const singleModel = partCount <= 1;
     const canMutateFiles = !!modelPartFiles && modelPartFiles.length === partCount;
     const canAppend = singleModel ? !!currentModelBuffer : canMutateFiles;
+    pruneBulkPartSelection();
 
     if (modelPartSelectorEl) modelPartSelectorEl.hidden = false;
     modelPartSelectorBtn.hidden = false;
     modelPartSelectorBtn.classList.toggle('is-static', singleModel);
-    modelPartSelectorMenu.hidden = true;
-    modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
+    modelPartSelectorMenu.hidden = !keepMenuOpen;
+    modelPartSelectorBtn.setAttribute('aria-expanded', keepMenuOpen ? 'true' : 'false');
 
     if (modelPartSingleMenuRow) {
         modelPartSingleMenuRow.hidden = !singleModel;
@@ -2258,6 +2399,36 @@ function syncModelPartSelectorUI() {
     modelPartSelectorMenu.innerHTML = '';
 
     if (!singleModel) {
+        const selectedIndices = getBulkSelectedPartIndices();
+        const selectedCount = selectedIndices.length;
+        const bulkBar = document.createElement('div');
+        bulkBar.className = 'model-bulk-bar';
+        bulkBar.innerHTML = `<div class="model-bulk-bar-head"><span class="model-bulk-bar-title">Bulk edit checked parts</span><span class="model-bulk-bar-count">${selectedCount} selected</span></div><div class="model-bulk-bar-actions"><button type="button" class="model-bulk-btn" data-bulk-action="select-all">Select all</button><button type="button" class="model-bulk-btn" data-bulk-action="clear">Clear</button><button type="button" class="model-bulk-btn" data-bulk-action="color"${selectedCount ? '' : ' disabled'}>Apply color</button><button type="button" class="model-bulk-btn" data-bulk-action="shade"${selectedCount ? '' : ' disabled'}>Apply shade</button><button type="button" class="model-bulk-btn" data-bulk-action="finish"${selectedCount ? '' : ' disabled'}>Apply finish</button></div>`;
+        bulkBar.addEventListener('click', (ev) => ev.stopPropagation());
+        bulkBar.querySelector('[data-bulk-action="select-all"]')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            setBulkPartSelectionForAll(true);
+            syncModelPartSelectorUI(true);
+        });
+        bulkBar.querySelector('[data-bulk-action="clear"]')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            setBulkPartSelectionForAll(false);
+            syncModelPartSelectorUI(true);
+        });
+        bulkBar.querySelector('[data-bulk-action="color"]')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            applyBulkEditToSelectedParts('color');
+        });
+        bulkBar.querySelector('[data-bulk-action="shade"]')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            applyBulkEditToSelectedParts('shade');
+        });
+        bulkBar.querySelector('[data-bulk-action="finish"]')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            applyBulkEditToSelectedParts('finish');
+        });
+        modelPartSelectorMenu.appendChild(bulkBar);
+
         modelPartNames.forEach((name, idx) => {
             const opt = document.createElement('div');
             opt.className = 'thumb-select-option';
@@ -2266,7 +2437,21 @@ function syncModelPartSelectorUI() {
             const settings = getPartSettings(idx);
             const hideLabel = settings.hidden ? 'Show' : 'Hide';
             const mutateDisabledAttr = canMutateFiles ? '' : ' disabled title="Part source files are unavailable for editing"';
-            opt.innerHTML = `<button type="button" class="thumb-select-option-main" data-part-select="${idx}"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">\u22ee</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action" data-part-action="hide" data-part-index="${idx}">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}"${mutateDisabledAttr}>Delete Model</button></div>`;
+            const bulkLabel = `Select part ${idx + 1} for bulk edit`;
+            opt.innerHTML = `<label class="thumb-select-option-check" title="${bulkLabel}" aria-label="${bulkLabel}"><input type="checkbox" class="thumb-select-option-check-input" data-part-bulk-select="${idx}"></label><button type="button" class="thumb-select-option-main" data-part-select="${idx}"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">\u22ee</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action" data-part-action="hide" data-part-index="${idx}">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}"${mutateDisabledAttr}>Delete Model</button></div>`;
+
+            const bulkCheck = opt.querySelector('[data-part-bulk-select]');
+            const bulkCheckWrap = opt.querySelector('.thumb-select-option-check');
+            bulkCheckWrap?.addEventListener('click', (ev) => ev.stopPropagation());
+            if (bulkCheck) {
+                bulkCheck.checked = bulkSelectedPartIndices.has(idx);
+                bulkCheck.addEventListener('click', (ev) => ev.stopPropagation());
+                bulkCheck.addEventListener('change', (ev) => {
+                    ev.stopPropagation();
+                    setBulkPartSelected(idx, bulkCheck.checked);
+                    syncModelPartSelectorUI(true);
+                });
+            }
 
             opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
                 clearPresetHoverPreview();
@@ -5646,11 +5831,10 @@ textureTuneLightSourceSlider?.addEventListener('input', () => {
 });
 
 textureTuneLightLockBox?.addEventListener('change', () => {
-    // Light lock is always on; ignore user changes to hidden checkbox
-    textureTuneState.lightLock = true;
-    if (textureTuneLightLockBox) textureTuneLightLockBox.checked = true;
+    textureTuneState.lightLock = !!textureTuneLightLockBox?.checked;
     updateTextureTuneUI();
-    if (!isExporting) renderer.render(scene, camera);
+    syncLightRig();
+    if (!isExporting && renderer && scene && camera) renderer.render(scene, camera);
     saveSettings();
 });
 
@@ -5874,6 +6058,8 @@ function applyExportFormat(fmt) {
     if (opts) opts.hidden = false;
     applyExportQuickOptionsForFormat(fmt);
     handleExportFormatAutoPause(fmt);
+    const isStillFmt = fmt === 'png' || fmt === 'jpg';
+    if (exportMotionControlsEl) exportMotionControlsEl.hidden = isStillFmt || !exportMotionControlsEnabled;
     updateCropDimensionsDock();
     updateExportActionLabels(fmt);
     updateEstimate();
@@ -5966,10 +6152,7 @@ function renderCollapsedExportSummary(fmt) {
             <span>Quality</span>
             <select class="export-select export-collapsed-confirm-control" data-export-review="quality">${qualityOptions}</select>
         </label>
-        <label class="export-collapsed-confirm-row">
-            <span>Rotation Time</span>
-            <select class="export-select export-collapsed-confirm-control" data-export-review="speed">${speedOptions}</select>
-        </label>
+        ${(format === 'gif' || format === 'mp4') ? `<label class="export-collapsed-confirm-row"><span>Rotation Time</span><select class="export-select export-collapsed-confirm-control" data-export-review="speed">${speedOptions}</select></label>` : ''}
         <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
             <span>Grid</span>
             <input type="checkbox" data-export-review="grid"${gridChecked ? ' checked' : ''}>
@@ -5998,7 +6181,9 @@ function renderCollapsedExportSummary(fmt) {
         saveSettings();
     });
 
-    const speedSelect = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="speed"]');
+    const speedSelect = (format === 'gif' || format === 'mp4')
+        ? exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="speed"]')
+        : null;
     speedSelect?.addEventListener('change', () => {
         if (!speedSlider) return;
         speedSlider.value = speedSelect.value;

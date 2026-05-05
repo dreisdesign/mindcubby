@@ -31,6 +31,7 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
   - **Do not ask me again** stores your preferred default action
 - Multi-part import: select or drop multiple STL files at once to load them as one aligned object (keeps original CAD offsets for multi-color part stacks)
 - Multi-part editing: use **Part Color Target** in the Model card to choose which part you are editing
+- Multi-part bulk edit: in **Part Color Target**, check multiple parts and use the bulk banner to apply active **Color**, **Shade**, or **Finish** values to all checked parts
 - Model card manager behavior:
   - For multipart models, each part row keeps **Replace**, **Hide/Show**, and **Delete** in the 3-dot menu
   - **Add STL** is now a dedicated card-level button (`Add Model`) instead of living in each 3-dot row
@@ -56,7 +57,7 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 
 ### Viewer controls
 
-- **Drag** to orbit · **Scroll** to zoom · **Right-drag** to pan
+- **Drag** to orbit · **Scroll** to zoom · **Right-drag up/down** to pan vertically
 - **Spacebar** — pause / resume rotation
 - **D-pad** (bottom-center of viewer) — orbit the camera in 45° snapped increments
   - Arrow keys (←↑↓→) do the same thing from the keyboard
@@ -110,6 +111,7 @@ Texture tuning (tune icon in the Texture card) includes:
 - Highlights
 - Shadows (strength)
 - Light Source (shadow direction)
+- Lock light to camera (toggle)
 - Light Height (shadow length/angle)
 - Roughness / Reflection (all modes)
 - Metalness (Metal mode only)

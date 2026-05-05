@@ -996,9 +996,87 @@ html.loaded .controls-bar.hidden {
     box-shadow: var(--shadow-card);
 }
 
+.model-bulk-bar {
+    margin-bottom: 8px;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 70%, white 30%);
+    border-radius: 10px;
+    background: color-mix(in srgb, #fff 78%, var(--palette-blueberry-100) 22%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.model-bulk-bar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.model-bulk-bar-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--color-on-surface);
+}
+
+.model-bulk-bar-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-label);
+}
+
+.model-bulk-bar-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.model-bulk-btn {
+    border: 1px solid color-mix(in srgb, var(--palette-blueberry-400) 68%, white 32%);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--color-on-surface);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
+.model-bulk-btn:hover {
+    border-color: var(--palette-blueberry-500);
+    background: color-mix(in srgb, #fff 70%, var(--palette-blueberry-100) 30%);
+}
+
+.model-bulk-btn:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
+
 #modelPartSelectorMenu {
     max-height: none;
     overflow: visible;
+}
+
+#modelPartSelectorMenu .thumb-select-option {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.thumb-select-option-check {
+    width: 20px;
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.thumb-select-option-check-input {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
 }
 
 .thumb-select-option {
@@ -1283,6 +1361,22 @@ html.theme-dark .thumb-select-btn,
 html.theme-dark .thumb-select-menu {
     background: rgba(30, 25, 62, 0.18);
     border-color: rgba(179, 168, 247, 0.3);
+}
+
+html.theme-dark .model-bulk-bar {
+    border-color: rgba(179, 168, 247, 0.44);
+    background: rgba(34, 30, 70, 0.52);
+}
+
+html.theme-dark .model-bulk-btn {
+    background: rgba(30, 25, 62, 0.26);
+    border-color: rgba(179, 168, 247, 0.42);
+    color: var(--palette-blueberry-100);
+}
+
+html.theme-dark .model-bulk-btn:hover {
+    border-color: var(--palette-blueberry-300);
+    background: rgba(56, 48, 104, 0.56);
 }
 
 html.theme-dark .thumb-select-btn:hover,
@@ -1996,7 +2090,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     margin-bottom: 0;
     position: relative;
     aspect-ratio: 1 / 1;
-    border: 1.5px solid var(--color-border);
+    border: 1.5px solid var(--color-border, rgba(0, 0, 0, 0.14));
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
@@ -2015,6 +2109,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
         linear-gradient(45deg, rgba(0, 0, 0, 0.06) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.06) 75%);
     background-size: 16px 16px;
     background-position: 0 0, 8px 8px;
+    border-color: rgba(0, 0, 0, 0.22);
 }
 
 /* Main export button */
@@ -5098,8 +5193,7 @@ html.loaded.layout-mobile-accordion .tab-panel {
         max-height: var(--desktop-v2-effects-max-height, calc(100vh - 220px));
         overflow-y: auto;
         z-index: 40;
-        padding-right: 0;
-        padding-bottom: 6px;
+        padding: 4px 8px 40px 8px;
     }
 
     html.loaded.layout-v2-desktop .tab-panel--effects[hidden] {
