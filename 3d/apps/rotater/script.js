@@ -2153,6 +2153,8 @@ function getPartBounds(partIdx) {
 
 function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (!canvasEl || !mesh || !renderer || !camera) return;
+    const resolvedPartIdx = parseInt(partIdx, 10);
+    if (!Number.isInteger(resolvedPartIdx) || resolvedPartIdx < 0 || resolvedPartIdx >= modelPartNames.length) return;
     const rect = canvasEl.getBoundingClientRect();
     const cssW = Math.max(1, Math.round(rect.width || canvasEl.clientWidth || canvasEl.width || 1));
     let cssH = Math.max(1, Math.round(rect.height || canvasEl.clientHeight || canvasEl.height || 1));
@@ -2204,7 +2206,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
 
     mats.forEach((m, idx) => {
         if (!m) return;
-        if (idx === partIdx) {
+        if (idx === resolvedPartIdx) {
             m.transparent = false;
             m.opacity = 1;
             m.depthWrite = true;
@@ -2219,7 +2221,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
         m.needsUpdate = true;
     });
 
-    const partBounds = getPartBounds(partIdx);
+    const partBounds = getPartBounds(resolvedPartIdx);
     const fov = camera.fov;
     const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(fov / 2));
     const dist = (partBounds.radius / Math.max(0.01, tanHalfFov)) * 1.65;
@@ -2768,6 +2770,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             }
             syncModelPartCheckboxStates();
             syncModelPartBulkUIState();
+            queueModelPartThumbsRender();
         });
         bulkBar.querySelectorAll('[data-model-view]').forEach((btn) => btn.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -2810,6 +2813,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     // Re-sync all states to ensure consistency
                     syncModelPartCheckboxStates();
                     syncModelPartBulkUIState();
+                    queueModelPartThumbsRender();
                 }, false);
             }
 
@@ -2854,6 +2858,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 closeThumbSelectMenus();
                 syncModelPartCheckboxStates();
                 syncModelPartBulkUIState();
+                queueModelPartThumbsRender();
                 saveSettings();
             });
 
