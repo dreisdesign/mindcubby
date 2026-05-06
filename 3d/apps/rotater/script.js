@@ -110,7 +110,7 @@ const EXPORT = {
     get image() {
         const { width, height, presetId, presetTag } = getImageExportSize();
         return {
-            quality: parseInt(document.getElementById('jpegQuality')?.value ?? 92, 10) / 100,
+                quality: parseInt(document.getElementById('jpegQuality')?.value ?? 90, 10) / 100,
             width,
             height,
             presetId,
@@ -249,7 +249,9 @@ const btnVideo = document.getElementById('btnExportVideo');
 const btnPng = document.getElementById('btnExportPng');
 const btnExportLabel = document.getElementById('btnExportLabel');
 const exportFormatEl = document.getElementById('exportFormat');
+const exportMiniFormatEl = document.getElementById('exportMiniFormat');
 const exportFormatCollapsedEl = document.getElementById('exportFormatCollapsed');
+const exportFormatTabEls = Array.from(document.querySelectorAll('[data-export-format-tab]'));
 const exportPanelEl = document.querySelector('.export-modal-panel');
 const exportPanelBodyEl = document.getElementById('exportPanelBody');
 const btnToggleExportPanel = document.getElementById('btnToggleExportPanel');
@@ -272,6 +274,8 @@ const partAppendInput = document.getElementById('partAppendInput');
 const uploadChoiceOverlayEl = document.getElementById('uploadChoiceOverlay');
 const uploadChoiceTextEl = document.getElementById('uploadChoiceText');
 const uploadChoiceDontShowEl = document.getElementById('uploadChoiceDontShow');
+const uploadChoiceDropZoneEl = document.getElementById('uploadChoiceDropZone');
+const uploadChoiceBrowseBtnEl = document.getElementById('btnUploadChoiceBrowse');
 const btnUploadChoiceClose = document.getElementById('btnUploadChoiceClose');
 const btnUploadChoiceCancel = document.getElementById('btnUploadChoiceCancel');
 const btnUploadChoiceImport = document.getElementById('btnUploadChoiceImport');
@@ -352,6 +356,7 @@ const btnResetBackgroundCard = document.getElementById('btnResetBackgroundCard')
 const btnResetBuildPlateCard = document.getElementById('btnResetBuildPlateCard');
 const btnResetLightingCard = document.getElementById('btnResetLightingCard');
 const btnResetAnimationCard = document.getElementById('btnResetAnimationCard');
+const btnResetExportCard = document.getElementById('btnResetExportCard');
 // Dev logging and a flag used to suppress saveSettings() while programmatically
 // applying restored settings so we don't overwrite localStorage/URL mid-restore.
 // Capture passthrough URL params (e.g. debug=1) once at startup so they survive
@@ -510,9 +515,19 @@ function setSliderValueFromClientX(slider, clientX) {
     if (!rect.width) return;
     const min = parseFloat(slider.min);
     const max = parseFloat(slider.max);
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const step = parseFloat(slider.step) || 1;
+    const thumbPx = parseFloat(getComputedStyle(slider).getPropertyValue('--slider-thumb-size')) || 16;
+    const usable = Math.max(1, rect.width - thumbPx);
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left - (thumbPx / 2)) / usable));
     const raw = min + ratio * (max - min);
-    const next = raw.toFixed(4);
+    const snapImmediately = !fineTuningMode && slider.dataset.immediateSnap === '1' && Number.isFinite(step) && step > 0;
+    const snapped = snapImmediately
+        ? min + Math.round((raw - min) / step) * step
+        : raw;
+    const decimals = snapImmediately
+        ? Math.min((String(step).split('.')[1] || '').length, 6)
+        : 4;
+    const next = Number(snapped).toFixed(decimals);
     if (String(slider.value) === next) return;
     slider.value = next;
     slider.dispatchEvent(new Event('input', { bubbles: true }));
@@ -528,7 +543,7 @@ function enableImmediateRangeDrag(slider) {
     slider.addEventListener('pointerdown', (ev) => {
         if (ev.button !== 0) return;
         draggingPointerId = ev.pointerId;
-        if (slider.dataset.snapCount && restoreStepValue == null) {
+        if (!fineTuningMode && slider.dataset.snapCount && restoreStepValue == null) {
             restoreStepValue = slider.step;
             slider.step = 'any';
         }
@@ -1136,6 +1151,7 @@ function updateBuildPlateMaterial() {
         buildPlateShadeValEl.textContent = (v >= 0 ? '+' : '') + String(v);
     }
     if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(Number(buildPlateShade) || 0);
+    updateBuildPlateShadeSliderVisual();
     if (buildPlateColorPickerEl && /^#[0-9a-f]{6}$/i.test(buildPlateColor)) {
         buildPlateColorPickerEl.value = buildPlateColor;
     }
@@ -1559,6 +1575,10 @@ function getPartOptionMoreIconSVG() {
     return '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="5" r="1.9" fill="currentColor"></circle><circle cx="12" cy="12" r="1.9" fill="currentColor"></circle><circle cx="12" cy="19" r="1.9" fill="currentColor"></circle></svg>';
 }
 
+function getChevronDownIconSVG(size = 20) {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"></path></svg>`;
+}
+
 function hideModelUndoToast() {
     if (!modelUndoToast) return;
     modelUndoToast.hidden = true;
@@ -1843,8 +1863,19 @@ function finishSliderValueToModeStrength(value) {
     const idx = Math.max(0, Math.min(FINISH_MODE_ORDER.length - 1, Math.floor((v - 1) / 3)));
     const mode = FINISH_MODE_ORDER[idx] || 'satin';
     const local = v - (idx * 3);
-    const strength = clampFinishStrength(local);
+    const strength = fineTuningMode
+        ? Math.max(1, Math.min(3, local))
+        : clampFinishStrength(local);
     return { mode, strength };
+}
+
+function roughnessForModeStrength(mode, strength) {
+    const stops = FINISH_MODE_STOPS[mode] || FINISH_MODE_STOPS.satin;
+    const s = Math.max(1, Math.min(3, Number(strength) || 1));
+    if (s <= 1) return stops[0];
+    if (s >= 3) return stops[2];
+    if (s <= 2) return stops[0] + (stops[1] - stops[0]) * (s - 1);
+    return stops[1] + (stops[2] - stops[1]) * (s - 2);
 }
 
 function setFinishModeUI(mode) {
@@ -1860,8 +1891,11 @@ function setFinishModeUI(mode) {
 function getFinishModeFromPartSettings(settings) {
     const shade = settings?.shading;
     if (shade === 'matte' || shade === 'flat' || shade === 'toon') return 'matte';
-    if (shade === 'phong') return 'satin';
-    return 'glossy';
+    if (shade === 'metallic') return 'glossy';
+    const rough = Number(settings?.phongRoughness ?? settings?.matteRoughness ?? settings?.metallicRoughness ?? 62);
+    if (rough >= 78) return 'matte';
+    if (rough <= 42) return 'glossy';
+    return 'satin';
 }
 
 function getSelectedFinishMode() {
@@ -1896,40 +1930,66 @@ function finishSliderValueFromPartSettings(settings) {
 }
 
 function applyFinishControlsToSelectedPart(commit = false) {
-    const s = getSelectedPartSettings();
     const defaultMode = getSelectedFinishMode();
     const defaultStrength = FINISH_MODE_DEFAULT_STRENGTH[defaultMode] || 2;
     const defaultValue = modeStrengthToFinishSliderValue(defaultMode, defaultStrength);
     const { mode, strength } = finishSliderValueToModeStrength(textureTuneRoughnessSlider?.value || defaultValue);
-    const rough = (FINISH_MODE_STOPS[mode] || FINISH_MODE_STOPS.glossy)[strength - 1];
+    const rough = roughnessForModeStrength(mode, strength);
 
-    if (commit && textureTuneRoughnessSlider) {
+    if (commit && textureTuneRoughnessSlider && !fineTuningMode) {
         textureTuneRoughnessSlider.value = String(modeStrengthToFinishSliderValue(mode, strength));
     }
     setFinishModeUI(mode);
 
-    s.shading = mode === 'matte' ? 'matte' : mode === 'satin' ? 'phong' : 'metallic';
-    shadingEl.value = s.shading;
-    s.matteRoughness = rough;
-    s.metallicRoughness = rough;
-    s.phongRoughness = rough;
-    if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = String(modeStrengthToFinishSliderValue(mode, strength));
+    const targets = applyToModelPartEditTargets((partSettings) => {
+        partSettings.shading = 'phong';
+        partSettings.matteRoughness = rough;
+        partSettings.metallicRoughness = rough;
+        partSettings.phongRoughness = rough;
+        const modeBaseReflection = mode === 'matte' ? 22 : mode === 'satin' ? 40 : 62;
+        const reflection = Math.max(6, Math.min(120, modeBaseReflection + ((2 - strength) * 8)));
+        partSettings.matteReflection = Math.max(4, reflection - 14);
+        partSettings.phongReflection = reflection;
+        partSettings.metallicReflection = Math.min(130, reflection + 10);
+    });
+    shadingEl.value = getSelectedPartSettings().shading;
+    if (textureTuneRoughnessVal) {
+        const rawVal = Number(textureTuneRoughnessSlider?.value || modeStrengthToFinishSliderValue(mode, strength));
+        textureTuneRoughnessVal.textContent = fineTuningMode
+            ? rawVal.toFixed(1).replace(/\.0$/, '')
+            : String(modeStrengthToFinishSliderValue(mode, strength));
+    }
+    return { mode, strength, targets };
 }
 
 function updateShadeSliderVisual() {
     if (!opacitySlider) return;
     const s = getSelectedPartSettings();
     const baseHex = s?.color || colorPick.value;
-    const toneVal = parseInt(s?.tone ?? opacitySlider.value ?? 0, 10) || 0;
-    const tonedHex = `#${computeTonedColor(baseHex, toneVal).getHexString()}`;
-    opacitySlider.style.setProperty('--slider-fill', tonedHex);
+    const lightHex = `#${computeTonedColor(baseHex, -100).getHexString()}`;
+    const darkHex = `#${computeTonedColor(baseHex, 100).getHexString()}`;
+    opacitySlider.style.setProperty('--slider-fill', lightHex);
+    opacitySlider.style.setProperty('--slider-track-base', darkHex);
+    opacitySlider.style.setProperty('--slider-track-gradient', `linear-gradient(to right, ${lightHex} 0%, ${darkHex} 100%)`);
 }
 
 function updateBgShadeSliderVisual() {
     if (!bgOpacitySlider || !bgPick) return;
-    const toneVal = parseInt(bgOpacitySlider.value, 10) || 0;
-    const c = computeTonedColor(bgPick.value, toneVal);
-    bgOpacitySlider.style.setProperty('--slider-fill', `#${c.getHexString()}`);
+    const lightHex = `#${computeTonedColor(bgPick.value, -100).getHexString()}`;
+    const darkHex = `#${computeTonedColor(bgPick.value, 100).getHexString()}`;
+    bgOpacitySlider.style.setProperty('--slider-fill', lightHex);
+    bgOpacitySlider.style.setProperty('--slider-track-base', darkHex);
+    bgOpacitySlider.style.setProperty('--slider-track-gradient', `linear-gradient(to right, ${lightHex} 0%, ${darkHex} 100%)`);
+}
+
+function updateBuildPlateShadeSliderVisual() {
+    if (!buildPlateShadeSliderEl) return;
+    const baseHex = buildPlateColor || '#c2a164';
+    const lightHex = `#${computeTonedColor(baseHex, -100).getHexString()}`;
+    const darkHex = `#${computeTonedColor(baseHex, 100).getHexString()}`;
+    buildPlateShadeSliderEl.style.setProperty('--slider-fill', lightHex);
+    buildPlateShadeSliderEl.style.setProperty('--slider-track-base', darkHex);
+    buildPlateShadeSliderEl.style.setProperty('--slider-track-gradient', `linear-gradient(to right, ${lightHex} 0%, ${darkHex} 100%)`);
 }
 
 function syncUIFromSelectedPart() {
@@ -2072,7 +2132,13 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (!canvasEl || !mesh || !renderer || !camera) return;
     const rect = canvasEl.getBoundingClientRect();
     const cssW = Math.max(1, Math.round(rect.width || canvasEl.clientWidth || canvasEl.width || 1));
-    const cssH = Math.max(1, Math.round(rect.height || canvasEl.clientHeight || canvasEl.height || 1));
+    let cssH = Math.max(1, Math.round(rect.height || canvasEl.clientHeight || canvasEl.height || 1));
+    if (
+        canvasEl.classList.contains('thumb-select-option-canvas')
+        && canvasEl.closest('#modelPartSelectorMenu.model-selector-view--grid')
+    ) {
+        cssH = cssW;
+    }
     const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
     const targetW = Math.max(1, Math.round(cssW * dpr));
     const targetH = Math.max(1, Math.round(cssH * dpr));
@@ -2539,42 +2605,19 @@ function disposeMaterials(materialLike) {
 
 function computeTonedColor(baseHex, toneVal) {
     const baseC = new THREE.Color(baseHex);
-    const rgb = { r: baseC.r, g: baseC.g, b: baseC.b };
-    const max = Math.max(rgb.r, rgb.g, rgb.b);
-    const min = Math.min(rgb.r, rgb.g, rgb.b);
-    const delta = max - min;
-
-    let h = 0;
-    if (delta > 1e-6) {
-        if (max === rgb.r) h = ((rgb.g - rgb.b) / delta) % 6;
-        else if (max === rgb.g) h = ((rgb.b - rgb.r) / delta) + 2;
-        else h = ((rgb.r - rgb.g) / delta) + 4;
-        h /= 6;
-        if (h < 0) h += 1;
-    }
-    const s = max <= 1e-6 ? 0 : delta / max;
-    const v = max;
-
+    const hsl = { h: 0, s: 0, l: 0 };
+    baseC.getHSL(hsl);
     const amount = Math.max(0, Math.min(1, Math.abs(toneVal) / 100));
-    const maxShift = 0.30; // slider extremes are +/-30% brightness from baseline
-    let outV = v;
-    if (toneVal < 0) outV = Math.min(1, v * (1 + (maxShift * amount))); // brighter side
-    if (toneVal > 0) outV = Math.max(0, v * (1 - (maxShift * amount))); // darker side
 
-    const i = Math.floor(h * 6);
-    const f = (h * 6) - i;
-    const p = outV * (1 - s);
-    const q = outV * (1 - f * s);
-    const t = outV * (1 - (1 - f) * s);
-    const sextant = ((i % 6) + 6) % 6;
-    let r = outV, g = t, b = p;
-    if (sextant === 1) { r = q; g = outV; b = p; }
-    if (sextant === 2) { r = p; g = outV; b = t; }
-    if (sextant === 3) { r = p; g = q; b = outV; }
-    if (sextant === 4) { r = t; g = p; b = outV; }
-    if (sextant === 5) { r = outV; g = p; b = q; }
+    if (toneVal < 0) {
+        const lift = hsl.l < 0.08 ? 0.56 : 0.30;
+        hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * lift * amount);
+    } else if (toneVal > 0) {
+        hsl.l = Math.max(0, hsl.l * (1 - 0.45 * amount));
+    }
 
-    baseC.setRGB(r, g, b);
+    if (hsl.s < 0.02 && hsl.l > 0.02) hsl.s = 0.02;
+    baseC.setHSL(hsl.h, hsl.s, hsl.l);
     return baseC;
 }
 
@@ -2659,7 +2702,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     if (modelPartSingleMenuBtn) modelPartSingleMenuBtn.setAttribute('aria-expanded', 'false');
 
     if (modelPartAddNextBtn) {
-        modelPartAddNextBtn.hidden = true;
+        modelPartAddNextBtn.hidden = false;
         modelPartAddNextBtn.disabled = !canAppend;
         modelPartAddNextBtn.title = canAppend
             ? 'Add one or more STL files as new model parts'
@@ -2718,7 +2761,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             const bulkCheckWrap = opt.querySelector('.thumb-select-option-check');
             bulkCheckWrap?.addEventListener('click', (ev) => ev.stopPropagation());
             if (bulkCheck) {
-                bulkCheck.checked = bulkSelectedPartIndices.has(idx);
+                bulkCheck.checked = bulkSelectedPartIndices.has(idx) || idx === modelPartSelected;
                 bulkCheck.addEventListener('click', (ev) => ev.stopPropagation());
                 bulkCheck.addEventListener('change', (ev) => {
                     ev.stopPropagation();
@@ -2757,6 +2800,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
                 clearPresetHoverPreview();
                 modelPartSelected = idx;
+                setBulkPartSelected(idx, true);
                 syncUIFromSelectedPart();
                 applyPartColorsToMesh();
                 applyCurrentTextureTuning();
@@ -2807,6 +2851,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                             const fallbackPreset = BG_PRESETS.find((preset) => preset.id === lastNonModelBgPreset) || BG_PRESETS[0];
                             activeBgPreset = fallbackPreset?.id || 'white';
                             if (fallbackPreset?.color) {
+                                applyBgPresetDefaultTone(fallbackPreset.id);
                                 bgPick.value = fallbackPreset.color;
                                 bgPick.dispatchEvent(new Event('input', { bubbles: true }));
                             }
@@ -2838,30 +2883,11 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
 
             modelPartSelectorMenu.appendChild(opt);
         });
-
-        const addRow = document.createElement('div');
-        addRow.className = 'thumb-select-menu-add-row';
-        addRow.innerHTML = `<button type="button" class="thumb-select-add-slot thumb-select-add-slot--menu"${canAppend ? '' : ' disabled'}>Add Model</button>`;
-        const addBtn = addRow.querySelector('button');
-        if (addBtn) {
-            addBtn.title = canAppend
-                ? 'Add one or more STL files as new model parts'
-                : (singleModel
-                    ? 'Current model source is unavailable for add. Reload the model and try again.'
-                    : 'Part source files are unavailable for editing');
-            addBtn.addEventListener('click', (ev) => {
-                ev.stopPropagation();
-                if (addBtn.disabled) return;
-                partAppendInput?.click();
-            });
-        }
-        modelPartSelectorMenu.appendChild(addRow);
     } else if (modelPartSingleActions) {
         const settings = getPartSettings(0);
         const hideLabel = settings.hidden ? 'Show Model' : 'Hide Model';
-        const clearBtn = document.getElementById('btnClearModel');
-        const clearLabel = clearBtn?.title || 'Reset to Benchy';
-        modelPartSingleActions.innerHTML = `<button type="button" class="part-option-action" data-single-action="replace">Replace STL</button><button type="button" class="part-option-action" data-single-action="add"${canAppend ? '' : ' disabled'}>Add Model</button><button type="button" class="part-option-action" data-single-action="hide">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-single-action="clear">${clearLabel}</button>`;
+        const syncOn = activeBgPreset === 'modelcolor';
+        modelPartSingleActions.innerHTML = `<button type="button" class="part-option-action" data-single-action="replace">Replace STL</button><button type="button" class="part-option-action" data-single-action="hide">${hideLabel}</button><button type="button" class="part-option-action part-option-action--toggle" data-single-action="bg-sync-toggle"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button>`;
 
         modelPartSingleActions.querySelectorAll('.part-option-action').forEach((actionBtn) => {
             actionBtn.addEventListener('click', (ev) => {
@@ -2881,15 +2907,39 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     closeModelPartActionMenus();
                     return;
                 }
-                if (action === 'add') {
+                if (action === 'bg-sync-toggle') {
+                    const partIdx = 0;
+                    const isActiveSource = activeBgPreset === 'modelcolor' && bgSyncPartIndex === partIdx;
+                    if (isActiveSource) {
+                        if (!window.confirm('Turn off background color sync?')) return;
+                        pushModelUndoState();
+                        const fallbackPreset = BG_PRESETS.find((preset) => preset.id === lastNonModelBgPreset) || BG_PRESETS[0];
+                        activeBgPreset = fallbackPreset?.id || 'white';
+                        if (fallbackPreset?.color) {
+                            applyBgPresetDefaultTone(fallbackPreset.id);
+                            bgPick.value = fallbackPreset.color;
+                            bgPick.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                        updateBgSelection();
+                        syncModelPartSelectorUI(true);
+                        saveSettings();
+                        closeModelPartActionMenus();
+                        return;
+                    }
+                    if (!maybeConfirmBgSyncChange(partIdx)) return;
+                    pushModelUndoState();
+                    activeBgPreset = 'modelcolor';
+                    bgSyncPartIndex = partIdx;
+                    const syncColor = getModelSyncSourceColor();
+                    bgPick.value = syncColor;
+                    if (isDynamicBg) updateDynamicBg();
+                    else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+                    renderBgPresets();
+                    updateBgSelection();
+                    syncModelPartSelectorUI(true);
+                    saveSettings();
                     closeModelPartActionMenus();
-                    if (!canAppend) return;
-                    partAppendInput?.click();
                     return;
-                }
-                if (action === 'clear') {
-                    closeModelPartActionMenus();
-                    clearBtn?.click();
                 }
             });
         });
@@ -3446,7 +3496,7 @@ function updateExportPreview(force = false) {
                     // Draw dim overlay over the crop region
                     const scaleX = pxW / cw;
                     const scaleY = pxH / ch;
-                    ctx2d.fillStyle = 'rgba(0, 0, 0, 0.45)';
+                    ctx2d.fillStyle = 'rgba(0, 0, 0, 0.58)';
                     ctx2d.fillRect(0, 0, pxW, sy * scaleY);                  // top
                     ctx2d.fillRect(0, (sy + sh) * scaleY, pxW, pxH - (sy + sh) * scaleY);   // bottom
                     ctx2d.fillRect(0, sy * scaleY, sx * scaleX, sh * scaleY);                // left
@@ -3589,7 +3639,7 @@ function updateExportPreview(force = false) {
         const { sx, sy, sw, sh } = getCropFrameRect(cw, ch);
         const scaleX = pxW / cw;
         const scaleY = pxH / ch;
-        ctx2d.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx2d.fillStyle = 'rgba(0, 0, 0, 0.58)';
         ctx2d.fillRect(0, 0, pxW, sy * scaleY);
         ctx2d.fillRect(0, (sy + sh) * scaleY, pxW, pxH - (sy + sh) * scaleY);
         ctx2d.fillRect(0, sy * scaleY, sx * scaleX, sh * scaleY);
@@ -3748,7 +3798,7 @@ function drawExportFrame() {
     const cc = document.getElementById('cropControls');
     if (exportFrameEnabled) {
         // Draw dim overlay directly on canvas — avoids hard CSS edges from backdrop-filter divs
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
         ctx.fillRect(0, 0, w, sy);                  // top
         ctx.fillRect(0, sy + sh, w, h - sy - sh);   // bottom
         ctx.fillRect(0, sy, sx, sh);                // left
@@ -4485,8 +4535,7 @@ function updateRulerGrid() {
     const modelGap = Math.max(0.4, modelRadius * 0.02);
     let gridY = worldBox.min.y - modelGap;
     if (buildPlateMesh?.visible) {
-        const plateGap = Math.max(0.8, modelRadius * 0.04);
-        gridY = Math.min(gridY, buildPlateMesh.position.y - plateGap);
+        gridY = buildPlateMesh.position.y + Math.max(0.03, modelRadius * 0.0012);
     }
     rulerGridHelper.position.set(0, gridY, 0);
     updateRulerFootprintHelper(worldBox, gridY);
@@ -4581,7 +4630,7 @@ function saveSettings() {
             exportTransparent: document.getElementById('exportTransparent')?.checked ? '1' : '0',
             gifDither: document.getElementById('gifDither')?.checked ? '1' : '0',
             exportWatermark: document.getElementById('exportWatermark')?.checked ? '1' : '0',
-            jpegQuality: document.getElementById('jpegQuality')?.value ?? '92',
+            jpegQuality: document.getElementById('jpegQuality')?.value ?? '90',
             textureTuneOpen: textureTunePanel && !textureTunePanel.hidden ? '1' : '0',
             textureTuneLight: String(textureTuneState.light),
             textureTuneContrast: String(textureTuneState.contrast),
@@ -6244,17 +6293,8 @@ textureTuneLightHeightSlider?.addEventListener('input', () => {
 
 textureTuneRoughnessSlider?.addEventListener('input', () => {
     syncSliderTooltip(textureTuneRoughnessSlider);
-    const mode = getSelectedFinishMode();
-    const strength = parseInt(textureTuneRoughnessSlider?.value || '2', 10);
-    const finishFromSlider = modeStrengthToFinishValues(mode, strength);
-    const targets = applyToModelPartEditTargets((partSettings) => {
-        partSettings.metallicRoughness = finishFromSlider.metallicRoughness;
-        partSettings.metallicReflection = finishFromSlider.metallicReflection;
-        partSettings.phongRoughness = finishFromSlider.phongRoughness;
-        partSettings.phongReflection = finishFromSlider.phongReflection;
-        partSettings.matteRoughness = finishFromSlider.matteRoughness;
-        partSettings.matteReflection = finishFromSlider.matteReflection;
-    });
+    const { targets } = applyFinishControlsToSelectedPart();
+    if (mesh) rebuildMeshMaterialsForCurrentShading();
     applyCurrentTextureTuning();
     persistCurrentMultipartParts();
     queueModelPartThumbsRender(targets);
@@ -6262,17 +6302,8 @@ textureTuneRoughnessSlider?.addEventListener('input', () => {
 });
 
 textureTuneRoughnessSlider?.addEventListener('change', () => {
-    const mode = getSelectedFinishMode();
-    const strength = parseInt(textureTuneRoughnessSlider?.value || '2', 10);
-    const finishFromSlider = modeStrengthToFinishValues(mode, strength);
-    const targets = applyToModelPartEditTargets((partSettings) => {
-        partSettings.metallicRoughness = finishFromSlider.metallicRoughness;
-        partSettings.metallicReflection = finishFromSlider.metallicReflection;
-        partSettings.phongRoughness = finishFromSlider.phongRoughness;
-        partSettings.phongReflection = finishFromSlider.phongReflection;
-        partSettings.matteRoughness = finishFromSlider.matteRoughness;
-        partSettings.matteReflection = finishFromSlider.matteReflection;
-    });
+    const { targets } = applyFinishControlsToSelectedPart(true);
+    if (mesh) rebuildMeshMaterialsForCurrentShading();
     applyCurrentTextureTuning();
     persistCurrentMultipartParts({ immediate: true });
     queueModelPartThumbsRender(targets);
@@ -6281,20 +6312,12 @@ textureTuneRoughnessSlider?.addEventListener('change', () => {
 
 finishModeButtons.forEach((btn) => btn.addEventListener('click', () => {
     const mode = btn.dataset.finishMode || 'satin';
-    setFinishModeUI(mode);
     if (textureTuneRoughnessSlider) {
         textureTuneRoughnessSlider.value = String(modeStrengthToFinishSliderValue(mode, 2));
     }
-    const finishValues = modeStrengthToFinishValues(mode, 2);
-    const targets = applyToModelPartEditTargets((partSettings) => {
-        partSettings.metallicRoughness = finishValues.metallicRoughness;
-        partSettings.metallicReflection = finishValues.metallicReflection;
-        partSettings.phongRoughness = finishValues.phongRoughness;
-        partSettings.phongReflection = finishValues.phongReflection;
-        partSettings.matteRoughness = finishValues.matteRoughness;
-        partSettings.matteReflection = finishValues.matteReflection;
-    });
     syncSliderTooltip(textureTuneRoughnessSlider);
+    const { targets } = applyFinishControlsToSelectedPart(true);
+    if (mesh) rebuildMeshMaterialsForCurrentShading();
     applyCurrentTextureTuning();
     persistCurrentMultipartParts({ immediate: true });
     queueModelPartThumbsRender(targets);
@@ -6369,7 +6392,7 @@ document.getElementById('exportQuality')?.addEventListener('change', () => {
 });
 
 exportQualitySliderEl?.addEventListener('input', () => {
-    const idx = Math.max(0, Math.min(2, parseInt(exportQualitySliderEl.value, 10) || 1));
+    const idx = Math.max(0, Math.min(2, Math.round(parseFloat(exportQualitySliderEl.value) || 1)));
     setExportQualityValue(EXPORT_QUALITY_ORDER[idx]);
     updateEstimate();
     refreshExportPreviewNow();
@@ -6478,40 +6501,64 @@ function updateExportActionLabels(fmt = exportFormatEl?.value ?? exportFormatCol
     if (btnExportCollapsedLabel) btnExportCollapsedLabel.textContent = FORMAT_SHORT_LABELS[fmt] ?? 'Export';
 }
 
+function syncExportFormatTabs(fmt) {
+    exportFormatTabEls.forEach((tabEl) => {
+        const active = tabEl.dataset.exportFormatTab === fmt;
+        tabEl.classList.toggle('is-active', active);
+        tabEl.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+}
+
 function applyExportFormat(fmt) {
     if (exportFormatEl && exportFormatEl.value !== fmt) exportFormatEl.value = fmt;
+    if (exportMiniFormatEl && exportMiniFormatEl.value !== fmt) exportMiniFormatEl.value = fmt;
     if (exportFormatCollapsedEl && exportFormatCollapsedEl.value !== fmt) exportFormatCollapsedEl.value = fmt;
     document.querySelectorAll('.export-format-opts').forEach(el => { el.hidden = true; });
     const opts = document.getElementById(`exportOpts-${fmt}`);
     if (opts) opts.hidden = false;
     applyExportQuickOptionsForFormat(fmt);
     handleExportFormatAutoPause(fmt);
-    const isStillFmt = fmt === 'png' || fmt === 'jpg';
-    if (exportMotionControlsEl) exportMotionControlsEl.hidden = isStillFmt || !exportMotionControlsEnabled;
+    if (exportMotionControlsEl) exportMotionControlsEl.hidden = true;
     updateCropDimensionsDock();
     updateExportActionLabels(fmt);
+    syncExportFormatTabs(fmt);
     updateEstimate();
     refreshExportPreviewNow();
     queueDesktopV2RailLayoutSync();
 }
 
-function applyExportPanelState(collapsed) {
-    if (!exportPanelEl || !exportPanelBodyEl || !btnToggleExportPanel) return;
+exportFormatTabEls.forEach((tabEl) => {
+    tabEl.addEventListener('click', () => {
+        const fmt = tabEl.dataset.exportFormatTab;
+        if (!fmt) return;
+        applyExportFormat(fmt);
+        saveSettings();
+    });
+});
 
-    exportPanelEl.classList.toggle('is-collapsed', !!collapsed);
-    exportPanelBodyEl.hidden = !!collapsed;
-    btnToggleExportPanel.setAttribute('aria-expanded', String(!collapsed));
+function applyExportPanelState(collapsed) {
+    if (!exportPanelEl || !exportPanelBodyEl) return;
+
+    // Export in overlay mode always stays expanded.
+    exportPanelEl.classList.remove('is-collapsed');
+    exportPanelBodyEl.hidden = false;
+    if (btnToggleExportPanel) btnToggleExportPanel.setAttribute('aria-expanded', 'true');
     if (exportPanelCollapsedBarEl) {
-        exportPanelCollapsedBarEl.hidden = !collapsed;
-        exportPanelCollapsedBarEl.setAttribute('aria-hidden', String(!collapsed));
+        exportPanelCollapsedBarEl.hidden = true;
+        exportPanelCollapsedBarEl.setAttribute('aria-hidden', 'true');
     }
 
     updateExportActionLabels();
-    if (!collapsed) refreshExportPreviewNow();
+    refreshExportPreviewNow();
     queueDesktopV2RailLayoutSync();
 }
 
 exportFormatEl?.addEventListener('change', function () {
+    applyExportFormat(this.value);
+    saveSettings();
+});
+
+exportMiniFormatEl?.addEventListener('change', function () {
     applyExportFormat(this.value);
     saveSettings();
 });
@@ -6546,7 +6593,7 @@ function renderCollapsedExportSummary(fmt) {
     const bgChecked = !!exportBgColorEl?.checked;
     const gifLoopChecked = !!document.getElementById('gifLoop')?.checked;
     const gifDitherChecked = !!document.getElementById('gifDither')?.checked;
-    const jpegQualityValue = document.getElementById('jpegQuality')?.value || '92';
+    const jpegQualityValue = document.getElementById('jpegQuality')?.value || '90';
 
     const formatOptions = ['gif', 'mp4', 'png', 'jpg']
         .map((key) => `<option value="${key}"${key === format ? ' selected' : ''}>${getExportFormatDisplay(key)}</option>`)
@@ -6682,12 +6729,13 @@ function promptCollapsedExportConfirm(fmt) {
 
 function getUploadIncomingLabel(files) {
     const arr = Array.from(files || []).filter(Boolean);
-    if (!arr.length) return 'your STL file(s)';
-    return arr.length > 1 ? `${arr.length} STL files` : `"${arr[0]?.name || 'STL file'}"`;
+    if (!arr.length) return 'your STL or ZIP files';
+    return arr.length > 1 ? `${arr.length} files` : `"${arr[0]?.name || 'file'}"`;
 }
 
 function closeUploadChoicePrompt(action = 'cancel') {
     if (uploadChoiceOverlayEl) uploadChoiceOverlayEl.hidden = true;
+    uploadChoiceDropZoneEl?.classList.remove('is-dragover');
     if (_uploadChoiceResolver) {
         const resolve = _uploadChoiceResolver;
         _uploadChoiceResolver = null;
@@ -6709,12 +6757,13 @@ function promptUploadChoice(files) {
     if (uploadChoiceTextEl) {
         const incomingLabel = getUploadIncomingLabel(files);
         if (Array.from(files || []).length) {
-            uploadChoiceTextEl.textContent = `Load ${incomingLabel}: add to existing plate, or create new plate and replace current model.`;
+            uploadChoiceTextEl.textContent = `Load ${incomingLabel}: add them to your current plate, or create a new plate and replace the current model.`;
         } else {
-            uploadChoiceTextEl.textContent = `Upload ${incomingLabel}: add to existing plate, or create a new plate and replace current model. You can also import a package (.zip).`;
+            uploadChoiceTextEl.textContent = `Drop STL/ZIP files below or choose an action to continue.`;
         }
     }
     if (uploadChoiceDontShowEl) uploadChoiceDontShowEl.checked = false;
+    uploadChoiceDropZoneEl?.classList.remove('is-dragover');
     uploadChoiceOverlayEl.hidden = false;
 
     return new Promise((resolve) => {
@@ -6762,6 +6811,11 @@ async function triggerExportWithAssist(fmt) {
 
 document.getElementById('btnExport')?.addEventListener('click', async () => {
     const fmt = exportFormatEl?.value ?? 'gif';
+    await triggerExportWithAssist(fmt);
+});
+
+document.getElementById('btnMiniExport')?.addEventListener('click', async () => {
+    const fmt = exportMiniFormatEl?.value ?? exportFormatEl?.value ?? 'gif';
     await triggerExportWithAssist(fmt);
 });
 
@@ -6942,6 +6996,23 @@ function sliderMatchesResetMidpoint(id) {
     return String(input.value) === String(midpointForRangeInput(input));
 }
 
+function getVisualResetPartSettings(index) {
+    const baseColor = modelPartBaseColors[index] || getPartSettings(index).color || colorPick.value;
+    return {
+        color: baseColor,
+        tone: 0,
+        shading: 'phong',
+        hidden: false,
+        metallicRoughness: TEXTURE_TUNE_DEFAULTS.metallicRoughness,
+        metallicMetalness: TEXTURE_TUNE_DEFAULTS.metallicMetalness,
+        metallicReflection: TEXTURE_TUNE_DEFAULTS.metallicReflection,
+        phongRoughness: TEXTURE_TUNE_DEFAULTS.phongRoughness,
+        phongReflection: TEXTURE_TUNE_DEFAULTS.phongReflection,
+        matteRoughness: TEXTURE_TUNE_DEFAULTS.matteRoughness,
+        matteReflection: TEXTURE_TUNE_DEFAULTS.matteReflection,
+    };
+}
+
 function setCardResetButtonState(button, isDirty) {
     if (!button) return;
     button.disabled = !isDirty;
@@ -6950,7 +7021,23 @@ function setCardResetButtonState(button, isDirty) {
 }
 
 function updateCardResetButtonStates() {
-    const modelDirty = modelUndoStack.length > 0;
+    const modelDirty = getModelPartEditTargetIndices().some((idx) => {
+        const partSettings = getPartSettings(idx);
+        const defaults = getVisualResetPartSettings(idx);
+        return (
+            partSettings.color !== defaults.color
+            || (partSettings.tone ?? 0) !== defaults.tone
+            || (partSettings.shading || 'phong') !== defaults.shading
+            || partSettings.hidden === true
+            || Number(partSettings.metallicRoughness) !== defaults.metallicRoughness
+            || Number(partSettings.metallicMetalness) !== defaults.metallicMetalness
+            || Number(partSettings.metallicReflection) !== defaults.metallicReflection
+            || Number(partSettings.phongRoughness) !== defaults.phongRoughness
+            || Number(partSettings.phongReflection) !== defaults.phongReflection
+            || Number(partSettings.matteRoughness) !== defaults.matteRoughness
+            || Number(partSettings.matteReflection) !== defaults.matteReflection
+        );
+    });
 
     const backgroundDirty = !sliderMatchesResetMidpoint('bgOpacitySlider');
 
@@ -6969,15 +7056,76 @@ function updateCardResetButtonStates() {
     const animationDirty = speedValue !== SPEED_DEFAULT
         || CARD_RESET_ANIMATION_SLIDERS.some((id) => !sliderMatchesResetMidpoint(id));
 
+    const exportDirty = (exportFormatEl?.value || 'gif') !== 'gif'
+        || (document.getElementById('exportQuality')?.value || 'std') !== 'std'
+        || !!(document.getElementById('gifLoop') && !document.getElementById('gifLoop').checked)
+        || !!document.getElementById('gifDither')?.checked
+        || !!(exportBgColorEl && !exportBgColorEl.checked)
+        || !!(exportGridEl && !exportGridEl.checked)
+        || !!document.getElementById('exportWatermark')?.checked
+        || (exportMotionModeEl?.value || 'spin') !== 'spin'
+        || parseInt(exportMotionSpeedEl?.value || String(SPEED_DEFAULT), 10) !== SPEED_DEFAULT
+        || parseInt(exportMotionRangeEl?.value || '360', 10) !== 360
+        || parseInt(document.getElementById('jpegQuality')?.value || '90', 10) !== 90;
+
     setCardResetButtonState(btnResetModelCard, modelDirty);
     setCardResetButtonState(btnResetBackgroundCard, backgroundDirty);
     setCardResetButtonState(btnResetBuildPlateCard, buildPlateDirty);
     setCardResetButtonState(btnResetLightingCard, lightingDirty);
     setCardResetButtonState(btnResetAnimationCard, animationDirty);
+    setCardResetButtonState(btnResetExportCard, exportDirty);
 }
 
 btnResetModelCard?.addEventListener('click', () => {
-    undoLastModelChange();
+    const targets = getModelPartEditTargetIndices();
+    if (!targets.length) return;
+
+    const changed = targets.some((idx) => {
+        const partSettings = getPartSettings(idx);
+        const defaults = getVisualResetPartSettings(idx);
+        return (
+            partSettings.color !== defaults.color
+            || (partSettings.tone ?? 0) !== defaults.tone
+            || (partSettings.shading || 'phong') !== defaults.shading
+            || partSettings.hidden === true
+            || Number(partSettings.metallicRoughness) !== defaults.metallicRoughness
+            || Number(partSettings.metallicMetalness) !== defaults.metallicMetalness
+            || Number(partSettings.metallicReflection) !== defaults.metallicReflection
+            || Number(partSettings.phongRoughness) !== defaults.phongRoughness
+            || Number(partSettings.phongReflection) !== defaults.phongReflection
+            || Number(partSettings.matteRoughness) !== defaults.matteRoughness
+            || Number(partSettings.matteReflection) !== defaults.matteReflection
+        );
+    });
+    if (!changed) return;
+
+    pushModelUndoState();
+    targets.forEach((idx) => {
+        const partSettings = getPartSettings(idx);
+        const defaults = getVisualResetPartSettings(idx);
+        Object.assign(partSettings, defaults);
+        if (customModelSettingsByPart && typeof customModelSettingsByPart === 'object') {
+            customModelSettingsByPart[idx] = { ...partSettings };
+        }
+    });
+
+    activeModelPreset = 'custom';
+    syncUIFromSelectedPart();
+    rebuildMeshMaterialsForCurrentShading();
+    applyPartColorsToMesh();
+    applyCurrentTextureTuning();
+
+    if (activeBgPreset === 'modelcolor') {
+        const syncColor = getModelSyncSourceColor();
+        bgPick.value = syncColor;
+        if (isDynamicBg) updateDynamicBg();
+        else if (renderer) renderer.setClearColor(new THREE.Color(syncColor), 1);
+    }
+
+    renderModelPresets();
+    queueModelPartThumbsRender(targets);
+    saveSettings();
+    updateCardResetButtonStates();
 });
 
 btnResetBackgroundCard?.addEventListener('click', () => {
@@ -7022,6 +7170,41 @@ btnResetAnimationCard?.addEventListener('click', () => {
     updateCardResetButtonStates();
 });
 
+btnResetExportCard?.addEventListener('click', () => {
+    exportFormatEl && (exportFormatEl.value = 'gif');
+    exportFormatEl?.dispatchEvent(new Event('change'));
+    setExportQualityValue('std');
+    document.getElementById('gifLoop') && (document.getElementById('gifLoop').checked = true);
+    document.getElementById('gifDither') && (document.getElementById('gifDither').checked = false);
+    exportBgColorEl && (exportBgColorEl.checked = true);
+    exportBgColorEl?.dispatchEvent(new Event('change'));
+    exportGridEl && (exportGridEl.checked = true);
+    exportGridEl?.dispatchEvent(new Event('change'));
+    document.getElementById('exportWatermark') && (document.getElementById('exportWatermark').checked = false);
+    if (exportMotionModeEl) {
+        exportMotionModeEl.value = 'spin';
+        exportMotionModeEl.dispatchEvent(new Event('change'));
+    }
+    if (exportMotionSpeedEl) {
+        exportMotionSpeedEl.value = String(SPEED_DEFAULT);
+        exportMotionSpeedEl.dispatchEvent(new Event('change'));
+    }
+    if (exportMotionRangeEl) {
+        exportMotionRangeEl.value = '360';
+        exportMotionRangeEl.dispatchEvent(new Event('input'));
+    }
+    const jpegQualityEl = document.getElementById('jpegQuality');
+    if (jpegQualityEl) {
+        jpegQualityEl.value = '90';
+        jpegQualityEl.dispatchEvent(new Event('input'));
+    }
+    syncExportQualitySliderFromSelect();
+    updateEstimate();
+    refreshExportPreviewNow();
+    saveSettings();
+    updateCardResetButtonStates();
+});
+
 [
     'opacitySlider',
     'textureTuneRoughness',
@@ -7045,6 +7228,24 @@ btnResetAnimationCard?.addEventListener('click', () => {
 document.getElementById('rulerToggle')?.addEventListener('change', updateCardResetButtonStates);
 buildPlateToggleEl?.addEventListener('change', updateCardResetButtonStates);
 buildPlateColorPickerEl?.addEventListener('input', updateCardResetButtonStates);
+[
+    'exportFormat',
+    'exportFormatCollapsed',
+    'exportMotionMode',
+    'exportMotionSpeed',
+    'exportMotionRange',
+    'exportQuality',
+    'gifLoop',
+    'gifDither',
+    'exportBgColor',
+    'exportGrid',
+    'exportWatermark',
+    'jpegQuality',
+].forEach((id) => {
+    const input = document.getElementById(id);
+    input?.addEventListener('input', updateCardResetButtonStates);
+    input?.addEventListener('change', updateCardResetButtonStates);
+});
 
 requestAnimationFrame(updateCardResetButtonStates);
 
@@ -7240,9 +7441,9 @@ function applyDesktopV2Layout() {
     if (desktopV2) {
         document.documentElement.classList.remove('sidebar-collapsed');
         try { localStorage.setItem('rotater_sidebarCollapsed', '0'); } catch (_) { }
-        if (exportOverlayEl) exportOverlayEl.hidden = false;
-        if (openExportBtn) openExportBtn.hidden = true;
-        refreshExportPreviewNow();
+        if (openExportBtn) {
+            openExportBtn.hidden = false;
+        }
         switchTab('theme');
         if (!desktopV2DockDefaultApplied) {
             applyAppSettingsDockState(true);
@@ -7256,7 +7457,9 @@ function applyDesktopV2Layout() {
             document.documentElement.classList.remove('sidebar-collapsed');
             try { localStorage.setItem('rotater_sidebarCollapsed', '0'); } catch (_) { }
         }
-        if (openExportBtn) openExportBtn.hidden = false;
+        if (openExportBtn) {
+            openExportBtn.hidden = false;
+        }
         if (exportOverlayEl) exportOverlayEl.hidden = true;
         disconnectDesktopV2RailObserver();
         document.documentElement.style.removeProperty('--desktop-v2-effects-top');
@@ -7392,7 +7595,7 @@ function setupCardHeaderControls() {
         collapseBtn.setAttribute('aria-expanded', 'true');
         collapseBtn.setAttribute('title', 'Collapse card');
         collapseBtn.setAttribute('aria-label', 'Collapse card');
-        collapseBtn.innerHTML = '<span aria-hidden="true">▾</span>';
+        collapseBtn.innerHTML = `<span aria-hidden="true">${getChevronDownIconSVG(18)}</span>`;
         collapseBtn.addEventListener('click', () => {
             const collapsed = card.classList.toggle('is-collapsed');
             closeThumbSelectMenus();
@@ -7447,7 +7650,7 @@ function applyFineTuningUIState(enabled) {
 
     // In fine tuning mode, keep labels visible but disable clickable snap dots.
     document.querySelectorAll('.snap-dot-btn').forEach(el => {
-        el.style.opacity = fineTuningMode ? '0' : '';
+        el.style.opacity = fineTuningMode ? '0.35' : '';
         el.style.pointerEvents = fineTuningMode ? 'none' : '';
     });
 }
@@ -7561,16 +7764,83 @@ btnUploadChoiceReplace?.addEventListener('click', () => {
     applyUploadChoicePreference('replace');
     closeUploadChoicePrompt('replace');
 });
+uploadChoiceBrowseBtnEl?.addEventListener('click', () => {
+    closeUploadChoicePrompt('cancel');
+    pendingUploadAction = null;
+    fileInput?.click();
+});
+
+async function handleUploadChoiceDroppedFiles(fileList) {
+    closeUploadChoicePrompt('cancel');
+    pendingUploadAction = null;
+    try {
+        await handlePickedUploadFiles(fileList, null);
+    } catch (err) {
+        setStatus('Error: ' + (err?.message || 'Failed to import file(s).'));
+        console.error(err);
+        setTimeout(() => setStatus(''), 5000);
+    }
+}
+
+if (uploadChoiceDropZoneEl) {
+    let dragDepth = 0;
+    const setDragOverState = (active) => {
+        uploadChoiceDropZoneEl.classList.toggle('is-dragover', !!active);
+    };
+
+    uploadChoiceDropZoneEl.addEventListener('click', () => {
+        closeUploadChoicePrompt('cancel');
+        pendingUploadAction = null;
+        fileInput?.click();
+    });
+
+    uploadChoiceDropZoneEl.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragDepth += 1;
+        setDragOverState(true);
+    });
+
+    uploadChoiceDropZoneEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragOverState(true);
+    });
+
+    ['dragleave', 'dragend'].forEach((eventName) => {
+        uploadChoiceDropZoneEl.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dragDepth = Math.max(0, dragDepth - 1);
+            if (!dragDepth) setDragOverState(false);
+        });
+    });
+
+    uploadChoiceDropZoneEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragDepth = 0;
+        setDragOverState(false);
+        const files = e.dataTransfer?.files;
+        if (!files?.length) return;
+        handleUploadChoiceDroppedFiles(files);
+    });
+}
+
 uploadChoiceOverlayEl?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeUploadChoicePrompt('cancel');
 });
+uploadChoiceOverlayEl?.addEventListener('dragover', (e) => {
+    e.preventDefault();
+});
+uploadChoiceOverlayEl?.addEventListener('drop', (e) => {
+    e.preventDefault();
+});
 
 if (resetWarningsToggleEl) {
-    resetWarningsToggleEl.checked = false;
-    resetWarningsToggleEl.addEventListener('change', () => {
-        if (!resetWarningsToggleEl.checked) return;
+    resetWarningsToggleEl.addEventListener('click', (e) => {
+        e.preventDefault();
         resetAllWarnings();
-        resetWarningsToggleEl.checked = false;
     });
 }
 
@@ -7591,18 +7861,18 @@ try {
     }
 } catch (e) { }
 
-document.getElementById('btnOpenExportModal')?.addEventListener('click', () => {
-    document.getElementById('exportOverlay').hidden = false;
-    refreshExportPreviewNow();
+['btnOpenExportModal', 'btnOpenExportModalMini'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('click', () => {
+        document.getElementById('exportOverlay').hidden = false;
+        refreshExportPreviewNow();
+    });
 });
 
 document.getElementById('btnExportClose')?.addEventListener('click', () => {
-    if (isDesktopV2Layout()) return;
     document.getElementById('exportOverlay').hidden = true;
 });
 
 document.getElementById('exportOverlay')?.addEventListener('click', (e) => {
-    if (isDesktopV2Layout()) return;
     if (e.target === e.currentTarget) document.getElementById('exportOverlay').hidden = true;
 });
 
@@ -7825,10 +8095,55 @@ canvas?.addEventListener('contextmenu', (e) => {
 
 const exportPreviewCanvas = document.getElementById('exportPreview');
 const exportPreviewWrap = exportPreviewCanvas?.closest('.export-preview-wrap');
-const exportPreviewDetails = document.getElementById('exportPreviewDetails');
-const exportPreviewSummary = exportPreviewDetails?.querySelector('.export-preview-summary');
-[exportPreviewCanvas, exportPreviewWrap, exportPreviewDetails, exportPreviewSummary].forEach((el) => {
-    el?.addEventListener('wheel', (e) => {
+const exportPreviewForwardHost = exportPreviewWrap || exportPreviewCanvas;
+
+function forwardPreviewPointerToMainCanvas(e) {
+    if (!canvas || !controls) return;
+    const init = {
+        pointerId: e.pointerId,
+        pointerType: e.pointerType,
+        isPrimary: e.isPrimary,
+        button: e.button,
+        buttons: e.buttons,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        screenX: e.screenX,
+        screenY: e.screenY,
+        ctrlKey: e.ctrlKey,
+        shiftKey: e.shiftKey,
+        altKey: e.altKey,
+        metaKey: e.metaKey,
+        pressure: e.pressure,
+        tangentialPressure: e.tangentialPressure,
+        tiltX: e.tiltX,
+        tiltY: e.tiltY,
+        twist: e.twist,
+        width: e.width,
+        height: e.height,
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+    };
+    try {
+        canvas.dispatchEvent(new PointerEvent(e.type, init));
+    } catch (_) {
+        if (e.type === 'pointercancel') return;
+        const fallbackType = e.type.replace('pointer', 'mouse');
+        canvas.dispatchEvent(new MouseEvent(fallbackType, init));
+    }
+}
+
+if (exportPreviewForwardHost) {
+    ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((eventName) => {
+        exportPreviewForwardHost.addEventListener(eventName, (e) => {
+            if (!canvas || !controls) return;
+            e.preventDefault();
+            e.stopPropagation();
+            forwardPreviewPointerToMainCanvas(e);
+        }, { passive: false });
+    });
+
+    exportPreviewForwardHost.addEventListener('wheel', (e) => {
         if (!canvas || !controls) return;
         e.preventDefault();
         e.stopPropagation();
@@ -7847,7 +8162,19 @@ const exportPreviewSummary = exportPreviewDetails?.querySelector('.export-previe
         });
         canvas.dispatchEvent(forwarded);
     }, { passive: false });
-});
+
+    exportPreviewForwardHost.addEventListener('contextmenu', (e) => {
+        if (!canvas || !controls) return;
+        e.preventDefault();
+        e.stopPropagation();
+        canvas.dispatchEvent(new MouseEvent('contextmenu', {
+            clientX: e.clientX,
+            clientY: e.clientY,
+            bubbles: true,
+            cancelable: true,
+        }));
+    });
+}
 
 // ── Crop corner drag to snap aspect ratio ─────────────────────────────────────
 let _cropCornerDrag = null; // { id, startX, startY, initW, initH } or null
@@ -8554,6 +8881,19 @@ const BG_PRESETS = [
     { id: 'modelcolor', name: 'Model', color: null }
 ];
 
+function getBgPresetDefaultTone(presetId) {
+    if (presetId === 'white') return -100;
+    if (presetId === 'black') return 100;
+    return 0;
+}
+
+function applyBgPresetDefaultTone(presetId) {
+    if (!bgOpacitySlider) return;
+    const tone = getBgPresetDefaultTone(presetId);
+    bgOpacitySlider.value = String(tone);
+    bgOpacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 function updateDynamicBg() {
     if (!isDynamicBg || !renderer) return;
     let baseHex;
@@ -9037,6 +9377,7 @@ function renderBgPresets() {
                 const fallbackPreset = BG_PRESETS.find((candidate) => candidate.id === lastNonModelBgPreset) || BG_PRESETS[0];
                 activeBgPreset = fallbackPreset?.id || 'white';
                 if (fallbackPreset?.color) {
+                    applyBgPresetDefaultTone(fallbackPreset.id);
                     bgPick.value = fallbackPreset.color;
                     bgPick.dispatchEvent(new Event('input', { bubbles: true }));
                 }
@@ -9057,6 +9398,7 @@ function renderBgPresets() {
                 if (isDynamicBg) updateDynamicBg();
                 else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
             } else {
+                applyBgPresetDefaultTone(preset.id);
                 bgPick.value = preset.color;
                 bgPick.dispatchEvent(new Event('input', { bubbles: true }));
             }
