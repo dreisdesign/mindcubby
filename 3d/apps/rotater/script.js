@@ -2338,13 +2338,18 @@ function renderMultipartSummaryThumbnail(canvasEl) {
     ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
     const selected = getUiSelectedPartIndices();
-    const visible = selected.slice(0, 3);
-    const remaining = Math.max(0, selected.length - visible.length);
-    const tiles = [...visible];
-    if (remaining > 0) tiles.push(`+${remaining}`);
+    if (selected.length === 1) {
+        renderSinglePartThumbnail(canvasEl, selected[0]);
+        return;
+    }
+
+    const tiles = selected.slice(0, 4);
+    if (selected.length > 4) {
+        tiles[3] = `+${selected.length - 3}`;
+    }
     const tileCount = Math.max(1, tiles.length);
-    const cols = tileCount <= 1 ? 1 : 2;
-    const rows = tileCount <= 2 ? 1 : 2;
+    const cols = 2;
+    const rows = 2;
     const pad = Math.max(4, Math.round(canvasEl.width * 0.035));
     const gap = tileCount <= 1 ? 0 : Math.max(4, Math.round(canvasEl.width * 0.03));
     const cellW = Math.floor((canvasEl.width - pad * 2 - gap) / cols);
