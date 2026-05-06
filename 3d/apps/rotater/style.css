@@ -1110,15 +1110,18 @@ html.loaded .controls-bar.hidden {
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    gap: 7px;
+    gap: 4px;
+    min-height: 0;
 }
 
 .thumb-select-summary-title {
     width: 100%;
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 700;
-    line-height: 1.15;
-    white-space: nowrap;
+    line-height: 1.08;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -2167,7 +2170,7 @@ html.theme-dark .finish-mode-btn.is-active {
     }
 
     .thumb-select-summary-title {
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .thumb-select-summary-meta {
