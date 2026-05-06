@@ -1057,6 +1057,14 @@ html.loaded .controls-bar.hidden {
     min-height: 96px;
 }
 
+.thumb-select-btn.is-multipart-summary.is-empty-selection {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.thumb-select-btn.is-multipart-summary.is-empty-selection .thumb-select-canvas {
+    display: none;
+}
+
 .thumb-select-btn:hover {
     border-color: var(--palette-blueberry-500);
 }

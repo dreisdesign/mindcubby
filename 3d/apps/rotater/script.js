@@ -405,6 +405,7 @@ let modelPartDisplayOrder = [];
 let pendingModelPartDisplayOrder = null;
 let modelPartSelected = 0;
 let pendingModelPartSelected = 0;
+let pendingBulkSelectedPartIndices = null;
 let bgSyncPartIndex = 0;
 let lastNonModelBgPreset = 'white';
 let presetHoverPreviewSnapshot = null;
@@ -2451,6 +2452,8 @@ function renderModelPartThumbnails() {
 function renderModelPartSelectorSummary() {
     if (!modelPartSelectorText || !modelPartSelectorBtn || !hasModelParts()) return;
     if (!isMultipartModel()) {
+        if (modelPartSelectorThumb) modelPartSelectorThumb.hidden = false;
+        modelPartSelectorBtn.classList.remove('is-empty-selection');
         const selectedName = modelPartNames[modelPartSelected] || `Part ${modelPartSelected + 1}`;
         modelPartSelectorText.textContent = selectedName;
         modelPartSelectorBtn.title = selectedName;
@@ -2460,6 +2463,8 @@ function renderModelPartSelectorSummary() {
     const selectedIndices = getUiSelectedPartIndices();
     const selectedCount = selectedIndices.length;
     const totalCount = modelPartNames.length;
+    if (modelPartSelectorThumb) modelPartSelectorThumb.hidden = selectedCount === 0;
+    modelPartSelectorBtn.classList.toggle('is-empty-selection', selectedCount === 0);
     const firstIndex = selectedIndices[0] ?? Math.max(0, modelPartSelected);
     const firstLabel = modelPartNames[firstIndex] || `Part ${firstIndex + 1}`;
 
@@ -2766,6 +2771,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             syncModelPartCheckboxStates();
             syncModelPartBulkUIState();
             queueModelPartThumbsRender();
+            saveSettings();
         });
         bulkBar.querySelectorAll('[data-model-view]').forEach((btn) => btn.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -2809,6 +2815,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     syncModelPartCheckboxStates();
                     syncModelPartBulkUIState();
                     queueModelPartThumbsRender();
+                    saveSettings();
                 }, false);
             }
 
@@ -3255,6 +3262,15 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
     currentModelBuffer = null;
     modelPartSelected = Math.max(0, Math.min(pendingModelPartSelected, modelPartNames.length - 1));
     bulkSelectedPartIndices.clear();
+    if (Array.isArray(pendingBulkSelectedPartIndices)) {
+        const maxIdx = Math.max(0, modelPartNames.length - 1);
+        pendingBulkSelectedPartIndices.forEach((idx) => {
+            if (Number.isInteger(idx) && idx >= 0 && idx <= maxIdx) bulkSelectedPartIndices.add(idx);
+        });
+    } else if (modelPartNames.length) {
+        bulkSelectedPartIndices.add(modelPartSelected);
+    }
+    pendingBulkSelectedPartIndices = null;
 
     const parsed = [];
     const unionBox = new THREE.Box3();
@@ -4716,6 +4732,7 @@ function saveSettings() {
             activeBgPreset: activeBgPreset,
             activeModelPreset: activeModelPreset,
             modelPartSelected: String(modelPartSelected || 0),
+            modelPartBulkSelected: getBulkSelectedPartIndices().join(','),
             bgSyncPartIndex: String(bgSyncPartIndex || 0),
         }));
     } catch (e) { }
@@ -4998,6 +5015,20 @@ function restoreSettings() {
         if (s.modelPartSelected != null) {
             const idx = parseInt(s.modelPartSelected, 10);
             pendingModelPartSelected = Number.isFinite(idx) ? Math.max(0, idx) : 0;
+        }
+        if (s.modelPartBulkSelected != null) {
+            const raw = String(s.modelPartBulkSelected || '').trim();
+            if (!raw) {
+                pendingBulkSelectedPartIndices = [];
+            } else {
+                const parsed = raw
+                    .split(',')
+                    .map((token) => parseInt(token, 10))
+                    .filter((idx) => Number.isInteger(idx) && idx >= 0);
+                pendingBulkSelectedPartIndices = Array.from(new Set(parsed));
+            }
+        } else {
+            pendingBulkSelectedPartIndices = null;
         }
         if (s.bgSyncPartIndex != null || s.modelSyncPart != null) {
             const idx = parseInt(s.bgSyncPartIndex ?? s.modelSyncPart, 10);
