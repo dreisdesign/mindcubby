@@ -2846,12 +2846,9 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
 
             opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
                 clearPresetHoverPreview();
-                // Only set active part; preserve existing bulk selection
+                // Set active part and ensure it is part of bulk selection.
                 modelPartSelected = idx;
-                // If no bulk selection, add this part to bulk selection for editing
-                if (getBulkSelectedPartIndices().length === 0) {
-                    setBulkPartSelected(idx, true);
-                }
+                setBulkPartSelected(idx, true);
                 syncUIFromSelectedPart();
                 applyPartColorsToMesh();
                 applyCurrentTextureTuning();
