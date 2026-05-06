@@ -2370,8 +2370,8 @@ function renderMultipartSummaryThumbnail(canvasEl) {
         const y = pad + row * (cellH + gap);
 
         ctx.fillStyle = 'rgba(245, 243, 255, 0.98)';
-        ctx.strokeStyle = 'rgba(92, 84, 164, 0.28)';
-        ctx.lineWidth = Math.max(1, Math.round(canvasEl.width * 0.01));
+        ctx.strokeStyle = 'rgba(46, 43, 116, 0.88)';
+        ctx.lineWidth = Math.max(2, Math.round(canvasEl.width * 0.018));
         const radius = Math.max(8, Math.round(canvasEl.width * 0.07));
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
@@ -2474,8 +2474,7 @@ function renderModelPartSelectorSummary() {
         titleText = `Parts ${selectedIndices[0] + 1} +${selectedCount - 1} more`;
     }
 
-    const state = getBulkSelectionIconState(selectedCount, totalCount);
-    const summaryText = `${selectedCount}/${totalCount} selected`;
+    const summaryText = `(${selectedCount}/${totalCount} Selected)`;
 
     modelPartSelectorText.textContent = '';
 
@@ -2486,15 +2485,11 @@ function renderModelPartSelectorSummary() {
     const metaEl = document.createElement('span');
     metaEl.className = 'thumb-select-summary-meta';
 
-    const checkEl = document.createElement('span');
-    checkEl.className = 'thumb-select-summary-check';
-    checkEl.dataset.selectionState = state;
-
     const countEl = document.createElement('span');
     countEl.className = 'thumb-select-summary-count';
     countEl.textContent = summaryText;
 
-    metaEl.append(checkEl, countEl);
+    metaEl.append(countEl);
     modelPartSelectorText.append(titleEl, metaEl);
     modelPartSelectorBtn.title = `${titleText} - ${summaryText}`;
 }
