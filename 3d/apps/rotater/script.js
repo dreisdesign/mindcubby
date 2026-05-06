@@ -227,6 +227,9 @@ const bgModelSyncSelectorBtn = document.getElementById('bgModelSyncSelectorBtn')
 const bgModelSyncSelectorMenu = document.getElementById('bgModelSyncSelectorMenu');
 const bgModelSyncSelectorThumb = document.getElementById('bgModelSyncSelectorThumb');
 const bgModelSyncSelectorText = document.getElementById('bgModelSyncSelectorText');
+const modelUndoToast = document.getElementById('modelUndoToast');
+const modelUndoToastText = document.getElementById('modelUndoToastText');
+const btnModelUndoToast = document.getElementById('btnModelUndoToast');
 const bgPick = document.getElementById('bgPicker');
 const bgOpacitySlider = document.getElementById('bgOpacitySlider');
 const buildPlateToggleEl = document.getElementById('buildPlateToggle');
@@ -400,6 +403,9 @@ let pendingModelPartSelected = 0;
 let bgSyncPartIndex = 0;
 let lastNonModelBgPreset = 'white';
 let presetHoverPreviewSnapshot = null;
+const MODEL_UNDO_LIMIT = 24;
+let modelUndoStack = [];
+let suppressModelUndoCapture = false;
 let modelPartThumbsQueued = false;
 let partThumbRenderTarget = null;
 let partThumbCamera = null;
@@ -411,14 +417,16 @@ let currentModelBuffer = null;
 let bulkSelectedPartIndices = new Set();
 let modelPartSelectorViewMode = 'card';
 let multipartPersistTimer = 0;
+let modelUndoToastTimer = 0;
+let modelUndoToastLastShownAt = 0;
 
 const BULK_SELECT_ICON_PATHS = {
-    none: 'M5.00001 21.65C4.27117 21.65 3.64734 21.3905 3.12851 20.8715C2.60951 20.3526 2.35001 19.7288 2.35001 19V4.99998C2.35001 4.27131 2.60951 3.64748 3.12851 3.12848C3.64734 2.60948 4.27117 2.34998 5.00001 2.34998H19C19.7287 2.34998 20.3525 2.60948 20.8715 3.12848C21.3905 3.64748 21.65 4.27131 21.65 4.99998V19C21.65 19.7288 21.3905 20.3526 20.8715 20.8715C20.3525 21.3905 19.7287 21.65 19 21.65H5.00001ZM5.00001 19H19V4.99998H5.00001V19Z',
-    some: 'M8.82501 13.3H15.175C15.5417 13.3 15.8542 13.1708 16.1125 12.9125C16.3708 12.6541 16.5 12.3416 16.5 11.975C16.5 11.6083 16.3708 11.2958 16.1125 11.0375C15.8542 10.7791 15.5417 10.65 15.175 10.65H8.82501C8.45834 10.65 8.14584 10.7791 7.88751 11.0375C7.62917 11.2958 7.50001 11.6083 7.50001 11.975C7.50001 12.3416 7.62917 12.6541 7.88751 12.9125C8.14584 13.1708 8.45834 13.3 8.82501 13.3ZM5.00001 21.65C4.26667 21.65 3.64167 21.3916 3.12501 20.875C2.60834 20.3583 2.35001 19.7333 2.35001 19V4.99998C2.35001 4.26664 2.60834 3.64164 3.12501 3.12498C3.64167 2.60831 4.26667 2.34998 5.00001 2.34998H19C19.7333 2.34998 20.3583 2.60831 20.875 3.12498C21.3917 3.64164 21.65 4.26664 21.65 4.99998V19C21.65 19.7333 21.3917 20.3583 20.875 20.875C20.3583 21.3916 19.7333 21.65 19 21.65H5.00001ZM5.00001 19H19V4.99998H5.00001V19Z',
+    none: 'M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z',
+    some: 'M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM16 14H8V12H16V14ZM19 19H5V5H19V19Z',
     all: 'M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2Zm-9 14-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9Z',
 };
 
-const MODEL_SELECTOR_VIEW_MODES = ['card', 'list', 'grid'];
+const MODEL_SELECTOR_VIEW_MODES = ['card', 'grid'];
 
 try {
     const savedViewMode = localStorage.getItem('rotater_modelPartSelectorViewMode');
@@ -1458,6 +1466,15 @@ function getBulkSelectedPartIndices() {
     return Array.from(bulkSelectedPartIndices).sort((a, b) => a - b);
 }
 
+function getEffectiveSelectedPartIndices() {
+    if (!hasModelParts()) return [];
+    const maxIndex = Math.max(0, modelPartNames.length - 1);
+    const selected = getBulkSelectedPartIndices();
+    if (selected.length) return selected;
+    const fallback = Math.max(0, Math.min(modelPartSelected, maxIndex));
+    return [fallback];
+}
+
 function setBulkPartSelectionForAll(selected) {
     if (!isMultipartModel()) {
         bulkSelectedPartIndices.clear();
@@ -1529,13 +1546,49 @@ function getBulkSelectionIconState(selectedCount, partCount) {
 }
 
 function getBulkSelectIconSVG(state) {
-    const path = BULK_SELECT_ICON_PATHS[state] || BULK_SELECT_ICON_PATHS.none;
-    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}" fill="currentColor"></path></svg>`;
+    if (state === 'all') {
+        return '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>';
+    }
+    if (state === 'some') {
+        return '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 10H8v-2h8v2z"></path></svg>';
+    }
+    return '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"></path></svg>';
+}
+
+function getPartOptionMoreIconSVG() {
+    return '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="5" r="1.9" fill="currentColor"></circle><circle cx="12" cy="12" r="1.9" fill="currentColor"></circle><circle cx="12" cy="19" r="1.9" fill="currentColor"></circle></svg>';
+}
+
+function hideModelUndoToast() {
+    if (!modelUndoToast) return;
+    modelUndoToast.hidden = true;
+    modelUndoToast.setAttribute('aria-hidden', 'true');
+    if (modelUndoToastTimer) {
+        window.clearTimeout(modelUndoToastTimer);
+        modelUndoToastTimer = 0;
+    }
+}
+
+function showModelUndoToast(message = 'Model updated') {
+    if (!modelUndoToast || !btnModelUndoToast || !modelUndoStack.length) return;
+    const now = Date.now();
+    if (now - modelUndoToastLastShownAt < 300 && !modelUndoToast.hidden) {
+        if (modelUndoToastTimer) window.clearTimeout(modelUndoToastTimer);
+        modelUndoToastTimer = window.setTimeout(hideModelUndoToast, 5000);
+        return;
+    }
+    modelUndoToastLastShownAt = now;
+    if (modelUndoToastText) modelUndoToastText.textContent = message;
+    modelUndoToast.hidden = false;
+    modelUndoToast.setAttribute('aria-hidden', 'false');
+    if (modelUndoToastTimer) window.clearTimeout(modelUndoToastTimer);
+    modelUndoToastTimer = window.setTimeout(hideModelUndoToast, 5000);
 }
 
 function getBulkSelectionSummaryText() {
     const total = modelPartNames.length;
-    const selected = getBulkSelectedPartIndices().length;
+    const selected = getEffectiveSelectedPartIndices().length;
+    if (!total) return '0 models';
     return `${selected}/${total} selected`;
 }
 
@@ -1546,10 +1599,83 @@ function applyModelPartSelectorViewMode(mode, rerender = false) {
     if (rerender) syncModelPartSelectorUI(true);
 }
 
+function cloneModelUndoState() {
+    return {
+        activeModelPreset,
+        activeBgPreset,
+        bgSyncPartIndex,
+        modelPartSelected,
+        modelPartSelectorViewMode,
+        modelPartBaseColors: Array.isArray(modelPartBaseColors) ? [...modelPartBaseColors] : [],
+        modelPartSettings: Array.isArray(modelPartSettings) ? modelPartSettings.map((settings) => ({ ...settings })) : [],
+        customModelSettingsByPart: customModelSettingsByPart && typeof customModelSettingsByPart === 'object'
+            ? Object.fromEntries(Object.entries(customModelSettingsByPart).map(([key, value]) => [key, { ...value }]))
+            : null,
+    };
+}
+
+function pushModelUndoState() {
+    if (suppressModelUndoCapture) return;
+    const snapshot = cloneModelUndoState();
+    const lastSnapshot = modelUndoStack[modelUndoStack.length - 1];
+    if (lastSnapshot && JSON.stringify(lastSnapshot) === JSON.stringify(snapshot)) return;
+    modelUndoStack.push(snapshot);
+    if (modelUndoStack.length > MODEL_UNDO_LIMIT) modelUndoStack.shift();
+    updateCardResetButtonStates();
+    showModelUndoToast();
+}
+
+function restoreModelUndoState(snapshot) {
+    if (!snapshot) return;
+    suppressModelUndoCapture = true;
+    activeModelPreset = snapshot.activeModelPreset || '';
+    activeBgPreset = snapshot.activeBgPreset || activeBgPreset;
+    bgSyncPartIndex = Math.max(0, Math.min(parseInt(String(snapshot.bgSyncPartIndex ?? 0), 10) || 0, Math.max(0, modelPartNames.length - 1)));
+    modelPartSelected = Math.max(0, Math.min(parseInt(String(snapshot.modelPartSelected ?? 0), 10) || 0, Math.max(0, modelPartNames.length - 1)));
+    modelPartSelectorViewMode = MODEL_SELECTOR_VIEW_MODES.includes(snapshot.modelPartSelectorViewMode)
+        ? snapshot.modelPartSelectorViewMode
+        : modelPartSelectorViewMode;
+    if (Array.isArray(snapshot.modelPartBaseColors)) modelPartBaseColors = [...snapshot.modelPartBaseColors];
+    if (Array.isArray(snapshot.modelPartSettings)) modelPartSettings = snapshot.modelPartSettings.map((settings) => ({ ...settings }));
+    if (snapshot.customModelSettingsByPart && typeof snapshot.customModelSettingsByPart === 'object') {
+        customModelSettingsByPart = Object.fromEntries(Object.entries(snapshot.customModelSettingsByPart).map(([key, value]) => [key, { ...value }]));
+    }
+    syncUIFromSelectedPart();
+    rebuildMeshMaterialsForCurrentShading();
+    applyPartColorsToMesh();
+    applyCurrentTextureTuning();
+    renderModelPresets();
+    renderBgPresets();
+    if (activeBgPreset === 'modelcolor') {
+        const syncColor = getModelSyncSourceColor();
+        bgPick.value = syncColor;
+        if (isDynamicBg) updateDynamicBg();
+        else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+    }
+    syncModelPartSelectorUI();
+    queueModelPartThumbsRender();
+    saveSettings();
+    suppressModelUndoCapture = false;
+    updateCardResetButtonStates();
+}
+
+function undoLastModelChange() {
+    const snapshot = modelUndoStack.pop();
+    if (!snapshot) return;
+    restoreModelUndoState(snapshot);
+    hideModelUndoToast();
+}
+
+function maybeConfirmBgSyncChange(nextIdx) {
+    if (!Number.isFinite(nextIdx) || nextIdx < 0) return false;
+    if (activeBgPreset !== 'modelcolor') return true;
+    if (bgSyncPartIndex === nextIdx) return true;
+    return window.confirm('Change the background color sync to this model?');
+}
+
 function getModelPartEditTargetIndices() {
     if (isMultipartModel()) {
-        const selectedIndices = getBulkSelectedPartIndices();
-        if (selectedIndices.length) return selectedIndices;
+        return getEffectiveSelectedPartIndices();
     }
     return [Math.max(0, modelPartSelected)];
 }
@@ -1557,8 +1683,13 @@ function getModelPartEditTargetIndices() {
 function applyToModelPartEditTargets(mutator) {
     const targets = getModelPartEditTargetIndices();
     const touched = [];
+    let captured = false;
     targets.forEach((idx) => {
         const partSettings = getPartSettings(idx);
+        if (!captured) {
+            pushModelUndoState();
+            captured = true;
+        }
         mutator(partSettings, idx);
         if (customModelSettingsByPart && typeof customModelSettingsByPart === 'object') {
             customModelSettingsByPart[idx] = { ...partSettings };
@@ -1570,11 +1701,9 @@ function applyToModelPartEditTargets(mutator) {
 
 function syncModelPartBulkUIState() {
     if (!modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
-    const selectedCount = getBulkSelectedPartIndices().length;
+    const selectedCount = getEffectiveSelectedPartIndices().length;
     const partCount = modelPartNames.length;
-    const countEl = modelPartSelectorMenu.querySelector('.model-bulk-bar-count');
-    if (countEl) countEl.textContent = getBulkSelectionSummaryText();
-    if (modelPartSelectorText && isMultipartModel()) modelPartSelectorText.textContent = getBulkSelectionSummaryText();
+    if (modelPartSelectorText && isMultipartModel()) renderModelPartSelectorSummary();
     const iconBtn = modelPartSelectorMenu.querySelector('[data-bulk-action="toggle-all"]');
     if (iconBtn) {
         const state = getBulkSelectionIconState(selectedCount, partCount);
@@ -2119,13 +2248,16 @@ function renderMultipartSummaryThumbnail(canvasEl) {
     if (!ctx) return;
     ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
-    const ordered = getOrderedPartIndices();
-    const visible = ordered.slice(0, 3);
-    const remaining = Math.max(0, ordered.length - visible.length);
-    const cols = 2;
-    const rows = 2;
+    const selected = getEffectiveSelectedPartIndices();
+    const visible = selected.slice(0, 3);
+    const remaining = Math.max(0, selected.length - visible.length);
+    const tiles = [...visible];
+    if (remaining > 0) tiles.push(`+${remaining}`);
+    const tileCount = Math.max(1, tiles.length);
+    const cols = tileCount <= 1 ? 1 : 2;
+    const rows = tileCount <= 2 ? 1 : 2;
     const pad = Math.max(4, Math.round(canvasEl.width * 0.035));
-    const gap = Math.max(4, Math.round(canvasEl.width * 0.03));
+    const gap = tileCount <= 1 ? 0 : Math.max(4, Math.round(canvasEl.width * 0.03));
     const cellW = Math.floor((canvasEl.width - pad * 2 - gap) / cols);
     const cellH = Math.floor((canvasEl.height - pad * 2 - gap) / rows);
     const tempCanvas = document.createElement('canvas');
@@ -2133,9 +2265,6 @@ function renderMultipartSummaryThumbnail(canvasEl) {
     tempCanvas.height = cellH;
     tempCanvas.style.width = `${cellW}px`;
     tempCanvas.style.height = `${cellH}px`;
-
-    const tiles = [...visible];
-    if (remaining > 0) tiles.push(`+${remaining}`);
 
     tiles.forEach((tile, tileIndex) => {
         const row = Math.floor(tileIndex / cols);
@@ -2210,16 +2339,62 @@ function renderModelPartThumbnails() {
     }
 
     if (modelPartSelectorText) {
-        const selectedName = modelPartNames[modelPartSelected] || `Part ${modelPartSelected + 1}`;
-        const displayText = isMultipartModel() ? getBulkSelectionSummaryText() : selectedName;
-        modelPartSelectorText.textContent = displayText;
-        modelPartSelectorBtn.title = displayText;
+        renderModelPartSelectorSummary();
     }
     if (bgModelSyncSelectorText && activeBgPreset === 'modelcolor') {
         const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
-        bgModelSyncSelectorText.textContent = selectedName;
-        bgModelSyncSelectorBtn.title = selectedName;
+        bgModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
+        bgModelSyncSelectorBtn.title = `Background sync: ${selectedName}`;
     }
+}
+
+function renderModelPartSelectorSummary() {
+    if (!modelPartSelectorText || !modelPartSelectorBtn || !hasModelParts()) return;
+    if (!isMultipartModel()) {
+        const selectedName = modelPartNames[modelPartSelected] || `Part ${modelPartSelected + 1}`;
+        modelPartSelectorText.textContent = selectedName;
+        modelPartSelectorBtn.title = selectedName;
+        return;
+    }
+
+    const selectedIndices = getEffectiveSelectedPartIndices();
+    const selectedCount = selectedIndices.length;
+    const totalCount = modelPartNames.length;
+    const firstIndex = selectedIndices[0] ?? 0;
+    const firstLabel = modelPartNames[firstIndex] || `Part ${firstIndex + 1}`;
+
+    let titleText = '';
+    if (selectedCount <= 1) {
+        titleText = `Part ${firstIndex + 1}: ${firstLabel}`;
+    } else if (selectedCount === 2) {
+        titleText = `Parts ${selectedIndices[0] + 1} and ${selectedIndices[1] + 1}`;
+    } else {
+        titleText = `Parts ${selectedIndices[0] + 1} +${selectedCount - 1} more`;
+    }
+
+    const state = getBulkSelectionIconState(selectedCount, totalCount);
+    const summaryText = `${selectedCount}/${totalCount} selected`;
+
+    modelPartSelectorText.textContent = '';
+
+    const titleEl = document.createElement('span');
+    titleEl.className = 'thumb-select-summary-title';
+    titleEl.textContent = titleText;
+
+    const metaEl = document.createElement('span');
+    metaEl.className = 'thumb-select-summary-meta';
+
+    const checkEl = document.createElement('span');
+    checkEl.className = 'thumb-select-summary-check';
+    checkEl.dataset.selectionState = state;
+
+    const countEl = document.createElement('span');
+    countEl.className = 'thumb-select-summary-count';
+    countEl.textContent = summaryText;
+
+    metaEl.append(checkEl, countEl);
+    modelPartSelectorText.append(titleEl, metaEl);
+    modelPartSelectorBtn.title = `${titleText} - ${summaryText}`;
 }
 
 function closeThumbSelectMenus() {
@@ -2301,6 +2476,11 @@ bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
         bgModelSyncSelectorMenu.hidden = false;
         bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
     }
+});
+
+btnModelUndoToast?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    undoLastModelChange();
 });
 
 document.addEventListener('click', () => {
@@ -2460,8 +2640,6 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     const canMutateFiles = !!modelPartFiles && modelPartFiles.length === partCount;
     const canAppend = singleModel ? !!currentModelBuffer : canMutateFiles;
     pruneBulkPartSelection();
-    if (!singleModel && bulkSelectedPartIndices.size === 0) setBulkPartSelectionForAll(true);
-
     if (modelPartSelectorEl) modelPartSelectorEl.hidden = false;
     modelPartSelectorBtn.hidden = false;
     modelPartSelectorBtn.classList.toggle('is-static', singleModel);
@@ -2501,7 +2679,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
         const iconState = getBulkSelectionIconState(selectedCount, partCount);
         const bulkBar = document.createElement('div');
         bulkBar.className = 'model-bulk-bar';
-        bulkBar.innerHTML = `<div class="model-bulk-bar-head"><span class="model-bulk-bar-count">${getBulkSelectionSummaryText()}</span></div><div class="model-bulk-bar-actions"><button type="button" class="model-bulk-icon-btn" data-bulk-action="toggle-all" title="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}" aria-label="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}">${getBulkSelectIconSVG(iconState)}</button><div class="model-bulk-view" role="group" aria-label="Model selector view"><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'card' ? ' is-active' : ''}" data-model-view="card">Card</button><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'list' ? ' is-active' : ''}" data-model-view="list">List</button><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'grid' ? ' is-active' : ''}" data-model-view="grid">Grid</button></div></div>`;
+        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><button type="button" class="model-bulk-icon-btn" data-bulk-action="toggle-all" title="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}" aria-label="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}">${getBulkSelectIconSVG(iconState)}</button><div class="model-bulk-view" role="group" aria-label="Model selector view"><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'card' ? ' is-active' : ''}" data-model-view="card">Card</button><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'grid' ? ' is-active' : ''}" data-model-view="grid">Grid</button></div></div>`;
         bulkBar.addEventListener('click', (ev) => ev.stopPropagation());
         bulkBar.querySelector('[data-bulk-action="toggle-all"]')?.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -2525,14 +2703,16 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             const name = modelPartNames[idx];
             const opt = document.createElement('div');
             opt.className = 'thumb-select-option';
+            if (activeBgPreset === 'modelcolor' && idx === bgSyncPartIndex) opt.classList.add('is-bg-sync-source');
             opt.dataset.partIndex = String(idx);
-            opt.draggable = true;
+            opt.draggable = !!window.matchMedia && window.matchMedia('(pointer:fine)').matches;
             opt.setAttribute('role', 'option');
             const settings = getPartSettings(idx);
             const hideLabel = settings.hidden ? 'Show' : 'Hide';
             const mutateDisabledAttr = canMutateFiles ? '' : ' disabled title="Part source files are unavailable for editing"';
             const bulkLabel = `Select part ${idx + 1} for bulk edit`;
-            opt.innerHTML = `<label class="thumb-select-option-check" title="${bulkLabel}" aria-label="${bulkLabel}"><input type="checkbox" class="thumb-select-option-check-input" data-part-bulk-select="${idx}"></label><button type="button" class="thumb-select-option-main" data-part-select="${idx}"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">\u22ee</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action" data-part-action="hide" data-part-index="${idx}">${hideLabel}</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}"${mutateDisabledAttr}>Delete Model</button></div>`;
+            const syncOn = activeBgPreset === 'modelcolor' && idx === bgSyncPartIndex;
+            opt.innerHTML = `<label class="thumb-select-option-check" title="${bulkLabel}" aria-label="${bulkLabel}"><input type="checkbox" class="thumb-select-option-check-input" data-part-bulk-select="${idx}"></label><button type="button" class="thumb-select-option-main" data-part-select="${idx}"><span class="thumb-select-option-thumb-wrap"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-sync-badge" aria-hidden="true">Sync</span></span><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">${getPartOptionMoreIconSVG()}</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action" data-part-action="hide" data-part-index="${idx}">${hideLabel}</button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="bg-sync-toggle" data-part-index="${idx}"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}"${mutateDisabledAttr}>Delete Model</button></div>`;
 
             const bulkCheck = opt.querySelector('[data-part-bulk-select]');
             const bulkCheckWrap = opt.querySelector('.thumb-select-option-check');
@@ -2592,6 +2772,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 closeModelPartActionMenus();
                 if (!menu || !willOpen) return;
                 menu.hidden = false;
+                menu.addEventListener('click', (event) => event.stopPropagation());
                 positionModelPartActionMenu(menu, ev.currentTarget);
             });
 
@@ -2609,10 +2790,42 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     }
 
                     if (action === 'hide') {
+                        pushModelUndoState();
                         const partSettings = getPartSettings(partIdx);
                         partSettings.hidden = !partSettings.hidden;
                         applyPartColorsToMesh();
                         syncModelPartSelectorUI();
+                        saveSettings();
+                        return;
+                    }
+
+                    if (action === 'bg-sync-toggle') {
+                        const isActiveSource = activeBgPreset === 'modelcolor' && bgSyncPartIndex === partIdx;
+                        if (isActiveSource) {
+                            if (!window.confirm('Turn off background color sync?')) return;
+                            pushModelUndoState();
+                            const fallbackPreset = BG_PRESETS.find((preset) => preset.id === lastNonModelBgPreset) || BG_PRESETS[0];
+                            activeBgPreset = fallbackPreset?.id || 'white';
+                            if (fallbackPreset?.color) {
+                                bgPick.value = fallbackPreset.color;
+                                bgPick.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                            updateBgSelection();
+                            syncModelPartSelectorUI(true);
+                            saveSettings();
+                            return;
+                        }
+                        if (!maybeConfirmBgSyncChange(partIdx)) return;
+                        pushModelUndoState();
+                        activeBgPreset = 'modelcolor';
+                        bgSyncPartIndex = partIdx;
+                        const syncColor = getModelSyncSourceColor();
+                        bgPick.value = syncColor;
+                        if (isDynamicBg) updateDynamicBg();
+                        else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+                        renderBgPresets();
+                        updateBgSelection();
+                        syncModelPartSelectorUI(true);
                         saveSettings();
                         return;
                     }
@@ -2725,11 +2938,15 @@ function syncBgModelSyncSourceUI() {
         const opt = document.createElement('button');
         opt.type = 'button';
         opt.className = 'thumb-select-option';
+        if (idx === bgSyncPartIndex) opt.classList.add('is-bg-sync-source');
         opt.dataset.partIndex = String(idx);
         opt.setAttribute('role', 'option');
-        opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="68" height="68" aria-hidden="true"></canvas><span class="thumb-select-option-text">${name}</span>`;
+        opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="68" height="68" aria-hidden="true"></canvas><span class="thumb-select-option-text">${name}</span><span class="thumb-select-sync-badge" aria-hidden="true">Sync</span>`;
         opt.addEventListener('click', () => {
+            if (!maybeConfirmBgSyncChange(idx)) return;
+            pushModelUndoState();
             bgSyncPartIndex = idx;
+            activeBgPreset = 'modelcolor';
             if (activeBgPreset === 'modelcolor') {
                 const syncColor = getModelSyncSourceColor();
                 bgPick.value = syncColor;
@@ -2749,8 +2966,8 @@ function syncBgModelSyncSourceUI() {
     }
     if (bgModelSyncSelectorText) {
         const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
-        bgModelSyncSelectorText.textContent = selectedName;
-        bgModelSyncSelectorBtn.title = selectedName;
+        bgModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
+        bgModelSyncSelectorBtn.title = `Background sync: ${selectedName}`;
     }
     queueModelPartThumbsRender();
 }
@@ -2922,6 +3139,7 @@ function loadSTLBuffer(buffer, name) {
     multipartPartBounds = null;
     currentModelBuffer = buffer;
     modelPartSelected = 0;
+    bulkSelectedPartIndices.clear();
 
     loadPreparedGeometry(geo, name);
 }
@@ -2940,6 +3158,7 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
     customModelSettingsByPart = {};
     currentModelBuffer = null;
     modelPartSelected = Math.max(0, Math.min(pendingModelPartSelected, modelPartNames.length - 1));
+    bulkSelectedPartIndices.clear();
 
     const parsed = [];
     const unionBox = new THREE.Box3();
@@ -6731,8 +6950,7 @@ function setCardResetButtonState(button, isDirty) {
 }
 
 function updateCardResetButtonStates() {
-    const modelDirty = !sliderMatchesResetMidpoint('opacitySlider')
-        || !sliderMatchesResetMidpoint('textureTuneRoughness');
+    const modelDirty = modelUndoStack.length > 0;
 
     const backgroundDirty = !sliderMatchesResetMidpoint('bgOpacitySlider');
 
@@ -6759,11 +6977,7 @@ function updateCardResetButtonStates() {
 }
 
 btnResetModelCard?.addEventListener('click', () => {
-    resetCardSlidersToMiddle([
-        'opacitySlider',
-        'textureTuneRoughness',
-    ]);
-    updateCardResetButtonStates();
+    undoLastModelChange();
 });
 
 btnResetBackgroundCard?.addEventListener('click', () => {
@@ -6993,12 +7207,23 @@ function ensureDesktopV2RailObserver() {
 
 function applyMobileAccordionState(panelName) {
     const panel = normalizeSidebarTab(panelName || 'theme');
+    document.querySelectorAll('.sidebar-tab').forEach((btn) => {
+        const active = btn.dataset.tab === panel;
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-selected', String(active));
+    });
     document.querySelectorAll('.mobile-panel-toggle').forEach((btn) => {
         const expanded = btn.dataset.mobilePanel === panel;
         btn.setAttribute('aria-expanded', String(expanded));
     });
     document.querySelectorAll('.tab-panel').forEach((panelEl) => {
-        panelEl.hidden = panelEl.dataset.panel !== panel;
+        const expanded = panelEl.dataset.panel === panel;
+        panelEl.hidden = false;
+        panelEl.classList.toggle('is-mobile-open', expanded);
+        Array.from(panelEl.children).forEach((child) => {
+            if (child.classList && child.classList.contains('mobile-panel-toggle')) return;
+            child.hidden = !expanded;
+        });
     });
     try { localStorage.setItem('rotater_mobileAccordionPanel', panel); } catch (_) { }
 }
@@ -7073,6 +7298,11 @@ function switchTab(tab) {
         btn.setAttribute('aria-selected', String(active));
     });
     document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.remove('is-mobile-open');
+        Array.from(panel.children).forEach((child) => {
+            if (child.classList && child.classList.contains('mobile-panel-toggle')) return;
+            child.hidden = false;
+        });
         panel.hidden = panel.dataset.panel !== normalizedTab;
     });
     try { localStorage.setItem('rotater_activeTab', normalizedTab); } catch (_) { }
@@ -7165,6 +7395,8 @@ function setupCardHeaderControls() {
         collapseBtn.innerHTML = '<span aria-hidden="true">▾</span>';
         collapseBtn.addEventListener('click', () => {
             const collapsed = card.classList.toggle('is-collapsed');
+            closeThumbSelectMenus();
+            closeFileChipPartsMenu();
             collapseBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
             collapseBtn.title = collapsed ? 'Expand card' : 'Collapse card';
             collapseBtn.setAttribute('aria-label', collapsed ? 'Expand card' : 'Collapse card');
@@ -8800,6 +9032,20 @@ function renderBgPresets() {
 
         const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
+            const toggleOffModelSync = preset.id === 'modelcolor' && activeBgPreset === 'modelcolor';
+            if (toggleOffModelSync) {
+                const fallbackPreset = BG_PRESETS.find((candidate) => candidate.id === lastNonModelBgPreset) || BG_PRESETS[0];
+                activeBgPreset = fallbackPreset?.id || 'white';
+                if (fallbackPreset?.color) {
+                    bgPick.value = fallbackPreset.color;
+                    bgPick.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                updateBgSelection();
+                syncBgModelSyncSourceUI();
+                saveSettings();
+                return;
+            }
+
             activeBgPreset = preset.id;
             if (preset.id !== 'modelcolor') lastNonModelBgPreset = preset.id;
             // Respect existing auto-adjust state
@@ -8816,6 +9062,13 @@ function renderBgPresets() {
             }
             if (isDynamicBg) updateDynamicBg();
             updateBgSelection();
+            if (preset.id === 'modelcolor' && bgModelSyncSelectorMenu && bgModelSyncSelectorBtn) {
+                requestAnimationFrame(() => {
+                    syncBgModelSyncSourceUI();
+                    bgModelSyncSelectorMenu.hidden = false;
+                    bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
+                });
+            }
         });
         bar.appendChild(wrap);
     });
