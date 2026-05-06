@@ -1724,13 +1724,30 @@ function syncModelPartBulkUIState() {
     const selectedCount = getEffectiveSelectedPartIndices().length;
     const partCount = modelPartNames.length;
     if (modelPartSelectorText && isMultipartModel()) renderModelPartSelectorSummary();
-    const iconBtn = modelPartSelectorMenu.querySelector('[data-bulk-action="toggle-all"]');
-    if (iconBtn) {
+    const toggleAllControl = modelPartSelectorMenu.querySelector('[data-bulk-action="toggle-all"]');
+    if (toggleAllControl instanceof HTMLInputElement) {
+        const allSelected = partCount > 0 && selectedCount >= partCount;
+        const partiallySelected = selectedCount > 0 && selectedCount < partCount;
+        toggleAllControl.checked = allSelected;
+        toggleAllControl.indeterminate = partiallySelected;
+        const labelText = allSelected ? 'Clear selection' : 'Select all';
+        toggleAllControl.title = labelText;
+        toggleAllControl.setAttribute('aria-label', labelText);
+    } else if (toggleAllControl) {
         const state = getBulkSelectionIconState(selectedCount, partCount);
-        iconBtn.innerHTML = getBulkSelectIconSVG(state);
-        iconBtn.title = selectedCount >= partCount ? 'Clear selection' : 'Select all';
-        iconBtn.setAttribute('aria-label', iconBtn.title);
+        toggleAllControl.innerHTML = getBulkSelectIconSVG(state);
+        toggleAllControl.title = selectedCount >= partCount ? 'Clear selection' : 'Select all';
+        toggleAllControl.setAttribute('aria-label', toggleAllControl.title);
     }
+}
+
+function syncModelPartCheckboxStates() {
+    if (!modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
+    const effectiveSelection = new Set(getEffectiveSelectedPartIndices());
+    modelPartSelectorMenu.querySelectorAll('.thumb-select-option-check-input[data-part-bulk-select]').forEach((inputEl) => {
+        const idx = parseInt(inputEl.dataset.partBulkSelect || '-1', 10);
+        inputEl.checked = effectiveSelection.has(idx);
+    });
 }
 
 function setDisplayedFileName(name) {
@@ -2326,11 +2343,12 @@ function renderMultipartSummaryThumbnail(canvasEl) {
     const gap = tileCount <= 1 ? 0 : Math.max(4, Math.round(canvasEl.width * 0.03));
     const cellW = Math.floor((canvasEl.width - pad * 2 - gap) / cols);
     const cellH = Math.floor((canvasEl.height - pad * 2 - gap) / rows);
+    const tileSide = Math.max(1, Math.min(cellW, cellH));
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = cellW;
-    tempCanvas.height = cellH;
-    tempCanvas.style.width = `${cellW}px`;
-    tempCanvas.style.height = `${cellH}px`;
+    tempCanvas.width = tileSide;
+    tempCanvas.height = tileSide;
+    tempCanvas.style.width = `${tileSide}px`;
+    tempCanvas.style.height = `${tileSide}px`;
 
     tiles.forEach((tile, tileIndex) => {
         const row = Math.floor(tileIndex / cols);
@@ -2352,9 +2370,12 @@ function renderMultipartSummaryThumbnail(canvasEl) {
         ctx.fill();
         ctx.stroke();
 
+        const drawX = x + Math.floor((cellW - tileSide) / 2);
+        const drawY = y + Math.floor((cellH - tileSide) / 2);
+
         if (typeof tile === 'number') {
             renderSinglePartThumbnail(tempCanvas, tile);
-            ctx.drawImage(tempCanvas, x + 2, y + 2, cellW - 4, cellH - 4);
+            ctx.drawImage(tempCanvas, drawX, drawY, tileSide, tileSide);
         } else {
             ctx.fillStyle = '#1f1a47';
             ctx.font = `700 ${Math.max(18, Math.round(cellW * 0.34))}px "Source Sans 3", sans-serif`;
@@ -2718,20 +2739,21 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     modelPartSelectorMenu.innerHTML = '';
 
     if (!singleModel) {
-        const selectedCount = getBulkSelectedPartIndices().length;
-        const iconState = getBulkSelectionIconState(selectedCount, partCount);
+        const selectedCount = getEffectiveSelectedPartIndices().length;
+        const allSelected = partCount > 0 && selectedCount >= partCount;
         const bulkBar = document.createElement('div');
         bulkBar.className = 'model-bulk-bar';
-        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><button type="button" class="model-bulk-icon-btn" data-bulk-action="toggle-all" title="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}" aria-label="${selectedCount >= partCount ? 'Clear selection' : 'Select all'}">${getBulkSelectIconSVG(iconState)}</button><div class="model-bulk-view" role="group" aria-label="Model selector view"><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'card' ? ' is-active' : ''}" data-model-view="card">Card</button><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'grid' ? ' is-active' : ''}" data-model-view="grid">Grid</button></div></div>`;
+        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><label class="model-bulk-toggle-all" title="${allSelected ? 'Clear selection' : 'Select all'}" aria-label="${allSelected ? 'Clear selection' : 'Select all'}"><input type="checkbox" class="thumb-select-option-check-input" data-bulk-action="toggle-all"></label><div class="model-bulk-view" role="group" aria-label="Model selector view"><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'card' ? ' is-active' : ''}" data-model-view="card">Card</button><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'grid' ? ' is-active' : ''}" data-model-view="grid">Grid</button></div></div>`;
         bulkBar.addEventListener('click', (ev) => ev.stopPropagation());
-        bulkBar.querySelector('[data-bulk-action="toggle-all"]')?.addEventListener('click', (ev) => {
+        bulkBar.querySelector('[data-bulk-action="toggle-all"]')?.addEventListener('change', (ev) => {
             ev.stopPropagation();
-            const allSelected = getBulkSelectedPartIndices().length >= partCount;
-            setBulkPartSelectionForAll(!allSelected);
-            modelPartSelectorMenu.querySelectorAll('.thumb-select-option-check-input[data-part-bulk-select]').forEach((inputEl) => {
-                const partIdx = parseInt(inputEl.dataset.partBulkSelect || '-1', 10);
-                inputEl.checked = bulkSelectedPartIndices.has(partIdx);
-            });
+            const shouldSelectAll = !!ev.currentTarget.checked;
+            setBulkPartSelectionForAll(shouldSelectAll);
+            if (!shouldSelectAll) {
+                // Keep one active fallback selected for deterministic editing behavior.
+                modelPartSelected = Math.max(0, Math.min(modelPartSelected, Math.max(0, modelPartNames.length - 1)));
+            }
+            syncModelPartCheckboxStates();
             syncModelPartBulkUIState();
         });
         bulkBar.querySelectorAll('[data-model-view]').forEach((btn) => btn.addEventListener('click', (ev) => {
@@ -2761,13 +2783,26 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             const bulkCheckWrap = opt.querySelector('.thumb-select-option-check');
             bulkCheckWrap?.addEventListener('click', (ev) => ev.stopPropagation());
             if (bulkCheck) {
-                bulkCheck.checked = bulkSelectedPartIndices.has(idx) || idx === modelPartSelected;
-                bulkCheck.addEventListener('click', (ev) => ev.stopPropagation());
+                // Set initial checked state based on effective selection
+                const effectiveSelection = getEffectiveSelectedPartIndices();
+                bulkCheck.checked = effectiveSelection.includes(idx);
+                bulkCheck.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                });
                 bulkCheck.addEventListener('change', (ev) => {
                     ev.stopPropagation();
-                    setBulkPartSelected(idx, bulkCheck.checked);
+                    const isNowChecked = bulkCheck.checked;
+                    // Add or remove from bulk selection
+                    setBulkPartSelected(idx, isNowChecked);
+                    // Ensure at least one part remains as active fallback
+                    if (!isNowChecked && idx === modelPartSelected) {
+                        const fallback = getOrderedPartIndices().find((partIdx) => partIdx !== idx);
+                        if (Number.isInteger(fallback)) modelPartSelected = fallback;
+                    }
+                    // Re-sync all states to ensure consistency
+                    syncModelPartCheckboxStates();
                     syncModelPartBulkUIState();
-                });
+                }, false);
             }
 
             opt.addEventListener('dragstart', (ev) => {
@@ -2799,13 +2834,18 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
 
             opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
                 clearPresetHoverPreview();
+                // Only set active part; preserve existing bulk selection
                 modelPartSelected = idx;
-                setBulkPartSelected(idx, true);
+                // If no bulk selection, add this part to bulk selection for editing
+                if (getBulkSelectedPartIndices().length === 0) {
+                    setBulkPartSelected(idx, true);
+                }
                 syncUIFromSelectedPart();
                 applyPartColorsToMesh();
                 applyCurrentTextureTuning();
                 closeThumbSelectMenus();
-                syncModelPartSelectorUI();
+                syncModelPartCheckboxStates();
+                syncModelPartBulkUIState();
                 saveSettings();
             });
 

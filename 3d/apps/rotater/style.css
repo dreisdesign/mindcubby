@@ -318,6 +318,38 @@ html.loaded .sidebar {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    /* On narrow viewports, prevent sidebar from becoming too cramped */
+    min-width: 280px;
+}
+
+@media (max-width: 640px) {
+    html.loaded .app-body {
+        flex-direction: column;
+    }
+
+    html.loaded main {
+        flex: 0 0 40vh;
+        min-height: 200px;
+    }
+
+    html.loaded .sidebar {
+        flex: 1;
+        min-height: 150px;
+        min-width: auto;
+        max-width: none;
+    }
+}
+
+@media (max-width: 899px) and (min-width: 641px) {
+    html.loaded main {
+        /* Constrain height to give sidebar more breathing room */
+        flex: 0 0 auto;
+        max-height: 50vh;
+    }
+
+    html.loaded .sidebar {
+        min-width: 300px;
+    }
 }
 
 @media (min-width: 900px) {
@@ -1192,7 +1224,8 @@ html.loaded .controls-bar.hidden {
     gap: 8px;
 }
 
-.model-bulk-icon-btn {
+.model-bulk-icon-btn,
+.model-bulk-toggle-all {
     width: 34px;
     height: 30px;
     min-width: 34px;
@@ -1210,6 +1243,30 @@ html.loaded .controls-bar.hidden {
     cursor: pointer;
 }
 
+.model-bulk-toggle-all {
+    position: relative;
+}
+
+.model-bulk-toggle-all .thumb-select-option-check-input {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+}
+
+.model-bulk-toggle-all .thumb-select-option-check-input:indeterminate {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.model-bulk-toggle-all .thumb-select-option-check-input:indeterminate::after {
+    transform: none;
+    width: 8px;
+    height: 2px;
+    border: none;
+    border-radius: 999px;
+    background: #fff;
+}
+
 .model-bulk-icon-btn svg {
     width: 20px;
     height: 20px;
@@ -1217,7 +1274,8 @@ html.loaded .controls-bar.hidden {
     flex: 0 0 20px;
 }
 
-.model-bulk-icon-btn:hover {
+.model-bulk-icon-btn:hover,
+.model-bulk-toggle-all:hover {
     border-color: var(--palette-blueberry-500);
     background: color-mix(in srgb, #fff 70%, var(--palette-blueberry-100) 30%);
 }
@@ -1901,7 +1959,8 @@ html.theme-dark .model-bulk-btn:hover {
     background: rgba(56, 48, 104, 0.56);
 }
 
-html.theme-dark .model-bulk-icon-btn {
+html.theme-dark .model-bulk-icon-btn,
+html.theme-dark .model-bulk-toggle-all {
     background: rgba(30, 25, 62, 0.26);
     border-color: rgba(179, 168, 247, 0.42);
     color: var(--palette-blueberry-100);

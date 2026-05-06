@@ -17,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Model footprint floor guides** — ruler grid now includes thin footprint lines derived from the loaded model bounds, aligned to the active ruler unit system (`mm` metric spacing or `in` imperial spacing)
 - **Export preview visible border** — the mini export preview now always has a visible border; border strengthens when background is off so the frame is clear on transparent renders
 - **Build plate shape control** — Build Plate card now supports `Rectangle`, `Rounded`, and `Circle` footprint modes with live geometry switching
-- **Card-level Add Model action** — Model card now includes a dedicated `Add Model` button for appending STL parts
 - **Multipart bulk edit MVP** — Model parts menu now includes per-row checkboxes plus a bulk action banner to apply active `Color`, `Shade`, or `Finish` values to checked parts
 
 ### Changed
@@ -32,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lighting lock control** — `Lock light to camera` is now a visible toggle in Lighting Effects (instead of a forced hidden state)
 
 ### Fixed
+- **Model sync thumbnail distortion** — multipart summary thumbnails now render each part into square tiles, preventing stretched part previews when background sync is enabled
+- **Model manager checkbox multi-select** — part selection checkboxes now correctly support multi-select; clicking a part button no longer clears other bulk selections
+- **Model manager checkbox state consistency** — checkbox states now remain consistent across card/grid view switches and part selection interactions
+- **Model manager checkbox visual parity** — the bulk toggle control beside `Card/Grid` now uses the same checkbox style and indeterminate behavior as row-level part checkboxes
+- **Mobile / narrow viewport layout** — sidebar on narrow viewports (<900px) now maintains a minimum width instead of being squeezed; below 640px switches to full-height stacked layout with expanded canvas
 - **Rotation Time hidden for still formats** — Export motion `Rotation Time` field and the motion controls block are now hidden when PNG or JPEG format is selected
 - **Right-panel card shadow clipping** — added padding to the desktop v2 effects panel so card drop-shadows are no longer cut off at the panel edges
 - **Single-model actions menu alignment** — exposed 3-dot menu is now anchored and centered correctly on the single-model selector card

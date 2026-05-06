@@ -28,13 +28,13 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 - Upload STL buttons now open the Add/Replace choice modal **before** the file picker when a model is already loaded:
   - **Add to existing plate** appends the incoming STL file(s) as new parts
   - **Create new plate / replace** replaces the current model
-  - **Do not ask me again** stores your preferred default action
 - Multi-part import: select or drop multiple STL files at once to load them as one aligned object (keeps original CAD offsets for multi-color part stacks)
 - Multi-part editing: use **Part Color Target** in the Model card to choose which part you are editing
-- Multi-part bulk edit: in **Part Color Target**, check multiple parts and use the bulk banner to apply active **Color**, **Shade**, or **Finish** values to all checked parts
-- Model card manager behavior:
-  - For multipart models, each part row keeps **Replace**, **Hide/Show**, and **Delete** in the 3-dot menu
-  - **Add STL** is now a dedicated card-level button (`Add Model`) instead of living in each 3-dot row
+- Multi-part bulk edit: in **Part Color Target**, check multiple parts and use the bulk banner to apply active **Color**, **Shade**, or **Finish** values to all checked parts  - Bulk checkboxes support true multi-select: select any combination of parts to edit them together
+  - Clicking a part thumbnail or button activates it for editing without clearing other selections- Model card manager behavior:
+  - For multipart models, each part row keeps **Replace**, **Hide/Show**, **Background Color Sync**, and **Delete** in the 3-dot menu
+  - Bulk selection checkboxes always reflect the effective model edit targets and remain consistent when switching **Card** / **Grid** view modes
+  - The bulk toggle beside **Card / Grid** uses the same checkbox system and visual style as row checkboxes
   - For a single model, the part dropdown is hidden and an exposed 3-dot menu is shown instead
 - Model preset cards now apply on click only
 - The model and all settings persist across page refreshes — no re-upload needed
