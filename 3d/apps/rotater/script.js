@@ -2794,11 +2794,6 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     const isNowChecked = bulkCheck.checked;
                     // Add or remove from bulk selection
                     setBulkPartSelected(idx, isNowChecked);
-                    // Ensure at least one part remains as active fallback
-                    if (!isNowChecked && idx === modelPartSelected) {
-                        const fallback = getOrderedPartIndices().find((partIdx) => partIdx !== idx);
-                        if (Number.isInteger(fallback)) modelPartSelected = fallback;
-                    }
                     // Re-sync all states to ensure consistency
                     syncModelPartCheckboxStates();
                     syncModelPartBulkUIState();
