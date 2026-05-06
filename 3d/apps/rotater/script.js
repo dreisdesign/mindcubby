@@ -1498,6 +1498,12 @@ function getUiSelectedPartIndices() {
     return getBulkSelectedPartIndices();
 }
 
+function syncActivePartFromUiSelection() {
+    if (!isMultipartModel()) return;
+    const selected = getUiSelectedPartIndices();
+    if (selected.length === 1) modelPartSelected = selected[0];
+}
+
 function setBulkPartSelectionForAll(selected) {
     if (!isMultipartModel()) {
         bulkSelectedPartIndices.clear();
@@ -2751,6 +2757,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
 
     modelPartSelected = Math.max(0, Math.min(modelPartSelected, modelPartNames.length - 1));
     if (singleModel) modelPartSelected = 0;
+    if (!singleModel) syncActivePartFromUiSelection();
     modelPartSelectorMenu.innerHTML = '';
 
     if (!singleModel) {
@@ -2768,6 +2775,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 // Keep one active fallback selected for deterministic editing behavior.
                 modelPartSelected = Math.max(0, Math.min(modelPartSelected, Math.max(0, modelPartNames.length - 1)));
             }
+            syncActivePartFromUiSelection();
             syncModelPartCheckboxStates();
             syncModelPartBulkUIState();
             queueModelPartThumbsRender();
@@ -2811,6 +2819,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     const isNowChecked = bulkCheck.checked;
                     // Add or remove from bulk selection
                     setBulkPartSelected(idx, isNowChecked);
+                    syncActivePartFromUiSelection();
                     // Re-sync all states to ensure consistency
                     syncModelPartCheckboxStates();
                     syncModelPartBulkUIState();
@@ -3271,6 +3280,7 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
         bulkSelectedPartIndices.add(modelPartSelected);
     }
     pendingBulkSelectedPartIndices = null;
+    syncActivePartFromUiSelection();
 
     const parsed = [];
     const unionBox = new THREE.Box3();

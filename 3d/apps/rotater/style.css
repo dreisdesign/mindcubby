@@ -1553,9 +1553,9 @@ html.loaded .controls-bar.hidden {
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option.is-selected {
-    border-color: color-mix(in srgb, var(--palette-blueberry-700) 72%, var(--color-primary) 28%);
+    border: 2px solid var(--palette-blueberry-500);
     background: color-mix(in srgb, #fff 62%, var(--palette-blueberry-100) 38%);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-500) 54%, transparent);
+    box-shadow: none;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option.is-bg-sync-source .thumb-select-sync-badge {
@@ -2026,9 +2026,9 @@ html.theme-dark #modelPartSelectorMenu.model-selector-view--grid .thumb-select-o
 }
 
 html.theme-dark #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option.is-selected {
-    border-color: rgba(232, 227, 255, 0.92);
+    border: 2px solid rgba(232, 227, 255, 0.92);
     background: rgba(74, 64, 140, 0.5);
-    box-shadow: 0 0 0 2px rgba(179, 168, 247, 0.56);
+    box-shadow: none;
 }
 
 html.theme-dark .thumb-select-canvas,
