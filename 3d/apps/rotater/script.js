@@ -1491,6 +1491,12 @@ function getEffectiveSelectedPartIndices() {
     return [fallback];
 }
 
+function getUiSelectedPartIndices() {
+    if (!hasModelParts()) return [];
+    if (!isMultipartModel()) return [Math.max(0, modelPartSelected)];
+    return getBulkSelectedPartIndices();
+}
+
 function setBulkPartSelectionForAll(selected) {
     if (!isMultipartModel()) {
         bulkSelectedPartIndices.clear();
@@ -1607,7 +1613,7 @@ function showModelUndoToast(message = 'Model updated') {
 
 function getBulkSelectionSummaryText() {
     const total = modelPartNames.length;
-    const selected = getEffectiveSelectedPartIndices().length;
+    const selected = getUiSelectedPartIndices().length;
     if (!total) return '0 models';
     return `${selected}/${total} selected`;
 }
@@ -1721,7 +1727,7 @@ function applyToModelPartEditTargets(mutator) {
 
 function syncModelPartBulkUIState() {
     if (!modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
-    const selectedCount = getEffectiveSelectedPartIndices().length;
+    const selectedCount = getUiSelectedPartIndices().length;
     const partCount = modelPartNames.length;
     if (modelPartSelectorText && isMultipartModel()) renderModelPartSelectorSummary();
     const toggleAllControl = modelPartSelectorMenu.querySelector('[data-bulk-action="toggle-all"]');
@@ -1743,7 +1749,7 @@ function syncModelPartBulkUIState() {
 
 function syncModelPartCheckboxStates() {
     if (!modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
-    const effectiveSelection = new Set(getEffectiveSelectedPartIndices());
+    const effectiveSelection = new Set(getUiSelectedPartIndices());
     modelPartSelectorMenu.querySelectorAll('.thumb-select-option-check-input[data-part-bulk-select]').forEach((inputEl) => {
         const idx = parseInt(inputEl.dataset.partBulkSelect || '-1', 10);
         inputEl.checked = effectiveSelection.has(idx);
@@ -2331,7 +2337,7 @@ function renderMultipartSummaryThumbnail(canvasEl) {
     if (!ctx) return;
     ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
-    const selected = getEffectiveSelectedPartIndices();
+    const selected = getUiSelectedPartIndices();
     const visible = selected.slice(0, 3);
     const remaining = Math.max(0, selected.length - visible.length);
     const tiles = [...visible];
@@ -2444,14 +2450,16 @@ function renderModelPartSelectorSummary() {
         return;
     }
 
-    const selectedIndices = getEffectiveSelectedPartIndices();
+    const selectedIndices = getUiSelectedPartIndices();
     const selectedCount = selectedIndices.length;
     const totalCount = modelPartNames.length;
-    const firstIndex = selectedIndices[0] ?? 0;
+    const firstIndex = selectedIndices[0] ?? Math.max(0, modelPartSelected);
     const firstLabel = modelPartNames[firstIndex] || `Part ${firstIndex + 1}`;
 
     let titleText = '';
-    if (selectedCount <= 1) {
+    if (selectedCount === 0) {
+        titleText = 'No parts selected';
+    } else if (selectedCount <= 1) {
         titleText = `Part ${firstIndex + 1}: ${firstLabel}`;
     } else if (selectedCount === 2) {
         titleText = `Parts ${selectedIndices[0] + 1} and ${selectedIndices[1] + 1}`;
@@ -2739,7 +2747,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     modelPartSelectorMenu.innerHTML = '';
 
     if (!singleModel) {
-        const selectedCount = getEffectiveSelectedPartIndices().length;
+        const selectedCount = getUiSelectedPartIndices().length;
         const allSelected = partCount > 0 && selectedCount >= partCount;
         const bulkBar = document.createElement('div');
         bulkBar.className = 'model-bulk-bar';
@@ -2784,7 +2792,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             bulkCheckWrap?.addEventListener('click', (ev) => ev.stopPropagation());
             if (bulkCheck) {
                 // Set initial checked state based on effective selection
-                const effectiveSelection = getEffectiveSelectedPartIndices();
+                const effectiveSelection = getUiSelectedPartIndices();
                 bulkCheck.checked = effectiveSelection.includes(idx);
                 bulkCheck.addEventListener('click', (ev) => {
                     ev.stopPropagation();
