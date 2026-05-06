@@ -1352,6 +1352,20 @@ html.loaded .controls-bar.hidden {
     justify-content: center;
 }
 
+@media (hover: hover) and (pointer: fine) {
+    #modelPartSelectorMenu .thumb-select-option .thumb-select-option-check {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 120ms ease;
+    }
+
+    #modelPartSelectorMenu .thumb-select-option:hover .thumb-select-option-check,
+    #modelPartSelectorMenu .thumb-select-option:focus-within .thumb-select-option-check {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
 .thumb-select-option-check-input {
     width: 20px;
     height: 20px;

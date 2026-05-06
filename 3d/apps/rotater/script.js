@@ -2841,8 +2841,9 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
 
             opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
                 clearPresetHoverPreview();
-                // Set active part and ensure it is part of bulk selection.
+                // Main row click is single-select: switch active part and replace bulk set.
                 modelPartSelected = idx;
+                bulkSelectedPartIndices.clear();
                 setBulkPartSelected(idx, true);
                 syncUIFromSelectedPart();
                 applyPartColorsToMesh();
