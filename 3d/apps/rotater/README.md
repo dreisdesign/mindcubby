@@ -4,6 +4,8 @@ View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapsh
 
 **Version (current workspace): Unreleased**
 
+Current development note: the existing export UI still reflects an older multi-surface design. The next planned round consolidates export and crop into one workspace so Rotater no longer has to maintain a main viewer, mini export card, and separate export preview flow in parallel. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
+
 ---
 
 ## Web App
@@ -38,12 +40,13 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
   - For a single model, the part dropdown is hidden and an exposed 3-dot menu is shown instead
 - Model preset cards now apply on click only
 - The model and all settings persist across page refreshes — no re-upload needed
+- Hard refresh startup now exits the splash immediately after restore pass, and demo-model auto-load is deferred for smoother initial interaction
 - The filename chip (top-right of canvas) shows the active file
   - For multipart models, click the chevron to expand all part filenames
   - Each expanded row supports **Replace**, **Add**, and **×** remove for individual part operations (remove when 2+ parts are loaded)
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
-- **Export** (sidebar header) opens the Export modal
+- **Export** opens the export workspace from the left controls; framing now reuses the main viewer instead of a separate duplicate preview
 - **Download Project ZIP** (inside the Export modal) saves a single ZIP package containing `package.json` plus the original STL file(s)
 - **Import Package** is part of the Upload STL flow (choice modal button) and accepts Rotater `.zip` packages for quick restore/testing
 - ZIP package import now validates file paths, type allowlist (`.stl` + `package.json`), and archive size limits before loading
@@ -63,10 +66,13 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
   - Arrow keys (←↑↓→) do the same thing from the keyboard
   - Center button of the D-pad pauses / resumes (⏸/▶)
 - **Reset camera** button (⟳, D-pad center) — recenters the model in the export frame
-- **Crop button** (⬜, bottom-right of viewer) — enters crop mode
-  - The viewer dims and blurs outside the crop frame; all other controls hide
-  - **Cancel** (ghost button, bottom-center) — discards changes and exits crop mode (also Esc)
-  - **Keep** (purple button, bottom-center) — saves the current framing and exits crop mode (also Enter)
+- **Export workspace framing** — entering Export enables the crop/framing workspace on the main viewer
+  - The viewer dims and blurs outside the crop frame
+  - Clicking outside the crop frame closes Export workspace
+  - Dimension presets appear beside the viewer for one-click framing changes
+  - **Cancel** (ghost button, bottom-center) — discards crop changes while staying in the export flow
+  - **Keep** (purple button, bottom-center) — saves the current framing
+  - The D-pad remains available during export framing so camera alignment stays easy
 - **Dark mode toggle** (bottom-left of viewer)
 
 ### Export preview overlay
@@ -131,13 +137,11 @@ On first visit after texture updates, the tune icon shows a small **NEW** badge 
 | Speed | Playback speed in seconds per full rotation: 5s · 10s · 15s · 20s · 25s · 30s |
 | Range | Oscillation amplitude for Tilt (10°–50°) and arc width for Spin (45°–360°); controls tilt depth for Wobble |
 
+Rotation timing is now time-based (delta-time corrected), so selected seconds-per-revolution stay accurate even when frame rate drops.
+
 ### Export preview
 
-The sidebar **Preview** thumbnail always shows exactly what will be exported:
-
-- **Default** — preview uses a stored export-frame distance (fit-to-model). Viewport zoom is cosmetic only and does not affect the exported output.
-- **Crop mode** (crop icon, bottom-right of viewer) — enables zoom-to-export. Zooming the viewport while crop mode is active directly controls the export framing; the preview updates in real time.
-  - **Cancel** discards crop edits; **Keep** commits the framing for future exports
+Export framing now centers on the main viewer during the export workspace flow. The older duplicate preview surface is being phased out so framing, crop state, and camera adjustment all happen in one place.
 
 ### Export
 

@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multipart bulk edit MVP** — Model parts menu now includes per-row checkboxes plus a bulk action banner to apply active `Color`, `Shade`, or `Finish` values to checked parts
 
 ### Changed
+- **Export workspace consolidation (phase 1)** — Export now enters a shared framing workspace based on crop mode, using the main viewer as the active preview instead of relying on a separate duplicate preview workflow
 - **Upload STL modal timing** — Upload STL buttons now open the Add/Replace decision modal before opening the file picker when a model is already loaded
 - **Package action placement** — `Download Project ZIP` now lives in the Export panel, and package import is available directly from the Upload STL choice flow
 - **Model manager semantics** — per-part 3-dot menus removed `Add STL`; single-model sessions now hide the part dropdown and show an exposed 3-dot actions menu
@@ -29,12 +30,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Roadmap cleanup** — removed the obsolete background texture slider roadmap item
 - **Build plate color picker parity** — Build Plate now exposes a custom color swatch button that opens the native picker with the same anchored behavior used by Custom color swatches
 - **Lighting lock control** — `Lock light to camera` is now a visible toggle in Lighting Effects (instead of a forced hidden state)
+- **Sidebar export entry placement** — desktop export entry now sits beside `Upload STL` in the sidebar brand row so export starts from the primary left-panel workflow
 
 ### Fixed
+- **Rotation Time accuracy under load** — viewer animation now uses delta-time based updates (`controls.update(delta)` + time-based phase advance), so 5s/10s/etc. timing stays consistent even when FPS dips
+- **Export workspace outside-click close** — while crop framing is active, clicking outside the crop frame now closes Export workspace; inside-frame clicks continue to orbit/pan/zoom as expected
+- **Hard-refresh splash responsiveness** — restore completion now always marks the app as loaded and dismisses splash promptly; heavy demo auto-load is deferred and skipped for returning users to reduce startup blocking
+- **Duplicate export surfaces reduced** — removed the canvas mini export card, removed the standalone crop button, and hid the duplicate export preview panel so export framing now centers on one live viewer surface
+- **Multipart row-action bulk behavior** — row-level `Hide` and `Remove` now apply to the active checked selection when multiple parts are selected, matching bulk-edit expectations
+- **Multipart checkbox visibility in multi-select mode** — on hover-capable desktop devices, row checkboxes now stay visible while multi-selection is active instead of disappearing until hover/focus
 - **Model sync thumbnail distortion** — multipart summary thumbnails now render each part into square tiles, preventing stretched part previews when background sync is enabled
 - **Model manager checkbox multi-select** — part selection checkboxes now correctly support multi-select; clicking a part button no longer clears other bulk selections
 - **Model manager checkbox state consistency** — checkbox states now remain consistent across card/grid view switches and part selection interactions
 - **Model manager checkbox visual parity** — the bulk toggle control beside `Card/Grid` now uses the same checkbox style and indeterminate behavior as row-level part checkboxes
+- **Build plate shade response curve** — build plate shade now uses a dedicated capped curve (±20% brightness envelope) so tone changes are more controlled and predictable across colors
+- **Build plate URL round-trip completeness** — URL serialization now always includes valid `bpc` and numeric `bps` values (including defaults such as `0`) to improve settings restoration consistency
 - **Mobile / narrow viewport layout** — sidebar on narrow viewports (<900px) now maintains a minimum width instead of being squeezed; below 640px switches to full-height stacked layout with expanded canvas
 - **Rotation Time hidden for still formats** — Export motion `Rotation Time` field and the motion controls block are now hidden when PNG or JPEG format is selected
 - **Right-panel card shadow clipping** — added padding to the desktop v2 effects panel so card drop-shadows are no longer cut off at the panel edges

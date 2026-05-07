@@ -133,8 +133,8 @@ const CROP_FRAME_UI_SCALE = 0.82; // Keeps a visual margin around the crop guide
 const VIEWPORT_FIT_SCALE = 1.55; // Smaller than 1.8 so default/reset framing is less zoomed out
 const VIEWPORT_AA_SCALE = 1.35; // Mild supersampling for cleaner edges on standard-DPI displays
 const BUILD_PLATE_TEXTURES_ENABLED = false; // Flat plate avoids extra texture work in dense multipart scenes
-const AUTO_LOAD_BENCHY_ON_IDLE = false;
-const AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS = 1800;
+const AUTO_LOAD_BENCHY_ON_IDLE = true;
+const AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS = 6000;
 const ORBIT_MIN_DISTANCE_FACTOR = 0.12;
 const ORBIT_MAX_DISTANCE_FACTOR = 6.0;
 const LIGHT_BASE = { ambient: 0.45, key: 1.9, fill: 0.30, rim: 0.92, exposure: 0.75 };
@@ -253,6 +253,7 @@ const exportMiniFormatEl = document.getElementById('exportMiniFormat');
 const exportFormatCollapsedEl = document.getElementById('exportFormatCollapsed');
 const exportFormatTabEls = Array.from(document.querySelectorAll('[data-export-format-tab]'));
 const exportPanelEl = document.querySelector('.export-modal-panel');
+const exportPanelHeaderEl = exportPanelEl?.querySelector('.settings-panel-header') || null;
 const exportPanelBodyEl = document.getElementById('exportPanelBody');
 const btnToggleExportPanel = document.getElementById('btnToggleExportPanel');
 const exportPanelCollapsedBarEl = document.getElementById('exportPanelCollapsedBar');
@@ -629,6 +630,7 @@ let tiltPhase = 0;
 let swingBaseAz = 0, swingLastAz = 0;
 let tiltBaseMeshRx = -Math.PI / 2;
 let spinDir = 1; // 1 = clockwise, -1 = counter-clockwise
+const renderDeltaClock = new THREE.Clock();
 let modelDims = null;  // { w, d, h } in mm (STL units: x=width, y=depth, z=height)
 let exportCamDist = null; // stored export camera distance (fit-to-frame, independent of viewport zoom)
 let exportCamElev = 0;   // stored export camera elevation (radians)
@@ -747,6 +749,15 @@ function syncExportCameraFromViewport() {
     exportCamElev = elev;
     const cropScale = exportFrameEnabled ? getCropFrameVerticalScale() : 1;
     exportCamZoom = (camera.zoom || 1) / cropScale;
+}
+
+function isCanvasPointInsideCropFrame(clientX, clientY) {
+    const fc = document.getElementById('exportFrameCanvas');
+    if (!fc) return true;
+    const rect = fc.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    return x >= _cropSx && x <= (_cropSx + _cropSw) && y >= _cropSy && y <= (_cropSy + _cropSh);
 }
 
 function getViewportPixelRatio() {
@@ -1109,7 +1120,7 @@ function openAnchoredColorPicker(inputEl, anchorEl) {
 
 function updateBuildPlateMaterial() {
     const shade = Math.max(-100, Math.min(100, Number(buildPlateShade) || 0));
-    const toned = computeTonedColor(buildPlateColor || '#c2a164', shade);
+    const toned = computeBuildPlateShadeColor(buildPlateColor || '#c2a164', shade);
     buildPlateShape = normalizeBuildPlateShape(buildPlateShape);
     buildPlateFinish = (buildPlateFinish === 'matte' || buildPlateFinish === 'gloss') ? buildPlateFinish : 'satin';
 
@@ -1757,10 +1768,19 @@ function syncModelPartBulkUIState() {
 function syncModelPartCheckboxStates() {
     if (!modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
     const effectiveSelection = new Set(getUiSelectedPartIndices());
+    modelPartSelectorMenu.classList.toggle('has-multi-selection', effectiveSelection.size > 0);
     modelPartSelectorMenu.querySelectorAll('.thumb-select-option-check-input[data-part-bulk-select]').forEach((inputEl) => {
         const idx = parseInt(inputEl.dataset.partBulkSelect || '-1', 10);
         inputEl.checked = effectiveSelection.has(idx);
     });
+}
+
+function getPartActionTargetIndices(partIdx) {
+    const baseIdx = parseInt(partIdx, 10);
+    if (!Number.isInteger(baseIdx) || baseIdx < 0) return [];
+    const selected = getUiSelectedPartIndices();
+    if (selected.length > 1 && selected.includes(baseIdx)) return selected;
+    return [baseIdx];
 }
 
 function setDisplayedFileName(name) {
@@ -2015,8 +2035,8 @@ function updateBgShadeSliderVisual() {
 function updateBuildPlateShadeSliderVisual() {
     if (!buildPlateShadeSliderEl) return;
     const baseHex = buildPlateColor || '#c2a164';
-    const lightHex = `#${computeTonedColor(baseHex, -100).getHexString()}`;
-    const darkHex = `#${computeTonedColor(baseHex, 100).getHexString()}`;
+    const lightHex = `#${computeBuildPlateShadeColor(baseHex, -100).getHexString()}`;
+    const darkHex = `#${computeBuildPlateShadeColor(baseHex, 100).getHexString()}`;
     buildPlateShadeSliderEl.style.setProperty('--slider-fill', lightHex);
     buildPlateShadeSliderEl.style.setProperty('--slider-track-base', darkHex);
     buildPlateShadeSliderEl.style.setProperty('--slider-track-gradient', `linear-gradient(to right, ${lightHex} 0%, ${darkHex} 100%)`);
@@ -2663,6 +2683,18 @@ function computeTonedColor(baseHex, toneVal) {
     return baseC;
 }
 
+function computeBuildPlateShadeColor(baseHex, shadeVal) {
+    const baseColor = new THREE.Color(baseHex);
+    const hsl = { h: 0, s: 0, l: 0 };
+    baseColor.getHSL(hsl);
+    const amount = Math.max(0, Math.min(1, Math.abs(Number(shadeVal) || 0) / 100));
+    const span = 0.2;
+    if (shadeVal < 0) hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * span * amount);
+    else if (shadeVal > 0) hsl.l = Math.max(0, hsl.l * (1 - span * amount));
+    baseColor.setHSL(hsl.h, hsl.s, hsl.l);
+    return baseColor;
+}
+
 function applyPartColorsToMesh() {
     const mats = getMeshMaterials();
     if (!mats.length) return;
@@ -2888,6 +2920,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     const action = actionBtn.dataset.partAction;
                     const partIdx = parseInt(actionBtn.dataset.partIndex || '-1', 10);
                     if (!Number.isFinite(partIdx) || partIdx < 0) return;
+                    const targetPartIndices = getPartActionTargetIndices(partIdx);
 
                     if (action === 'replace') {
                         pendingReplacePartIndex = partIdx;
@@ -2898,7 +2931,11 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     if (action === 'hide') {
                         pushModelUndoState();
                         const partSettings = getPartSettings(partIdx);
-                        partSettings.hidden = !partSettings.hidden;
+                        const nextHidden = !partSettings.hidden;
+                        targetPartIndices.forEach((idx) => {
+                            const settings = getPartSettings(idx);
+                            settings.hidden = nextHidden;
+                        });
                         applyPartColorsToMesh();
                         syncModelPartSelectorUI();
                         saveSettings();
@@ -2938,6 +2975,14 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     }
 
                     if (action === 'remove') {
+                        if (targetPartIndices.length > 1) {
+                            if (!confirm(`Remove ${targetPartIndices.length} selected models?`)) return;
+                            const descending = [...targetPartIndices].sort((a, b) => b - a);
+                            for (const idx of descending) {
+                                await removeMultipartPart(idx, { confirmRemoval: false });
+                            }
+                            return;
+                        }
                         await removeMultipartPart(partIdx);
                     }
                 });
@@ -3248,6 +3293,7 @@ function loadSTLBuffer(buffer, name) {
     modelPartFiles = null;
     modelPartDisplayOrder = [0];
     pendingModelPartDisplayOrder = null;
+    pendingBulkSelectedPartIndices = null;
     multipartPartBounds = null;
     currentModelBuffer = buffer;
     modelPartSelected = 0;
@@ -3368,12 +3414,14 @@ let _lastRulerOverlayUpdateMs = 0;
 
 function loop() {
     requestAnimationFrame(loop);
+    const deltaSec = Math.min(Math.max(renderDeltaClock.getDelta(), 0), 0.1);
+    const phaseStep = (2 * Math.PI / Math.max(1e-6, getSecondsPerRevolution())) * deltaSec;
     if (!isExporting) {
         if (!isPaused && rotateModeEl.value === 'tilt' && mesh) {
             // Tilt: pitch the mesh around its X axis — camera orbits freely
             controls.autoRotate = false;
-            controls.update();
-            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * getSpeed();
+            controls.update(deltaSec);
+            tiltPhase += phaseStep;
             const swing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * swing;
         } else if (!isPaused && rotateModeEl.value === 'wobble' && mesh) {
@@ -3381,17 +3429,17 @@ function loop() {
             const wobbleSpinRange = parseFloat(wobbleSpinRangeSlider.value);
             if (wobbleSpinRange >= 360) {
                 controls.autoRotate = true;
-                controls.update();
+                controls.update(deltaSec);
             } else {
                 controls.autoRotate = false;
-                controls.update();
+                controls.update(deltaSec);
                 const actualAz = Math.atan2(camera.position.x, camera.position.z);
                 let azDelta = actualAz - swingLastAz;
                 if (azDelta > Math.PI) azDelta -= 2 * Math.PI;
                 if (azDelta < -Math.PI) azDelta += 2 * Math.PI;
                 swingBaseAz += azDelta;
             }
-            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * getSpeed();
+            tiltPhase += phaseStep;
             const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
             mesh.rotation.x = tiltBaseMeshRx + Math.sin(tiltPhase) * tiltSwing;
             if (wobbleSpinRange < 360) {
@@ -3411,14 +3459,14 @@ function loop() {
         } else if (!isPaused && rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360 && mesh) {
             // Spin with Range < 360°: azimuth oscillates ±range around user-orbitable base
             controls.autoRotate = false;
-            controls.update(); // apply user input first
+            controls.update(deltaSec); // apply user input first
             // Accumulate user-driven azimuth delta on top of the base
             const actualAz = Math.atan2(camera.position.x, camera.position.z);
             let azDelta = actualAz - swingLastAz;
             if (azDelta > Math.PI) azDelta -= 2 * Math.PI;
             if (azDelta < -Math.PI) azDelta += 2 * Math.PI;
             swingBaseAz += azDelta;
-            tiltPhase += (2 * Math.PI / 3600) * BASE_ROTATE_SPEED * getSpeed();
+            tiltPhase += phaseStep;
             const MAX_EL = Math.PI / 2 - 0.05;
             const swingRange = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
             const dist = camera.position.length();
@@ -3434,7 +3482,7 @@ function loop() {
             swingLastAz = az;
         } else {
             controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
-            controls.update();
+            controls.update(deltaSec);
             // Keep spin base in sync while paused so resume is seamless
             if (camera && rotateModeEl.value === 'spin') {
                 swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
@@ -3746,6 +3794,133 @@ function refreshExportPreviewNow() {
 // ── Export frame overlay ──────────────────────────────────────────────────
 let exportFrameEnabled = false;
 let _hintVisibleBeforeCrop = null;
+let exportWorkspaceActive = false;
+let _cropAppliedCameraZoomScale = false;
+let _exportPanelDragState = null;
+
+function clampExportPanelPosition(left, top) {
+    if (!exportPanelEl) return { left, top };
+    const rect = exportPanelEl.getBoundingClientRect();
+    const maxLeft = Math.max(8, window.innerWidth - rect.width - 8);
+    const maxTop = Math.max(8, window.innerHeight - rect.height - 8);
+    return {
+        left: Math.max(8, Math.min(maxLeft, left)),
+        top: Math.max(8, Math.min(maxTop, top)),
+    };
+}
+
+function setExportPanelPosition(left, top, persist = true) {
+    if (!exportPanelEl) return;
+    const clamped = clampExportPanelPosition(left, top);
+    exportPanelEl.style.left = `${Math.round(clamped.left)}px`;
+    exportPanelEl.style.top = `${Math.round(clamped.top)}px`;
+    exportPanelEl.style.transform = 'none';
+    exportPanelEl.style.right = 'auto';
+    exportPanelEl.style.bottom = 'auto';
+    if (!persist) return;
+    try {
+        localStorage.setItem('rotater_exportPanelPos', JSON.stringify({ left: Math.round(clamped.left), top: Math.round(clamped.top) }));
+    } catch (_) { }
+}
+
+function restoreExportPanelPosition() {
+    if (!exportPanelEl || !isDesktopV2Layout()) return;
+    try {
+        const raw = localStorage.getItem('rotater_exportPanelPos');
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Number.isFinite(parsed.left) || !Number.isFinite(parsed.top)) return;
+        setExportPanelPosition(parsed.left, parsed.top, false);
+    } catch (_) { }
+}
+
+function initializeExportPanelDrag() {
+    if (!exportPanelEl || !exportPanelHeaderEl) return;
+    const onPointerMove = (ev) => {
+        if (!_exportPanelDragState) return;
+        const nextLeft = _exportPanelDragState.startLeft + (ev.clientX - _exportPanelDragState.startX);
+        const nextTop = _exportPanelDragState.startTop + (ev.clientY - _exportPanelDragState.startY);
+        setExportPanelPosition(nextLeft, nextTop, false);
+    };
+
+    const onPointerUp = () => {
+        if (!_exportPanelDragState) return;
+        const rect = exportPanelEl.getBoundingClientRect();
+        setExportPanelPosition(rect.left, rect.top, true);
+        exportPanelHeaderEl.classList.remove('is-dragging');
+        _exportPanelDragState = null;
+    };
+
+    exportPanelHeaderEl.addEventListener('pointerdown', (ev) => {
+        if (!isDesktopV2Layout() || !exportWorkspaceActive) return;
+        if (ev.button !== 0) return;
+        if (ev.target instanceof Element && ev.target.closest('button,a,input,select,label,textarea')) return;
+        const rect = exportPanelEl.getBoundingClientRect();
+        _exportPanelDragState = {
+            startX: ev.clientX,
+            startY: ev.clientY,
+            startLeft: rect.left,
+            startTop: rect.top,
+        };
+        exportPanelHeaderEl.classList.add('is-dragging');
+        exportPanelHeaderEl.setPointerCapture?.(ev.pointerId);
+        ev.preventDefault();
+    });
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('resize', () => {
+        if (!isDesktopV2Layout() || !exportWorkspaceActive) return;
+        const rect = exportPanelEl.getBoundingClientRect();
+        setExportPanelPosition(rect.left, rect.top, false);
+    });
+}
+
+initializeExportPanelDrag();
+
+function setExportWorkspaceActive(active) {
+    exportWorkspaceActive = !!active;
+    document.documentElement.classList.toggle('export-workspace-active', exportWorkspaceActive);
+    const exportOverlayEl = document.getElementById('exportOverlay');
+    if (exportOverlayEl) exportOverlayEl.hidden = !exportWorkspaceActive;
+    try { localStorage.setItem('rotater_exportWorkspaceActive', exportWorkspaceActive ? '1' : '0'); } catch (_) { }
+    syncCanvasSize();
+    requestAnimationFrame(() => syncCanvasSize());
+}
+
+function enterCropMode() {
+    if (exportFrameEnabled) return;
+    exportFrameEnabled = true;
+    _cropBackupDist = exportCamDist;
+    _cropBackupElev = exportCamElev;
+    _cropBackupZoom = exportCamZoom;
+    _cropAppliedCameraZoomScale = false;
+    if (camera) {
+        _cropBackupCameraZoom = camera.zoom || 1;
+        if (!exportWorkspaceActive) {
+            camera.zoom = _cropBackupCameraZoom * CROP_FRAME_UI_SCALE;
+            camera.updateProjectionMatrix();
+            _cropAppliedCameraZoomScale = true;
+        }
+    }
+    _cropLiveSyncArmed = true;
+    syncExportCameraFromViewport();
+    updateCropHintUI();
+    updateFrameOverlayButtonUI();
+    updateRulerHUD();
+    refreshExportPreviewNow();
+}
+
+function openExportWorkspace() {
+    setExportWorkspaceActive(true);
+    requestAnimationFrame(() => restoreExportPanelPosition());
+    enterCropMode();
+}
+
+function closeExportWorkspace() {
+    if (exportFrameEnabled) confirmCropMode();
+    setExportWorkspaceActive(false);
+}
 
 function updateFrameOverlayButtonUI() {
     if (!frameOverlayBtn) return;
@@ -3817,7 +3992,8 @@ function setShiftPanInteraction(active) {
 
 function updateCropDimensionsDock(frameRect = null) {
     const showDimensions = !!exportFormatEl?.value; // all formats support aspect presets
-    const useDock = showDimensions && exportFrameEnabled && !!cropDimensionsDock;
+    const inExportWorkspace = !!(exportWorkspaceActive && document.documentElement.classList.contains('export-workspace-active'));
+    const useDock = showDimensions && !!cropDimensionsDock && (inExportWorkspace || exportFrameEnabled);
 
     if (!cropDimensionsDock) return;
     if (!useDock) {
@@ -3828,6 +4004,13 @@ function updateCropDimensionsDock(frameRect = null) {
 
     cropDimensionsDock.hidden = false;
     cropDimensionsDock.setAttribute('aria-hidden', 'false');
+
+    // In export workspace the crop dock lives inside the export card, not on-canvas.
+    if (inExportWorkspace) {
+        cropDimensionsDock.style.left = '';
+        cropDimensionsDock.style.top = '';
+        return;
+    }
 
     const fc = document.getElementById('exportFrameCanvas');
     const wrap = fc?.parentElement;
@@ -5228,10 +5411,10 @@ function settingsToURL() {
     if (rulerUnit === 'imperial') p.set('ru', 'i');
     if (!rulerLinesVisible) p.set('rg', '0');
     if (!buildPlateEnabled) p.set('bp', '0');
-    if (buildPlateColor && /^#[0-9a-f]{6}$/i.test(buildPlateColor) && buildPlateColor.toLowerCase() !== '#c2a164') {
+    if (buildPlateColor && /^#[0-9a-f]{6}$/i.test(buildPlateColor)) {
         p.set('bpc', buildPlateColor.replace('#', ''));
     }
-    if (buildPlateShade) p.set('bps', String(buildPlateShade));
+    if (Number.isFinite(Number(buildPlateShade))) p.set('bps', String(buildPlateShade));
     if (buildPlateFinish && buildPlateFinish !== 'satin') p.set('bpf', buildPlateFinish);
     if (buildPlateShape !== 'rectangle') p.set('bpsh', normalizeBuildPlateShape(buildPlateShape));
     if (buildPlateSizePreset && buildPlateSizePreset !== '220x220') p.set('bpp', buildPlateSizePreset);
@@ -5295,8 +5478,17 @@ function runWhenBrowserIdle(task, timeoutMs = AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS) 
 
 function scheduleAutoDemoModelLoad() {
     if (autoDemoLoadScheduled || autoDemoLoadSuppressed) return;
+    // Returning users generally expect an immediate workspace after hard refresh.
+    // Skip heavy demo-model auto-load once they've already had a session.
+    try {
+        if (localStorage.getItem('rotater_hasSession') === '1') {
+            dismissStartupSplash();
+            return;
+        }
+    } catch (_) { }
     autoDemoLoadScheduled = true;
     if (DEV_LOG) console.log(`[rotater] restoreSession: scheduling demo model load at ${Date.now()}`);
+    dismissStartupSplash();
     const runLoad = async () => {
         const hasExplicitModelName = !!currentFileName && currentFileName !== 'model' && currentFileName !== '3dbenchy';
         if (autoDemoLoadSuppressed || mesh || hasExplicitModelName) {
@@ -5753,11 +5945,12 @@ async function replaceMultipartPart(partIdx, file) {
     syncFileChipMultipartUI();
 }
 
-async function removeMultipartPart(partIdx) {
+async function removeMultipartPart(partIdx, options = {}) {
+    const { confirmRemoval = true } = options;
     if (!isMultipartModel() || !modelPartFiles || modelPartFiles.length !== modelPartNames.length) return;
     if (modelPartFiles.length <= 1) return;
     const index = Math.max(0, Math.min(partIdx, modelPartFiles.length - 1));
-    if (!confirm(`Remove part \"${modelPartNames[index]}\"?`)) return;
+    if (confirmRemoval && !confirm(`Remove part \"${modelPartNames[index]}\"?`)) return;
     ensureModelPartDisplayOrder();
     const nextFiles = modelPartFiles.filter((_, idx) => idx !== index);
     const nextNames = nextFiles.map((part) => part.name);
@@ -7548,6 +7741,9 @@ function applyDesktopV2Layout() {
             openExportBtn.hidden = false;
         }
         if (exportOverlayEl) exportOverlayEl.hidden = true;
+        // Close export workspace cleanly when switching to mobile/tablet,
+        // otherwise crop-mode UI can remain visible after resize.
+        closeExportWorkspace();
         disconnectDesktopV2RailObserver();
         document.documentElement.style.removeProperty('--desktop-v2-effects-top');
         document.documentElement.style.removeProperty('--desktop-v2-effects-max-height');
@@ -7651,7 +7847,6 @@ document.getElementById('btnAppSettingsCanvas')?.addEventListener('click', () =>
 
     applyAppSettingsDockState(false);
     try { localStorage.setItem('rotater_appSettingsCollapsed', '0'); } catch (_) { }
-    document.getElementById('appSettingsDock')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 document.getElementById('btnThemeToggleRail')?.addEventListener('click', () => {
@@ -7659,6 +7854,10 @@ document.getElementById('btnThemeToggleRail')?.addEventListener('click', () => {
 });
 
 applyDesktopV2Layout();
+try {
+    const shouldRestoreExportWorkspace = isDesktopV2Layout() && localStorage.getItem('rotater_exportWorkspaceActive') === '1';
+    if (shouldRestoreExportWorkspace) openExportWorkspace();
+} catch (_) { }
 window.addEventListener('resize', () => {
     applyDesktopV2Layout();
 });
@@ -7948,19 +8147,21 @@ try {
     }
 } catch (e) { }
 
-['btnOpenExportModal', 'btnOpenExportModalMini'].forEach((id) => {
+['btnOpenExportModal', 'btnOpenExportModalMobile', 'btnOpenExportModalMini'].forEach((id) => {
     document.getElementById(id)?.addEventListener('click', () => {
-        document.getElementById('exportOverlay').hidden = false;
-        refreshExportPreviewNow();
+        openExportWorkspace();
     });
 });
 
 document.getElementById('btnExportClose')?.addEventListener('click', () => {
-    document.getElementById('exportOverlay').hidden = true;
+    closeExportWorkspace();
 });
 
-document.getElementById('exportOverlay')?.addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) document.getElementById('exportOverlay').hidden = true;
+// Fallback for stale/partially-cached tabs where direct binding may mismatch the live node.
+document.addEventListener('click', (e) => {
+    const target = e.target instanceof Element ? e.target.closest('#btnExportClose') : null;
+    if (!target) return;
+    closeExportWorkspace();
 });
 
 btnDownloadPackage?.addEventListener('click', async () => {
@@ -8043,8 +8244,8 @@ document.addEventListener('keydown', (e) => {
         closeUploadChoicePrompt('cancel');
         return;
     }
-    if (e.key === 'Escape' && !isDesktopV2Layout() && !document.getElementById('exportOverlay').hidden) {
-        document.getElementById('exportOverlay').hidden = true;
+    if (e.key === 'Escape' && exportWorkspaceActive) {
+        closeExportWorkspace();
         return;
     }
     if (e.key === 'Escape' && !document.getElementById('infoOverlay').hidden) {
@@ -8058,23 +8259,7 @@ frameOverlayBtn?.addEventListener('click', () => {
         confirmCropMode();
         return;
     }
-    exportFrameEnabled = true;
-    if (exportFrameEnabled) {
-        // Entering crop mode: back up framing and physically zoom viewport so object seamlessly shrinks into crop UI
-        _cropBackupDist = exportCamDist;
-        _cropBackupElev = exportCamElev;
-        _cropBackupZoom = exportCamZoom;
-        if (camera) {
-            _cropBackupCameraZoom = camera.zoom || 1;
-            camera.zoom = _cropBackupCameraZoom * CROP_FRAME_UI_SCALE;
-            camera.updateProjectionMatrix();
-        }
-        _cropLiveSyncArmed = true;
-        syncExportCameraFromViewport();
-    }
-    updateCropHintUI();
-    updateFrameOverlayButtonUI();
-    updateRulerHUD();
+    enterCropMode();
 });
 
 function cancelCropMode() {
@@ -8087,7 +8272,7 @@ function cancelCropMode() {
     } else {
         exportCamDist = null;
     }
-    if (camera) {
+    if (camera && _cropAppliedCameraZoomScale) {
         camera.zoom = _cropBackupCameraZoom || 1;
         camera.updateProjectionMatrix();
     }
@@ -8095,6 +8280,7 @@ function cancelCropMode() {
     updateCropHintUI();
     updateFrameOverlayButtonUI();
     _cropLiveSyncArmed = false;
+    _cropAppliedCameraZoomScale = false;
     clearExportFrame();
     updateRulerHUD();
     saveSettings();
@@ -8105,7 +8291,7 @@ function confirmCropMode() {
     // Commit current live crop framing.
     syncExportCameraFromViewport();
     // Revert the viewport's physical *0.82 shrink so it bounds to the canvas instead of the crop UI
-    if (camera) {
+    if (camera && _cropAppliedCameraZoomScale) {
         camera.zoom = (camera.zoom || 1) / CROP_FRAME_UI_SCALE;
         camera.updateProjectionMatrix();
     }
@@ -8113,6 +8299,7 @@ function confirmCropMode() {
     updateCropHintUI();
     updateFrameOverlayButtonUI();
     _cropLiveSyncArmed = false;
+    _cropAppliedCameraZoomScale = false;
     clearExportFrame();
     updateRulerHUD();
     saveSettings();
@@ -8122,7 +8309,11 @@ document.getElementById('btnCancelCrop').addEventListener('click', cancelCropMod
 document.getElementById('btnConfirmCrop')?.addEventListener('click', confirmCropMode);
 updateFrameOverlayButtonUI();
 
-// Click outside (dim regions) intentionally does NOT cancel — use the buttons or Esc/Enter
+canvas?.addEventListener('click', (e) => {
+    if (!exportWorkspaceActive || !exportFrameEnabled) return;
+    if (isCanvasPointInsideCropFrame(e.clientX, e.clientY)) return;
+    closeExportWorkspace();
+});
 
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && exportFrameEnabled) cancelCropMode();
@@ -8870,6 +9061,8 @@ function finishRestoreSessionState() {
     // whether it succeeded (html.loaded is set) or not.
     // Ensure preview reflects restored transparent setting immediately
     try { syncTransparentCheckboxes('exportTransparent'); } catch (e) { }
+    document.documentElement.classList.add('loaded');
+    dismissStartupSplash();
     document.documentElement.classList.remove('has-session');
 }
 

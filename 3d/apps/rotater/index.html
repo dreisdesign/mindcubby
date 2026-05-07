@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="0">
     <title>ROTATER — STL Spin Viewer</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=2.1.7">
+    <link rel="stylesheet" href="style.css?v=2.1.31">
     <style>
         #startupSplash {
             position: fixed;
@@ -38,7 +38,7 @@
             opacity: 1;
         }
     </style>
-    <script>const ROTATER_BUILD = '2.1.2';
+    <script>const ROTATER_BUILD = '2.1.31';
         const ROTATER_DEFAULT_QUERY = 'c=b4aed6&b=8d8ab7&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
         try {
             document.documentElement.classList.add('booting');
@@ -126,43 +126,6 @@
                                 Keep
                             </button>
                         </div>
-                        <div id="cropDimensionsDock" class="crop-dimensions-dock" hidden aria-hidden="true">
-                            <div class="dimension-group dimension-group--overlay" role="radiogroup"
-                                aria-label="Image dimensions">
-                                <div class="thumb-card-wrap">
-                                    <label class="dimension-option" title="Square 1:1">
-                                        <input type="radio" name="exportDimensions" value="square" checked>
-                                        <span class="dimension-thumb dimension-thumb--square"><span
-                                                class="dimension-shape"></span></span>
-                                    </label>
-                                    <span class="thumb-label">1:1</span>
-                                </div>
-                                <div class="thumb-card-wrap">
-                                    <label class="dimension-option" title="Portrait 1:2">
-                                        <input type="radio" name="exportDimensions" value="portrait12">
-                                        <span class="dimension-thumb dimension-thumb--portrait12"><span
-                                                class="dimension-shape"></span></span>
-                                    </label>
-                                    <span class="thumb-label">1:2</span>
-                                </div>
-                                <div class="thumb-card-wrap">
-                                    <label class="dimension-option" title="Landscape 2:1">
-                                        <input type="radio" name="exportDimensions" value="landscape21">
-                                        <span class="dimension-thumb dimension-thumb--landscape21"><span
-                                                class="dimension-shape"></span></span>
-                                    </label>
-                                    <span class="thumb-label">2:1</span>
-                                </div>
-                                <div class="thumb-card-wrap">
-                                    <label class="dimension-option" title="Landscape 4:3">
-                                        <input type="radio" name="exportDimensions" value="landscape43">
-                                        <span class="dimension-thumb dimension-thumb--landscape43"><span
-                                                class="dimension-shape"></span></span>
-                                    </label>
-                                    <span class="thumb-label">4:3</span>
-                                </div>
-                            </div>
-                        </div>
                         <div id="rulerHUD" class="ruler-hud" hidden
                             role="button" tabindex="0" aria-label="Switch to imperial units">
                             <span class="ruler-dim"><span class="ruler-axis">W</span><span id="rulerW"
@@ -184,7 +147,8 @@
                         <div id="cropCornerTR" class="crop-corner crop-corner--tr" aria-hidden="true"></div>
                         <div id="cropCornerBL" class="crop-corner crop-corner--bl" aria-hidden="true"></div>
                         <div id="cropCornerBR" class="crop-corner crop-corner--br" aria-hidden="true"></div>
-                        <img src="rotater.svg" alt="ROTATER" class="logo canvas-logo">
+                        <img src="rotater.svg" alt="ROTATER" class="logo canvas-logo canvas-logo--wordmark">
+                        <img src="favicon.svg" alt="ROTATER" class="logo canvas-logo canvas-logo--icon">
                         <div class="canvas-top-right">
                             <div class="file-chip" id="fileChip">
                                 <span id="fileName" class="file-chip-name"></span>
@@ -221,35 +185,6 @@
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                         <path
                                             d="M12.9627 17.0125C13.221 16.7542 13.3502 16.4417 13.3502 16.075V12.325C13.3502 11.9583 13.221 11.6458 12.9627 11.3875C12.7044 11.1292 12.3919 11 12.0252 11C11.6585 11 11.346 11.1292 11.0877 11.3875C10.8294 11.6458 10.7002 11.9583 10.7002 12.325V16.075C10.7002 16.4417 10.8294 16.7542 11.0877 17.0125C11.346 17.2708 11.6585 17.4 12.0252 17.4C12.3919 17.4 12.7044 17.2708 12.9627 17.0125ZM12.8877 8.24201C13.1294 8.00318 13.2502 7.70735 13.2502 7.35451C13.2502 7.00151 13.1309 6.70418 12.8922 6.46251C12.6534 6.22085 12.3575 6.10001 12.0047 6.10001C11.6517 6.10001 11.3544 6.21935 11.1127 6.45801C10.871 6.69685 10.7502 6.99268 10.7502 7.34551C10.7502 7.69851 10.8695 7.99585 11.1082 8.23751C11.347 8.47918 11.6429 8.60001 11.9957 8.60001C12.3487 8.60001 12.646 8.48068 12.8877 8.24201ZM12.0002 22.8C10.5062 22.8 9.1022 22.5165 7.7882 21.9495C6.4742 21.3825 5.3312 20.613 4.3592 19.641C3.3872 18.669 2.6177 17.526 2.0507 16.212C1.4837 14.898 1.2002 13.494 1.2002 12C1.2002 10.5017 1.4842 9.09368 2.0522 7.77601C2.6202 6.45818 3.39103 5.31193 4.3647 4.33726C5.33836 3.36243 6.48136 2.59585 7.79369 2.03751C9.10603 1.47918 10.5082 1.20001 12.0002 1.20001C13.4984 1.20001 14.9062 1.47918 16.2237 2.03751C17.5414 2.59585 18.6877 3.36251 19.6627 4.33751C20.6377 5.31251 21.4044 6.45901 21.9627 7.77701C22.521 9.09518 22.8002 10.5035 22.8002 12.002C22.8002 13.5007 22.521 14.9042 21.9627 16.2125C21.4044 17.5208 20.6378 18.6618 19.6629 19.6355C18.6883 20.6092 17.542 21.38 16.2242 21.948C14.9065 22.516 13.4985 22.8 12.0002 22.8ZM12.0002 20.15C14.2754 20.15 16.2025 19.3605 17.7817 17.7815C19.3607 16.2023 20.1502 14.2752 20.1502 12C20.1502 9.72485 19.3607 7.79768 17.7817 6.21851C16.2025 4.63951 14.2754 3.85001 12.0002 3.85001C9.72503 3.85001 7.79786 4.63951 6.2187 6.21851C4.6397 7.79768 3.8502 9.72485 3.8502 12C3.8502 14.2752 4.6397 16.2023 6.2187 17.7815C7.79786 19.3605 9.72503 20.15 12.0002 20.15Z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="canvas-mini-export-card" aria-label="Quick export">
-                            <div class="canvas-mini-export-header">
-                                <span class="canvas-mini-export-title">Export</span>
-                            </div>
-                            <div class="canvas-mini-export-actions">
-                                <select id="exportMiniFormat" class="export-select" aria-label="Quick export format">
-                                    <option value="gif" selected>GIF</option>
-                                    <option value="mp4">MP4</option>
-                                    <option value="png">PNG</option>
-                                    <option value="jpg">JPEG</option>
-                                </select>
-                                <button id="btnMiniExport" class="export-btn export-btn--main" type="button">Export</button>
-                                <button id="btnOpenExportModalMini" class="canvas-mini-export-settings" type="button" title="Open export settings" aria-label="Open export settings">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <circle cx="12" cy="12" r="3.2"></circle>
-                                            <path d="M12 3.2v2.1"></path>
-                                            <path d="M12 18.7v2.1"></path>
-                                            <path d="M3.2 12h2.1"></path>
-                                            <path d="M18.7 12h2.1"></path>
-                                            <path d="m5.78 5.78 1.49 1.49"></path>
-                                            <path d="m16.73 16.73 1.49 1.49"></path>
-                                            <path d="m5.78 18.22 1.49-1.49"></path>
-                                            <path d="m16.73 7.27 1.49-1.49"></path>
-                                        </g>
                                     </svg>
                                 </button>
                             </div>
@@ -321,19 +256,6 @@
                                         d="M7.16309 15.4172V5.66614C7.16309 5.33628 7.28022 5.05985 7.51447 4.83686C7.74873 4.61373 8.02201 4.50217 8.33431 4.50217C8.43197 4.50217 8.53204 4.51681 8.63453 4.54609C8.73702 4.57537 8.8395 4.62662 8.94199 4.69982L16.6286 9.55338C16.8116 9.67051 16.9489 9.81692 17.0404 9.99262C17.1319 10.1683 17.1777 10.3525 17.1777 10.5452C17.1777 10.7379 17.1301 10.9209 17.0349 11.0942C16.9398 11.2676 16.8043 11.4128 16.6286 11.5299L8.94199 16.3835C8.8395 16.4567 8.7354 16.508 8.6297 16.5372C8.52399 16.5665 8.42311 16.5812 8.32706 16.5812C8.0196 16.5812 7.74873 16.4696 7.51447 16.2465C7.28022 16.0233 7.16309 15.7469 7.16309 15.4172Z" />
                                 </svg>
                             </button>
-                            <button id="btnFrameOverlay" class="pause-btn" title="Show export frame"
-                                aria-label="Show export frame" aria-pressed="false">
-                                <svg class="frame-overlay-icon frame-overlay-icon--frame" width="15" height="15"
-                                    viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <path
-                                        d="M16.8001 22.175V19.4H7.2251C6.49626 19.4 5.87243 19.1405 5.3536 18.6215C4.8346 18.1027 4.5751 17.4788 4.5751 16.75V7.17501H1.8001C1.43343 7.17501 1.12093 7.04585 0.862598 6.78751C0.604264 6.52918 0.475098 6.21668 0.475098 5.85001C0.475098 5.48335 0.604264 5.17085 0.862598 4.91251C1.12093 4.65418 1.43343 4.52501 1.8001 4.52501H4.5751V1.77501C4.5751 1.40835 4.70426 1.09585 4.9626 0.837512C5.22093 0.579179 5.53343 0.450012 5.9001 0.450012C6.26676 0.450012 6.57926 0.579179 6.8376 0.837512C7.09593 1.09585 7.2251 1.40835 7.2251 1.77501V16.75H22.2001C22.5668 16.75 22.8793 16.8792 23.1376 17.1375C23.3959 17.3958 23.5251 17.7083 23.5251 18.075C23.5251 18.4417 23.3959 18.7542 23.1376 19.0125C22.8793 19.2708 22.5668 19.4 22.2001 19.4H19.4501V22.175C19.4501 22.5417 19.3209 22.8542 19.0626 23.1125C18.8043 23.3708 18.4918 23.5 18.1251 23.5C17.7584 23.5 17.4459 23.3708 17.1876 23.1125C16.9293 22.8542 16.8001 22.5417 16.8001 22.175ZM16.8001 14.75V7.17501H9.2251V4.52501H16.8001C17.5288 4.52501 18.1526 4.78451 18.6716 5.30351C19.1906 5.82251 19.4501 6.44635 19.4501 7.17501V14.75H16.8001Z" />
-                                </svg>
-                                <svg class="frame-overlay-icon frame-overlay-icon--confirm" width="15" height="15"
-                                    viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                </svg>
-                                <span class="frame-overlay-label">Keep</span>
-                            </button>
                         </div>
                         <div class="canvas-overlay-bl">
                             <button id="btnThemeToggle" class="theme-toggle-btn">
@@ -359,17 +281,28 @@
 
             <div class="sidebar">
                 <div class="sidebar-brand-row">
-                    <img src="rotater.svg" alt="ROTATER" class="logo sidebar-logo">
-                    <button type="button" id="btnUploadStlSidebar" class="file-label compact-btn sidebar-upload-btn">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path
-                                d="M4.5252 20.175H19.5002C19.8669 20.175 20.1752 20.3 20.4252 20.55C20.6752 20.8 20.8002 21.1083 20.8002 21.475C20.8002 21.8417 20.671 22.1542 20.4127 22.4125C20.1544 22.6708 19.8419 22.8 19.4752 22.8H4.5002C4.13353 22.8 3.8252 22.6708 3.5752 22.4125C3.3252 22.1542 3.2002 21.8417 3.2002 21.475C3.2002 21.1083 3.32936 20.8 3.5877 20.55C3.84603 20.3 4.15853 20.175 4.5252 20.175ZM9.6752 18.175C9.30853 18.175 8.99603 18.0458 8.7377 17.7875C8.47936 17.5292 8.3502 17.2167 8.3502 16.85V11.55H6.5252C5.9752 11.55 5.5752 11.3 5.3252 10.8C5.0752 10.3 5.1252 9.83333 5.4752 9.4L10.9752 2.5C11.1085 2.33333 11.2669 2.20833 11.4502 2.125C11.6335 2.04167 11.8169 2 12.0002 2C12.1835 2 12.3669 2.04167 12.5502 2.125C12.7335 2.20833 12.8919 2.33333 13.0252 2.5L18.5252 9.4C18.8752 9.83333 18.9252 10.3 18.6752 10.8C18.4252 11.3 18.0252 11.55 17.4752 11.55H15.6502V16.85C15.6502 17.2167 15.521 17.5292 15.2627 17.7875C15.0044 18.0458 14.6919 18.175 14.3252 18.175H9.6752Z" />
-                        </svg>
-                        <span>Upload STL</span>
-                    </button>
+                    <img src="rotater.svg" alt="ROTATER" class="logo sidebar-logo sidebar-logo--wordmark">
+                    <img src="favicon.svg" alt="ROTATER" class="logo sidebar-logo sidebar-logo--icon">
+                    <div class="sidebar-brand-actions">
+                        <button type="button" id="btnUploadStlSidebar" class="file-label compact-btn sidebar-upload-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path
+                                    d="M4.5252 20.175H19.5002C19.8669 20.175 20.1752 20.3 20.4252 20.55C20.6752 20.8 20.8002 21.1083 20.8002 21.475C20.8002 21.8417 20.671 22.1542 20.4127 22.4125C20.1544 22.6708 19.8419 22.8 19.4752 22.8H4.5002C4.13353 22.8 3.8252 22.6708 3.5752 22.4125C3.3252 22.1542 3.2002 21.8417 3.2002 21.475C3.2002 21.1083 3.32936 20.8 3.5877 20.55C3.84603 20.3 4.15853 20.175 4.5252 20.175ZM9.6752 18.175C9.30853 18.175 8.99603 18.0458 8.7377 17.7875C8.47936 17.5292 8.3502 17.2167 8.3502 16.85V11.55H6.5252C5.9752 11.55 5.5752 11.3 5.3252 10.8C5.0752 10.3 5.1252 9.83333 5.4752 9.4L10.9752 2.5C11.1085 2.33333 11.2669 2.20833 11.4502 2.125C11.6335 2.04167 11.8169 2 12.0002 2C12.1835 2 12.3669 2.04167 12.5502 2.125C12.7335 2.20833 12.8919 2.33333 13.0252 2.5L18.5252 9.4C18.8752 9.83333 18.9252 10.3 18.6752 10.8C18.4252 11.3 18.0252 11.55 17.4752 11.55H15.6502V16.85C15.6502 17.2167 15.521 17.5292 15.2627 17.7875C15.0044 18.0458 14.6919 18.175 14.3252 18.175H9.6752Z" />
+                            </svg>
+                            <span>Upload STL</span>
+                        </button>
+                        <button id="btnOpenExportModal" class="copy-link-btn copy-link-btn--export" title="Open export workspace"
+                            aria-label="Open Export">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path
+                                    d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
+                            </svg>
+                            Export
+                        </button>
+                    </div>
                 </div>
                 <div class="sidebar-header">
-                    <button id="btnOpenExportModal" class="copy-link-btn copy-link-btn--export" title="Open export options"
+                    <button id="btnOpenExportModalMobile" class="copy-link-btn copy-link-btn--export" title="Open export workspace"
                         aria-label="Open Export">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
@@ -377,8 +310,8 @@
                         </svg>
                         Export
                     </button>
-</div>
-<div class="sidebar-tabs" role="tablist">
+                </div>
+                <div class="sidebar-tabs" role="tablist">
                     <button class="sidebar-tab is-active" data-tab="theme" role="tab" aria-selected="true">
                         <svg class="sidebar-tab-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M7.6251 21.025L2.0001 15.4C1.7501 15.15 1.55843 14.8625 1.4251 14.5375C1.29176 14.2125 1.2251 13.875 1.2251 13.525C1.2251 13.1916 1.29176 12.8625 1.4251 12.5375C1.55843 12.2125 1.7501 11.925 2.0001 11.675L7.4001 6.27497L5.4751 4.34997C5.19176 4.06664 5.04593 3.7208 5.0376 3.31247C5.02926 2.90414 5.16676 2.5583 5.4501 2.27497C5.73343 1.97497 6.08343 1.8208 6.5001 1.81247C6.91676 1.80414 7.2751 1.94997 7.5751 2.24997L16.9751 11.675C17.2251 11.925 17.4168 12.2125 17.5501 12.5375C17.6834 12.8625 17.7501 13.1916 17.7501 13.525C17.7501 13.875 17.6834 14.2125 17.5501 14.5375C17.4168 14.8625 17.2251 15.15 16.9751 15.4L11.3501 21.025C11.1001 21.275 10.8126 21.4666 10.4876 21.6C10.1626 21.7333 9.83343 21.8 9.5001 21.8C9.1501 21.8 8.8126 21.7333 8.4876 21.6C8.1626 21.4666 7.8751 21.275 7.6251 21.025ZM9.4501 8.42497L4.3501 13.525H14.6001C14.6001 13.4916 14.6001 13.4916 14.6001 13.525L9.4501 8.42497ZM20.2251 21.8C19.5251 21.8 18.9334 21.55 18.4501 21.05C17.9668 20.55 17.7251 19.95 17.7251 19.25C17.7251 18.7333 17.8501 18.25 18.1001 17.8C18.3501 17.35 18.6418 16.9166 18.9751 16.5L19.4501 15.9C19.6501 15.65 19.9084 15.525 20.2251 15.525C20.5418 15.525 20.8001 15.65 21.0001 15.9L21.4751 16.5C21.7918 16.9166 22.0876 17.35 22.3626 17.8C22.6376 18.25 22.7751 18.7333 22.7751 19.25C22.7751 19.9666 22.5251 20.5708 22.0251 21.0625C21.5251 21.5541 20.9251 21.8 20.2251 21.8Z" />
@@ -790,12 +723,9 @@
             <div class="settings-panel export-modal-panel" role="dialog" aria-modal="true" aria-labelledby="exportPanelTitle">
                 <div class="settings-panel-header">
                     <h3 id="exportPanelTitle">Export</h3>
-                    <button id="btnResetExportCard" class="copy-link-btn copy-link-btn--secondary copy-link-btn--compact"
-                        type="button" title="Reset export settings in this card"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.0002 23C10.6502 23 9.37936 22.7417 8.1877 22.225C6.99603 21.7083 5.95853 21.0083 5.0752 20.125C4.19186 19.2417 3.49186 18.2042 2.9752 17.0125C2.45853 15.8208 2.2002 14.55 2.2002 13.2C2.2002 12.8333 2.32936 12.5208 2.5877 12.2625C2.84603 12.0042 3.15853 11.875 3.5252 11.875C3.89186 11.875 4.20436 12.0042 4.4627 12.2625C4.72103 12.5208 4.8502 12.8333 4.8502 13.2C4.8502 15.1833 5.54603 16.8708 6.9377 18.2625C8.32936 19.6542 10.0169 20.35 12.0002 20.35C13.9835 20.35 15.671 19.6542 17.0627 18.2625C18.4544 16.8708 19.1502 15.1833 19.1502 13.2C19.1502 11.2167 18.4544 9.52918 17.0627 8.13751C15.671 6.74585 13.9835 6.05001 12.0002 6.05001L12.6502 6.70001C12.8835 6.93335 13.0085 7.22085 13.0252 7.56251C13.0419 7.90418 12.9335 8.20835 12.7002 8.47501C12.4669 8.75835 12.1627 8.90835 11.7877 8.92501C11.4127 8.94168 11.0919 8.81668 10.8252 8.55001L7.8752 5.67501C7.60853 5.40835 7.47103 5.09585 7.4627 4.73751C7.45436 4.37918 7.58353 4.06668 7.8502 3.80001L10.7002 0.950013C10.9669 0.683346 11.2794 0.554179 11.6377 0.562513C11.996 0.570846 12.3085 0.708346 12.5752 0.975013C12.8252 1.24168 12.9544 1.55001 12.9627 1.90001C12.971 2.25001 12.8419 2.55835 12.5752 2.82501L12.0002 3.40001C13.3502 3.40001 14.621 3.65835 15.8127 4.17501C17.0044 4.69168 18.0419 5.39168 18.9252 6.27501C19.8085 7.15835 20.5085 8.19585 21.0252 9.38751C21.5419 10.5792 21.8002 11.85 21.8002 13.2C21.8002 14.55 21.5419 15.8208 21.0252 17.0125C20.5085 18.2042 19.8085 19.2417 18.9252 20.125C18.0419 21.0083 17.0044 21.7083 15.8127 22.225C14.621 22.7417 13.3502 23 12.0002 23Z"/></svg>Reset</button>
-                    <button class="settings-close-btn" id="btnExportClose" aria-label="Close export options">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M12.0251 13.85L7.2501 18.65C6.98343 18.9167 6.66676 19.0458 6.3001 19.0375C5.93343 19.0292 5.61676 18.8917 5.3501 18.625C5.1001 18.3583 4.97926 18.05 4.9876 17.7C4.99593 17.35 5.1251 17.0417 5.3751 16.775L10.1251 12L5.3501 7.175C5.1001 6.90834 4.9751 6.6 4.9751 6.25C4.9751 5.9 5.1001 5.59167 5.3501 5.325C5.61676 5.05834 5.93343 4.92084 6.3001 4.9125C6.66676 4.90417 6.98343 5.03334 7.2501 5.3L12.0251 10.1L16.7501 5.3C17.0168 5.03334 17.3334 4.90417 17.7001 4.9125C18.0668 4.92084 18.3834 5.05834 18.6501 5.325C18.9001 5.59167 19.0209 5.9 19.0126 6.25C19.0043 6.6 18.8751 6.90834 18.6251 7.175L13.8751 12L18.6251 16.775C18.8751 17.025 19.0043 17.3292 19.0126 17.6875C19.0209 18.0458 18.9001 18.3583 18.6501 18.625C18.3834 18.8917 18.0668 19.0292 17.7001 19.0375C17.3334 19.0458 17.0168 18.9167 16.7501 18.65L12.0251 13.85Z"/>
-                        </svg>
+                    <button id="btnDownloadPackage" class="export-header-link" type="button"
+                        title="Download settings and STL files as a ZIP" aria-label="Download project settings (Zip)">
+                        Download Project Settings (Zip)
                     </button>
                 </div>
                 <div id="exportPanelBody" class="settings-panel-body export-modal-body">
@@ -838,6 +768,45 @@
                             Grid</label>
                         <label class="gif-option-check"><input type="checkbox" id="exportWatermark">
                             Watermark</label>
+                    </div>
+
+                    <div id="cropDimensionsDock" class="crop-dimensions-dock" hidden aria-hidden="true">
+                        <div class="export-motion-controls-title">Crop</div>
+                        <div class="dimension-group dimension-group--overlay" role="radiogroup"
+                            aria-label="Crop aspect ratio">
+                            <div class="thumb-card-wrap">
+                                <label class="dimension-option" title="Square 1:1">
+                                    <input type="radio" name="exportDimensions" value="square" checked>
+                                    <span class="dimension-thumb dimension-thumb--square"><span
+                                            class="dimension-shape"></span></span>
+                                </label>
+                                <span class="thumb-label">1:1</span>
+                            </div>
+                            <div class="thumb-card-wrap">
+                                <label class="dimension-option" title="Portrait 1:2">
+                                    <input type="radio" name="exportDimensions" value="portrait12">
+                                    <span class="dimension-thumb dimension-thumb--portrait12"><span
+                                            class="dimension-shape"></span></span>
+                                </label>
+                                <span class="thumb-label">1:2</span>
+                            </div>
+                            <div class="thumb-card-wrap">
+                                <label class="dimension-option" title="Landscape 2:1">
+                                    <input type="radio" name="exportDimensions" value="landscape21">
+                                    <span class="dimension-thumb dimension-thumb--landscape21"><span
+                                            class="dimension-shape"></span></span>
+                                </label>
+                                <span class="thumb-label">2:1</span>
+                            </div>
+                            <div class="thumb-card-wrap">
+                                <label class="dimension-option" title="Landscape 4:3">
+                                    <input type="radio" name="exportDimensions" value="landscape43">
+                                    <span class="dimension-thumb dimension-thumb--landscape43"><span
+                                            class="dimension-shape"></span></span>
+                                </label>
+                                <span class="thumb-label">4:3</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div id="exportMotionControls" class="export-motion-controls">
@@ -898,14 +867,11 @@
                         <div class="export-size-est-row"><span id="imgEstJpg"></span></div>
                     </div>
 
-                    <details id="exportPreviewDetails" class="export-preview-details" open>
-                        <summary class="export-preview-summary">
-                            <span class="export-select-label export-preview-label">Preview</span>
-                        </summary>
+                    <div id="exportPreviewDetails" class="export-preview-details export-preview-details--legacy" hidden aria-hidden="true">
                         <div class="export-preview-wrap">
                             <canvas id="exportPreview" class="export-preview-canvas"></canvas>
                         </div>
-                    </details>
+                    </div>
 
                     <button id="btnExportGif" hidden style="display:none"></button>
                     <button id="btnExportVideo" hidden style="display:none"></button>
@@ -919,17 +885,6 @@
                         <span id="exportStatusAnim" class="export-status"></span>
                     </div>
                     <span id="exportStatus" class="export-status"></span>
-
-                    <div class="sidebar-footer-actions export-panel-package-row">
-                        <button id="btnDownloadPackage" class="copy-link-btn copy-link-btn--secondary"
-                            title="Download settings and STL files as a ZIP" aria-label="Download project settings (Zip)">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path
-                                    d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
-                            </svg>
-                            Download Project Settings (Zip)
-                        </button>
-                    </div>
 
                     <div class="export-primary-row">
                         <button id="btnExport" class="export-btn export-btn--main export-btn--inline" type="button">
@@ -945,6 +900,12 @@
                 </div>
             </div>
         </div>
+
+        <button class="settings-close-btn" id="btnExportClose" aria-label="Close export workspace">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12.0251 13.85L7.2501 18.65C6.98343 18.9167 6.66676 19.0458 6.3001 19.0375C5.93343 19.0292 5.61676 18.8917 5.3501 18.625C5.1001 18.3583 4.97926 18.05 4.9876 17.7C4.99593 17.35 5.1251 17.0417 5.3751 16.775L10.1251 12L5.3501 7.175C5.1001 6.90834 4.9751 6.6 4.9751 6.25C4.9751 5.9 5.1001 5.59167 5.3501 5.325C5.61676 5.05834 5.93343 4.92084 6.3001 4.9125C6.66676 4.90417 6.98343 5.03334 7.2501 5.3L12.0251 10.1L16.7501 5.3C17.0168 5.03334 17.3334 4.90417 17.7001 4.9125C18.0668 4.92084 18.3834 5.05834 18.6501 5.325C18.9001 5.59167 19.0209 5.9 19.0126 6.25C19.0043 6.6 18.8751 6.90834 18.6251 7.175L13.8751 12L18.6251 16.775C18.8751 17.025 19.0043 17.3292 19.0126 17.6875C19.0209 18.0458 18.9001 18.3583 18.6501 18.625C18.3834 18.8917 18.0668 19.0292 17.7001 19.0375C17.3334 19.0458 17.0168 18.9167 16.7501 18.65L12.0251 13.85Z"/>
+            </svg>
+        </button>
 
         <div id="exportCollapsedConfirmOverlay" class="settings-overlay export-collapsed-confirm-overlay" hidden>
             <div class="settings-panel export-collapsed-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="exportCollapsedConfirmTitle">
@@ -1053,7 +1014,7 @@
         <footer></footer>
     </div>
 
-    <script type="module" src="script.js?v=2.1.7"></script>
+    <script type="module" src="script.js?v=2.1.31"></script>
 
 </body>
 
