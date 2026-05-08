@@ -131,10 +131,12 @@ const WOBBLE_SPIN_RANGE_DEFAULT = 360;
 const ELEV_DEFAULT = 0; // Used by placeCamera() and fitToFrame() for default camera elevation
 const CROP_FRAME_UI_SCALE = 0.82; // Keeps a visual margin around the crop guide
 const VIEWPORT_FIT_SCALE = 1.55; // Smaller than 1.8 so default/reset framing is less zoomed out
-const VIEWPORT_AA_SCALE = 1.35; // Mild supersampling for cleaner edges on standard-DPI displays
+const VIEWPORT_AA_SCALE = 1.0; // Prioritize realtime smoothness in the main viewport
+const VIEWPORT_PIXEL_RATIO_MIN = 1;
+const VIEWPORT_PIXEL_RATIO_MAX = 1.6;
 const BUILD_PLATE_TEXTURES_ENABLED = false; // Flat plate avoids extra texture work in dense multipart scenes
 const AUTO_LOAD_BENCHY_ON_IDLE = true;
-const AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS = 6000;
+const AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS = 1200;
 const ORBIT_MIN_DISTANCE_FACTOR = 0.12;
 const ORBIT_MAX_DISTANCE_FACTOR = 6.0;
 const LIGHT_BASE = { ambient: 0.45, key: 1.9, fill: 0.30, rim: 0.92, exposure: 0.75 };
@@ -686,18 +688,38 @@ const textureTuneState = {
 
 function syncLightRig() {
     if (!lightRig || !camera) return;
-    const az = textureTuneState.lightLock ? getOrbitFrameState().az : 0;
+    const az = textureTuneState.lightLock ? getOrbitFrameStateFast().az : 0;
     lightRig.rotation.y = az;
     if (scene) scene.environmentRotation.y = az;
 }
 
+const _orbitStateScratch = {
+    target: new THREE.Vector3(),
+    dist: 1,
+    elev: 0,
+    az: 0,
+};
+const _orbitOffsetScratch = new THREE.Vector3();
+
+function getOrbitFrameStateFast() {
+    const target = controls?.target || _orbitStateScratch.target.set(0, 0, 0);
+    _orbitStateScratch.target.copy(target);
+    _orbitOffsetScratch.copy(camera.position).sub(target);
+    const dist = Math.max(_orbitOffsetScratch.length(), 1e-6);
+    _orbitStateScratch.dist = dist;
+    _orbitStateScratch.elev = Math.asin(Math.max(-1, Math.min(1, _orbitOffsetScratch.y / dist)));
+    _orbitStateScratch.az = Math.atan2(_orbitOffsetScratch.x, _orbitOffsetScratch.z);
+    return _orbitStateScratch;
+}
+
 function getOrbitFrameState() {
-    const target = controls?.target ? controls.target.clone() : new THREE.Vector3(0, 0, 0);
-    const offset = camera.position.clone().sub(target);
-    const dist = Math.max(offset.length(), 1e-6);
-    const elev = Math.asin(Math.max(-1, Math.min(1, offset.y / dist)));
-    const az = Math.atan2(offset.x, offset.z);
-    return { target, dist, elev, az };
+    const s = getOrbitFrameStateFast();
+    return {
+        target: s.target.clone(),
+        dist: s.dist,
+        elev: s.elev,
+        az: s.az,
+    };
 }
 
 function setCameraFromOrbitState(cam, target, dist, elev, az) {
@@ -762,9 +784,7 @@ function isCanvasPointInsideCropFrame(clientX, clientY) {
 
 function getViewportPixelRatio() {
     const dpr = window.devicePixelRatio || 1;
-    // Floor at 2.0: on non-Retina (dpr=1), dpr*SCALE=1.35 isn't enough for clean AA.
-    // On Retina (dpr=2) it becomes 2.7, capped at 2.5.
-    return Math.min(Math.max(dpr * VIEWPORT_AA_SCALE, 2), 2.5);
+    return Math.min(Math.max(dpr * VIEWPORT_AA_SCALE, VIEWPORT_PIXEL_RATIO_MIN), VIEWPORT_PIXEL_RATIO_MAX);
 }
 
 function getViewportFitDistance() {
@@ -3240,6 +3260,7 @@ function loadPreparedGeometry(geo, name) {
     viewerSec.classList.remove('hidden');
     document.getElementById('emptyState').classList.add('hidden');
     document.getElementById('controlsBar').classList.remove('hidden');
+    document.documentElement.classList.add('startup-model-ready');
     if (!localStorage.getItem('rotater_hintDismissed')) {
         orbitHintBarEl?.classList.add('visible');
     }
@@ -3427,7 +3448,7 @@ function loop() {
             } else {
                 controls.autoRotate = false;
                 controls.update(deltaSec);
-                const { az: actualAz } = getOrbitFrameState();
+                const { az: actualAz } = getOrbitFrameStateFast();
                 let azDelta = actualAz - swingLastAz;
                 if (azDelta > Math.PI) azDelta -= 2 * Math.PI;
                 if (azDelta < -Math.PI) azDelta += 2 * Math.PI;
@@ -3439,7 +3460,7 @@ function loop() {
             if (wobbleSpinRange < 360) {
                 const MAX_EL = Math.PI / 2 - 0.05;
                 const spinRange = THREE.MathUtils.degToRad(wobbleSpinRange / 2);
-                const { target, dist, elev } = getOrbitFrameState();
+                const { target, dist, elev } = getOrbitFrameStateFast();
                 const el = THREE.MathUtils.clamp(elev, -MAX_EL, MAX_EL);
                 const az = swingBaseAz + Math.sin(tiltPhase) * spinRange;
                 setCameraFromOrbitState(camera, target, dist, el, az);
@@ -3451,7 +3472,7 @@ function loop() {
             controls.autoRotate = false;
             controls.update(deltaSec); // apply user input first
             // Accumulate user-driven azimuth delta on top of the base
-            const { target, dist, elev, az: actualAz } = getOrbitFrameState();
+            const { target, dist, elev, az: actualAz } = getOrbitFrameStateFast();
             let azDelta = actualAz - swingLastAz;
             if (azDelta > Math.PI) azDelta -= 2 * Math.PI;
             if (azDelta < -Math.PI) azDelta += 2 * Math.PI;
@@ -3470,7 +3491,7 @@ function loop() {
             controls.update(deltaSec);
             // Keep spin base in sync while paused so resume is seamless
             if (camera && rotateModeEl.value === 'spin') {
-                swingBaseAz = getOrbitFrameState().az;
+                swingBaseAz = getOrbitFrameStateFast().az;
                 swingLastAz = swingBaseAz;
             }
         }
@@ -5409,6 +5430,18 @@ function settingsToURL() {
 }
 
 async function restoreSession() {
+    // Always show the full viewer shell first so startup is consistent:
+    // Splash -> full UI (no model yet) -> full UI with model.
+    document.documentElement.classList.add('startup-shell-ready');
+    document.documentElement.classList.remove('startup-model-ready');
+    if (!renderer) initThree();
+    viewerSec?.classList.remove('hidden');
+    document.getElementById('emptyState')?.classList.add('hidden');
+    document.getElementById('controlsBar')?.classList.remove('hidden');
+    const compactBtnLabel = document.getElementById('compactBtnLabel');
+    if (compactBtnLabel) compactBtnLabel.textContent = 'Upload STL';
+    updateCropHintUI();
+
     if (DEV_LOG) console.log(`[rotater] restoreSession: calling restoreSettings at ${Date.now()}`);
     restoreSettings();
     updateColorSwatches(); // guaranteed init even if restoreSettings throws
@@ -9052,7 +9085,7 @@ function finishRestoreSessionState() {
     // Ensure preview reflects restored transparent setting immediately
     try { syncTransparentCheckboxes('exportTransparent'); } catch (e) { }
     document.documentElement.classList.add('loaded');
-    if (!(autoDemoLoadScheduled && !mesh)) dismissStartupSplash();
+    dismissStartupSplash();
     document.documentElement.classList.remove('has-session');
 }
 

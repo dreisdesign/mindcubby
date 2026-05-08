@@ -479,6 +479,29 @@ html.loaded main {
     position: relative;
 }
 
+html.loaded .app-body,
+html.loaded .viewer-section,
+html.loaded .controls-bar,
+html.loaded .sidebar {
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+
+html.loaded.startup-shell-ready .app-body,
+html.loaded.startup-shell-ready .viewer-section,
+html.loaded.startup-shell-ready .controls-bar,
+html.loaded.startup-shell-ready .sidebar {
+    opacity: 0.88;
+    transform: translateY(3px);
+}
+
+html.loaded.startup-shell-ready.startup-model-ready .app-body,
+html.loaded.startup-shell-ready.startup-model-ready .viewer-section,
+html.loaded.startup-shell-ready.startup-model-ready .controls-bar,
+html.loaded.startup-shell-ready.startup-model-ready .sidebar {
+    opacity: 1;
+    transform: none;
+}
+
 html.loaded main.drag-over {
     background: rgba(46, 43, 116, 0.04);
 }
@@ -492,6 +515,15 @@ html.loaded .viewer-section {
 
 html.loaded .viewer-section.hidden {
     display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.loaded .app-body,
+    html.loaded .viewer-section,
+    html.loaded .controls-bar,
+    html.loaded .sidebar {
+        transition: none;
+    }
 }
 
 .canvas-wrap {

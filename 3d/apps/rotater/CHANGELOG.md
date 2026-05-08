@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar export entry placement** — desktop export entry now sits beside `Upload STL` in the sidebar brand row so export starts from the primary left-panel workflow
 
 ### Fixed
+- **Startup transition consistency + staged fades** — both first-time (incognito/new) and returning refresh paths now follow one startup sequence (`Splash -> Full UI shell -> Model ready`) with matched fade transitions between stages
 - **Rotation Time accuracy under load** — viewer animation now uses delta-time based updates (`controls.update(delta)` + time-based phase advance), so 5s/10s/etc. timing stays consistent even when FPS dips
 - **Export workspace outside-click close** — while crop framing is active, clicking outside the crop frame now closes Export workspace; inside-frame clicks continue to orbit/pan/zoom as expected
 - **Hard-refresh splash responsiveness** — restore completion now always marks the app as loaded and dismisses splash promptly; heavy demo auto-load is deferred and skipped for returning users to reduce startup blocking

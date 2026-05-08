@@ -41,6 +41,7 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 - Model preset cards now apply on click only
 - The model and all settings persist across page refreshes — no re-upload needed
 - Hard refresh startup now exits the splash immediately after restore pass, and demo-model auto-load is deferred for smoother initial interaction
+- Startup flow is now unified for both new and returning sessions: `Splash -> full UI shell (no model yet) -> model-ready UI`, with smooth fade transitions between stages
 - The filename chip (top-right of canvas) shows the active file
   - For multipart models, click the chevron to expand all part filenames
   - Each expanded row supports **Replace**, **Add**, and **×** remove for individual part operations (remove when 2+ parts are loaded)
