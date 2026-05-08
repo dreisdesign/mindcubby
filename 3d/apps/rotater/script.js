@@ -3825,9 +3825,17 @@ function setExportWorkspaceActive(active) {
     document.documentElement.classList.toggle('export-workspace-active', exportWorkspaceActive);
     const exportOverlayEl = document.getElementById('exportOverlay');
     if (exportOverlayEl) exportOverlayEl.hidden = !exportWorkspaceActive;
+    updateExportWorkspaceTransparencyPattern();
     try { localStorage.setItem('rotater_exportWorkspaceActive', exportWorkspaceActive ? '1' : '0'); } catch (_) { }
     syncCanvasSize();
     requestAnimationFrame(() => syncCanvasSize());
+}
+
+function updateExportWorkspaceTransparencyPattern() {
+    const wrap = canvas?.parentElement;
+    if (!wrap) return;
+    const transparent = !!(exportWorkspaceActive && !(exportBgColorEl?.checked ?? true));
+    wrap.classList.toggle('is-export-transparent', transparent);
 }
 
 function enterCropMode() {
@@ -7105,6 +7113,7 @@ function syncTransparentCheckboxes(sourceId = 'exportBgColor') {
     if (wrap) {
         wrap.classList.toggle('is-transparent', transparent);
     }
+    updateExportWorkspaceTransparencyPattern();
     updateEstimate(); saveSettings();
     refreshExportPreviewNow();
 }

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Model footprint floor guides** — ruler grid now includes thin footprint lines derived from the loaded model bounds, aligned to the active ruler unit system (`mm` metric spacing or `in` imperial spacing)
 - **Export preview visible border** — the mini export preview now always has a visible border; border strengthens when background is off so the frame is clear on transparent renders
 - **Export Build Plate quick option** — Export quick options now include a dedicated `Build Plate` toggle so plate visibility can be controlled per-export without changing the main Build Plate card defaults
+- **Export workspace transparency checkerboard** — when Export `Background` is toggled off, the main export workspace viewport now shows a white/gray checkerboard behind the model to make alpha state explicit
 - **Build plate shape control** — Build Plate card now supports `Rectangle`, `Rounded`, and `Circle` footprint modes with live geometry switching
 - **Multipart bulk edit MVP** — Model parts menu now includes per-row checkboxes plus a bulk action banner to apply active `Color`, `Shade`, or `Finish` values to checked parts
 

@@ -4,7 +4,7 @@ View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapsh
 
 **Version (current workspace): Unreleased**
 
-Current development note: the existing export UI still reflects an older multi-surface design. The next planned round consolidates export and crop into one workspace so Rotater no longer has to maintain a main viewer, mini export card, and separate export preview flow in parallel. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
+Current development note: export and crop now run through one shared workspace on the main viewer. Remaining cleanup focuses on removing older duplicate preview remnants and simplifying export-specific state wiring. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
 ---
 
@@ -70,6 +70,7 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 - **Export workspace framing** — entering Export enables the crop/framing workspace on the main viewer
   - The viewer dims and blurs outside the crop frame
   - Export quick options (`Background`, `Grid`, `Build Plate`) apply directly to the live export workspace viewport while framing
+  - When `Background` is off, the export workspace viewport shows a white/gray checkerboard to indicate transparency
   - Clicking outside the crop frame closes Export workspace
   - Dimension presets appear beside the viewer for one-click framing changes
   - During export workspace, `Pause` and `Close` actions are in the same bottom bar as the D-pad (to the right of the D-pad) so controls stay in one place
@@ -182,7 +183,7 @@ The Preview thumbnail and estimate label update immediately when you change form
 
 | Control | Description |
 |---|---|
-| Background | Toggle background color on/off for export preview and compatible outputs |
+| Background | Toggle background color on/off for export preview and compatible outputs (off state shows checkerboard transparency in export workspace) |
 | Grid | Toggle ruler grid visibility in export preview/output |
 | Build Plate | Toggle build plate visibility in export preview/output |
 

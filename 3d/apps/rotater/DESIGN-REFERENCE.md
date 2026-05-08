@@ -71,6 +71,15 @@ Buttons floating over the 3D canvas use a translucent dark blueberry background 
 | `--color-export` | `#2E2B74` (blueberry-500) | Export button background |
 | `--color-on-export` | `#fff` | Export button text/icon |
 
+## Export Workspace Transparency Indicator
+
+When export `Background` is toggled off, the main export workspace viewport uses a checkerboard alpha indicator to communicate transparency clearly while framing.
+
+| Surface | Style |
+|---|---|
+| Export workspace transparent background (`.canvas-wrap.is-export-transparent`) | Base `#f0f0f0` with 45deg checker pattern using `rgba(0,0,0,0.08)` tiles |
+| Mini export preview transparent background (`.export-preview-wrap.is-transparent`) | Checker pattern with lighter contrast (`rgba(0,0,0,0.06)`) |
+
 ---
 
 ## Theme Toggle Icons
