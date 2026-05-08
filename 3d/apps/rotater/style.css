@@ -508,6 +508,57 @@ html.loaded .viewer-section.hidden {
     display: block;
 }
 
+/* ── Export progress overlay ── */
+.export-progress-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: var(--color-background-darkest, #1a1a2e);
+    z-index: 9999;
+}
+
+.export-progress-overlay[hidden] { display: none; }
+
+@keyframes _export-spin {
+    to { transform: rotate(360deg); }
+}
+
+.export-progress-overlay__spinner {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3.5px solid rgba(255,255,255,0.15);
+    border-top-color: rgba(255,255,255,0.75);
+    animation: _export-spin 0.8s linear infinite;
+}
+
+.export-progress-overlay__label {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.01em;
+}
+
+.export-progress-overlay__bar-wrap {
+    width: min(220px, 60%);
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.12);
+    overflow: hidden;
+}
+
+.export-progress-overlay__bar-fill {
+    height: 100%;
+    width: 0%;
+    background: rgba(255,255,255,0.6);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+}
+
 .file-chip {
     display: none;
     align-items: center;
@@ -927,6 +978,46 @@ html.none-mode #btnPause {
     gap: 2px;
     z-index: 1;
     pointer-events: auto;
+}
+
+.cam-nav-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.cam-nav-actions {
+    display: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.cam-nav-action-btn {
+    width: 42px;
+    height: 42px;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.62);
+    background: rgba(13, 10, 26, 0.56);
+    box-shadow: 0 10px 24px rgba(8, 6, 18, 0.34);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-radius: 10px;
+}
+
+.cam-nav-action-btn--close {
+    width: auto;
+    min-width: 96px;
+    padding: 0 12px;
+    gap: 7px;
+    border-radius: 9999px;
+    font-size: var(--text-md);
+    font-weight: 700;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+}
+
+.cam-nav-action-btn:hover {
+    background: rgba(13, 10, 26, 0.7);
 }
 
 .cam-btn {
@@ -4192,7 +4283,8 @@ html.loaded .menu-btn {
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
-#btnExportClose {
+#btnExportClose,
+#btnExportPause {
     display: none;
 }
 
@@ -5355,7 +5447,17 @@ html.crop-mode .crop-corner {
         margin-top: 12px;
     }
 
+    .orbit-hint-bar.visible+.cam-nav-row {
+        margin-top: 12px;
+    }
+
     .cam-nav {
+        align-self: flex-end;
+        margin-right: 18px;
+        transform: none;
+    }
+
+    .cam-nav-row {
         align-self: flex-end;
         margin-right: 18px;
         transform: none;
@@ -5368,6 +5470,10 @@ html.crop-mode .crop-corner {
     }
 
     .cam-nav {
+        transform: none;
+    }
+
+    .cam-nav-row {
         transform: translateX(28px);
     }
 
@@ -6794,21 +6900,25 @@ html.loaded.export-workspace-active .canvas-wrap {
     }
 }
 
-html.export-workspace-active #btnExportClose {
+html.export-workspace-active .cam-nav-actions {
     display: flex;
-    position: fixed !important;
-    top: 12px !important;
-    right: 12px !important;
-    left: auto !important;
-    width: 42px;
-    height: 42px;
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.62);
-    background: rgba(13, 10, 26, 0.56);
-    box-shadow: 0 10px 24px rgba(8, 6, 18, 0.34);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    z-index: 100;
+}
+
+html.export-workspace-active .cam-nav-actions #btnExportClose,
+html.export-workspace-active .cam-nav-actions #btnExportPause {
+    display: flex;
+}
+
+html.export-workspace-active #btnExportPause .export-pause-icon--play {
+    display: none;
+}
+
+html.export-workspace-active #btnExportPause.is-paused .export-pause-icon--pause {
+    display: none;
+}
+
+html.export-workspace-active #btnExportPause.is-paused .export-pause-icon--play {
+    display: block;
 }
 
 .export-modal-body > :not(#exportPreviewDetails) {

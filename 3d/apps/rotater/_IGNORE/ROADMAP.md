@@ -1,6 +1,6 @@
 # Rotater Roadmap
 
-Updated: 2026-05-04
+Updated: 2026-05-07
 
 This file is intentionally split into two buckets:
 - Up Next: concrete tasks we should execute soon.
@@ -13,24 +13,40 @@ This file is intentionally split into two buckets:
 - Multi-part bulk edit is moving to a live-edit model: select parts, then any color/shade/finish changes apply to all selected parts in real time.
 - Light lock behavior is now user-controllable via a visible toggle (lock light to camera on/off).
 - Import package is available in Upload flow, and package export naming now uses Project ZIP wording.
+- Export workspace close behavior and crop outside-click interactions are stabilized.
+- Rotation timing now uses elapsed-time updates so selected duration matches real time more closely under load.
+- Startup splash/restore responsiveness has been improved for hard-refresh and returning-session flows.
 
 ---
 
 ## Up Next (Execution Queue)
 
-1. Bulk edit hardening + view UX (ship next)
-- Complete live-edit paradigm polish (selection summary + no Apply buttons).
-- Add explicit bulk scope hint near sliders when multi-select is active.
-- Add regression checks for mixed multipart sets (hidden parts, metallic + matte mixes, imported ZIP parts).
-- Validate card/list/grid model-selector views for large model sets.
+1. Export duration dropdown (GIF + MP4)
+- Replace the current static frame-count text area (for example "300 frames") with a duration dropdown that shows both duration and derived frame count in each option.
+- Keep GIF and MP4 behavior aligned so both formats use the same duration options and frame math presentation.
+- Example option format: "10.0s · 300 frames".
+- Persist the selected duration and keep estimate labels in sync when FPS or format changes.
 
-2. Upload decision UX simplification
+2. Batch 1: Export/crop consolidation (ship next)
+- Reuse crop mode as the export workspace instead of maintaining separate main-view, mini-export, and export-overlay preview surfaces.
+- Add a new Export entry beside Upload STL in the left panel.
+- Remove the mini export card from the canvas UI.
+- Remove the standalone crop button from the main viewer.
+- Keep exactly one live preview and move export controls beside it.
+- Apply the full-screen dark/blur treatment during export mode and keep the D-pad available.
+- Standardize shared export button and icon sizing during this pass.
+- Keep preview/export framing unified to prevent squish/skew regressions.
+
+3. Batch 2: Persistence + multipart hardening
+- Keep multipart checkboxes visible when bulk selection is active.
+- Make 3-dot part actions apply to the current bulk-selected set when appropriate.
+- Normalize build-plate shade behavior to match the midpoint-based shade model used elsewhere.
+- Fix URL persistence gaps for model shade, build-plate color, and build-plate shade.
+- Run regression checks for refresh persistence, export mode transitions, and mobile layout.
+
+4. Upload decision UX simplification
 - Replace current warning-style memory flow with explicit segmented default: Always Add / Always Replace / Ask.
 - Keep one-click override in modal so users can bypass default per upload.
-
-3. Import/export placement validation
-- Confirm final UX location for Import package action now that Upload flow owns import entry.
-- Decide whether Export panel should keep only Download Project ZIP or also surface Import.
 
 ---
 
@@ -38,6 +54,10 @@ This file is intentionally split into two buckets:
 
 ### Model Manager (larger scope)
 - Full-screen model manager modal: larger thumbnails, rename, reorder (drag), replace, remove, and visibility in one workspace.
+
+### Export Workspace Cleanup (resolved by consolidation)
+- Mini export icon polish, duplicate preview sizing, overlay-only crop affordances, and two-preview performance tuning are intentionally not being pursued as standalone fixes.
+- Those issues are superseded by the export/crop merge because the affected UI surfaces will be removed.
 
 ### Pinnable Cards (planned)
 - Goal: any card (for example Build Plate) can be pinned into a quick-access tab rail for focus workflows.

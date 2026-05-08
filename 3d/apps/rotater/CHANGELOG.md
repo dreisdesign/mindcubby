@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Export workspace consolidation (phase 1)** — Export now enters a shared framing workspace based on crop mode, using the main viewer as the active preview instead of relying on a separate duplicate preview workflow
+- **Export control zones simplified** — Export workspace `Pause` and `Close` actions now live in the bottom d-pad control bar (to the right of the d-pad), and `Close` is now an icon + text button instead of a floating top-right icon-only control
+- **Finish wording clarity** — model finish-strength slider label now reads `Surface Finish` (was `Shading`) to match Matte/Satin/Gloss behavior
 - **Upload STL modal timing** — Upload STL buttons now open the Add/Replace decision modal before opening the file picker when a model is already loaded
 - **Package action placement** — `Download Project ZIP` now lives in the Export panel, and package import is available directly from the Upload STL choice flow
 - **Model manager semantics** — per-part 3-dot menus removed `Add STL`; single-model sessions now hide the part dropdown and show an exposed 3-dot actions menu

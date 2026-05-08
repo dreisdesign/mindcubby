@@ -953,6 +953,9 @@ function syncCanvasSize() {
     const w = wrap.clientWidth;
     const h = wrap.clientHeight;
     if (w === 0 || h === 0) return;
+    // Don't override the renderer size or camera aspect during export — the
+    // export pipeline sets its own dimensions and restores them when done.
+    if (isExporting) return;
     renderer.setPixelRatio(getViewportPixelRatio());
     renderer.setSize(w, h, false); // false = don't touch CSS
     if (camera) {
@@ -3247,19 +3250,10 @@ function loadPreparedGeometry(geo, name) {
     requestAnimationFrame(() => {
         syncCanvasSize();
         if (!savedCamPos) { placeCamera(); syncLightRig(); renderer.render(scene, camera); }
-        if (_hasRestoredExportFrame && Number.isFinite(exportCamDist) && exportCamDist > 0) {
-            const { target, az } = getOrbitFrameState();
-            setCameraFromOrbitState(camera, target, exportCamDist, exportCamElev, az);
-            camera.zoom = exportCamZoom || 1;
-            camera.updateProjectionMatrix();
-            controls.target.copy(target);
-            controls.update();
-            syncLightRig();
-            renderer.render(scene, camera);
-            _hasRestoredExportFrame = false;
-        } else {
-            storeExportCamera();
-        }
+        // Keep the live viewer on the real viewport fit/restore state.
+        // Export framing should follow the live camera, not overwrite it on load.
+        _hasRestoredExportFrame = false;
+        storeExportCamera();
         queueModelPartThumbsRender();
     });
 
@@ -3433,7 +3427,7 @@ function loop() {
             } else {
                 controls.autoRotate = false;
                 controls.update(deltaSec);
-                const actualAz = Math.atan2(camera.position.x, camera.position.z);
+                const { az: actualAz } = getOrbitFrameState();
                 let azDelta = actualAz - swingLastAz;
                 if (azDelta > Math.PI) azDelta -= 2 * Math.PI;
                 if (azDelta < -Math.PI) azDelta += 2 * Math.PI;
@@ -3445,15 +3439,11 @@ function loop() {
             if (wobbleSpinRange < 360) {
                 const MAX_EL = Math.PI / 2 - 0.05;
                 const spinRange = THREE.MathUtils.degToRad(wobbleSpinRange / 2);
-                const dist = camera.position.length();
-                const el = THREE.MathUtils.clamp(Math.asin(camera.position.y / dist), -MAX_EL, MAX_EL);
+                const { target, dist, elev } = getOrbitFrameState();
+                const el = THREE.MathUtils.clamp(elev, -MAX_EL, MAX_EL);
                 const az = swingBaseAz + Math.sin(tiltPhase) * spinRange;
-                camera.position.set(
-                    dist * Math.cos(el) * Math.sin(az),
-                    dist * Math.sin(el),
-                    dist * Math.cos(el) * Math.cos(az),
-                );
-                camera.lookAt(0, 0, 0);
+                setCameraFromOrbitState(camera, target, dist, el, az);
+                controls.target.copy(target);
                 swingLastAz = az;
             }
         } else if (!isPaused && rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360 && mesh) {
@@ -3461,7 +3451,7 @@ function loop() {
             controls.autoRotate = false;
             controls.update(deltaSec); // apply user input first
             // Accumulate user-driven azimuth delta on top of the base
-            const actualAz = Math.atan2(camera.position.x, camera.position.z);
+            const { target, dist, elev, az: actualAz } = getOrbitFrameState();
             let azDelta = actualAz - swingLastAz;
             if (azDelta > Math.PI) azDelta -= 2 * Math.PI;
             if (azDelta < -Math.PI) azDelta += 2 * Math.PI;
@@ -3469,23 +3459,18 @@ function loop() {
             tiltPhase += phaseStep;
             const MAX_EL = Math.PI / 2 - 0.05;
             const swingRange = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
-            const dist = camera.position.length();
             // Elevation is user-controlled (read from wherever they orbited to)
-            const el = THREE.MathUtils.clamp(Math.asin(camera.position.y / dist), -MAX_EL, MAX_EL);
+            const el = THREE.MathUtils.clamp(elev, -MAX_EL, MAX_EL);
             const az = swingBaseAz + Math.sin(tiltPhase) * swingRange;
-            camera.position.set(
-                dist * Math.cos(el) * Math.sin(az),
-                dist * Math.sin(el),
-                dist * Math.cos(el) * Math.cos(az),
-            );
-            camera.lookAt(0, 0, 0);
+            setCameraFromOrbitState(camera, target, dist, el, az);
+            controls.target.copy(target);
             swingLastAz = az;
         } else {
             controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
             controls.update(deltaSec);
             // Keep spin base in sync while paused so resume is seamless
             if (camera && rotateModeEl.value === 'spin') {
-                swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
+                swingBaseAz = getOrbitFrameState().az;
                 swingLastAz = swingBaseAz;
             }
         }
@@ -3532,7 +3517,7 @@ function updateExportPreview(force = false) {
     if (!isExportPreviewActive()) return;
     if (force) _previewTick = 0;
     if (!force) {
-        const stride = exportFrameEnabled ? 1 : 4;
+        const stride = exportFrameEnabled ? 2 : 4;
         if (++_previewTick % stride !== 0) return;
     }
     const pv = document.getElementById('exportPreview');
@@ -3895,14 +3880,7 @@ function enterCropMode() {
     _cropBackupElev = exportCamElev;
     _cropBackupZoom = exportCamZoom;
     _cropAppliedCameraZoomScale = false;
-    if (camera) {
-        _cropBackupCameraZoom = camera.zoom || 1;
-        if (!exportWorkspaceActive) {
-            camera.zoom = _cropBackupCameraZoom * CROP_FRAME_UI_SCALE;
-            camera.updateProjectionMatrix();
-            _cropAppliedCameraZoomScale = true;
-        }
-    }
+    if (camera) _cropBackupCameraZoom = camera.zoom || 1;
     _cropLiveSyncArmed = true;
     syncExportCameraFromViewport();
     updateCropHintUI();
@@ -5478,17 +5456,8 @@ function runWhenBrowserIdle(task, timeoutMs = AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS) 
 
 function scheduleAutoDemoModelLoad() {
     if (autoDemoLoadScheduled || autoDemoLoadSuppressed) return;
-    // Returning users generally expect an immediate workspace after hard refresh.
-    // Skip heavy demo-model auto-load once they've already had a session.
-    try {
-        if (localStorage.getItem('rotater_hasSession') === '1') {
-            dismissStartupSplash();
-            return;
-        }
-    } catch (_) { }
     autoDemoLoadScheduled = true;
     if (DEV_LOG) console.log(`[rotater] restoreSession: scheduling demo model load at ${Date.now()}`);
-    dismissStartupSplash();
     const runLoad = async () => {
         const hasExplicitModelName = !!currentFileName && currentFileName !== 'model' && currentFileName !== '3dbenchy';
         if (autoDemoLoadSuppressed || mesh || hasExplicitModelName) {
@@ -6082,6 +6051,14 @@ partAppendInput?.addEventListener('change', async (ev) => {
     ev.target.value = '';
 });
 
+function updateExportPauseButtonUI() {
+    const btn = document.getElementById('btnExportPause');
+    if (!btn) return;
+    btn.classList.toggle('is-paused', isPaused);
+    btn.setAttribute('aria-label', isPaused ? 'Resume rotation' : 'Pause rotation');
+    btn.title = isPaused ? 'Resume rotation' : 'Pause rotation';
+}
+
 function togglePause() {
     if (rotateModeEl.value === 'off') return;
     isPaused = !isPaused;
@@ -6091,6 +6068,7 @@ function togglePause() {
     iconPlay.style.display = isPaused ? '' : 'none';
     btnPause.setAttribute('aria-label', isPaused ? 'Resume rotation' : 'Pause rotation');
     btnPause.title = isPaused ? 'Resume rotation' : 'Pause rotation';
+    updateExportPauseButtonUI();
 }
 
 function toggleSpinDir() {
@@ -6113,6 +6091,8 @@ function updateTiltRangeReset() {
 }
 
 btnPause.addEventListener('click', togglePause);
+document.getElementById('btnExportPause')?.addEventListener('click', togglePause);
+updateExportPauseButtonUI();
 
 // Re-clicking active Spin card toggles CW/CCW; other active cards toggle pause
 document.querySelectorAll('input[name="rotateMode"]').forEach(input => {
@@ -6144,20 +6124,17 @@ document.addEventListener('keydown', e => {
 
 function snapCamera(azimuth, elevation) {
     if (!camera) return;
-    const dist = camera.position.length();
+    const { target, dist } = getOrbitFrameState();
     const el = THREE.MathUtils.clamp(elevation, -(Math.PI / 2 - 0.01), Math.PI / 2 - 0.01);
     // Zero any residual damping velocity so the snap is instant with no post-snap drift
     controls.enableDamping = false;
     controls.update();
     controls.enableDamping = true;
-    camera.position.set(
-        dist * Math.cos(el) * Math.sin(azimuth),
-        dist * Math.sin(el),
-        dist * Math.cos(el) * Math.cos(azimuth),
-    );
+    setCameraFromOrbitState(camera, target, dist, el, azimuth);
     // Avoid gimbal lock on near-vertical views
     camera.up.set(0, Math.abs(elevation) > Math.PI / 4 ? 0 : 1, Math.abs(elevation) > Math.PI / 4 ? (elevation > 0 ? -1 : 1) : 0);
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(target);
+    controls.target.copy(target);
     controls.update();
     if (exportFrameEnabled) {
         _cropLiveSyncArmed = true;
@@ -6171,9 +6148,9 @@ function snapOrbit(azDir, elDir) {
     if (!camera) return;
     const STEP = Math.PI / 4; // 45° snap increment
     const MAX_EL = Math.PI / 2 - 0.01;
-    const dist = camera.position.length();
-    let el = Math.asin(Math.max(-1, Math.min(1, camera.position.y / dist)));
-    let az = Math.atan2(camera.position.x, camera.position.z);
+    const { elev, az: baseAz } = getOrbitFrameState();
+    let el = THREE.MathUtils.clamp(elev, -MAX_EL, MAX_EL);
+    let az = baseAz;
     if (azDir !== 0) {
         const eps = 1e-6;
         az = azDir > 0
@@ -6689,6 +6666,7 @@ exportGridEl?.addEventListener('change', () => {
 exportDimensionInputs.forEach(input => {
     input.addEventListener('change', () => {
         if (!input.checked) return;
+        if (exportFrameEnabled) syncExportCameraFromViewport();
         updateCropDimensionsDock();
         updateEstimate();
         refreshExportPreviewNow();
@@ -7185,7 +7163,7 @@ rotateModeEl.addEventListener('change', () => {
     }
     tiltPhase = 0;
     if ((m === 'spin' || m === 'wobble') && camera) {
-        swingBaseAz = Math.atan2(camera.position.x, camera.position.z);
+        swingBaseAz = getOrbitFrameState().az;
         swingLastAz = swingBaseAz;
     }
     if ((m === 'tilt' || m === 'wobble') && mesh) {
@@ -8272,10 +8250,6 @@ function cancelCropMode() {
     } else {
         exportCamDist = null;
     }
-    if (camera && _cropAppliedCameraZoomScale) {
-        camera.zoom = _cropBackupCameraZoom || 1;
-        camera.updateProjectionMatrix();
-    }
     exportFrameEnabled = false;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
@@ -8290,11 +8264,6 @@ function confirmCropMode() {
     if (!exportFrameEnabled) return;
     // Commit current live crop framing.
     syncExportCameraFromViewport();
-    // Revert the viewport's physical *0.82 shrink so it bounds to the canvas instead of the crop UI
-    if (camera && _cropAppliedCameraZoomScale) {
-        camera.zoom = (camera.zoom || 1) / CROP_FRAME_UI_SCALE;
-        camera.updateProjectionMatrix();
-    }
     exportFrameEnabled = false;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
@@ -8491,6 +8460,7 @@ function _applyCropCornerDrag(clientX, clientY) {
     const best = nearestDimensionPreset(newAspect);
     if (best !== getSelectedExportDimensionsId()) {
         setSelectedExportDimensionsId(best);
+        if (exportFrameEnabled) syncExportCameraFromViewport();
         updateCropDimensionsDock();
         updateEstimate();
         refreshExportPreviewNow();
@@ -8516,7 +8486,35 @@ const setAnimStatus = (msg, done, total) => {
         prog.hidden = !show;
         if (show) fill.style.width = `${Math.round(done / total * 100)}%`;
     }
+    // Also drive the in-viewport progress overlay
+    updateExportProgressOverlay(msg, done, total);
 };
+const _exportProgressOverlay = () => document.getElementById('exportProgressOverlay');
+const _exportProgressLabel = () => document.getElementById('exportProgressOverlayLabel');
+const _exportProgressFill = () => document.getElementById('exportProgressOverlayFill');
+
+function showExportProgressOverlay(msg) {
+    const el = _exportProgressOverlay();
+    if (!el) return;
+    const lbl = _exportProgressLabel();
+    const fill = _exportProgressFill();
+    if (lbl) lbl.textContent = msg || 'Preparing…';
+    if (fill) fill.style.width = '0%';
+    el.hidden = false;
+}
+
+function updateExportProgressOverlay(msg, done, total) {
+    const lbl = _exportProgressLabel();
+    const fill = _exportProgressFill();
+    if (lbl && msg) lbl.textContent = msg;
+    if (fill && done != null && total > 0) fill.style.width = `${Math.round(done / total * 100)}%`;
+}
+
+function hideExportProgressOverlay() {
+    const el = _exportProgressOverlay();
+    if (el) el.hidden = true;
+}
+
 const setExporting = v => {
     isExporting = v;
     btnGif.disabled = v;
@@ -8526,6 +8524,8 @@ const setExporting = v => {
     if (jpegBtn) jpegBtn.disabled = v;
     const mainBtn = document.getElementById('btnExport');
     if (mainBtn) mainBtn.disabled = v;
+    if (v) showExportProgressOverlay('Preparing…');
+    else hideExportProgressOverlay();
 };
 
 function download(data, filename, type) {
@@ -8622,7 +8622,7 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     const out = document.createElement('canvas');
     out.width = W;
     out.height = H;
-    const outCtx = out.getContext('2d');
+    const outCtx = out.getContext('2d', { willReadFrequently: true });
     outCtx.imageSmoothingEnabled = true;
     outCtx.imageSmoothingQuality = 'high';
     outCtx.drawImage(canvas, 0, 0, W, H); // downscale 2× → SSAA
@@ -8696,17 +8696,9 @@ async function captureFrames(n, dims = null, transparent = false) {
     const exportDist = (exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
     const exportElev = (exportFrameEnabled && exportCamDist !== null) ? exportCamElev : elev;
 
-    let exportZoom;
-    if (exportFrameEnabled && exportCamDist !== null) {
-        exportZoom = exportCamZoom || 1;
-    } else {
-        const canvasAspect = savedViewW / Math.max(1, savedViewH);
-        const exportAspect = W / H;
-        exportZoom = camera.zoom || 1;
-        if (exportAspect > canvasAspect) {
-            exportZoom *= (exportAspect / canvasAspect);
-        }
-    }
+    const exportZoom = (exportFrameEnabled && exportCamDist !== null)
+        ? (exportCamZoom || 1)
+        : (camera.zoom || 1);
 
     camera.zoom = exportZoom;
     camera.updateProjectionMatrix();
@@ -8725,7 +8717,7 @@ async function captureFrames(n, dims = null, transparent = false) {
     const out = document.createElement('canvas');
     out.width = W;
     out.height = H;
-    const outCtx = out.getContext('2d');
+    const outCtx = out.getContext('2d', { willReadFrequently: true });
     outCtx.imageSmoothingEnabled = true;
     outCtx.imageSmoothingQuality = 'high';
 
@@ -8833,6 +8825,9 @@ function applyPaletteDithered(data, palette, width, height) {
 btnGif.addEventListener('click', async () => {
     if (!mesh) return;
     setExporting(true);
+    // Yield one frame so the browser paints the freeze overlay before export
+    // rendering begins — prevents the distorted canvas from ever being visible.
+    await new Promise(r => requestAnimationFrame(r));
     controls.autoRotate = false;
 
     try {
@@ -8897,6 +8892,9 @@ btnVideo.addEventListener('click', async () => {
         return;
     }
     setExporting(true);
+    // Yield one frame so the browser paints the freeze overlay before export
+    // rendering begins — prevents the distorted canvas from ever being visible.
+    await new Promise(r => requestAnimationFrame(r));
     controls.autoRotate = false;
 
     try {
@@ -8947,17 +8945,9 @@ btnVideo.addEventListener('click', async () => {
         const exportDist = (exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
         const exportElev = (exportFrameEnabled && exportCamDist !== null) ? exportCamElev : elev;
 
-        let exportZoom;
-        if (exportFrameEnabled && exportCamDist !== null) {
-            exportZoom = exportCamZoom || 1;
-        } else {
-            const canvasAspect = savedViewW / Math.max(1, savedViewH);
-            const exportAspect = W / H;
-            exportZoom = camera.zoom || 1;
-            if (exportAspect > canvasAspect) {
-                exportZoom *= (exportAspect / canvasAspect);
-            }
-        }
+        const exportZoom = (exportFrameEnabled && exportCamDist !== null)
+            ? (exportCamZoom || 1)
+            : (camera.zoom || 1);
 
         camera.zoom = exportZoom;
         camera.updateProjectionMatrix();
@@ -8975,7 +8965,7 @@ btnVideo.addEventListener('click', async () => {
         const out = document.createElement('canvas');
         out.width = W;
         out.height = H;
-        const outCtx = out.getContext('2d');
+        const outCtx = out.getContext('2d', { willReadFrequently: true });
         outCtx.imageSmoothingEnabled = true;
         outCtx.imageSmoothingQuality = 'high';
 
@@ -9062,7 +9052,7 @@ function finishRestoreSessionState() {
     // Ensure preview reflects restored transparent setting immediately
     try { syncTransparentCheckboxes('exportTransparent'); } catch (e) { }
     document.documentElement.classList.add('loaded');
-    dismissStartupSplash();
+    if (!(autoDemoLoadScheduled && !mesh)) dismissStartupSplash();
     document.documentElement.classList.remove('has-session');
 }
 

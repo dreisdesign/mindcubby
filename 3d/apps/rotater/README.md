@@ -70,6 +70,7 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
   - The viewer dims and blurs outside the crop frame
   - Clicking outside the crop frame closes Export workspace
   - Dimension presets appear beside the viewer for one-click framing changes
+  - During export workspace, `Pause` and `Close` actions are in the same bottom bar as the D-pad (to the right of the D-pad) so controls stay in one place
   - **Cancel** (ghost button, bottom-center) — discards crop changes while staying in the export flow
   - **Keep** (purple button, bottom-center) — saves the current framing
   - The D-pad remains available during export framing so camera alignment stays easy
