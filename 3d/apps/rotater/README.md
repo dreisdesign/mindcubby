@@ -184,7 +184,7 @@ The Preview thumbnail and estimate label update immediately when you change form
 | Control | Description |
 |---|---|
 | Background | Toggle background color on/off for export preview and compatible outputs (off state shows checkerboard transparency in export workspace) |
-| Grid | Toggle ruler grid visibility in export preview/output |
+| Grid | Toggle ruler grid visibility in export preview/output (visible even when Build Plate is off) |
 | Build Plate | Toggle build plate visibility in export preview/output |
 
 #### GIF options

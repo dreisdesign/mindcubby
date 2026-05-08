@@ -910,6 +910,11 @@ function initThree() {
     );
     shadowCatcher.rotation.x = -Math.PI / 2;
     shadowCatcher.receiveShadow = true;
+    if (shadowCatcher.material && shadowCatcher.material.isShadowMaterial) {
+        // Keep ground shadows visible without depth-occluding the ruler grid.
+        shadowCatcher.material.depthWrite = false;
+    }
+    shadowCatcher.renderOrder = -2;
     shadowCatcher.visible = false;
     scene.add(shadowCatcher);
 
