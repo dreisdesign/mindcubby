@@ -39,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar export entry placement** — desktop export entry now sits beside `Upload STL` in the sidebar brand row so export starts from the primary left-panel workflow
 
 ### Fixed
+- **Mobile preview order and Info access** — on narrow widths the preview now sits above the control panel, the duplicate canvas logo/header are hidden, and the Info card is reachable from the sidebar action row
+- **Desktop load card overlap** — Effects panel no longer force-renders while hidden in desktop layout, preventing Lighting/Animation cards from stacking over Theme cards during startup/tab initialization
+- **Surface auto-brightness visibility sync** — Surface `Shade` row now updates immediately on toggle and initial UI wiring so it stays hidden whenever `Auto brightness` is enabled
 - **Surface preset startup regression** — closed the Background preset renderer correctly so the Surface preset row initializes on load again; mobile Info card build/date labels now stay aligned with the shared app build constants
 - **Auto brightness slider visibility** — the Background `Shade` slider now hides when `Auto brightness` is enabled; Surface `Auto brightness` now follows the same interaction pattern
 - **Undo toast noise** — `Model updated` undo toast now appears only for batch edits instead of single-part model tweaks

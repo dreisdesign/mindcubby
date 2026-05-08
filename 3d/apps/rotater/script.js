@@ -1676,9 +1676,13 @@ function updateAutoBgShadeControlVisibility() {
 }
 
 function updateBuildPlateShadeControlVisibility() {
-    if (buildPlateShadeRowEl) buildPlateShadeRowEl.hidden = buildPlateAutoBrightnessEnabled;
-    if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.disabled = buildPlateAutoBrightnessEnabled;
-    if (buildPlateAutoBrightnessEl) buildPlateAutoBrightnessEl.checked = buildPlateAutoBrightnessEnabled;
+    const autoOn = !!buildPlateAutoBrightnessEl?.checked || !!buildPlateAutoBrightnessEnabled;
+    buildPlateAutoBrightnessEnabled = autoOn;
+    if (buildPlateShadeRowEl) buildPlateShadeRowEl.hidden = autoOn;
+    if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.disabled = autoOn;
+    if (buildPlateAutoBrightnessEl && buildPlateAutoBrightnessEl.checked !== autoOn) {
+        buildPlateAutoBrightnessEl.checked = autoOn;
+    }
 }
 
 function getBulkSelectionSummaryText() {
@@ -5254,6 +5258,8 @@ function restoreSettings() {
             exportCollapsedConfirmToggleEl.disabled = !autoUIAssistEnabled;
         }
         updateBuildPlateMaterial();
+        updateAutoBgShadeControlVisibility();
+        updateBuildPlateShadeControlVisibility();
         syncExportMotionControlsFromMain();
         syncAllRangeFillIndicators();
         if (bgOpacitySlider) updateBgShadeSliderVisual();
@@ -7770,7 +7776,24 @@ function applyDesktopV2Layout() {
         if (openExportBtn) {
             openExportBtn.hidden = false;
         }
-        switchTab('theme');
+        // Desktop rail shows both Theme and Effects cards side-by-side.
+        document.querySelectorAll('.sidebar-tab').forEach((btn) => {
+            const active = btn.dataset.tab === 'theme';
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-selected', String(active));
+        });
+        document.querySelectorAll('.mobile-panel-toggle').forEach((btn) => {
+            btn.setAttribute('aria-expanded', String(btn.dataset.mobilePanel === 'theme'));
+        });
+        document.querySelectorAll('.tab-panel').forEach((panel) => {
+            panel.classList.remove('is-mobile-open');
+            panel.hidden = false;
+            Array.from(panel.children).forEach((child) => {
+                if (child.classList && child.classList.contains('mobile-panel-toggle')) return;
+                child.hidden = false;
+            });
+        });
+        try { localStorage.setItem('rotater_activeTab', 'theme'); } catch (_) { }
         if (!desktopV2DockDefaultApplied) {
             applyAppSettingsDockState(true);
             try { localStorage.setItem('rotater_appSettingsCollapsed', '1'); } catch (_) { }
@@ -8272,8 +8295,10 @@ btnDownloadPackage?.addEventListener('click', async () => {
 });
 
 // ── Info overlay ──────────────────────────────────────────────────────────────
-document.getElementById('btnInfo').addEventListener('click', () => {
-    document.getElementById('infoOverlay').hidden = false;
+['btnInfo', 'btnInfoSidebar'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('click', () => {
+        document.getElementById('infoOverlay').hidden = false;
+    });
 });
 document.getElementById('btnInfoClose').addEventListener('click', () => {
     document.getElementById('infoOverlay').hidden = true;
@@ -9737,11 +9762,14 @@ if (buildPlateColorPickerEl) {
 if (buildPlateAutoBrightnessEl) {
     buildPlateAutoBrightnessEl.addEventListener('change', () => {
         buildPlateAutoBrightnessEnabled = !!buildPlateAutoBrightnessEl.checked;
+        updateBuildPlateShadeControlVisibility();
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
         saveSettings();
     });
 }
+
+updateBuildPlateShadeControlVisibility();
 
 if (buildPlateShadeSliderEl) {
     buildPlateShadeSliderEl.addEventListener('input', () => {

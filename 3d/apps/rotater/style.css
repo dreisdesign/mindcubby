@@ -322,6 +322,57 @@ html.loaded .sidebar {
     min-width: 280px;
 }
 
+@media (max-width: 899px) {
+    html.loaded .app-body {
+        flex-direction: column;
+    }
+
+    html.loaded main {
+        order: 0;
+        flex: 0 0 48vh;
+        min-height: 220px;
+    }
+
+    html.loaded .sidebar {
+        order: 1;
+        flex: 1;
+        min-height: 150px;
+        min-width: auto;
+        max-width: none;
+    }
+
+    html.loaded .canvas-logo,
+    html.loaded .canvas-top-right,
+    html.loaded .sidebar-header {
+        display: none !important;
+    }
+
+    html.loaded .sidebar-brand-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 12px 8px;
+        background: var(--color-surface);
+    }
+
+    html.loaded .sidebar-brand-actions {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    html.loaded .sidebar-brand-actions .sidebar-upload-btn,
+    html.loaded .sidebar-brand-actions .copy-link-btn--export,
+    html.loaded .sidebar-brand-actions .info-icon-btn {
+        width: 100%;
+        min-width: 0;
+        justify-content: center;
+    }
+}
+
 @media (max-width: 640px) {
     html.loaded .app-body {
         flex-direction: column;
@@ -6352,6 +6403,87 @@ html.loaded.layout-mobile-accordion .tab-panel {
     gap: 10px;
 }
 
+html.loaded.layout-mobile-accordion .canvas-top-right,
+html.loaded.layout-tablet-tabs .canvas-top-right {
+    display: none !important;
+}
+
+html.loaded.layout-mobile-accordion .canvas-logo,
+html.loaded.layout-tablet-tabs .canvas-logo {
+    display: none !important;
+}
+
+html.loaded.layout-mobile-accordion .sidebar-header,
+html.loaded.layout-tablet-tabs .sidebar-header {
+    display: none !important;
+}
+
+html.loaded.layout-mobile-accordion .sidebar-brand-row,
+html.loaded.layout-tablet-tabs .sidebar-brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 12px 8px;
+    background: var(--color-surface);
+}
+
+html.loaded.layout-mobile-accordion .sidebar-brand-actions,
+html.loaded.layout-tablet-tabs .sidebar-brand-actions {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+html.loaded.layout-mobile-accordion .sidebar-brand-actions .sidebar-upload-btn,
+html.loaded.layout-mobile-accordion .sidebar-brand-actions .copy-link-btn--export,
+html.loaded.layout-tablet-tabs .sidebar-brand-actions .sidebar-upload-btn,
+html.loaded.layout-tablet-tabs .sidebar-brand-actions .copy-link-btn--export {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+}
+
+html.loaded.layout-tablet-tabs .sidebar,
+html.loaded.layout-mobile-accordion .sidebar {
+    order: 0;
+    border-right: 1px solid var(--border-color);
+    border-left: none;
+}
+
+html.loaded.layout-mobile-accordion .app-body {
+    flex-direction: column;
+}
+
+html.loaded.layout-mobile-accordion main {
+    order: 0;
+    flex: 0 0 48vh;
+}
+
+html.loaded.layout-mobile-accordion .sidebar {
+    order: 1;
+}
+
+html.loaded.layout-mobile-accordion .sidebar-brand-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+html.loaded.layout-mobile-accordion .sidebar-brand-actions .info-icon-btn,
+html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+#environmentBox .bg-toggle-row:has(#autoBgCheck:checked) ~ .control-label:has(#bgOpacitySlider) {
+    display: none !important;
+}
+
+#buildPlateControls .bg-toggle-row:has(#buildPlateAutoBrightness:checked) ~ .control-label:has(#buildPlateShadeSlider) {
+    display: none !important;
+}
+
 @media (min-width: 1200px) {
     html.loaded.layout-v2-desktop .sidebar-edge-tab {
         display: none !important;
@@ -6474,7 +6606,7 @@ html.loaded.layout-mobile-accordion .tab-panel {
     }
 
     html.loaded.layout-v2-desktop .tab-panel--effects[hidden] {
-        display: flex !important;
+        display: none !important;
     }
 
     html.loaded.layout-v2-desktop .export-overlay {

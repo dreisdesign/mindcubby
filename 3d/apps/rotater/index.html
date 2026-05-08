@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="0">
     <title>Rotater 3D Studio by MindCubby</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=2.1.45">
+    <link rel="stylesheet" href="style.css?v=2.1.48">
     <style>
         #startupSplash {
             position: fixed;
@@ -37,8 +37,23 @@
         html.booting #startupSplash {
             opacity: 1;
         }
+
+        html.booting .tab-panel,
+        html.booting .sidebar-tabs,
+        html.booting .sidebar-brand-row,
+        html.booting .canvas-top-right {
+            visibility: hidden;
+        }
+
+        html.booting .sidebar,
+        html.booting .controls-bar,
+        html.booting .tab-panel,
+        html.booting .controls-section-box {
+            transition: none !important;
+            animation: none !important;
+        }
     </style>
-    <script>const ROTATER_BUILD = '2.1.45';
+    <script>const ROTATER_BUILD = '2.1.48';
         const ROTATER_BUILD_DATE = 'May 8, 2026';
         const syncBuildInfoMeta = () => {
             const versionEl = document.getElementById('infoBuildVersion');
@@ -54,6 +69,11 @@
         const ROTATER_DEFAULT_QUERY = 'c=b4aed6&b=8d8ab7&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
         try {
             document.documentElement.classList.add('booting');
+            const _desktopV2 = window.matchMedia('(min-width: 1200px)').matches;
+            const _tabletTabs = window.matchMedia('(min-width: 900px) and (max-width: 1199px)').matches;
+            document.documentElement.classList.toggle('layout-v2-desktop', _desktopV2);
+            document.documentElement.classList.toggle('layout-tablet-tabs', !_desktopV2 && _tabletTabs);
+            document.documentElement.classList.toggle('layout-mobile-accordion', !_desktopV2 && !_tabletTabs);
             if (!location.search && !location.hash) {
                 history.replaceState(null, '', '?' + ROTATER_DEFAULT_QUERY);
             }
@@ -336,6 +356,12 @@
                                     d="M11.9752 15.6C11.799 15.6 11.6339 15.5716 11.4797 15.5147C11.3255 15.4579 11.1824 15.3613 11.0502 15.225L6.9002 11.075C6.63353 10.8068 6.50436 10.4939 6.5127 10.1362C6.52103 9.77875 6.65853 9.46666 6.9252 9.2C7.19186 8.93333 7.50436 8.8 7.8627 8.8C8.22103 8.8 8.53353 8.93333 8.8002 9.2L10.6502 11.075V4.525C10.6502 4.15833 10.7794 3.84583 11.0377 3.5875C11.296 3.32916 11.6085 3.2 11.9752 3.2C12.3419 3.2 12.6544 3.32916 12.9127 3.5875C13.171 3.84583 13.3002 4.15833 13.3002 4.525V11.075L15.1752 9.2C15.4374 8.93333 15.7488 8.80416 16.1094 8.8125C16.4699 8.82083 16.7835 8.95833 17.0502 9.225C17.3169 9.49166 17.4502 9.80416 17.4502 10.1625C17.4502 10.5208 17.3169 10.8333 17.0502 11.1L12.9002 15.225C12.768 15.3613 12.6249 15.4579 12.4707 15.5147C12.3165 15.5716 12.1514 15.6 11.9752 15.6ZM5.8502 20.8C5.12136 20.8 4.49753 20.5405 3.9787 20.0215C3.4597 19.5027 3.2002 18.8788 3.2002 18.15V16.475C3.2002 16.1083 3.32936 15.7958 3.5877 15.5375C3.84603 15.2792 4.15853 15.15 4.5252 15.15C4.89186 15.15 5.20436 15.2792 5.4627 15.5375C5.72103 15.7958 5.8502 16.1083 5.8502 16.475V18.15H18.1502V16.475C18.1502 16.1083 18.2794 15.7958 18.5377 15.5375C18.796 15.2792 19.1085 15.15 19.4752 15.15C19.8419 15.15 20.1544 15.2792 20.4127 15.5375C20.671 15.7958 20.8002 16.1083 20.8002 16.475V18.15C20.8002 18.8788 20.5407 19.5027 20.0217 20.0215C19.5027 20.5405 18.8789 20.8 18.1502 20.8H5.8502Z" />
                             </svg>
                             Export
+                        </button>
+                        <button id="btnInfoSidebar" class="info-icon-btn canvas-utility-btn" aria-label="About Rotater" title="About Rotater">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path
+                                    d="M12.9627 17.0125C13.221 16.7542 13.3502 16.4417 13.3502 16.075V12.325C13.3502 11.9583 13.221 11.6458 12.9627 11.3875C12.7044 11.1292 12.3919 11 12.0252 11C11.6585 11 11.346 11.1292 11.0877 11.3875C10.8294 11.6458 10.7002 11.9583 10.7002 12.325V16.075C10.7002 16.4417 10.8294 16.7542 11.0877 17.0125C11.346 17.2708 11.6585 17.4 12.0252 17.4C12.3919 17.4 12.7044 17.2708 12.9627 17.0125ZM12.8877 8.24201C13.1294 8.00318 13.2502 7.70735 13.2502 7.35451C13.2502 7.00151 13.1309 6.70418 12.8922 6.46251C12.6534 6.22085 12.3575 6.10001 12.0047 6.10001C11.6517 6.10001 11.3544 6.21935 11.1127 6.45801C10.871 6.69685 10.7502 6.99268 10.7502 7.34551C10.7502 7.69851 10.8695 7.99585 11.1082 8.23751C11.347 8.47918 11.6429 8.60001 11.9957 8.60001C12.3487 8.60001 12.646 8.48068 12.8877 8.24201ZM12.0002 22.8C10.5062 22.8 9.1022 22.5165 7.7882 21.9495C6.4742 21.3825 5.3312 20.613 4.3592 19.641C3.3872 18.669 2.6177 17.526 2.0507 16.212C1.4837 14.898 1.2002 13.494 1.2002 12C1.2002 10.5017 1.4842 9.09368 2.0522 7.77601C2.6202 6.45818 3.39103 5.31193 4.3647 4.33726C5.33836 3.36243 6.48136 2.59585 7.79369 2.03751C9.10603 1.47918 10.5082 1.20001 12.0002 1.20001C13.4984 1.20001 14.9062 1.47918 16.2237 2.03751C17.5414 2.59585 18.6877 3.36251 19.6627 4.33751C20.6377 5.31251 21.4044 6.45901 21.9627 7.77701C22.521 9.09518 22.8002 10.5035 22.8002 12.002C22.8002 13.5007 22.521 14.9042 21.9627 16.2125C21.4044 17.5208 20.6378 18.6618 19.6629 19.6355C18.6883 20.6092 17.542 21.38 16.2242 21.948C14.9065 22.516 13.4985 22.8 12.0002 22.8ZM12.0002 20.15C14.2754 20.15 16.2025 19.3605 17.7817 17.7815C19.3607 16.2023 20.1502 14.2752 20.1502 12C20.1502 9.72485 19.3607 7.79768 17.7817 6.21851C16.2025 4.63951 14.2754 3.85001 12.0002 3.85001C9.72503 3.85001 7.79786 4.63951 6.2187 6.21851C4.6397 7.79768 3.8502 9.72485 3.8502 12C3.8502 14.2752 4.6397 16.2023 6.2187 17.7815C7.79786 19.3605 9.72503 20.15 12.0002 20.15Z" />
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -1025,7 +1051,7 @@
                     <p class="info-description">View and export rotating 3D STL models as animated GIF, MP4, or PNG —
                         entirely in your browser. Your files never leave your device.</p>
                     <div class="info-meta">
-                        <span id="infoBuildVersion">Build 2.1.45</span>
+                        <span id="infoBuildVersion">Build 2.1.48</span>
                         <span id="infoBuildDate">Updated May 8, 2026</span>
                     </div>
                     <div class="settings-divider"></div>
@@ -1066,7 +1092,7 @@
         <footer></footer>
     </div>
 
-    <script type="module" src="script.js?v=2.1.45"></script>
+    <script type="module" src="script.js?v=2.1.48"></script>
 
 </body>
 
