@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multipart bulk edit MVP** — Model parts menu now includes per-row checkboxes plus a bulk action banner to apply active `Color`, `Shade`, or `Finish` values to checked parts
 
 ### Changed
+- **Surface card hierarchy + presets** — renamed the `Build Plate` card to `Surface`, kept `Grid` and `Build Plate` as peer toggles, and replaced the old plate color button with Background-style `White`, `Black`, `Model Sync`, and `Custom` thumb presets plus a matching multipart sync-source selector
 - **Watermark quick option temporarily removed** — removed the non-functional Export `Watermark` toggle and watermark compositing path for now; this will be revisited in a future iteration
 - **Export workspace consolidation (phase 1)** — Export now enters a shared framing workspace based on crop mode, using the main viewer as the active preview instead of relying on a separate duplicate preview workflow
 - **Export control zones simplified** — Export workspace `Pause` and `Close` actions now live in the bottom d-pad control bar (to the right of the d-pad), and `Close` is now an icon + text button instead of a floating top-right icon-only control
@@ -38,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar export entry placement** — desktop export entry now sits beside `Upload STL` in the sidebar brand row so export starts from the primary left-panel workflow
 
 ### Fixed
+- **Auto brightness slider visibility** — the Background `Shade` slider now hides when `Auto brightness` is enabled; Surface `Auto brightness` now follows the same interaction pattern
+- **Undo toast noise** — `Model updated` undo toast now appears only for batch edits instead of single-part model tweaks
 - **Export workspace preview parity** — in export framing workspace, `Background`, `Grid`, and `Build Plate` quick options now apply directly to the live export viewport and to exported output, restoring parity with prior mini-preview behavior
 - **Build plate finish control scope** — clicking Build Plate `Matte/Satin/Gloss` no longer changes model finish mode; model finish handlers are now scoped only to model finish controls
 - **Build plate shade visual mismatch** — strengthened build plate shade response so darker/lighter slider values are reflected more accurately on the live plate surface

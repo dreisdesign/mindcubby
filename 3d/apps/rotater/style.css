@@ -7395,7 +7395,8 @@ html.theme-dark .adv-section-check input[type="checkbox"] {
 
 /* ── Preset group inside new cards (no extra margin needed) ── */
 #modelBox .preset-group,
-#environmentBox .preset-group {
+#environmentBox .preset-group,
+#buildPlateBox .preset-group {
     margin-top: 0;
     margin-bottom: 0;
 }

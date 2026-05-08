@@ -229,17 +229,23 @@ const bgModelSyncSelectorBtn = document.getElementById('bgModelSyncSelectorBtn')
 const bgModelSyncSelectorMenu = document.getElementById('bgModelSyncSelectorMenu');
 const bgModelSyncSelectorThumb = document.getElementById('bgModelSyncSelectorThumb');
 const bgModelSyncSelectorText = document.getElementById('bgModelSyncSelectorText');
+const buildPlateModelSyncSourceWrap = document.getElementById('buildPlateModelSyncSourceWrap');
+const buildPlateModelSyncSelectorBtn = document.getElementById('buildPlateModelSyncSelectorBtn');
+const buildPlateModelSyncSelectorMenu = document.getElementById('buildPlateModelSyncSelectorMenu');
+const buildPlateModelSyncSelectorThumb = document.getElementById('buildPlateModelSyncSelectorThumb');
+const buildPlateModelSyncSelectorText = document.getElementById('buildPlateModelSyncSelectorText');
 const modelUndoToast = document.getElementById('modelUndoToast');
 const modelUndoToastText = document.getElementById('modelUndoToastText');
 const btnModelUndoToast = document.getElementById('btnModelUndoToast');
 const bgPick = document.getElementById('bgPicker');
 const bgOpacitySlider = document.getElementById('bgOpacitySlider');
+const bgOpacitySliderLabel = bgOpacitySlider?.closest('.control-label');
 const buildPlateToggleEl = document.getElementById('buildPlateToggle');
 const buildPlateControlsEl = document.getElementById('buildPlateControls');
 const buildPlateColorPickerEl = document.getElementById('buildPlateColorPicker');
-const buildPlateColorCustomBtnEl = document.getElementById('buildPlateColorCustomBtn');
-const buildPlateColorCustomCoreEl = document.getElementById('buildPlateColorCustomCore');
+const buildPlateAutoBrightnessEl = document.getElementById('buildPlateAutoBrightness');
 const buildPlateShadeSliderEl = document.getElementById('buildPlateShadeSlider');
+const buildPlateShadeRowEl = buildPlateShadeSliderEl?.closest('.control-label');
 const buildPlateShadeValEl = document.getElementById('buildPlateShadeVal');
 const buildPlateFinishWrapEl = document.getElementById('buildPlateFinishWrap');
 const buildPlateShapeWrapEl = document.getElementById('buildPlateShapeWrap');
@@ -390,7 +396,9 @@ let suppressSave = false;
 // initialized by their let declarations later in the file) can safely read/write them.
 let activeModelPreset = 'custom';
 let activeBgPreset = 'custom';
+let activeBuildPlatePreset = 'custom';
 let isDynamicBg = false;
+let buildPlateAutoBrightnessEnabled = false;
 let rulerEnabled = true;
 let rulerUnit = 'metric';
 let rulerLinesVisible = true;
@@ -412,6 +420,8 @@ let pendingModelPartSelected = 0;
 let pendingBulkSelectedPartIndices = null;
 let bgSyncPartIndex = 0;
 let lastNonModelBgPreset = 'white';
+let buildPlateSyncPartIndex = 0;
+let lastNonModelBuildPlatePreset = 'custom';
 let presetHoverPreviewSnapshot = null;
 const MODEL_UNDO_LIMIT = 24;
 let modelUndoStack = [];
@@ -1149,7 +1159,10 @@ function openAnchoredColorPicker(inputEl, anchorEl) {
 
 function updateBuildPlateMaterial() {
     const shade = Math.max(-100, Math.min(100, Number(buildPlateShade) || 0));
-    const toned = computeBuildPlateShadeColor(buildPlateColor || '#c2a164', shade);
+    const baseHex = getActiveBuildPlateBaseColor();
+    const toned = buildPlateAutoBrightnessEnabled
+        ? computeAutoBrightnessColor(baseHex)
+        : computeBuildPlateShadeColor(baseHex, shade);
     buildPlateShape = normalizeBuildPlateShape(buildPlateShape);
     buildPlateFinish = (buildPlateFinish === 'matte' || buildPlateFinish === 'gloss') ? buildPlateFinish : 'satin';
 
@@ -1192,12 +1205,10 @@ function updateBuildPlateMaterial() {
         buildPlateShadeValEl.textContent = (v >= 0 ? '+' : '') + String(v);
     }
     if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(Number(buildPlateShade) || 0);
+    updateBuildPlateShadeControlVisibility();
     updateBuildPlateShadeSliderVisual();
     if (buildPlateColorPickerEl && /^#[0-9a-f]{6}$/i.test(buildPlateColor)) {
         buildPlateColorPickerEl.value = buildPlateColor;
-    }
-    if (buildPlateColorCustomCoreEl && /^#[0-9a-f]{6}$/i.test(buildPlateColor)) {
-        buildPlateColorCustomCoreEl.style.background = buildPlateColor;
     }
     if (buildPlateFinishWrapEl) {
         buildPlateFinishWrapEl.querySelectorAll('[data-plate-finish]').forEach((btn) => {
@@ -1658,6 +1669,18 @@ function showModelUndoToast(message = 'Model updated') {
     modelUndoToastTimer = window.setTimeout(hideModelUndoToast, 5000);
 }
 
+function updateAutoBgShadeControlVisibility() {
+    const autoBgEnabled = !!document.getElementById('autoBgCheck')?.checked;
+    if (bgOpacitySliderLabel) bgOpacitySliderLabel.hidden = autoBgEnabled;
+    if (bgOpacitySlider) bgOpacitySlider.disabled = autoBgEnabled;
+}
+
+function updateBuildPlateShadeControlVisibility() {
+    if (buildPlateShadeRowEl) buildPlateShadeRowEl.hidden = buildPlateAutoBrightnessEnabled;
+    if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.disabled = buildPlateAutoBrightnessEnabled;
+    if (buildPlateAutoBrightnessEl) buildPlateAutoBrightnessEl.checked = buildPlateAutoBrightnessEnabled;
+}
+
 function getBulkSelectionSummaryText() {
     const total = modelPartNames.length;
     const selected = getUiSelectedPartIndices().length;
@@ -1687,7 +1710,8 @@ function cloneModelUndoState() {
     };
 }
 
-function pushModelUndoState() {
+function pushModelUndoState(options = {}) {
+    const { showToast = false } = options;
     if (suppressModelUndoCapture) return;
     const snapshot = cloneModelUndoState();
     const lastSnapshot = modelUndoStack[modelUndoStack.length - 1];
@@ -1695,7 +1719,7 @@ function pushModelUndoState() {
     modelUndoStack.push(snapshot);
     if (modelUndoStack.length > MODEL_UNDO_LIMIT) modelUndoStack.shift();
     updateCardResetButtonStates();
-    showModelUndoToast();
+    if (showToast) showModelUndoToast();
 }
 
 function restoreModelUndoState(snapshot) {
@@ -1760,7 +1784,7 @@ function applyToModelPartEditTargets(mutator) {
     targets.forEach((idx) => {
         const partSettings = getPartSettings(idx);
         if (!captured) {
-            pushModelUndoState();
+            pushModelUndoState({ showToast: targets.length > 1 });
             captured = true;
         }
         mutator(partSettings, idx);
@@ -2063,7 +2087,7 @@ function updateBgShadeSliderVisual() {
 
 function updateBuildPlateShadeSliderVisual() {
     if (!buildPlateShadeSliderEl) return;
-    const baseHex = buildPlateColor || '#c2a164';
+    const baseHex = getActiveBuildPlateBaseColor();
     const lightHex = `#${computeBuildPlateShadeColor(baseHex, -100).getHexString()}`;
     const darkHex = `#${computeBuildPlateShadeColor(baseHex, 100).getHexString()}`;
     buildPlateShadeSliderEl.style.setProperty('--slider-fill', lightHex);
@@ -2559,6 +2583,8 @@ function closeThumbSelectMenus() {
     if (modelPartSelectorBtn) modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
     if (bgModelSyncSelectorMenu) bgModelSyncSelectorMenu.hidden = true;
     if (bgModelSyncSelectorBtn) bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
+    if (buildPlateModelSyncSelectorMenu) buildPlateModelSyncSelectorMenu.hidden = true;
+    if (buildPlateModelSyncSelectorBtn) buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
     closeModelPartActionMenus();
 }
 
@@ -2632,6 +2658,16 @@ bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
     if (bgModelSyncSelectorMenu && !open) {
         bgModelSyncSelectorMenu.hidden = false;
         bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
+    }
+});
+
+buildPlateModelSyncSelectorBtn?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const open = buildPlateModelSyncSelectorMenu && !buildPlateModelSyncSelectorMenu.hidden;
+    closeThumbSelectMenus();
+    if (buildPlateModelSyncSelectorMenu && !open) {
+        buildPlateModelSyncSelectorMenu.hidden = false;
+        buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
     }
 });
 
@@ -2737,6 +2773,7 @@ function applyPartColorsToMesh() {
         mat.visible = s.hidden !== true;
         mat.needsUpdate = true;
     });
+    if (activeBuildPlatePreset === 'modelcolor') updateBuildPlateMaterial();
 }
 
 function rebuildMeshMaterialsForCurrentShading() {
@@ -2960,7 +2997,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     }
 
                     if (action === 'hide') {
-                        pushModelUndoState();
+                        pushModelUndoState({ showToast: targetPartIndices.length > 1 });
                         const partSettings = getPartSettings(partIdx);
                         const nextHidden = !partSettings.hidden;
                         targetPartIndices.forEach((idx) => {
@@ -3096,6 +3133,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     syncUIFromSelectedPart();
     syncModelPartBulkUIState();
     syncBgModelSyncSourceUI();
+    syncBuildPlateModelSyncSourceUI();
     queueModelPartThumbsRender();
 }
 
@@ -3103,6 +3141,19 @@ function getModelSyncSourceColor() {
     if (!isMultipartModel()) return colorPick.value;
     const idx = Math.max(0, Math.min(bgSyncPartIndex, modelPartBaseColors.length - 1));
     return modelPartBaseColors[idx] || colorPick.value;
+}
+
+function getBuildPlateSyncSourceColor() {
+    if (!isMultipartModel()) return colorPick.value;
+    const idx = Math.max(0, Math.min(buildPlateSyncPartIndex, modelPartBaseColors.length - 1));
+    return modelPartBaseColors[idx] || colorPick.value;
+}
+
+function getActiveBuildPlateBaseColor() {
+    if (activeBuildPlatePreset === 'white') return '#ffffff';
+    if (activeBuildPlatePreset === 'black') return '#000000';
+    if (activeBuildPlatePreset === 'modelcolor') return getBuildPlateSyncSourceColor();
+    return buildPlateColor || '#c2a164';
 }
 
 function syncBgModelSyncSourceUI() {
@@ -4842,6 +4893,9 @@ function saveSettings() {
             rulerUnit: rulerUnit,
             rulerGridVisible: rulerLinesVisible ? '1' : '0',
             buildPlate: buildPlateEnabled ? '1' : '0',
+            buildPlatePreset: activeBuildPlatePreset,
+            buildPlateSyncPartIndex: String(buildPlateSyncPartIndex || 0),
+            buildPlateAutoBrightness: buildPlateAutoBrightnessEnabled ? '1' : '0',
             buildPlateColor: buildPlateColor,
             buildPlateShade: String(buildPlateShade),
             buildPlateFinish: buildPlateFinish,
@@ -5082,6 +5136,17 @@ function restoreSettings() {
         if (s.buildPlate != null) {
             buildPlateEnabled = (s.buildPlate === '1' || s.buildPlate === true || s.buildPlate === 1);
         }
+        if (s.buildPlatePreset === 'white' || s.buildPlatePreset === 'black' || s.buildPlatePreset === 'modelcolor' || s.buildPlatePreset === 'custom') {
+            activeBuildPlatePreset = s.buildPlatePreset;
+            if (activeBuildPlatePreset !== 'modelcolor') lastNonModelBuildPlatePreset = activeBuildPlatePreset;
+        }
+        if (s.buildPlateSyncPartIndex != null) {
+            const idx = parseInt(s.buildPlateSyncPartIndex, 10);
+            buildPlateSyncPartIndex = Number.isFinite(idx) ? Math.max(0, idx) : 0;
+        }
+        if (s.buildPlateAutoBrightness != null) {
+            buildPlateAutoBrightnessEnabled = (s.buildPlateAutoBrightness === '1' || s.buildPlateAutoBrightness === true || s.buildPlateAutoBrightness === 1);
+        }
         if (typeof s.buildPlateColor === 'string' && /^[0-9a-f]{6}$/i.test(s.buildPlateColor)) {
             buildPlateColor = `#${s.buildPlateColor}`;
         } else if (typeof s.buildPlateColor === 'string' && /^#[0-9a-f]{6}$/i.test(s.buildPlateColor)) {
@@ -5270,6 +5335,9 @@ function getURLSettings(searchStr = location.search) {
         rulerUnit: g('ru'),
         rulerGridVisible: g('rg'),
         buildPlate: g('bp'),
+        buildPlatePreset: g('bpr'),
+        buildPlateSyncPartIndex: g('bpsp'),
+        buildPlateAutoBrightness: g('bpab'),
         buildPlateColor: g('bpc'),
         buildPlateShade: g('bps'),
         buildPlateFinish: g('bpf'),
@@ -5343,6 +5411,9 @@ function settingsToURL() {
     if (rulerUnit === 'imperial') p.set('ru', 'i');
     if (!rulerLinesVisible) p.set('rg', '0');
     if (!buildPlateEnabled) p.set('bp', '0');
+    if (activeBuildPlatePreset && activeBuildPlatePreset !== 'custom') p.set('bpr', activeBuildPlatePreset);
+    if (buildPlateSyncPartIndex > 0) p.set('bpsp', String(buildPlateSyncPartIndex));
+    if (buildPlateAutoBrightnessEnabled) p.set('bpab', '1');
     if (buildPlateColor && /^#[0-9a-f]{6}$/i.test(buildPlateColor)) {
         p.set('bpc', buildPlateColor.replace('#', ''));
     }
@@ -7289,6 +7360,8 @@ function updateCardResetButtonStates() {
     const normalizedPlateColor = String(buildPlateColor || '#c2a164').toLowerCase();
     const buildPlateDirty = !!(rulerToggle && !rulerToggle.checked)
         || !!(buildPlateToggleEl && !buildPlateToggleEl.checked)
+        || (activeBuildPlatePreset || 'custom') !== 'custom'
+        || !!buildPlateAutoBrightnessEnabled
         || normalizedPlateColor !== '#c2a164'
         || (parseInt(String(buildPlateShade), 10) || 0) !== 0
         || (buildPlateFinish || 'satin') !== 'satin'
@@ -7343,7 +7416,7 @@ btnResetModelCard?.addEventListener('click', () => {
     });
     if (!changed) return;
 
-    pushModelUndoState();
+    pushModelUndoState({ showToast: targets.length > 1 });
     targets.forEach((idx) => {
         const partSettings = getPartSettings(idx);
         const defaults = getVisualResetPartSettings(idx);
@@ -7367,6 +7440,7 @@ btnResetModelCard?.addEventListener('click', () => {
     }
 
     renderModelPresets();
+    if (activeBuildPlatePreset === 'modelcolor') updateBuildPlateSelection();
     queueModelPartThumbsRender(targets);
     saveSettings();
     updateCardResetButtonStates();
@@ -7389,11 +7463,17 @@ btnResetBuildPlateCard?.addEventListener('click', () => {
         buildPlateToggleEl.checked = true;
         buildPlateToggleEl.dispatchEvent(new Event('change'));
     }
+    activeBuildPlatePreset = 'custom';
+    lastNonModelBuildPlatePreset = 'custom';
+    buildPlateSyncPartIndex = 0;
+    buildPlateAutoBrightnessEnabled = false;
+    if (buildPlateAutoBrightnessEl) buildPlateAutoBrightnessEl.checked = false;
     buildPlateColor = '#c2a164';
     buildPlateShade = 0;
     buildPlateFinish = 'satin';
     buildPlateShape = 'rectangle';
     updateBuildPlateMaterial();
+    updateBuildPlateSelection();
     refreshExportPreviewNow();
     saveSettings();
     updateCardResetButtonStates();
@@ -7473,6 +7553,7 @@ btnResetExportCard?.addEventListener('click', () => {
 document.getElementById('rulerToggle')?.addEventListener('change', updateCardResetButtonStates);
 buildPlateToggleEl?.addEventListener('change', updateCardResetButtonStates);
 buildPlateColorPickerEl?.addEventListener('input', updateCardResetButtonStates);
+buildPlateAutoBrightnessEl?.addEventListener('change', updateCardResetButtonStates);
 [
     'exportFormat',
     'exportFormatCollapsed',
@@ -9154,10 +9235,24 @@ const BG_PRESETS = [
     { id: 'modelcolor', name: 'Model', color: null }
 ];
 
+const BUILD_PLATE_PRESETS = [
+    { id: 'white', name: 'White', color: '#ffffff' },
+    { id: 'black', name: 'Black', color: '#000000' },
+    { id: 'modelcolor', name: 'Model Sync', color: null }
+];
+
 function getBgPresetDefaultTone(presetId) {
     if (presetId === 'white') return -100;
     if (presetId === 'black') return 100;
     return 0;
+}
+
+function computeAutoBrightnessColor(baseHex) {
+    const color = new THREE.Color(baseHex);
+    const hsl = {};
+    color.getHSL(hsl);
+    hsl.l = hsl.l + (0.92 - hsl.l) * 0.75;
+    return new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l);
 }
 
 function applyBgPresetDefaultTone(presetId) {
@@ -9175,12 +9270,7 @@ function updateDynamicBg() {
     } else {
         baseHex = bgPick.value;
     }
-    const c = new THREE.Color(baseHex);
-    const hsl = {};
-    c.getHSL(hsl);
-    // Push L toward white while preserving H and S (no desaturation)
-    hsl.l = hsl.l + (0.92 - hsl.l) * 0.75;
-    renderer.setClearColor(new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l), 1);
+    renderer.setClearColor(computeAutoBrightnessColor(baseHex), 1);
 }
 
 // Hook model color changes to update dynamic bg and Model preset swatch
@@ -9498,6 +9588,86 @@ function updateBgSelection() {
     syncModelPartSelectorUI();
 }
 
+function updateBuildPlateSelection() {
+    document.querySelectorAll('#buildPlatePresetsBar .shading-option').forEach(el => el.classList.remove('is-selected'));
+
+    if (activeBuildPlatePreset === 'custom') {
+        const customThumb = document.getElementById('customBuildPlateThumb');
+        if (customThumb) {
+            const parentOpt = customThumb.closest('.shading-option');
+            if (parentOpt) parentOpt.classList.add('is-selected');
+        }
+        const svgCircle = document.querySelector('#customBuildPlateThumb circle');
+        if (svgCircle) svgCircle.setAttribute('fill', buildPlateColor || '#c2a164');
+        const overlay = document.getElementById('customBuildPlateSphereOverlay');
+        if (overlay) {
+            overlay.style.display = 'block';
+            overlay.style.background = 'radial-gradient(circle at 36% 32%, rgba(255,255,255,0.5) 5%, transparent 40%, rgba(0,0,0,0.25) 100%)';
+        }
+    } else {
+        const svgCircle = document.querySelector('#customBuildPlateThumb circle');
+        if (svgCircle) svgCircle.setAttribute('fill', 'transparent');
+        const overlay = document.getElementById('customBuildPlateSphereOverlay');
+        if (overlay) overlay.style.display = 'none';
+
+        const presetThumb = document.getElementById('build-plate-preset-' + activeBuildPlatePreset);
+        if (presetThumb) {
+            const parentOpt = presetThumb.closest('.shading-option');
+            if (parentOpt) parentOpt.classList.add('is-selected');
+        }
+    }
+    syncBuildPlateModelSyncSourceUI();
+}
+
+function syncBuildPlateModelSyncSourceUI() {
+    if (!buildPlateModelSyncSourceWrap || !buildPlateModelSyncSelectorMenu || !buildPlateModelSyncSelectorBtn) return;
+    const visible = activeBuildPlatePreset === 'modelcolor' && isMultipartModel();
+    buildPlateModelSyncSourceWrap.hidden = !visible;
+    buildPlateModelSyncSourceWrap.setAttribute('aria-hidden', String(!visible));
+    if (!visible) {
+        buildPlateModelSyncSelectorMenu.innerHTML = '';
+        buildPlateModelSyncSelectorMenu.hidden = true;
+        buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
+        if (buildPlateModelSyncSelectorText) buildPlateModelSyncSelectorText.textContent = '';
+        return;
+    }
+
+    buildPlateSyncPartIndex = Math.max(0, Math.min(buildPlateSyncPartIndex, modelPartNames.length - 1));
+    buildPlateModelSyncSelectorMenu.innerHTML = '';
+    buildPlateModelSyncSelectorMenu.hidden = true;
+    buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
+    modelPartNames.forEach((name, idx) => {
+        const opt = document.createElement('button');
+        opt.type = 'button';
+        opt.className = 'thumb-select-option';
+        if (idx === buildPlateSyncPartIndex) opt.classList.add('is-bg-sync-source');
+        opt.dataset.partIndex = String(idx);
+        opt.setAttribute('role', 'option');
+        opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="68" height="68" aria-hidden="true"></canvas><span class="thumb-select-option-text">${name}</span><span class="thumb-select-sync-badge" aria-hidden="true">Sync</span>`;
+        opt.addEventListener('click', () => {
+            buildPlateSyncPartIndex = idx;
+            activeBuildPlatePreset = 'modelcolor';
+            closeThumbSelectMenus();
+            updateBuildPlateMaterial();
+            updateBuildPlateSelection();
+            refreshExportPreviewNow();
+            saveSettings();
+        });
+        buildPlateModelSyncSelectorMenu.appendChild(opt);
+    });
+
+    if (buildPlateModelSyncSelectorThumb) {
+        buildPlateModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
+        buildPlateModelSyncSelectorThumb.dataset.partIndex = String(buildPlateSyncPartIndex);
+    }
+    if (buildPlateModelSyncSelectorText) {
+        const selectedName = modelPartNames[buildPlateSyncPartIndex] || `Part ${buildPlateSyncPartIndex + 1}`;
+        buildPlateModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
+        buildPlateModelSyncSelectorBtn.title = `Surface sync: ${selectedName}`;
+    }
+    queueModelPartThumbsRender();
+}
+
 // Hook manual color-picker changes to switch to custom (only real user interaction, not preset dispatch)
 bgPick.addEventListener('input', (ev) => {
     if (ev.isTrusted) {
@@ -9511,6 +9681,7 @@ const autoBgCheckEl = document.getElementById('autoBgCheck');
 if (autoBgCheckEl) {
     autoBgCheckEl.addEventListener('change', () => {
         isDynamicBg = autoBgCheckEl.checked;
+        updateAutoBgShadeControlVisibility();
         if (isDynamicBg) updateDynamicBg();
         else {
             // Restore base preset color when turning auto-adjust off
@@ -9525,6 +9696,7 @@ if (autoBgCheckEl) {
         }
     });
 }
+updateAutoBgShadeControlVisibility();
 
 const rulerToggleEl = document.getElementById('rulerToggle');
 if (rulerToggleEl) {
@@ -9550,15 +9722,21 @@ if (buildPlateToggleEl) {
     });
 }
 
-if (buildPlateColorCustomBtnEl && buildPlateColorPickerEl) {
-    buildPlateColorCustomBtnEl.addEventListener('click', () => {
-        openAnchoredColorPicker(buildPlateColorPickerEl, buildPlateColorCustomBtnEl);
-    });
-}
-
 if (buildPlateColorPickerEl) {
     buildPlateColorPickerEl.addEventListener('input', () => {
         buildPlateColor = buildPlateColorPickerEl.value;
+        activeBuildPlatePreset = 'custom';
+        lastNonModelBuildPlatePreset = 'custom';
+        updateBuildPlateSelection();
+        updateBuildPlateMaterial();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+}
+
+if (buildPlateAutoBrightnessEl) {
+    buildPlateAutoBrightnessEl.addEventListener('change', () => {
+        buildPlateAutoBrightnessEnabled = !!buildPlateAutoBrightnessEl.checked;
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
         saveSettings();
@@ -9743,6 +9921,93 @@ function renderBgPresets() {
         bgPick._presetListenerAdded = true;
     }
 
+
+function renderBuildPlatePresets() {
+    const bar = document.getElementById('buildPlatePresetsBar');
+    if (!bar) return;
+
+    bar.innerHTML = '';
+    bar.style.display = 'grid';
+    bar.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    bar.style.gap = '6px';
+
+    BUILD_PLATE_PRESETS.forEach((preset) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'thumb-card-wrap';
+        wrap.style.display = 'flex';
+        wrap.style.flexDirection = 'column';
+        wrap.style.alignItems = 'center';
+
+        const swatchInner = preset.id === 'modelcolor'
+            ? `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:transparent;display:flex;align-items:center;justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.2 12.05C7.2 12.65 7.308 13.246 7.524 13.838C7.74 14.43 8.072 14.979 8.52 15.485L8.565 15.53V14.815C8.565 14.476 8.685 14.186 8.925 13.945C9.165 13.705 9.455 13.585 9.795 13.585C10.135 13.585 10.425 13.705 10.665 13.945C10.905 14.186 11.025 14.476 11.025 14.815V18.695C11.025 19.034 10.905 19.324 10.665 19.565C10.425 19.805 10.135 19.925 9.795 19.925H5.91C5.57 19.925 5.28 19.805 5.04 19.565C4.8 19.324 4.68 19.034 4.68 18.695C4.68 18.355 4.8 18.065 5.04 17.825C5.28 17.584 5.57 17.464 5.91 17.464H7.08L7.035 17.419C6.249 16.633 5.671 15.783 5.301 14.869C4.931 13.955 4.746 13.015 4.746 12.05C4.746 10.515 5.145 9.106 5.943 7.823C6.741 6.539 7.816 5.575 9.168 4.931C9.445 4.793 9.722 4.808 10 4.978C10.277 5.147 10.469 5.393 10.577 5.715C10.669 6.023 10.657 6.331 10.542 6.639C10.426 6.947 10.223 7.186 9.93 7.355C9.1 7.832 8.435 8.485 7.935 9.315C7.435 10.146 7.2 11.057 7.2 12.05ZM16.8 12C16.8 11.4 16.692 10.804 16.476 10.212C16.26 9.62 15.928 9.071 15.48 8.565L15.435 8.52V9.235C15.435 9.575 15.315 9.864 15.075 10.105C14.835 10.345 14.545 10.465 14.205 10.465C13.865 10.465 13.575 10.345 13.335 10.105C13.095 9.864 12.975 9.575 12.975 9.235V5.35C12.975 5.01 13.095 4.72 13.335 4.48C13.575 4.239 13.865 4.12 14.205 4.12H18.09C18.43 4.12 18.72 4.239 18.96 4.48C19.2 4.72 19.32 5.01 19.32 5.35C19.32 5.689 19.2 5.979 18.96 6.22C18.72 6.46 18.43 6.58 18.09 6.58H16.92L16.965 6.625C17.751 7.411 18.329 8.261 18.699 9.175C19.069 10.089 19.254 11.03 19.254 12C19.254 13.535 18.855 14.944 18.057 16.227C17.259 17.511 16.184 18.475 14.832 19.119C14.555 19.257 14.277 19.242 14 19.073C13.723 18.903 13.531 18.657 13.423 18.335C13.331 18.028 13.343 17.72 13.458 17.412C13.574 17.104 13.777 16.864 14.07 16.695C14.9 16.218 15.565 15.565 16.065 14.735C16.565 13.905 16.8 12.993 16.8 12Z" fill="currentColor"/></svg></span>`
+            : `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? '#b8b6ca' : (preset.id === 'black' ? '#5d5a74' : 'transparent')};"></span>`;
+
+        wrap.innerHTML = `
+            <label class="shading-option preset-option" title="${preset.name} surface color">
+                ${swatchInner}
+            </label>
+            <span class="thumb-label">${preset.name}</span>
+        `;
+
+        const actionArea = wrap.querySelector('.shading-option');
+        actionArea.addEventListener('click', () => {
+            const toggleOffModelSync = preset.id === 'modelcolor' && activeBuildPlatePreset === 'modelcolor';
+            if (toggleOffModelSync) {
+                activeBuildPlatePreset = lastNonModelBuildPlatePreset || 'custom';
+                updateBuildPlateMaterial();
+                updateBuildPlateSelection();
+                refreshExportPreviewNow();
+                saveSettings();
+                return;
+            }
+
+            activeBuildPlatePreset = preset.id;
+            if (preset.id !== 'modelcolor') lastNonModelBuildPlatePreset = preset.id;
+            updateBuildPlateMaterial();
+            updateBuildPlateSelection();
+            refreshExportPreviewNow();
+            saveSettings();
+            if (preset.id === 'modelcolor' && buildPlateModelSyncSelectorMenu && buildPlateModelSyncSelectorBtn) {
+                requestAnimationFrame(() => {
+                    syncBuildPlateModelSyncSourceUI();
+                    buildPlateModelSyncSelectorMenu.hidden = false;
+                    buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
+                });
+            }
+        });
+        bar.appendChild(wrap);
+    });
+
+    const customWrap = document.createElement('div');
+    customWrap.className = 'thumb-card-wrap';
+    customWrap.style.display = 'flex';
+    customWrap.style.flexDirection = 'column';
+    customWrap.style.alignItems = 'center';
+
+    customWrap.innerHTML = `
+        <label class="shading-option custom-color-option" title="Custom surface color" style="cursor:pointer;position:relative;">
+            ${rainbowRingSvg('customBuildPlateThumb', 'transparent')}
+            <span id="customBuildPlateSphereOverlay" style="position:absolute;inset:3px;border-radius:50%;pointer-events:none;display:none;"></span>
+        </label>
+        <span class="thumb-label">Custom</span>
+    `;
+    bar.appendChild(customWrap);
+
+    const labelEl = customWrap.querySelector('.shading-option');
+    if (labelEl) {
+        labelEl.addEventListener('click', () => {
+            activeBuildPlatePreset = 'custom';
+            lastNonModelBuildPlatePreset = 'custom';
+            updateBuildPlateMaterial();
+            updateBuildPlateSelection();
+            refreshExportPreviewNow();
+            saveSettings();
+            openAnchoredColorPicker(buildPlateColorPickerEl, labelEl);
+        });
+    }
+
+    requestAnimationFrame(updateBuildPlateSelection);
+}
     requestAnimationFrame(updateBgSelection);
 }
 
@@ -9793,6 +10058,7 @@ if (opacitySlider) {
 function initPresetGallery() {
     renderModelPresets();
     renderBgPresets();
+    renderBuildPlatePresets();
     renderModelShadeSelector();
 }
 initPresetGallery();
