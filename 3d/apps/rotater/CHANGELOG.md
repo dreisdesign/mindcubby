@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Build plate finish control scope** — clicking Build Plate `Matte/Satin/Gloss` no longer changes model finish mode; model finish handlers are now scoped only to model finish controls
 - **Build plate shade visual mismatch** — strengthened build plate shade response so darker/lighter slider values are reflected more accurately on the live plate surface
 - **Grid visibility with plate disabled** — grid now remains visible in the live preview when `Build Plate` is off; shadow-catcher no longer depth-occludes grid rendering
+- **MP4 export late-frame stalls** — added WebCodecs encoder queue backpressure handling plus explicit `Finalizing video…` progress stage to avoid apparent hangs near the final frames (for example around `109/120`)
 - **Startup transition consistency + staged fades** — both first-time (incognito/new) and returning refresh paths now follow one startup sequence (`Splash -> Full UI shell -> Model ready`) with matched fade transitions between stages
 - **Rotation Time accuracy under load** — viewer animation now uses delta-time based updates (`controls.update(delta)` + time-based phase advance), so 5s/10s/etc. timing stays consistent even when FPS dips
 - **Export workspace outside-click close** — while crop framing is active, clicking outside the crop frame now closes Export workspace; inside-frame clicks continue to orbit/pan/zoom as expected

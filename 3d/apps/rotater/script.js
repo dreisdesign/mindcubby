@@ -8930,6 +8930,31 @@ btnVideo.addEventListener('click', async () => {
             output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
             error: e => { encoderError = e; },
         });
+
+        const waitForEncoderQueue = async (maxQueue = 8) => {
+            if (!encoder || encoder.state === 'closed') return;
+            if (typeof encoder.encodeQueueSize !== 'number') return;
+            while (encoder.encodeQueueSize > maxQueue) {
+                await new Promise((resolve) => {
+                    let done = false;
+                    let timeoutId = null;
+                    const finish = () => {
+                        if (done) return;
+                        done = true;
+                        if (timeoutId !== null) clearTimeout(timeoutId);
+                        try { encoder.removeEventListener?.('dequeue', onDequeue); } catch (_) { }
+                        resolve();
+                    };
+                    const onDequeue = () => {
+                        if (encoder.encodeQueueSize <= maxQueue || encoder.state === 'closed') finish();
+                    };
+                    try { encoder.addEventListener?.('dequeue', onDequeue); } catch (_) { }
+                    timeoutId = setTimeout(finish, 50);
+                });
+                if (encoderError) throw encoderError;
+                if (encoder.state === 'closed') throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.');
+            }
+        };
         // avc1.4200XX — Baseline profile
         // level 3.1 (0x1f) up to 720p, level 4.0 (0x28) up to 1080p, level 5.1 (0x33) up to 4K/2048x2048
         const totalPixels = W * H;
@@ -9008,6 +9033,7 @@ btnVideo.addEventListener('click', async () => {
                 const frame = new VideoFrame(out, { timestamp });
                 if (encoderError) { frame.close(); throw encoderError; }
                 if (encoder.state === 'closed') { frame.close(); throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.'); }
+                await waitForEncoderQueue(8);
                 encoder.encode(frame, { keyFrame: f % 30 === 0 });
                 frame.close();
 
@@ -9017,6 +9043,8 @@ btnVideo.addEventListener('click', async () => {
                 }
             }
 
+            setAnimStatus('Finalizing video…', totalFrames, totalFrames);
+            await new Promise(r => setTimeout(r, 0));
             await encoder.flush();
             if (encoderError) throw encoderError;
             muxer.finalize();
