@@ -263,6 +263,7 @@ const btnExportCollapsedLabel = document.getElementById('btnExportCollapsedLabel
 const exportQualitySliderEl = document.getElementById('exportQualitySlider');
 const exportQualityValEl = document.getElementById('exportQualityVal');
 const exportGridEl = document.getElementById('exportGrid');
+const exportBuildPlateEl = document.getElementById('exportBuildPlate');
 const exportBgColorEl = document.getElementById('exportBgColor');
 const exportDimensionInputs = Array.from(document.querySelectorAll('input[name="exportDimensions"]'));
 const cropDimensionsDock = document.getElementById('cropDimensionsDock');
@@ -3497,7 +3498,15 @@ function loop() {
         }
         updateCameraClipPlanes();
         syncLightRig();
-        renderer.render(scene, camera);
+        const renderWithExportOptions = !!(exportFrameEnabled && !isExporting);
+        const restoreViewportExportScene = renderWithExportOptions
+            ? applyExportSceneForRender({ forceTransparent: !(exportBgColorEl?.checked ?? true) })
+            : null;
+        try {
+            renderer.render(scene, camera);
+        } finally {
+            restoreViewportExportScene?.();
+        }
         if (exportFrameEnabled) drawExportFrame();
         if (rulerEnabled) {
             const now = performance.now();
@@ -3534,6 +3543,43 @@ function isExportPreviewActive() {
     return true;
 }
 
+function applyExportSceneForRender({ forceTransparent = false } = {}) {
+    if (!renderer || !scene) return () => { };
+
+    const includeBg = !!(exportBgColorEl?.checked ?? true);
+    const includeGrid = !!(exportGridEl?.checked ?? true);
+    const includeBuildPlate = !!(exportBuildPlateEl ? exportBuildPlateEl.checked : buildPlateEnabled);
+    const transparent = forceTransparent || !includeBg;
+
+    const savedBg = scene.background;
+    const savedClearColor = renderer.getClearColor(new THREE.Color());
+    const savedClearAlpha = renderer.getClearAlpha();
+    const savedBuildPlateVisible = buildPlateMesh?.visible;
+    const savedRulerGridVisible = rulerGridHelper?.visible;
+    const savedRulerFootprintVisible = rulerFootprintHelper?.visible;
+
+    if (buildPlateMesh) {
+        buildPlateMesh.visible = !!(includeBuildPlate && buildPlateEnabled && mesh);
+    }
+
+    const showGrid = !!(includeGrid && rulerEnabled && rulerLinesVisible && mesh);
+    if (rulerGridHelper) rulerGridHelper.visible = showGrid;
+    if (rulerFootprintHelper) rulerFootprintHelper.visible = showGrid;
+
+    if (transparent) {
+        scene.background = null;
+        renderer.setClearColor(0x000000, 0);
+    }
+
+    return () => {
+        scene.background = savedBg;
+        renderer.setClearColor(savedClearColor, savedClearAlpha);
+        if (buildPlateMesh && typeof savedBuildPlateVisible === 'boolean') buildPlateMesh.visible = savedBuildPlateVisible;
+        if (rulerGridHelper && typeof savedRulerGridVisible === 'boolean') rulerGridHelper.visible = savedRulerGridVisible;
+        if (rulerFootprintHelper && typeof savedRulerFootprintVisible === 'boolean') rulerFootprintHelper.visible = savedRulerFootprintVisible;
+    };
+}
+
 function updateExportPreview(force = false) {
     if (!isExportPreviewActive()) return;
     if (force) _previewTick = 0;
@@ -3548,23 +3594,17 @@ function updateExportPreview(force = false) {
     const fmt = exportFormatEl?.value ?? 'gif';
     const { width: expW, height: expH } = getPreviewExportSize(fmt);
     const previewWrap = pv.parentElement;
-    const isTransparentPreview = (fmt === 'gif')
+    const bgEnabled = exportBgColorEl?.checked ?? true;
+    const isTransparentPreview = !bgEnabled || ((fmt === 'gif')
         ? (document.getElementById('exportTransparent')?.checked ?? false)
         : (fmt === 'png')
             ? ((document.getElementById('exportTransparentPng')?.checked
                 ?? document.getElementById('exportTransparent')?.checked
                 ?? false))
-            : false;
+            : false);
     if (previewWrap) {
         previewWrap.style.aspectRatio = '1 / 1';
-        const transparentOn = (fmt === 'gif')
-            ? (document.getElementById('exportTransparent')?.checked ?? false)
-            : (fmt === 'png')
-                ? ((document.getElementById('exportTransparentPng')?.checked
-                    ?? document.getElementById('exportTransparent')?.checked
-                    ?? false))
-                : false;
-        previewWrap.classList.toggle('is-transparent', transparentOn);
+        previewWrap.classList.toggle('is-transparent', isTransparentPreview);
     }
 
     const wrap = canvas?.parentElement;
@@ -3598,111 +3638,9 @@ function updateExportPreview(force = false) {
         exportCamDist = dist;
         exportCamElev = elev;
         exportCamZoom = (camera.zoom || 1) / cropScale;
-
-        // In crop mode, sample directly from the visible canvas so the mini
-        // preview matches the on-screen tone/contrast exactly.
-        if (!isTransparentPreview) {
-            const wrap = canvas?.parentElement;
-            if (wrap) {
-                const cw = wrap.clientWidth;
-                const ch = wrap.clientHeight;
-                const { sx, sy, sw, sh } = getCropFrameRect(cw, ch);
-                const srcScaleX = canvas.width / Math.max(1, cw);
-                const srcScaleY = canvas.height / Math.max(1, ch);
-                const ctx2d = pv.getContext('2d');
-                if (ctx2d) {
-                    ctx2d.clearRect(0, 0, pxW, pxH);
-                    // Draw entire uncropped viewport
-                    ctx2d.drawImage(
-                        canvas,
-                        0, 0, canvas.width, canvas.height,
-                        0, 0, pxW, pxH
-                    );
-
-                    // Draw dim overlay over the crop region
-                    const scaleX = pxW / cw;
-                    const scaleY = pxH / ch;
-                    ctx2d.fillStyle = 'rgba(0, 0, 0, 0.58)';
-                    ctx2d.fillRect(0, 0, pxW, sy * scaleY);                  // top
-                    ctx2d.fillRect(0, (sy + sh) * scaleY, pxW, pxH - (sy + sh) * scaleY);   // bottom
-                    ctx2d.fillRect(0, sy * scaleY, sx * scaleX, sh * scaleY);                // left
-                    ctx2d.fillRect((sx + sw) * scaleX, sy * scaleY, pxW - (sx + sw) * scaleX, sh * scaleY); // right
-
-                    // Corner marks
-                    const cm = Math.max(2, Math.round(Math.min(sw * scaleX, sh * scaleY) * 0.07));
-                    ctx2d.strokeStyle = 'rgba(255, 255, 255, 0.65)';
-                    ctx2d.lineWidth = 1.5;
-                    ctx2d.beginPath();
-
-                    const minX = sx * scaleX;
-                    const minY = sy * scaleY;
-                    const maxX = (sx + sw) * scaleX;
-                    const maxY = (sy + sh) * scaleY;
-
-                    // TL
-                    ctx2d.moveTo(minX, minY + cm); ctx2d.lineTo(minX, minY); ctx2d.lineTo(minX + cm, minY);
-                    // TR
-                    ctx2d.moveTo(maxX - cm, minY); ctx2d.lineTo(maxX, minY); ctx2d.lineTo(maxX, minY + cm);
-                    // BL
-                    ctx2d.moveTo(minX, maxY - cm); ctx2d.lineTo(minX, maxY); ctx2d.lineTo(minX + cm, maxY);
-                    // BR
-                    ctx2d.moveTo(maxX - cm, maxY); ctx2d.lineTo(maxX, maxY); ctx2d.lineTo(maxX, maxY - cm);
-                    ctx2d.stroke();
-                    drawRulerOverlay(ctx2d, pxW, pxH, camera);
-                    return;
-                }
-            }
-        }
     }
 
-    // In normal (non-crop) mode, for non-transparent formats: sample the main
-    // canvas with a centered aspect-ratio crop matching the export dimensions.
-    // This guarantees the preview perfectly matches what will be exported —
-    // same tone mapping, same AA, same colors — with zero render overhead.
-    if (!exportFrameEnabled && !isTransparentPreview) {
-        const wrap = canvas?.parentElement;
-        if (wrap) {
-            const cw = wrap.clientWidth;
-            const ch = wrap.clientHeight;
-            const exportAspect = expW / Math.max(1, expH);
-            const canvasAspect = cw / Math.max(1, ch);
-            let sx, sy, sw, sh;
-            if (exportAspect <= canvasAspect) {
-                // Export narrower than canvas: letterbox sides
-                sh = ch;
-                sw = ch * exportAspect;
-                sx = (cw - sw) / 2;
-                sy = 0;
-            } else {
-                // Export wider than canvas: letterbox top/bottom
-                sw = cw;
-                sh = cw / exportAspect;
-                sx = 0;
-                sy = (ch - sh) / 2;
-            }
-            const srcScaleX = canvas.width / Math.max(1, cw);
-            const srcScaleY = canvas.height / Math.max(1, ch);
-            const ctx2d = pv.getContext('2d');
-            if (ctx2d) {
-                ctx2d.clearRect(0, 0, pxW, pxH);
-                ctx2d.drawImage(
-                    canvas,
-                    sx * srcScaleX,
-                    sy * srcScaleY,
-                    sw * srcScaleX,
-                    sh * srcScaleY,
-                    0,
-                    0,
-                    pxW,
-                    pxH
-                );
-                drawRulerOverlay(ctx2d, pxW, pxH, camera);
-                return;
-            }
-        }
-    }
-
-    // Fallback: WebGLRenderTarget for transparent exports
+    // Render preview from export-effective scene state so it always matches export toggles.
     if (!_previewRt || _previewRtWidth !== pxW || _previewRtHeight !== pxH) {
         if (_previewRt) _previewRt.dispose();
         _previewRtWidth = pxW;
@@ -3739,16 +3677,14 @@ function updateExportPreview(force = false) {
         _previewCam.updateProjectionMatrix();
     }
 
-    const savedBg = scene.background;
-    const savedClearColor = renderer.getClearColor(new THREE.Color());
-    const savedClearAlpha = renderer.getClearAlpha();
-    scene.background = null;
-    renderer.setClearColor(0x000000, 0);
-    renderer.setRenderTarget(_previewRt);
-    renderer.render(scene, _previewCam);
-    renderer.setRenderTarget(null);
-    scene.background = savedBg;
-    renderer.setClearColor(savedClearColor, savedClearAlpha);
+    const restoreExportScene = applyExportSceneForRender({ forceTransparent: isTransparentPreview });
+    try {
+        renderer.setRenderTarget(_previewRt);
+        renderer.render(scene, _previewCam);
+        renderer.setRenderTarget(null);
+    } finally {
+        restoreExportScene();
+    }
 
     const buf = new Uint8Array(pxW * pxH * 4);
     renderer.readRenderTargetPixels(_previewRt, 0, 0, pxW, pxH, buf);
@@ -4883,6 +4819,7 @@ function saveSettings() {
             exportDimensions: getSelectedExportDimensionsId(),
             exportTransparent: document.getElementById('exportTransparent')?.checked ? '1' : '0',
             gifDither: document.getElementById('gifDither')?.checked ? '1' : '0',
+            exportBuildPlate: document.getElementById('exportBuildPlate')?.checked ? '1' : '0',
             exportWatermark: document.getElementById('exportWatermark')?.checked ? '1' : '0',
             jpegQuality: document.getElementById('jpegQuality')?.value ?? '90',
             textureTuneOpen: textureTunePanel && !textureTunePanel.hidden ? '1' : '0',
@@ -5111,6 +5048,10 @@ function restoreSettings() {
                 const el = document.getElementById('exportWatermark');
                 if (el) el.checked = isOn;
             }
+            if (s.exportBuildPlate != null) {
+                const isOn = (s.exportBuildPlate === true || s.exportBuildPlate === '1' || s.exportBuildPlate === 1);
+                if (exportBuildPlateEl) exportBuildPlateEl.checked = isOn;
+            }
 
             // Restore persisted export framing (used by preview/export and crop mode).
             if (s.exportCamDist != null) {
@@ -5200,6 +5141,7 @@ function restoreSettings() {
             uploadDefaultAction = s.uploadDefaultAction;
         }
         if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
+        if (exportBuildPlateEl && s.exportBuildPlate == null) exportBuildPlateEl.checked = buildPlateEnabled;
         if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
         if (s.activeBgPreset) activeBgPreset = s.activeBgPreset;
@@ -6673,6 +6615,9 @@ syncExportQualitySliderFromSelect();
 if (exportGridEl) {
     exportGridEl.checked = rulerLinesVisible;
 }
+if (exportBuildPlateEl) {
+    exportBuildPlateEl.checked = buildPlateEnabled;
+}
 
 document.getElementById('exportQuality')?.addEventListener('change', () => {
     syncExportQualitySliderFromSelect();
@@ -6693,6 +6638,10 @@ exportGridEl?.addEventListener('change', () => {
     rulerLinesVisible = !!exportGridEl.checked;
     updateRulerHUD();
     updateLiveRulerOverlay();
+    refreshExportPreviewNow();
+    saveSettings();
+});
+exportBuildPlateEl?.addEventListener('change', () => {
     refreshExportPreviewNow();
     saveSettings();
 });
@@ -6728,6 +6677,7 @@ const EXPORT_OPTION_VISIBILITY = {
         gifDither: true,
         exportBgColor: true,
         exportGrid: true,
+        exportBuildPlate: true,
         exportWatermark: true,
     },
     mp4: {
@@ -6735,6 +6685,7 @@ const EXPORT_OPTION_VISIBILITY = {
         gifDither: false,
         exportBgColor: true,
         exportGrid: true,
+        exportBuildPlate: true,
         exportWatermark: true,
     },
     png: {
@@ -6742,6 +6693,7 @@ const EXPORT_OPTION_VISIBILITY = {
         gifDither: false,
         exportBgColor: true,
         exportGrid: true,
+        exportBuildPlate: true,
         exportWatermark: true,
     },
     jpg: {
@@ -6749,6 +6701,7 @@ const EXPORT_OPTION_VISIBILITY = {
         gifDither: false,
         exportBgColor: true,
         exportGrid: true,
+        exportBuildPlate: true,
         exportWatermark: true,
     },
 };
@@ -6881,6 +6834,7 @@ function renderCollapsedExportSummary(fmt) {
     const qualityValue = document.getElementById('exportQuality')?.value || 'std';
     const speedValue = String(parseInt(speedSlider?.value || String(SPEED_DEFAULT), 10) || SPEED_DEFAULT);
     const gridChecked = !!exportGridEl?.checked;
+    const buildPlateChecked = !!(exportBuildPlateEl ? exportBuildPlateEl.checked : buildPlateEnabled);
     const bgChecked = !!exportBgColorEl?.checked;
     const gifLoopChecked = !!document.getElementById('gifLoop')?.checked;
     const gifDitherChecked = !!document.getElementById('gifDither')?.checked;
@@ -6927,6 +6881,10 @@ function renderCollapsedExportSummary(fmt) {
             <span>Background</span>
             <input type="checkbox" data-export-review="bg"${bgChecked ? ' checked' : ''}>
         </label>
+        <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
+            <span>Build Plate</span>
+            <input type="checkbox" data-export-review="build-plate"${buildPlateChecked ? ' checked' : ''}>
+        </label>
         ${gifExtras}
         ${jpgExtra}
     `;
@@ -6968,6 +6926,13 @@ function renderCollapsedExportSummary(fmt) {
         if (!exportBgColorEl) return;
         exportBgColorEl.checked = !!bgCheck.checked;
         exportBgColorEl.dispatchEvent(new Event('change'));
+    });
+
+    const buildPlateCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="build-plate"]');
+    buildPlateCheck?.addEventListener('change', () => {
+        if (!exportBuildPlateEl) return;
+        exportBuildPlateEl.checked = !!buildPlateCheck.checked;
+        exportBuildPlateEl.dispatchEvent(new Event('change'));
     });
 
     const gifLoopCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="gif-loop"]');
@@ -7353,6 +7318,7 @@ function updateCardResetButtonStates() {
         || !!document.getElementById('gifDither')?.checked
         || !!(exportBgColorEl && !exportBgColorEl.checked)
         || !!(exportGridEl && !exportGridEl.checked)
+        || !!(exportBuildPlateEl && !exportBuildPlateEl.checked)
         || !!document.getElementById('exportWatermark')?.checked
         || (exportMotionModeEl?.value || 'spin') !== 'spin'
         || parseInt(exportMotionSpeedEl?.value || String(SPEED_DEFAULT), 10) !== SPEED_DEFAULT
@@ -7471,6 +7437,8 @@ btnResetExportCard?.addEventListener('click', () => {
     exportBgColorEl?.dispatchEvent(new Event('change'));
     exportGridEl && (exportGridEl.checked = true);
     exportGridEl?.dispatchEvent(new Event('change'));
+    exportBuildPlateEl && (exportBuildPlateEl.checked = true);
+    exportBuildPlateEl?.dispatchEvent(new Event('change'));
     document.getElementById('exportWatermark') && (document.getElementById('exportWatermark').checked = false);
     if (exportMotionModeEl) {
         exportMotionModeEl.value = 'spin';
@@ -7530,6 +7498,7 @@ buildPlateColorPickerEl?.addEventListener('input', updateCardResetButtonStates);
     'gifDither',
     'exportBgColor',
     'exportGrid',
+    'exportBuildPlate',
     'exportWatermark',
     'jpegQuality',
 ].forEach((id) => {
@@ -8615,9 +8584,6 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     const savedCamPos = camera.position.clone();
     const savedUp = camera.up.clone();
     const savedTarget = controls?.target ? controls.target.clone() : new THREE.Vector3(0, 0, 0);
-    const savedBg = scene.background;
-    const savedClearColor = renderer.getClearColor(new THREE.Color());
-    const savedClearAlpha = renderer.getClearAlpha();
 
     const { target, dist, elev, az } = getOrbitFrameState();
     const exportDist = (exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
@@ -8640,14 +8606,13 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     camera.zoom = exportZoom;
     setCameraFromOrbitState(camera, target, exportDist, exportElev, az);
     camera.updateProjectionMatrix();
-
-    if (transparent) {
-        scene.background = null;
-        renderer.setClearColor(0x000000, 0);
+    const restoreExportScene = applyExportSceneForRender({ forceTransparent: transparent });
+    try {
+        syncLightRig();
+        renderer.render(scene, camera);
+    } finally {
+        restoreExportScene();
     }
-
-    syncLightRig();
-    renderer.render(scene, camera);
 
     // Synchronously copy the export frame to an offscreen canvas BEFORE any
     // await, so the main renderer/camera can be restored within the same JS
@@ -8662,11 +8627,7 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     drawRulerOverlay(outCtx, W, H, camera);
     drawWatermark(outCtx, W, H);
 
-    // Restore scene + camera exactly as the user had them, synchronously.
-    if (transparent) {
-        scene.background = savedBg;
-        renderer.setClearColor(savedClearColor, savedClearAlpha);
-    }
+    // Restore camera exactly as the user had it, synchronously.
     camera.position.copy(savedCamPos);
     camera.up.copy(savedUp);
     camera.aspect = savedAspect;
@@ -8715,14 +8676,7 @@ async function captureFrames(n, dims = null, transparent = false) {
     const savedAspect = camera.aspect;
     const savedZoom = camera.zoom;
     camera.aspect = W / H;
-
-    const savedBg = scene.background;
-    const savedClearColor = renderer.getClearColor(new THREE.Color());
-    const savedClearAlpha = renderer.getClearAlpha();
-    if (transparent) {
-        scene.background = null;
-        renderer.setClearColor(0x000000, 0);
-    }
+    const restoreExportScene = applyExportSceneForRender({ forceTransparent: transparent });
 
     const { target, dist, elev, az } = getOrbitFrameState();
     // Use stored export framing only in crop mode; otherwise mirror the live viewport.
@@ -8754,48 +8708,47 @@ async function captureFrames(n, dims = null, transparent = false) {
     outCtx.imageSmoothingEnabled = true;
     outCtx.imageSmoothingQuality = 'high';
 
-    for (let i = 0; i < n; i++) {
-        if (isTilt) {
-            mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
-            // Keep camera at export distance, same azimuth/elevation as starting position
-            setCameraFromOrbitState(camera, target, exportDist, exportElev, az);
-        } else if (isWobbleArc) {
-            // Wobble arc: mesh tilts AND camera arcs (< 360° spin range)
-            mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
-            const el = Math.min(baseEl, MAX_EL);
-            const azimuth = az + Math.sin(2 * Math.PI * i / n) * wobbleSpinSwing;
-            setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
-        } else if (isWobble) {
-            // Wobble full spin: mesh tilts AND camera spins 360°
-            mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
-            const azimuth = az + spinSign * (2 * Math.PI * i) / n;
-            setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
-        } else if (isSpinLimited) {
-            const el = Math.min(baseEl, MAX_EL);
-            const azimuth = az + Math.sin(2 * Math.PI * i / n) * tiltSwing;
-            setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
-        } else {
-            const azimuth = az + spinSign * (2 * Math.PI * i) / n;
-            setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
+    try {
+        for (let i = 0; i < n; i++) {
+            if (isTilt) {
+                mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
+                // Keep camera at export distance, same azimuth/elevation as starting position
+                setCameraFromOrbitState(camera, target, exportDist, exportElev, az);
+            } else if (isWobbleArc) {
+                // Wobble arc: mesh tilts AND camera arcs (< 360° spin range)
+                mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
+                const el = Math.min(baseEl, MAX_EL);
+                const azimuth = az + Math.sin(2 * Math.PI * i / n) * wobbleSpinSwing;
+                setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
+            } else if (isWobble) {
+                // Wobble full spin: mesh tilts AND camera spins 360°
+                mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * i / n) * tiltSwing;
+                const azimuth = az + spinSign * (2 * Math.PI * i) / n;
+                setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
+            } else if (isSpinLimited) {
+                const el = Math.min(baseEl, MAX_EL);
+                const azimuth = az + Math.sin(2 * Math.PI * i / n) * tiltSwing;
+                setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
+            } else {
+                const azimuth = az + spinSign * (2 * Math.PI * i) / n;
+                setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
+            }
+
+            syncLightRig();
+            renderer.render(scene, camera);
+            outCtx.clearRect(0, 0, W, H);
+            outCtx.drawImage(canvas, 0, 0, W, H);
+            drawRulerOverlay(outCtx, W, H, camera);
+            drawWatermark(outCtx, W, H);
+            frames.push(new Uint8ClampedArray(outCtx.getImageData(0, 0, W, H).data));
+
+            if (i % 12 === 0) {
+                setAnimStatus(`Capturing… ${i + 1} / ${n}`, i + 1, n);
+                await new Promise(r => setTimeout(r, 0));
+            }
         }
-
-        syncLightRig();
-        renderer.render(scene, camera);
-        outCtx.clearRect(0, 0, W, H);
-        outCtx.drawImage(canvas, 0, 0, W, H);
-        drawRulerOverlay(outCtx, W, H, camera);
-        drawWatermark(outCtx, W, H);
-        frames.push(new Uint8ClampedArray(outCtx.getImageData(0, 0, W, H).data));
-
-        if (i % 12 === 0) {
-            setAnimStatus(`Capturing… ${i + 1} / ${n}`, i + 1, n);
-            await new Promise(r => setTimeout(r, 0));
-        }
-    }
-
-    if (transparent) {
-        scene.background = savedBg;
-        renderer.setClearColor(savedClearColor, savedClearAlpha);
+    } finally {
+        restoreExportScene();
     }
     if (mesh) mesh.rotation.x = savedMeshRx;
     camera.position.copy(savedCamPos);
@@ -9001,53 +8954,59 @@ btnVideo.addEventListener('click', async () => {
         const outCtx = out.getContext('2d', { willReadFrequently: true });
         outCtx.imageSmoothingEnabled = true;
         outCtx.imageSmoothingQuality = 'high';
+        const transparentVideo = !(exportBgColorEl?.checked ?? true);
+        const restoreExportScene = applyExportSceneForRender({ forceTransparent: transparentVideo });
 
-        for (let f = 0; f < totalFrames; f++) {
-            if (isTilt) {
-                mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
-                setCameraFromOrbitState(camera, target, exportDist, exportElev, az);
-            } else if (isWobbleArc) {
-                // Wobble arc: mesh tilts AND camera arcs
-                mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
-                const el = Math.min(baseEl, MAX_EL);
-                const azimuth = az + Math.sin(2 * Math.PI * f / n) * wobbleSpinSwing;
-                setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
-            } else if (isWobble) {
-                // Wobble full spin: mesh tilts AND camera spins 360°
-                mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
-                const azimuth = az + spinSign * (2 * Math.PI * f) / n;
-                setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
-            } else if (isSpinLimited) {
-                const el = Math.min(baseEl, MAX_EL);
-                const azimuth = az + Math.sin(2 * Math.PI * f / n) * tiltSwing;
-                setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
-            } else {
-                const azimuth = az + spinSign * (2 * Math.PI * f) / n;
-                setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
+        try {
+            for (let f = 0; f < totalFrames; f++) {
+                if (isTilt) {
+                    mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
+                    setCameraFromOrbitState(camera, target, exportDist, exportElev, az);
+                } else if (isWobbleArc) {
+                    // Wobble arc: mesh tilts AND camera arcs
+                    mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
+                    const el = Math.min(baseEl, MAX_EL);
+                    const azimuth = az + Math.sin(2 * Math.PI * f / n) * wobbleSpinSwing;
+                    setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
+                } else if (isWobble) {
+                    // Wobble full spin: mesh tilts AND camera spins 360°
+                    mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
+                    const azimuth = az + spinSign * (2 * Math.PI * f) / n;
+                    setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
+                } else if (isSpinLimited) {
+                    const el = Math.min(baseEl, MAX_EL);
+                    const azimuth = az + Math.sin(2 * Math.PI * f / n) * tiltSwing;
+                    setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
+                } else {
+                    const azimuth = az + spinSign * (2 * Math.PI * f) / n;
+                    setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
+                }
+
+                syncLightRig();
+                renderer.render(scene, camera);
+                outCtx.clearRect(0, 0, W, H);
+                outCtx.drawImage(canvas, 0, 0, W, H);
+                drawRulerOverlay(outCtx, W, H, camera);
+
+                const timestamp = Math.round(f * (1_000_000 / fps));
+                const frame = new VideoFrame(out, { timestamp });
+                if (encoderError) { frame.close(); throw encoderError; }
+                if (encoder.state === 'closed') { frame.close(); throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.'); }
+                encoder.encode(frame, { keyFrame: f % 30 === 0 });
+                frame.close();
+
+                if (f % 12 === 0) {
+                    setAnimStatus(`Encoding… ${f + 1} / ${totalFrames}`, f + 1, totalFrames);
+                    await new Promise(r => setTimeout(r, 0));
+                }
             }
 
-            syncLightRig();
-            renderer.render(scene, camera);
-            outCtx.clearRect(0, 0, W, H);
-            outCtx.drawImage(canvas, 0, 0, W, H);
-            drawRulerOverlay(outCtx, W, H, camera);
-
-            const timestamp = Math.round(f * (1_000_000 / fps));
-            const frame = new VideoFrame(out, { timestamp });
-            if (encoderError) { frame.close(); throw encoderError; }
-            if (encoder.state === 'closed') { frame.close(); throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.'); }
-            encoder.encode(frame, { keyFrame: f % 30 === 0 });
-            frame.close();
-
-            if (f % 12 === 0) {
-                setAnimStatus(`Encoding… ${f + 1} / ${totalFrames}`, f + 1, totalFrames);
-                await new Promise(r => setTimeout(r, 0));
-            }
+            await encoder.flush();
+            if (encoderError) throw encoderError;
+            muxer.finalize();
+        } finally {
+            restoreExportScene();
         }
-
-        await encoder.flush();
-        if (encoderError) throw encoderError;
-        muxer.finalize();
 
         if (mesh) mesh.rotation.x = savedMeshRx;
         camera.position.copy(savedCamPos);

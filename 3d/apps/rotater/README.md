@@ -69,6 +69,7 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 - **Reset camera** button (⟳, D-pad center) — recenters the model in the export frame
 - **Export workspace framing** — entering Export enables the crop/framing workspace on the main viewer
   - The viewer dims and blurs outside the crop frame
+  - Export quick options (`Background`, `Grid`, `Build Plate`) apply directly to the live export workspace viewport while framing
   - Clicking outside the crop frame closes Export workspace
   - Dimension presets appear beside the viewer for one-click framing changes
   - During export workspace, `Pause` and `Close` actions are in the same bottom bar as the D-pad (to the right of the D-pad) so controls stay in one place
@@ -183,6 +184,7 @@ The Preview thumbnail and estimate label update immediately when you change form
 |---|---|
 | Background | Toggle background color on/off for export preview and compatible outputs |
 | Grid | Toggle ruler grid visibility in export preview/output |
+| Build Plate | Toggle build plate visibility in export preview/output |
 
 #### GIF options
 
