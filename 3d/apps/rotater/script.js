@@ -4214,24 +4214,6 @@ function drawMeasurement(ctx, start, end, text, center, options = {}) {
     drawMeasurementLabel(ctx, text, labelPos, align);
 }
 
-function drawWatermark(ctx, W, H) {
-    if (!document.getElementById('exportWatermark')?.checked) return;
-    const margin = Math.round(Math.max(10, W * 0.022));
-    const size = Math.round(Math.max(11, W * 0.028));
-    ctx.save();
-    ctx.globalAlpha = 0.52;
-    ctx.font = `700 ${size}px "Source Sans 3", -apple-system, BlinkMacSystemFont, sans-serif`;
-    ctx.textBaseline = 'alphabetic';
-    ctx.textAlign = 'right';
-    ctx.shadowColor = 'rgba(0,0,0,0.55)';
-    ctx.shadowBlur = Math.round(size * 0.55);
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('rotater', W - margin, H - margin);
-    ctx.restore();
-}
-
 function drawRulerOverlay(ctx, width, height, cam, options = {}) {
     if (!RULER_DYNAMIC_LINES_ENABLED) return;
     if (!rulerEnabled || !rulerLinesVisible || !modelDims) return;
@@ -4835,7 +4817,6 @@ function saveSettings() {
             exportTransparent: document.getElementById('exportTransparent')?.checked ? '1' : '0',
             gifDither: document.getElementById('gifDither')?.checked ? '1' : '0',
             exportBuildPlate: document.getElementById('exportBuildPlate')?.checked ? '1' : '0',
-            exportWatermark: document.getElementById('exportWatermark')?.checked ? '1' : '0',
             jpegQuality: document.getElementById('jpegQuality')?.value ?? '90',
             textureTuneOpen: textureTunePanel && !textureTunePanel.hidden ? '1' : '0',
             textureTuneLight: String(textureTuneState.light),
@@ -5056,11 +5037,6 @@ function restoreSettings() {
             if (s.gifDither != null) {
                 const isOn = (s.gifDither === true || s.gifDither === '1' || s.gifDither === 1);
                 const el = document.getElementById('gifDither');
-                if (el) el.checked = isOn;
-            }
-            if (s.exportWatermark != null) {
-                const isOn = (s.exportWatermark === true || s.exportWatermark === '1' || s.exportWatermark === 1);
-                const el = document.getElementById('exportWatermark');
                 if (el) el.checked = isOn;
             }
             if (s.exportBuildPlate != null) {
@@ -6693,7 +6669,6 @@ const EXPORT_OPTION_VISIBILITY = {
         exportBgColor: true,
         exportGrid: true,
         exportBuildPlate: true,
-        exportWatermark: true,
     },
     mp4: {
         gifLoop: false,
@@ -6701,7 +6676,6 @@ const EXPORT_OPTION_VISIBILITY = {
         exportBgColor: true,
         exportGrid: true,
         exportBuildPlate: true,
-        exportWatermark: true,
     },
     png: {
         gifLoop: false,
@@ -6709,7 +6683,6 @@ const EXPORT_OPTION_VISIBILITY = {
         exportBgColor: true,
         exportGrid: true,
         exportBuildPlate: true,
-        exportWatermark: true,
     },
     jpg: {
         gifLoop: false,
@@ -6717,7 +6690,6 @@ const EXPORT_OPTION_VISIBILITY = {
         exportBgColor: true,
         exportGrid: true,
         exportBuildPlate: true,
-        exportWatermark: true,
     },
 };
 
@@ -7335,7 +7307,6 @@ function updateCardResetButtonStates() {
         || !!(exportBgColorEl && !exportBgColorEl.checked)
         || !!(exportGridEl && !exportGridEl.checked)
         || !!(exportBuildPlateEl && !exportBuildPlateEl.checked)
-        || !!document.getElementById('exportWatermark')?.checked
         || (exportMotionModeEl?.value || 'spin') !== 'spin'
         || parseInt(exportMotionSpeedEl?.value || String(SPEED_DEFAULT), 10) !== SPEED_DEFAULT
         || parseInt(exportMotionRangeEl?.value || '360', 10) !== 360
@@ -7455,7 +7426,6 @@ btnResetExportCard?.addEventListener('click', () => {
     exportGridEl?.dispatchEvent(new Event('change'));
     exportBuildPlateEl && (exportBuildPlateEl.checked = true);
     exportBuildPlateEl?.dispatchEvent(new Event('change'));
-    document.getElementById('exportWatermark') && (document.getElementById('exportWatermark').checked = false);
     if (exportMotionModeEl) {
         exportMotionModeEl.value = 'spin';
         exportMotionModeEl.dispatchEvent(new Event('change'));
@@ -7515,7 +7485,6 @@ buildPlateColorPickerEl?.addEventListener('input', updateCardResetButtonStates);
     'exportBgColor',
     'exportGrid',
     'exportBuildPlate',
-    'exportWatermark',
     'jpegQuality',
 ].forEach((id) => {
     const input = document.getElementById(id);
@@ -8641,7 +8610,6 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     outCtx.imageSmoothingQuality = 'high';
     outCtx.drawImage(canvas, 0, 0, W, H); // downscale 2× → SSAA
     drawRulerOverlay(outCtx, W, H, camera);
-    drawWatermark(outCtx, W, H);
 
     // Restore camera exactly as the user had it, synchronously.
     camera.position.copy(savedCamPos);
@@ -8755,7 +8723,6 @@ async function captureFrames(n, dims = null, transparent = false) {
             outCtx.clearRect(0, 0, W, H);
             outCtx.drawImage(canvas, 0, 0, W, H);
             drawRulerOverlay(outCtx, W, H, camera);
-            drawWatermark(outCtx, W, H);
             frames.push(new Uint8ClampedArray(outCtx.getImageData(0, 0, W, H).data));
 
             if (i % 12 === 0) {

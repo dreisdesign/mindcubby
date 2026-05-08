@@ -79,6 +79,7 @@ This file is intentionally split into two buckets:
 
 ### Optional Product Ideas
 - Optional filename label burned into export output.
+- Revisit export watermark feature (deferred): redesign and re-implement only after behavior is validated across GIF/MP4/PNG/JPEG.
 - Single-click full-screen canvas expand.
 - Batch export presets for repeated listing generation.
 - Preset gallery with save-as modal.
