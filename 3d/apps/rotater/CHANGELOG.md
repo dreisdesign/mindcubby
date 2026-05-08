@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar export entry placement** — desktop export entry now sits beside `Upload STL` in the sidebar brand row so export starts from the primary left-panel workflow
 
 ### Fixed
+- **Surface preset startup regression** — closed the Background preset renderer correctly so the Surface preset row initializes on load again; mobile Info card build/date labels now stay aligned with the shared app build constants
 - **Auto brightness slider visibility** — the Background `Shade` slider now hides when `Auto brightness` is enabled; Surface `Auto brightness` now follows the same interaction pattern
 - **Undo toast noise** — `Model updated` undo toast now appears only for batch edits instead of single-part model tweaks
 - **Export workspace preview parity** — in export framing workspace, `Background`, `Grid`, and `Build Plate` quick options now apply directly to the live export viewport and to exported output, restoring parity with prior mini-preview behavior

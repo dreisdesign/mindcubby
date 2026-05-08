@@ -9921,6 +9921,10 @@ function renderBgPresets() {
         bgPick._presetListenerAdded = true;
     }
 
+    requestAnimationFrame(updateBgSelection);
+
+}
+
 
 function renderBuildPlatePresets() {
     const bar = document.getElementById('buildPlatePresetsBar');
@@ -10007,8 +10011,6 @@ function renderBuildPlatePresets() {
     }
 
     requestAnimationFrame(updateBuildPlateSelection);
-}
-    requestAnimationFrame(updateBgSelection);
 }
 
 

@@ -39,6 +39,18 @@
         }
     </style>
     <script>const ROTATER_BUILD = '2.1.45';
+        const ROTATER_BUILD_DATE = 'May 8, 2026';
+        const syncBuildInfoMeta = () => {
+            const versionEl = document.getElementById('infoBuildVersion');
+            const dateEl = document.getElementById('infoBuildDate');
+            if (versionEl) versionEl.textContent = `Build ${ROTATER_BUILD}`;
+            if (dateEl) dateEl.textContent = `Updated ${ROTATER_BUILD_DATE}`;
+        };
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', syncBuildInfoMeta, { once: true });
+        } else {
+            syncBuildInfoMeta();
+        }
         const ROTATER_DEFAULT_QUERY = 'c=b4aed6&b=8d8ab7&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
         try {
             document.documentElement.classList.add('booting');
@@ -1013,8 +1025,8 @@
                     <p class="info-description">View and export rotating 3D STL models as animated GIF, MP4, or PNG —
                         entirely in your browser. Your files never leave your device.</p>
                     <div class="info-meta">
-                        <span>Version 1.0.0</span>
-                        <span>Updated April 16, 2026</span>
+                        <span id="infoBuildVersion">Build 2.1.45</span>
+                        <span id="infoBuildDate">Updated May 8, 2026</span>
                     </div>
                     <div class="settings-divider"></div>
                     <span class="info-made-by">Made by @mindcubby</span>
