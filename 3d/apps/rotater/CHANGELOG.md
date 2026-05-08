@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multipart bulk edit MVP** — Model parts menu now includes per-row checkboxes plus a bulk action banner to apply active `Color`, `Shade`, or `Finish` values to checked parts
 
 ### Changed
+- **Manual crop close cleanup** — removed the in-frame top-right crop close button to avoid interfering with crop-corner dragging; export close now stays in the Export panel action row
+- **Export action row cleanup** — removed legacy in-canvas crop `Keep` and old D-pad `Close`; Export panel now provides an inline `Close` button beside `Export`
+- **Mobile top controls alignment** — mobile/narrow preview header now prioritizes Upload + Export actions, removes the filename chip from that row, and adds a compact quick-close/reset action beside Export for cleaner parity with desktop flow
+- **Info entry location** — `About Rotater` access moved to the App Settings card action row (bottom-right)
+- **Ruler HUD compact unit switch** — replaced the wider `mm / Imperial` hint-style switch with a compact unit toggle button to save bottom-bar space
 - **Surface card hierarchy + presets** — renamed the `Build Plate` card to `Surface`, kept `Grid` and `Build Plate` as peer toggles, and replaced the old plate color button with Background-style `White`, `Black`, `Model Sync`, and `Custom` thumb presets plus a matching multipart sync-source selector
 - **Watermark quick option temporarily removed** — removed the non-functional Export `Watermark` toggle and watermark compositing path for now; this will be revisited in a future iteration
 - **Export workspace consolidation (phase 1)** — Export now enters a shared framing workspace based on crop mode, using the main viewer as the active preview instead of relying on a separate duplicate preview workflow
@@ -39,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar export entry placement** — desktop export entry now sits beside `Upload STL` in the sidebar brand row so export starts from the primary left-panel workflow
 
 ### Fixed
+- **D-pad horizontal centering** — camera D-pad now stays centered in the preview control bar instead of shifting with ruler width
 - **Mobile preview order and Info access** — on narrow widths the preview now sits above the control panel, the duplicate canvas logo/header are hidden, and the Info card is reachable from the sidebar action row
 - **Desktop load card overlap** — Effects panel no longer force-renders while hidden in desktop layout, preventing Lighting/Animation cards from stacking over Theme cards during startup/tab initialization
 - **Surface auto-brightness visibility sync** — Surface `Shade` row now updates immediately on toggle and initial UI wiring so it stays hidden whenever `Auto brightness` is enabled

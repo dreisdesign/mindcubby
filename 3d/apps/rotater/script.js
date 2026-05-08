@@ -3342,11 +3342,16 @@ function loadPreparedGeometry(geo, name) {
     });
 
     const clearBtn = document.getElementById('btnClearModel');
+    const clearBtnQuick = document.getElementById('btnClearModelQuick');
     if (clearBtn) {
         const isDemo = (currentFileName === '3dbenchy');
         const clearLabel = isDemo ? 'Load your own model' : 'Reset to Benchy';
         clearBtn.title = clearLabel;
         clearBtn.setAttribute('aria-label', clearLabel);
+        if (clearBtnQuick) {
+            clearBtnQuick.title = clearLabel;
+            clearBtnQuick.setAttribute('aria-label', clearLabel);
+        }
     }
     syncFileChipMultipartUI();
     rebuildFileChipPartsMenu();
@@ -4055,7 +4060,6 @@ function drawExportFrame() {
     ctx.clearRect(0, 0, w, h);
     drawRulerOverlay(ctx, w, h, camera);
 
-    const cc = document.getElementById('cropControls');
     if (exportFrameEnabled) {
         // Draw dim overlay directly on canvas — avoids hard CSS edges from backdrop-filter divs
         ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
@@ -4075,11 +4079,6 @@ function drawExportFrame() {
         ctx.moveTo(sx + sw - cm, sy + sh); ctx.lineTo(sx + sw, sy + sh); ctx.lineTo(sx + sw, sy + sh - cm); // BR
         ctx.stroke();
 
-        // Position the crop controls div to match the crop frame
-        if (cc) {
-            cc.hidden = false;
-            cc.removeAttribute('aria-hidden');
-        }
         // Position the 4 transparent click-capture divs over the dim regions
         _cropSx = sx; _cropSy = sy; _cropSw = sw; _cropSh = sh;
         [['frameDimTop', 0, 0, w, sy],
@@ -4106,7 +4105,6 @@ function drawExportFrame() {
     } else {
         // Frame off: just clear — no hint brackets
         ctx.clearRect(0, 0, w, h);
-        if (cc) { cc.hidden = true; cc.setAttribute('aria-hidden', 'true'); }
         updateCropDimensionsDock();
         document.documentElement.classList.remove('crop-mode');
     }
@@ -4117,8 +4115,6 @@ function clearExportFrame() {
     const fc = document.getElementById('exportFrameCanvas');
     if (fc) fc.getContext('2d').clearRect(0, 0, fc.width, fc.height);
     _cropSx = 0; _cropSy = 0; _cropSw = 0; _cropSh = 0;
-    const cc = document.getElementById('cropControls');
-    if (cc) { cc.hidden = true; cc.setAttribute('aria-hidden', 'true'); }
     updateCropDimensionsDock();
     document.documentElement.classList.remove('crop-mode');
 }
@@ -4131,11 +4127,10 @@ function updateRulerHUD() {
     document.documentElement.classList.toggle('ruler-visible', !!modelDims && !!rulerEnabled);
     if (!modelDims) return;
     const unitEl = document.getElementById('rulerUnitVal');
-    const unitHint = hud.querySelector('.ruler-unit-hint');
+    const unitToggle = document.getElementById('rulerUnitToggle');
     if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';
     const next = (rulerUnit === 'imperial') ? 'Metric' : 'Imperial';
-    if (unitHint) unitHint.textContent = next;
-    hud.setAttribute('aria-label', `Switch to ${next.toLowerCase()} units`);
+    if (unitToggle) unitToggle.setAttribute('aria-label', `Switch to ${next.toLowerCase()} units`);
     document.getElementById('rulerW').textContent = formatRulerValue(modelDims.w);
     document.getElementById('rulerD').textContent = formatRulerValue(modelDims.d);
     document.getElementById('rulerH').textContent = formatRulerValue(modelDims.h);
@@ -7586,7 +7581,7 @@ document.querySelector('.orbit-hint-dismiss')?.addEventListener('click', () => {
     try { localStorage.setItem('rotater_hintDismissed', '1'); } catch (e) { }
 });
 
-document.getElementById('btnClearModel').addEventListener('click', async (e) => {
+const handleClearModelRequest = async (e) => {
     e.stopPropagation();
     e.preventDefault();
     // If currently showing benchy (no user file in IDB), X = replace (open picker)
@@ -7596,7 +7591,10 @@ document.getElementById('btnClearModel').addEventListener('click', async (e) => 
     }
     if (!confirm('Reset to 3D Benchy?')) return;
     await loadBenchyModel();
-});
+};
+
+document.getElementById('btnClearModel')?.addEventListener('click', handleClearModelRequest);
+document.getElementById('btnClearModelQuick')?.addEventListener('click', handleClearModelRequest);
 
 async function loadBenchyModel({ clearStoredModel = true } = {}) {
     try {
@@ -8222,14 +8220,11 @@ try {
     });
 });
 
-document.getElementById('btnExportClose')?.addEventListener('click', () => {
-    closeExportWorkspace();
+document.getElementById('btnOpenExportModalCanvas')?.addEventListener('click', () => {
+    openExportWorkspace();
 });
 
-// Fallback for stale/partially-cached tabs where direct binding may mismatch the live node.
-document.addEventListener('click', (e) => {
-    const target = e.target instanceof Element ? e.target.closest('#btnExportClose') : null;
-    if (!target) return;
+document.getElementById('btnExportWorkspaceClose')?.addEventListener('click', () => {
     closeExportWorkspace();
 });
 
@@ -8295,7 +8290,7 @@ btnDownloadPackage?.addEventListener('click', async () => {
 });
 
 // ── Info overlay ──────────────────────────────────────────────────────────────
-['btnInfo', 'btnInfoSidebar'].forEach((id) => {
+['btnInfoAppSettings'].forEach((id) => {
     document.getElementById(id)?.addEventListener('click', () => {
         document.getElementById('infoOverlay').hidden = false;
     });
@@ -8367,8 +8362,6 @@ function confirmCropMode() {
     saveSettings();
 }
 
-document.getElementById('btnCancelCrop').addEventListener('click', cancelCropMode);
-document.getElementById('btnConfirmCrop')?.addEventListener('click', confirmCropMode);
 updateFrameOverlayButtonUI();
 
 canvas?.addEventListener('click', (e) => {
@@ -9807,8 +9800,8 @@ if (buildPlateShapeWrapEl) {
     });
 }
 
-const rulerHudEl = document.getElementById('rulerHUD');
-if (rulerHudEl) {
+const rulerUnitToggleEl = document.getElementById('rulerUnitToggle');
+if (rulerUnitToggleEl) {
     const _toggleRulerUnit = () => {
         rulerUnit = (rulerUnit === 'metric') ? 'imperial' : 'metric';
         updateRulerHUD();
@@ -9816,8 +9809,8 @@ if (rulerHudEl) {
         refreshExportPreviewNow();
         saveSettings();
     };
-    rulerHudEl.addEventListener('click', _toggleRulerUnit);
-    rulerHudEl.addEventListener('keydown', (e) => {
+    rulerUnitToggleEl.addEventListener('click', _toggleRulerUnit);
+    rulerUnitToggleEl.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _toggleRulerUnit(); }
     });
 }
