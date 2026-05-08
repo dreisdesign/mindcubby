@@ -336,7 +336,7 @@ const textureTuneLightLockBox = document.getElementById('textureTuneLightLock');
 const textureTuneLightHeightSlider = document.getElementById('textureTuneLightHeight');
 const textureTuneRoughnessSlider = document.getElementById('textureTuneRoughness');
 const textureTuneMetalnessSlider = document.getElementById('textureTuneMetalness');
-const finishModeButtons = Array.from(document.querySelectorAll('.finish-mode-btn'));
+const finishModeButtons = Array.from(document.querySelectorAll('[data-finish-mode]'));
 const textureTuneLightVal = document.getElementById('textureTuneLightVal');
 const textureTuneContrastVal = document.getElementById('textureTuneContrastVal');
 const textureTuneHighlightsVal = document.getElementById('textureTuneHighlightsVal');
@@ -2712,7 +2712,9 @@ function computeBuildPlateShadeColor(baseHex, shadeVal) {
     const hsl = { h: 0, s: 0, l: 0 };
     baseColor.getHSL(hsl);
     const amount = Math.max(0, Math.min(1, Math.abs(Number(shadeVal) || 0) / 100));
-    const span = 0.2;
+    // Keep plate shade clearly visible in the live viewport; 20% was too subtle
+    // under scene lighting and often looked lighter than the selected shade.
+    const span = 0.45;
     if (shadeVal < 0) hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * span * amount);
     else if (shadeVal > 0) hsl.l = Math.max(0, hsl.l * (1 - span * amount));
     baseColor.setHSL(hsl.h, hsl.s, hsl.l);
