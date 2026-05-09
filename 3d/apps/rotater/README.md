@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.55**
+**Version (current workspace): 2.1.56**
 
 Current development note: export and crop now run through one shared workspace on the main viewer. Remaining cleanup focuses on removing older duplicate preview remnants and simplifying export-specific state wiring. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
@@ -23,6 +23,26 @@ If you want to spin up your own instance and override the default colors, camera
 ```javascript
 const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 ```
+
+### Default Logic Tuning (quick reference)
+
+If you want to change startup defaults and card reset behavior in code, these are the main sources of truth:
+
+- `script.js` -> `DEFAULT_SETTINGS_URL`: full URL-based baseline for first-time visitors
+- `index.html` -> `ROTATER_DEFAULT_QUERY`: bootstrap fallback query that is inserted when no query/hash exists
+- `script.js` -> initial state defaults:
+  - `activeBgPreset = 'modelcolor'`
+  - `activeBuildPlatePreset = 'modelcolor'`
+  - `isDynamicBg = true`
+  - `buildPlateAutoBrightnessEnabled = true`
+- `script.js` -> `AUTO_BRIGHTNESS_RULES`:
+  - `background.shade = 0`
+  - `buildPlate.shade = 25`
+- `script.js` -> card reset handlers:
+  - `btnResetBackgroundCard` restores `Model Sync + Auto brightness`
+  - `btnResetBuildPlateCard` restores `Model Sync + Auto brightness`
+
+For full design-token and runtime-default documentation, see `DESIGN-REFERENCE.md`.
 
 ### Loading a model
 

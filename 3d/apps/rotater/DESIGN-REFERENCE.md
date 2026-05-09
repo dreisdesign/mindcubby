@@ -96,6 +96,70 @@ When export `Background` is toggled off, the main export workspace viewport uses
 
 ---
 
+## Runtime Defaults And Logic
+
+This section documents where startup defaults come from and how reset/auto logic is applied at runtime.
+
+### Build metadata and cache-busting
+
+- `index.html`
+	- `ROTATER_BUILD` controls the build shown in the Info panel (`Build x.y.z`)
+	- `ROTATER_BUILD_DATE` controls the displayed update date
+	- `style.css?v=<build>` should be bumped with each build to avoid stale CSS
+
+### Startup defaults (first-time visitors)
+
+Defaults are layered intentionally:
+
+1. `script.js` -> `DEFAULT_SETTINGS_URL`
+2. `index.html` -> `ROTATER_DEFAULT_QUERY` fallback when URL has no query/hash
+3. Runtime state defaults in `script.js` (`active*Preset`, auto toggles, etc.)
+
+Current baseline behavior:
+
+- Background default: `Model Sync`
+- Surface (build plate) default: `Model Sync`
+- Background auto brightness: `on`
+- Surface auto brightness: `on`
+
+### Card reset defaults
+
+- `btnResetBackgroundCard` restores:
+	- preset: `modelcolor`
+	- auto brightness: `on`
+	- shade slider: auto-equivalent baseline
+- `btnResetBuildPlateCard` restores:
+	- preset: `modelcolor`
+	- auto brightness: `on`
+	- shade slider: baseline (`BUILD_PLATE_DEFAULTS.shade`)
+
+### Auto brightness and shade mapping
+
+`AUTO_BRIGHTNESS_RULES` in `script.js` is the tuning point for auto/manual parity:
+
+- `background.shade = 0` (middle snap)
+- `buildPlate.shade = 25` (one snap darker)
+
+Both Background and Surface shade pipelines are now aligned to the same tone function (`computeTonedColor`) so identical snap values produce equivalent color transforms.
+
+When Surface auto brightness is turned off, the manual shade value is set to the auto-equivalent snap (`+25`) so the tooltip and slider reflect the visible state.
+
+### Preset click behavior
+
+- Clicking an already-active preset is a no-op.
+- This prevents accidental toggle-away behavior (for example re-clicking active `Model Sync`).
+
+### Surface color rendering model
+
+To avoid unintended gray casts from lighting/IBL, the build plate uses an unlit material path:
+
+- `THREE.MeshBasicMaterial`
+- `toneMapped: false`
+
+This keeps Surface shade color driven directly by shade logic rather than scene lighting.
+
+---
+
 ## Typography
 
 Source Sans 3 is the only typeface. Size tokens:

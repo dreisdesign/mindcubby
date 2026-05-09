@@ -658,20 +658,46 @@ document.querySelectorAll('input[type="range"]').forEach((slider) => {
 // ── Snap-to-grid enforcement ──────────────────────────────────────────────────
 let fineTuningMode = false;
 
+const AUTO_BRIGHTNESS_RULES = {
+    background: { shade: 0 },
+    buildPlate: { shade: 25 },
+};
+
+function getSliderEffectiveValue(slider) {
+    if (!slider) return 0;
+    const raw = parseFloat(slider.value);
+    if (!Number.isFinite(raw)) return 0;
+    if (fineTuningMode) return raw;
+
+    if (slider.dataset.snapCount) {
+        const n = parseInt(slider.dataset.snapCount, 10) || 5;
+        const min = parseFloat(slider.min);
+        const max = parseFloat(slider.max);
+        let closest = min;
+        let minDist = Infinity;
+        for (let i = 0; i < n; i++) {
+            const pos = min + (i / (n - 1)) * (max - min);
+            const dist = Math.abs(raw - pos);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = pos;
+            }
+        }
+        return Number(closest.toFixed(4));
+    }
+
+    const step = parseFloat(slider.step);
+    if (slider.dataset.immediateSnap === '1' && Number.isFinite(step) && step > 0) {
+        const min = parseFloat(slider.min);
+        return Number((min + Math.round((raw - min) / step) * step).toFixed(Math.min((String(step).split('.')[1] || '').length, 6)));
+    }
+
+    return raw;
+}
+
 function snapToGrid(slider) {
     if (fineTuningMode) return;
-    const n = parseInt(slider.dataset.snapCount, 10) || 5;
-    const min = parseFloat(slider.min);
-    const max = parseFloat(slider.max);
-    const v = parseFloat(slider.value);
-    let closest = min;
-    let minDist = Infinity;
-    for (let i = 0; i < n; i++) {
-        const pos = min + (i / (n - 1)) * (max - min);
-        const d = Math.abs(v - pos);
-        if (d < minDist) { minDist = d; closest = pos; }
-    }
-    const snapped = Number(closest.toFixed(4));
+    const snapped = getSliderEffectiveValue(slider);
     if (parseFloat(slider.value) !== snapped) slider.value = String(snapped);
 }
 
@@ -930,7 +956,7 @@ function initThree() {
     scene.background = null;
 
     {
-        const tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
+        const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
         const c = computeTonedColor(bgPick.value, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
@@ -983,23 +1009,21 @@ function initThree() {
         // Keep ground shadows visible without depth-occluding the ruler grid.
         shadowCatcher.material.depthWrite = false;
     }
-    shadowCatcher.renderOrder = -2;
+    shadowCatcher.renderOrder = -1;
     shadowCatcher.visible = false;
     scene.add(shadowCatcher);
 
     buildPlateMesh = new THREE.Mesh(
         createBuildPlateGeometry(buildPlateShape),
-        new THREE.MeshStandardMaterial({
+        new THREE.MeshBasicMaterial({
             color: 0xffffff,
-            roughness: 0.96,
-            metalness: 0.0,
             side: THREE.DoubleSide,
-            shadowSide: THREE.FrontSide,
+            toneMapped: false,
         })
     );
     buildPlateMesh.userData.shape = normalizeBuildPlateShape(buildPlateShape);
     buildPlateMesh.rotation.x = -Math.PI / 2;
-    buildPlateMesh.receiveShadow = true;
+    buildPlateMesh.receiveShadow = false;
     buildPlateMesh.castShadow = false;
     buildPlateMesh.visible = false;
     buildPlateMesh.renderOrder = -2;
@@ -1220,7 +1244,7 @@ function updateBuildPlateMaterial() {
     const shade = Math.max(-100, Math.min(100, Number(buildPlateShade) || 0));
     const baseHex = getActiveBuildPlateBaseColor();
     const toned = buildPlateAutoBrightnessEnabled
-        ? computeAutoBrightnessColor(baseHex)
+        ? computeBuildPlateAutoBrightnessColor(baseHex)
         : computeBuildPlateShadeColor(baseHex, shade);
     buildPlateShape = normalizeBuildPlateShape(buildPlateShape);
     buildPlateFinish = (buildPlateFinish === 'matte' || buildPlateFinish === 'gloss') ? buildPlateFinish : 'satin';
@@ -1228,21 +1252,6 @@ function updateBuildPlateMaterial() {
     if (buildPlateMesh && buildPlateMesh.material) {
         syncBuildPlateShapeMesh();
         buildPlateMesh.material.color.set(toned);
-
-        if (buildPlateFinish === 'matte') {
-            buildPlateMesh.material.roughness = 0.98;
-            buildPlateMesh.material.metalness = 0.02;
-            buildPlateMesh.material.envMapIntensity = 0.16;
-        } else if (buildPlateFinish === 'gloss') {
-            buildPlateMesh.material.roughness = 0.26;
-            buildPlateMesh.material.metalness = 0.52;
-            buildPlateMesh.material.envMapIntensity = 0.94;
-        } else {
-            buildPlateMesh.material.roughness = 0.72;
-            buildPlateMesh.material.metalness = 0.22;
-            buildPlateMesh.material.envMapIntensity = 0.56;
-        }
-        buildPlateMesh.material.shadowSide = THREE.FrontSide;
 
         const previousMap = buildPlateMesh.material.map;
         const repeatX = previousMap?.repeat?.x || Math.max(4, Math.round((buildPlateMesh.scale?.x || buildPlateWidth || 220) / 8));
@@ -1259,11 +1268,13 @@ function updateBuildPlateMaterial() {
     }
 
     if (buildPlateControlsEl) buildPlateControlsEl.hidden = !buildPlateEnabled;
+    if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(Number(buildPlateShade) || 0);
     if (buildPlateShadeValEl) {
-        const v = Number(buildPlateShade) || 0;
+        const v = buildPlateShadeSliderEl
+            ? Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl))
+            : (Number(buildPlateShade) || 0);
         buildPlateShadeValEl.textContent = (v >= 0 ? '+' : '') + String(v);
     }
-    if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(Number(buildPlateShade) || 0);
     updateBuildPlateShadeControlVisibility();
     updateBuildPlateShadeSliderVisual();
     if (buildPlateColorPickerEl && /^#[0-9a-f]{6}$/i.test(buildPlateColor)) {
@@ -2163,7 +2174,7 @@ function syncUIFromSelectedPart() {
     colorPick.value = s.color || colorPick.value;
     if (opacitySlider) {
         opacitySlider.value = String(s.tone ?? 0);
-        const toneVal = parseInt(opacitySlider.value, 10);
+        const toneVal = Math.round(getSliderEffectiveValue(opacitySlider));
         opacityVal.textContent = (toneVal >= 0 ? '+' : '') + toneVal;
         syncSliderTooltip(opacitySlider);
     }
@@ -2183,7 +2194,7 @@ function syncUIFromSelectedPart() {
         textureTuneRoughnessSlider.value = String(finishSliderValueFromPartSettings(s));
         syncSliderTooltip(textureTuneRoughnessSlider);
     }
-    if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = textureTuneRoughnessSlider?.value || '1';
+    if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = String(getSliderEffectiveValue(textureTuneRoughnessSlider) || 1);
     updateShadeSliderVisual();
 
     updateTextureTuneUI();
@@ -2812,17 +2823,7 @@ function computeTonedColor(baseHex, toneVal) {
 }
 
 function computeBuildPlateShadeColor(baseHex, shadeVal) {
-    const baseColor = new THREE.Color(baseHex);
-    const hsl = { h: 0, s: 0, l: 0 };
-    baseColor.getHSL(hsl);
-    const amount = Math.max(0, Math.min(1, Math.abs(Number(shadeVal) || 0) / 100));
-    // Keep plate shade clearly visible in the live viewport; 20% was too subtle
-    // under scene lighting and often looked lighter than the selected shade.
-    const span = 0.45;
-    if (shadeVal < 0) hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * span * amount);
-    else if (shadeVal > 0) hsl.l = Math.max(0, hsl.l * (1 - span * amount));
-    baseColor.setHSL(hsl.h, hsl.s, hsl.l);
-    return baseColor;
+    return computeTonedColor(baseHex, shadeVal);
 }
 
 function applyPartColorsToMesh() {
@@ -3201,7 +3202,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
 }
 
 function getModelSyncSourceColor() {
-    if (!isMultipartModel()) return colorPick.value;
+    if (!isMultipartModel()) return modelPartBaseColors[0] || colorPick.value;
     const idx = Math.max(0, Math.min(bgSyncPartIndex, modelPartBaseColors.length - 1));
     return modelPartBaseColors[idx] || colorPick.value;
 }
@@ -3355,7 +3356,7 @@ function loadPreparedGeometry(geo, name) {
     scene.background = null;
 
     {
-        const tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
+        const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
         const c = computeTonedColor(bgPick.value, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
@@ -5062,13 +5063,13 @@ function restoreSettings() {
                     toneRestored = (Number.isFinite(oldVal) && oldVal > 0 && oldVal <= 100) ? 0 : clamp(s.opacity, -100, 100, 0);
                 }
                 opacitySlider.value = toneRestored;
-                const actualTone = parseInt(opacitySlider.value, 10);
+                const actualTone = Math.round(getSliderEffectiveValue(opacitySlider));
                 opacityVal.textContent = (actualTone >= 0 ? '+' : '') + actualTone;
             }
             if (s.bgOpacity !== undefined && bgOpacitySlider) {
                 const bgTone = Math.max(-100, Math.min(100, parseInt(s.bgOpacity, 10) || 0));
                 bgOpacitySlider.value = bgTone;
-                const actualBgTone = parseInt(bgOpacitySlider.value, 10);
+                const actualBgTone = Math.round(getSliderEffectiveValue(bgOpacitySlider));
                 const bgValEl = document.getElementById('bgOpacityVal');
                 if (bgValEl) bgValEl.textContent = (actualBgTone >= 0 ? '+' : '') + actualBgTone;
             }
@@ -5238,9 +5239,7 @@ function restoreSettings() {
             const shade = parseInt(s.buildPlateShade, 10);
             if (Number.isFinite(shade)) buildPlateShade = Math.max(-100, Math.min(100, shade));
         }
-        if (s.buildPlateFinish === 'matte' || s.buildPlateFinish === 'satin' || s.buildPlateFinish === 'gloss') {
-            buildPlateFinish = s.buildPlateFinish;
-        }
+        buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
         if (s.buildPlateShape === 'rounded' || s.buildPlateShape === 'rectangle' || s.buildPlateShape === 'circle') {
             buildPlateShape = s.buildPlateShape;
         }
@@ -5495,7 +5494,6 @@ function settingsToURL() {
         p.set('bpc', buildPlateColor.replace('#', ''));
     }
     if (Number.isFinite(Number(buildPlateShade))) p.set('bps', String(buildPlateShade));
-    if (buildPlateFinish && buildPlateFinish !== 'satin') p.set('bpf', buildPlateFinish);
     if (buildPlateShape !== 'rectangle') p.set('bpsh', normalizeBuildPlateShape(buildPlateShape));
     if (buildPlateSizePreset && buildPlateSizePreset !== '220x220') p.set('bpp', buildPlateSizePreset);
     if (buildPlateWidth !== 220) p.set('bpw', String(buildPlateWidth));
@@ -6556,7 +6554,7 @@ colorPick.addEventListener('input', (ev) => {
 });
 if (opacitySlider) {
     opacitySlider.addEventListener('input', () => {
-        const toneVal = parseInt(opacitySlider.value, 10);
+        const toneVal = Math.round(getSliderEffectiveValue(opacitySlider));
         opacityVal.textContent = (toneVal >= 0 ? '+' : '') + toneVal;
         syncSliderTooltip(opacitySlider);
         const targets = applyToModelPartEditTargets((partSettings) => {
@@ -6573,12 +6571,11 @@ if (opacitySlider) {
 
 if (bgOpacitySlider) {
     bgOpacitySlider.addEventListener('input', () => {
-        const bgTone = parseInt(bgOpacitySlider.value, 10);
+        const bgTone = Math.round(getSliderEffectiveValue(bgOpacitySlider));
         document.getElementById('bgOpacityVal').textContent = (bgTone >= 0 ? '+' : '') + bgTone;
         syncSliderTooltip(bgOpacitySlider);
         updateBgShadeSliderVisual();
-        const tone = parseInt(bgOpacitySlider.value, 10);
-        const c = computeTonedColor(bgPick.value, tone);
+        const c = computeTonedColor(bgPick.value, bgTone);
         if (renderer) renderer.setClearColor(c, 1);
         updateBuildPlateMaterial();
         if (isDynamicBg) updateDynamicBg();
@@ -6591,7 +6588,7 @@ bgPick.addEventListener('input', () => {
     scene.background = null;
 
     {
-        const tone = bgOpacitySlider ? parseInt(bgOpacitySlider.value, 10) : 0;
+        const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
         const c = computeTonedColor(bgPick.value, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
@@ -7382,6 +7379,11 @@ const CARD_RESET_ANIMATION_SLIDERS = [
     'wobbleSpinRangeSlider',
 ];
 
+function animationSlidersMatchDefaults() {
+    return parseFloat(tiltRangeSlider?.value || String(SPIN_RANGE_DEFAULT)) === SPIN_RANGE_DEFAULT
+        && parseFloat(wobbleSpinRangeSlider?.value || String(WOBBLE_SPIN_RANGE_DEFAULT)) === WOBBLE_SPIN_RANGE_DEFAULT;
+}
+
 function sliderMatchesResetMidpoint(id) {
     const input = document.getElementById(id);
     if (!(input instanceof HTMLInputElement) || input.type !== 'range') return true;
@@ -7437,18 +7439,18 @@ function updateCardResetButtonStates() {
     const normalizedPlateColor = String(buildPlateColor || '').toLowerCase();
     const buildPlateDirty = !!(rulerToggle && !rulerToggle.checked)
         || !!(buildPlateToggleEl && !buildPlateToggleEl.checked)
-        || (activeBuildPlatePreset || 'custom') !== 'custom'
-        || !!buildPlateAutoBrightnessEnabled
+        || (activeBuildPlatePreset || 'modelcolor') !== 'modelcolor'
+        || !buildPlateAutoBrightnessEnabled
         || normalizedPlateColor !== ''
         || (parseInt(String(buildPlateShade), 10) || 0) !== BUILD_PLATE_DEFAULTS.shade
-        || (buildPlateFinish || BUILD_PLATE_DEFAULTS.finish) !== BUILD_PLATE_DEFAULTS.finish
         || (buildPlateShape || BUILD_PLATE_DEFAULTS.shape) !== BUILD_PLATE_DEFAULTS.shape;
 
     const lightingDirty = CARD_RESET_LIGHTING_SLIDERS.some((id) => !sliderMatchesResetMidpoint(id));
 
     const speedValue = parseInt(speedSlider?.value || String(SPEED_DEFAULT), 10);
     const animationDirty = speedValue !== SPEED_DEFAULT
-        || CARD_RESET_ANIMATION_SLIDERS.some((id) => !sliderMatchesResetMidpoint(id));
+        || (rotateModeEl?.value || 'spin') !== 'spin'
+        || !animationSlidersMatchDefaults();
 
     const exportDirty = (exportFormatEl?.value || 'gif') !== 'gif'
         || (document.getElementById('exportQuality')?.value || 'std') !== 'std'
@@ -7524,9 +7526,21 @@ btnResetModelCard?.addEventListener('click', () => {
 });
 
 btnResetBackgroundCard?.addEventListener('click', () => {
-    resetCardSlidersToMiddle([
-        'bgOpacitySlider',
-    ]);
+    activeBgPreset = 'modelcolor';
+    lastNonModelBgPreset = 'custom';
+    bgSyncPartIndex = 0;
+    isDynamicBg = true;
+    const autoBgCheck = document.getElementById('autoBgCheck');
+    if (autoBgCheck) autoBgCheck.checked = true;
+    if (bgOpacitySlider) {
+        bgOpacitySlider.value = String(AUTO_BRIGHTNESS_RULES.background.shade);
+        bgOpacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    bgPick.value = getModelSyncSourceColor();
+    updateDynamicBg();
+    updateBgSelection();
+    syncBgModelSyncSourceUI();
+    saveSettings();
     updateCardResetButtonStates();
 });
 
@@ -7540,11 +7554,11 @@ btnResetBuildPlateCard?.addEventListener('click', () => {
         buildPlateToggleEl.checked = true;
         buildPlateToggleEl.dispatchEvent(new Event('change'));
     }
-    activeBuildPlatePreset = 'custom';
+    activeBuildPlatePreset = 'modelcolor';
     lastNonModelBuildPlatePreset = 'custom';
     buildPlateSyncPartIndex = 0;
-    buildPlateAutoBrightnessEnabled = false;
-    if (buildPlateAutoBrightnessEl) buildPlateAutoBrightnessEl.checked = false;
+    buildPlateAutoBrightnessEnabled = true;
+    if (buildPlateAutoBrightnessEl) buildPlateAutoBrightnessEl.checked = true;
     buildPlateColor = null;
     buildPlateShade = BUILD_PLATE_DEFAULTS.shade;
     buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
@@ -7565,12 +7579,14 @@ btnResetLightingCard?.addEventListener('click', () => {
 });
 
 btnResetAnimationCard?.addEventListener('click', () => {
+    rotateModeEl.value = 'spin';
+    document.querySelector('input[name="rotateMode"][value="spin"]')?.dispatchEvent(new Event('change', { bubbles: true }));
     speedSlider.value = String(SPEED_DEFAULT);
     speedSlider.dispatchEvent(new Event('change'));
-    resetCardSlidersToMiddle([
-        'tiltRangeSlider',
-        'wobbleSpinRangeSlider',
-    ]);
+    tiltRangeSlider.value = String(SPIN_RANGE_DEFAULT);
+    tiltRangeSlider.dispatchEvent(new Event('input', { bubbles: true }));
+    wobbleSpinRangeSlider.value = String(WOBBLE_SPIN_RANGE_DEFAULT);
+    wobbleSpinRangeSlider.dispatchEvent(new Event('input', { bubbles: true }));
     updateCardResetButtonStates();
 });
 
@@ -9326,11 +9342,11 @@ function getBgPresetDefaultTone(presetId) {
 }
 
 function computeAutoBrightnessColor(baseHex) {
-    const color = new THREE.Color(baseHex);
-    const hsl = {};
-    color.getHSL(hsl);
-    hsl.l = hsl.l + (0.92 - hsl.l) * 0.75;
-    return new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l);
+    return computeTonedColor(baseHex, AUTO_BRIGHTNESS_RULES.background.shade);
+}
+
+function computeBuildPlateAutoBrightnessColor(baseHex) {
+    return computeBuildPlateShadeColor(baseHex, AUTO_BRIGHTNESS_RULES.buildPlate.shade);
 }
 
 function applyBgPresetDefaultTone(presetId) {
@@ -9762,13 +9778,18 @@ bgPick.addEventListener('input', (ev) => {
 const autoBgCheckEl = document.getElementById('autoBgCheck');
 if (autoBgCheckEl) {
     autoBgCheckEl.addEventListener('change', () => {
+        const wasDynamicBg = isDynamicBg;
         isDynamicBg = autoBgCheckEl.checked;
         updateAutoBgShadeControlVisibility();
         if (isDynamicBg) updateDynamicBg();
         else {
+            if (wasDynamicBg && bgOpacitySlider) {
+                bgOpacitySlider.value = String(AUTO_BRIGHTNESS_RULES.background.shade);
+            }
             // Restore base preset color when turning auto-adjust off
             if (activeBgPreset === 'modelcolor') {
-                renderer && renderer.setClearColor(new THREE.Color(getModelSyncSourceColor()), 1);
+                const manualTone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : AUTO_BRIGHTNESS_RULES.background.shade;
+                renderer && renderer.setClearColor(computeTonedColor(getModelSyncSourceColor(), manualTone), 1);
             } else if (activeBgPreset === 'custom') {
                 bgPick.dispatchEvent(new Event('input', { bubbles: true }));
             } else {
@@ -9818,7 +9839,12 @@ if (buildPlateColorPickerEl) {
 
 if (buildPlateAutoBrightnessEl) {
     buildPlateAutoBrightnessEl.addEventListener('change', () => {
+        const wasAuto = buildPlateAutoBrightnessEnabled;
         buildPlateAutoBrightnessEnabled = !!buildPlateAutoBrightnessEl.checked;
+        if (!buildPlateAutoBrightnessEnabled && wasAuto) {
+            buildPlateShade = AUTO_BRIGHTNESS_RULES.buildPlate.shade;
+            if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(buildPlateShade);
+        }
         updateBuildPlateShadeControlVisibility();
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
@@ -9830,7 +9856,7 @@ updateBuildPlateShadeControlVisibility();
 
 if (buildPlateShadeSliderEl) {
     buildPlateShadeSliderEl.addEventListener('input', () => {
-        buildPlateShade = Math.max(-100, Math.min(100, parseInt(buildPlateShadeSliderEl.value, 10) || 0));
+        buildPlateShade = Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0));
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
         saveSettings();
@@ -9908,20 +9934,7 @@ function renderBgPresets() {
 
         const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
-            const toggleOffModelSync = preset.id === 'modelcolor' && activeBgPreset === 'modelcolor';
-            if (toggleOffModelSync) {
-                const fallbackPreset = BG_PRESETS.find((candidate) => candidate.id === lastNonModelBgPreset) || BG_PRESETS[0];
-                activeBgPreset = fallbackPreset?.id || 'white';
-                if (fallbackPreset?.color) {
-                    applyBgPresetDefaultTone(fallbackPreset.id);
-                    bgPick.value = fallbackPreset.color;
-                    bgPick.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-                updateBgSelection();
-                syncBgModelSyncSourceUI();
-                saveSettings();
-                return;
-            }
+            if (preset.id === activeBgPreset) return;
 
             activeBgPreset = preset.id;
             if (preset.id !== 'modelcolor') lastNonModelBgPreset = preset.id;
@@ -10040,18 +10053,7 @@ function renderBuildPlatePresets() {
 
         const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
-            const toggleOffModelSync = preset.id === 'modelcolor' && activeBuildPlatePreset === 'modelcolor';
-            if (toggleOffModelSync) {
-                if ((lastNonModelBuildPlatePreset || 'custom') === 'custom') {
-                    syncStoredBuildPlateColorToVisibleBase();
-                }
-                activeBuildPlatePreset = lastNonModelBuildPlatePreset || 'custom';
-                updateBuildPlateMaterial();
-                updateBuildPlateSelection();
-                refreshExportPreviewNow();
-                saveSettings();
-                return;
-            }
+            if (preset.id === activeBuildPlatePreset) return;
 
             activeBuildPlatePreset = preset.id;
             if (preset.id !== 'modelcolor') lastNonModelBuildPlatePreset = preset.id;

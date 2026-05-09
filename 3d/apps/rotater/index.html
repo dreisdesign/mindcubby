@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="0">
     <title>Rotater 3D Studio by MindCubby</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=2.1.55">
+    <link rel="stylesheet" href="style.css?v=2.1.56">
     <style>
         #startupSplash {
             position: fixed;
@@ -53,7 +53,7 @@
             animation: none !important;
         }
     </style>
-    <script>const ROTATER_BUILD = '2.1.55';
+    <script>const ROTATER_BUILD = '2.1.56';
         const ROTATER_BUILD_DATE = 'May 9, 2026';
         const syncBuildInfoMeta = () => {
             const versionEl = document.getElementById('infoBuildVersion');
@@ -472,8 +472,8 @@
                             <label class="control-label range-label" style="margin-top:10px;">
                                 <span>Shade<span class="slider-tooltip" id="bgOpacityVal">0</span></span>
                                 <div class="range-wrap">
-                                        <input type="range" id="bgOpacitySlider" class="tone-gradient-slider" min="-100" max="100" step="50" value="0"
-                                        data-snap-count="5" data-fine-step="1" data-group="scene">
+                                        <input type="range" id="bgOpacitySlider" class="tone-gradient-slider" min="-100" max="100" step="25" value="0"
+                                        data-snap-count="9" data-fine-step="1" data-group="scene">
                                 </div>
                             </label>
                         </div>
@@ -512,7 +512,7 @@
                                         <input type="checkbox" id="buildPlateAutoBrightness" data-group="scene" checked> Auto brightness
                                     </label>
                                 </div>
-                                <input type="color" id="buildPlateColorPicker" class="build-plate-color-input-hidden" value="#c2a164" data-group="scene">
+                                <input type="color" id="buildPlateColorPicker" class="build-plate-color-input-hidden" value="#ffffff" data-group="scene">
                                 <label class="control-label range-label" style="margin-top:10px;">
                                     <span>Shade<span class="slider-tooltip" id="buildPlateShadeVal">0</span></span>
                                     <div class="range-wrap">
@@ -520,11 +520,6 @@
                                             data-snap-count="9" data-fine-step="1" data-group="scene">
                                     </div>
                                 </label>
-                                <div class="finish-mode-wrap" id="buildPlateFinishWrap" role="group" aria-label="Build plate finish" style="margin-top:10px;">
-                                    <button type="button" class="finish-mode-btn" id="buildPlateFinishMatte" data-plate-finish="matte" aria-pressed="false">Matte</button>
-                                    <button type="button" class="finish-mode-btn" id="buildPlateFinishSatin" data-plate-finish="satin" aria-pressed="true">Satin</button>
-                                    <button type="button" class="finish-mode-btn" id="buildPlateFinishGloss" data-plate-finish="gloss" aria-pressed="false">Gloss</button>
-                                </div>
                                 <div class="build-plate-shape-group" id="buildPlateShapeWrap" role="group" aria-label="Build plate shape" style="margin-top:10px;">
                                     <button type="button" class="build-plate-shape-btn" id="buildPlateShapeRectangle" data-plate-shape="rectangle" aria-pressed="true">
                                         <span class="build-plate-shape-icon build-plate-shape-icon--rectangle" aria-hidden="true"></span>

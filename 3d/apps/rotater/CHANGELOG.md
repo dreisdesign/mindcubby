@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.56] - 2026-05-09
+
+### Changed
+- **Build metadata bumped** — app build/version metadata now reports `2.1.56` and stylesheet cache-buster query was updated to the same build
+- **Background and Surface reset parity** — Background card reset now restores `Model Sync + Auto brightness` (matching Surface reset defaults)
+- **Auto-to-manual shade handoff** — turning Surface auto brightness off now reveals its effective manual shade (`+25`) instead of showing `+0`
+
+### Fixed
+- **Background/Surface shade logic parity** — both pipelines now use the same tone transform model for matching snap behavior
+- **Surface gray cast removal** — build plate now uses an unlit material path (`MeshBasicMaterial`, `toneMapped: false`) so shade colors are not shifted by scene lighting/IBL
+- **Preset re-click behavior** — clicking an already-active preset (including Model Sync) is now a no-op instead of toggling away
+- **Animation reset default range** — Animation card reset now restores true spin defaults (`360` range) instead of midpoint behavior
+
+### Documentation
+- **Design reference expanded** — added a runtime-defaults/logic section documenting where to change startup defaults, reset behavior, and auto-brightness shade mapping
+- **README updated** — version updated to `2.1.56` and added a defaults-tuning quick reference for changing baseline behavior
+
 ## [2.1.55] - 2026-05-09
 
 ### Added
