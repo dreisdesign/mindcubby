@@ -140,6 +140,65 @@ const AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS = 1200;
 const ORBIT_MIN_DISTANCE_FACTOR = 0.12;
 const ORBIT_MAX_DISTANCE_FACTOR = 6.0;
 const LIGHT_BASE = { ambient: 0.45, key: 1.9, fill: 0.30, rim: 0.92, exposure: 0.75 };
+const BUILD_PLATE_DEFAULTS = {
+    shade: 0,
+    finish: 'satin',
+    shape: 'rectangle',
+    sizePreset: '220x220',
+    width: 220,
+    depth: 220,
+};
+const PALETTE = {
+    fallback: '#ffffff',
+    text: {
+        partThumb: '#1f1a47',
+        measurement: '#15122b',
+    },
+    preset: {
+        white: '#ffffff',
+        black: '#000000',
+        bgThumb: '#d0d0d0',
+        ink: '#0d0d0d',
+        ceramic: '#fef8f0',
+        glassBorder: 'rgba(130,210,240,0.55)',
+        chocolate: '#3a1c06',
+        gumball: '#ff8fb5',
+        gold: '#f5c400',
+        bgBorderLight: '#b8b6ca',
+        bgBorderDark: '#5d5a74',
+        modelToneFallback: '#2e2b74',
+    },
+    gradient: {
+        white: '#fff',
+        chromeEdge: 'rgba(180,180,180,0.2)',
+        chromeShadow: 'rgba(0,0,0,0.7)',
+        inkHighlight: 'rgba(255,255,255,0.9)',
+        inkSoft: 'rgba(255,255,255,0.35)',
+        inkEdge: 'rgba(255,255,255,0.04)',
+        ceramicHighlight: 'rgba(255,255,255,0.75)',
+        ceramicSoft: 'rgba(255,255,255,0.35)',
+        ceramicWarm1: 'rgba(230,210,190,0.25)',
+        ceramicWarm2: 'rgba(190,165,140,0.45)',
+        glassHighlight: 'rgba(255,255,255,0.6)',
+        glassTint: 'rgba(200,242,255,0.15)',
+        glassTint2: 'rgba(200,242,255,0.3)',
+        glassTint3: 'rgba(100,200,240,0.08)',
+        chocolateHighlight: 'rgba(180,110,50,0.55)',
+        chocolateSoft: 'rgba(120,65,20,0.25)',
+        gumballHighlight: 'rgba(255,255,255,0.78)',
+        gumballSoft: 'rgba(255,230,240,0.45)',
+        gumballShadow: 'rgba(210,60,110,0.28)',
+        goldHighlight: 'rgba(255,255,220,0.95)',
+        goldSoft: 'rgba(255,235,100,0.6)',
+        goldShadow: 'rgba(240,190,0,0.2)',
+        goldDeep: 'rgba(140,90,0,0.75)',
+        rainbow1: '#FF0909',
+        rainbow2: '#FF9D00',
+        rainbow3: '#FFF718',
+        rainbow4: '#84FF00',
+        rainbow5: '#8C00FF',
+    },
+};
 const TEXTURE_TUNE_DEFAULTS = {
     light: 100,
     contrast: 100,
@@ -664,13 +723,13 @@ let autoDemoLoadSuppressed = false;
 let autoDemoLoadScheduled = false;
 let _pausedBeforeStillExport = null;
 let buildPlateEnabled = true;
-let buildPlateColor = '#c2a164';
-let buildPlateShade = 0;
-let buildPlateFinish = 'satin'; // matte | satin | gloss
-let buildPlateShape = 'rectangle'; // rectangle | rounded | circle
-let buildPlateSizePreset = '220x220';
-let buildPlateWidth = 220;
-let buildPlateDepth = 220;
+let buildPlateColor = null;
+let buildPlateShade = BUILD_PLATE_DEFAULTS.shade;
+let buildPlateFinish = BUILD_PLATE_DEFAULTS.finish; // matte | satin | gloss
+let buildPlateShape = BUILD_PLATE_DEFAULTS.shape; // rectangle | rounded | circle
+let buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
+let buildPlateWidth = BUILD_PLATE_DEFAULTS.width;
+let buildPlateDepth = BUILD_PLATE_DEFAULTS.depth;
 let exportMotionControlsEnabled = true;
 let _syncingExportMotionControls = false;
 let autoUIAssistEnabled = true;
@@ -1071,14 +1130,14 @@ function syncBuildPlateShapeMesh() {
     if (oldGeometry?.dispose) oldGeometry.dispose();
 }
 
-function createBuildPlateTexture(hexColor = '#c2a164', finish = 'satin') {
+function createBuildPlateTexture(hexColor = null, finish = BUILD_PLATE_DEFAULTS.finish) {
     const c = document.createElement('canvas');
     c.width = 128;
     c.height = 128;
     const ctx = c.getContext('2d');
     if (!ctx) return null;
 
-    const color = new THREE.Color(hexColor);
+    const color = new THREE.Color(hexColor || getActiveBuildPlateBaseColor() || colorPick?.value || bgPick?.value || PALETTE.fallback);
     const base = {
         r: Math.round(color.r * 255),
         g: Math.round(color.g * 255),
@@ -2474,7 +2533,7 @@ function renderMultipartSummaryThumbnail(canvasEl) {
             renderSinglePartThumbnail(tempCanvas, tile);
             ctx.drawImage(tempCanvas, drawX, drawY, tileSide, tileSide);
         } else {
-            ctx.fillStyle = '#1f1a47';
+            ctx.fillStyle = PALETTE.text.partThumb;
             ctx.font = `700 ${Math.max(18, Math.round(cellW * 0.34))}px "Source Sans 3", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -3154,10 +3213,18 @@ function getBuildPlateSyncSourceColor() {
 }
 
 function getActiveBuildPlateBaseColor() {
-    if (activeBuildPlatePreset === 'white') return '#ffffff';
-    if (activeBuildPlatePreset === 'black') return '#000000';
+    if (activeBuildPlatePreset === 'white') return PALETTE.preset.white;
+    if (activeBuildPlatePreset === 'black') return PALETTE.preset.black;
     if (activeBuildPlatePreset === 'modelcolor') return getBuildPlateSyncSourceColor();
-    return buildPlateColor || '#c2a164';
+    return buildPlateColor || getBuildPlateSyncSourceColor() || colorPick?.value || bgPick?.value || PALETTE.fallback;
+}
+
+function syncStoredBuildPlateColorToVisibleBase() {
+    const visibleBase = getActiveBuildPlateBaseColor();
+    if (/^#[0-9a-f]{6}$/i.test(visibleBase)) {
+        buildPlateColor = visibleBase;
+        if (buildPlateColorPickerEl) buildPlateColorPickerEl.value = visibleBase;
+    }
 }
 
 function syncBgModelSyncSourceUI() {
@@ -4239,7 +4306,7 @@ function drawMeasurementLabel(ctx, text, position, align = 'center') {
     drawRoundedRectPath(ctx, boxX, boxY, boxW, boxH, radius);
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = '#15122b';
+    ctx.fillStyle = PALETTE.text.measurement;
     ctx.textAlign = 'center';
     ctx.fillText(text, boxCenterX, baselineY);
     ctx.restore();
@@ -5164,13 +5231,8 @@ function restoreSettings() {
             buildPlateColor = `#${s.buildPlateColor}`;
         } else if (typeof s.buildPlateColor === 'string' && /^#[0-9a-f]{6}$/i.test(s.buildPlateColor)) {
             buildPlateColor = s.buildPlateColor;
-        } else if (s.buildPlateColor === 'black') {
-            buildPlateColor = '#1e1e22';
-        } else if (s.buildPlateColor === 'gold') {
-            buildPlateColor = '#c2a164';
         } else if (s.buildPlateTexture != null) {
-            const oldTextureOn = (s.buildPlateTexture === '1' || s.buildPlateTexture === true || s.buildPlateTexture === 1);
-            buildPlateColor = oldTextureOn ? '#c2a164' : '#1e1e22';
+            buildPlateColor = null;
         }
         if (s.buildPlateShade != null) {
             const shade = parseInt(s.buildPlateShade, 10);
@@ -5188,8 +5250,8 @@ function restoreSettings() {
                 buildPlateSizePreset = preset;
             }
         }
-        if (s.buildPlateWidth != null) buildPlateWidth = clampBuildPlateSize(s.buildPlateWidth, 220);
-        if (s.buildPlateDepth != null) buildPlateDepth = clampBuildPlateSize(s.buildPlateDepth, 220);
+        if (s.buildPlateWidth != null) buildPlateWidth = clampBuildPlateSize(s.buildPlateWidth, BUILD_PLATE_DEFAULTS.width);
+        if (s.buildPlateDepth != null) buildPlateDepth = clampBuildPlateSize(s.buildPlateDepth, BUILD_PLATE_DEFAULTS.depth);
         if (buildPlateSizePreset !== 'custom' && BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset]) {
             buildPlateWidth = BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset].w;
             buildPlateDepth = BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset].d;
@@ -7372,15 +7434,15 @@ function updateCardResetButtonStates() {
     const backgroundDirty = !sliderMatchesResetMidpoint('bgOpacitySlider');
 
     const rulerToggle = document.getElementById('rulerToggle');
-    const normalizedPlateColor = String(buildPlateColor || '#c2a164').toLowerCase();
+    const normalizedPlateColor = String(buildPlateColor || '').toLowerCase();
     const buildPlateDirty = !!(rulerToggle && !rulerToggle.checked)
         || !!(buildPlateToggleEl && !buildPlateToggleEl.checked)
         || (activeBuildPlatePreset || 'custom') !== 'custom'
         || !!buildPlateAutoBrightnessEnabled
-        || normalizedPlateColor !== '#c2a164'
-        || (parseInt(String(buildPlateShade), 10) || 0) !== 0
-        || (buildPlateFinish || 'satin') !== 'satin'
-        || (buildPlateShape || 'rectangle') !== 'rectangle';
+        || normalizedPlateColor !== ''
+        || (parseInt(String(buildPlateShade), 10) || 0) !== BUILD_PLATE_DEFAULTS.shade
+        || (buildPlateFinish || BUILD_PLATE_DEFAULTS.finish) !== BUILD_PLATE_DEFAULTS.finish
+        || (buildPlateShape || BUILD_PLATE_DEFAULTS.shape) !== BUILD_PLATE_DEFAULTS.shape;
 
     const lightingDirty = CARD_RESET_LIGHTING_SLIDERS.some((id) => !sliderMatchesResetMidpoint(id));
 
@@ -7483,10 +7545,13 @@ btnResetBuildPlateCard?.addEventListener('click', () => {
     buildPlateSyncPartIndex = 0;
     buildPlateAutoBrightnessEnabled = false;
     if (buildPlateAutoBrightnessEl) buildPlateAutoBrightnessEl.checked = false;
-    buildPlateColor = '#c2a164';
-    buildPlateShade = 0;
-    buildPlateFinish = 'satin';
-    buildPlateShape = 'rectangle';
+    buildPlateColor = null;
+    buildPlateShade = BUILD_PLATE_DEFAULTS.shade;
+    buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
+    buildPlateShape = BUILD_PLATE_DEFAULTS.shape;
+    buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
+    buildPlateWidth = BUILD_PLATE_DEFAULTS.width;
+    buildPlateDepth = BUILD_PLATE_DEFAULTS.depth;
     updateBuildPlateMaterial();
     updateBuildPlateSelection();
     refreshExportPreviewNow();
@@ -9193,40 +9258,6 @@ requestAnimationFrame(() => {
     }, 0);
 });
 
-// ── Preset Gallery ──────────────────────────────────────────────────────────
-// Accurate per-material sphere visuals (used by model presets + BG model swatch)
-const THUMB_STYLES = {
-    chrome: {
-        bg: '#d0d0d0',
-        overlay: 'radial-gradient(circle at 30% 25%, #fff 0%, rgba(255,255,255,0.8) 6%, rgba(180,180,180,0.2) 22%, transparent 45%), radial-gradient(circle at 70% 75%, rgba(0,0,0,0.7) 0%, transparent 55%)'
-    },
-    ink: {
-        bg: '#0d0d0d',
-        overlay: 'radial-gradient(circle at 32% 27%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.35) 8%, transparent 28%), radial-gradient(circle at 68% 72%, rgba(255,255,255,0.04) 0%, transparent 40%)'
-    },
-    ceramic: {
-        bg: '#fef8f0',
-        overlay: 'radial-gradient(circle at 38% 30%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.35) 22%, rgba(230,210,190,0.25) 50%, rgba(190,165,140,0.45) 100%)'
-    },
-    glass: {
-        bg: 'rgba(210,245,252,0.35)',
-        overlay: 'radial-gradient(circle at 28% 24%, #fff 0%, rgba(255,255,255,0.6) 7%, rgba(200,242,255,0.15) 28%, transparent 48%), radial-gradient(circle at 68% 70%, rgba(200,242,255,0.3) 0%, transparent 50%), radial-gradient(circle at 52% 52%, rgba(100,200,240,0.08) 0%, transparent 70%)',
-        extra: 'border: 1px solid rgba(130,210,240,0.55);'
-    },
-    chocolate: {
-        bg: '#3a1c06',
-        overlay: 'radial-gradient(circle at 36% 30%, rgba(180,110,50,0.55) 0%, rgba(120,65,20,0.25) 18%, transparent 48%), radial-gradient(circle at 65% 70%, rgba(0,0,0,0.7) 0%, transparent 55%)'
-    },
-    gumball: {
-        bg: '#ff8fb5',
-        overlay: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.78) 0%, rgba(255,230,240,0.45) 18%, transparent 46%), radial-gradient(circle at 66% 72%, rgba(210,60,110,0.28) 0%, transparent 50%)'
-    },
-    gold: {
-        bg: '#f5c400',
-        overlay: 'radial-gradient(circle at 30% 26%, rgba(255,255,220,0.95) 0%, rgba(255,235,100,0.6) 10%, rgba(240,190,0,0.2) 28%, transparent 48%), radial-gradient(circle at 68% 72%, rgba(140,90,0,0.75) 0%, transparent 55%)'
-    }
-};
-
 let QUICK_PRESETS = [];
 
 function reconcileModelPresetFromSettings(force = false) {
@@ -9277,14 +9308,14 @@ fetch('presets.json')
     .catch(err => console.error("Could not load presets.json", err));
 
 const BG_PRESETS = [
-    { id: 'white', name: 'White', color: '#ffffff' },
-    { id: 'black', name: 'Black', color: '#000000' },
+    { id: 'white', name: 'White', color: PALETTE.preset.white },
+    { id: 'black', name: 'Black', color: PALETTE.preset.black },
     { id: 'modelcolor', name: 'Model', color: null }
 ];
 
 const BUILD_PLATE_PRESETS = [
-    { id: 'white', name: 'White', color: '#ffffff' },
-    { id: 'black', name: 'Black', color: '#000000' },
+    { id: 'white', name: 'White', color: PALETTE.preset.white },
+    { id: 'black', name: 'Black', color: PALETTE.preset.black },
     { id: 'modelcolor', name: 'Model Sync', color: null }
 ];
 
@@ -9341,7 +9372,7 @@ colorPick.addEventListener('input', () => {
 // SVG rainbow ring for custom swatches — matches the provided design SVG
 function rainbowRingSvg(svgId, fillColor) {
     const gid = `rr-${svgId}`;
-    return `<svg id="${svgId}" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none" style="display:block;cursor:pointer;"><circle cx="22" cy="22" r="19.5" fill="${fillColor}" stroke="url(#${gid})" stroke-width="3"/><defs><radialGradient id="${gid}" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(43 18) rotate(156.894) scale(43.7)"><stop stop-color="#FF0909"/><stop offset="0.240385" stop-color="#FF9D00"/><stop offset="0.538462" stop-color="#FFF718"/><stop offset="0.740385" stop-color="#84FF00"/><stop offset="0.9375" stop-color="#8C00FF"/></radialGradient></defs></svg>`;
+    return `<svg id="${svgId}" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none" style="display:block;cursor:pointer;"><circle cx="22" cy="22" r="19.5" fill="${fillColor}" stroke="url(#${gid})" stroke-width="3"/><defs><radialGradient id="${gid}" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(43 18) rotate(156.894) scale(43.7)"><stop stop-color="${PALETTE.gradient.rainbow1}"/><stop offset="0.240385" stop-color="${PALETTE.gradient.rainbow2}"/><stop offset="0.538462" stop-color="${PALETTE.gradient.rainbow3}"/><stop offset="0.740385" stop-color="${PALETTE.gradient.rainbow4}"/><stop offset="0.9375" stop-color="${PALETTE.gradient.rainbow5}"/></radialGradient></defs></svg>`;
 }
 
 let customModelSettingsByPart = {};
@@ -9469,7 +9500,11 @@ function renderModelPresets() {
         wrap.style.flexDirection = 'column';
         wrap.style.alignItems = 'center';
 
-        const ts = THUMB_STYLES[preset.id] || { bg: preset.color, overlay: 'radial-gradient(circle at 36% 32%, rgba(255,255,255,0.6) 5%, transparent 40%, rgba(0,0,0,0.3) 100%)' };
+        const ts = preset.thumb || {
+            bg: preset.color || PALETTE.fallback,
+            overlay: 'radial-gradient(circle at 36% 32%, rgba(255,255,255,0.6) 5%, transparent 40%, rgba(0,0,0,0.3) 100%)',
+            extra: '',
+        };
         wrap.innerHTML = `
             <label class="shading-option preset-option" title="Apply ${preset.name}">
                 <span class="shading-thumb" id="model-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;background-color:${ts.bg};position:relative;overflow:hidden;background-clip:padding-box;${ts.extra || ''}">
@@ -9645,7 +9680,7 @@ function updateBuildPlateSelection() {
             if (parentOpt) parentOpt.classList.add('is-selected');
         }
         const svgCircle = document.querySelector('#customBuildPlateThumb circle');
-        if (svgCircle) svgCircle.setAttribute('fill', buildPlateColor || '#c2a164');
+        if (svgCircle) svgCircle.setAttribute('fill', buildPlateColor || getActiveBuildPlateBaseColor());
         const overlay = document.getElementById('customBuildPlateSphereOverlay');
         if (overlay) {
             overlay.style.display = 'block';
@@ -9862,7 +9897,7 @@ function renderBgPresets() {
 
         const swatchInner = preset.id === 'modelcolor'
             ? `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:transparent;display:flex;align-items:center;justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.2 12.05C7.2 12.65 7.308 13.246 7.524 13.838C7.74 14.43 8.072 14.979 8.52 15.485L8.565 15.53V14.815C8.565 14.476 8.685 14.186 8.925 13.945C9.165 13.705 9.455 13.585 9.795 13.585C10.135 13.585 10.425 13.705 10.665 13.945C10.905 14.186 11.025 14.476 11.025 14.815V18.695C11.025 19.034 10.905 19.324 10.665 19.565C10.425 19.805 10.135 19.925 9.795 19.925H5.91C5.57 19.925 5.28 19.805 5.04 19.565C4.8 19.324 4.68 19.034 4.68 18.695C4.68 18.355 4.8 18.065 5.04 17.825C5.28 17.584 5.57 17.464 5.91 17.464H7.08L7.035 17.419C6.249 16.633 5.671 15.783 5.301 14.869C4.931 13.955 4.746 13.015 4.746 12.05C4.746 10.515 5.145 9.106 5.943 7.823C6.741 6.539 7.816 5.575 9.168 4.931C9.445 4.793 9.722 4.808 10 4.978C10.277 5.147 10.469 5.393 10.577 5.715C10.669 6.023 10.657 6.331 10.542 6.639C10.426 6.947 10.223 7.186 9.93 7.355C9.1 7.832 8.435 8.485 7.935 9.315C7.435 10.146 7.2 11.057 7.2 12.05ZM16.8 12C16.8 11.4 16.692 10.804 16.476 10.212C16.26 9.62 15.928 9.071 15.48 8.565L15.435 8.52V9.235C15.435 9.575 15.315 9.864 15.075 10.105C14.835 10.345 14.545 10.465 14.205 10.465C13.865 10.465 13.575 10.345 13.335 10.105C13.095 9.864 12.975 9.575 12.975 9.235V5.35C12.975 5.01 13.095 4.72 13.335 4.48C13.575 4.239 13.865 4.12 14.205 4.12H18.09C18.43 4.12 18.72 4.239 18.96 4.48C19.2 4.72 19.32 5.01 19.32 5.35C19.32 5.689 19.2 5.979 18.96 6.22C18.72 6.46 18.43 6.58 18.09 6.58H16.92L16.965 6.625C17.751 7.411 18.329 8.261 18.699 9.175C19.069 10.089 19.254 11.03 19.254 12C19.254 13.535 18.855 14.944 18.057 16.227C17.259 17.511 16.184 18.475 14.832 19.119C14.555 19.257 14.277 19.242 14 19.073C13.723 18.903 13.531 18.657 13.423 18.335C13.331 18.028 13.343 17.72 13.458 17.412C13.574 17.104 13.777 16.864 14.07 16.695C14.9 16.218 15.565 15.565 16.065 14.735C16.565 13.905 16.8 12.993 16.8 12Z" fill="currentColor"/></svg></span>`
-            : `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? '#b8b6ca' : (preset.id === 'black' ? '#5d5a74' : 'transparent')};"></span>`;
+            : `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? PALETTE.preset.bgBorderLight : (preset.id === 'black' ? PALETTE.preset.bgBorderDark : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
             <label class="shading-option preset-option" title="${preset.name} background">
@@ -9994,7 +10029,7 @@ function renderBuildPlatePresets() {
 
         const swatchInner = preset.id === 'modelcolor'
             ? `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:transparent;display:flex;align-items:center;justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.2 12.05C7.2 12.65 7.308 13.246 7.524 13.838C7.74 14.43 8.072 14.979 8.52 15.485L8.565 15.53V14.815C8.565 14.476 8.685 14.186 8.925 13.945C9.165 13.705 9.455 13.585 9.795 13.585C10.135 13.585 10.425 13.705 10.665 13.945C10.905 14.186 11.025 14.476 11.025 14.815V18.695C11.025 19.034 10.905 19.324 10.665 19.565C10.425 19.805 10.135 19.925 9.795 19.925H5.91C5.57 19.925 5.28 19.805 5.04 19.565C4.8 19.324 4.68 19.034 4.68 18.695C4.68 18.355 4.8 18.065 5.04 17.825C5.28 17.584 5.57 17.464 5.91 17.464H7.08L7.035 17.419C6.249 16.633 5.671 15.783 5.301 14.869C4.931 13.955 4.746 13.015 4.746 12.05C4.746 10.515 5.145 9.106 5.943 7.823C6.741 6.539 7.816 5.575 9.168 4.931C9.445 4.793 9.722 4.808 10 4.978C10.277 5.147 10.469 5.393 10.577 5.715C10.669 6.023 10.657 6.331 10.542 6.639C10.426 6.947 10.223 7.186 9.93 7.355C9.1 7.832 8.435 8.485 7.935 9.315C7.435 10.146 7.2 11.057 7.2 12.05ZM16.8 12C16.8 11.4 16.692 10.804 16.476 10.212C16.26 9.62 15.928 9.071 15.48 8.565L15.435 8.52V9.235C15.435 9.575 15.315 9.864 15.075 10.105C14.835 10.345 14.545 10.465 14.205 10.465C13.865 10.465 13.575 10.345 13.335 10.105C13.095 9.864 12.975 9.575 12.975 9.235V5.35C12.975 5.01 13.095 4.72 13.335 4.48C13.575 4.239 13.865 4.12 14.205 4.12H18.09C18.43 4.12 18.72 4.239 18.96 4.48C19.2 4.72 19.32 5.01 19.32 5.35C19.32 5.689 19.2 5.979 18.96 6.22C18.72 6.46 18.43 6.58 18.09 6.58H16.92L16.965 6.625C17.751 7.411 18.329 8.261 18.699 9.175C19.069 10.089 19.254 11.03 19.254 12C19.254 13.535 18.855 14.944 18.057 16.227C17.259 17.511 16.184 18.475 14.832 19.119C14.555 19.257 14.277 19.242 14 19.073C13.723 18.903 13.531 18.657 13.423 18.335C13.331 18.028 13.343 17.72 13.458 17.412C13.574 17.104 13.777 16.864 14.07 16.695C14.9 16.218 15.565 15.565 16.065 14.735C16.565 13.905 16.8 12.993 16.8 12Z" fill="currentColor"/></svg></span>`
-            : `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? '#b8b6ca' : (preset.id === 'black' ? '#5d5a74' : 'transparent')};"></span>`;
+            : `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? PALETTE.preset.bgBorderLight : (preset.id === 'black' ? PALETTE.preset.bgBorderDark : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
             <label class="shading-option preset-option" title="${preset.name} surface color">
@@ -10007,6 +10042,9 @@ function renderBuildPlatePresets() {
         actionArea.addEventListener('click', () => {
             const toggleOffModelSync = preset.id === 'modelcolor' && activeBuildPlatePreset === 'modelcolor';
             if (toggleOffModelSync) {
+                if ((lastNonModelBuildPlatePreset || 'custom') === 'custom') {
+                    syncStoredBuildPlateColorToVisibleBase();
+                }
                 activeBuildPlatePreset = lastNonModelBuildPlatePreset || 'custom';
                 updateBuildPlateMaterial();
                 updateBuildPlateSelection();
@@ -10050,6 +10088,7 @@ function renderBuildPlatePresets() {
     const labelEl = customWrap.querySelector('.shading-option');
     if (labelEl) {
         labelEl.addEventListener('click', () => {
+            syncStoredBuildPlateColorToVisibleBase();
             activeBuildPlatePreset = 'custom';
             lastNonModelBuildPlatePreset = 'custom';
             updateBuildPlateMaterial();
@@ -10079,7 +10118,7 @@ function renderModelShadeSelector() {
         dot.style.borderRadius = '50%';
         dot.style.cursor = 'pointer';
         // Show actual model color at each tone stop.
-        const baseC = computeTonedColor(colorPick ? colorPick.value : '#2e2b74', val);
+        const baseC = computeTonedColor(colorPick ? colorPick.value : PALETTE.preset.modelToneFallback, val);
         dot.style.backgroundColor = '#' + baseC.getHexString();
         dot.onclick = () => {
             if (opacitySlider) {
