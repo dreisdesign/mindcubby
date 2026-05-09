@@ -660,7 +660,15 @@ document.querySelectorAll('input[type="range"]').forEach((slider) => {
 // ── Snap-to-grid enforcement ──────────────────────────────────────────────────
 let fineTuningMode = false;
 
+// ── SHADE RANGE CONFIGURATION ──────────────────────────────────────────────────
+// SHADE_RANGE_PERCENT: Maximum lightness adjustment range (0-100%)
+// Example: 40 = slider can adjust by ±40% of the HSL lightness range
+// For white (L=100%): ranges from 100% (slider -100) to 60% (slider +100)
+// For black (L=0%): ranges from 40% (slider -100) to 0% (slider +100)
+const SHADE_RANGE_PERCENT = 40;
+
 const AUTO_BRIGHTNESS_RULES = {
+    // DEFAULT: Slider value when auto-brightness is enabled
     background: { shade: -100 },
     buildPlate: { shade: -100 },
 };
@@ -2845,24 +2853,28 @@ function computeTonedColor(baseHex, toneVal) {
 }
 
 function computeSurfaceShadeColor(baseHex, shadeVal) {
+    // Slider range: -100 (brightest) to +100 (darkest)
+    // All colors use the same formula — no special casing needed:
+    //   Slider left  (-100): L += (1 - L) * SHADE_RANGE_PERCENT%  → pushes toward white
+    //   Slider center (0)  : no change
+    //   Slider right (+100): L -= L * SHADE_RANGE_PERCENT%         → pushes toward black
+    //
+    // White  (L=1.0): -100 → L:100%,  0 → L:80%,  +100 → L:60%  (if range=40%)
+    // Black  (L=0.0): -100 → L:40%,   0 → L:0%,   +100 → L:0%   (if range=40%)
+    // Blue   (L=0.5): -100 → L:70%,   0 → L:50%,  +100 → L:30%  (if range=40%)
     const baseC = new THREE.Color(baseHex);
     const hsl = { h: 0, s: 0, l: 0 };
     baseC.getHSL(hsl);
-    // Scale slider range [-100, +100] to adjustment range [-0.4, +0.4] (40% range)
-    const scaledAdjustment = (shadeVal / 100) * 0.4;
-    const amount = Math.max(-0.4, Math.min(0.4, scaledAdjustment));
 
-    if (amount < 0) {
-        // Brighten: increase lightness
-        const lift = hsl.l < 0.08 ? 0.56 : 0.30;
-        hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * lift * Math.abs(amount));
-    } else if (amount > 0) {
-        // Darken: decrease lightness
-        if (hsl.l < 0.1) {
-            hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * 0.62 * amount);
-        } else {
-            hsl.l = Math.max(0, hsl.l * (1 - 0.45 * amount));
-        }
+    const t = shadeVal / 100; // -1.0 to +1.0
+    const rangeScale = SHADE_RANGE_PERCENT / 100;
+
+    if (t < 0) {
+        // Brighten: lift toward white
+        hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * (-t) * rangeScale);
+    } else if (t > 0) {
+        // Darken: push toward black
+        hsl.l = Math.max(0, hsl.l - hsl.l * t * rangeScale);
     }
 
     if (hsl.s < 0.02 && hsl.l > 0.02) hsl.s = 0.02;
@@ -9486,15 +9498,19 @@ const BUILD_PLATE_PRESETS = [
 ];
 
 function getBgPresetDefaultTone(presetId) {
-    if (presetId === 'white') return -40;
-    if (presetId === 'black') return 40;
-    return 0;
+    // DEFAULT: Manual-mode slider position for each preset
+    // At this position, the slider shows the unmodified preset color.
+    if (presetId === 'white') return -100; // Far left: L=100% (pure white, no darkening)
+    if (presetId === 'black') return 100;  // Far right: L=0% (pure black, no lightening)
+    return 0;                              // Center: no lightness adjustment
 }
 
 function getBuildPlatePresetDefaultTone(presetId) {
-    if (presetId === 'white') return -40;
-    if (presetId === 'black') return 40;
-    return 0;
+    // DEFAULT: Manual-mode slider position for each preset
+    // At this position, the slider shows the unmodified preset color.
+    if (presetId === 'white') return -100; // Far left: L=100% (pure white, no darkening)
+    if (presetId === 'black') return 100;  // Far right: L=0% (pure black, no lightening)
+    return 0;                              // Center: no lightness adjustment
 }
 
 function getManualBgTone() {
