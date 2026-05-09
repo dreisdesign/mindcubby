@@ -468,6 +468,7 @@ let rulerGridSize = 0;
 let rulerFootprintHelper = null;
 let rulerFootprintSignature = '';
 const RULER_DYNAMIC_LINES_ENABLED = false;
+const RULER_FOOTPRINT_ENABLED = false;
 const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
 let modelPartNames = [];
 let modelPartBaseColors = [];
@@ -660,7 +661,7 @@ document.querySelectorAll('input[type="range"]').forEach((slider) => {
 let fineTuningMode = false;
 
 const AUTO_BRIGHTNESS_RULES = {
-    background: { shade: 0 },
+    background: { shade: -25 },
     buildPlate: { shade: 25 },
 };
 
@@ -1826,7 +1827,7 @@ function restoreModelUndoState(snapshot) {
         const syncColor = getModelSyncSourceColor();
         bgPick.value = syncColor;
         if (isDynamicBg) updateDynamicBg();
-        else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+        else applyBackgroundFromBaseColor(syncColor);
     }
     syncModelPartSelectorUI();
     queueModelPartThumbsRender();
@@ -2157,11 +2158,27 @@ function updateShadeSliderVisual() {
 
 function updateBgShadeSliderVisual() {
     if (!bgOpacitySlider || !bgPick) return;
-    const lightHex = `#${computeTonedColor(bgPick.value, -100).getHexString()}`;
-    const darkHex = `#${computeTonedColor(bgPick.value, 100).getHexString()}`;
+    const baseHex = getActiveBackgroundBaseColor();
+    const lightHex = `#${computeSurfaceShadeColor(baseHex, -100).getHexString()}`;
+    const darkHex = `#${computeSurfaceShadeColor(baseHex, 100).getHexString()}`;
     bgOpacitySlider.style.setProperty('--slider-fill', lightHex);
     bgOpacitySlider.style.setProperty('--slider-track-base', darkHex);
     bgOpacitySlider.style.setProperty('--slider-track-gradient', `linear-gradient(to right, ${lightHex} 0%, ${darkHex} 100%)`);
+}
+
+function syncBgShadeReadout() {
+    if (!bgOpacitySlider) return;
+    const tone = Math.round(getSliderEffectiveValue(bgOpacitySlider));
+    const bgValEl = document.getElementById('bgOpacityVal');
+    if (bgValEl) bgValEl.textContent = (tone >= 0 ? '+' : '') + tone;
+    syncSliderTooltip(bgOpacitySlider);
+}
+
+function syncBuildPlateShadeReadout() {
+    if (!buildPlateShadeSliderEl) return;
+    const shade = Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl));
+    if (buildPlateShadeValEl) buildPlateShadeValEl.textContent = (shade >= 0 ? '+' : '') + shade;
+    syncSliderTooltip(buildPlateShadeSliderEl);
 }
 
 function updateBuildPlateShadeSliderVisual() {
@@ -2827,8 +2844,36 @@ function computeTonedColor(baseHex, toneVal) {
     return baseC;
 }
 
+function computeSurfaceShadeColor(baseHex, shadeVal) {
+    const baseC = new THREE.Color(baseHex);
+    const hsl = { h: 0, s: 0, l: 0 };
+    baseC.getHSL(hsl);
+    const amount = Math.max(0, Math.min(1, Math.abs(shadeVal) / 100));
+
+    if (shadeVal < 0) {
+        if (hsl.l > 0.9) {
+            // Very light colors cannot brighten further; push darker instead.
+            hsl.l = Math.max(0, hsl.l * (1 - 0.55 * amount));
+        } else {
+            const lift = hsl.l < 0.08 ? 0.56 : 0.30;
+            hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * lift * amount);
+        }
+    } else if (shadeVal > 0) {
+        if (hsl.l < 0.1) {
+            // Very dark colors cannot darken further; push lighter instead.
+            hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * 0.62 * amount);
+        } else {
+            hsl.l = Math.max(0, hsl.l * (1 - 0.45 * amount));
+        }
+    }
+
+    if (hsl.s < 0.02 && hsl.l > 0.02) hsl.s = 0.02;
+    baseC.setHSL(hsl.h, hsl.s, hsl.l);
+    return baseC;
+}
+
 function computeBuildPlateShadeColor(baseHex, shadeVal) {
-    return computeTonedColor(baseHex, shadeVal);
+    return computeSurfaceShadeColor(baseHex, shadeVal);
 }
 
 function applyPartColorsToMesh() {
@@ -3087,7 +3132,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                             const fallbackPreset = BG_PRESETS.find((preset) => preset.id === lastNonModelBgPreset) || BG_PRESETS[0];
                             activeBgPreset = fallbackPreset?.id || 'white';
                             if (fallbackPreset?.color) {
-                                applyBgPresetDefaultTone(fallbackPreset.id);
+                                if (isDynamicBg) applyBgPresetDefaultTone(fallbackPreset.id);
                                 bgPick.value = fallbackPreset.color;
                                 bgPick.dispatchEvent(new Event('input', { bubbles: true }));
                             }
@@ -3103,7 +3148,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                         const syncColor = getModelSyncSourceColor();
                         bgPick.value = syncColor;
                         if (isDynamicBg) updateDynamicBg();
-                        else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+                        else applyBackgroundFromBaseColor(syncColor);
                         renderBgPresets();
                         updateBgSelection();
                         syncModelPartSelectorUI(true);
@@ -3160,7 +3205,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                         const fallbackPreset = BG_PRESETS.find((preset) => preset.id === lastNonModelBgPreset) || BG_PRESETS[0];
                         activeBgPreset = fallbackPreset?.id || 'white';
                         if (fallbackPreset?.color) {
-                            applyBgPresetDefaultTone(fallbackPreset.id);
+                            if (isDynamicBg) applyBgPresetDefaultTone(fallbackPreset.id);
                             bgPick.value = fallbackPreset.color;
                             bgPick.dispatchEvent(new Event('input', { bubbles: true }));
                         }
@@ -3177,7 +3222,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     const syncColor = getModelSyncSourceColor();
                     bgPick.value = syncColor;
                     if (isDynamicBg) updateDynamicBg();
-                    else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+                    else applyBackgroundFromBaseColor(syncColor);
                     renderBgPresets();
                     updateBgSelection();
                     syncModelPartSelectorUI(true);
@@ -3210,6 +3255,13 @@ function getModelSyncSourceColor() {
     if (!isMultipartModel()) return modelPartBaseColors[0] || colorPick.value;
     const idx = Math.max(0, Math.min(bgSyncPartIndex, modelPartBaseColors.length - 1));
     return modelPartBaseColors[idx] || colorPick.value;
+}
+
+function getActiveBackgroundBaseColor() {
+    if (activeBgPreset === 'white') return PALETTE.preset.white;
+    if (activeBgPreset === 'black') return PALETTE.preset.black;
+    if (activeBgPreset === 'modelcolor') return getModelSyncSourceColor() || bgPick?.value || PALETTE.fallback;
+    return bgPick?.value || PALETTE.fallback;
 }
 
 function getBuildPlateSyncSourceColor() {
@@ -3267,8 +3319,9 @@ function syncBgModelSyncSourceUI() {
                 const syncColor = getModelSyncSourceColor();
                 bgPick.value = syncColor;
                 if (isDynamicBg) updateDynamicBg();
-                else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+                else applyBackgroundFromBaseColor(syncColor);
             }
+            updateBgShadeSliderVisual();
             closeThumbSelectMenus();
             syncBgModelSyncSourceUI();
             saveSettings();
@@ -3285,6 +3338,7 @@ function syncBgModelSyncSourceUI() {
         bgModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
         bgModelSyncSelectorBtn.title = `Background sync: ${selectedName}`;
     }
+    updateBgShadeSliderVisual();
     queueModelPartThumbsRender();
 }
 
@@ -4868,10 +4922,13 @@ function updateRulerGrid() {
     const getGridContrastPalette = () => {
         const surfaceColor = getActiveGridSurfaceColor();
         const lum = getColorRelativeLuminance(surfaceColor);
-        if (lum < 0.46) {
-            return { center: 0xf4f4f8, lines: 0xd9d9e2, opacity: 0.56 };
+
+        const whiteContrast = 1.05 / Math.max(0.0001, lum + 0.05);
+        const blackContrast = (lum + 0.05) / 0.05;
+        if (whiteContrast >= blackContrast) {
+            return { center: 0xf7f7fb, lines: 0xe2e2ed, opacity: 0.62 };
         }
-        return { center: 0x1f1f27, lines: 0x3a3a47, opacity: 0.5 };
+        return { center: 0x17171f, lines: 0x2a2a36, opacity: 0.64 };
     };
 
     const palette = getGridContrastPalette();
@@ -4907,7 +4964,11 @@ function updateRulerGrid() {
         gridY = buildPlateMesh.position.y + Math.max(0.03, modelRadius * 0.0012);
     }
     rulerGridHelper.position.set(0, gridY, 0);
-    updateRulerFootprintHelper(worldBox, gridY);
+    if (RULER_FOOTPRINT_ENABLED) {
+        updateRulerFootprintHelper(worldBox, gridY);
+    } else if (rulerFootprintHelper) {
+        rulerFootprintHelper.visible = false;
+    }
 }
 
 // ── Persistence (IndexedDB for binary, localStorage for settings) ───────────
@@ -6599,7 +6660,8 @@ colorPick.addEventListener('input', (ev) => {
     if (activeBgPreset === 'modelcolor') {
         bgPick.value = getModelSyncSourceColor();
         if (isDynamicBg) updateDynamicBg();
-        else renderer && renderer.setClearColor(new THREE.Color(bgPick.value), 1);
+        else applyBackgroundFromBaseColor(bgPick.value);
+        updateBgShadeSliderVisual();
     }
     saveSettings();
 });
@@ -6626,7 +6688,7 @@ if (bgOpacitySlider) {
         document.getElementById('bgOpacityVal').textContent = (bgTone >= 0 ? '+' : '') + bgTone;
         syncSliderTooltip(bgOpacitySlider);
         updateBgShadeSliderVisual();
-        const c = computeTonedColor(bgPick.value, bgTone);
+        const c = computeSurfaceShadeColor(bgPick.value, bgTone);
         if (renderer) renderer.setClearColor(c, 1);
         updateBuildPlateMaterial();
         if (isDynamicBg) updateDynamicBg();
@@ -6640,7 +6702,7 @@ bgPick.addEventListener('input', () => {
 
     {
         const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
-        const c = computeTonedColor(bgPick.value, tone);
+        const c = computeSurfaceShadeColor(bgPick.value, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
     updateBuildPlateMaterial();
@@ -7442,20 +7504,54 @@ function sliderMatchesResetMidpoint(id) {
 }
 
 function getVisualResetPartSettings(index) {
-    const baseColor = modelPartBaseColors[index] || getPartSettings(index).color || colorPick.value;
+    const defaults = getModelResetDefaultsFromFirstTimeState();
     return {
-        color: baseColor,
-        tone: 0,
-        shading: 'phong',
+        color: defaults.color,
+        tone: defaults.tone,
+        shading: defaults.shading,
         hidden: false,
-        metallicRoughness: TEXTURE_TUNE_DEFAULTS.metallicRoughness,
-        metallicMetalness: TEXTURE_TUNE_DEFAULTS.metallicMetalness,
-        metallicReflection: TEXTURE_TUNE_DEFAULTS.metallicReflection,
-        phongRoughness: TEXTURE_TUNE_DEFAULTS.phongRoughness,
-        phongReflection: TEXTURE_TUNE_DEFAULTS.phongReflection,
-        matteRoughness: TEXTURE_TUNE_DEFAULTS.matteRoughness,
-        matteReflection: TEXTURE_TUNE_DEFAULTS.matteReflection,
+        metallicRoughness: defaults.metallicRoughness,
+        metallicMetalness: defaults.metallicMetalness,
+        metallicReflection: defaults.metallicReflection,
+        phongRoughness: defaults.phongRoughness,
+        phongReflection: defaults.phongReflection,
+        matteRoughness: defaults.matteRoughness,
+        matteReflection: defaults.matteReflection,
     };
+}
+
+let _cachedModelResetDefaults = null;
+
+function getModelResetDefaultsFromFirstTimeState() {
+    if (_cachedModelResetDefaults) return _cachedModelResetDefaults;
+
+    const clamp = (value, min, max, fallback) => {
+        const n = parseFloat(value);
+        return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+    };
+
+    const defaultSearchStr = typeof DEFAULT_SETTINGS_URL !== 'undefined' && DEFAULT_SETTINGS_URL.includes('?')
+        ? '?' + DEFAULT_SETTINGS_URL.split('?')[1]
+        : '';
+    const s = defaultSearchStr ? (getURLSettings(defaultSearchStr) || {}) : {};
+
+    _cachedModelResetDefaults = {
+        color: (typeof s.color === 'string' && /^#[0-9a-f]{6}$/i.test(s.color)) ? s.color : '#b4aed6',
+        tone: clamp(s.tone, -100, 100, 0),
+        shading: (s.shading === 'phong' || s.shading === 'matte' || s.shading === 'metallic' || s.shading === 'clear' || s.shading === 'glass')
+            ? s.shading
+            : 'phong',
+        metallicRoughness: clamp(s.textureTuneMetallicRoughness, 0, 100, TEXTURE_TUNE_DEFAULTS.metallicRoughness),
+        metallicMetalness: clamp(s.textureTuneMetallicMetalness, 0, 100, TEXTURE_TUNE_DEFAULTS.metallicMetalness),
+        metallicReflection: clamp(s.textureTuneMetallicReflection, 0, 200, TEXTURE_TUNE_DEFAULTS.metallicReflection),
+        phongRoughness: clamp(s.textureTunePhongRoughness, 0, 100, TEXTURE_TUNE_DEFAULTS.phongRoughness),
+        phongReflection: clamp(s.textureTunePhongReflection, 0, 200, TEXTURE_TUNE_DEFAULTS.phongReflection),
+        matteRoughness: clamp(s.textureTuneMatteRoughness, 0, 100, TEXTURE_TUNE_DEFAULTS.matteRoughness),
+        matteReflection: clamp(s.textureTuneMatteReflection, 0, 200, TEXTURE_TUNE_DEFAULTS.matteReflection),
+        activeModelPreset: (typeof s.activeModelPreset === 'string' && s.activeModelPreset.trim()) ? s.activeModelPreset.trim() : 'custom',
+    };
+
+    return _cachedModelResetDefaults;
 }
 
 function setCardResetButtonState(button, isDirty) {
@@ -7561,7 +7657,7 @@ btnResetModelCard?.addEventListener('click', () => {
         }
     });
 
-    activeModelPreset = 'custom';
+    activeModelPreset = getModelResetDefaultsFromFirstTimeState().activeModelPreset;
     syncUIFromSelectedPart();
     rebuildMeshMaterialsForCurrentShading();
     applyPartColorsToMesh();
@@ -7571,7 +7667,7 @@ btnResetModelCard?.addEventListener('click', () => {
         const syncColor = getModelSyncSourceColor();
         bgPick.value = syncColor;
         if (isDynamicBg) updateDynamicBg();
-        else if (renderer) renderer.setClearColor(new THREE.Color(syncColor), 1);
+        else applyBackgroundFromBaseColor(syncColor);
     }
 
     renderModelPresets();
@@ -9397,8 +9493,21 @@ function getBgPresetDefaultTone(presetId) {
     return 0;
 }
 
+function getManualBgTone() {
+    return bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : AUTO_BRIGHTNESS_RULES.background.shade;
+}
+
+function applyBackgroundFromBaseColor(baseHex) {
+    if (!renderer) return;
+    if (isDynamicBg) {
+        renderer.setClearColor(computeAutoBrightnessColor(baseHex), 1);
+        return;
+    }
+    renderer.setClearColor(computeSurfaceShadeColor(baseHex, getManualBgTone()), 1);
+}
+
 function computeAutoBrightnessColor(baseHex) {
-    return computeTonedColor(baseHex, AUTO_BRIGHTNESS_RULES.background.shade);
+    return computeSurfaceShadeColor(baseHex, AUTO_BRIGHTNESS_RULES.background.shade);
 }
 
 function computeBuildPlateAutoBrightnessColor(baseHex) {
@@ -9436,7 +9545,7 @@ colorPick.addEventListener('input', () => {
         // Only apply directly to renderer if auto-adjust is off
         // (updateDynamicBg above handles it when isDynamicBg is true)
         if (!isDynamicBg) {
-            renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+            applyBackgroundFromBaseColor(syncColor);
         }
     }
 });
@@ -9738,6 +9847,7 @@ function updateBgSelection() {
             if (parentOpt) parentOpt.classList.add('is-selected');
         }
     }
+    updateBgShadeSliderVisual();
     syncBgModelSyncSourceUI();
     syncModelPartSelectorUI();
 }
@@ -9841,6 +9951,7 @@ if (autoBgCheckEl) {
         else {
             if (wasDynamicBg && bgOpacitySlider) {
                 bgOpacitySlider.value = String(AUTO_BRIGHTNESS_RULES.background.shade);
+                syncBgShadeReadout();
             }
             // Restore base preset color when turning auto-adjust off
             if (activeBgPreset === 'modelcolor') {
@@ -9853,6 +9964,8 @@ if (autoBgCheckEl) {
                 if (preset && preset.color) bgPick.dispatchEvent(new Event('input', { bubbles: true }));
             }
         }
+        syncBgShadeReadout();
+        updateBgShadeSliderVisual();
         saveSettings();
         updateCardResetButtonStates();
     });
@@ -9901,8 +10014,12 @@ if (buildPlateAutoBrightnessEl) {
         buildPlateAutoBrightnessEnabled = !!buildPlateAutoBrightnessEl.checked;
         if (!buildPlateAutoBrightnessEnabled && wasAuto) {
             buildPlateShade = AUTO_BRIGHTNESS_RULES.buildPlate.shade;
-            if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(buildPlateShade);
+            if (buildPlateShadeSliderEl) {
+                buildPlateShadeSliderEl.value = String(buildPlateShade);
+                syncBuildPlateShadeReadout();
+            }
         }
+        syncBuildPlateShadeReadout();
         updateBuildPlateShadeControlVisibility();
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
@@ -10003,9 +10120,9 @@ function renderBgPresets() {
                 const syncColor = getModelSyncSourceColor();
                 bgPick.value = syncColor;
                 if (isDynamicBg) updateDynamicBg();
-                else renderer && renderer.setClearColor(new THREE.Color(syncColor), 1);
+                else applyBackgroundFromBaseColor(syncColor);
             } else {
-                applyBgPresetDefaultTone(preset.id);
+                if (isDynamicBg) applyBgPresetDefaultTone(preset.id);
                 bgPick.value = preset.color;
                 bgPick.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -10115,6 +10232,13 @@ function renderBuildPlatePresets() {
 
             activeBuildPlatePreset = preset.id;
             if (preset.id !== 'modelcolor') lastNonModelBuildPlatePreset = preset.id;
+            if (preset.id === 'modelcolor') {
+                buildPlateShade = AUTO_BRIGHTNESS_RULES.buildPlate.shade;
+                if (buildPlateShadeSliderEl) {
+                    buildPlateShadeSliderEl.value = String(buildPlateShade);
+                    syncBuildPlateShadeReadout();
+                }
+            }
             updateBuildPlateMaterial();
             updateBuildPlateSelection();
             refreshExportPreviewNow();

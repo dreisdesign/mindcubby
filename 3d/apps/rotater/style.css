@@ -7581,6 +7581,7 @@ html.theme-dark .adv-section-check input[type="checkbox"] {
 
 #buildPlateBox .build-plate-section-label {
     margin-top: 0;
+    margin-bottom: 8px;
 }
 
 #buildPlateBox .build-plate-section-label > span {
@@ -7594,7 +7595,11 @@ html.theme-dark #buildPlateBox .build-plate-section-label > span {
 }
 
 #buildPlateBox .preset-group {
-    margin-bottom: 10px;
+    margin-bottom: 14px;
+}
+
+#buildPlateBox .build-plate-shape-group {
+    margin-top: 12px !important;
 }
 
 /* ── Preset group inside new cards (no extra margin needed) ── */
