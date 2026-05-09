@@ -662,7 +662,7 @@ let fineTuningMode = false;
 
 const AUTO_BRIGHTNESS_RULES = {
     background: { shade: -100 },
-    buildPlate: { shade: 25 },
+    buildPlate: { shade: -100 },
 };
 
 function getSliderEffectiveValue(slider) {
@@ -7710,7 +7710,7 @@ btnResetBuildPlateCard?.addEventListener('click', () => {
     buildPlateAutoBrightnessEnabled = true;
     if (buildPlateAutoBrightnessEl) buildPlateAutoBrightnessEl.checked = true;
     buildPlateColor = null;
-    buildPlateShade = BUILD_PLATE_DEFAULTS.shade;
+    buildPlateShade = AUTO_BRIGHTNESS_RULES.buildPlate.shade;
     buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
     buildPlateShape = BUILD_PLATE_DEFAULTS.shape;
     buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
@@ -9491,6 +9491,12 @@ function getBgPresetDefaultTone(presetId) {
     return 0;
 }
 
+function getBuildPlatePresetDefaultTone(presetId) {
+    if (presetId === 'white') return -40;
+    if (presetId === 'black') return 40;
+    return 0;
+}
+
 function getManualBgTone() {
     return bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : AUTO_BRIGHTNESS_RULES.background.shade;
 }
@@ -10013,7 +10019,8 @@ if (buildPlateAutoBrightnessEl) {
         const wasAuto = buildPlateAutoBrightnessEnabled;
         buildPlateAutoBrightnessEnabled = !!buildPlateAutoBrightnessEl.checked;
         if (!buildPlateAutoBrightnessEnabled && wasAuto) {
-            buildPlateShade = AUTO_BRIGHTNESS_RULES.buildPlate.shade;
+            // When turning auto off, set slider to manual default (0 for normal, -40 for white, +40 for black)
+            buildPlateShade = getBuildPlatePresetDefaultTone(activeBuildPlatePreset);
             if (buildPlateShadeSliderEl) {
                 buildPlateShadeSliderEl.value = String(buildPlateShade);
                 syncBuildPlateShadeReadout();
