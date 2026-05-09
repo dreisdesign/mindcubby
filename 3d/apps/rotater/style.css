@@ -6023,37 +6023,56 @@ html.loaded .sidebar-tabs {
 
 .app-settings-toggle {
     width: 100%;
-    min-height: 46px;
+    min-height: 30px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 0 14px;
+    padding: 18px;
     border: none;
     background: transparent;
     color: var(--color-on-surface);
-    font-size: var(--text-md);
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
     cursor: pointer;
+    outline: none;
 }
 
 .app-settings-toggle-chevron {
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--surface-elev) 88%, #fff 12%);
+    color: var(--color-on-surface);
     transition: transform 0.16s ease;
 }
 
 .app-settings-toggle-chevron svg {
-    width: 100%;
-    height: 100%;
+    width: 18px;
+    height: 18px;
     display: block;
 }
 
 .app-settings-dock.is-collapsed .app-settings-toggle-chevron {
     transform: rotate(-90deg);
+}
+
+.app-settings-toggle:focus,
+.app-settings-toggle:active {
+    outline: none;
+    box-shadow: none;
+}
+
+.app-settings-toggle:focus-visible {
+    outline: none;
+    box-shadow: none;
 }
 
 .app-settings-dock-body {
@@ -7294,6 +7313,10 @@ html.loaded.export-workspace-active .canvas-wrap {
     display: none !important;
 }
 
+#buildPlateConfigBody[hidden] {
+    display: none !important;
+}
+
 .box-sub-heading {
     font-size: var(--text-sm, 12px);
     font-weight: 600;
@@ -7508,6 +7531,70 @@ html.theme-dark .adv-section-check input[type="checkbox"] {
     top: 50%;
     right: 8px;
     transform: translateY(-50%);
+}
+
+#buildPlateModelSyncSourceWrap {
+    width: 100%;
+    margin: 8px 0 4px;
+}
+
+#buildPlateModelSyncSelector .thumb-select-btn {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 6px;
+    min-height: 64px;
+    border-radius: 14px;
+    box-shadow: var(--shadow-soft);
+}
+
+#buildPlateModelSyncSelector .thumb-select-text,
+#buildPlateModelSyncSelector .thumb-select-option-text {
+    font-size: 12px;
+}
+
+#buildPlateModelSyncSelector .thumb-select-canvas {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+}
+
+#buildPlateModelSyncSelector .thumb-select-menu {
+    max-height: 220px;
+}
+
+#buildPlateModelSyncSelector .thumb-select-option {
+    grid-template-columns: 48px minmax(0, 1fr);
+    padding: 5px;
+}
+
+#buildPlateModelSyncSelector .thumb-select-option-canvas {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+}
+
+#buildPlateModelSyncSelector .thumb-select-sync-badge {
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+}
+
+#buildPlateBox .build-plate-section-label {
+    margin-top: 0;
+}
+
+#buildPlateBox .build-plate-section-label > span {
+    color: #4f4b66;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+html.theme-dark #buildPlateBox .build-plate-section-label > span {
+    color: var(--palette-blueberry-200);
+}
+
+#buildPlateBox .preset-group {
+    margin-bottom: 10px;
 }
 
 /* ── Preset group inside new cards (no extra margin needed) ── */

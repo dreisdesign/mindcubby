@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.58] - 2026-05-09
+
+### Fixed
+- **Background reset dirty-state trigger** — toggling `Auto brightness` off in the Background card now immediately activates the card reset state
+- **Surface control row layout parity** — `Grid` and `Build Plate` toggles are back to a side-by-side row for cleaner scanability
+- **Surface preset visual parity** — Build Plate color thumbs now retain standard card borders and selected-state styling matching the rest of the preset system
+- **Surface spacing/label cleanup** — Build Plate color/shape section labels are now Title Case and spacing between color controls/shape controls is more consistent
+- **Build Plate disabled remnant cleanup** — when Build Plate is toggled off, the inner Build Plate config body now hides cleanly so no empty remnant box is left behind
+- **App Settings dock visual parity** — App Settings now aligns with card width conventions and no longer shows the browser-default active/focus border artifact with clipped corners
+- **App Settings chevron affordance** — App Settings expand/collapse chevron now uses the same bordered-button visual language as other panel/card toggles
+
+### Changed
+- **Build metadata bumped** — app build/version metadata now reports `2.1.58` and CSS/JS cache-buster query tags were updated accordingly
+
 ## [2.1.56] - 2026-05-09
 
 ### Changed

@@ -301,6 +301,7 @@ const bgOpacitySlider = document.getElementById('bgOpacitySlider');
 const bgOpacitySliderLabel = bgOpacitySlider?.closest('.control-label');
 const buildPlateToggleEl = document.getElementById('buildPlateToggle');
 const buildPlateControlsEl = document.getElementById('buildPlateControls');
+const buildPlateConfigBodyEl = document.getElementById('buildPlateConfigBody');
 const buildPlateColorPickerEl = document.getElementById('buildPlateColorPicker');
 const buildPlateAutoBrightnessEl = document.getElementById('buildPlateAutoBrightness');
 const buildPlateShadeSliderEl = document.getElementById('buildPlateShadeSlider');
@@ -1268,6 +1269,7 @@ function updateBuildPlateMaterial() {
     }
 
     if (buildPlateControlsEl) buildPlateControlsEl.hidden = !buildPlateEnabled;
+    if (buildPlateConfigBodyEl) buildPlateConfigBodyEl.hidden = false;
     if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(Number(buildPlateShade) || 0);
     if (buildPlateShadeValEl) {
         const v = buildPlateShadeSliderEl
@@ -1294,6 +1296,7 @@ function updateBuildPlateMaterial() {
             btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
         });
     }
+    updateRulerGrid();
     updateCardResetButtonStates();
 }
 
@@ -1746,7 +1749,9 @@ function updateAutoBgShadeControlVisibility() {
 }
 
 function updateBuildPlateShadeControlVisibility() {
-    const autoOn = !!buildPlateAutoBrightnessEl?.checked || !!buildPlateAutoBrightnessEnabled;
+    const autoOn = buildPlateAutoBrightnessEl
+        ? !!buildPlateAutoBrightnessEl.checked
+        : !!buildPlateAutoBrightnessEnabled;
     buildPlateAutoBrightnessEnabled = autoOn;
     if (buildPlateShadeRowEl) buildPlateShadeRowEl.hidden = autoOn;
     if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.disabled = autoOn;
@@ -4834,19 +4839,65 @@ function updateRulerGrid() {
     const targetSize = Math.max(40, Math.ceil((Math.max(modelDims.w, modelDims.d) * 1.6) / 5) * 5);
     const divisions = Math.max(8, Math.min(42, Math.round(targetSize / 6)));
 
+    const getColorRelativeLuminance = (color) => {
+        const toLinear = (channel) => {
+            if (channel <= 0.04045) return channel / 12.92;
+            return Math.pow((channel + 0.055) / 1.055, 2.4);
+        };
+        const r = toLinear(color.r);
+        const g = toLinear(color.g);
+        const b = toLinear(color.b);
+        return (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+    };
+
+    const getActiveGridSurfaceColor = () => {
+        if (buildPlateEnabled && buildPlateMesh?.visible) {
+            const baseHex = getActiveBuildPlateBaseColor();
+            if (buildPlateAutoBrightnessEnabled) return computeBuildPlateAutoBrightnessColor(baseHex);
+            return computeBuildPlateShadeColor(baseHex, Number(buildPlateShade) || 0);
+        }
+
+        const baseHex = activeBgPreset === 'modelcolor'
+            ? getModelSyncSourceColor()
+            : (bgPick?.value || PALETTE.fallback);
+        if (isDynamicBg) return computeAutoBrightnessColor(baseHex);
+        const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
+        return computeTonedColor(baseHex, tone);
+    };
+
+    const getGridContrastPalette = () => {
+        const surfaceColor = getActiveGridSurfaceColor();
+        const lum = getColorRelativeLuminance(surfaceColor);
+        if (lum < 0.46) {
+            return { center: 0xf4f4f8, lines: 0xd9d9e2, opacity: 0.56 };
+        }
+        return { center: 0x1f1f27, lines: 0x3a3a47, opacity: 0.5 };
+    };
+
+    const palette = getGridContrastPalette();
+
     if (!rulerGridHelper || Math.abs(rulerGridSize - targetSize) > 0.5) {
         if (rulerGridHelper) scene.remove(rulerGridHelper);
-        rulerGridHelper = new THREE.GridHelper(targetSize, divisions, 0x3f3b52, 0x6f6a8f);
+        rulerGridHelper = new THREE.GridHelper(targetSize, divisions, palette.center, palette.lines);
         const mats = Array.isArray(rulerGridHelper.material) ? rulerGridHelper.material : [rulerGridHelper.material];
         mats.forEach((mat) => {
             mat.transparent = true;
-            mat.opacity = 0.5;
+            mat.opacity = palette.opacity;
             mat.depthWrite = false;
             mat.depthTest = true;
         });
         rulerGridHelper.renderOrder = -1;
         scene.add(rulerGridHelper);
         rulerGridSize = targetSize;
+    } else {
+        if (typeof rulerGridHelper.setColors === 'function') {
+            rulerGridHelper.setColors(palette.center, palette.lines);
+        }
+        const mats = Array.isArray(rulerGridHelper.material) ? rulerGridHelper.material : [rulerGridHelper.material];
+        mats.forEach((mat) => {
+            mat.opacity = palette.opacity;
+            mat.needsUpdate = true;
+        });
     }
 
     rulerGridHelper.visible = true;
@@ -7433,7 +7484,12 @@ function updateCardResetButtonStates() {
         );
     });
 
-    const backgroundDirty = !sliderMatchesResetMidpoint('bgOpacitySlider');
+    const bgAutoOn = !!(document.getElementById('autoBgCheck')?.checked ?? isDynamicBg);
+    const bgShadeValue = parseInt(String(bgOpacitySlider?.value || AUTO_BRIGHTNESS_RULES.background.shade), 10) || 0;
+    const backgroundDirty = (activeBgPreset || 'modelcolor') !== 'modelcolor'
+        || bgSyncPartIndex !== 0
+        || !bgAutoOn
+        || (!bgAutoOn && bgShadeValue !== AUTO_BRIGHTNESS_RULES.background.shade);
 
     const rulerToggle = document.getElementById('rulerToggle');
     const normalizedPlateColor = String(buildPlateColor || '').toLowerCase();
@@ -7442,7 +7498,7 @@ function updateCardResetButtonStates() {
         || (activeBuildPlatePreset || 'modelcolor') !== 'modelcolor'
         || !buildPlateAutoBrightnessEnabled
         || normalizedPlateColor !== ''
-        || (parseInt(String(buildPlateShade), 10) || 0) !== BUILD_PLATE_DEFAULTS.shade
+        || (!buildPlateAutoBrightnessEnabled && (parseInt(String(buildPlateShade), 10) || 0) !== BUILD_PLATE_DEFAULTS.shade)
         || (buildPlateShape || BUILD_PLATE_DEFAULTS.shape) !== BUILD_PLATE_DEFAULTS.shape;
 
     const lightingDirty = CARD_RESET_LIGHTING_SLIDERS.some((id) => !sliderMatchesResetMidpoint(id));
@@ -9797,6 +9853,8 @@ if (autoBgCheckEl) {
                 if (preset && preset.color) bgPick.dispatchEvent(new Event('input', { bubbles: true }));
             }
         }
+        saveSettings();
+        updateCardResetButtonStates();
     });
 }
 updateAutoBgShadeControlVisibility();
