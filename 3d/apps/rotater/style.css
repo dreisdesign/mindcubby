@@ -6788,20 +6788,11 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
 
     html.loaded.layout-v2-desktop .sidebar-logo--icon {
         display: block;
-        width: 30px;
-        min-width: 30px;
-        height: 30px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        border-radius: 9px;
-        border: 1px solid var(--border-color);
-        background: color-mix(in srgb, var(--surface-elev) 88%, #fff 12%);
-        transition: transform 0.16s ease;
-        flex: 1 1 auto;
-        min-width: 0;
-        gap: 8px;
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        object-fit: contain;
+        flex: 0 0 40px;
     }
 
     html.loaded.layout-v2-desktop .sidebar-upload-btn {
