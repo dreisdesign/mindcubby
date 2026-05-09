@@ -1462,7 +1462,8 @@ function applyTextureLighting() {
         mesh.receiveShadow = false;
     }
     if (shadowCatcher) {
-        shadowCatcher.visible = shadowsOn && !buildPlateEnabled;
+        // Keep projected shadows visible regardless of build plate toggle.
+        shadowCatcher.visible = shadowsOn;
         if (shadowCatcher.material && shadowCatcher.material.isShadowMaterial) {
             shadowCatcher.material.opacity = shadowsOn ? (0.02 + shadowsAmt * 0.16) : 0.02;
             shadowCatcher.material.needsUpdate = true;
