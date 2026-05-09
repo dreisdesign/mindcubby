@@ -8848,6 +8848,15 @@ const setAnimStatus = (msg, done, total) => {
     // Also drive the in-viewport progress overlay
     updateExportProgressOverlay(msg, done, total);
 };
+let _lastExportUiPaintAt = 0;
+async function maybePaintExportProgress(msg, done, total, force = false) {
+    const now = performance.now();
+    // Paint frequently at start (so early progress does not feel stuck), then throttle.
+    if (!force && done != null && done > 24 && (now - _lastExportUiPaintAt) < 90) return;
+    setAnimStatus(msg, done, total);
+    _lastExportUiPaintAt = now;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+}
 const _exportProgressOverlay = () => document.getElementById('exportProgressOverlay');
 const _exportProgressLabel = () => document.getElementById('exportProgressOverlayLabel');
 const _exportProgressFill = () => document.getElementById('exportProgressOverlayFill');
@@ -9097,10 +9106,7 @@ async function captureFrames(n, dims = null, transparent = false) {
             drawRulerOverlay(outCtx, W, H, camera);
             frames.push(new Uint8ClampedArray(outCtx.getImageData(0, 0, W, H).data));
 
-            if (i % 12 === 0) {
-                setAnimStatus(`Capturing… ${i + 1} / ${n}`, i + 1, n);
-                await new Promise(r => setTimeout(r, 0));
-            }
+            await maybePaintExportProgress(`Capturing… ${i + 1} / ${n}`, i + 1, n);
         }
     } finally {
         restoreExportScene();
@@ -9206,10 +9212,7 @@ btnGif.addEventListener('click', async () => {
                 gif.writeFrame(index, W, H, { palette, delay, ...(i === 0 && { repeat }) });
             }
 
-            if (i % 16 === 0) {
-                setAnimStatus(`Encoding… ${i + 1} / ${frames.length}`, i + 1, frames.length);
-                await new Promise(r => setTimeout(r, 0));
-            }
+            await maybePaintExportProgress(`Encoding… ${i + 1} / ${frames.length}`, i + 1, frames.length);
         }
 
         gif.finish();
@@ -9376,10 +9379,7 @@ btnVideo.addEventListener('click', async () => {
                 encoder.encode(frame, { keyFrame: f % 30 === 0 });
                 frame.close();
 
-                if (f % 12 === 0) {
-                    setAnimStatus(`Encoding… ${f + 1} / ${totalFrames}`, f + 1, totalFrames);
-                    await new Promise(r => setTimeout(r, 0));
-                }
+                await maybePaintExportProgress(`Encoding… ${f + 1} / ${totalFrames}`, f + 1, totalFrames);
             }
 
             setAnimStatus('Finalizing video…', totalFrames, totalFrames);
