@@ -6479,7 +6479,7 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
     }
 
     html.loaded.layout-v2-desktop.sidebar-collapsed .sidebar {
-        width: clamp(320px, 26vw, 420px) !important;
+        width: clamp(340px, 28vw, 460px) !important;
         border-right: 1px solid var(--border-color);
     }
 
@@ -6493,7 +6493,7 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
 
     html.loaded.layout-v2-desktop .sidebar {
         order: -1;
-        width: clamp(320px, 26vw, 420px);
+        width: clamp(340px, 28vw, 460px);
         border-left: none;
         border-right: 1px solid var(--border-color);
         background: var(--color-surface);
@@ -6769,12 +6769,17 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
 
     html.loaded.layout-v2-desktop .sidebar-logo--icon {
         display: block;
-        width: 40px;
-        height: 40px;
-        flex: 0 0 40px;
-    }
-
-    html.loaded.layout-v2-desktop .sidebar-brand-actions {
+        width: 30px;
+        min-width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 9px;
+        border: 1px solid var(--border-color);
+        background: color-mix(in srgb, var(--surface-elev) 88%, #fff 12%);
+        transition: transform 0.16s ease;
         flex: 1 1 auto;
         min-width: 0;
         gap: 8px;
@@ -7243,8 +7248,8 @@ html.loaded.export-workspace-active .canvas-wrap {
 }
 
 .card-collapse-btn span svg {
-    width: 100%;
-    height: 100%;
+    width: 18px;
+    height: 18px;
     display: block;
 }
 

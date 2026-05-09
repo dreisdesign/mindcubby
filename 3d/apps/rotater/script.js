@@ -8,7 +8,7 @@ import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 import JSZip from 'jszip';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
-const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=phong&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1';
+const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=phong&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
 // Export quality presets — base short-edge size + fps + bitrate.
@@ -395,10 +395,10 @@ let suppressSave = false;
 // Declared early so restoreSettings() (called before these would otherwise be
 // initialized by their let declarations later in the file) can safely read/write them.
 let activeModelPreset = 'custom';
-let activeBgPreset = 'custom';
-let activeBuildPlatePreset = 'custom';
-let isDynamicBg = false;
-let buildPlateAutoBrightnessEnabled = false;
+let activeBgPreset = 'modelcolor';
+let activeBuildPlatePreset = 'modelcolor';
+let isDynamicBg = true;
+let buildPlateAutoBrightnessEnabled = true;
 let rulerEnabled = true;
 let rulerUnit = 'metric';
 let rulerLinesVisible = true;
@@ -3148,7 +3148,7 @@ function getModelSyncSourceColor() {
 }
 
 function getBuildPlateSyncSourceColor() {
-    if (!isMultipartModel()) return colorPick.value;
+    if (!isMultipartModel()) return modelPartBaseColors[0] || colorPick.value;
     const idx = Math.max(0, Math.min(buildPlateSyncPartIndex, modelPartBaseColors.length - 1));
     return modelPartBaseColors[idx] || colorPick.value;
 }
@@ -3629,7 +3629,19 @@ function applyExportSceneForRender({ forceTransparent = false } = {}) {
         buildPlateMesh.visible = !!(includeBuildPlate && buildPlateEnabled && mesh);
     }
 
-    const showGrid = !!(includeGrid && rulerEnabled && rulerLinesVisible && mesh);
+    const showGrid = !!(includeGrid && mesh);
+    if (showGrid && !rulerGridHelper && modelDims && scene) {
+        // Create the grid helper on demand for export even if ruler is off in main view
+        const _savedEnabled = rulerEnabled;
+        const _savedVisible = rulerLinesVisible;
+        rulerEnabled = true;
+        rulerLinesVisible = true;
+        updateRulerGrid();
+        rulerEnabled = _savedEnabled;
+        rulerLinesVisible = _savedVisible;
+        if (rulerGridHelper) rulerGridHelper.visible = false;
+        if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
+    }
     if (rulerGridHelper) rulerGridHelper.visible = showGrid;
     if (rulerFootprintHelper) rulerFootprintHelper.visible = showGrid;
 
@@ -3642,8 +3654,9 @@ function applyExportSceneForRender({ forceTransparent = false } = {}) {
         scene.background = savedBg;
         renderer.setClearColor(savedClearColor, savedClearAlpha);
         if (buildPlateMesh && typeof savedBuildPlateVisible === 'boolean') buildPlateMesh.visible = savedBuildPlateVisible;
-        if (rulerGridHelper && typeof savedRulerGridVisible === 'boolean') rulerGridHelper.visible = savedRulerGridVisible;
-        if (rulerFootprintHelper && typeof savedRulerFootprintVisible === 'boolean') rulerFootprintHelper.visible = savedRulerFootprintVisible;
+        // If rulerGridHelper was null before (created on demand for export), hide it after; otherwise restore
+        if (rulerGridHelper) rulerGridHelper.visible = typeof savedRulerGridVisible === 'boolean' ? savedRulerGridVisible : false;
+        if (rulerFootprintHelper) rulerFootprintHelper.visible = typeof savedRulerFootprintVisible === 'boolean' ? savedRulerFootprintVisible : false;
     };
 }
 
@@ -5145,6 +5158,7 @@ function restoreSettings() {
         }
         if (s.buildPlateAutoBrightness != null) {
             buildPlateAutoBrightnessEnabled = (s.buildPlateAutoBrightness === '1' || s.buildPlateAutoBrightness === true || s.buildPlateAutoBrightness === 1);
+            if (buildPlateAutoBrightnessEl) buildPlateAutoBrightnessEl.checked = buildPlateAutoBrightnessEnabled;
         }
         if (typeof s.buildPlateColor === 'string' && /^[0-9a-f]{6}$/i.test(s.buildPlateColor)) {
             buildPlateColor = `#${s.buildPlateColor}`;
@@ -8226,6 +8240,21 @@ document.getElementById('btnOpenExportModalCanvas')?.addEventListener('click', (
 
 document.getElementById('btnExportWorkspaceClose')?.addEventListener('click', () => {
     closeExportWorkspace();
+});
+
+document.getElementById('btnCopyLink')?.addEventListener('click', function () {
+    saveSettings();
+    settingsToURL();
+    const url = location.href;
+    const btn = this;
+    const prev = btn.textContent;
+    navigator.clipboard.writeText(url).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = prev; }, 1800);
+    }).catch(() => {
+        btn.textContent = 'Copy failed';
+        setTimeout(() => { btn.textContent = prev; }, 1800);
+    });
 });
 
 btnDownloadPackage?.addEventListener('click', async () => {

@@ -11,8 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
-## [Unreleased]
+## [2.1.55] - 2026-05-09
 
+### Added
+- **Copy Link button** — Export panel now includes a `Copy Link` button (left of `Save Project`) that saves current settings to the URL and copies it to the clipboard
+
+### Changed
+- **Export: Download Settings → Save Project** — renamed the ZIP package button to `Save Project` for clarity
+- **Animation card moved to top** — Animation card is now the first card in the Effects panel (above Lighting Effects)
+- **Animation card header** — Animation card header now uses the standard `box-heading` style matching all other cards
+- **App Settings chevron** — App Settings collapse chevron now renders as a bordered 30×30 box matching the card collapse button style
+- **Desktop sidebar wider** — Sidebar panel width increased from `clamp(320px, 26vw, 420px)` to `clamp(340px, 28vw, 460px)` so the Upload STL button text no longer wraps to two lines
+
+### Fixed
+- **Build plate model sync + auto brightness** — Fixed initialization bug where restoring settings with model sync + auto brightness could produce a stale color; `getBuildPlateSyncSourceColor()` now uses `modelPartBaseColors[0]` as primary source for single-part models; `buildPlateAutoBrightnessEl.checked` is now explicitly synced on restore
+- **Export grid** — Grid now appears correctly in the export preview even when the main-view ruler is disabled; the grid helper is created on demand for export if needed
+- **Defaults: model sync + auto brightness** — Build Plate and Background now default to `Model Sync` preset with Auto Brightness enabled for new visitors
+
+## [Unreleased]
 ### Added
 - **Model footprint floor guides** — ruler grid now includes thin footprint lines derived from the loaded model bounds, aligned to the active ruler unit system (`mm` metric spacing or `in` imperial spacing)
 - **Export preview visible border** — the mini export preview now always has a visible border; border strengthens when background is off so the frame is clear on transparent renders
