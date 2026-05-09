@@ -5420,15 +5420,15 @@ function settingsToURL() {
         p.set('ece', exportCamElev.toFixed(4));
     if (exportCamZoom != null && Number.isFinite(exportCamZoom) && exportCamZoom !== 1)
         p.set('ecz', exportCamZoom.toFixed(4));
-    // Auto BG adjust + active presets
-    if (isDynamicBg) p.set('aba', '1');
-    if (rulerEnabled) p.set('rv', '1');
+    // Persist explicit values for settings whose defaults may differ between builds.
+    p.set('aba', isDynamicBg ? '1' : '0');
+    p.set('rv', rulerEnabled ? '1' : '0');
     if (rulerUnit === 'imperial') p.set('ru', 'i');
     if (!rulerLinesVisible) p.set('rg', '0');
     if (!buildPlateEnabled) p.set('bp', '0');
-    if (activeBuildPlatePreset && activeBuildPlatePreset !== 'custom') p.set('bpr', activeBuildPlatePreset);
+    p.set('bpr', activeBuildPlatePreset || 'modelcolor');
     if (buildPlateSyncPartIndex > 0) p.set('bpsp', String(buildPlateSyncPartIndex));
-    if (buildPlateAutoBrightnessEnabled) p.set('bpab', '1');
+    p.set('bpab', buildPlateAutoBrightnessEnabled ? '1' : '0');
     if (buildPlateColor && /^#[0-9a-f]{6}$/i.test(buildPlateColor)) {
         p.set('bpc', buildPlateColor.replace('#', ''));
     }
@@ -5438,7 +5438,7 @@ function settingsToURL() {
     if (buildPlateSizePreset && buildPlateSizePreset !== '220x220') p.set('bpp', buildPlateSizePreset);
     if (buildPlateWidth !== 220) p.set('bpw', String(buildPlateWidth));
     if (buildPlateDepth !== 220) p.set('bpd', String(buildPlateDepth));
-    if (activeBgPreset && activeBgPreset !== 'custom') p.set('abp', activeBgPreset);
+    p.set('abp', activeBgPreset || 'modelcolor');
     if (activeModelPreset && activeModelPreset !== 'custom') p.set('amp', activeModelPreset);
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
     if (!uploadChoicePromptEnabled) p.set('uap', '0');

@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): Unreleased**
+**Version (current workspace): 2.1.55**
 
 Current development note: export and crop now run through one shared workspace on the main viewer. Remaining cleanup focuses on removing older duplicate preview remnants and simplifying export-specific state wiring. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
@@ -18,7 +18,7 @@ python3 -m http.server 8765
 ```
 
 ### Applying Default Settings
-If you want to spin up your own instance and override the default colors, camera angles, speeds, or lighting without modifying the codebase, download a package from the app header and copy the `shareURL` value from `package.json`, then paste that URL parameter string inside `script.js` near the top:
+If you want to spin up your own instance and override the default colors, camera angles, speeds, lighting, or build plate/background sync behavior without modifying the codebase, use `Copy Link` in the Export modal or save a project package and copy the `shareURL` value from `package.json`, then paste that URL parameter string inside `script.js` near the top:
 
 ```javascript
 const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
@@ -48,13 +48,15 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
 - **Export** opens the export workspace from the left controls; framing now reuses the main viewer instead of a separate duplicate preview
-- **Download Project ZIP** (inside the Export modal) saves a single ZIP package containing `package.json` plus the original STL file(s)
+- **Copy Link** (inside the Export modal) copies a shareable URL for the current scene, including build plate/background sync and auto-brightness settings
+- **Save Project** (inside the Export modal) saves a single ZIP package containing `package.json` plus the original STL file(s)
 - **Import Package** is part of the Upload STL flow (choice modal button) and accepts Rotater `.zip` packages for quick restore/testing
 - ZIP package import now validates file paths, type allowlist (`.stl` + `package.json`), and archive size limits before loading
 - **Collapsed Export Assist** (App Settings) can auto-expand export when collapsed and show a one-time confirmation before continuing
 - **Reset all warnings** (App Settings) re-enables warning dialogs that were previously dismissed (for example collapsed export confirmation and upload choice prompt)
 - **Export Motion Controls** (App Settings) toggles curated mode/time/range controls directly inside the Export overlay
 - **Build Plate controls** are now in their own dedicated card (separate from Background)
+- **Background** and **Build Plate** now default to `Model Sync` with Auto Brightness enabled for new visitors
 - **Load 3D Benchy** is available in App Settings for a quick test-model reset
 
 See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
@@ -90,14 +92,14 @@ Sidebar tabs: **Theme → Effects**
 - **Theme** includes model + background controls
 - **Effects** combines lighting controls and animation controls in one panel
 - **Export** is now a modal opened from the header button
-- **Download Project ZIP** lives inside the Export modal and exports a reusable ZIP package for future import/export workflows
+- **Copy Link** and **Save Project** live inside the Export modal for shareable URLs and reusable ZIP packages
 - The Theme sidebar uses unified slider styling and shared snap behavior across Shade, Sheen, Contrast, and Highlights
 
 When a multi-part model is loaded:
 
 - **Model** controls are part-aware (color, shade/tone, shading mode, and finish/reflection values are stored per selected part)
 - **Model presets** are model-only (they no longer force background or lighting changes)
-- **Background → Model** preset can follow a chosen part via **Model Sync Source** (defaults to Part 1)
+- **Background → Model** preset can follow a chosen part via **Model Sync Source** (defaults to Part 1), and Auto Brightness is enabled by default on first visit
 - The part selector dropdown appears only for multipart models; single-model sessions use an exposed 3-dot actions menu
 
 | Control | Description |
@@ -105,6 +107,8 @@ When a multi-part model is loaded:
 | Color → Model | Model face color (click swatch to open color picker) |
 | Color → BG | Background color (click swatch to open color picker) |
 | Build Plate | Solid slicer-style floor plane beneath the model (toggle in Background card) |
+| Build Plate Preset | `White`, `Black`, `Model Sync`, or `Custom` |
+| Build Plate Auto Brightness | Automatically lightens the selected build plate color or synced model color for better scene contrast |
 | Plate Color | Build plate color picker (shown when Build Plate is enabled) |
 | Plate Shade | Lighten/darken the selected plate color |
 | Plate Finish | Plate material finish: Matte, Satin, or Gloss |
@@ -151,14 +155,18 @@ Export framing now centers on the main viewer during the export workspace flow. 
 
 The Export section uses a **Format** dropdown and a **Quality** dropdown. Selecting a format reveals its specific options. A live **Preview** thumbnail shows the export frame crop in real time.
 
-### Download project ZIP
+### Save Project
 
-The **Download Project ZIP** action inside the Export modal saves one ZIP package that contains:
+The **Save Project** action inside the Export modal saves one ZIP package that contains:
 
 - `package.json` with the current Rotater settings, part names, selected part, and share URL
 - the currently loaded STL file, or all STL parts for multipart models
 
 This package is designed to support a future import flow.
+
+### Copy Link
+
+The **Copy Link** action inside the Export modal copies a shareable URL for the current Rotater scene. The link includes animation, export, background, build plate, model-sync, and auto-brightness settings so another session can restore the same setup directly from the URL.
 
 | Format | Output |
 |---|---|
