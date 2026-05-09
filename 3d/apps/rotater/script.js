@@ -661,7 +661,7 @@ document.querySelectorAll('input[type="range"]').forEach((slider) => {
 let fineTuningMode = false;
 
 const AUTO_BRIGHTNESS_RULES = {
-    background: { shade: -25 },
+    background: { shade: -100 },
     buildPlate: { shade: 25 },
 };
 
@@ -2848,19 +2848,17 @@ function computeSurfaceShadeColor(baseHex, shadeVal) {
     const baseC = new THREE.Color(baseHex);
     const hsl = { h: 0, s: 0, l: 0 };
     baseC.getHSL(hsl);
-    const amount = Math.max(0, Math.min(1, Math.abs(shadeVal) / 100));
+    // Scale slider range [-100, +100] to adjustment range [-0.4, +0.4] (40% range)
+    const scaledAdjustment = (shadeVal / 100) * 0.4;
+    const amount = Math.max(-0.4, Math.min(0.4, scaledAdjustment));
 
-    if (shadeVal < 0) {
-        if (hsl.l > 0.9) {
-            // Very light colors cannot brighten further; push darker instead.
-            hsl.l = Math.max(0, hsl.l * (1 - 0.55 * amount));
-        } else {
-            const lift = hsl.l < 0.08 ? 0.56 : 0.30;
-            hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * lift * amount);
-        }
-    } else if (shadeVal > 0) {
+    if (amount < 0) {
+        // Brighten: increase lightness
+        const lift = hsl.l < 0.08 ? 0.56 : 0.30;
+        hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * lift * Math.abs(amount));
+    } else if (amount > 0) {
+        // Darken: decrease lightness
         if (hsl.l < 0.1) {
-            // Very dark colors cannot darken further; push lighter instead.
             hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * 0.62 * amount);
         } else {
             hsl.l = Math.max(0, hsl.l * (1 - 0.45 * amount));
@@ -9488,8 +9486,8 @@ const BUILD_PLATE_PRESETS = [
 ];
 
 function getBgPresetDefaultTone(presetId) {
-    if (presetId === 'white') return -100;
-    if (presetId === 'black') return 100;
+    if (presetId === 'white') return -40;
+    if (presetId === 'black') return 40;
     return 0;
 }
 
@@ -9950,7 +9948,9 @@ if (autoBgCheckEl) {
         if (isDynamicBg) updateDynamicBg();
         else {
             if (wasDynamicBg && bgOpacitySlider) {
-                bgOpacitySlider.value = String(AUTO_BRIGHTNESS_RULES.background.shade);
+                // When turning auto off, set slider to manual default (0 for normal, -40 for white, +40 for black)
+                const manualDefault = getBgPresetDefaultTone(activeBgPreset);
+                bgOpacitySlider.value = String(manualDefault);
                 syncBgShadeReadout();
             }
             // Restore base preset color when turning auto-adjust off
