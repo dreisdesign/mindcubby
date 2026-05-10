@@ -2007,6 +2007,10 @@ function rebuildFileChipPartsMenu() {
 }
 
 function createPartSettings(colorHex = colorPick.value) {
+    const finishMode = finishControlGroupEl?.dataset.activeMode || getSelectedFinishMode();
+    const finishValue = textureTuneRoughnessSlider
+        ? clampFinishSliderValue(textureTuneRoughnessSlider.value)
+        : modeStrengthToFinishSliderValue(finishMode, FINISH_MODE_DEFAULT_STRENGTH[finishMode] || 2);
     return {
         color: colorHex,
         tone: parseInt(opacitySlider ? opacitySlider.value : 0, 10) || 0,
@@ -2019,6 +2023,8 @@ function createPartSettings(colorHex = colorPick.value) {
         phongReflection: textureTuneState.phongReflection,
         matteRoughness: textureTuneState.matteRoughness,
         matteReflection: textureTuneState.matteReflection,
+        finishMode,
+        finishValue,
     };
 }
 
@@ -2090,7 +2096,43 @@ function setFinishModeUI(mode) {
     if (group) group.dataset.activeMode = mode;
 }
 
+function getStoredFinishMode(settings) {
+    const mode = settings?.finishMode;
+    return FINISH_MODE_ORDER.includes(mode) ? mode : null;
+}
+
+function getStoredFinishSliderValue(settings) {
+    if (!settings) return null;
+    const raw = Number(settings.finishValue);
+    return Number.isFinite(raw) ? clampFinishSliderValue(raw) : null;
+}
+
+function applyFinishModeValueToPartSettings(partSettings, finishMode, finishValue = null) {
+    const mode = FINISH_MODE_ORDER.includes(finishMode) ? finishMode : getStoredFinishMode(partSettings) || 'satin';
+    const normalizedValue = finishValue == null
+        ? modeStrengthToFinishSliderValue(mode, FINISH_MODE_DEFAULT_STRENGTH[mode] || 2)
+        : clampFinishSliderValue(finishValue);
+    const { mode: resolvedMode, strength } = finishSliderValueToModeStrength(normalizedValue);
+    const rough = roughnessForModeStrength(resolvedMode, strength);
+    const modeBaseReflection = resolvedMode === 'matte' ? 22 : resolvedMode === 'satin' ? 40 : 62;
+    const reflection = Math.max(6, Math.min(120, modeBaseReflection + ((2 - strength) * 8)));
+
+    partSettings.shading = 'phong';
+    partSettings.matteRoughness = rough;
+    partSettings.metallicRoughness = rough;
+    partSettings.phongRoughness = rough;
+    partSettings.matteReflection = Math.max(4, reflection - 14);
+    partSettings.phongReflection = reflection;
+    partSettings.metallicReflection = Math.min(130, reflection + 10);
+    partSettings.finishMode = resolvedMode;
+    partSettings.finishValue = modeStrengthToFinishSliderValue(resolvedMode, strength);
+    return partSettings;
+}
+
 function getFinishModeFromPartSettings(settings) {
+    const storedMode = getStoredFinishMode(settings);
+    if (storedMode) return storedMode;
+
     const shade = settings?.shading;
     if (shade === 'flat' || shade === 'toon') return 'matte';
 
@@ -2143,6 +2185,9 @@ function finishStrengthFromPartSettings(settings) {
 }
 
 function finishSliderValueFromPartSettings(settings) {
+    const storedValue = getStoredFinishSliderValue(settings);
+    if (storedValue != null) return storedValue;
+
     const mode = getFinishModeFromPartSettings(settings);
     const strength = finishStrengthFromPartSettings(settings);
     return modeStrengthToFinishSliderValue(mode, strength);
@@ -2174,15 +2219,7 @@ function applyFinishControlsToSelectedPart(commit = false) {
     setFinishModeUI(mode);
 
     const targets = applyToModelPartEditTargets((partSettings) => {
-        partSettings.shading = 'phong';
-        partSettings.matteRoughness = rough;
-        partSettings.metallicRoughness = rough;
-        partSettings.phongRoughness = rough;
-        const modeBaseReflection = mode === 'matte' ? 22 : mode === 'satin' ? 40 : 62;
-        const reflection = Math.max(6, Math.min(120, modeBaseReflection + ((2 - strength) * 8)));
-        partSettings.matteReflection = Math.max(4, reflection - 14);
-        partSettings.phongReflection = reflection;
-        partSettings.metallicReflection = Math.min(130, reflection + 10);
+        applyFinishModeValueToPartSettings(partSettings, mode, modeStrengthToFinishSliderValue(mode, strength));
     });
     shadingEl.value = getSelectedPartSettings().shading;
     if (textureTuneRoughnessVal) {
@@ -3004,6 +3041,13 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
     if (presetUrlSettings.textureTunePhongReflection != null) partSettings.phongReflection = Number(presetUrlSettings.textureTunePhongReflection);
     if (presetUrlSettings.textureTuneMatteRoughness != null) partSettings.matteRoughness = Number(presetUrlSettings.textureTuneMatteRoughness);
     if (presetUrlSettings.textureTuneMatteReflection != null) partSettings.matteReflection = Number(presetUrlSettings.textureTuneMatteReflection);
+    if (presetUrlSettings.textureTuneFinishMode != null || presetUrlSettings.textureTuneFinishValue != null) {
+        applyFinishModeValueToPartSettings(
+            partSettings,
+            presetUrlSettings.textureTuneFinishMode,
+            presetUrlSettings.textureTuneFinishValue
+        );
+    }
 }
 
 function hasExplicitUrlModelAppearanceParams(params = new URLSearchParams(location.search)) {
