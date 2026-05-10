@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.63] - 2026-05-10
+
+### Changed
+- **Build metadata aligned** — app build/version metadata and cache-buster query tags now consistently report `2.1.63`
+
+### Fixed
+- **Shared finish-state authority** — explicit URL surface-finish values (`tfm`/`tfv`) now apply directly to part settings during restore instead of being parsed and then ignored
+- **Legacy shader finish drift** — legacy material URLs/presets that rely on `sh` plus roughness/reflection values now clear stale stored finish metadata so the Surface Finish UI reflects the actual rendered material instead of old matte/gloss labels
+
 ## [2.1.62] - 2026-05-10
 
 ### Changed

@@ -2107,6 +2107,12 @@ function getStoredFinishSliderValue(settings) {
     return Number.isFinite(raw) ? clampFinishSliderValue(raw) : null;
 }
 
+function clearStoredFinishState(partSettings) {
+    if (!partSettings) return;
+    delete partSettings.finishMode;
+    delete partSettings.finishValue;
+}
+
 function applyFinishModeValueToPartSettings(partSettings, finishMode, finishValue = null) {
     const mode = FINISH_MODE_ORDER.includes(finishMode) ? finishMode : getStoredFinishMode(partSettings) || 'satin';
     const normalizedValue = finishValue == null
@@ -3026,6 +3032,19 @@ fileChipEl?.addEventListener('click', (ev) => {
 
 function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
     partSettings.color = presetUrlSettings.color || partSettings.color;
+    const hasExplicitFinish = presetUrlSettings.textureTuneFinishMode != null || presetUrlSettings.textureTuneFinishValue != null;
+    const hasLegacyMaterialAppearance =
+        presetUrlSettings.shading != null ||
+        presetUrlSettings.textureTuneMetallicRoughness != null ||
+        presetUrlSettings.textureTuneMetallicMetalness != null ||
+        presetUrlSettings.textureTuneMetallicReflection != null ||
+        presetUrlSettings.textureTunePhongRoughness != null ||
+        presetUrlSettings.textureTunePhongReflection != null ||
+        presetUrlSettings.textureTuneMatteRoughness != null ||
+        presetUrlSettings.textureTuneMatteReflection != null;
+    if (!hasExplicitFinish && hasLegacyMaterialAppearance) {
+        clearStoredFinishState(partSettings);
+    }
     if (presetUrlSettings.shading) {
         const sh = presetUrlSettings.shading;
         partSettings.shading = (sh === 'flat' || sh === 'toon') ? 'matte' : sh;
@@ -3041,7 +3060,7 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
     if (presetUrlSettings.textureTunePhongReflection != null) partSettings.phongReflection = Number(presetUrlSettings.textureTunePhongReflection);
     if (presetUrlSettings.textureTuneMatteRoughness != null) partSettings.matteRoughness = Number(presetUrlSettings.textureTuneMatteRoughness);
     if (presetUrlSettings.textureTuneMatteReflection != null) partSettings.matteReflection = Number(presetUrlSettings.textureTuneMatteReflection);
-    if (presetUrlSettings.textureTuneFinishMode != null || presetUrlSettings.textureTuneFinishValue != null) {
+    if (hasExplicitFinish) {
         applyFinishModeValueToPartSettings(
             partSettings,
             presetUrlSettings.textureTuneFinishMode,
@@ -7124,6 +7143,7 @@ textureTuneMetalnessSlider?.addEventListener('input', () => {
 shadingEl.addEventListener('change', () => {
     if (shadingEl.value === 'flat' || shadingEl.value === 'toon') shadingEl.value = 'matte';
     const targets = applyToModelPartEditTargets((partSettings) => {
+        clearStoredFinishState(partSettings);
         partSettings.shading = shadingEl.value;
     });
     updateTextureTuneUI();

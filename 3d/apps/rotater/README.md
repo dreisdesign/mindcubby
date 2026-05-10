@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.62**
+**Version (current workspace): 2.1.63**
 
 Current development note: sync selector thumbs now have a stronger fallback render path, model-sync dropdowns use viewport-aware placement with contained wheel scrolling, and the model Surface Finish slider now stays synced per selected part with a dynamic color gradient. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
