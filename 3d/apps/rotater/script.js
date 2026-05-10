@@ -1856,7 +1856,7 @@ function maybeConfirmBgSyncChange(nextIdx) {
     if (!Number.isFinite(nextIdx) || nextIdx < 0) return false;
     if (activeBgPreset !== 'modelcolor') return true;
     if (bgSyncPartIndex === nextIdx) return true;
-    return window.confirm('Change the background color sync to this model?');
+    return true;
 }
 
 function getModelPartEditTargetIndices() {
@@ -6650,21 +6650,41 @@ function persistCurrentMultipartParts({ immediate = false } = {}) {
     multipartPersistTimer = setTimeout(commit, 140);
 }
 
+let colorCommitTimer = 0;
+let pendingColorThumbTargets = null;
+
+function flushColorCommit() {
+    if (colorCommitTimer) {
+        clearTimeout(colorCommitTimer);
+        colorCommitTimer = 0;
+    }
+    const thumbTargets = pendingColorThumbTargets;
+    pendingColorThumbTargets = null;
+    persistCurrentMultipartParts({ immediate: true });
+    saveSettings();
+    if (thumbTargets !== null) queueModelPartThumbsRender(thumbTargets);
+}
+
+function scheduleColorCommit(thumbTargets = null) {
+    pendingColorThumbTargets = thumbTargets;
+    if (colorCommitTimer) clearTimeout(colorCommitTimer);
+    colorCommitTimer = setTimeout(flushColorCommit, 100);
+}
+
 colorPick.addEventListener('input', (ev) => {
     if (isMultipartModel()) {
         const targets = applyToModelPartEditTargets((partSettings, idx) => {
             partSettings.color = colorPick.value;
             modelPartBaseColors[idx] = colorPick.value;
         });
-        queueModelPartThumbsRender(targets);
+        scheduleColorCommit(targets);
     } else {
         modelPartBaseColors = [colorPick.value];
         getPartSettings(0).color = colorPick.value;
-        queueModelPartThumbsRender(0);
+        scheduleColorCommit(0);
     }
 
     if (mesh) applyPartColorsToMesh();
-    persistCurrentMultipartParts();
     updateShadingThumbs();
     updateColorSwatches();
     updateShadeSliderVisual();
@@ -6674,7 +6694,9 @@ colorPick.addEventListener('input', (ev) => {
         else applyBackgroundFromBaseColor(bgPick.value);
         updateBgShadeSliderVisual();
     }
-    saveSettings();
+});
+colorPick.addEventListener('change', () => {
+    flushColorCommit();
 });
 if (opacitySlider) {
     opacitySlider.addEventListener('input', () => {
