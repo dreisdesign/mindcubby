@@ -3090,7 +3090,11 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
     if (presetUrlSettings.textureTunePhongReflection != null) partSettings.phongReflection = Number(presetUrlSettings.textureTunePhongReflection);
     if (presetUrlSettings.textureTuneMatteRoughness != null) partSettings.matteRoughness = Number(presetUrlSettings.textureTuneMatteRoughness);
     if (presetUrlSettings.textureTuneMatteReflection != null) partSettings.matteReflection = Number(presetUrlSettings.textureTuneMatteReflection);
-    if (hasExplicitFinish) {
+    const partMaterialFamily = getMaterialFamilyFromShading(partSettings.shading || shadingEl?.value || 'phong');
+    if (partMaterialFamily !== 'standard') {
+        clearStoredFinishState(partSettings);
+    }
+    if (hasExplicitFinish && partMaterialFamily === 'standard') {
         applyFinishModeValueToPartSettings(
             partSettings,
             presetUrlSettings.textureTuneFinishMode,
@@ -9816,11 +9820,29 @@ function reconcileModelPresetFromSettings(force = false) {
             const presetMaterialFamily = p.materialFamily || getMaterialFamilyFromShading(p.shading || 'phong');
             // Match by material family first, then color when provided by preset
             if (presetMaterialFamily && curMaterialFamily && presetMaterialFamily === curMaterialFamily) {
-                // If the preset encodes matte/roughness values, prefer a stricter match
-                const presetRough = p.textureTuneMatteRoughness != null ? String(p.textureTuneMatteRoughness) : null;
-                const presetRefl = p.textureTuneMatteReflection != null ? String(p.textureTuneMatteReflection) : null;
-                const curRough = typeof textureTuneState !== 'undefined' && textureTuneState.matteRoughness != null ? String(textureTuneState.matteRoughness) : null;
-                const curRefl = typeof textureTuneState !== 'undefined' && textureTuneState.matteReflection != null ? String(textureTuneState.matteReflection) : null;
+                // Compare roughness/reflection using the current family's active tuning channel.
+                const isMetallic = presetMaterialFamily === 'metallic';
+                const isClear = presetMaterialFamily === 'clear';
+                const presetRough = isMetallic
+                    ? (p.textureTuneMetallicRoughness != null ? String(p.textureTuneMetallicRoughness) : null)
+                    : isClear
+                        ? (p.textureTunePhongRoughness != null ? String(p.textureTunePhongRoughness) : null)
+                        : (p.textureTuneMatteRoughness != null ? String(p.textureTuneMatteRoughness) : null);
+                const presetRefl = isMetallic
+                    ? (p.textureTuneMetallicReflection != null ? String(p.textureTuneMetallicReflection) : null)
+                    : isClear
+                        ? (p.textureTunePhongReflection != null ? String(p.textureTunePhongReflection) : null)
+                        : (p.textureTuneMatteReflection != null ? String(p.textureTuneMatteReflection) : null);
+                const curRough = isMetallic
+                    ? (textureTuneState?.metallicRoughness != null ? String(textureTuneState.metallicRoughness) : null)
+                    : isClear
+                        ? (textureTuneState?.phongRoughness != null ? String(textureTuneState.phongRoughness) : null)
+                        : (textureTuneState?.matteRoughness != null ? String(textureTuneState.matteRoughness) : null);
+                const curRefl = isMetallic
+                    ? (textureTuneState?.metallicReflection != null ? String(textureTuneState.metallicReflection) : null)
+                    : isClear
+                        ? (textureTuneState?.phongReflection != null ? String(textureTuneState.phongReflection) : null)
+                        : (textureTuneState?.matteReflection != null ? String(textureTuneState.matteReflection) : null);
 
                 const roughMatches = !presetRough || (curRough && presetRough === curRough);
                 const reflMatches = !presetRefl || (curRefl && presetRefl === curRefl);
