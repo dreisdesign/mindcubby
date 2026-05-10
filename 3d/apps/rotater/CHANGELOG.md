@@ -13,9 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.62] - 2026-05-10
 
+### Changed
+- **Build metadata aligned** — app build/version metadata and cache-buster query tags now consistently report `2.1.62`
+
 ### Fixed
 - **Model preset thumb border noise** — unselected Model card preset thumbs no longer show the default card border; only selected thumbs display the selection ring
 - **Model reset sync propagation** — resetting model visual settings now updates the underlying part base-color cache so `Model Sync` background and build plate colors refresh immediately without requiring a page reload
+- **Model-sync manual shade mismatch** — background shade calculations now use the active background source color (including `Model Sync`) instead of stale picker values when Auto brightness is off
+- **Auto-to-manual model-sync handoff** — toggling Background Auto brightness off while on `Model Sync` now applies the correct background color transform path (same as normal manual shading)
+- **Finish mode classification accuracy** — finish slider mode detection now interprets stored roughness correctly (inverted roughness mapping) and accounts for high reflection values, preventing glossy presets from being mislabeled as matte
+- **Sync-thumb fallback resilience** — thumbnail canvases now paint a deterministic fallback when render preconditions are invalid, reducing broken/empty sync thumb states
+- **Fast-spin export smoothness** — GIF/MP4 exports now raise effective capture FPS for short rotation times (like 5s) to reduce jitter and speed artifacts
 
 ### Documentation
 - **README version updated** — workspace version marker updated to `2.1.62`

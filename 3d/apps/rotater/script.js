@@ -92,7 +92,7 @@ const EXPORT = {
         const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
         return {
             size: p.size,
-            fps: p.fps,
+            fps: getEffectiveExportFps(p.fps),
             loop: document.getElementById('gifLoop')?.checked ?? true,
             dither: document.getElementById('gifDither')?.checked ?? false,
         };
@@ -102,7 +102,7 @@ const EXPORT = {
         const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
         return {
             size: p.size,
-            fps: p.fps,
+            fps: getEffectiveExportFps(p.fps),
             bitrate: p.bitrate,
             loops: 0, // single play
         };
@@ -122,8 +122,17 @@ const BASE_ROTATE_SPEED = 1; // Keep timing 1:1 with the selected seconds-per-re
 const SPEED_SECONDS_PER_REV = [5, 10, 15, 20, 25, 30];
 const SPEED_DEFAULT = 2; // 15 seconds per full rotation
 function getSecondsPerRevolution() {
-    return SPEED_SECONDS_PER_REV[parseInt(speedSlider.value, 10)] ?? SPEED_SECONDS_PER_REV[SPEED_DEFAULT];
+    return SPEED_SECONDS_PER_REV[parseInt(speedSlider?.value ?? String(SPEED_DEFAULT), 10)] ?? SPEED_SECONDS_PER_REV[SPEED_DEFAULT];
 }
+
+// Keep fast 5s rotations smooth in exports by raising capture FPS when needed.
+function getEffectiveExportFps(baseFps) {
+    const secs = Math.max(1, getSecondsPerRevolution());
+    const targetMaxDegreesPerFrame = 2.4;
+    const minSmoothFps = Math.ceil(360 / (targetMaxDegreesPerFrame * secs));
+    return Math.max(baseFps, Math.min(60, minSmoothFps));
+}
+
 function getSpeed() { return 60 / getSecondsPerRevolution(); }
 const TILT_RANGE_DEFAULT = 20;
 const SPIN_RANGE_DEFAULT = 360;
@@ -2082,11 +2091,28 @@ function setFinishModeUI(mode) {
 
 function getFinishModeFromPartSettings(settings) {
     const shade = settings?.shading;
-    if (shade === 'matte' || shade === 'flat' || shade === 'toon') return 'matte';
-    if (shade === 'metallic') return 'glossy';
-    const rough = Number(settings?.phongRoughness ?? settings?.matteRoughness ?? settings?.metallicRoughness ?? 62);
-    if (rough >= 78) return 'matte';
-    if (rough <= 42) return 'glossy';
+    if (shade === 'flat' || shade === 'toon') return 'matte';
+
+    const selectedRough = Number(
+        shade === 'metallic'
+            ? (settings?.metallicRoughness ?? 62)
+            : shade === 'matte'
+                ? (settings?.matteRoughness ?? 62)
+                : (settings?.phongRoughness ?? settings?.matteRoughness ?? settings?.metallicRoughness ?? 62)
+    );
+    const selectedReflection = Number(
+        shade === 'metallic'
+            ? (settings?.metallicReflection ?? 100)
+            : shade === 'matte'
+                ? (settings?.matteReflection ?? 10)
+                : (settings?.phongReflection ?? settings?.matteReflection ?? settings?.metallicReflection ?? 40)
+    );
+
+    // Stored roughness sliders are inverted when mapped to Three.js roughness.
+    // Lower effective roughness and higher reflection read as glossier.
+    const effectiveRoughness = Math.max(0, Math.min(100, 100 - selectedRough));
+    if (selectedReflection >= 120 || effectiveRoughness <= 22) return 'glossy';
+    if (effectiveRoughness >= 58) return 'matte';
     return 'satin';
 }
 
@@ -2363,10 +2389,43 @@ function getPartBounds(partIdx) {
     return { center, radius };
 }
 
+function paintThumbFallback(canvasEl, partIdx) {
+    if (!canvasEl) return;
+    const ctx = canvasEl.getContext('2d');
+    if (!ctx) return;
+    const resolvedPartIdx = Number.isInteger(partIdx) ? partIdx : 0;
+    const fallbackHex = modelPartBaseColors[resolvedPartIdx] || colorPick?.value || PALETTE.fallback;
+    const fillHex = `#${computeTonedColor(fallbackHex, 15).getHexString()}`;
+    const shadeHex = `#${computeTonedColor(fallbackHex, 55).getHexString()}`;
+    const glowHex = `#${computeTonedColor(fallbackHex, -35).getHexString()}`;
+    const dstW = Math.max(1, canvasEl.width || 1);
+    const dstH = Math.max(1, canvasEl.height || 1);
+    ctx.clearRect(0, 0, dstW, dstH);
+    ctx.fillStyle = fillHex;
+    ctx.fillRect(0, 0, dstW, dstH);
+    const r = Math.max(6, Math.floor(Math.min(dstW, dstH) * 0.38));
+    const cx = Math.floor(dstW * 0.5);
+    const cy = Math.floor(dstH * 0.5);
+    const grad = ctx.createRadialGradient(cx - (r * 0.34), cy - (r * 0.42), Math.max(1, r * 0.2), cx, cy, r);
+    grad.addColorStop(0, glowHex);
+    grad.addColorStop(0.52, fillHex);
+    grad.addColorStop(1, shadeHex);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+}
+
 function renderSinglePartThumbnail(canvasEl, partIdx) {
-    if (!canvasEl || !mesh || !renderer || !camera) return;
+    if (!canvasEl || !mesh || !renderer || !camera) {
+        paintThumbFallback(canvasEl, 0);
+        return;
+    }
     const resolvedPartIdx = parseInt(partIdx, 10);
-    if (!Number.isInteger(resolvedPartIdx) || resolvedPartIdx < 0 || resolvedPartIdx >= modelPartNames.length) return;
+    if (!Number.isInteger(resolvedPartIdx) || resolvedPartIdx < 0 || resolvedPartIdx >= modelPartNames.length) {
+        paintThumbFallback(canvasEl, 0);
+        return;
+    }
     const rect = canvasEl.getBoundingClientRect();
     const cssW = Math.max(1, Math.round(rect.width || canvasEl.clientWidth || canvasEl.width || 1));
     let cssH = Math.max(1, Math.round(rect.height || canvasEl.clientHeight || canvasEl.height || 1));
@@ -6846,7 +6905,8 @@ if (bgOpacitySlider) {
         document.getElementById('bgOpacityVal').textContent = (bgTone >= 0 ? '+' : '') + bgTone;
         syncSliderTooltip(bgOpacitySlider);
         updateBgShadeSliderVisual();
-        const c = computeSurfaceShadeColor(bgPick.value, bgTone);
+        const baseHex = getActiveBackgroundBaseColor();
+        const c = computeSurfaceShadeColor(baseHex, bgTone);
         if (renderer) renderer.setClearColor(c, 1);
         updateBuildPlateMaterial();
         if (isDynamicBg) updateDynamicBg();
@@ -6860,7 +6920,8 @@ bgPick.addEventListener('input', () => {
 
     {
         const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
-        const c = computeSurfaceShadeColor(bgPick.value, tone);
+        const baseHex = getActiveBackgroundBaseColor();
+        const c = computeSurfaceShadeColor(baseHex, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
     updateBuildPlateMaterial();
@@ -10139,8 +10200,9 @@ if (autoBgCheckEl) {
             }
             // Restore base preset color when turning auto-adjust off
             if (activeBgPreset === 'modelcolor') {
-                const manualTone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : AUTO_BRIGHTNESS_RULES.background.shade;
-                renderer && renderer.setClearColor(computeTonedColor(getModelSyncSourceColor(), manualTone), 1);
+                const syncColor = getModelSyncSourceColor();
+                bgPick.value = syncColor;
+                applyBackgroundFromBaseColor(syncColor);
             } else if (activeBgPreset === 'custom') {
                 bgPick.dispatchEvent(new Event('input', { bubbles: true }));
             } else {
