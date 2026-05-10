@@ -2,9 +2,9 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.58**
+**Version (current workspace): 2.1.59**
 
-Current development note: export and crop now run through one shared workspace on the main viewer. Remaining cleanup focuses on removing older duplicate preview remnants and simplifying export-specific state wiring. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
+Current development note: export progress now paints smoothly during GIF/MP4 encoding, custom color edits are debounced to reduce thumbnail lag, and Background Model Sync source changes no longer prompt for confirmation. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
 ---
 
@@ -36,8 +36,12 @@ If you want to change startup defaults and card reset behavior in code, these ar
   - `isDynamicBg = true`
   - `buildPlateAutoBrightnessEnabled = true`
 - `script.js` -> `AUTO_BRIGHTNESS_RULES`:
-  - `background.shade = 0`
-  - `buildPlate.shade = 25`
+  - `background.shade = -100`
+  - `buildPlate.shade = -100`
+- `script.js` -> `SHADE_RANGE_PERCENT = 40`
+  - slider left is brighter and right is darker across a 40% HSL adjustment span
+  - change this constant to make the shade range stronger or softer
+  - manual defaults: normal colors `0`, white `-100`, black `+100`
 - `script.js` -> card reset handlers:
   - `btnResetBackgroundCard` restores `Model Sync + Auto brightness`
   - `btnResetBuildPlateCard` restores `Model Sync + Auto brightness`

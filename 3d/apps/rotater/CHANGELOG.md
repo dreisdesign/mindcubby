@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.59] - 2026-05-10
+
+### Changed
+- **Build metadata bumped** — app build/version metadata now reports `2.1.59` and the info panel build date was updated to `May 10, 2026`
+- **Documentation sync** — README default-logic notes now reflect the current `AUTO_BRIGHTNESS_RULES` and `SHADE_RANGE_PERCENT` values
+
+### Fixed
+- **Custom color edit lag** — color picker changes now debounce expensive thumbnail/settings commits so dragging the OS picker stays responsive with multipart models
+- **Background sync UX** — switching the Background Model Sync source no longer shows a confirmation prompt
+
 ## [2.1.58] - 2026-05-09
 
 ### Fixed
