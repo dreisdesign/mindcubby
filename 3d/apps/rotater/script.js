@@ -2239,13 +2239,16 @@ function syncUIFromSelectedPart() {
 let dirtyPartThumbs = null;
 
 function queueModelPartThumbsRender(partIndices = null) {
-    if (!modelPartSelectorBtn && !bgModelSyncSelectorBtn) return;
+    if (!modelPartSelectorBtn && !bgModelSyncSelectorBtn && !buildPlateModelSyncSelectorBtn) return;
     // Accumulate dirty indices. null means "all".
-    if (dirtyPartThumbs !== null) {
-        if (partIndices === null) {
-            dirtyPartThumbs = null;
-        } else {
-            const arr = Array.isArray(partIndices) ? partIndices : [partIndices];
+    if (partIndices === null) {
+        dirtyPartThumbs = null;
+    } else {
+        const arr = Array.isArray(partIndices) ? partIndices : [partIndices];
+        if (dirtyPartThumbs === null && !modelPartThumbsQueued) {
+            dirtyPartThumbs = new Set();
+        }
+        if (dirtyPartThumbs instanceof Set) {
             arr.forEach(i => dirtyPartThumbs.add(i));
         }
     }
@@ -2255,6 +2258,14 @@ function queueModelPartThumbsRender(partIndices = null) {
         modelPartThumbsQueued = false;
         renderModelPartThumbnails();
     });
+}
+
+function shouldRenderThumbCanvas(canvasEl) {
+    if (!canvasEl?.isConnected) return false;
+    if (canvasEl === modelPartSelectorThumb || canvasEl === bgModelSyncSelectorThumb || canvasEl === buildPlateModelSyncSelectorThumb) {
+        return true;
+    }
+    return canvasEl.offsetParent !== null;
 }
 
 function ensurePartThumbRenderResources() {
@@ -2600,6 +2611,7 @@ function renderModelPartThumbnails() {
 
     let anyRendered = false;
     document.querySelectorAll('.js-part-thumb-preview').forEach((canvasEl) => {
+        if (!shouldRenderThumbCanvas(canvasEl)) return;
         const idx = parseInt(canvasEl.dataset.partIndex, 10);
         if (!Number.isFinite(idx)) return;
         if (dirty !== null && !dirty.has(idx)) return; // skip clean parts
@@ -2630,6 +2642,17 @@ function renderModelPartThumbnails() {
         const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
         bgModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
         bgModelSyncSelectorBtn.title = `Background sync: ${selectedName}`;
+    }
+    if (buildPlateModelSyncSelectorMenu && activeBuildPlatePreset === 'modelcolor') {
+        buildPlateModelSyncSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
+            const idx = parseInt(opt.dataset.partIndex, 10);
+            opt.classList.toggle('is-bg-sync-source', idx === buildPlateSyncPartIndex);
+        });
+    }
+    if (buildPlateModelSyncSelectorText && activeBuildPlatePreset === 'modelcolor') {
+        const selectedName = modelPartNames[buildPlateSyncPartIndex] || `Part ${buildPlateSyncPartIndex + 1}`;
+        buildPlateModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
+        buildPlateModelSyncSelectorBtn.title = `Surface sync: ${selectedName}`;
     }
 }
 
@@ -2734,7 +2757,9 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
     closeThumbSelectMenus();
     if (modelPartSelectorMenu && !open) {
         modelPartSelectorMenu.hidden = false;
+        modelPartSelectorMenu.scrollTop = 0;
         modelPartSelectorBtn.setAttribute('aria-expanded', 'true');
+        queueModelPartThumbsRender();
     }
 });
 
@@ -2762,7 +2787,9 @@ bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
     closeThumbSelectMenus();
     if (bgModelSyncSelectorMenu && !open) {
         bgModelSyncSelectorMenu.hidden = false;
+        bgModelSyncSelectorMenu.scrollTop = 0;
         bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
+        queueModelPartThumbsRender();
     }
 });
 
@@ -2772,8 +2799,16 @@ buildPlateModelSyncSelectorBtn?.addEventListener('click', (ev) => {
     closeThumbSelectMenus();
     if (buildPlateModelSyncSelectorMenu && !open) {
         buildPlateModelSyncSelectorMenu.hidden = false;
+        buildPlateModelSyncSelectorMenu.scrollTop = 0;
         buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
+        queueModelPartThumbsRender();
     }
+});
+
+[modelPartSelectorMenu, bgModelSyncSelectorMenu, buildPlateModelSyncSelectorMenu].forEach((menuEl) => {
+    menuEl?.addEventListener('wheel', (ev) => {
+        ev.stopPropagation();
+    }, { passive: true });
 });
 
 btnModelUndoToast?.addEventListener('click', (ev) => {
@@ -8229,13 +8264,22 @@ function setupCardHeaderControls() {
         collapseBtn.setAttribute('title', 'Collapse card');
         collapseBtn.setAttribute('aria-label', 'Collapse card');
         collapseBtn.innerHTML = `<span aria-hidden="true">${getChevronDownIconSVG(18)}</span>`;
-        collapseBtn.addEventListener('click', () => {
+        const toggleCardCollapsed = () => {
             const collapsed = card.classList.toggle('is-collapsed');
             closeThumbSelectMenus();
             closeFileChipPartsMenu();
             collapseBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
             collapseBtn.title = collapsed ? 'Expand card' : 'Collapse card';
             collapseBtn.setAttribute('aria-label', collapsed ? 'Expand card' : 'Collapse card');
+        };
+        header.classList.add('card-header-toggle');
+        header.addEventListener('click', (ev) => {
+            if (ev.target instanceof Element && ev.target.closest('button, a, input, select, textarea, label')) return;
+            toggleCardCollapsed();
+        });
+        collapseBtn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            toggleCardCollapsed();
         });
         header.appendChild(collapseBtn);
     });

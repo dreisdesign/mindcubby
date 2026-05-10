@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.60] - 2026-05-10
+
+### Changed
+- **Build metadata bumped** — app build/version metadata now reports `2.1.60` and CSS/JS cache-buster query tags were updated to match
+- **Card header collapse affordance** — all collapsible main control cards now expand/collapse when clicking the full top header area, matching the App Settings dock behavior
+
+### Fixed
+- **Sync selector dropdown layout** — Background and Surface model-sync menus can expand taller without being clipped by their parent card and keep wheel scrolling contained
+- **Sync selector thumbnail refresh** — hidden menu canvases are skipped until visible, reducing broken-thumb redraw states when opening model-sync selectors after color/sync changes
+- **Viewer control icons** — pause, spin, tilt, and wobble controls now use the refreshed inline SVG artwork
+
 ## [2.1.59] - 2026-05-10
 
 ### Changed

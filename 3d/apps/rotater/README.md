@@ -2,9 +2,9 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.59**
+**Version (current workspace): 2.1.60**
 
-Current development note: export progress now paints smoothly during GIF/MP4 encoding, custom color edits are debounced to reduce thumbnail lag, and Background Model Sync source changes no longer prompt for confirmation. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
+Current development note: main control cards now collapse from the full header row, sync selector dropdowns render more reliably and open without clipping, and the viewer pause/animation controls use the refreshed inline SVG set. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
 ---
 

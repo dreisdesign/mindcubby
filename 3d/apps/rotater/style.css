@@ -1237,6 +1237,10 @@ html.loaded .controls-bar.hidden {
     overflow: visible;
 }
 
+#buildPlateBox {
+    overflow: visible;
+}
+
 .thumb-select-wrap {
     display: block;
     position: relative;
@@ -1434,6 +1438,8 @@ html.loaded .controls-bar.hidden {
     z-index: 35;
     max-height: 280px;
     overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
     padding: 6px;
     border-radius: var(--radius-control);
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 75%, white 25%);
@@ -7231,6 +7237,14 @@ html.loaded.export-workspace-active .canvas-wrap {
     pointer-events: none;
 }
 
+.card-header-toggle {
+    cursor: pointer;
+}
+
+.card-header-toggle > * {
+    cursor: auto;
+}
+
 .card-collapse-btn {
     margin-left: auto;
     width: 30px;
@@ -7504,7 +7518,7 @@ html.theme-dark .adv-section-check input[type="checkbox"] {
 }
 
 #bgModelSyncSelector .thumb-select-menu {
-    max-height: 220px;
+    max-height: min(52vh, 420px);
 }
 
 #bgModelSyncSelector .thumb-select-option {
@@ -7550,7 +7564,7 @@ html.theme-dark .adv-section-check input[type="checkbox"] {
 }
 
 #buildPlateModelSyncSelector .thumb-select-menu {
-    max-height: 220px;
+    max-height: min(52vh, 420px);
 }
 
 #buildPlateModelSyncSelector .thumb-select-option {
