@@ -9636,10 +9636,13 @@ btnVideo.addEventListener('click', async () => {
             error: e => { encoderError = e; },
         });
 
-        const waitForEncoderQueue = async (maxQueue = 8) => {
+        const waitForEncoderQueue = async (maxQueue = 24, frameIndex = 0, total = 0) => {
             if (!encoder || encoder.state === 'closed') return;
             if (typeof encoder.encodeQueueSize !== 'number') return;
+            let stallStartedAt = 0;
+            let lastBusyNoticeAt = 0;
             while (encoder.encodeQueueSize > maxQueue) {
+                if (!stallStartedAt) stallStartedAt = performance.now();
                 await new Promise((resolve) => {
                     let done = false;
                     let timeoutId = null;
@@ -9658,6 +9661,18 @@ btnVideo.addEventListener('click', async () => {
                 });
                 if (encoderError) throw encoderError;
                 if (encoder.state === 'closed') throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.');
+
+                const now = performance.now();
+                if (total > 0 && (now - stallStartedAt) > 900 && (now - lastBusyNoticeAt) > 800) {
+                    lastBusyNoticeAt = now;
+                    const queueDepth = Math.round(encoder.encodeQueueSize || 0);
+                    await maybePaintExportProgress(
+                        `Encoding… ${frameIndex + 1} / ${total} (encoder busy: q=${queueDepth}, screen recording can slow export)`,
+                        frameIndex + 1,
+                        total,
+                        true
+                    );
+                }
             }
         };
         // avc1.4200XX — Baseline profile
@@ -9738,7 +9753,7 @@ btnVideo.addEventListener('click', async () => {
                 const frame = new VideoFrame(out, { timestamp });
                 if (encoderError) { frame.close(); throw encoderError; }
                 if (encoder.state === 'closed') { frame.close(); throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.'); }
-                await waitForEncoderQueue(8);
+                await waitForEncoderQueue(24, f, totalFrames);
                 encoder.encode(frame, { keyFrame: f % 30 === 0 });
                 frame.close();
 
