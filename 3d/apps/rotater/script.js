@@ -502,6 +502,7 @@ let partThumbCamera = null;
 let partThumbScratchCanvas = null;
 let partThumbScratchCtx = null;
 let multipartPartBounds = null;
+let pendingUrlModelAppearanceOverride = null;
 let pendingReplacePartIndex = -1;
 let currentModelBuffer = null;
 let bulkSelectedPartIndices = new Set();
@@ -3005,6 +3006,30 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
     if (presetUrlSettings.textureTuneMatteReflection != null) partSettings.matteReflection = Number(presetUrlSettings.textureTuneMatteReflection);
 }
 
+function hasExplicitUrlModelAppearanceParams(params = new URLSearchParams(location.search)) {
+    return [
+        'c', 'op', 'sh', 'amp',
+        'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh',
+        'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
+        'tfm', 'tfv'
+    ].some((key) => params.has(key));
+}
+
+function applyPendingUrlModelAppearanceOverride() {
+    if (!pendingUrlModelAppearanceOverride || !Array.isArray(modelPartSettings) || !modelPartSettings.length) return;
+
+    const override = pendingUrlModelAppearanceOverride;
+    modelPartSettings = modelPartSettings.map((settings, idx) => {
+        const color = modelPartBaseColors[idx] || settings?.color || colorPick.value;
+        const next = { ...createPartSettings(color), ...settings, color };
+        applyPresetIntoPartSettings(next, override);
+        modelPartBaseColors[idx] = next.color || modelPartBaseColors[idx] || colorPick.value;
+        return next;
+    });
+
+    if (override.activeModelPreset) activeModelPreset = override.activeModelPreset;
+}
+
 function getMeshMaterials() {
     if (!mesh || !mesh.material) return [];
     return Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -3702,6 +3727,7 @@ function loadSTLBuffer(buffer, name) {
     currentModelBuffer = buffer;
     modelPartSelected = 0;
     bulkSelectedPartIndices.clear();
+    applyPendingUrlModelAppearanceOverride();
 
     loadPreparedGeometry(geo, name);
 }
@@ -3731,6 +3757,7 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
     }
     pendingBulkSelectedPartIndices = null;
     syncActivePartFromUiSelection();
+    applyPendingUrlModelAppearanceOverride();
 
     const parsed = [];
     const unionBox = new THREE.Box3();
@@ -5322,6 +5349,8 @@ function restoreSettings() {
     if (DEV_LOG) console.log(`[rotater] restoreSettings start at ${Date.now()}`);
     try {
         const urlS = getURLSettings(location.search);
+        const urlParams = new URLSearchParams(location.search);
+        pendingUrlModelAppearanceOverride = (urlS && hasExplicitUrlModelAppearanceParams(urlParams)) ? urlS : null;
         let localS = {};
         try {
             const saved = localStorage.getItem(SETTINGS_KEY);
@@ -5336,7 +5365,6 @@ function restoreSettings() {
         let s = { ...defaultS, ...localS };
         if (urlS) {
             s = { ...s };
-            const urlParams = new URLSearchParams(location.search);
             Object.entries(urlS).forEach(([k, v]) => {
                 if (v !== null && v !== undefined) {
                     // Only override activeModelPreset/activeBgPreset from URL if
@@ -5603,6 +5631,11 @@ function restoreSettings() {
         if (s.bgSyncPartIndex != null || s.modelSyncPart != null) {
             const idx = parseInt(s.bgSyncPartIndex ?? s.modelSyncPart, 10);
             bgSyncPartIndex = Number.isFinite(idx) ? Math.max(0, idx) : 0;
+        }
+
+        if (pendingUrlModelAppearanceOverride && modelPartSettings.length) {
+            applyPendingUrlModelAppearanceOverride();
+            if (mesh) rebuildMeshMaterialsForCurrentShading();
         }
 
         // Always apply mode-based classes/slider setup — even when s is null (settings reset)
