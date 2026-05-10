@@ -1447,6 +1447,11 @@ html.loaded .controls-bar.hidden {
     box-shadow: 0 28px 44px rgba(16, 14, 36, 0.38), 0 8px 20px rgba(16, 14, 36, 0.22);
 }
 
+.thumb-select-menu.thumb-select-menu--above {
+    top: auto;
+    bottom: calc(100% + 8px);
+}
+
 .thumb-select-menu[hidden] {
     display: none !important;
 }
@@ -7620,21 +7625,21 @@ html.theme-dark #buildPlateBox .build-plate-section-label > span {
 }
 
 #modelBox .shading-option {
-    padding: 3px;
-    border: 3px solid transparent;
-    border-radius: 16px;
+    padding: 6px 8px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
     background: transparent;
-    box-shadow: none;
+    box-shadow: 0 0 0 2px transparent;
 }
 
 #modelBox .shading-option:hover {
-    transform: translateY(-1px);
-    box-shadow: none;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(46, 43, 116, 0.15);
 }
 
 #modelBox .shading-option.is-selected {
-    border-color: var(--color-primary);
-    box-shadow: none;
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--color-primary);
 }
 
 #modelBox .preset-group .thumb-label {

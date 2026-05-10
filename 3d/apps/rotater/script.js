@@ -2121,6 +2121,19 @@ function finishSliderValueFromPartSettings(settings) {
     return modeStrengthToFinishSliderValue(mode, strength);
 }
 
+function updateFinishSliderVisual() {
+    if (!textureTuneRoughnessSlider) return;
+    const s = getSelectedPartSettings();
+    const baseHex = s?.color || colorPick?.value || PALETTE.fallback;
+    const matteHex = `#${computeTonedColor(baseHex, 35).getHexString()}`;
+    const satinHex = `#${computeTonedColor(baseHex, 0).getHexString()}`;
+    const glossHex = `#${computeTonedColor(baseHex, -35).getHexString()}`;
+    textureTuneRoughnessSlider.classList.add('tone-gradient-slider');
+    textureTuneRoughnessSlider.style.setProperty('--slider-fill', matteHex);
+    textureTuneRoughnessSlider.style.setProperty('--slider-track-base', glossHex);
+    textureTuneRoughnessSlider.style.setProperty('--slider-track-gradient', `linear-gradient(to right, ${matteHex} 0%, ${satinHex} 50%, ${glossHex} 100%)`);
+}
+
 function applyFinishControlsToSelectedPart(commit = false) {
     const defaultMode = getSelectedFinishMode();
     const defaultStrength = FINISH_MODE_DEFAULT_STRENGTH[defaultMode] || 2;
@@ -2225,7 +2238,10 @@ function syncUIFromSelectedPart() {
         textureTuneRoughnessSlider.value = String(finishSliderValueFromPartSettings(s));
         syncSliderTooltip(textureTuneRoughnessSlider);
     }
-    if (textureTuneRoughnessVal) textureTuneRoughnessVal.textContent = String(getSliderEffectiveValue(textureTuneRoughnessSlider) || 1);
+    if (textureTuneRoughnessVal && textureTuneRoughnessSlider) {
+        textureTuneRoughnessVal.textContent = String(Math.round(clampFinishSliderValue(textureTuneRoughnessSlider.value)));
+    }
+    updateFinishSliderVisual();
     updateShadeSliderVisual();
 
     updateTextureTuneUI();
@@ -2457,41 +2473,65 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
 
     ctx.clearRect(0, 0, dstW, dstH);
 
-    if (partThumbScratchCtx) {
-        const imageData = partThumbScratchCtx.createImageData(rtW, rtH);
-        let minX = rtW, minY = rtH, maxX = -1, maxY = -1;
-        for (let y = 0; y < rtH; y++) {
-            const srcRow = (rtH - 1 - y) * rtW * 4;
-            const dstRow = y * rtW * 4;
-            imageData.data.set(pixelBuf.subarray(srcRow, srcRow + rtW * 4), dstRow);
-            for (let x = 0; x < rtW; x++) {
-                const a = pixelBuf[srcRow + (x * 4) + 3];
-                if (a > 0) {
-                    if (x < minX) minX = x;
-                    if (x > maxX) maxX = x;
-                    if (y < minY) minY = y;
-                    if (y > maxY) maxY = y;
+    try {
+        if (partThumbScratchCtx) {
+            const imageData = partThumbScratchCtx.createImageData(rtW, rtH);
+            let minX = rtW, minY = rtH, maxX = -1, maxY = -1;
+            for (let y = 0; y < rtH; y++) {
+                const srcRow = (rtH - 1 - y) * rtW * 4;
+                const dstRow = y * rtW * 4;
+                imageData.data.set(pixelBuf.subarray(srcRow, srcRow + rtW * 4), dstRow);
+                for (let x = 0; x < rtW; x++) {
+                    const a = pixelBuf[srcRow + (x * 4) + 3];
+                    if (a > 0) {
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
                 }
             }
-        }
-        partThumbScratchCtx.putImageData(imageData, 0, 0);
+            partThumbScratchCtx.putImageData(imageData, 0, 0);
 
-        if (maxX >= minX && maxY >= minY) {
-            const w = maxX - minX + 1;
-            const h = maxY - minY + 1;
-            const side = Math.max(w, h);
-            const pad = Math.max(6, Math.floor(side * 0.14));
-            const cropSide = Math.min(Math.max(side + pad * 2, 1), rtW);
-            const cx = Math.floor((minX + maxX) / 2);
-            const cy = Math.floor((minY + maxY) / 2);
-            let sx = Math.max(0, cx - Math.floor(cropSide / 2));
-            let sy = Math.max(0, cy - Math.floor(cropSide / 2));
-            if (sx + cropSide > rtW) sx = rtW - cropSide;
-            if (sy + cropSide > rtH) sy = rtH - cropSide;
-            ctx.drawImage(partThumbScratchCanvas, sx, sy, cropSide, cropSide, 0, 0, dstW, dstH);
-        } else {
-            ctx.drawImage(partThumbScratchCanvas, 0, 0, rtW, rtH, 0, 0, dstW, dstH);
+            if (maxX >= minX && maxY >= minY) {
+                const w = maxX - minX + 1;
+                const h = maxY - minY + 1;
+                const side = Math.max(w, h);
+                const pad = Math.max(6, Math.floor(side * 0.14));
+                const cropSide = Math.min(Math.max(side + pad * 2, 1), rtW);
+                const cx = Math.floor((minX + maxX) / 2);
+                const cy = Math.floor((minY + maxY) / 2);
+                let sx = Math.max(0, cx - Math.floor(cropSide / 2));
+                let sy = Math.max(0, cy - Math.floor(cropSide / 2));
+                if (sx + cropSide > rtW) sx = rtW - cropSide;
+                if (sy + cropSide > rtH) sy = rtH - cropSide;
+                ctx.drawImage(partThumbScratchCanvas, sx, sy, cropSide, cropSide, 0, 0, dstW, dstH);
+            } else {
+                const fallbackHex = modelPartBaseColors[resolvedPartIdx] || colorPick?.value || PALETTE.fallback;
+                const fillHex = `#${computeTonedColor(fallbackHex, 15).getHexString()}`;
+                const shadeHex = `#${computeTonedColor(fallbackHex, 55).getHexString()}`;
+                const glowHex = `#${computeTonedColor(fallbackHex, -35).getHexString()}`;
+                ctx.fillStyle = fillHex;
+                ctx.fillRect(0, 0, dstW, dstH);
+                const r = Math.max(6, Math.floor(Math.min(dstW, dstH) * 0.38));
+                const cx2 = Math.floor(dstW * 0.5);
+                const cy2 = Math.floor(dstH * 0.5);
+                const grad = ctx.createRadialGradient(cx2 - (r * 0.34), cy2 - (r * 0.42), Math.max(1, r * 0.2), cx2, cy2, r);
+                grad.addColorStop(0, glowHex);
+                grad.addColorStop(0.52, fillHex);
+                grad.addColorStop(1, shadeHex);
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(cx2, cy2, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
+    } catch (_) {
+        const fallbackHex = modelPartBaseColors[resolvedPartIdx] || colorPick?.value || PALETTE.fallback;
+        const fillHex = `#${computeTonedColor(fallbackHex, 15).getHexString()}`;
+        ctx.clearRect(0, 0, dstW, dstH);
+        ctx.fillStyle = fillHex;
+        ctx.fillRect(0, 0, dstW, dstH);
     }
 
     saved.forEach((s) => {
@@ -2750,6 +2790,42 @@ function positionModelPartActionMenu(menuEl, anchorEl) {
     menuEl.style.top = `${Math.round(top)}px`;
 }
 
+function positionThumbSelectMenu(menuEl, anchorBtn) {
+    if (!menuEl || !anchorBtn) return;
+    const gap = 8;
+    const viewportPad = 12;
+    const minPanelHeight = 170;
+    const btnRect = anchorBtn.getBoundingClientRect();
+    const spaceBelow = Math.max(0, window.innerHeight - btnRect.bottom - viewportPad - gap);
+    const spaceAbove = Math.max(0, btnRect.top - viewportPad - gap);
+    const openAbove = spaceBelow < minPanelHeight && spaceAbove > spaceBelow;
+    const available = Math.max(140, Math.floor((openAbove ? spaceAbove : spaceBelow)));
+    menuEl.classList.toggle('thumb-select-menu--above', openAbove);
+    menuEl.style.maxHeight = `${available}px`;
+}
+
+function trapMenuWheelScroll(menuEl) {
+    if (!menuEl || menuEl.dataset.wheelTrapBound === '1') return;
+    menuEl.dataset.wheelTrapBound = '1';
+    menuEl.addEventListener('wheel', (ev) => {
+        const deltaY = ev.deltaY || 0;
+        if (!deltaY) return;
+        const maxScroll = Math.max(0, menuEl.scrollHeight - menuEl.clientHeight);
+        if (maxScroll <= 0) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            return;
+        }
+        const prev = menuEl.scrollTop;
+        const next = Math.max(0, Math.min(maxScroll, prev + deltaY));
+        menuEl.scrollTop = next;
+        if (next !== prev || (deltaY < 0 && prev <= 0) || (deltaY > 0 && prev >= maxScroll)) {
+            ev.preventDefault();
+        }
+        ev.stopPropagation();
+    }, { passive: false });
+}
+
 modelPartSelectorBtn?.addEventListener('click', (ev) => {
     ev.stopPropagation();
     if (modelPartSelectorBtn.classList.contains('is-static')) return;
@@ -2757,6 +2833,7 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
     closeThumbSelectMenus();
     if (modelPartSelectorMenu && !open) {
         modelPartSelectorMenu.hidden = false;
+        positionThumbSelectMenu(modelPartSelectorMenu, modelPartSelectorBtn);
         modelPartSelectorMenu.scrollTop = 0;
         modelPartSelectorBtn.setAttribute('aria-expanded', 'true');
         queueModelPartThumbsRender();
@@ -2787,6 +2864,7 @@ bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
     closeThumbSelectMenus();
     if (bgModelSyncSelectorMenu && !open) {
         bgModelSyncSelectorMenu.hidden = false;
+        positionThumbSelectMenu(bgModelSyncSelectorMenu, bgModelSyncSelectorBtn);
         bgModelSyncSelectorMenu.scrollTop = 0;
         bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
         queueModelPartThumbsRender();
@@ -2799,6 +2877,7 @@ buildPlateModelSyncSelectorBtn?.addEventListener('click', (ev) => {
     closeThumbSelectMenus();
     if (buildPlateModelSyncSelectorMenu && !open) {
         buildPlateModelSyncSelectorMenu.hidden = false;
+        positionThumbSelectMenu(buildPlateModelSyncSelectorMenu, buildPlateModelSyncSelectorBtn);
         buildPlateModelSyncSelectorMenu.scrollTop = 0;
         buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
         queueModelPartThumbsRender();
@@ -2806,9 +2885,19 @@ buildPlateModelSyncSelectorBtn?.addEventListener('click', (ev) => {
 });
 
 [modelPartSelectorMenu, bgModelSyncSelectorMenu, buildPlateModelSyncSelectorMenu].forEach((menuEl) => {
-    menuEl?.addEventListener('wheel', (ev) => {
-        ev.stopPropagation();
-    }, { passive: true });
+    trapMenuWheelScroll(menuEl);
+});
+
+window.addEventListener('resize', () => {
+    if (modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorBtn) {
+        positionThumbSelectMenu(modelPartSelectorMenu, modelPartSelectorBtn);
+    }
+    if (bgModelSyncSelectorMenu && !bgModelSyncSelectorMenu.hidden && bgModelSyncSelectorBtn) {
+        positionThumbSelectMenu(bgModelSyncSelectorMenu, bgModelSyncSelectorBtn);
+    }
+    if (buildPlateModelSyncSelectorMenu && !buildPlateModelSyncSelectorMenu.hidden && buildPlateModelSyncSelectorBtn) {
+        positionThumbSelectMenu(buildPlateModelSyncSelectorMenu, buildPlateModelSyncSelectorBtn);
+    }
 });
 
 btnModelUndoToast?.addEventListener('click', (ev) => {
@@ -6620,12 +6709,13 @@ function updateTextureTuneUI() {
     }
     if (textureTuneLightHeightVal) textureTuneLightHeightVal.textContent = `${Math.round(textureTuneState.shadowHeight)}%`;
 
-    if (showFinishSlider && textureTuneRoughnessSlider) {
+    if (isStandard && textureTuneRoughnessSlider) {
         const s = getSelectedPartSettings();
         setFinishModeUI(getFinishModeFromPartSettings(s));
         textureTuneRoughnessSlider.value = String(finishSliderValueFromPartSettings(s));
+        updateFinishSliderVisual();
         if (textureTuneRoughnessVal) {
-            textureTuneRoughnessVal.textContent = textureTuneRoughnessSlider.value;
+            textureTuneRoughnessVal.textContent = String(Math.round(clampFinishSliderValue(textureTuneRoughnessSlider.value)));
         }
         syncSliderTooltip(textureTuneRoughnessSlider);
     }
@@ -6842,6 +6932,7 @@ textureTuneLightHeightSlider?.addEventListener('input', () => {
 
 textureTuneRoughnessSlider?.addEventListener('input', () => {
     syncSliderTooltip(textureTuneRoughnessSlider);
+    updateFinishSliderVisual();
     const { targets } = applyFinishControlsToSelectedPart();
     if (mesh) rebuildMeshMaterialsForCurrentShading();
     applyCurrentTextureTuning();
@@ -6851,6 +6942,7 @@ textureTuneRoughnessSlider?.addEventListener('input', () => {
 });
 
 textureTuneRoughnessSlider?.addEventListener('change', () => {
+    updateFinishSliderVisual();
     const { targets } = applyFinishControlsToSelectedPart(true);
     if (mesh) rebuildMeshMaterialsForCurrentShading();
     applyCurrentTextureTuning();
@@ -6865,6 +6957,7 @@ finishModeButtons.forEach((btn) => btn.addEventListener('click', () => {
         textureTuneRoughnessSlider.value = String(modeStrengthToFinishSliderValue(mode, 2));
     }
     syncSliderTooltip(textureTuneRoughnessSlider);
+    updateFinishSliderVisual();
     const { targets } = applyFinishControlsToSelectedPart(true);
     if (mesh) rebuildMeshMaterialsForCurrentShading();
     applyCurrentTextureTuning();
@@ -9621,6 +9714,7 @@ function updateDynamicBg() {
 
 // Hook model color changes to update dynamic bg and Model preset swatch
 colorPick.addEventListener('input', updateDynamicBg);
+colorPick.addEventListener('input', updateFinishSliderVisual);
 colorPick.addEventListener('input', () => {
     // Update model custom swatch fill
     const svgCircle = document.querySelector('#customModelThumb circle');
@@ -10222,6 +10316,7 @@ function renderBgPresets() {
                 requestAnimationFrame(() => {
                     syncBgModelSyncSourceUI();
                     bgModelSyncSelectorMenu.hidden = false;
+                    positionThumbSelectMenu(bgModelSyncSelectorMenu, bgModelSyncSelectorBtn);
                     bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
                 });
             }
@@ -10337,6 +10432,7 @@ function renderBuildPlatePresets() {
                 requestAnimationFrame(() => {
                     syncBuildPlateModelSyncSourceUI();
                     buildPlateModelSyncSelectorMenu.hidden = false;
+                    positionThumbSelectMenu(buildPlateModelSyncSelectorMenu, buildPlateModelSyncSelectorBtn);
                     buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
                 });
             }

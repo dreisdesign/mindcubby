@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.61] - 2026-05-10
+
+### Changed
+- **Build metadata bumped** — app build/version metadata now reports `2.1.61` and CSS/JS cache-buster query tags were updated to match
+- **Model preset card parity** — Model card preset thumb borders/radius now match the same border shape/weight behavior used by Background and Surface presets
+- **Surface finish slider visual language** — Surface Finish slider now uses a dynamic color gradient based on the selected part color (matte → satin → gloss) instead of a fixed purple track
+
+### Fixed
+- **BG/Surface sync thumbnail fallback** — model-sync selector thumbs now recover with a deterministic fallback paint when thumbnail render buffers are empty or render-time issues occur
+- **Surface finish slider state sync** — changing selected model parts now consistently refreshes finish mode and slider value/readout from the selected part settings
+- **Dropdown list accessibility in-place** — model-sync dropdown menus now reposition above/below based on viewport room and trap wheel scrolling so users can scroll long option lists without scrolling the entire panel
+
 ## [2.1.60] - 2026-05-10
 
 ### Changed
