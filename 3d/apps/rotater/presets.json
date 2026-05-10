@@ -39,7 +39,7 @@
     {
         "id": "chocolate",
         "name": "Chocolate",
-        "url": "?c=523a1e&b=523a1e&sh=matte&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=80&tc=200&thi=220&ts=100&tsa=270&tsh=130&tmr=100&tme=150&tpr=100&tpe=200&tcr=75&tce=200&ecd=106.4679&ece=0.4686&aba=1&abp=modelcolor&amp=chocolate",
+        "url": "?c=523a1e&b=ffcf0f&sh=phong&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=1&jq=90&tto=1&tl=110.1771&tc=200&thi=40&ts=72.9386&tsa=60.2403&tsh=62.3634&tmr=100&tme=150&tpr=100&tpe=200&tcr=75&tce=200&ecd=180.6447&ece=0.0000&aba=0&rv=0&rg=0&bpr=modelcolor&bpsp=3&bpab=0&bps=-100&bpsh=circle&abp=modelcolor&amp=chocolate",
         "thumb": {
             "bg": "#3a1c06",
             "overlay": "radial-gradient(circle at 36% 30%, rgba(180,110,50,0.55) 0%, rgba(120,65,20,0.25) 18%, transparent 48%), radial-gradient(circle at 65% 70%, rgba(0,0,0,0.7) 0%, transparent 55%)"
