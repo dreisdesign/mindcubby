@@ -8,7 +8,7 @@ import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 import JSZip from 'jszip';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
-const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&sh=phong&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
+const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
 // Export quality presets — base short-edge size + fps + bitrate.
@@ -1113,6 +1113,33 @@ function syncCanvasSize() {
 function getActiveShadingMode() {
     if (shadingEl.value === 'flat' || shadingEl.value === 'toon') return 'matte';
     return shadingEl.value;
+}
+
+function normalizeMaterialFamily(value, fallback = 'standard') {
+    if (value == null || value === '') return fallback;
+    const normalized = String(value).trim().toLowerCase();
+    if (normalized === 'metallic' || normalized === 'metal' || normalized === 'm') return 'metallic';
+    if (normalized === 'clear' || normalized === 'glass' || normalized === 'transparent' || normalized === 'translucent' || normalized === 'c') return 'clear';
+    if (normalized === 'standard' || normalized === 'std' || normalized === 'opaque' || normalized === 'phong' || normalized === 'matte' || normalized === 'flat' || normalized === 'toon' || normalized === 's') return 'standard';
+    return fallback;
+}
+
+function getMaterialFamilyFromShading(shading) {
+    const normalized = (shading === 'flat' || shading === 'toon') ? 'matte' : (shading || 'phong');
+    if (normalized === 'metallic') return 'metallic';
+    if (normalized === 'clear' || normalized === 'glass') return 'clear';
+    return 'standard';
+}
+
+function getShadingForMaterialFamily(materialFamily, fallback = 'phong') {
+    const family = normalizeMaterialFamily(materialFamily, 'standard');
+    if (family === 'metallic') return 'metallic';
+    if (family === 'clear') return 'clear';
+    return (fallback === 'matte' || fallback === 'flat' || fallback === 'toon') ? 'matte' : 'phong';
+}
+
+function getMaterialFamilyFromPartSettings(settings = getSelectedPartSettings()) {
+    return getMaterialFamilyFromShading(settings?.shading || getActiveShadingMode());
 }
 
 function normalizeBuildPlateShape(shape) {
@@ -3034,6 +3061,7 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
     partSettings.color = presetUrlSettings.color || partSettings.color;
     const hasExplicitFinish = presetUrlSettings.textureTuneFinishMode != null || presetUrlSettings.textureTuneFinishValue != null;
     const hasLegacyMaterialAppearance =
+        presetUrlSettings.materialFamily != null ||
         presetUrlSettings.shading != null ||
         presetUrlSettings.textureTuneMetallicRoughness != null ||
         presetUrlSettings.textureTuneMetallicMetalness != null ||
@@ -3045,7 +3073,9 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
     if (!hasExplicitFinish && hasLegacyMaterialAppearance) {
         clearStoredFinishState(partSettings);
     }
-    if (presetUrlSettings.shading) {
+    if (presetUrlSettings.materialFamily != null) {
+        partSettings.shading = getShadingForMaterialFamily(presetUrlSettings.materialFamily, partSettings.shading || shadingEl?.value || 'phong');
+    } else if (presetUrlSettings.shading) {
         const sh = presetUrlSettings.shading;
         partSettings.shading = (sh === 'flat' || sh === 'toon') ? 'matte' : sh;
     }
@@ -3071,7 +3101,7 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
 
 function hasExplicitUrlModelAppearanceParams(params = new URLSearchParams(location.search)) {
     return [
-        'c', 'op', 'sh', 'amp',
+        'c', 'op', 'mf', 'sh', 'amp',
         'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh',
         'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
         'tfm', 'tfv'
@@ -5765,14 +5795,20 @@ function restoreSettings() {
 function getURLSettings(searchStr = location.search) {
     const p = new URLSearchParams(searchStr);
     // Require at least one known key to treat URL as settings-bearing
-    if (!p.has('c') && !p.has('sh') && !p.has('rm') && !p.has('amp') && !p.has('ef')) return null;
+    if (!p.has('c') && !p.has('mf') && !p.has('sh') && !p.has('rm') && !p.has('amp') && !p.has('ef')) return null;
     const g = (k) => p.has(k) ? p.get(k) : null;
+    const rawMaterialFamily = p.has('mf') ? p.get('mf') : g('sh');
+    const materialFamily = (p.has('mf') || p.has('sh')) ? normalizeMaterialFamily(rawMaterialFamily) : null;
+    const shading = materialFamily
+        ? getShadingForMaterialFamily(materialFamily, g('sh') || 'phong')
+        : g('sh');
     return {
         // Core appearance
         color: p.has('c') ? '#' + p.get('c') : null,
         bg: p.has('b') ? '#' + p.get('b') : null,
         tone: p.has('op') ? p.get('op') : null,
-        shading: g('sh'),
+        materialFamily,
+        shading,
         // Animation
         rotateMode: g('rm'),
         speed: g('sp'),
@@ -5837,11 +5873,12 @@ function getURLSettings(searchStr = location.search) {
 
 function settingsToURL() {
     const p = new URLSearchParams();
+    const selectedPartSettings = getSelectedPartSettings();
     // Core appearance
     p.set('c', colorPick.value.replace('#', ''));
     p.set('b', bgPick.value.replace('#', ''));
     p.set('op', String(Math.round(getSliderEffectiveValue(opacitySlider)) || 0));
-    p.set('sh', shadingEl.value);
+    p.set('mf', getMaterialFamilyFromPartSettings(selectedPartSettings));
     // Animation
     p.set('rm', rotateModeEl.value);
     p.set('sp', speedSlider.value);
@@ -5877,7 +5914,6 @@ function settingsToURL() {
     p.set('tpe', String(tt.phongReflection));
     p.set('tcr', String(tt.matteRoughness));
     p.set('tce', String(tt.matteReflection));
-    const selectedPartSettings = getSelectedPartSettings();
     p.set('tfm', getFinishModeFromPartSettings(selectedPartSettings));
     p.set('tfv', String(finishSliderValueFromPartSettings(selectedPartSettings)));
     // Export camera framing
@@ -9770,15 +9806,16 @@ function reconcileModelPresetFromSettings(force = false) {
 
     activeModelPreset = 'custom';
 
-    const curShade = shadingEl?.value;
+    const curMaterialFamily = getMaterialFamilyFromPartSettings(getSelectedPartSettings());
     const curColor = colorPick?.value ? colorPick.value.toLowerCase() : null;
     for (const preset of QUICK_PRESETS) {
         if (!preset || !preset.url) continue;
         try {
             const p = getURLSettings(preset.url);
             if (!p) continue;
-            // Match by shading first, then color when provided by preset
-            if (p.shading && curShade && p.shading === curShade) {
+            const presetMaterialFamily = p.materialFamily || getMaterialFamilyFromShading(p.shading || 'phong');
+            // Match by material family first, then color when provided by preset
+            if (presetMaterialFamily && curMaterialFamily && presetMaterialFamily === curMaterialFamily) {
                 // If the preset encodes matte/roughness values, prefer a stricter match
                 const presetRough = p.textureTuneMatteRoughness != null ? String(p.textureTuneMatteRoughness) : null;
                 const presetRefl = p.textureTuneMatteReflection != null ? String(p.textureTuneMatteReflection) : null;

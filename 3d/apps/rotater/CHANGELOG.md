@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.64] - 2026-05-10
+
+### Changed
+- **Share URL schema cleaned up** — newly generated model URLs now use `mf` (`standard`, `metallic`, `clear`) as the explicit material-family key instead of legacy `sh` shader labels
+- **Preset URL cleanup** — bundled model preset URLs now encode the current material-family/finish model directly so preset links are easier to reason about and update
+
+### Fixed
+- **Legacy shader URL drift** — old `sh=` links still restore correctly, but they now rewrite forward into the clean `mf=` schema on save/load instead of perpetuating legacy shader labels
+- **Preset detection parity** — quick preset matching now compares material family instead of legacy shader labels, preventing standard-finish presets from depending on deprecated `phong`/`matte` URL values
+
 ## [2.1.63] - 2026-05-10
 
 ### Changed
