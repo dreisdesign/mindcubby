@@ -5707,6 +5707,8 @@ function getURLSettings(searchStr = location.search) {
         textureTunePhongReflection: g('tpe'),
         textureTuneMatteRoughness: g('tcr'),
         textureTuneMatteReflection: g('tce'),
+        textureTuneFinishMode: g('tfm'),
+        textureTuneFinishValue: g('tfv'),
         // Export camera framing
         exportCamDist: g('ecd'),
         exportCamElev: g('ece'),
@@ -5742,7 +5744,7 @@ function settingsToURL() {
     // Core appearance
     p.set('c', colorPick.value.replace('#', ''));
     p.set('b', bgPick.value.replace('#', ''));
-    if (opacitySlider && opacitySlider.value !== '0') p.set('op', opacitySlider.value);
+    p.set('op', String(Math.round(getSliderEffectiveValue(opacitySlider)) || 0));
     p.set('sh', shadingEl.value);
     // Animation
     p.set('rm', rotateModeEl.value);
@@ -5763,23 +5765,25 @@ function settingsToURL() {
     if (jq != null) p.set('jq', jq);
     // Texture tune panel state
     p.set('tto', (textureTunePanel && !textureTunePanel.hidden) ? '1' : '0');
-    // Texture tune values (only non-default to keep URLs short)
+    // Texture tune values are always serialized so presets capture full model finish state.
     const tt = textureTuneState;
-    const D = TEXTURE_TUNE_DEFAULTS;
-    if (tt.light !== D.light) p.set('tl', String(tt.light));
-    if (tt.contrast !== D.contrast) p.set('tc', String(tt.contrast));
-    if (tt.highlights !== D.highlights) p.set('thi', String(tt.highlights));
-    if (tt.shadows !== D.shadows) p.set('ts', String(tt.shadows));
-    if (tt.shadowAzimuth !== D.shadowAzimuth) p.set('tsa', String(tt.shadowAzimuth));
-    if (tt.lightLock !== D.lightLock) p.set('tll', tt.lightLock ? '1' : '0');
-    if (tt.shadowHeight !== D.shadowHeight) p.set('tsh', String(tt.shadowHeight));
-    if (tt.metallicRoughness !== D.metallicRoughness) p.set('tmr', String(tt.metallicRoughness));
-    if (tt.metallicMetalness !== D.metallicMetalness) p.set('tmm', String(tt.metallicMetalness));
-    if (tt.metallicReflection !== D.metallicReflection) p.set('tme', String(tt.metallicReflection));
-    if (tt.phongRoughness !== D.phongRoughness) p.set('tpr', String(tt.phongRoughness));
-    if (tt.phongReflection !== D.phongReflection) p.set('tpe', String(tt.phongReflection));
-    if (tt.matteRoughness !== D.matteRoughness) p.set('tcr', String(tt.matteRoughness));
-    if (tt.matteReflection !== D.matteReflection) p.set('tce', String(tt.matteReflection));
+    p.set('tl', String(tt.light));
+    p.set('tc', String(tt.contrast));
+    p.set('thi', String(tt.highlights));
+    p.set('ts', String(tt.shadows));
+    p.set('tsa', String(tt.shadowAzimuth));
+    p.set('tll', tt.lightLock ? '1' : '0');
+    p.set('tsh', String(tt.shadowHeight));
+    p.set('tmr', String(tt.metallicRoughness));
+    p.set('tmm', String(tt.metallicMetalness));
+    p.set('tme', String(tt.metallicReflection));
+    p.set('tpr', String(tt.phongRoughness));
+    p.set('tpe', String(tt.phongReflection));
+    p.set('tcr', String(tt.matteRoughness));
+    p.set('tce', String(tt.matteReflection));
+    const selectedPartSettings = getSelectedPartSettings();
+    p.set('tfm', getFinishModeFromPartSettings(selectedPartSettings));
+    p.set('tfv', String(finishSliderValueFromPartSettings(selectedPartSettings)));
     // Export camera framing
     if (exportCamDist != null && Number.isFinite(exportCamDist) && exportCamDist > 0)
         p.set('ecd', exportCamDist.toFixed(4));
@@ -5800,12 +5804,13 @@ function settingsToURL() {
         p.set('bpc', buildPlateColor.replace('#', ''));
     }
     if (Number.isFinite(Number(buildPlateShade))) p.set('bps', String(buildPlateShade));
+    p.set('bpf', buildPlateFinish || BUILD_PLATE_DEFAULTS.finish);
     if (buildPlateShape !== 'rectangle') p.set('bpsh', normalizeBuildPlateShape(buildPlateShape));
     if (buildPlateSizePreset && buildPlateSizePreset !== '220x220') p.set('bpp', buildPlateSizePreset);
     if (buildPlateWidth !== 220) p.set('bpw', String(buildPlateWidth));
     if (buildPlateDepth !== 220) p.set('bpd', String(buildPlateDepth));
     p.set('abp', activeBgPreset || 'modelcolor');
-    if (activeModelPreset && activeModelPreset !== 'custom') p.set('amp', activeModelPreset);
+    p.set('amp', activeModelPreset || 'custom');
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
     if (!uploadChoicePromptEnabled) p.set('uap', '0');
     if (uploadDefaultAction === 'add') p.set('uam', 'a');

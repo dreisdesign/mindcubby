@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Finish mode classification accuracy** — finish slider mode detection now interprets stored roughness correctly (inverted roughness mapping) and accounts for high reflection values, preventing glossy presets from being mislabeled as matte
 - **Sync-thumb fallback resilience** — thumbnail canvases now paint a deterministic fallback when render preconditions are invalid, reducing broken/empty sync thumb states
 - **Fast-spin export smoothness** — GIF/MP4 exports now raise effective capture FPS for short rotation times (like 5s) to reduce jitter and speed artifacts
+- **Share URL model-state completeness** — URL serialization now always includes full model texture/finish tuning values (including surface-finish mode/value helpers) so preset links/json capture complete model settings reliably
+- **Surface URL parity** — build plate finish (`bpf`) is now emitted in share URLs to match existing URL restore support
 
 ### Documentation
 - **README version updated** — workspace version marker updated to `2.1.62`
