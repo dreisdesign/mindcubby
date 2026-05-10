@@ -7813,6 +7813,7 @@ btnResetModelCard?.addEventListener('click', () => {
         const partSettings = getPartSettings(idx);
         const defaults = getVisualResetPartSettings(idx);
         Object.assign(partSettings, defaults);
+        modelPartBaseColors[idx] = defaults.color;
         if (customModelSettingsByPart && typeof customModelSettingsByPart === 'object') {
             customModelSettingsByPart[idx] = { ...partSettings };
         }

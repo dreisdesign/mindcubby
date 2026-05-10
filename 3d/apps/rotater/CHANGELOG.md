@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.62] - 2026-05-10
+
+### Fixed
+- **Model preset thumb border noise** — unselected Model card preset thumbs no longer show the default card border; only selected thumbs display the selection ring
+- **Model reset sync propagation** — resetting model visual settings now updates the underlying part base-color cache so `Model Sync` background and build plate colors refresh immediately without requiring a page reload
+
+### Documentation
+- **README version updated** — workspace version marker updated to `2.1.62`
+
 ## [2.1.61] - 2026-05-10
 
 ### Changed

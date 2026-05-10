@@ -7626,7 +7626,7 @@ html.theme-dark #buildPlateBox .build-plate-section-label > span {
 
 #modelBox .shading-option {
     padding: 6px 8px;
-    border: 2px solid var(--border-color);
+    border: 2px solid transparent;
     border-radius: 6px;
     background: transparent;
     box-shadow: 0 0 0 2px transparent;
