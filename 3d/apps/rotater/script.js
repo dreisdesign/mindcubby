@@ -709,6 +709,16 @@ const DEFAULT_COLOR_RULES = {
             modelcolor: 0,
             custom: 0,
         },
+        model: {
+            ceramic: 0,
+            ink: 0,
+            chrome: 0,
+            glass: 0,
+            chocolate: 0,
+            gumball: 0,
+            gold: 0,
+            custom: 0,
+        },
     },
 };
 
@@ -3177,7 +3187,7 @@ fileChipEl?.addEventListener('click', (ev) => {
     ev.stopPropagation();
 });
 
-function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
+function applyPresetIntoPartSettings(partSettings, presetUrlSettings, presetId = null) {
     partSettings.color = presetUrlSettings.color || partSettings.color;
     const hasExplicitFinish = presetUrlSettings.textureTuneFinishMode != null || presetUrlSettings.textureTuneFinishValue != null;
     const hasLegacyMaterialAppearance =
@@ -3200,8 +3210,20 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
         partSettings.shading = (sh === 'flat' || sh === 'toon') ? 'matte' : sh;
     }
     {
-        const t = presetUrlSettings.tone != null ? parseInt(presetUrlSettings.tone, 10) : 0;
-        partSettings.tone = Number.isFinite(t) ? Math.max(-100, Math.min(100, t)) : 0;
+        const explicitTone = presetUrlSettings.tone != null ? parseInt(presetUrlSettings.tone, 10) : NaN;
+        if (Number.isFinite(explicitTone)) {
+            partSettings.tone = Math.max(-100, Math.min(100, explicitTone));
+        } else if (presetId) {
+            const presetDefaultTone = getModelPresetDefaultTone(presetId, partSettings.tone ?? 0);
+            const parsedDefaultTone = parseInt(String(presetDefaultTone), 10);
+            if (Number.isFinite(parsedDefaultTone)) {
+                partSettings.tone = Math.max(-100, Math.min(100, parsedDefaultTone));
+            } else if (!Number.isFinite(Number(partSettings.tone))) {
+                partSettings.tone = 0;
+            }
+        } else if (!Number.isFinite(Number(partSettings.tone))) {
+            partSettings.tone = 0;
+        }
     }
     if (presetUrlSettings.textureTuneMetallicRoughness != null) partSettings.metallicRoughness = Number(presetUrlSettings.textureTuneMetallicRoughness);
     if (presetUrlSettings.textureTuneMetallicMetalness != null) partSettings.metallicMetalness = Number(presetUrlSettings.textureTuneMetallicMetalness);
@@ -3773,7 +3795,7 @@ function applyPresetHoverPreview(preset) {
     }
 
     const s = getSelectedPartSettings();
-    applyPresetIntoPartSettings(s, p);
+    applyPresetIntoPartSettings(s, p, preset.id);
     modelPartBaseColors[modelPartSelected] = s.color;
     if (activeBgPreset === 'modelcolor') bgPick.value = getModelSyncSourceColor();
     rebuildMeshMaterialsForCurrentShading();
@@ -10091,8 +10113,12 @@ function getBuildPlatePresetDefaultTone(presetId) {
     return getPresetShadeDefault('buildPlate', presetId, 0);
 }
 
+function getModelPresetDefaultTone(presetId, fallback = 0) {
+    return getPresetShadeDefault('model', presetId, fallback);
+}
+
 function getPresetShadeDefault(scope, presetId, fallback = 0) {
-    const safeScope = scope === 'buildPlate' ? 'buildPlate' : 'background';
+    const safeScope = (scope === 'buildPlate' || scope === 'model') ? scope : 'background';
     const key = String(presetId || '').trim().toLowerCase();
     const raw = getColorRuleValue(`presetShadeDefaults.${safeScope}.${key}`, null);
     const parsed = parseInt(raw, 10);
@@ -10250,7 +10276,7 @@ function applyModelPresetOnly(preset) {
     if (!p) return;
 
     const targets = applyToModelPartEditTargets((partSettings, idx) => {
-        applyPresetIntoPartSettings(partSettings, p);
+        applyPresetIntoPartSettings(partSettings, p, preset.id);
         modelPartBaseColors[idx] = partSettings.color;
     });
     syncUIFromSelectedPart();

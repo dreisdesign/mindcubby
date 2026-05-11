@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.87] - 2026-05-11
+
+### Added
+- **Model preset shade defaults in `color-rules.json`** — Added `presetShadeDefaults.model` keyed by model preset id (`ceramic`, `ink`, `chrome`, `glass`, `chocolate`, `gumball`, `gold`, `custom`).
+
+### Changed
+- **Model preset tone fallback path** — When a model preset URL omits `op`, model tone now falls back to `presetShadeDefaults.model.<presetId>` instead of always defaulting to `0`.
+- **Model hover/apply parity** — Both preset hover preview and preset apply now use the same preset-id aware tone fallback logic.
+
 ## [2.1.86] - 2026-05-11
 
 ### Fixed

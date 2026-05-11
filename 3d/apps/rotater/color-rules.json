@@ -4,7 +4,7 @@
     "snapCount": "Number of slider stops including -100 and +100.",
     "autoBrightnessShade": "Direction/position on shade scale: -100 means toward white, +100 means toward black.",
     "maxBlendPercent": "Maximum blend strength at |shade|=100. Example: 40 means blend up to 40% toward white/black.",
-    "presetShadeDefaults": "Default manual shade by preset. White should be -100 and Black should be +100.",
+    "presetShadeDefaults": "Default shade by preset. Background/buildPlate use white/black/modelcolor/custom. Model presets use preset ids from presets.json (e.g., ceramic, ink).",
     "shadeResponse": "Optional perceptual tuning. Lower lightenScale reduces intensity on the lighter side (0 to -25)."
   },
   "modelShade": {
@@ -40,6 +40,16 @@
       "white": -100,
       "black": 100,
       "modelcolor": 0,
+      "custom": 0
+    },
+    "model": {
+      "ceramic": 0,
+      "ink": 0,
+      "chrome": 0,
+      "glass": 0,
+      "chocolate": 0,
+      "gumball": 0,
+      "gold": 0,
       "custom": 0
     }
   }
