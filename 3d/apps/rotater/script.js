@@ -10642,12 +10642,13 @@ if (buildPlateAutoBrightnessEl) {
             if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(autoShade);
             buildPlateShade = autoShade;
         } else {
-            // When turning auto-adjust OFF, restore the user's last manual shade.
-            const restoreShade = Number.isFinite(Number(manualBuildPlateShadeBeforeAuto))
-                ? Number(manualBuildPlateShadeBeforeAuto)
-                : Number(lastManualBuildPlateShade);
-            buildPlateShade = Math.max(-100, Math.min(100, parseInt(String(restoreShade), 10) || 0));
+            // Match background behavior: turning auto OFF keeps the current auto shade.
+            const currentShade = buildPlateShadeSliderEl
+                ? Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0))
+                : Math.max(-100, Math.min(100, parseInt(String(buildPlateShade), 10) || 0));
+            buildPlateShade = currentShade;
             lastManualBuildPlateShade = buildPlateShade;
+            manualBuildPlateShadeBeforeAuto = buildPlateShade;
             if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(buildPlateShade);
         }
         syncBuildPlateShadeReadout();
