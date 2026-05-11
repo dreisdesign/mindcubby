@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.66] - 2026-05-11
+
+### Fixed
+- **Shade slider resets on preset change** — Switching model presets now always resets the shade value to the preset's defined shade (defaulting to `0` if the preset has no explicit shade), instead of carrying over the previous preset's shade
+
 ## [2.1.65] - 2026-05-11
 
 ### Changed

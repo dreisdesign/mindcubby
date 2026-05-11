@@ -3085,9 +3085,9 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings) {
         const sh = presetUrlSettings.shading;
         partSettings.shading = (sh === 'flat' || sh === 'toon') ? 'matte' : sh;
     }
-    if (presetUrlSettings.tone != null) {
-        const t = parseInt(presetUrlSettings.tone, 10);
-        if (Number.isFinite(t)) partSettings.tone = Math.max(-100, Math.min(100, t));
+    {
+        const t = presetUrlSettings.tone != null ? parseInt(presetUrlSettings.tone, 10) : 0;
+        partSettings.tone = Number.isFinite(t) ? Math.max(-100, Math.min(100, t)) : 0;
     }
     if (presetUrlSettings.textureTuneMetallicRoughness != null) partSettings.metallicRoughness = Number(presetUrlSettings.textureTuneMetallicRoughness);
     if (presetUrlSettings.textureTuneMetallicMetalness != null) partSettings.metallicMetalness = Number(presetUrlSettings.textureTuneMetallicMetalness);
