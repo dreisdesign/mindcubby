@@ -5787,6 +5787,11 @@ function restoreSettings() {
         } else if (activeBuildPlatePreset === 'modelcolor') {
             buildPlateColor = null;
         }
+        // Ensure lastManualBuildPlateShade is properly initialized for when user toggles auto OFF.
+        // If auto is ON, cache the preset's manual default. If auto is OFF, it was already set above.
+        if (buildPlateAutoBrightnessEnabled) {
+            lastManualBuildPlateShade = getBuildPlatePresetDefaultTone(activeBuildPlatePreset);
+        }
         buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
         if (s.buildPlateShape === 'rounded' || s.buildPlateShape === 'rectangle' || s.buildPlateShape === 'circle') {
             buildPlateShape = s.buildPlateShape;
@@ -10843,7 +10848,7 @@ function renderBuildPlatePresets() {
                 buildPlateShade = buildPlateAutoBrightnessEnabled
                     ? AUTO_BRIGHTNESS_RULES.buildPlate.shade
                     : getBuildPlatePresetDefaultTone('modelcolor');
-                if (!buildPlateAutoBrightnessEnabled) lastManualBuildPlateShade = buildPlateShade;
+                lastManualBuildPlateShade = getBuildPlatePresetDefaultTone('modelcolor');
                 if (buildPlateShadeSliderEl) {
                     buildPlateShadeSliderEl.value = String(buildPlateShade);
                     syncBuildPlateShadeReadout();
@@ -10851,7 +10856,7 @@ function renderBuildPlatePresets() {
             } else if (preset.id === 'white' || preset.id === 'black') {
                 buildPlateColor = preset.color;
                 buildPlateShade = getBuildPlatePresetDefaultTone(preset.id);
-                if (!buildPlateAutoBrightnessEnabled) lastManualBuildPlateShade = buildPlateShade;
+                lastManualBuildPlateShade = buildPlateShade;
                 if (buildPlateShadeSliderEl) {
                     buildPlateShadeSliderEl.value = String(buildPlateShade);
                     syncBuildPlateShadeReadout();
