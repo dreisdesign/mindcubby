@@ -1,0 +1,41 @@
+{
+  "_guide": {
+    "jumpPercent": "Percent change per shade step from center.",
+    "snapCount": "Number of slider stops including -100 and +100.",
+    "autoBrightnessShade": "Direction/position on shade scale: -100 means toward white, +100 means toward black.",
+    "maxBlendPercent": "Maximum blend strength at |shade|=100. Example: 40 means blend up to 40% toward white/black.",
+    "presetShadeDefaults": "Default manual shade by preset. White should be -100 and Black should be +100."
+  },
+  "modelShade": {
+    "jumpPercent": 10,
+    "snapCount": 9
+  },
+  "surfaceShade": {
+    "jumpPercent": 10,
+    "snapCount": 9
+  },
+  "autoBrightness": {
+    "background": {
+      "shade": -100,
+      "maxBlendPercent": 40
+    },
+    "buildPlate": {
+      "shade": -100,
+      "maxBlendPercent": 10
+    }
+  },
+  "presetShadeDefaults": {
+    "background": {
+      "white": -100,
+      "black": 100,
+      "modelcolor": 0,
+      "custom": 0
+    },
+    "buildPlate": {
+      "white": -100,
+      "black": 100,
+      "modelcolor": 0,
+      "custom": 0
+    }
+  }
+}

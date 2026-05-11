@@ -11,6 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.70] - 2026-05-11
+
+### Fixed
+- **Build label/source consistency** — Aligned all build metadata sources in `index.html` (bootstrap constants, info card label, and CSS/JS cache-buster query strings) so the UI no longer shows stale `Build 2.1.64` after refresh
+
+## [2.1.69] - 2026-05-11
+
+### Fixed
+- **Preset shade defaults are now config-driven** — White/Black default manual shade endpoints are now read from `color-rules.json` (`presetShadeDefaults`) so both background and build plate can be controlled without JS edits
+- **Background reset sync thumbnail stability** — Resetting the Background card now repaints the model sync thumbnail immediately, preventing transient broken thumbnail states
+- **Auto Brightness toggle no longer jumps manual shade** — Disabling Auto Brightness now preserves the current manual shade slider position instead of forcing a preset-specific reset
+
+### Changed
+- **Terminology normalization in color rules** — Helper naming now consistently uses `shade` language, and `color-rules.json` includes a plain-language `_guide` block
+
+## [2.1.68] - 2026-05-11
+
+### Fixed
+- **Config-driven color rules** — Shade and auto-brightness now read their percentage rules from `color-rules.json`, and shade blending uses RGB lerp so each step stays visually consistent
+
 ## [2.1.67] - 2026-05-11
 
 ### Fixed

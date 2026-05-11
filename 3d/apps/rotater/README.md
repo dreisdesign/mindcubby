@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.65**
+**Version (current workspace): 2.1.70**
 
 Current development note: sync selector thumbs now have a stronger fallback render path, model-sync dropdowns use viewport-aware placement with contained wheel scrolling, and the model Surface Finish slider now stays synced per selected part with a dynamic color gradient. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
@@ -35,13 +35,17 @@ If you want to change startup defaults and card reset behavior in code, these ar
   - `activeBuildPlatePreset = 'modelcolor'`
   - `isDynamicBg = true`
   - `buildPlateAutoBrightnessEnabled = true`
-- `script.js` -> `AUTO_BRIGHTNESS_RULES`:
-  - `background.shade = -100`
-  - `buildPlate.shade = -100`
-- `script.js` -> `SHADE_RANGE_PERCENT = 40`
-  - slider left is brighter and right is darker across a 40% HSL adjustment span
-  - change this constant to make the shade range stronger or softer
-  - manual defaults: normal colors `0`, white `-100`, black `+100`
+- `color-rules.json` -> `modelShade`:
+  - `jumpPercent` controls shade step strength per stop
+  - `snapCount` controls how many stops are available
+- `color-rules.json` -> `surfaceShade`:
+  - `jumpPercent` controls background/build-plate manual shade step strength
+  - `snapCount` controls how many manual shade stops are available
+- `color-rules.json` -> `autoBrightness`:
+  - `background.shade` and `buildPlate.shade` set the auto-brightness direction (`-100` white side, `+100` black side)
+  - `maxBlendPercent` sets the strongest blend amount at `|shade|=100`
+- `color-rules.json` -> `presetShadeDefaults`:
+  - manual shade defaults per preset (`white=-100`, `black=+100`)
 - `script.js` -> card reset handlers:
   - `btnResetBackgroundCard` restores `Model Sync + Auto brightness`
   - `btnResetBuildPlateCard` restores `Model Sync + Auto brightness`
@@ -121,7 +125,7 @@ Sidebar tabs: **Theme → Effects**
 
 When a multi-part model is loaded:
 
-- **Model** controls are part-aware (color, shade/tone, shading mode, and finish/reflection values are stored per selected part)
+- **Model** controls are part-aware (color, shade, shading mode, and finish/reflection values are stored per selected part)
 - **Model presets** are model-only (they no longer force background or lighting changes)
 - **Background → Model** preset can follow a chosen part via **Model Sync Source** (defaults to Part 1), and Auto Brightness is enabled by default on first visit
 - The part selector dropdown appears only for multipart models; single-model sessions use an exposed 3-dot actions menu

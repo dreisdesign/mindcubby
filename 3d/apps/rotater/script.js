@@ -175,7 +175,7 @@ const PALETTE = {
         gold: '#f5c400',
         bgBorderLight: '#b8b6ca',
         bgBorderDark: '#5d5a74',
-        modelToneFallback: '#2e2b74',
+        modelShadeFallback: '#2e2b74',
     },
     gradient: {
         white: '#fff',
@@ -670,17 +670,100 @@ document.querySelectorAll('input[type="range"]').forEach((slider) => {
 // ── Snap-to-grid enforcement ──────────────────────────────────────────────────
 let fineTuningMode = false;
 
-// ── SHADE RANGE CONFIGURATION ──────────────────────────────────────────────────
-// SHADE_RANGE_PERCENT: Maximum lightness adjustment range (0-100%)
-// Example: 40 = slider can adjust by ±40% of the HSL lightness range
-// For white (L=100%): ranges from 100% (slider -100) to 60% (slider +100)
-// For black (L=0%): ranges from 40% (slider -100) to 0% (slider +100)
-const SHADE_RANGE_PERCENT = 40;
+// ── COLOR RULE CONFIGURATION ──────────────────────────────────────────────────
+// Editable defaults are loaded from color-rules.json at startup.
+const DEFAULT_COLOR_RULES = {
+    modelShade: {
+        jumpPercent: 5,
+        snapCount: 9,
+    },
+    surfaceShade: {
+        jumpPercent: 5,
+        snapCount: 9,
+    },
+    autoBrightness: {
+        background: {
+            shade: -100,
+            maxBlendPercent: 40,
+        },
+        buildPlate: {
+            shade: -100,
+            maxBlendPercent: 40,
+        },
+    },
+    presetShadeDefaults: {
+        background: {
+            white: -100,
+            black: 100,
+            modelcolor: 0,
+            custom: 0,
+        },
+        buildPlate: {
+            white: -100,
+            black: 100,
+            modelcolor: 0,
+            custom: 0,
+        },
+    },
+};
+
+let colorRules = JSON.parse(JSON.stringify(DEFAULT_COLOR_RULES));
+
+function mergePlainObject(target, source) {
+    if (!source || typeof source !== 'object' || Array.isArray(source)) return target;
+    Object.entries(source).forEach(([key, value]) => {
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            if (!target[key] || typeof target[key] !== 'object' || Array.isArray(target[key])) target[key] = {};
+            mergePlainObject(target[key], value);
+        } else if (value !== undefined) {
+            target[key] = value;
+        }
+    });
+    return target;
+}
+
+function getColorRuleValue(path, fallback) {
+    const parts = String(path || '').split('.').filter(Boolean);
+    let cur = colorRules;
+    for (const part of parts) {
+        if (!cur || typeof cur !== 'object' || Array.isArray(cur) || !(part in cur)) return fallback;
+        cur = cur[part];
+    }
+    return cur ?? fallback;
+}
+
+function getColorRuleNumber(path, fallback) {
+    const n = parseFloat(getColorRuleValue(path, fallback));
+    return Number.isFinite(n) ? n : fallback;
+}
+
+async function loadColorRules() {
+    try {
+        const response = await fetch(new URL('./color-rules.json', import.meta.url), { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const loaded = await response.json();
+        if (loaded?.modelTone && !loaded.modelShade) loaded.modelShade = loaded.modelTone;
+        if (loaded?.autoBrightness?.background?.rangePercent != null && loaded.autoBrightness.background.maxBlendPercent == null) {
+            loaded.autoBrightness.background.maxBlendPercent = loaded.autoBrightness.background.rangePercent;
+        }
+        if (loaded?.autoBrightness?.buildPlate?.rangePercent != null && loaded.autoBrightness.buildPlate.maxBlendPercent == null) {
+            loaded.autoBrightness.buildPlate.maxBlendPercent = loaded.autoBrightness.buildPlate.rangePercent;
+        }
+        if (loaded?.presetToneDefaults && !loaded.presetShadeDefaults) loaded.presetShadeDefaults = loaded.presetToneDefaults;
+        colorRules = mergePlainObject(JSON.parse(JSON.stringify(DEFAULT_COLOR_RULES)), loaded);
+    } catch (error) {
+        colorRules = JSON.parse(JSON.stringify(DEFAULT_COLOR_RULES));
+        if (DEV_LOG) console.warn('[rotater] color-rules.json fallback to defaults', error);
+    }
+}
 
 const AUTO_BRIGHTNESS_RULES = {
-    // DEFAULT: Slider value when auto-brightness is enabled
-    background: { shade: -100 },
-    buildPlate: { shade: -100 },
+    get background() {
+        return getColorRuleValue('autoBrightness.background', DEFAULT_COLOR_RULES.autoBrightness.background);
+    },
+    get buildPlate() {
+        return getColorRuleValue('autoBrightness.buildPlate', DEFAULT_COLOR_RULES.autoBrightness.buildPlate);
+    },
 };
 
 function getSliderEffectiveValue(slider) {
@@ -2243,6 +2326,28 @@ function updateFinishSliderVisual() {
     textureTuneRoughnessSlider.style.setProperty('--slider-track-gradient', `linear-gradient(to right, ${matteHex} 0%, ${satinHex} 50%, ${glossHex} 100%)`);
 }
 
+function getShadeMaxDeltaPercent(rulePath) {
+    const defaultRule = DEFAULT_COLOR_RULES[rulePath] || {};
+    const jumpPercent = getColorRuleNumber(`${rulePath}.jumpPercent`, defaultRule.jumpPercent ?? 5);
+    const snapCount = Math.max(3, Math.round(getColorRuleNumber(`${rulePath}.snapCount`, defaultRule.snapCount ?? 9)));
+    return jumpPercent * Math.max(0, (snapCount - 1) / 2);
+}
+
+function lerpColorTowardTarget(baseHex, targetHex, amount) {
+    const baseC = new THREE.Color(baseHex);
+    const targetC = new THREE.Color(targetHex);
+    baseC.lerp(targetC, Math.max(0, Math.min(1, amount)));
+    return baseC;
+}
+
+function blendShadeColor(baseHex, shadeVal, maxDeltaPercent) {
+    const shade = Number(shadeVal) || 0;
+    const mixAmount = Math.max(0, Math.min(1, (Math.abs(shade) / 100) * (Math.max(0, maxDeltaPercent) / 100)));
+    if (shade < 0) return lerpColorTowardTarget(baseHex, '#ffffff', mixAmount);
+    if (shade > 0) return lerpColorTowardTarget(baseHex, '#000000', mixAmount);
+    return new THREE.Color(baseHex);
+}
+
 function applyFinishControlsToSelectedPart(commit = false) {
     const defaultMode = getSelectedFinishMode();
     const defaultStrength = FINISH_MODE_DEFAULT_STRENGTH[defaultMode] || 2;
@@ -3147,51 +3252,11 @@ function disposeMaterials(materialLike) {
 }
 
 function computeTonedColor(baseHex, toneVal) {
-    const baseC = new THREE.Color(baseHex);
-    const hsl = { h: 0, s: 0, l: 0 };
-    baseC.getHSL(hsl);
-    const amount = Math.max(0, Math.min(1, Math.abs(toneVal) / 100));
-
-    if (toneVal < 0) {
-        const lift = hsl.l < 0.08 ? 0.56 : 0.30;
-        hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * lift * amount);
-    } else if (toneVal > 0) {
-        hsl.l = Math.max(0, hsl.l * (1 - 0.45 * amount));
-    }
-
-    if (hsl.s < 0.02 && hsl.l > 0.02) hsl.s = 0.02;
-    baseC.setHSL(hsl.h, hsl.s, hsl.l);
-    return baseC;
+    return blendShadeColor(baseHex, toneVal, getShadeMaxDeltaPercent('modelShade'));
 }
 
 function computeSurfaceShadeColor(baseHex, shadeVal) {
-    // Slider range: -100 (brightest) to +100 (darkest)
-    // All colors use the same formula — no special casing needed:
-    //   Slider left  (-100): L += (1 - L) * SHADE_RANGE_PERCENT%  → pushes toward white
-    //   Slider center (0)  : no change
-    //   Slider right (+100): L -= L * SHADE_RANGE_PERCENT%         → pushes toward black
-    //
-    // White  (L=1.0): -100 → L:100%,  0 → L:80%,  +100 → L:60%  (if range=40%)
-    // Black  (L=0.0): -100 → L:40%,   0 → L:0%,   +100 → L:0%   (if range=40%)
-    // Blue   (L=0.5): -100 → L:70%,   0 → L:50%,  +100 → L:30%  (if range=40%)
-    const baseC = new THREE.Color(baseHex);
-    const hsl = { h: 0, s: 0, l: 0 };
-    baseC.getHSL(hsl);
-
-    const t = shadeVal / 100; // -1.0 to +1.0
-    const rangeScale = SHADE_RANGE_PERCENT / 100;
-
-    if (t < 0) {
-        // Brighten: lift toward white
-        hsl.l = Math.min(1, hsl.l + (1 - hsl.l) * (-t) * rangeScale);
-    } else if (t > 0) {
-        // Darken: push toward black
-        hsl.l = Math.max(0, hsl.l - hsl.l * t * rangeScale);
-    }
-
-    if (hsl.s < 0.02 && hsl.l > 0.02) hsl.s = 0.02;
-    baseC.setHSL(hsl.h, hsl.s, hsl.l);
-    return baseC;
+    return blendShadeColor(baseHex, shadeVal, getShadeMaxDeltaPercent('surfaceShade'));
 }
 
 function computeBuildPlateShadeColor(baseHex, shadeVal) {
@@ -3657,6 +3722,7 @@ function syncBgModelSyncSourceUI() {
         bgModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
         bgModelSyncSelectorThumb.dataset.partIndex = String(bgSyncPartIndex);
         paintThumbFallback(bgModelSyncSelectorThumb, bgSyncPartIndex);
+        renderSinglePartThumbnail(bgModelSyncSelectorThumb, bgSyncPartIndex);
     }
     if (bgModelSyncSelectorText) {
         const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
@@ -8082,6 +8148,11 @@ btnResetBackgroundCard?.addEventListener('click', () => {
     updateDynamicBg();
     updateBgSelection();
     syncBgModelSyncSourceUI();
+    if (bgModelSyncSelectorThumb) {
+        paintThumbFallback(bgModelSyncSelectorThumb, bgSyncPartIndex);
+        renderSinglePartThumbnail(bgModelSyncSelectorThumb, bgSyncPartIndex);
+    }
+    queueModelPartThumbsRender([bgSyncPartIndex]);
     saveSettings();
     updateCardResetButtonStates();
 });
@@ -9836,7 +9907,12 @@ function finishRestoreSessionState() {
 
 requestAnimationFrame(() => {
     setTimeout(() => {
-        restoreSession().finally(finishRestoreSessionState);
+        loadColorRules().finally(() => {
+            initPresetGallery();
+            updateShadeSliderVisual();
+            updateBgShadeSliderVisual();
+            updateBuildPlateShadeSliderVisual();
+        }).then(() => restoreSession()).finally(finishRestoreSessionState);
     }, 0);
 });
 
@@ -9934,19 +10010,28 @@ const BUILD_PLATE_PRESETS = [
 ];
 
 function getBgPresetDefaultTone(presetId) {
-    // DEFAULT: Manual-mode slider position for each preset
-    // At this position, the slider shows the unmodified preset color.
-    if (presetId === 'white') return -100; // Far left: L=100% (pure white, no darkening)
-    if (presetId === 'black') return 100;  // Far right: L=0% (pure black, no lightening)
-    return 0;                              // Center: no lightness adjustment
+    return getPresetShadeDefault('background', presetId, 0);
 }
 
 function getBuildPlatePresetDefaultTone(presetId) {
-    // DEFAULT: Manual-mode slider position for each preset
-    // At this position, the slider shows the unmodified preset color.
-    if (presetId === 'white') return -100; // Far left: L=100% (pure white, no darkening)
-    if (presetId === 'black') return 100;  // Far right: L=0% (pure black, no lightening)
-    return 0;                              // Center: no lightness adjustment
+    return getPresetShadeDefault('buildPlate', presetId, 0);
+}
+
+function getPresetShadeDefault(scope, presetId, fallback = 0) {
+    const safeScope = scope === 'buildPlate' ? 'buildPlate' : 'background';
+    const key = String(presetId || '').trim().toLowerCase();
+    const raw = getColorRuleValue(`presetShadeDefaults.${safeScope}.${key}`, null);
+    const parsed = parseInt(raw, 10);
+    if (Number.isFinite(parsed)) return Math.max(-100, Math.min(100, parsed));
+    return fallback;
+}
+
+function getShadeStopValues(rulePath) {
+    const defaultRule = DEFAULT_COLOR_RULES[rulePath] || {};
+    const snapCount = Math.max(3, Math.round(getColorRuleNumber(`${rulePath}.snapCount`, defaultRule.snapCount ?? 9)));
+    if (snapCount === 1) return [0];
+    const step = 200 / (snapCount - 1);
+    return Array.from({ length: snapCount }, (_, idx) => Math.round(-100 + (step * idx)));
 }
 
 function getManualBgTone() {
@@ -9963,11 +10048,17 @@ function applyBackgroundFromBaseColor(baseHex) {
 }
 
 function computeAutoBrightnessColor(baseHex) {
-    return computeSurfaceShadeColor(baseHex, AUTO_BRIGHTNESS_RULES.background.shade);
+    const rule = AUTO_BRIGHTNESS_RULES.background || DEFAULT_COLOR_RULES.autoBrightness.background;
+    const shade = getColorRuleNumber('autoBrightness.background.shade', DEFAULT_COLOR_RULES.autoBrightness.background.shade);
+    const maxBlendPercent = getColorRuleNumber('autoBrightness.background.maxBlendPercent', DEFAULT_COLOR_RULES.autoBrightness.background.maxBlendPercent);
+    return blendShadeColor(baseHex, shade, maxBlendPercent);
 }
 
 function computeBuildPlateAutoBrightnessColor(baseHex) {
-    return computeBuildPlateShadeColor(baseHex, AUTO_BRIGHTNESS_RULES.buildPlate.shade);
+    const rule = AUTO_BRIGHTNESS_RULES.buildPlate || DEFAULT_COLOR_RULES.autoBrightness.buildPlate;
+    const shade = getColorRuleNumber('autoBrightness.buildPlate.shade', DEFAULT_COLOR_RULES.autoBrightness.buildPlate.shade);
+    const maxBlendPercent = getColorRuleNumber('autoBrightness.buildPlate.maxBlendPercent', DEFAULT_COLOR_RULES.autoBrightness.buildPlate.maxBlendPercent);
+    return blendShadeColor(baseHex, shade, maxBlendPercent);
 }
 
 function applyBgPresetDefaultTone(presetId) {
@@ -10404,17 +10495,10 @@ bgPick.addEventListener('input', (ev) => {
 const autoBgCheckEl = document.getElementById('autoBgCheck');
 if (autoBgCheckEl) {
     autoBgCheckEl.addEventListener('change', () => {
-        const wasDynamicBg = isDynamicBg;
         isDynamicBg = autoBgCheckEl.checked;
         updateAutoBgShadeControlVisibility();
         if (isDynamicBg) updateDynamicBg();
         else {
-            if (wasDynamicBg && bgOpacitySlider) {
-                // When turning auto off, set slider to manual default (0 for normal, -40 for white, +40 for black)
-                const manualDefault = getBgPresetDefaultTone(activeBgPreset);
-                bgOpacitySlider.value = String(manualDefault);
-                syncBgShadeReadout();
-            }
             // Restore base preset color when turning auto-adjust off
             if (activeBgPreset === 'modelcolor') {
                 const syncColor = getModelSyncSourceColor();
@@ -10473,16 +10557,7 @@ if (buildPlateColorPickerEl) {
 
 if (buildPlateAutoBrightnessEl) {
     buildPlateAutoBrightnessEl.addEventListener('change', () => {
-        const wasAuto = buildPlateAutoBrightnessEnabled;
         buildPlateAutoBrightnessEnabled = !!buildPlateAutoBrightnessEl.checked;
-        if (!buildPlateAutoBrightnessEnabled && wasAuto) {
-            // When turning auto off, set slider to manual default (0 for normal, -40 for white, +40 for black)
-            buildPlateShade = getBuildPlatePresetDefaultTone(activeBuildPlatePreset);
-            if (buildPlateShadeSliderEl) {
-                buildPlateShadeSliderEl.value = String(buildPlateShade);
-                syncBuildPlateShadeReadout();
-            }
-        }
         syncBuildPlateShadeReadout();
         updateBuildPlateShadeControlVisibility();
         updateBuildPlateMaterial();
@@ -10758,8 +10833,7 @@ function renderModelShadeSelector() {
     const sel = document.getElementById('modelShadeSelector');
     if (!sel) return;
     sel.innerHTML = '';
-    // Tone dots: 0 is baseline color; ends are bounded +/-20% brightness.
-    const values = [-100, -75, -50, -25, 0, 25, 50, 75, 100];
+    const values = getShadeStopValues('modelShade');
     const currentVal = parseInt(opacitySlider ? opacitySlider.value : 0, 10);
     values.forEach((val) => {
         const dot = document.createElement('div');
@@ -10768,7 +10842,7 @@ function renderModelShadeSelector() {
         dot.style.borderRadius = '50%';
         dot.style.cursor = 'pointer';
         // Show actual model color at each tone stop.
-        const baseC = computeTonedColor(colorPick ? colorPick.value : PALETTE.preset.modelToneFallback, val);
+        const baseC = computeTonedColor(colorPick ? colorPick.value : PALETTE.preset.modelShadeFallback, val);
         dot.style.backgroundColor = '#' + baseC.getHexString();
         dot.onclick = () => {
             if (opacitySlider) {
