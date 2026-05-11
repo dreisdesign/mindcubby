@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.90] - 2026-05-11
+
+### Fixed
+- **Multipart refresh now preserves per-part model appearance** — Reloading a saved multi-part session no longer reapplies selected-part URL appearance params to every part, so individual part colors/presets remain intact after refresh.
+
 ## [2.1.89] - 2026-05-11
 
 ### Fixed

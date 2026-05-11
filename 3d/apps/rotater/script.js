@@ -6163,6 +6163,9 @@ async function restoreSession() {
     if (DEV_LOG) console.log(`[rotater] restoreSession: calling loadSTLBuffer for user file at ${Date.now()}`);
     if (isMultipart) {
         modelPartFiles = saved.parts.map(p => ({ name: p.name, buffer: p.buffer }));
+        // URL model appearance params represent selected-part state; when restoring
+        // a saved multipart session, preserve each part's persisted appearance.
+        pendingUrlModelAppearanceOverride = null;
         loadMultipartSTLBuffers(
             saved.parts.map(p => p.buffer),
             saved.parts.map(p => p.name),
