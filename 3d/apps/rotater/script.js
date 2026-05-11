@@ -10783,6 +10783,7 @@ function renderBgPresets() {
             isDynamicBg = autoBg ? autoBg.checked : false;
             if (preset.id === 'modelcolor') {
                 const syncColor = getModelSyncSourceColor();
+                if (!isDynamicBg) applyBgPresetDefaultTone('modelcolor');
                 bgPick.value = syncColor;
                 if (isDynamicBg) updateDynamicBg();
                 else applyBackgroundFromBaseColor(syncColor);
