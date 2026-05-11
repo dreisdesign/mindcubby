@@ -1,4 +1,47 @@
 # Rotater Roadmap
+---
+
+Updated: 2026-05-11
+
+## Language
+(Needs some thought) When 3+ parts are selected - update the wording in the dropdown from "Parts 1 +2 more" "(3/3 Selected) to "Parts 1, 2, 3" - or something better. "Part 1 
+
+---
+
+## D-Pad
+- New setting for App Settings: Show/Hide D-Pad
+- When D-Pad  hidden: Position the Pause button to the bottom right. 
+
+---
+
+## New feature: "New version indicator" - in the app settings card: a little red badge on the Info Icon.
+
+---
+
+## Make surface finish slider only available when Fine tuning for precise control is turned on in settings
+
+---
+## Refactor for Industry Standards
+Most modern development practices (using frameworks like React, Vue, or Svelte) favor Modularization.
+Metric	Assessment
+0–300 lines	Ideal; highly readable and focused.
+300–600 lines	Acceptable for complex components.
+600–1,000 lines	Warning; consider breaking into smaller modules.
+1,000+ lines	High technical debt; refactoring is recommended.
+Recommendation
+Break the file down into smaller, reusable modules using ES Modules (import/export). Group logic by functionality, such as utility functions, API calls, and UI components.
+
+
+---
+
+Create an automation for testing. NPM?
+Plan: review all changelogs / bug fixes to collect and identify common bugs and regressions. 
+Solution: create an automated test to run and catch them.
+
+
+
+
+---
 
 Updated: 2026-05-07
 
@@ -91,3 +134,19 @@ This file is intentionally split into two buckets:
 - Full-screen manager should include thumbnail virtualization before enabling very large multipart sessions.
 - Advanced measure mode depends on robust raycast hit filtering so hidden parts and transparent materials do not produce incorrect picks.
 - Undo should be scoped to settings first to avoid file mutation complexity in early versions.
+
+---
+Imported from next.md
+
+Modal Manager: List view /  thumbnail grid view / current card view.
+
+Pinnable cards plan:
+- Pin button on card header menus.
+- Pinned cards become quick tabs for focus switching.
+- Persist pin order/state and support overflow handling.
+
+Animation shold have the same title treatment as Lighting Effects etc.
+
+Idea: HOld down command to enter a select mode to select model by clicking on it. This was previously implemented but removed because it was obtrusive. By requiring command it will work without being an issue.
+
+ ![Persistent Add Model button takes upa a lot of space... hmm](image-1.png)

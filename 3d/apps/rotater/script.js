@@ -5713,6 +5713,11 @@ function restoreSettings() {
             const el = document.getElementById('autoBgCheck');
             if (el) el.checked = on;
             isDynamicBg = on;
+            if (bgOpacitySlider) {
+                bgOpacitySlider.value = on
+                    ? String(AUTO_BRIGHTNESS_RULES.background.shade)
+                    : String(getBgPresetDefaultTone(activeBgPreset));
+            }
         }
         if (s.rulerVisible != null) {
             const on = (s.rulerVisible === '1' || s.rulerVisible === true || s.rulerVisible === 1);
@@ -5862,6 +5867,13 @@ function restoreSettings() {
         syncExportMotionControlsFromMain();
         syncAllRangeFillIndicators();
         if (bgOpacitySlider) updateBgShadeSliderVisual();
+        if (bgOpacitySlider) {
+            bgOpacitySlider.value = isDynamicBg
+                ? String(AUTO_BRIGHTNESS_RULES.background.shade)
+                : String(getBgPresetDefaultTone(activeBgPreset));
+            syncBgShadeReadout();
+            updateBgShadeSliderVisual();
+        }
         updateTiltRangeReset();
         wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
         speedResetBtn?.classList.toggle('is-changed', parseInt(speedSlider.value, 10) !== SPEED_DEFAULT);
