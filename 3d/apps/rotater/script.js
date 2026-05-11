@@ -10609,6 +10609,10 @@ if (buildPlateAutoBrightnessEl) {
             const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
             if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(autoShade);
             buildPlateShade = autoShade;
+        } else {
+            // When turning auto-adjust OFF, restore the preset default shade
+            buildPlateShade = getBuildPlatePresetDefaultTone(activeBuildPlatePreset);
+            if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(buildPlateShade);
         }
         syncBuildPlateShadeReadout();
         updateBuildPlateShadeControlVisibility();

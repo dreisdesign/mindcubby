@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.79] - 2026-05-11
+
+### Fixed
+- **Build plate auto-brightness OFF state** — Toggling auto-brightness OFF now properly restores the preset default shade instead of leaving it at the auto value. Matches background auto-brightness behavior.
+
 ## [2.1.78] - 2026-05-11
 
 ### Changed
