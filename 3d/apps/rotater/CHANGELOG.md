@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.78] - 2026-05-11
+
+### Changed
+- **REFACTOR: Shade system ES Module** — Extracted shade computation logic into new `shade-system.js` ES Module for improved maintainability and code organization (Phase 1 of roadmap modularization)
+- **Wrapper functions** — Added compatibility wrappers in script.js to maintain existing API while delegating to module
+
+### Fixed
+- **Build plate shade range (lightenScale)** — Fixed double-damping issue where `lightenScale: 0.6` was being multiplied into the blend amount, causing shade=-100 to appear gray instead of white. Now `lightenScale` only affects darker side (darkenScale) for perceptual tuning without reducing white intensity
+
 ## [2.1.77] - 2026-05-11
 
 ### Fixed

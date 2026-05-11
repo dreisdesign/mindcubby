@@ -6,6 +6,7 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 import JSZip from 'jszip';
+import * as ShadeSystem from './shade-system.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -2345,22 +2346,10 @@ function getShadeMaxDeltaPercent(rulePath) {
     return jumpPercent * Math.max(0, (snapCount - 1) / 2);
 }
 
-function lerpColorTowardTarget(baseHex, targetHex, amount) {
-    const baseC = new THREE.Color(baseHex);
-    const targetC = new THREE.Color(targetHex);
-    baseC.lerp(targetC, Math.max(0, Math.min(1, amount)));
-    return baseC;
-}
 
-function blendShadeColor(baseHex, shadeVal, maxDeltaPercent) {
-    const shade = Number(shadeVal) || 0;
-    const baseMixAmount = Math.max(0, Math.min(1, (Math.abs(shade) / 100) * (Math.max(0, maxDeltaPercent) / 100)));
-    const lightenScale = Math.max(0, getColorRuleNumber('shadeResponse.lightenScale', DEFAULT_COLOR_RULES.shadeResponse.lightenScale));
-    const darkenScale = Math.max(0, getColorRuleNumber('shadeResponse.darkenScale', DEFAULT_COLOR_RULES.shadeResponse.darkenScale));
-    if (shade < 0) return lerpColorTowardTarget(baseHex, '#ffffff', Math.max(0, Math.min(1, baseMixAmount * lightenScale)));
-    if (shade > 0) return lerpColorTowardTarget(baseHex, '#000000', Math.max(0, Math.min(1, baseMixAmount * darkenScale)));
-    return new THREE.Color(baseHex);
-}
+// Shade functions moved to shade-system.js module
+// Use ShadeSystem.blendShadeColor, etc. instead
+
 
 function applyFinishControlsToSelectedPart(commit = false) {
     const defaultMode = getSelectedFinishMode();
@@ -3265,17 +3254,35 @@ function disposeMaterials(materialLike) {
     });
 }
 
+// Wrapper functions for shade system (module exported functions)
+// These maintain the original script.js interface while delegating to shade-system.js
+function lerpColorTowardTarget(baseHex, targetHex, amount) {
+    return ShadeSystem.lerpColorTowardTarget(baseHex, targetHex, amount);
+}
+
+function blendShadeColor(baseHex, shadeVal, maxDeltaPercent) {
+    return ShadeSystem.blendShadeColor(baseHex, shadeVal, maxDeltaPercent);
+}
+
 function computeTonedColor(baseHex, toneVal) {
-    return blendShadeColor(baseHex, toneVal, getShadeMaxDeltaPercent('modelShade'));
+    const maxDelta = getShadeMaxDeltaPercent('modelShade');
+    return ShadeSystem.computeTonedColor(baseHex, toneVal, maxDelta);
 }
 
 function computeSurfaceShadeColor(baseHex, shadeVal) {
-    return blendShadeColor(baseHex, shadeVal, getShadeMaxDeltaPercent('surfaceShade'));
+    const maxDelta = getShadeMaxDeltaPercent('surfaceShade');
+    return ShadeSystem.computeSurfaceShadeColor(baseHex, shadeVal, maxDelta);
 }
 
 function computeBuildPlateShadeColor(baseHex, shadeVal) {
-    return computeSurfaceShadeColor(baseHex, shadeVal);
+    const maxDelta = getShadeMaxDeltaPercent('surfaceShade');
+    return ShadeSystem.computeBuildPlateShadeColor(baseHex, shadeVal, maxDelta);
 }
+
+function computeBuildPlateAutoBrightnessColor(baseHex) {
+    return ShadeSystem.computeBuildPlateAutoBrightnessColor(baseHex);
+}
+
 
 function applyPartColorsToMesh() {
     const mats = getMeshMaterials();
@@ -9946,6 +9953,8 @@ function finishRestoreSessionState() {
 requestAnimationFrame(() => {
     setTimeout(() => {
         loadColorRules().finally(() => {
+            // Initialize shade system with script.js's color rule getter
+            ShadeSystem.setColorRuleGetter(getColorRuleNumber);
             initPresetGallery();
             updateShadeSliderVisual();
             updateBgShadeSliderVisual();
@@ -10092,12 +10101,8 @@ function computeAutoBrightnessColor(baseHex) {
     return blendShadeColor(baseHex, shade, maxBlendPercent);
 }
 
-function computeBuildPlateAutoBrightnessColor(baseHex) {
-    const rule = AUTO_BRIGHTNESS_RULES.buildPlate || DEFAULT_COLOR_RULES.autoBrightness.buildPlate;
-    const shade = getColorRuleNumber('autoBrightness.buildPlate.shade', DEFAULT_COLOR_RULES.autoBrightness.buildPlate.shade);
-    const maxBlendPercent = getColorRuleNumber('autoBrightness.buildPlate.maxBlendPercent', DEFAULT_COLOR_RULES.autoBrightness.buildPlate.maxBlendPercent);
-    return blendShadeColor(baseHex, shade, maxBlendPercent);
-}
+// Moved to shade-system.js module
+
 
 function applyBgPresetDefaultTone(presetId) {
     if (!bgOpacitySlider) return;
