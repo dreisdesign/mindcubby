@@ -3211,16 +3211,19 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings, presetId =
     }
     {
         const explicitTone = presetUrlSettings.tone != null ? parseInt(presetUrlSettings.tone, 10) : NaN;
-        if (Number.isFinite(explicitTone)) {
-            partSettings.tone = Math.max(-100, Math.min(100, explicitTone));
-        } else if (presetId) {
-            const presetDefaultTone = getModelPresetDefaultTone(presetId, partSettings.tone ?? 0);
-            const parsedDefaultTone = parseInt(String(presetDefaultTone), 10);
-            if (Number.isFinite(parsedDefaultTone)) {
-                partSettings.tone = Math.max(-100, Math.min(100, parsedDefaultTone));
+        if (presetId) {
+            // Model default table is authoritative when present; URL op is fallback only.
+            const configuredTone = getModelPresetDefaultTone(presetId, null);
+            const parsedConfiguredTone = parseInt(String(configuredTone), 10);
+            if (Number.isFinite(parsedConfiguredTone)) {
+                partSettings.tone = Math.max(-100, Math.min(100, parsedConfiguredTone));
+            } else if (Number.isFinite(explicitTone)) {
+                partSettings.tone = Math.max(-100, Math.min(100, explicitTone));
             } else if (!Number.isFinite(Number(partSettings.tone))) {
                 partSettings.tone = 0;
             }
+        } else if (Number.isFinite(explicitTone)) {
+            partSettings.tone = Math.max(-100, Math.min(100, explicitTone));
         } else if (!Number.isFinite(Number(partSettings.tone))) {
             partSettings.tone = 0;
         }

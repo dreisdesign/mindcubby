@@ -2,9 +2,9 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.87**
+**Version (current workspace): 2.1.88**
 
-Current development note: Model quick presets now support config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled without editing preset URL strings. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
+Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
 ---
 
@@ -64,7 +64,7 @@ If you want to change startup defaults and card reset behavior in code, these ar
 - `color-rules.json` -> `presetShadeDefaults`:
   - manual shade defaults per preset (`white=-100`, `black=+100`)
   - model quick preset defaults are keyed by preset id under `presetShadeDefaults.model` (for example `ink`, `ceramic`)
-  - model preset `op` in `presets.json` still wins when explicitly provided; defaults apply when `op` is omitted
+  - when a `presetShadeDefaults.model.<presetId>` value exists, it is authoritative for model tone (overrides preset URL `op`)
 - `script.js` -> card reset handlers:
   - `btnResetBackgroundCard` restores `Model Sync + Auto brightness`
   - `btnResetBuildPlateCard` restores `Model Sync + Auto brightness`

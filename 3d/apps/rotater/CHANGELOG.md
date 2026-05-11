@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.88] - 2026-05-11
+
+### Changed
+- **Model preset defaults are now authoritative** — When a value exists in `presetShadeDefaults.model.<presetId>`, model tone uses that value even if the preset URL contains `op`.
+- **Centralized model tone control** — Quick preset tone positions can now be managed from `color-rules.json` without editing preset URL strings.
+
 ## [2.1.87] - 2026-05-11
 
 ### Added
