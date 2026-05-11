@@ -2,9 +2,9 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.71**
+**Version (current workspace): 2.1.73**
 
-Current development note: sync selector thumbs now have a stronger fallback render path, model-sync dropdowns use viewport-aware placement with contained wheel scrolling, and the model Surface Finish slider now stays synced per selected part with a dynamic color gradient. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
+Current development note: Surface Auto Brightness now restores the last manual Shade value when toggled off, and shade response tuning remains configurable through `color-rules.json`. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
 ---
 
@@ -23,6 +23,18 @@ If you want to spin up your own instance and override the default colors, camera
 ```javascript
 const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 ```
+
+### Build Bump Script (single-source version update)
+
+Run this from `3d/apps/rotater` to update build version/date in `index.html`:
+
+```bash
+npm run bump:build -- 2.1.73
+```
+
+Notes:
+- This updates `ROTATER_BUILD`, `ROTATER_BUILD_DATE`, and the Info card fallback labels.
+- CSS/JS cache-buster values are generated from `ROTATER_BUILD` at runtime, so they stay in sync automatically.
 
 ### Default Logic Tuning (quick reference)
 

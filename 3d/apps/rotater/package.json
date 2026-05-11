@@ -1,0 +1,8 @@
+{
+  "name": "rotater",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "bump:build": "node scripts/bump-build.mjs"
+  }
+}

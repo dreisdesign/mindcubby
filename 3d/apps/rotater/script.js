@@ -165,7 +165,7 @@ const PALETTE = {
     },
     preset: {
         white: '#ffffff',
-        black: '#000000',
+        black: '#0f0f0f',
         bgThumb: '#d0d0d0',
         ink: '#0d0d0d',
         ceramic: '#fef8f0',
@@ -681,6 +681,10 @@ const DEFAULT_COLOR_RULES = {
         jumpPercent: 5,
         snapCount: 9,
     },
+    shadeResponse: {
+        lightenScale: 0.6,
+        darkenScale: 1.0,
+    },
     autoBrightness: {
         background: {
             shade: -100,
@@ -854,6 +858,7 @@ let _pausedBeforeStillExport = null;
 let buildPlateEnabled = true;
 let buildPlateColor = null;
 let buildPlateShade = BUILD_PLATE_DEFAULTS.shade;
+let lastManualBuildPlateShade = BUILD_PLATE_DEFAULTS.shade;
 let buildPlateFinish = BUILD_PLATE_DEFAULTS.finish; // matte | satin | gloss
 let buildPlateShape = BUILD_PLATE_DEFAULTS.shape; // rectangle | rounded | circle
 let buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
@@ -2342,9 +2347,11 @@ function lerpColorTowardTarget(baseHex, targetHex, amount) {
 
 function blendShadeColor(baseHex, shadeVal, maxDeltaPercent) {
     const shade = Number(shadeVal) || 0;
-    const mixAmount = Math.max(0, Math.min(1, (Math.abs(shade) / 100) * (Math.max(0, maxDeltaPercent) / 100)));
-    if (shade < 0) return lerpColorTowardTarget(baseHex, '#ffffff', mixAmount);
-    if (shade > 0) return lerpColorTowardTarget(baseHex, '#000000', mixAmount);
+    const baseMixAmount = Math.max(0, Math.min(1, (Math.abs(shade) / 100) * (Math.max(0, maxDeltaPercent) / 100)));
+    const lightenScale = Math.max(0, getColorRuleNumber('shadeResponse.lightenScale', DEFAULT_COLOR_RULES.shadeResponse.lightenScale));
+    const darkenScale = Math.max(0, getColorRuleNumber('shadeResponse.darkenScale', DEFAULT_COLOR_RULES.shadeResponse.darkenScale));
+    if (shade < 0) return lerpColorTowardTarget(baseHex, '#ffffff', Math.max(0, Math.min(1, baseMixAmount * lightenScale)));
+    if (shade > 0) return lerpColorTowardTarget(baseHex, '#000000', Math.max(0, Math.min(1, baseMixAmount * darkenScale)));
     return new THREE.Color(baseHex);
 }
 
@@ -5744,6 +5751,9 @@ function restoreSettings() {
         if (s.buildPlateShade != null) {
             const shade = parseInt(s.buildPlateShade, 10);
             if (Number.isFinite(shade)) buildPlateShade = Math.max(-100, Math.min(100, shade));
+        }
+        if (!buildPlateAutoBrightnessEnabled) {
+            lastManualBuildPlateShade = Math.max(-100, Math.min(100, Number(buildPlateShade) || 0));
         }
         buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
         if (s.buildPlateShape === 'rounded' || s.buildPlateShape === 'rectangle' || s.buildPlateShape === 'circle') {
@@ -10563,15 +10573,22 @@ if (buildPlateColorPickerEl) {
 
 if (buildPlateAutoBrightnessEl) {
     buildPlateAutoBrightnessEl.addEventListener('change', () => {
-        const preservedPlateShade = buildPlateShadeSliderEl ? String(Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl))) : null;
+        const wasAuto = !!buildPlateAutoBrightnessEnabled;
         buildPlateAutoBrightnessEnabled = !!buildPlateAutoBrightnessEl.checked;
-        if (buildPlateShadeSliderEl && buildPlateAutoBrightnessEnabled) {
+        if (buildPlateAutoBrightnessEnabled) {
+            if (!wasAuto) {
+                const manualShade = buildPlateShadeSliderEl
+                    ? Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl))
+                    : Math.round(Number(buildPlateShade) || 0);
+                lastManualBuildPlateShade = Math.max(-100, Math.min(100, manualShade));
+            }
             const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
-            buildPlateShadeSliderEl.value = String(autoShade);
+            if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(autoShade);
             buildPlateShade = autoShade;
-        } else if (buildPlateShadeSliderEl && preservedPlateShade != null) {
-            buildPlateShadeSliderEl.value = preservedPlateShade;
-            buildPlateShade = Math.max(-100, Math.min(100, parseInt(preservedPlateShade, 10) || 0));
+        } else {
+            const restoreShade = Math.max(-100, Math.min(100, Math.round(Number(lastManualBuildPlateShade) || 0)));
+            if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(restoreShade);
+            buildPlateShade = restoreShade;
         }
         syncBuildPlateShadeReadout();
         updateBuildPlateShadeControlVisibility();
@@ -10586,6 +10603,7 @@ updateBuildPlateShadeControlVisibility();
 if (buildPlateShadeSliderEl) {
     buildPlateShadeSliderEl.addEventListener('input', () => {
         buildPlateShade = Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0));
+        if (!buildPlateAutoBrightnessEnabled) lastManualBuildPlateShade = buildPlateShade;
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
         saveSettings();

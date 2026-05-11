@@ -4,7 +4,8 @@
     "snapCount": "Number of slider stops including -100 and +100.",
     "autoBrightnessShade": "Direction/position on shade scale: -100 means toward white, +100 means toward black.",
     "maxBlendPercent": "Maximum blend strength at |shade|=100. Example: 40 means blend up to 40% toward white/black.",
-    "presetShadeDefaults": "Default manual shade by preset. White should be -100 and Black should be +100."
+    "presetShadeDefaults": "Default manual shade by preset. White should be -100 and Black should be +100.",
+    "shadeResponse": "Optional perceptual tuning. Lower lightenScale reduces intensity on the lighter side (0 to -25)."
   },
   "modelShade": {
     "jumpPercent": 10,
@@ -13,6 +14,10 @@
   "surfaceShade": {
     "jumpPercent": 10,
     "snapCount": 9
+  },
+  "shadeResponse": {
+    "lightenScale": 0.6,
+    "darkenScale": 1.0
   },
   "autoBrightness": {
     "background": {

@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.73] - 2026-05-11
+
+### Fixed
+- **Surface auto-brightness OFF restore** — Build Plate now restores the last manual Shade value when Auto Brightness is turned off, instead of keeping the auto shade
+
+## [2.1.72] - 2026-05-11
+
+### Fixed
+- **Surface auto-brightness toggle parity** — Surface (build plate) now preserves the current manual shade value when toggling Auto Brightness off, matching Background behavior
+- **Shade jump balance** — Added shade response scaling so the lighter-side step (`0` to `-25`) is less aggressive and more visually balanced with the darker side
+
+### Changed
+- **Black preset baseline** — Black preset now uses a near-black baseline (`#0f0f0f`) so shade `0` is not a clipped pure black
+- **NPM build bump workflow** — Added `npm run bump:build -- <version>` to update the single source-of-truth build metadata in `index.html`
+
 ## [2.1.71] - 2026-05-11
 
 ### Fixed
