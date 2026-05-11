@@ -863,6 +863,7 @@ let buildPlateEnabled = true;
 let buildPlateColor = null;
 let buildPlateShade = BUILD_PLATE_DEFAULTS.shade;
 let lastManualBuildPlateShade = BUILD_PLATE_DEFAULTS.shade;
+let manualBuildPlateShadeBeforeAuto = BUILD_PLATE_DEFAULTS.shade;
 let buildPlateFinish = BUILD_PLATE_DEFAULTS.finish; // matte | satin | gloss
 let buildPlateShape = BUILD_PLATE_DEFAULTS.shape; // rectangle | rounded | circle
 let buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
@@ -5781,6 +5782,7 @@ function restoreSettings() {
             const manualShade = parseInt(s.buildPlateManualShade, 10);
             if (Number.isFinite(manualShade)) {
                 lastManualBuildPlateShade = Math.max(-100, Math.min(100, manualShade));
+                manualBuildPlateShadeBeforeAuto = lastManualBuildPlateShade;
                 hasExplicitManualBuildPlateShade = true;
             }
         }
@@ -5790,6 +5792,7 @@ function restoreSettings() {
                 buildPlateShade = Math.max(-100, Math.min(100, shade));
                 if (!buildPlateAutoBrightnessEnabled && !hasExplicitManualBuildPlateShade) {
                     lastManualBuildPlateShade = buildPlateShade;
+                    manualBuildPlateShadeBeforeAuto = lastManualBuildPlateShade;
                 }
             }
         }
@@ -5802,6 +5805,7 @@ function restoreSettings() {
         // Ensure cache is initialized for toggling auto OFF when no explicit manual shade was restored.
         if (buildPlateAutoBrightnessEnabled && !hasExplicitManualBuildPlateShade) {
             lastManualBuildPlateShade = getBuildPlatePresetDefaultTone(activeBuildPlatePreset);
+            manualBuildPlateShadeBeforeAuto = lastManualBuildPlateShade;
         }
         buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
         if (s.buildPlateShape === 'rounded' || s.buildPlateShape === 'rectangle' || s.buildPlateShape === 'circle') {
@@ -10633,12 +10637,17 @@ if (buildPlateAutoBrightnessEl) {
                 ? Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0))
                 : Math.max(-100, Math.min(100, parseInt(String(buildPlateShade), 10) || 0));
             lastManualBuildPlateShade = manualShade;
+            manualBuildPlateShadeBeforeAuto = manualShade;
             const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
             if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(autoShade);
             buildPlateShade = autoShade;
         } else {
             // When turning auto-adjust OFF, restore the user's last manual shade.
-            buildPlateShade = Math.max(-100, Math.min(100, parseInt(String(lastManualBuildPlateShade), 10) || 0));
+            const restoreShade = Number.isFinite(Number(manualBuildPlateShadeBeforeAuto))
+                ? Number(manualBuildPlateShadeBeforeAuto)
+                : Number(lastManualBuildPlateShade);
+            buildPlateShade = Math.max(-100, Math.min(100, parseInt(String(restoreShade), 10) || 0));
+            lastManualBuildPlateShade = buildPlateShade;
             if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(buildPlateShade);
         }
         syncBuildPlateShadeReadout();
@@ -10654,7 +10663,10 @@ updateBuildPlateShadeControlVisibility();
 if (buildPlateShadeSliderEl) {
     buildPlateShadeSliderEl.addEventListener('input', () => {
         buildPlateShade = Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0));
-        if (!buildPlateAutoBrightnessEnabled) lastManualBuildPlateShade = buildPlateShade;
+        if (!buildPlateAutoBrightnessEnabled) {
+            lastManualBuildPlateShade = buildPlateShade;
+            manualBuildPlateShadeBeforeAuto = buildPlateShade;
+        }
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
         saveSettings();
@@ -10863,6 +10875,7 @@ function renderBuildPlatePresets() {
                     : getBuildPlatePresetDefaultTone('modelcolor');
                 if (!buildPlateAutoBrightnessEnabled) {
                     lastManualBuildPlateShade = getBuildPlatePresetDefaultTone('modelcolor');
+                    manualBuildPlateShadeBeforeAuto = lastManualBuildPlateShade;
                 }
                 if (buildPlateShadeSliderEl) {
                     buildPlateShadeSliderEl.value = String(buildPlateShade);
@@ -10873,6 +10886,7 @@ function renderBuildPlatePresets() {
                 buildPlateShade = getBuildPlatePresetDefaultTone(preset.id);
                 if (!buildPlateAutoBrightnessEnabled) {
                     lastManualBuildPlateShade = buildPlateShade;
+                    manualBuildPlateShadeBeforeAuto = lastManualBuildPlateShade;
                 }
                 if (buildPlateShadeSliderEl) {
                     buildPlateShadeSliderEl.value = String(buildPlateShade);

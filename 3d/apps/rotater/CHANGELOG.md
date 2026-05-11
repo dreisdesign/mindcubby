@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.84] - 2026-05-11
+
+### Fixed
+- **Surface auto OFF now restores from a direct pre-auto snapshot** — Added `manualBuildPlateShadeBeforeAuto` as a dedicated runtime snapshot captured exactly when Surface auto-brightness is turned ON, then used as the primary restore source when turned OFF.
+- **Manual snapshot now stays in sync across restore/manual/preset paths** — Snapshot is updated when manual shade is restored from settings, when manual slider input changes shade, and when manual-mode preset defaults are applied.
+- **Prevents state clobber from intermediate code paths while auto is ON** — OFF restore no longer depends solely on mutable cache values that can be overwritten by later flows.
+
 ## [2.1.83] - 2026-05-11
 
 ### Fixed
