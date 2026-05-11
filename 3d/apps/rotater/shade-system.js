@@ -38,45 +38,36 @@ function getColorRuleNumber(path, fallback = 0) {
 }
 
 /**
- * Core shade computation: blend a base hex color toward white or black
- * based on a shade value (-100 to +100).
- * 
- * KEY FIX: lightenScale is NOT multiplied into baseMixAmount.
- * This ensures shade=-100 always produces white (not gray).
- * 
+ * Core shade computation in HSL space.
+ * Preserves hue/saturation and adjusts only lightness based on shade.
+ *
  * @param {string} baseHex - Base color in #RRGGBB format
- * @param {number} shadeVal - Shade value from -100 (white) to +100 (black)
- * @param {number} maxDeltaPercent - Maximum blend strength (0-100)
+ * @param {number} shadeVal - Shade value from -100 (lighter) to +100 (darker)
+ * @param {number} maxDeltaPercent - Maximum lightness delta (0-100)
  * @returns {THREE.Color} Computed shade color
  */
 export function blendShadeColor(baseHex, shadeVal, maxDeltaPercent) {
     const shade = Number(shadeVal) || 0;
-    
-    // Clamp shade to valid range
-    if (shade === 0) {
-        return new THREE.Color(baseHex);
-    }
-    
-    // Calculate blend amount: abs(shade) / 100 * (maxDeltaPercent / 100)
-    // Example: shade=-100, maxDeltaPercent=10 → 1.0 * 0.1 = 0.1 (10% blend)
-    const baseMixAmount = Math.max(0, Math.min(1, (Math.abs(shade) / 100) * (Math.max(0, maxDeltaPercent) / 100)));
-    
-    // Get perceptual tuning scales
+
+    if (shade === 0) return new THREE.Color(baseHex);
+
+    const baseDelta = Math.max(0, Math.min(1, (Math.abs(shade) / 100) * (Math.max(0, maxDeltaPercent) / 100)));
     const lightenScale = Math.max(0, getColorRuleNumber('shadeResponse.lightenScale', 1.0));
     const darkenScale = Math.max(0, getColorRuleNumber('shadeResponse.darkenScale', 1.0));
-    
+
+    const c = new THREE.Color(baseHex);
+    const hsl = { h: 0, s: 0, l: 0 };
+    c.getHSL(hsl);
+
     if (shade < 0) {
-        // Blend toward white (lighter side)
-        // FIX: Don't multiply lightenScale with baseMixAmount.
-        // This ensures -100 produces full white, not gray.
-        // (lightenScale can be used for perceptual adjustments in the future)
-        return lerpColorTowardTarget(baseHex, '#ffffff', baseMixAmount);
+        const delta = Math.max(0, Math.min(1, baseDelta * lightenScale));
+        hsl.l = Math.max(0, Math.min(1, hsl.l + ((1 - hsl.l) * delta)));
     } else {
-        // Blend toward black (darker side)
-        // Apply darkenScale as perceptual tuning
-        const darkBlendAmount = Math.max(0, Math.min(1, baseMixAmount * darkenScale));
-        return lerpColorTowardTarget(baseHex, '#000000', darkBlendAmount);
+        const delta = Math.max(0, Math.min(1, baseDelta * darkenScale));
+        hsl.l = Math.max(0, Math.min(1, hsl.l * (1 - delta)));
     }
+
+    return new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l);
 }
 
 /**

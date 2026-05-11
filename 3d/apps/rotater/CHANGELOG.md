@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.80] - 2026-05-11
+
+### Fixed
+- **Surface auto OFF now restores true manual shade** — Build plate auto-brightness now restores the last manual slider value when toggled OFF (instead of preset fallback values like `0`)
+- **Shade math restored to HSL model** — Shade computation now preserves hue/saturation and changes only lightness, with `shadeResponse.lightenScale` and `shadeResponse.darkenScale` applied from `color-rules.json`
+
 ## [2.1.79] - 2026-05-11
 
 ### Fixed
