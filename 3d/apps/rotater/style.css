@@ -5553,7 +5553,7 @@ html.crop-mode .crop-corner {
     }
 }
 
-@media (max-width: 1180px), (max-height: 820px) {
+@media (min-width: 900px) and (max-width: 1180px), (min-width: 900px) and (max-height: 820px) {
     .canvas-bottom-center {
         bottom: 72px;
     }

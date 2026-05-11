@@ -1837,7 +1837,7 @@ function cloneModelUndoState() {
 }
 
 function pushModelUndoState(options = {}) {
-    const { showToast = false } = options;
+    const { showToast = false, toastMessage = 'Model updated' } = options;
     if (suppressModelUndoCapture) return;
     const snapshot = cloneModelUndoState();
     const lastSnapshot = modelUndoStack[modelUndoStack.length - 1];
@@ -1845,7 +1845,7 @@ function pushModelUndoState(options = {}) {
     modelUndoStack.push(snapshot);
     if (modelUndoStack.length > MODEL_UNDO_LIMIT) modelUndoStack.shift();
     updateCardResetButtonStates();
-    if (showToast) showModelUndoToast();
+    if (showToast) showModelUndoToast(toastMessage);
 }
 
 function restoreModelUndoState(snapshot) {
@@ -1907,10 +1907,11 @@ function applyToModelPartEditTargets(mutator) {
     const targets = getModelPartEditTargetIndices();
     const touched = [];
     let captured = false;
+    const toastMessage = `${targets.length} ${targets.length === 1 ? 'model changed' : 'models changed'}`;
     targets.forEach((idx) => {
         const partSettings = getPartSettings(idx);
         if (!captured) {
-            pushModelUndoState({ showToast: targets.length > 1 });
+            pushModelUndoState({ showToast: targets.length > 1, toastMessage });
             captured = true;
         }
         mutator(partSettings, idx);
@@ -2969,6 +2970,8 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
         positionThumbSelectMenu(modelPartSelectorMenu, modelPartSelectorBtn);
         modelPartSelectorMenu.scrollTop = 0;
         modelPartSelectorBtn.setAttribute('aria-expanded', 'true');
+        syncModelPartCheckboxStates();
+        syncModelPartBulkUIState();
         queueModelPartThumbsRender();
     }
 });
@@ -3629,6 +3632,8 @@ function syncBgModelSyncSourceUI() {
         opt.dataset.partIndex = String(idx);
         opt.setAttribute('role', 'option');
         opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="68" height="68" aria-hidden="true"></canvas><span class="thumb-select-option-text">${name}</span><span class="thumb-select-sync-badge" aria-hidden="true">Sync</span>`;
+        const optCanvas = opt.querySelector('.thumb-select-option-canvas');
+        paintThumbFallback(optCanvas, idx);
         opt.addEventListener('click', () => {
             if (!maybeConfirmBgSyncChange(idx)) return;
             pushModelUndoState();
@@ -3651,6 +3656,7 @@ function syncBgModelSyncSourceUI() {
     if (bgModelSyncSelectorThumb) {
         bgModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
         bgModelSyncSelectorThumb.dataset.partIndex = String(bgSyncPartIndex);
+        paintThumbFallback(bgModelSyncSelectorThumb, bgSyncPartIndex);
     }
     if (bgModelSyncSelectorText) {
         const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
@@ -6876,31 +6882,31 @@ function updateTextureTuneUI() {
         textureTuneLightSlider.value = String(textureTuneState.light);
         syncSliderTooltip(textureTuneLightSlider);
     }
-    if (textureTuneLightVal) textureTuneLightVal.textContent = `${Math.round(textureTuneState.light)}%`;
+    if (textureTuneLightVal) textureTuneLightVal.textContent = getCenteredLightingReadout(textureTuneLightSlider);
 
     if (textureTuneContrastSlider) {
         textureTuneContrastSlider.value = String(textureTuneState.contrast);
         syncSliderTooltip(textureTuneContrastSlider);
     }
-    if (textureTuneContrastVal) textureTuneContrastVal.textContent = `${Math.round(textureTuneState.contrast)}%`;
+    if (textureTuneContrastVal) textureTuneContrastVal.textContent = getCenteredLightingReadout(textureTuneContrastSlider);
 
     if (textureTuneHighlightsSlider) {
         textureTuneHighlightsSlider.value = String(textureTuneState.highlights);
         syncSliderTooltip(textureTuneHighlightsSlider);
     }
-    if (textureTuneHighlightsVal) textureTuneHighlightsVal.textContent = `${Math.round(textureTuneState.highlights)}%`;
+    if (textureTuneHighlightsVal) textureTuneHighlightsVal.textContent = getCenteredLightingReadout(textureTuneHighlightsSlider);
 
     if (textureTuneShadowsSlider) {
         textureTuneShadowsSlider.value = String(textureTuneState.shadows);
         syncSliderTooltip(textureTuneShadowsSlider);
     }
-    if (textureTuneShadowsVal) textureTuneShadowsVal.textContent = `${Math.round(textureTuneState.shadows)}%`;
+    if (textureTuneShadowsVal) textureTuneShadowsVal.textContent = getCenteredLightingReadout(textureTuneShadowsSlider);
 
     if (textureTuneLightSourceSlider) {
         textureTuneLightSourceSlider.value = String(textureTuneState.shadowAzimuth);
         syncSliderTooltip(textureTuneLightSourceSlider);
     }
-    if (textureTuneLightSourceVal) textureTuneLightSourceVal.textContent = `${Math.round(textureTuneState.shadowAzimuth)}°`;
+    if (textureTuneLightSourceVal) textureTuneLightSourceVal.textContent = getCenteredLightingReadout(textureTuneLightSourceSlider);
 
     if (textureTuneLightLockBox) {
         textureTuneLightLockBox.checked = textureTuneState.lightLock;
@@ -6910,7 +6916,7 @@ function updateTextureTuneUI() {
         textureTuneLightHeightSlider.value = String(textureTuneState.shadowHeight);
         syncSliderTooltip(textureTuneLightHeightSlider);
     }
-    if (textureTuneLightHeightVal) textureTuneLightHeightVal.textContent = `${Math.round(textureTuneState.shadowHeight)}%`;
+    if (textureTuneLightHeightVal) textureTuneLightHeightVal.textContent = getCenteredLightingReadout(textureTuneLightHeightSlider);
 
     if (isStandard && textureTuneRoughnessSlider) {
         const s = getSelectedPartSettings();
@@ -6928,6 +6934,22 @@ function updateTextureTuneUI() {
         syncSliderTooltip(textureTuneMetalnessSlider);
     }
     if (textureTuneMetalnessVal) textureTuneMetalnessVal.textContent = `${Math.round(textureTuneState.metallicMetalness)}%`;
+}
+
+function getCenteredLightingReadout(slider) {
+    if (!slider) return '+0';
+    const rawMin = parseFloat(slider.min);
+    const rawMax = parseFloat(slider.max);
+    const min = Number.isFinite(rawMin) ? rawMin : 0;
+    const max = Number.isFinite(rawMax) ? rawMax : 100;
+    const snapCountRaw = parseInt(slider.dataset.snapCount, 10);
+    const snapCount = Number.isInteger(snapCountRaw) && snapCountRaw >= 3 ? snapCountRaw : 5;
+    const step = (max - min) / Math.max(1, snapCount - 1);
+    const value = getSliderEffectiveValue(slider);
+    const index = Math.max(0, Math.min(snapCount - 1, Math.round((value - min) / Math.max(1e-9, step))));
+    const midpoint = (snapCount - 1) / 2;
+    const delta = Math.round((index - midpoint) * 25);
+    return `${delta >= 0 ? '+' : ''}${delta}`;
 }
 
 function updateRangeSliderForMode(mode) {
@@ -9828,8 +9850,11 @@ function reconcileModelPresetFromSettings(force = false) {
 
     activeModelPreset = 'custom';
 
-    const curMaterialFamily = getMaterialFamilyFromPartSettings(getSelectedPartSettings());
+    const selectedSettings = getSelectedPartSettings();
+    const curMaterialFamily = getMaterialFamilyFromPartSettings(selectedSettings);
     const curColor = colorPick?.value ? colorPick.value.toLowerCase() : null;
+    const curFinishMode = getFinishModeFromPartSettings(selectedSettings);
+    const curFinishValue = finishSliderValueFromPartSettings(selectedSettings);
     for (const preset of QUICK_PRESETS) {
         if (!preset || !preset.url) continue;
         try {
@@ -9841,6 +9866,16 @@ function reconcileModelPresetFromSettings(force = false) {
                 // Compare roughness/reflection using the current family's active tuning channel.
                 const isMetallic = presetMaterialFamily === 'metallic';
                 const isClear = presetMaterialFamily === 'clear';
+                if (!isMetallic && !isClear) {
+                    const presetFinishMode = p.finishMode || null;
+                    const presetFinishValue = p.finishValue != null ? clampFinishSliderValue(p.finishValue) : null;
+                    const finishModeMatches = !presetFinishMode || presetFinishMode === curFinishMode;
+                    const finishValueMatches = presetFinishValue == null || presetFinishValue === curFinishValue;
+                    if ((!p.color || (curColor && p.color.toLowerCase() === curColor)) && finishModeMatches && finishValueMatches) {
+                        activeModelPreset = preset.id;
+                        return;
+                    }
+                }
                 const presetRough = isMetallic
                     ? (p.textureTuneMetallicRoughness != null ? String(p.textureTuneMetallicRoughness) : null)
                     : isClear
@@ -9852,15 +9887,15 @@ function reconcileModelPresetFromSettings(force = false) {
                         ? (p.textureTunePhongReflection != null ? String(p.textureTunePhongReflection) : null)
                         : (p.textureTuneMatteReflection != null ? String(p.textureTuneMatteReflection) : null);
                 const curRough = isMetallic
-                    ? (textureTuneState?.metallicRoughness != null ? String(textureTuneState.metallicRoughness) : null)
+                    ? (selectedSettings?.metallicRoughness != null ? String(selectedSettings.metallicRoughness) : null)
                     : isClear
-                        ? (textureTuneState?.phongRoughness != null ? String(textureTuneState.phongRoughness) : null)
-                        : (textureTuneState?.matteRoughness != null ? String(textureTuneState.matteRoughness) : null);
+                        ? (selectedSettings?.phongRoughness != null ? String(selectedSettings.phongRoughness) : null)
+                        : (selectedSettings?.matteRoughness != null ? String(selectedSettings.matteRoughness) : null);
                 const curRefl = isMetallic
-                    ? (textureTuneState?.metallicReflection != null ? String(textureTuneState.metallicReflection) : null)
+                    ? (selectedSettings?.metallicReflection != null ? String(selectedSettings.metallicReflection) : null)
                     : isClear
-                        ? (textureTuneState?.phongReflection != null ? String(textureTuneState.phongReflection) : null)
-                        : (textureTuneState?.matteReflection != null ? String(textureTuneState.matteReflection) : null);
+                        ? (selectedSettings?.phongReflection != null ? String(selectedSettings.phongReflection) : null)
+                        : (selectedSettings?.matteReflection != null ? String(selectedSettings.matteReflection) : null);
 
                 const roughMatches = !presetRough || (curRough && presetRough === curRough);
                 const reflMatches = !presetRefl || (curRefl && presetRefl === curRefl);
@@ -10330,6 +10365,8 @@ function syncBuildPlateModelSyncSourceUI() {
         opt.dataset.partIndex = String(idx);
         opt.setAttribute('role', 'option');
         opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="68" height="68" aria-hidden="true"></canvas><span class="thumb-select-option-text">${name}</span><span class="thumb-select-sync-badge" aria-hidden="true">Sync</span>`;
+        const optCanvas = opt.querySelector('.thumb-select-option-canvas');
+        paintThumbFallback(optCanvas, idx);
         opt.addEventListener('click', () => {
             buildPlateSyncPartIndex = idx;
             activeBuildPlatePreset = 'modelcolor';
@@ -10345,6 +10382,7 @@ function syncBuildPlateModelSyncSourceUI() {
     if (buildPlateModelSyncSelectorThumb) {
         buildPlateModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
         buildPlateModelSyncSelectorThumb.dataset.partIndex = String(buildPlateSyncPartIndex);
+        paintThumbFallback(buildPlateModelSyncSelectorThumb, buildPlateSyncPartIndex);
     }
     if (buildPlateModelSyncSelectorText) {
         const selectedName = modelPartNames[buildPlateSyncPartIndex] || `Part ${buildPlateSyncPartIndex + 1}`;

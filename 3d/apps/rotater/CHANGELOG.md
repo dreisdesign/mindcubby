@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.65] - 2026-05-11
+
+### Changed
+- **Model Shade slider parity** — Model card Shade now uses the same 9-point snap model as Surface/Background shade sliders
+- **Lighting readout normalization** — Lighting sliders now show centered delta labels (`+0` midpoint, `±25` per step) without altering the rendered look
+- **Pause icon consistency** — Export pause button now uses the same pause glyph path as the main viewer pause button
+- **Build metadata bumped** — info card build/date and cache-buster query now report `2.1.65`
+
+### Fixed
+- **Multi-select toggle-all persistence UI** — reopening the multipart selector after refresh now re-syncs global checkbox state to current part selection
+- **Preset reconciliation reliability** — standard-family preset detection now prioritizes stored finish mode/value matching and compares against selected-part settings, fixing false `Custom` fallbacks (including Gumball)
+- **Sync thumb fallback resilience** — background/surface sync selector rows now paint deterministic fallback thumbnails immediately before async thumb renders
+- **Mobile cam-nav vertical spacing** — bottom preview controls no longer inherit the desktop compact offset on small screens
+
 ## [2.1.64] - 2026-05-10
 
 ### Changed
