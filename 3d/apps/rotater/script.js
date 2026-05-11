@@ -2150,7 +2150,10 @@ function applyFinishModeValueToPartSettings(partSettings, finishMode, finishValu
     const modeBaseReflection = resolvedMode === 'matte' ? 22 : resolvedMode === 'satin' ? 40 : 62;
     const reflection = Math.max(6, Math.min(120, modeBaseReflection + ((2 - strength) * 8)));
 
-    partSettings.shading = 'phong';
+    const currentFamily = getMaterialFamilyFromPartSettings(partSettings);
+    if (currentFamily === 'standard') {
+        partSettings.shading = 'phong';
+    }
     partSettings.matteRoughness = rough;
     partSettings.metallicRoughness = rough;
     partSettings.phongRoughness = rough;
