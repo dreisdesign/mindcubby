@@ -2,9 +2,9 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.77**
+**Version (current workspace): 2.1.85**
 
-Current development note: BG and Surface Auto Brightness now reassert `-100` on restore/toggle sync, preventing stale saved values from making Surface look darker when Auto is enabled. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
+Current development note: Background and Surface Auto Brightness now share the same default blend strength (`maxBlendPercent: 40`) so both auto modes land on the same tone response when using the same sync source. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
 ---
 
@@ -60,6 +60,7 @@ If you want to change startup defaults and card reset behavior in code, these ar
 - `color-rules.json` -> `autoBrightness`:
   - `background.shade` and `buildPlate.shade` set the auto-brightness direction (`-100` white side, `+100` black side)
   - `maxBlendPercent` sets the strongest blend amount at `|shade|=100`
+  - default parity: `background.maxBlendPercent = 40` and `buildPlate.maxBlendPercent = 40`
 - `color-rules.json` -> `presetShadeDefaults`:
   - manual shade defaults per preset (`white=-100`, `black=+100`)
 - `script.js` -> card reset handlers:

@@ -26,7 +26,7 @@
     },
     "buildPlate": {
       "shade": -100,
-      "maxBlendPercent": 10
+      "maxBlendPercent": 40
     }
   },
   "presetShadeDefaults": {

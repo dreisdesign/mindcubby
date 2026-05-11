@@ -95,11 +95,11 @@ export function computeBuildPlateShadeColor(baseHex, shadeVal, surfaceShadeMaxDe
 
 /**
  * Compute build plate color when auto-brightness is enabled.
- * This uses autoBrightness.buildPlate rules (maxBlendPercent=10).
+ * This uses autoBrightness.buildPlate rules (maxBlendPercent=40 by default).
  */
 export function computeBuildPlateAutoBrightnessColor(baseHex) {
     const shade = getColorRuleNumber('autoBrightness.buildPlate.shade', -100);
-    const maxBlendPercent = getColorRuleNumber('autoBrightness.buildPlate.maxBlendPercent', 10);
+    const maxBlendPercent = getColorRuleNumber('autoBrightness.buildPlate.maxBlendPercent', 40);
     return blendShadeColor(baseHex, shade, maxBlendPercent);
 }
 
@@ -158,7 +158,7 @@ export function getAutoShade(target) {
  */
 export function getAutoMaxBlendPercent(target) {
     // target: 'buildPlate' or 'background'
-    return getColorRuleNumber(`autoBrightness.${target}.maxBlendPercent`, target === 'buildPlate' ? 10 : 40);
+    return getColorRuleNumber(`autoBrightness.${target}.maxBlendPercent`, 40);
 }
 
 export default {
