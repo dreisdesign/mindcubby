@@ -43,8 +43,8 @@
       "custom": 0
     },
     "model": {
-      "ceramic": 0,
-      "ink": 0,
+      "ceramic": -100,
+      "ink": 100,
       "chrome": 0,
       "glass": 0,
       "chocolate": 0,
