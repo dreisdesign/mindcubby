@@ -8231,6 +8231,7 @@ btnResetModelCard?.addEventListener('click', () => {
     renderModelPresets();
     if (activeBuildPlatePreset === 'modelcolor') updateBuildPlateSelection();
     queueModelPartThumbsRender(targets);
+    persistCurrentMultipartParts({ immediate: true });
     saveSettings();
     updateCardResetButtonStates();
 });
