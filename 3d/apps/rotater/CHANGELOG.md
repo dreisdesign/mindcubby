@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.67] - 2026-05-11
+
+### Fixed
+- **Contrast and Highlights sliders centered on fresh load** — Changed range from asymmetric (`min=50/40 max=400`) to `min=0 max=200` so the default value (100) sits at the exact midpoint, making the thumb visually centered and the readout correctly show `+0`
+
 ## [2.1.66] - 2026-05-11
 
 ### Fixed

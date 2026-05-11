@@ -5529,8 +5529,8 @@ function restoreSettings() {
             }
 
             if (s.textureTuneLight != null) textureTuneState.light = clamp(s.textureTuneLight, 40, 200, TEXTURE_TUNE_DEFAULTS.light);
-            if (s.textureTuneContrast != null) textureTuneState.contrast = clamp(s.textureTuneContrast, 50, 200, TEXTURE_TUNE_DEFAULTS.contrast);
-            if (s.textureTuneHighlights != null) textureTuneState.highlights = clamp(s.textureTuneHighlights, 40, 250, TEXTURE_TUNE_DEFAULTS.highlights);
+            if (s.textureTuneContrast != null) textureTuneState.contrast = clamp(s.textureTuneContrast, 0, 200, TEXTURE_TUNE_DEFAULTS.contrast);
+            if (s.textureTuneHighlights != null) textureTuneState.highlights = clamp(s.textureTuneHighlights, 0, 200, TEXTURE_TUNE_DEFAULTS.highlights);
             if (s.textureTuneShadowStrength != null) {
                 textureTuneState.shadows = clamp(s.textureTuneShadowStrength, 0, 100, TEXTURE_TUNE_DEFAULTS.shadows);
             } else if (s.textureTuneShadows != null) {
