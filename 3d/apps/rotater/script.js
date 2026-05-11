@@ -1878,6 +1878,9 @@ function showModelUndoToast(message = 'Model updated') {
 
 function updateAutoBgShadeControlVisibility() {
     const autoBgEnabled = !!document.getElementById('autoBgCheck')?.checked;
+    if (autoBgEnabled && bgOpacitySlider) {
+        bgOpacitySlider.value = String(AUTO_BRIGHTNESS_RULES.background.shade);
+    }
     if (bgOpacitySliderLabel) bgOpacitySliderLabel.hidden = autoBgEnabled;
     if (bgOpacitySlider) bgOpacitySlider.disabled = autoBgEnabled;
 }
@@ -1887,6 +1890,11 @@ function updateBuildPlateShadeControlVisibility() {
         ? !!buildPlateAutoBrightnessEl.checked
         : !!buildPlateAutoBrightnessEnabled;
     buildPlateAutoBrightnessEnabled = autoOn;
+    if (autoOn) {
+        const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
+        buildPlateShade = autoShade;
+        if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(autoShade);
+    }
     if (buildPlateShadeRowEl) buildPlateShadeRowEl.hidden = autoOn;
     if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.disabled = autoOn;
     if (buildPlateAutoBrightnessEl && buildPlateAutoBrightnessEl.checked !== autoOn) {
