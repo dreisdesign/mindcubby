@@ -10495,7 +10495,12 @@ bgPick.addEventListener('input', (ev) => {
 const autoBgCheckEl = document.getElementById('autoBgCheck');
 if (autoBgCheckEl) {
     autoBgCheckEl.addEventListener('change', () => {
+        const preservedBgShade = bgOpacitySlider ? String(Math.round(getSliderEffectiveValue(bgOpacitySlider))) : null;
         isDynamicBg = autoBgCheckEl.checked;
+        if (bgOpacitySlider && isDynamicBg) {
+            const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.background.shade), 10) || 0));
+            bgOpacitySlider.value = String(autoShade);
+        }
         updateAutoBgShadeControlVisibility();
         if (isDynamicBg) updateDynamicBg();
         else {
@@ -10510,6 +10515,7 @@ if (autoBgCheckEl) {
                 const preset = BG_PRESETS.find(p => p.id === activeBgPreset);
                 if (preset && preset.color) bgPick.dispatchEvent(new Event('input', { bubbles: true }));
             }
+            if (bgOpacitySlider && preservedBgShade != null) bgOpacitySlider.value = preservedBgShade;
         }
         syncBgShadeReadout();
         updateBgShadeSliderVisual();
@@ -10557,7 +10563,16 @@ if (buildPlateColorPickerEl) {
 
 if (buildPlateAutoBrightnessEl) {
     buildPlateAutoBrightnessEl.addEventListener('change', () => {
+        const preservedPlateShade = buildPlateShadeSliderEl ? String(Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl))) : null;
         buildPlateAutoBrightnessEnabled = !!buildPlateAutoBrightnessEl.checked;
+        if (buildPlateShadeSliderEl && buildPlateAutoBrightnessEnabled) {
+            const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
+            buildPlateShadeSliderEl.value = String(autoShade);
+            buildPlateShade = autoShade;
+        } else if (buildPlateShadeSliderEl && preservedPlateShade != null) {
+            buildPlateShadeSliderEl.value = preservedPlateShade;
+            buildPlateShade = Math.max(-100, Math.min(100, parseInt(preservedPlateShade, 10) || 0));
+        }
         syncBuildPlateShadeReadout();
         updateBuildPlateShadeControlVisibility();
         updateBuildPlateMaterial();

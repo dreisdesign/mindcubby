@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="0">
     <title>Rotater 3D Studio by MindCubby</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=2.1.70">
+    <link id="rotaterStyleLink" rel="stylesheet" href="style.css">
     <style>
         #startupSplash {
             position: fixed;
@@ -53,8 +53,11 @@
             animation: none !important;
         }
     </style>
-    <script>const ROTATER_BUILD = '2.1.70';
+    <script>const ROTATER_BUILD = '2.1.71';
         const ROTATER_BUILD_DATE = 'May 11, 2026';
+        window.ROTATER_BUILD = ROTATER_BUILD;
+        const styleLinkEl = document.getElementById('rotaterStyleLink');
+        if (styleLinkEl) styleLinkEl.href = `style.css?v=${encodeURIComponent(ROTATER_BUILD)}`;
         const syncBuildInfoMeta = () => {
             const versionEl = document.getElementById('infoBuildVersion');
             const dateEl = document.getElementById('infoBuildDate');
@@ -1040,7 +1043,7 @@
                     <p class="info-description">View and export rotating 3D STL models as animated GIF, MP4, or PNG —
                         entirely in your browser. Your files never leave your device.</p>
                     <div class="info-meta">
-                        <span id="infoBuildVersion">Build 2.1.70</span>
+                        <span id="infoBuildVersion">Build 2.1.71</span>
                         <span id="infoBuildDate">Updated May 11, 2026</span>
                     </div>
                     <div class="settings-divider"></div>
@@ -1081,7 +1084,15 @@
         <footer></footer>
     </div>
 
-    <script type="module" src="script.js?v=2.1.70"></script>
+    <script>
+        (() => {
+            const build = window.ROTATER_BUILD || 'dev';
+            const scriptEl = document.createElement('script');
+            scriptEl.type = 'module';
+            scriptEl.src = `script.js?v=${encodeURIComponent(build)}`;
+            document.body.appendChild(scriptEl);
+        })();
+    </script>
 
 </body>
 

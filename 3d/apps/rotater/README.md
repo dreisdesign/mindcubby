@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.70**
+**Version (current workspace): 2.1.71**
 
 Current development note: sync selector thumbs now have a stronger fallback render path, model-sync dropdowns use viewport-aware placement with contained wheel scrolling, and the model Surface Finish slider now stays synced per selected part with a dynamic color gradient. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
@@ -27,6 +27,10 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 ### Default Logic Tuning (quick reference)
 
 If you want to change startup defaults and card reset behavior in code, these are the main sources of truth:
+
+- Build/version source-of-truth:
+  - `index.html` -> `ROTATER_BUILD` and `ROTATER_BUILD_DATE` in the head bootstrap script
+  - CSS and JS cache-buster query strings are now generated from `ROTATER_BUILD` automatically, so version updates are a one-location edit
 
 - `script.js` -> `DEFAULT_SETTINGS_URL`: full URL-based baseline for first-time visitors
 - `index.html` -> `ROTATER_DEFAULT_QUERY`: bootstrap fallback query that is inserted when no query/hash exists

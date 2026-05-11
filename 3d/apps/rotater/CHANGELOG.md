@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.71] - 2026-05-11
+
+### Fixed
+- **Auto brightness toggle shade stability** — Toggling Auto Brightness off now preserves the current shade slider value (no unexpected jump), and toggling on applies the configured auto shade deterministically
+
+### Changed
+- **Single source-of-truth build token** — `index.html` now uses `ROTATER_BUILD` as the single cache-buster source for both CSS and JS, reducing version updates to one edit location
+
 ## [2.1.70] - 2026-05-11
 
 ### Fixed
