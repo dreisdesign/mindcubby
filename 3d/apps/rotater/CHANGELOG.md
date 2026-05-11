@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.83] - 2026-05-11
+
+### Fixed
+- **Surface auto OFF no longer falls back to `+0`** — Added a dedicated persisted manual shade value (`buildPlateManualShade` / `bpms`) so restoring auto/manual states no longer infers manual shade from active auto shade.
+- **Manual shade cache is protected while auto is ON** — Surface preset clicks no longer overwrite the manual shade cache during auto mode.
+- **Surface shade readout no longer shows stale values** — Shade label now re-syncs when auto state changes, preventing mismatches like slider at `-100` with readout `+0`.
+
 ## [2.1.82] - 2026-05-11
 
 ### Fixed

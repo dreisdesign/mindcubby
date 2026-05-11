@@ -446,7 +446,7 @@ const APP_PARAM_KEYS = new Set([
     'tto', 'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh', 'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
     'rv', 'ru', 'rl', 'rg',
     'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp', 'bsp',
-    'bp', 'bpc', 'bpt', 'bps', 'bpf', 'bpp', 'bpw', 'bpd', 'bpsh',
+    'bp', 'bpc', 'bpt', 'bps', 'bpms', 'bpf', 'bpp', 'bpw', 'bpd', 'bpsh',
     'uap', 'uam'
 ]);
 const _passthroughParams = (() => {
@@ -1902,6 +1902,7 @@ function updateBuildPlateShadeControlVisibility() {
     }
     if (buildPlateShadeRowEl) buildPlateShadeRowEl.hidden = autoOn;
     if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.disabled = autoOn;
+    syncBuildPlateShadeReadout();
     if (buildPlateAutoBrightnessEl && buildPlateAutoBrightnessEl.checked !== autoOn) {
         buildPlateAutoBrightnessEl.checked = autoOn;
     }
@@ -5508,6 +5509,7 @@ function saveSettings() {
             buildPlateAutoBrightness: buildPlateAutoBrightnessEnabled ? '1' : '0',
             buildPlateColor: buildPlateColor,
             buildPlateShade: String(buildPlateShade),
+            buildPlateManualShade: String(lastManualBuildPlateShade),
             buildPlateFinish: buildPlateFinish,
             buildPlateShape: buildPlateShape,
             buildPlateSizePreset: buildPlateSizePreset,
@@ -5774,11 +5776,21 @@ function restoreSettings() {
         if (activeBuildPlatePreset === 'white') buildPlateColor = PALETTE.preset.white;
         else if (activeBuildPlatePreset === 'black') buildPlateColor = PALETTE.preset.black;
         else if (activeBuildPlatePreset === 'modelcolor') buildPlateColor = null;
+        let hasExplicitManualBuildPlateShade = false;
+        if (s.buildPlateManualShade != null) {
+            const manualShade = parseInt(s.buildPlateManualShade, 10);
+            if (Number.isFinite(manualShade)) {
+                lastManualBuildPlateShade = Math.max(-100, Math.min(100, manualShade));
+                hasExplicitManualBuildPlateShade = true;
+            }
+        }
         if (s.buildPlateShade != null) {
             const shade = parseInt(s.buildPlateShade, 10);
             if (Number.isFinite(shade)) {
                 buildPlateShade = Math.max(-100, Math.min(100, shade));
-                if (!buildPlateAutoBrightnessEnabled) lastManualBuildPlateShade = buildPlateShade;
+                if (!buildPlateAutoBrightnessEnabled && !hasExplicitManualBuildPlateShade) {
+                    lastManualBuildPlateShade = buildPlateShade;
+                }
             }
         }
         if (activeBuildPlatePreset === 'white' || activeBuildPlatePreset === 'black') {
@@ -5787,9 +5799,8 @@ function restoreSettings() {
         } else if (activeBuildPlatePreset === 'modelcolor') {
             buildPlateColor = null;
         }
-        // Ensure lastManualBuildPlateShade is properly initialized for when user toggles auto OFF.
-        // If auto is ON, cache the preset's manual default. If auto is OFF, it was already set above.
-        if (buildPlateAutoBrightnessEnabled) {
+        // Ensure cache is initialized for toggling auto OFF when no explicit manual shade was restored.
+        if (buildPlateAutoBrightnessEnabled && !hasExplicitManualBuildPlateShade) {
             lastManualBuildPlateShade = getBuildPlatePresetDefaultTone(activeBuildPlatePreset);
         }
         buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
@@ -5992,6 +6003,7 @@ function getURLSettings(searchStr = location.search) {
         buildPlateAutoBrightness: g('bpab'),
         buildPlateColor: g('bpc'),
         buildPlateShade: g('bps'),
+        buildPlateManualShade: g('bpms'),
         buildPlateFinish: g('bpf'),
         buildPlateShape: g('bpsh'),
         buildPlateSizePreset: g('bpp'),
@@ -6072,6 +6084,7 @@ function settingsToURL() {
         p.set('bpc', buildPlateColor.replace('#', ''));
     }
     if (Number.isFinite(Number(buildPlateShade))) p.set('bps', String(buildPlateShade));
+    if (Number.isFinite(Number(lastManualBuildPlateShade))) p.set('bpms', String(lastManualBuildPlateShade));
     p.set('bpf', buildPlateFinish || BUILD_PLATE_DEFAULTS.finish);
     if (buildPlateShape !== 'rectangle') p.set('bpsh', normalizeBuildPlateShape(buildPlateShape));
     if (buildPlateSizePreset && buildPlateSizePreset !== '220x220') p.set('bpp', buildPlateSizePreset);
@@ -10848,7 +10861,9 @@ function renderBuildPlatePresets() {
                 buildPlateShade = buildPlateAutoBrightnessEnabled
                     ? AUTO_BRIGHTNESS_RULES.buildPlate.shade
                     : getBuildPlatePresetDefaultTone('modelcolor');
-                lastManualBuildPlateShade = getBuildPlatePresetDefaultTone('modelcolor');
+                if (!buildPlateAutoBrightnessEnabled) {
+                    lastManualBuildPlateShade = getBuildPlatePresetDefaultTone('modelcolor');
+                }
                 if (buildPlateShadeSliderEl) {
                     buildPlateShadeSliderEl.value = String(buildPlateShade);
                     syncBuildPlateShadeReadout();
@@ -10856,7 +10871,9 @@ function renderBuildPlatePresets() {
             } else if (preset.id === 'white' || preset.id === 'black') {
                 buildPlateColor = preset.color;
                 buildPlateShade = getBuildPlatePresetDefaultTone(preset.id);
-                lastManualBuildPlateShade = buildPlateShade;
+                if (!buildPlateAutoBrightnessEnabled) {
+                    lastManualBuildPlateShade = buildPlateShade;
+                }
                 if (buildPlateShadeSliderEl) {
                     buildPlateShadeSliderEl.value = String(buildPlateShade);
                     syncBuildPlateShadeReadout();
