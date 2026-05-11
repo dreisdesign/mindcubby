@@ -2,9 +2,9 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.74**
+**Version (current workspace): 2.1.75**
 
-Current development note: Surface Auto Brightness now stays synced to the visible preset color, avoiding stale custom-color drift when switching White/Black presets. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
+Current development note: White/Black presets now reapply their default shade values on restore and when re-selected, so stale saved shades cannot override the visible preset. See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
 ---
 
@@ -29,7 +29,7 @@ const DEFAULT_SETTINGS_URL = '...'; // Paste your copied URL here
 Run this from `3d/apps/rotater` to update build version/date in `index.html`:
 
 ```bash
-npm run bump:build -- 2.1.74
+npm run bump:build -- 2.1.75
 ```
 
 Notes:

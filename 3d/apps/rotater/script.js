@@ -5754,6 +5754,12 @@ function restoreSettings() {
             const shade = parseInt(s.buildPlateShade, 10);
             if (Number.isFinite(shade)) buildPlateShade = Math.max(-100, Math.min(100, shade));
         }
+        if (activeBuildPlatePreset === 'white' || activeBuildPlatePreset === 'black') {
+            buildPlateColor = PALETTE.preset[activeBuildPlatePreset];
+            buildPlateShade = getBuildPlatePresetDefaultTone(activeBuildPlatePreset);
+        } else if (activeBuildPlatePreset === 'modelcolor') {
+            buildPlateColor = null;
+        }
         buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
         if (s.buildPlateShape === 'rounded' || s.buildPlateShape === 'rectangle' || s.buildPlateShape === 'circle') {
             buildPlateShape = s.buildPlateShape;
@@ -5791,6 +5797,9 @@ function restoreSettings() {
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
         if (s.activeBgPreset) activeBgPreset = s.activeBgPreset;
         if (s.activeModelPreset) activeModelPreset = s.activeModelPreset;
+        if ((activeBgPreset === 'white' || activeBgPreset === 'black') && bgOpacitySlider) {
+            bgOpacitySlider.value = String(getBgPresetDefaultTone(activeBgPreset));
+        }
         if (s.modelPartSelected != null) {
             const idx = parseInt(s.modelPartSelected, 10);
             pendingModelPartSelected = Number.isFinite(idx) ? Math.max(0, idx) : 0;
@@ -10666,7 +10675,7 @@ function renderBgPresets() {
 
         const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
-            if (preset.id === activeBgPreset) return;
+            if (preset.id === activeBgPreset && preset.id !== 'white' && preset.id !== 'black') return;
 
             activeBgPreset = preset.id;
             if (preset.id !== 'modelcolor') lastNonModelBgPreset = preset.id;
@@ -10786,7 +10795,7 @@ function renderBuildPlatePresets() {
 
         const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
-            if (preset.id === activeBuildPlatePreset) return;
+            if (preset.id === activeBuildPlatePreset && preset.id !== 'white' && preset.id !== 'black') return;
 
             activeBuildPlatePreset = preset.id;
             if (preset.id !== 'modelcolor') lastNonModelBuildPlatePreset = preset.id;
