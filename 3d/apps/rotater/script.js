@@ -5778,7 +5778,7 @@ function restoreSettings() {
             const shade = parseInt(s.buildPlateShade, 10);
             if (Number.isFinite(shade)) {
                 buildPlateShade = Math.max(-100, Math.min(100, shade));
-                lastManualBuildPlateShade = buildPlateShade;
+                if (!buildPlateAutoBrightnessEnabled) lastManualBuildPlateShade = buildPlateShade;
             }
         }
         if (activeBuildPlatePreset === 'white' || activeBuildPlatePreset === 'black') {
@@ -10840,7 +10840,10 @@ function renderBuildPlatePresets() {
             if (preset.id !== 'modelcolor') lastNonModelBuildPlatePreset = preset.id;
             if (preset.id === 'modelcolor') {
                 buildPlateColor = null;
-                buildPlateShade = AUTO_BRIGHTNESS_RULES.buildPlate.shade;
+                buildPlateShade = buildPlateAutoBrightnessEnabled
+                    ? AUTO_BRIGHTNESS_RULES.buildPlate.shade
+                    : getBuildPlatePresetDefaultTone('modelcolor');
+                if (!buildPlateAutoBrightnessEnabled) lastManualBuildPlateShade = buildPlateShade;
                 if (buildPlateShadeSliderEl) {
                     buildPlateShadeSliderEl.value = String(buildPlateShade);
                     syncBuildPlateShadeReadout();

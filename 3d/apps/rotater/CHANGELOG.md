@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.81] - 2026-05-11
+
+### Fixed
+- **Surface preset path no longer overrides manual mode** — Selecting Surface preset `modelcolor` while auto-brightness is OFF no longer forces shade to `-100`; it now respects manual-mode defaults/history.
+- **Restore no longer clobbers manual shade memory when auto is ON** — On load, the saved auto shade value is no longer written into the manual shade cache, preventing OFF toggles from restoring the wrong value.
+
 ## [2.1.80] - 2026-05-11
 
 ### Fixed
