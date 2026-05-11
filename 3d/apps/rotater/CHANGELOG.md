@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
 
+## [2.1.74] - 2026-05-11
+
+### Fixed
+- **Surface preset/color state sync** — Build Plate now keeps its stored color aligned with White/Black preset selection, preventing stale custom colors from making Auto Brightness look wrong
+
 ## [2.1.73] - 2026-05-11
 
 ### Fixed

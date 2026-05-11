@@ -858,7 +858,6 @@ let _pausedBeforeStillExport = null;
 let buildPlateEnabled = true;
 let buildPlateColor = null;
 let buildPlateShade = BUILD_PLATE_DEFAULTS.shade;
-let lastManualBuildPlateShade = BUILD_PLATE_DEFAULTS.shade;
 let buildPlateFinish = BUILD_PLATE_DEFAULTS.finish; // matte | satin | gloss
 let buildPlateShape = BUILD_PLATE_DEFAULTS.shape; // rectangle | rounded | circle
 let buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
@@ -5748,12 +5747,12 @@ function restoreSettings() {
         } else if (s.buildPlateTexture != null) {
             buildPlateColor = null;
         }
+        if (activeBuildPlatePreset === 'white') buildPlateColor = PALETTE.preset.white;
+        else if (activeBuildPlatePreset === 'black') buildPlateColor = PALETTE.preset.black;
+        else if (activeBuildPlatePreset === 'modelcolor') buildPlateColor = null;
         if (s.buildPlateShade != null) {
             const shade = parseInt(s.buildPlateShade, 10);
             if (Number.isFinite(shade)) buildPlateShade = Math.max(-100, Math.min(100, shade));
-        }
-        if (!buildPlateAutoBrightnessEnabled) {
-            lastManualBuildPlateShade = Math.max(-100, Math.min(100, Number(buildPlateShade) || 0));
         }
         buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
         if (s.buildPlateShape === 'rounded' || s.buildPlateShape === 'rectangle' || s.buildPlateShape === 'circle') {
@@ -10505,7 +10504,6 @@ bgPick.addEventListener('input', (ev) => {
 const autoBgCheckEl = document.getElementById('autoBgCheck');
 if (autoBgCheckEl) {
     autoBgCheckEl.addEventListener('change', () => {
-        const preservedBgShade = bgOpacitySlider ? String(Math.round(getSliderEffectiveValue(bgOpacitySlider))) : null;
         isDynamicBg = autoBgCheckEl.checked;
         if (bgOpacitySlider && isDynamicBg) {
             const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.background.shade), 10) || 0));
@@ -10525,7 +10523,6 @@ if (autoBgCheckEl) {
                 const preset = BG_PRESETS.find(p => p.id === activeBgPreset);
                 if (preset && preset.color) bgPick.dispatchEvent(new Event('input', { bubbles: true }));
             }
-            if (bgOpacitySlider && preservedBgShade != null) bgOpacitySlider.value = preservedBgShade;
         }
         syncBgShadeReadout();
         updateBgShadeSliderVisual();
@@ -10573,22 +10570,11 @@ if (buildPlateColorPickerEl) {
 
 if (buildPlateAutoBrightnessEl) {
     buildPlateAutoBrightnessEl.addEventListener('change', () => {
-        const wasAuto = !!buildPlateAutoBrightnessEnabled;
         buildPlateAutoBrightnessEnabled = !!buildPlateAutoBrightnessEl.checked;
         if (buildPlateAutoBrightnessEnabled) {
-            if (!wasAuto) {
-                const manualShade = buildPlateShadeSliderEl
-                    ? Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl))
-                    : Math.round(Number(buildPlateShade) || 0);
-                lastManualBuildPlateShade = Math.max(-100, Math.min(100, manualShade));
-            }
             const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
             if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(autoShade);
             buildPlateShade = autoShade;
-        } else {
-            const restoreShade = Math.max(-100, Math.min(100, Math.round(Number(lastManualBuildPlateShade) || 0)));
-            if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(restoreShade);
-            buildPlateShade = restoreShade;
         }
         syncBuildPlateShadeReadout();
         updateBuildPlateShadeControlVisibility();
@@ -10603,7 +10589,6 @@ updateBuildPlateShadeControlVisibility();
 if (buildPlateShadeSliderEl) {
     buildPlateShadeSliderEl.addEventListener('input', () => {
         buildPlateShade = Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0));
-        if (!buildPlateAutoBrightnessEnabled) lastManualBuildPlateShade = buildPlateShade;
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
         saveSettings();
@@ -10694,7 +10679,7 @@ function renderBgPresets() {
                 if (isDynamicBg) updateDynamicBg();
                 else applyBackgroundFromBaseColor(syncColor);
             } else {
-                if (isDynamicBg) applyBgPresetDefaultTone(preset.id);
+                if (!isDynamicBg && (preset.id === 'white' || preset.id === 'black')) applyBgPresetDefaultTone(preset.id);
                 bgPick.value = preset.color;
                 bgPick.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -10806,7 +10791,15 @@ function renderBuildPlatePresets() {
             activeBuildPlatePreset = preset.id;
             if (preset.id !== 'modelcolor') lastNonModelBuildPlatePreset = preset.id;
             if (preset.id === 'modelcolor') {
+                buildPlateColor = null;
                 buildPlateShade = AUTO_BRIGHTNESS_RULES.buildPlate.shade;
+                if (buildPlateShadeSliderEl) {
+                    buildPlateShadeSliderEl.value = String(buildPlateShade);
+                    syncBuildPlateShadeReadout();
+                }
+            } else if (preset.id === 'white' || preset.id === 'black') {
+                buildPlateColor = preset.color;
+                buildPlateShade = getBuildPlatePresetDefaultTone(preset.id);
                 if (buildPlateShadeSliderEl) {
                     buildPlateShadeSliderEl.value = String(buildPlateShade);
                     syncBuildPlateShadeReadout();
