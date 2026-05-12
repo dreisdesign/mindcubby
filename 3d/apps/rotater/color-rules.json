@@ -1,48 +1,55 @@
 {
-  "_guide": {
-    "jumpPercent": "Percent change per shade step from center.",
-    "snapCount": "Number of slider stops including -100 and +100.",
-    "autoBrightnessShade": "Direction/position on shade scale: -100 means toward white, +100 means toward black.",
-    "maxBlendPercent": "Maximum blend strength at |shade|=100. Example: 40 means blend up to 40% toward white/black.",
-    "presetShadeDefaults": "Default shade by preset. Background/buildPlate use white/black/modelcolor/custom. Model presets use preset ids from presets.json (e.g., ceramic, ink).",
-    "shadeResponse": "Optional perceptual tuning. Lower lightenScale reduces intensity on the lighter side (0 to -25)."
-  },
+
   "modelShade": {
+    "_formula": "Manual max effect = jumpPercent * ((snapCount - 1) / 2).",
+    "_note": "Manual model tone strength/spacing.",
+    "_example": "jump:10% & snaps:9 = 4 lighter, 4 darker, with 10% jump steps in between.",
     "jumpPercent": 10,
     "snapCount": 9
   },
   "surfaceShade": {
+    "_formula": "Manual max effect = jumpPercent * ((snapCount - 1) / 2).",
+    "_note": "Manual surface shade for Background + Build Plate when auto brightness is OFF.",
+    "_example": "Uses same stop behavior as modelShade, but for surface sliders.",
     "jumpPercent": 10,
     "snapCount": 9
   },
   "shadeResponse": {
-    "lightenScale": 0.6,
+    "_note": "Asymmetric manual response. 1.0 = full strength, <1 softens, >1 boosts.",
+    "_example": "lightenScale=0.5 means only 50% of lightening intensity vs base manual curve.",
+    "lightenScale": 0.5,
     "darkenScale": 1.0
   },
   "autoBrightness": {
+    "_formula": "Auto applies the same surfaceShade curve at the configured auto shade value.",
+    "_note": "Auto mode now matches manual shade response (same -100/+100 appearance for the same base color).",
     "background": {
-      "shade": -100,
-      "maxBlendPercent": 40
+      "_example": "shade=-100 matches manual shade slider at -100 for the same synced/base color.",
+      "shade": -100
     },
     "buildPlate": {
-      "shade": -100,
-      "maxBlendPercent": 40
+      "_example": "Same behavior as background; keep shade values aligned for parity.",
+      "shade": -100
     }
   },
   "presetShadeDefaults": {
+    "_note": "Default manual shade loaded when selecting a preset (primarily when auto brightness is OFF).",
     "background": {
+      "_example": "white=-100 (lightest), black=100 (darkest), modelcolor/custom=0 (neutral).",
       "white": -100,
       "black": 100,
       "modelcolor": 0,
       "custom": 0
     },
     "buildPlate": {
+      "_example": "Matches background defaults for consistency.",
       "white": -100,
       "black": 100,
       "modelcolor": 0,
       "custom": 0
     },
     "model": {
+      "_example": "Preset id -> default model tone. Example: ink=100 starts darker.",
       "ceramic": -100,
       "ink": 100,
       "chrome": 0,

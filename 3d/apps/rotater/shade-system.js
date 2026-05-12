@@ -71,20 +71,6 @@ export function blendShadeColor(baseHex, shadeVal, maxDeltaPercent) {
 }
 
 /**
- * Lerp a color from base toward a target color by a given amount.
- * @param {string} baseHex - Starting color in #RRGGBB format
- * @param {string} targetHex - Target color in #RRGGBB format
- * @param {number} amount - Blend amount (0-1, clamped)
- * @returns {THREE.Color} Interpolated color
- */
-export function lerpColorTowardTarget(baseHex, targetHex, amount) {
-    const base = new THREE.Color(baseHex);
-    const target = new THREE.Color(targetHex);
-    base.lerp(target, Math.max(0, Math.min(1, amount)));
-    return base;
-}
-
-/**
  * Compute build plate shade color using surface shade rules (jumpPercent/snapCount).
  * Note: Build plate manual shading uses surfaceShade rules, not autoBrightness rules.
  * The caller must provide the maxDeltaPercent calculated from surfaceShade config.
@@ -93,33 +79,20 @@ export function computeBuildPlateShadeColor(baseHex, shadeVal, surfaceShadeMaxDe
     return blendShadeColor(baseHex, shadeVal, surfaceShadeMaxDelta);
 }
 
-/**
- * Compute auto-brightness using opacity-equivalent compositing.
- *
- * Negative shade moves toward white, positive shade moves toward black.
- * This keeps saturation response stable regardless of the source color HSL lightness.
- *
- * Example: red (#ff0000) with 80% white blend => #ffcccc (same as 20% opacity over white).
- */
-export function blendAutoBrightnessColor(baseHex, shadeVal, maxBlendPercent) {
-    const shade = Number(shadeVal) || 0;
-    if (shade === 0) return new THREE.Color(baseHex);
-
-    const strength = Math.max(0, Math.min(1, Math.abs(shade) / 100));
-    const maxBlend = Math.max(0, Math.min(1, (Number(maxBlendPercent) || 0) / 100));
-    const amount = strength * maxBlend;
-    const targetHex = shade < 0 ? '#ffffff' : '#000000';
-    return lerpColorTowardTarget(baseHex, targetHex, amount);
+function getSurfaceShadeMaxDelta() {
+    const jumpPercent = getColorRuleNumber('surfaceShade.jumpPercent', 20);
+    const snapCount = Math.max(3, Math.round(getColorRuleNumber('surfaceShade.snapCount', 9)));
+    return jumpPercent * Math.max(0, (snapCount - 1) / 2);
 }
 
 /**
  * Compute build plate color when auto-brightness is enabled.
- * This uses autoBrightness.buildPlate rules (maxBlendPercent=40 by default).
+ * Auto now uses the same surface shade response curve as manual mode.
  */
 export function computeBuildPlateAutoBrightnessColor(baseHex) {
     const shade = getColorRuleNumber('autoBrightness.buildPlate.shade', -100);
-    const maxBlendPercent = getColorRuleNumber('autoBrightness.buildPlate.maxBlendPercent', 40);
-    return blendAutoBrightnessColor(baseHex, shade, maxBlendPercent);
+    const maxDelta = getSurfaceShadeMaxDelta();
+    return computeBuildPlateShadeColor(baseHex, shade, maxDelta);
 }
 
 /**
@@ -133,12 +106,12 @@ export function computeBackgroundShadeColor(baseHex, shadeVal, surfaceShadeMaxDe
 
 /**
  * Compute background color when auto-brightness is enabled.
- * This uses autoBrightness.background rules (maxBlendPercent=40).
+ * Auto now uses the same surface shade response curve as manual mode.
  */
 export function computeBackgroundAutoBrightnessColor(baseHex) {
     const shade = getColorRuleNumber('autoBrightness.background.shade', -100);
-    const maxBlendPercent = getColorRuleNumber('autoBrightness.background.maxBlendPercent', 40);
-    return blendAutoBrightnessColor(baseHex, shade, maxBlendPercent);
+    const maxDelta = getSurfaceShadeMaxDelta();
+    return computeBackgroundShadeColor(baseHex, shade, maxDelta);
 }
 
 /**
@@ -172,19 +145,9 @@ export function getAutoShade(target) {
     return getColorRuleNumber(`autoBrightness.${target}.shade`, target === 'buildPlate' ? -100 : -100);
 }
 
-/**
- * Get the auto-brightness max blend percent for a given target.
- */
-export function getAutoMaxBlendPercent(target) {
-    // target: 'buildPlate' or 'background'
-    return getColorRuleNumber(`autoBrightness.${target}.maxBlendPercent`, 40);
-}
-
 export default {
     setColorRuleGetter,
     blendShadeColor,
-    blendAutoBrightnessColor,
-    lerpColorTowardTarget,
     computeBuildPlateShadeColor,
     computeBuildPlateAutoBrightnessColor,
     computeBackgroundShadeColor,
@@ -192,7 +155,6 @@ export default {
     computeTonedColor,
     computeSurfaceShadeColor,
     clampShade,
-    getAutoShade,
-    getAutoMaxBlendPercent
+    getAutoShade
 };
 
