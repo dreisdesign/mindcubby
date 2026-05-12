@@ -146,7 +146,7 @@ When a multi-part model is loaded:
 
 - **Model** controls are part-aware (color, shade, shading mode, and finish/reflection values are stored per selected part)
 - **Model presets** are model-only (they no longer force background or lighting changes)
-- **Background → Model** preset can follow a chosen part via **Model Sync Source** (defaults to Part 1), and Auto Brightness is enabled by default on first visit
+- **Background → Model Sync** preset can follow a chosen part via **Model Sync Source** (defaults to Part 1), and Auto Brightness is enabled by default on first visit
 - The part selector dropdown appears only for multipart models; single-model sessions use an exposed 3-dot actions menu
 
 | Control | Description |

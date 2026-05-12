@@ -689,11 +689,9 @@ const DEFAULT_COLOR_RULES = {
     autoBrightness: {
         background: {
             shade: -100,
-            maxBlendPercent: 40,
         },
         buildPlate: {
             shade: -100,
-            maxBlendPercent: 40,
         },
     },
     presetShadeDefaults: {
@@ -761,12 +759,6 @@ async function loadColorRules() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const loaded = await response.json();
         if (loaded?.modelTone && !loaded.modelShade) loaded.modelShade = loaded.modelTone;
-        if (loaded?.autoBrightness?.background?.rangePercent != null && loaded.autoBrightness.background.maxBlendPercent == null) {
-            loaded.autoBrightness.background.maxBlendPercent = loaded.autoBrightness.background.rangePercent;
-        }
-        if (loaded?.autoBrightness?.buildPlate?.rangePercent != null && loaded.autoBrightness.buildPlate.maxBlendPercent == null) {
-            loaded.autoBrightness.buildPlate.maxBlendPercent = loaded.autoBrightness.buildPlate.rangePercent;
-        }
         if (loaded?.presetToneDefaults && !loaded.presetShadeDefaults) loaded.presetShadeDefaults = loaded.presetToneDefaults;
         colorRules = mergePlainObject(JSON.parse(JSON.stringify(DEFAULT_COLOR_RULES)), loaded);
     } catch (error) {
@@ -1395,7 +1387,7 @@ function updateBuildPlateMaterial() {
     const baseHex = getActiveBuildPlateBaseColor();
     const toned = buildPlateAutoBrightnessEnabled
         ? computeBuildPlateAutoBrightnessColor(baseHex)
-        : computeBuildPlateShadeColor(baseHex, shade);
+        : (activeBuildPlatePreset === 'modelcolor' ? baseHex : computeBuildPlateShadeColor(baseHex, shade));
     buildPlateShape = normalizeBuildPlateShape(buildPlateShape);
     buildPlateFinish = (buildPlateFinish === 'matte' || buildPlateFinish === 'gloss') ? buildPlateFinish : 'satin';
 
@@ -1894,22 +1886,31 @@ function showModelUndoToast(message = 'Model updated') {
 
 function updateAutoBgShadeControlVisibility() {
     const autoBgEnabled = !!document.getElementById('autoBgCheck')?.checked;
-    if (autoBgEnabled && bgOpacitySlider) {
-        bgOpacitySlider.value = String(AUTO_BRIGHTNESS_RULES.background.shade);
+    const syncToModel = !autoBgEnabled && activeBgPreset === 'modelcolor';
+    if (bgOpacitySlider) {
+        const bgTone = syncToModel
+            ? getComputedModelSyncTone(bgSyncPartIndex)
+            : Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.background.shade), 10) || 0));
+        if (syncToModel || autoBgEnabled) bgOpacitySlider.value = String(bgTone);
+        syncBgShadeReadout();
+        bgOpacitySlider.disabled = autoBgEnabled;
     }
     if (bgOpacitySliderLabel) bgOpacitySliderLabel.hidden = autoBgEnabled;
-    if (bgOpacitySlider) bgOpacitySlider.disabled = autoBgEnabled;
 }
 
 function updateBuildPlateShadeControlVisibility() {
     const autoOn = buildPlateAutoBrightnessEl
         ? !!buildPlateAutoBrightnessEl.checked
         : !!buildPlateAutoBrightnessEnabled;
+    const syncToModel = !autoOn && activeBuildPlatePreset === 'modelcolor';
     buildPlateAutoBrightnessEnabled = autoOn;
-    if (autoOn) {
-        const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
+    if (autoOn || syncToModel) {
+        const autoShade = syncToModel
+            ? getComputedModelSyncTone(buildPlateSyncPartIndex)
+            : Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
         buildPlateShade = autoShade;
         if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(autoShade);
+        syncBuildPlateShadeReadout();
     }
     if (buildPlateShadeRowEl) buildPlateShadeRowEl.hidden = autoOn;
     if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.disabled = autoOn;
@@ -3287,10 +3288,6 @@ function disposeMaterials(materialLike) {
 
 // Wrapper functions for shade system (module exported functions)
 // These maintain the original script.js interface while delegating to shade-system.js
-function lerpColorTowardTarget(baseHex, targetHex, amount) {
-    return ShadeSystem.lerpColorTowardTarget(baseHex, targetHex, amount);
-}
-
 function blendShadeColor(baseHex, shadeVal, maxDeltaPercent) {
     return ShadeSystem.blendShadeColor(baseHex, shadeVal, maxDeltaPercent);
 }
@@ -3691,9 +3688,26 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
 }
 
 function getModelSyncSourceColor() {
-    if (!isMultipartModel()) return modelPartBaseColors[0] || colorPick.value;
-    const idx = Math.max(0, Math.min(bgSyncPartIndex, modelPartBaseColors.length - 1));
-    return modelPartBaseColors[idx] || colorPick.value;
+    return getComputedModelSyncColor(bgSyncPartIndex);
+}
+
+function getComputedModelSyncColor(syncPartIndex = 0) {
+    const partCount = Math.max(1, modelPartNames.length, modelPartBaseColors.length, modelPartSettings.length);
+    const rawIndex = parseInt(String(syncPartIndex), 10);
+    const idx = Math.max(0, Math.min(Number.isFinite(rawIndex) ? rawIndex : 0, partCount - 1));
+    const settings = (Array.isArray(modelPartSettings) && modelPartSettings[idx]) ? modelPartSettings[idx] : null;
+    const baseHex = settings?.color || modelPartBaseColors[idx] || colorPick.value;
+    const toneVal = Number.isFinite(Number(settings?.tone)) ? Number(settings.tone) : 0;
+    return `#${computeTonedColor(baseHex, toneVal).getHexString()}`;
+}
+
+function getComputedModelSyncTone(syncPartIndex = 0) {
+    const partCount = Math.max(1, modelPartNames.length, modelPartBaseColors.length, modelPartSettings.length);
+    const rawIndex = parseInt(String(syncPartIndex), 10);
+    const idx = Math.max(0, Math.min(Number.isFinite(rawIndex) ? rawIndex : 0, partCount - 1));
+    const settings = (Array.isArray(modelPartSettings) && modelPartSettings[idx]) ? modelPartSettings[idx] : null;
+    const toneVal = Number.isFinite(Number(settings?.tone)) ? Number(settings.tone) : 0;
+    return Math.max(-100, Math.min(100, Math.round(toneVal)));
 }
 
 function getActiveBackgroundBaseColor() {
@@ -3704,9 +3718,7 @@ function getActiveBackgroundBaseColor() {
 }
 
 function getBuildPlateSyncSourceColor() {
-    if (!isMultipartModel()) return modelPartBaseColors[0] || colorPick.value;
-    const idx = Math.max(0, Math.min(buildPlateSyncPartIndex, modelPartBaseColors.length - 1));
-    return modelPartBaseColors[idx] || colorPick.value;
+    return getComputedModelSyncColor(buildPlateSyncPartIndex);
 }
 
 function getActiveBuildPlateBaseColor() {
@@ -3759,6 +3771,7 @@ function syncBgModelSyncSourceUI() {
             if (activeBgPreset === 'modelcolor') {
                 const syncColor = getModelSyncSourceColor();
                 bgPick.value = syncColor;
+                updateAutoBgShadeControlVisibility();
                 if (isDynamicBg) updateDynamicBg();
                 else applyBackgroundFromBaseColor(syncColor);
             }
@@ -7225,6 +7238,14 @@ if (opacitySlider) {
             partSettings.tone = toneVal;
         });
         if (mesh) applyPartColorsToMesh();
+        if (activeBgPreset === 'modelcolor') {
+            const syncColor = getModelSyncSourceColor();
+            bgPick.value = syncColor;
+            updateAutoBgShadeControlVisibility();
+            if (isDynamicBg) updateDynamicBg();
+            else applyBackgroundFromBaseColor(syncColor);
+            updateBgShadeSliderVisual();
+        }
         updateShadingThumbs();
         persistCurrentMultipartParts();
         updateShadeSliderVisual();
@@ -7239,6 +7260,30 @@ if (bgOpacitySlider) {
         document.getElementById('bgOpacityVal').textContent = (bgTone >= 0 ? '+' : '') + bgTone;
         syncSliderTooltip(bgOpacitySlider);
         updateBgShadeSliderVisual();
+
+        if (activeBgPreset === 'modelcolor' && !isDynamicBg) {
+            const partCount = Math.max(1, modelPartNames.length, modelPartBaseColors.length, modelPartSettings.length);
+            const idx = Math.max(0, Math.min(parseInt(String(bgSyncPartIndex), 10) || 0, partCount - 1));
+            const settings = getPartSettings(idx);
+            settings.tone = bgTone;
+            if (idx === modelPartSelected && opacitySlider) {
+                opacitySlider.value = String(bgTone);
+                opacityVal.textContent = (bgTone >= 0 ? '+' : '') + bgTone;
+                syncSliderTooltip(opacitySlider);
+                updateShadeSliderVisual();
+            }
+            if (mesh) applyPartColorsToMesh();
+            const syncColor = getModelSyncSourceColor();
+            bgPick.value = syncColor;
+            applyBackgroundFromBaseColor(syncColor);
+            updateShadingThumbs();
+            updateColorSwatches();
+            persistCurrentMultipartParts();
+            queueModelPartThumbsRender([idx]);
+            saveSettings();
+            return;
+        }
+
         const baseHex = getActiveBackgroundBaseColor();
         const c = computeSurfaceShadeColor(baseHex, bgTone);
         if (renderer) renderer.setClearColor(c, 1);
@@ -10103,7 +10148,7 @@ fetch('presets.json')
 const BG_PRESETS = [
     { id: 'white', name: 'White', color: PALETTE.preset.white },
     { id: 'black', name: 'Black', color: PALETTE.preset.black },
-    { id: 'modelcolor', name: 'Model', color: null }
+    { id: 'modelcolor', name: 'Model Sync', color: null }
 ];
 
 const BUILD_PLATE_PRESETS = [
@@ -10149,6 +10194,10 @@ function applyBackgroundFromBaseColor(baseHex) {
     if (!renderer) return;
     if (isDynamicBg) {
         renderer.setClearColor(computeAutoBrightnessColor(baseHex), 1);
+        return;
+    }
+    if (activeBgPreset === 'modelcolor') {
+        renderer.setClearColor(baseHex, 1);
         return;
     }
     renderer.setClearColor(computeSurfaceShadeColor(baseHex, getManualBgTone()), 1);
@@ -10580,6 +10629,7 @@ function syncBuildPlateModelSyncSourceUI() {
         buildPlateModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
         buildPlateModelSyncSelectorBtn.title = `Surface sync: ${selectedName}`;
     }
+    updateBuildPlateShadeControlVisibility();
     queueModelPartThumbsRender();
 }
 
@@ -10672,10 +10722,11 @@ if (buildPlateAutoBrightnessEl) {
             if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(autoShade);
             buildPlateShade = autoShade;
         } else {
-            // Match background behavior: turning auto OFF keeps the current auto shade.
-            const currentShade = buildPlateShadeSliderEl
-                ? Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0))
-                : Math.max(-100, Math.min(100, parseInt(String(buildPlateShade), 10) || 0));
+            const currentShade = activeBuildPlatePreset === 'modelcolor'
+                ? getComputedModelSyncTone(buildPlateSyncPartIndex)
+                : (buildPlateShadeSliderEl
+                    ? Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0))
+                    : Math.max(-100, Math.min(100, parseInt(String(buildPlateShade), 10) || 0)));
             buildPlateShade = currentShade;
             lastManualBuildPlateShade = buildPlateShade;
             manualBuildPlateShadeBeforeAuto = buildPlateShade;
@@ -10694,6 +10745,36 @@ updateBuildPlateShadeControlVisibility();
 if (buildPlateShadeSliderEl) {
     buildPlateShadeSliderEl.addEventListener('input', () => {
         buildPlateShade = Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0));
+
+        if (!buildPlateAutoBrightnessEnabled && activeBuildPlatePreset === 'modelcolor') {
+            const partCount = Math.max(1, modelPartNames.length, modelPartBaseColors.length, modelPartSettings.length);
+            const idx = Math.max(0, Math.min(parseInt(String(buildPlateSyncPartIndex), 10) || 0, partCount - 1));
+            const settings = getPartSettings(idx);
+            settings.tone = buildPlateShade;
+            if (idx === modelPartSelected && opacitySlider) {
+                opacitySlider.value = String(buildPlateShade);
+                opacityVal.textContent = (buildPlateShade >= 0 ? '+' : '') + buildPlateShade;
+                syncSliderTooltip(opacitySlider);
+                updateShadeSliderVisual();
+            }
+            if (mesh) applyPartColorsToMesh();
+            updateBuildPlateMaterial();
+            if (activeBgPreset === 'modelcolor' && !isDynamicBg && idx === bgSyncPartIndex) {
+                const syncColor = getModelSyncSourceColor();
+                bgPick.value = syncColor;
+                applyBackgroundFromBaseColor(syncColor);
+                updateAutoBgShadeControlVisibility();
+                updateBgShadeSliderVisual();
+            }
+            updateShadingThumbs();
+            updateColorSwatches();
+            persistCurrentMultipartParts();
+            queueModelPartThumbsRender([idx]);
+            refreshExportPreviewNow();
+            saveSettings();
+            return;
+        }
+
         if (!buildPlateAutoBrightnessEnabled) {
             lastManualBuildPlateShade = buildPlateShade;
             manualBuildPlateShadeBeforeAuto = buildPlateShade;
