@@ -3,6 +3,12 @@
 
 Updated: 2026-05-11
 
+Arrows to switch the active selected model 
+
+
+Updated: 2026-05-11
+
+
 ## Language
 (Needs some thought) When 3+ parts are selected - update the wording in the dropdown from "Parts 1 +2 more" "(3/3 Selected) to "Parts 1, 2, 3" - or something better. "Part 1 
 
