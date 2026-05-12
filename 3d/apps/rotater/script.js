@@ -10155,10 +10155,7 @@ function applyBackgroundFromBaseColor(baseHex) {
 }
 
 function computeAutoBrightnessColor(baseHex) {
-    const rule = AUTO_BRIGHTNESS_RULES.background || DEFAULT_COLOR_RULES.autoBrightness.background;
-    const shade = getColorRuleNumber('autoBrightness.background.shade', DEFAULT_COLOR_RULES.autoBrightness.background.shade);
-    const maxBlendPercent = getColorRuleNumber('autoBrightness.background.maxBlendPercent', DEFAULT_COLOR_RULES.autoBrightness.background.maxBlendPercent);
-    return blendShadeColor(baseHex, shade, maxBlendPercent);
+    return ShadeSystem.computeBackgroundAutoBrightnessColor(baseHex);
 }
 
 // Moved to shade-system.js module

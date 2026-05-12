@@ -94,13 +94,32 @@ export function computeBuildPlateShadeColor(baseHex, shadeVal, surfaceShadeMaxDe
 }
 
 /**
+ * Compute auto-brightness using opacity-equivalent compositing.
+ *
+ * Negative shade moves toward white, positive shade moves toward black.
+ * This keeps saturation response stable regardless of the source color HSL lightness.
+ *
+ * Example: red (#ff0000) with 80% white blend => #ffcccc (same as 20% opacity over white).
+ */
+export function blendAutoBrightnessColor(baseHex, shadeVal, maxBlendPercent) {
+    const shade = Number(shadeVal) || 0;
+    if (shade === 0) return new THREE.Color(baseHex);
+
+    const strength = Math.max(0, Math.min(1, Math.abs(shade) / 100));
+    const maxBlend = Math.max(0, Math.min(1, (Number(maxBlendPercent) || 0) / 100));
+    const amount = strength * maxBlend;
+    const targetHex = shade < 0 ? '#ffffff' : '#000000';
+    return lerpColorTowardTarget(baseHex, targetHex, amount);
+}
+
+/**
  * Compute build plate color when auto-brightness is enabled.
  * This uses autoBrightness.buildPlate rules (maxBlendPercent=40 by default).
  */
 export function computeBuildPlateAutoBrightnessColor(baseHex) {
     const shade = getColorRuleNumber('autoBrightness.buildPlate.shade', -100);
     const maxBlendPercent = getColorRuleNumber('autoBrightness.buildPlate.maxBlendPercent', 40);
-    return blendShadeColor(baseHex, shade, maxBlendPercent);
+    return blendAutoBrightnessColor(baseHex, shade, maxBlendPercent);
 }
 
 /**
@@ -119,7 +138,7 @@ export function computeBackgroundShadeColor(baseHex, shadeVal, surfaceShadeMaxDe
 export function computeBackgroundAutoBrightnessColor(baseHex) {
     const shade = getColorRuleNumber('autoBrightness.background.shade', -100);
     const maxBlendPercent = getColorRuleNumber('autoBrightness.background.maxBlendPercent', 40);
-    return blendShadeColor(baseHex, shade, maxBlendPercent);
+    return blendAutoBrightnessColor(baseHex, shade, maxBlendPercent);
 }
 
 /**
@@ -164,6 +183,7 @@ export function getAutoMaxBlendPercent(target) {
 export default {
     setColorRuleGetter,
     blendShadeColor,
+    blendAutoBrightnessColor,
     lerpColorTowardTarget,
     computeBuildPlateShadeColor,
     computeBuildPlateAutoBrightnessColor,
