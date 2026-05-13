@@ -4490,6 +4490,10 @@ function setExportWorkspaceActive(active) {
     document.documentElement.classList.toggle('export-workspace-active', exportWorkspaceActive);
     const exportOverlayEl = document.getElementById('exportOverlay');
     if (exportOverlayEl) exportOverlayEl.hidden = !exportWorkspaceActive;
+    if (exportWorkspaceActive) {
+        if (exportGridEl) exportGridEl.checked = !!rulerEnabled;
+        if (exportBuildPlateEl) exportBuildPlateEl.checked = !!buildPlateEnabled;
+    }
     updateExportWorkspaceTransparencyPattern();
     try { localStorage.setItem('rotater_exportWorkspaceActive', exportWorkspaceActive ? '1' : '0'); } catch (_) { }
     syncCanvasSize();
@@ -5876,7 +5880,7 @@ function restoreSettings() {
         if (s.uploadDefaultAction === 'add' || s.uploadDefaultAction === 'replace') {
             uploadDefaultAction = s.uploadDefaultAction;
         }
-        if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
+        if (exportGridEl) exportGridEl.checked = rulerEnabled;
         if (exportBuildPlateEl && s.exportBuildPlate == null) exportBuildPlateEl.checked = buildPlateEnabled;
         if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
@@ -7464,7 +7468,7 @@ function setExportQualityValue(value) {
 syncExportQualitySliderFromSelect();
 
 if (exportGridEl) {
-    exportGridEl.checked = rulerLinesVisible;
+    exportGridEl.checked = rulerEnabled;
 }
 if (exportBuildPlateEl) {
     exportBuildPlateEl.checked = buildPlateEnabled;
@@ -7486,13 +7490,22 @@ exportQualitySliderEl?.addEventListener('input', () => {
 });
 
 exportGridEl?.addEventListener('change', () => {
-    rulerLinesVisible = !!exportGridEl.checked;
+    const on = !!exportGridEl.checked;
+    rulerEnabled = on;
+    rulerLinesVisible = on;
+    if (rulerToggleEl) rulerToggleEl.checked = on;
     updateRulerHUD();
     updateLiveRulerOverlay();
     refreshExportPreviewNow();
     saveSettings();
 });
 exportBuildPlateEl?.addEventListener('change', () => {
+    const on = !!exportBuildPlateEl.checked;
+    buildPlateEnabled = on;
+    if (buildPlateToggleEl) buildPlateToggleEl.checked = on;
+    updateBuildPlateMaterial();
+    applyTextureLighting();
+    updateShadowCatcherPlacement();
     refreshExportPreviewNow();
     saveSettings();
 });
@@ -10678,6 +10691,8 @@ if (rulerToggleEl) {
     rulerToggleEl.checked = !!rulerEnabled;
     rulerToggleEl.addEventListener('change', () => {
         rulerEnabled = rulerToggleEl.checked;
+        rulerLinesVisible = rulerEnabled;
+        if (exportGridEl) exportGridEl.checked = rulerEnabled;
         updateRulerHUD();
         updateLiveRulerOverlay();
         refreshExportPreviewNow();
@@ -10689,6 +10704,7 @@ if (buildPlateToggleEl) {
     buildPlateToggleEl.checked = buildPlateEnabled;
     buildPlateToggleEl.addEventListener('change', () => {
         buildPlateEnabled = !!buildPlateToggleEl.checked;
+        if (exportBuildPlateEl) exportBuildPlateEl.checked = buildPlateEnabled;
         updateBuildPlateMaterial();
         applyTextureLighting();
         updateShadowCatcherPlacement();
