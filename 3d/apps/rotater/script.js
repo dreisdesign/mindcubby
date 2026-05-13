@@ -5801,9 +5801,14 @@ function restoreSettings() {
             activeBuildPlatePreset = s.buildPlatePreset;
             if (activeBuildPlatePreset !== 'modelcolor') lastNonModelBuildPlatePreset = activeBuildPlatePreset;
         }
-        if (s.buildPlateSyncPartIndex != null) {
-            const idx = parseInt(s.buildPlateSyncPartIndex, 10);
-            buildPlateSyncPartIndex = Number.isFinite(idx) ? Math.max(0, idx) : 0;
+        {
+            // Prefer localStorage over URL (same pattern as bgSyncPartIndex) so a stale
+            // shared/bookmarked URL never overwrites the user's locally-saved selection.
+            const bpsiRaw = localS.buildPlateSyncPartIndex ?? s.buildPlateSyncPartIndex;
+            if (bpsiRaw != null) {
+                const idx = parseInt(bpsiRaw, 10);
+                buildPlateSyncPartIndex = Number.isFinite(idx) ? Math.max(0, idx) : 0;
+            }
         }
         if (s.buildPlateAutoBrightness != null) {
             buildPlateAutoBrightnessEnabled = (s.buildPlateAutoBrightness === '1' || s.buildPlateAutoBrightness === true || s.buildPlateAutoBrightness === 1);
