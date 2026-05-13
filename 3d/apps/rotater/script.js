@@ -7192,26 +7192,9 @@ function persistCurrentMultipartParts({ immediate = false } = {}) {
 
 let colorCommitTimer = 0;
 let pendingColorThumbTargets = null;
+let colorPickPreviewFrame = 0;
 
-function flushColorCommit() {
-    if (colorCommitTimer) {
-        clearTimeout(colorCommitTimer);
-        colorCommitTimer = 0;
-    }
-    const thumbTargets = pendingColorThumbTargets;
-    pendingColorThumbTargets = null;
-    persistCurrentMultipartParts({ immediate: true });
-    saveSettings();
-    if (thumbTargets !== null) queueModelPartThumbsRender(thumbTargets);
-}
-
-function scheduleColorCommit(thumbTargets = null) {
-    pendingColorThumbTargets = thumbTargets;
-    if (colorCommitTimer) clearTimeout(colorCommitTimer);
-    colorCommitTimer = setTimeout(flushColorCommit, 100);
-}
-
-colorPick.addEventListener('input', (ev) => {
+function applyColorPickPreview() {
     if (isMultipartModel()) {
         const targets = applyToModelPartEditTargets((partSettings, idx) => {
             partSettings.color = colorPick.value;
@@ -7234,8 +7217,47 @@ colorPick.addEventListener('input', (ev) => {
         else applyBackgroundFromBaseColor(bgPick.value);
         updateBgShadeSliderVisual();
     }
+}
+
+function flushColorPickPreview() {
+    if (colorPickPreviewFrame) {
+        cancelAnimationFrame(colorPickPreviewFrame);
+        colorPickPreviewFrame = 0;
+    }
+    applyColorPickPreview();
+}
+
+function scheduleColorPickPreview() {
+    if (colorPickPreviewFrame) return;
+    colorPickPreviewFrame = requestAnimationFrame(() => {
+        colorPickPreviewFrame = 0;
+        applyColorPickPreview();
+    });
+}
+
+function flushColorCommit() {
+    if (colorCommitTimer) {
+        clearTimeout(colorCommitTimer);
+        colorCommitTimer = 0;
+    }
+    const thumbTargets = pendingColorThumbTargets;
+    pendingColorThumbTargets = null;
+    persistCurrentMultipartParts({ immediate: true });
+    saveSettings();
+    if (thumbTargets !== null) queueModelPartThumbsRender(thumbTargets);
+}
+
+function scheduleColorCommit(thumbTargets = null) {
+    pendingColorThumbTargets = thumbTargets;
+    if (colorCommitTimer) clearTimeout(colorCommitTimer);
+    colorCommitTimer = setTimeout(flushColorCommit, 100);
+}
+
+colorPick.addEventListener('input', (ev) => {
+    scheduleColorPickPreview();
 });
 colorPick.addEventListener('change', () => {
+    flushColorPickPreview();
     flushColorCommit();
 });
 if (opacitySlider) {
