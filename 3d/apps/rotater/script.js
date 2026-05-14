@@ -484,7 +484,7 @@ const btnResetExportCard = document.getElementById('btnResetExportCard');
 const APP_PARAM_KEYS = new Set([
     'c', 'b', 'op', 'sh', 'rm', 'sp', 'tr', 'wsr', 'sd', 'gl', 'ef', 'eq', 'ed', 'et', 'gd', 'jq',
     'tto', 'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh', 'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
-    'rv', 'ru', 'rl', 'rg',
+    'rv', 'ru', 'rl', 'rg', 'rh',
     'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp', 'bsp',
     'bp', 'bpc', 'bpt', 'bps', 'bpms', 'bpf', 'bpp', 'bpw', 'bpd', 'bpsh',
     'uap', 'uam'
@@ -512,6 +512,8 @@ let buildPlateAutoBrightnessEnabled = true;
 let rulerEnabled = true;
 let rulerUnit = 'metric';
 let rulerLinesVisible = true;
+let rulerPartHoverEnabled = false;
+let rulerHoveredPartIndex = -1;
 let rulerOverlayEl = null;
 let rulerGridHelper = null;
 let rulerGridSize = 0;
@@ -543,6 +545,7 @@ let partThumbCamera = null;
 let partThumbScratchCanvas = null;
 let partThumbScratchCtx = null;
 let multipartPartBounds = null;
+let modelPartDimensions = [];
 let pendingUrlModelAppearanceOverride = null;
 let pendingReplacePartIndex = -1;
 let currentModelBuffer = null;
@@ -882,6 +885,8 @@ let swingBaseAz = 0, swingLastAz = 0;
 let tiltBaseMeshRx = -Math.PI / 2;
 let spinDir = 1; // 1 = clockwise, -1 = counter-clockwise
 const renderDeltaClock = new THREE.Clock();
+const rulerPartHoverRaycaster = new THREE.Raycaster();
+const rulerPartHoverPointerNdc = new THREE.Vector2();
 let modelDims = null;  // { w, d, h } in mm (STL units: x=width, y=depth, z=height)
 let exportCamDist = null; // stored export camera distance (fit-to-frame, independent of viewport zoom)
 let exportCamElev = 0;   // stored export camera elevation (radians)
@@ -1764,6 +1769,14 @@ function buildMultipartFileBase(names) {
     const count = names?.length ?? 0;
     const base = inferMultipartBaseName(names);
     return count > 1 ? `${base}_${count}parts` : base;
+}
+
+function truncatePartNameForUi(name, maxLength = 30) {
+    const text = String(name || '').trim();
+    if (!text) return '';
+    const limit = Math.max(8, Math.floor(Number(maxLength) || 30));
+    if (text.length <= limit) return text;
+    return `${text.slice(0, Math.max(1, limit - 1)).trimEnd()}…`;
 }
 
 function isMultipartModel() {
@@ -3075,19 +3088,13 @@ function renderModelPartSelectorSummary() {
     if (modelPartSelectorThumb) modelPartSelectorThumb.hidden = selectedCount === 0;
     modelPartSelectorBtn.classList.toggle('is-empty-selection', selectedCount === 0);
     const firstIndex = selectedIndices[0] ?? Math.max(0, modelPartSelected);
-    const firstLabel = modelPartNames[firstIndex] || `Part ${firstIndex + 1}`;
+    const firstLabel = truncatePartNameForUi(modelPartNames[firstIndex] || `Part ${firstIndex + 1}`, 34);
 
     let titleText = '';
     if (selectedCount === 0) {
         titleText = 'No parts selected';
-    } else if (selectedCount <= 1) {
-        titleText = `Part ${firstIndex + 1}: ${firstLabel}`;
-    } else if (selectedCount === 2) {
-        titleText = `Parts ${selectedIndices[0] + 1} and ${selectedIndices[1] + 1} selected`;
     } else {
-        const listed = selectedIndices.slice(0, 3).map((idx) => idx + 1);
-        const suffix = selectedCount > 3 ? ', ...' : '';
-        titleText = `Parts ${listed.join(', ')} selected${suffix}`;
+        titleText = firstLabel;
     }
 
     const summaryText = `${selectedCount} of ${totalCount} selected`;
@@ -3957,6 +3964,10 @@ function loadPreparedGeometry(geo, name) {
     geo.boundingBox.getSize(sz);
     modelRadius = Math.max(sz.x, sz.y, sz.z) / 2;
     modelDims = { w: sz.x, d: sz.y, h: sz.z };
+    if (!isMultipartModel() || modelPartDimensions.length !== modelPartNames.length) {
+        modelPartDimensions = [{ ...modelDims }];
+    }
+    setRulerHoveredPartIndex(-1);
 
     const initialMaterial = isMultipartModel()
         ? modelPartSettings.map((s, idx) => getMaterial(s.shading || shadingEl.value, s.color || modelPartBaseColors[idx], s))
@@ -4066,6 +4077,7 @@ function loadSTLBuffer(buffer, name) {
     pendingModelPartDisplayOrder = null;
     pendingBulkSelectedPartIndices = null;
     multipartPartBounds = null;
+    modelPartDimensions = [];
     currentModelBuffer = buffer;
     modelPartSelected = 0;
     bulkSelectedPartIndices.clear();
@@ -4113,6 +4125,7 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
 
     const center = unionBox.getCenter(new THREE.Vector3());
     const computedPartBounds = [];
+    const computedPartDimensions = [];
     for (const geo of parsed) {
         geo.translate(-center.x, -center.y, -center.z);
         geo.computeBoundingBox();
@@ -4124,12 +4137,16 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
                 center: boundsCenter,
                 radius: Math.max(size.length() * 0.5, 0.001),
             });
+            computedPartDimensions.push({ w: size.x, d: size.y, h: size.z });
         } else {
             computedPartBounds.push({ center: new THREE.Vector3(0, 0, 0), radius: Math.max(0.001, modelRadius || 1) });
+            computedPartDimensions.push({ w: 0, d: 0, h: 0 });
         }
         geo.computeVertexNormals();
     }
     multipartPartBounds = computedPartBounds;
+    modelPartDimensions = computedPartDimensions;
+    setRulerHoveredPartIndex(-1);
 
     const merged = BufferGeometryUtils.mergeGeometries(parsed, true);
     if (!merged) throw new Error('Could not merge multi-part STL geometry.');
@@ -4827,20 +4844,149 @@ function clearExportFrame() {
 }
 
 // ── Ruler / dimensions HUD ────────────────────────────────────────────────────
+function setRulerHoveredPartIndex(partIndex) {
+    const normalized = (Number.isInteger(partIndex) && partIndex >= 0) ? partIndex : -1;
+    if (rulerHoveredPartIndex === normalized) return;
+    rulerHoveredPartIndex = normalized;
+    if (rulerPartHoverEnabled) updateRulerHUD();
+}
+
+function setRulerPartHoverEnabled(enabled, persist = true) {
+    const next = !!enabled;
+    if (rulerPartHoverEnabled === next) {
+        if (!next && rulerHoveredPartIndex !== -1) {
+            rulerHoveredPartIndex = -1;
+            updateRulerHUD();
+        }
+        return;
+    }
+    rulerPartHoverEnabled = next;
+    if (next && !isPaused && rotateModeEl?.value !== 'off') {
+        togglePause();
+    }
+    if (!next) rulerHoveredPartIndex = -1;
+    updateRulerHUD();
+    if (persist) saveSettings();
+}
+
+function getRulerDisplayedDims() {
+    const canShowPartDims = rulerPartHoverEnabled
+        && isMultipartModel()
+        && rulerHoveredPartIndex >= 0
+        && rulerHoveredPartIndex < modelPartDimensions.length;
+    if (canShowPartDims) {
+        const hoveredDims = modelPartDimensions[rulerHoveredPartIndex];
+        if (hoveredDims && Number.isFinite(hoveredDims.w) && Number.isFinite(hoveredDims.d) && Number.isFinite(hoveredDims.h)) {
+            return hoveredDims;
+        }
+    }
+    return modelDims;
+}
+
+function resolveHoveredPartIndexFromIntersection(intersection) {
+    if (!intersection) return -1;
+
+    const faceMaterialIndex = intersection.face?.materialIndex;
+    if (Number.isInteger(faceMaterialIndex) && faceMaterialIndex >= 0) return faceMaterialIndex;
+
+    const geometry = intersection.object?.geometry;
+    const faceIndex = intersection.faceIndex;
+    if (!geometry || !Number.isInteger(faceIndex)) return -1;
+
+    const groups = Array.isArray(geometry.groups) ? geometry.groups : [];
+    if (!groups.length) return -1;
+
+    const triStart = faceIndex * 3;
+    for (const group of groups) {
+        const start = Math.max(0, Math.floor(Number(group.start) || 0));
+        const count = Math.max(0, Math.floor(Number(group.count) || 0));
+        if (triStart >= start && triStart < (start + count)) {
+            return Number.isInteger(group.materialIndex) ? group.materialIndex : -1;
+        }
+    }
+
+    return -1;
+}
+
+function updateRulerPartHoverFromPointerEvent(ev) {
+    if (!canvas || !camera || !mesh || !rulerEnabled || !rulerPartHoverEnabled || !isMultipartModel()) return;
+
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+        setRulerHoveredPartIndex(-1);
+        return;
+    }
+
+    const x = (ev.clientX - rect.left) / rect.width;
+    const y = (ev.clientY - rect.top) / rect.height;
+    if (x < 0 || x > 1 || y < 0 || y > 1) {
+        setRulerHoveredPartIndex(-1);
+        return;
+    }
+
+    rulerPartHoverPointerNdc.set(x * 2 - 1, -(y * 2 - 1));
+    rulerPartHoverRaycaster.setFromCamera(rulerPartHoverPointerNdc, camera);
+    const hits = rulerPartHoverRaycaster.intersectObject(mesh, false);
+    if (!hits.length) {
+        setRulerHoveredPartIndex(-1);
+        return;
+    }
+
+    const partIndex = resolveHoveredPartIndexFromIntersection(hits[0]);
+    if (!Number.isInteger(partIndex) || partIndex < 0 || partIndex >= modelPartNames.length) {
+        setRulerHoveredPartIndex(-1);
+        return;
+    }
+    if (modelPartSettings?.[partIndex]?.hidden) {
+        setRulerHoveredPartIndex(-1);
+        return;
+    }
+
+    setRulerHoveredPartIndex(partIndex);
+}
+
 function updateRulerHUD() {
     const hud = document.getElementById('rulerHUD');
     if (!hud) return;
     hud.hidden = !modelDims || !rulerEnabled;
     document.documentElement.classList.toggle('ruler-visible', !!modelDims && !!rulerEnabled);
     if (!modelDims) return;
+
+    const hoverAvailable = isMultipartModel() && modelPartDimensions.length > 1;
+    if (!hoverAvailable) rulerHoveredPartIndex = -1;
+
+    const hoverToggle = document.getElementById('rulerHoverToggle');
+    const hoverLabelEl = document.getElementById('rulerHoverLabel');
+    const hoveredPartName = (rulerHoveredPartIndex >= 0)
+        ? truncatePartNameForUi(modelPartNames[rulerHoveredPartIndex] || `Part ${rulerHoveredPartIndex + 1}`, 18)
+        : '';
+
+    if (hoverToggle) {
+        hoverToggle.hidden = !hoverAvailable;
+        const isHoverActive = hoverAvailable && rulerPartHoverEnabled;
+        hoverToggle.classList.toggle('is-active', isHoverActive);
+        hoverToggle.setAttribute('aria-pressed', isHoverActive ? 'true' : 'false');
+        hoverToggle.setAttribute('aria-label', isHoverActive ? 'Disable part hover dimensions' : 'Enable part hover dimensions');
+        hoverToggle.title = isHoverActive
+            ? (hoveredPartName ? `Part hover on (${hoveredPartName})` : 'Part hover on (move cursor over part)')
+            : 'Enable part hover dimensions';
+    }
+
+    if (hoverLabelEl) {
+        if (hoverAvailable && rulerPartHoverEnabled && hoveredPartName) hoverLabelEl.textContent = hoveredPartName;
+        else if (hoverAvailable && rulerPartHoverEnabled) hoverLabelEl.textContent = 'Hover part';
+        else hoverLabelEl.textContent = 'Part hover';
+    }
+
+    const dims = getRulerDisplayedDims() || modelDims;
     const unitEl = document.getElementById('rulerUnitVal');
     const unitToggle = document.getElementById('rulerUnitToggle');
     if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';
     const next = (rulerUnit === 'imperial') ? 'Metric' : 'Imperial';
     if (unitToggle) unitToggle.setAttribute('aria-label', `Switch to ${next.toLowerCase()} units`);
-    document.getElementById('rulerW').textContent = formatRulerValue(modelDims.w);
-    document.getElementById('rulerD').textContent = formatRulerValue(modelDims.d);
-    document.getElementById('rulerH').textContent = formatRulerValue(modelDims.h);
+    document.getElementById('rulerW').textContent = formatRulerValue(dims.w);
+    document.getElementById('rulerD').textContent = formatRulerValue(dims.d);
+    document.getElementById('rulerH').textContent = formatRulerValue(dims.h);
 }
 
 function rulerUnitSuffix() {
@@ -5657,6 +5803,7 @@ function saveSettings() {
             rulerVisible: rulerEnabled ? '1' : '0',
             rulerUnit: rulerUnit,
             rulerGridVisible: rulerLinesVisible ? '1' : '0',
+            rulerPartHover: rulerPartHoverEnabled ? '1' : '0',
             buildPlate: buildPlateEnabled ? '1' : '0',
             buildPlatePreset: activeBuildPlatePreset,
             buildPlateSyncPartIndex: String(buildPlateSyncPartIndex || 0),
@@ -6010,6 +6157,10 @@ function restoreSettings() {
         if (exportBuildPlateEl && s.exportBuildPlate == null) exportBuildPlateEl.checked = buildPlateEnabled;
         if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
+        if (s.rulerPartHover != null) {
+            rulerPartHoverEnabled = (s.rulerPartHover === '1' || s.rulerPartHover === true || s.rulerPartHover === 1);
+            if (!rulerPartHoverEnabled) rulerHoveredPartIndex = -1;
+        }
         if (s.activeBgPreset) activeBgPreset = s.activeBgPreset;
         if (s.activeModelPreset) activeModelPreset = s.activeModelPreset;
         if ((activeBgPreset === 'white' || activeBgPreset === 'black') && bgOpacitySlider) {
@@ -6174,6 +6325,7 @@ function getURLSettings(searchStr = location.search) {
         rulerVisible: g('rv'),
         rulerUnit: g('ru'),
         rulerGridVisible: g('rg'),
+        rulerPartHover: g('rh'),
         buildPlate: g('bp'),
         buildPlatePreset: g('bpr'),
         buildPlateSyncPartIndex: g('bpsp'),
@@ -6253,6 +6405,7 @@ function settingsToURL() {
     p.set('rv', rulerEnabled ? '1' : '0');
     if (rulerUnit === 'imperial') p.set('ru', 'i');
     if (!rulerLinesVisible) p.set('rg', '0');
+    if (rulerPartHoverEnabled) p.set('rh', '1');
     if (!buildPlateEnabled) p.set('bp', '0');
     p.set('bpr', activeBuildPlatePreset || 'modelcolor');
     if (buildPlateSyncPartIndex > 0) p.set('bpsp', String(buildPlateSyncPartIndex));
@@ -9532,6 +9685,18 @@ canvas?.addEventListener('contextmenu', (e) => {
     e.preventDefault();
 });
 
+canvas?.addEventListener('pointermove', (e) => {
+    updateRulerPartHoverFromPointerEvent(e);
+}, { passive: true });
+
+canvas?.addEventListener('pointerleave', () => {
+    if (rulerPartHoverEnabled) setRulerHoveredPartIndex(-1);
+});
+
+canvas?.addEventListener('pointercancel', () => {
+    if (rulerPartHoverEnabled) setRulerHoveredPartIndex(-1);
+});
+
 const exportPreviewCanvas = document.getElementById('exportPreview');
 const exportPreviewWrap = exportPreviewCanvas?.closest('.export-preview-wrap');
 const exportPreviewForwardHost = exportPreviewWrap || exportPreviewCanvas;
@@ -10885,6 +11050,48 @@ if (autoBgCheckEl) {
         const nextAutoBg = !!autoBgCheckEl.checked;
         const wasAutoBg = !!isDynamicBg;
         const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.background.shade), 10) || 0));
+
+        if (nextAutoBg && !wasAutoBg && bgOpacitySlider) {
+            const fromShade = Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(bgOpacitySlider)) || 0));
+            lastManualBgShade = fromShade;
+            isDynamicBg = false;
+            bgOpacitySlider.value = String(fromShade);
+            bgOpacitySlider.disabled = false;
+            if (bgOpacitySliderLabel) bgOpacitySliderLabel.hidden = false;
+            syncBgShadeReadout();
+            updateBgShadeSliderVisual();
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    pulseShadeRevealRow(bgOpacitySliderLabel);
+                    cancelBgShadeRevealAnimation = animateShadeSliderValue(
+                        bgOpacitySlider,
+                        fromShade,
+                        autoShade,
+                        (nextValue) => {
+                            const tone = Math.max(-100, Math.min(100, Math.round(nextValue) || 0));
+                            const baseColor = (activeBgPreset === 'modelcolor') ? getModelSyncSourceColor() : getActiveBackgroundBaseColor();
+                            if (activeBgPreset === 'modelcolor') bgPick.value = baseColor;
+                            if (renderer) renderer.setClearColor(computeSurfaceShadeColor(baseColor, tone), 1);
+                            syncBgShadeReadout();
+                            updateBgShadeSliderVisual();
+                        },
+                        () => {
+                            cancelBgShadeRevealAnimation = null;
+                            isDynamicBg = true;
+                            updateAutoBgShadeControlVisibility();
+                            updateDynamicBg();
+                            syncBgShadeReadout();
+                            updateBgShadeSliderVisual();
+                            saveSettings();
+                            updateCardResetButtonStates();
+                        }
+                    );
+                });
+            });
+            return;
+        }
+
         isDynamicBg = nextAutoBg;
 
         if (bgOpacitySlider && nextAutoBg) {
@@ -10914,7 +11121,11 @@ if (autoBgCheckEl) {
                         bgOpacitySlider,
                         autoShade,
                         targetShade,
-                        () => {
+                        (nextValue) => {
+                            const tone = Math.max(-100, Math.min(100, Math.round(nextValue) || 0));
+                            const baseColor = (activeBgPreset === 'modelcolor') ? getModelSyncSourceColor() : getActiveBackgroundBaseColor();
+                            if (activeBgPreset === 'modelcolor') bgPick.value = baseColor;
+                            if (renderer) renderer.setClearColor(computeSurfaceShadeColor(baseColor, tone), 1);
                             syncBgShadeReadout();
                             updateBgShadeSliderVisual();
                         },
@@ -10958,6 +11169,7 @@ if (rulerToggleEl) {
     rulerToggleEl.addEventListener('change', () => {
         rulerEnabled = rulerToggleEl.checked;
         rulerLinesVisible = rulerEnabled;
+        if (!rulerEnabled) setRulerHoveredPartIndex(-1);
         if (exportGridEl) exportGridEl.checked = rulerEnabled;
         updateRulerHUD();
         updateLiveRulerOverlay();
@@ -11001,6 +11213,48 @@ if (buildPlateAutoBrightnessEl) {
         const nextAuto = !!buildPlateAutoBrightnessEl.checked;
         const wasAuto = !!buildPlateAutoBrightnessEnabled;
         const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
+
+        if (nextAuto && !wasAuto && buildPlateShadeSliderEl) {
+            const fromShade = Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0));
+            lastManualBuildPlateShade = fromShade;
+            manualBuildPlateShadeBeforeAuto = fromShade;
+            buildPlateAutoBrightnessEnabled = false;
+            buildPlateShade = fromShade;
+            buildPlateShadeSliderEl.value = String(fromShade);
+            syncBuildPlateShadeReadout();
+            if (buildPlateShadeRowEl) buildPlateShadeRowEl.hidden = false;
+            buildPlateShadeSliderEl.disabled = false;
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    pulseShadeRevealRow(buildPlateShadeRowEl);
+                    cancelBuildPlateShadeRevealAnimation = animateShadeSliderValue(
+                        buildPlateShadeSliderEl,
+                        fromShade,
+                        autoShade,
+                        (nextValue) => {
+                            buildPlateShade = Math.max(-100, Math.min(100, Math.round(nextValue) || 0));
+                            syncBuildPlateShadeReadout();
+                            updateBuildPlateMaterial();
+                            refreshExportPreviewNow();
+                        },
+                        () => {
+                            cancelBuildPlateShadeRevealAnimation = null;
+                            buildPlateAutoBrightnessEnabled = true;
+                            buildPlateShade = autoShade;
+                            buildPlateShadeSliderEl.value = String(autoShade);
+                            updateBuildPlateShadeControlVisibility();
+                            updateBuildPlateMaterial();
+                            refreshExportPreviewNow();
+                            saveSettings();
+                            updateCardResetButtonStates();
+                        }
+                    );
+                });
+            });
+            return;
+        }
+
         buildPlateAutoBrightnessEnabled = nextAuto;
 
         if (buildPlateAutoBrightnessEnabled) {
@@ -11040,8 +11294,11 @@ if (buildPlateAutoBrightnessEl) {
                         buildPlateShadeSliderEl,
                         autoShade,
                         buildPlateShade,
-                        () => {
+                        (nextValue) => {
+                            buildPlateShade = Math.max(-100, Math.min(100, Math.round(nextValue) || 0));
                             syncBuildPlateShadeReadout();
+                            updateBuildPlateMaterial();
+                            refreshExportPreviewNow();
                         },
                         () => {
                             cancelBuildPlateShadeRevealAnimation = null;
@@ -11146,6 +11403,20 @@ if (rulerUnitToggleEl) {
     rulerUnitToggleEl.addEventListener('click', _toggleRulerUnit);
     rulerUnitToggleEl.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _toggleRulerUnit(); }
+    });
+}
+
+const rulerHoverToggleEl = document.getElementById('rulerHoverToggle');
+if (rulerHoverToggleEl) {
+    const _toggleRulerHover = () => {
+        setRulerPartHoverEnabled(!rulerPartHoverEnabled, true);
+    };
+    rulerHoverToggleEl.addEventListener('click', _toggleRulerHover);
+    rulerHoverToggleEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            _toggleRulerHover();
+        }
     });
 }
 

@@ -9,6 +9,7 @@
 - **Phase 1 regression automation baseline** — added a lightweight `npm run test:smoke` script to validate critical files, JSON parseability, and JS syntax for fast local regression checks
 - **Optional pre-commit smoke gate** — added setup/removal scripts to install a local git pre-commit hook that runs only fast Rotater smoke checks
 - **D-pad visibility preference** — App Settings now includes `Show D-pad controls`; turning it off hides the bottom camera D-pad and keeps Pause available at bottom-right
+- **Ruler part-hover inspect mode** — ruler HUD now includes a `Part hover` toggle; when enabled, hovering multipart geometry updates W/D/H to the hovered part dimensions
 
 ### Changed
 - **Renamed Export → Share (UI text only)** — the Export panel title and sidebar/canvas quick-action labels were updated to read `Share` to better reflect copy-link and save/share workflows.
@@ -38,11 +39,15 @@
 - **Lighting lock control** — `Lock light to camera` is now a visible toggle in Lighting Effects (instead of a forced hidden state)
 - **Sidebar export entry placement** — desktop export entry now sits beside `Upload STL` in the sidebar brand row so export starts from the primary left-panel workflow
 - **Multipart selector summary wording** — 3+ selected-part summaries now use clearer phrasing (for example `Parts 1, 2, 3 selected`) with explicit count metadata
+- **Multipart selector filename-first summary** — collapsed multipart selector now prioritizes the first selected part filename (truncated) while keeping `N of M selected` on the second line
 - **Export duration selector parity** — Export `Time` options now show duration with derived frame counts using shared GIF/MP4 timing labels
+- **Ruler hover inspection focus** — enabling `Part hover` mode now auto-pauses model rotation so hovered-part measurement is easier to read
 
 ### Fixed
 - **Color picker preview performance** — coalesced per-`input` color picker updates via `requestAnimationFrame` and streamlined preview/commit handling so dragging the OS picker remains responsive in multipart models (reduces UI lag during continuous input).
 - **Auto-brightness OFF reveal transition** — turning Background/Surface Auto brightness off now reveals the Shade row first, then animates the slider from the auto shade to the restored manual shade for clearer state feedback
+- **Auto-brightness ON/OFF animation parity** — Background and Surface auto-brightness toggles now animate both directions with smoother ease-in-out motion
+- **Auto-brightness slider motion restore** — restored the original fast slider-knob travel profile so auto-toggle transitions visibly slide the knob (not just row reveal/fade)
 - **Surface Model Sync source persistence** — fixed an issue where the selected Model Sync source color was not persisted across refreshes; now uses the correct part-color source during restore.
 - **Multipart custom/reset refresh persistence** — preserved part appearance state more reliably across multipart reset/custom flows and refresh, preventing unintended fallback visuals after restore.
 - **D-pad horizontal centering** — camera D-pad now stays centered in the preview control bar instead of shifting with ruler width
@@ -76,6 +81,7 @@
 - **Single-model actions menu alignment** — exposed 3-dot menu is now anchored and centered correctly on the single-model selector card
 - **Finish slider fill desync on hard refresh** — finish-strength slider track fill now re-syncs with the knob position on startup/restore (no user interaction required)
 - **Mobile App Settings quick action** — top-right App Settings icon now opens the settings dock reliably in mobile/tablet layouts
+- **Small-browser App Settings visibility** — App Settings quick action remains visible in narrower desktop/tablet viewport widths where it was previously hidden
 - **Right-drag pan drift** — right-button drag is now constrained to vertical movement so framing stays horizontally centered
 
 ### Security

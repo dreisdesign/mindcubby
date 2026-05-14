@@ -806,7 +806,7 @@ html.loaded .canvas-logo {
     }
 
     html.loaded .canvas-utility-icons {
-        display: none;
+        display: inline-flex;
     }
 
     html.loaded .canvas-replace-btn,
@@ -4932,6 +4932,40 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-300) 75%, transparent);
 }
 
+.ruler-part-hover-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 76px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--palette-blueberry-500) 52%, transparent);
+    background: rgba(46, 43, 116, 0.08);
+    color: var(--palette-blueberry-500);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ruler-part-hover-toggle:hover {
+    background: rgba(46, 43, 116, 0.14);
+    border-color: color-mix(in srgb, var(--palette-blueberry-500) 74%, transparent);
+}
+
+.ruler-part-hover-toggle.is-active {
+    background: var(--palette-blueberry-500);
+    border-color: var(--palette-blueberry-500);
+    color: #fff;
+}
+
+.ruler-part-hover-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-300) 75%, transparent);
+}
+
 .ruler-lines-switch[hidden] {
     display: none;
 }
@@ -5013,6 +5047,13 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
     .ruler-unit-toggle {
         min-width: 34px;
         height: 24px;
+        font-size: 9px;
+    }
+
+    .ruler-part-hover-toggle {
+        min-width: 64px;
+        height: 24px;
+        padding: 0 8px;
         font-size: 9px;
     }
 
@@ -6878,7 +6919,7 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
 
 @media (max-width: 1399px) {
     #btnAppSettingsCanvas {
-        display: none !important;
+        display: inline-flex !important;
     }
 }
 
@@ -6930,6 +6971,22 @@ html.loaded.layout-v2-desktop .ruler-val {
 html.loaded.layout-v2-desktop .ruler-unit-toggle {
     padding: 5px 12px;
     font-size: 11px;
+    background: var(--palette-blueberry-500);
+    border-color: var(--palette-blueberry-500);
+    color: #fff;
+}
+
+html.loaded.layout-v2-desktop .ruler-part-hover-toggle {
+    min-width: 94px;
+    height: 30px;
+    padding: 0 12px;
+    font-size: 11px;
+    border-color: color-mix(in srgb, var(--palette-blueberry-500) 46%, transparent);
+    background: color-mix(in srgb, var(--palette-blueberry-100) 18%, white 82%);
+    color: var(--palette-blueberry-500);
+}
+
+html.loaded.layout-v2-desktop .ruler-part-hover-toggle.is-active {
     background: var(--palette-blueberry-500);
     border-color: var(--palette-blueberry-500);
     color: #fff;

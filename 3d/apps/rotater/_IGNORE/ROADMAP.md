@@ -21,7 +21,11 @@ This roadmap is sorted by readiness (dependency order). Every project includes a
 
 ### Phase 3
 
-1. TBD
+1. Auto-brightness two-way easing polish - completed 2026-05-14: Background and Surface now animate both ON and OFF transitions with smoother easing.
+2. Multipart selector filename-first summary - completed 2026-05-14: selector title now shows the first selected part filename (truncated) while preserving `N of M selected` metadata.
+3. Small-browser App Settings access fix - completed 2026-05-14: App Settings canvas quick action remains visible on narrower desktop/tablet widths.
+4. Track 2 ruler hover inspection mode - completed 2026-05-14: ruler now includes a part-hover toggle that updates W/D/H from the currently hovered model part.
+5. Fast-follow queued: interactive Export duration dropdown refinements (label/estimate responsiveness parity across GIF/MP4).
 
 ### Track Integration Map
 
@@ -38,6 +42,7 @@ Track 2: Ruler and measurement system (feature enhancement)
 
 - Spatial context and alignment are implemented through existing roadmap items:
 	- `Ruler persistence polish`
+	- `Ruler part-hover inspect mode` (implemented)
 	- `Advanced measure mode`
 	- `Preview click-to-select model parts`
 	- `Drag / move models on plate`
@@ -65,6 +70,7 @@ Track 2: Ruler and measurement system (feature enhancement)
 | D-pad visibility preference | UX Settings | S | None | Add App Settings toggle for Show/Hide D-pad; when hidden, move Pause control to bottom-right for accessible reach. |
 | New version indicator badge | Release UX | S | None | Add a small red badge to the Info entry in App Settings when build metadata indicates a newer version is available. |
 | Export duration selector parity | Export UX | M | None | Replace static frame-count display with shared GIF/MP4 duration dropdown that shows duration and derived frame count. |
+| Interactive export duration dropdown refinements (fast-follow) | Export UX | S | Export duration selector parity | Improve dropdown interaction polish so duration labels, frame counts, and estimate rows update with tighter parity across GIF and MP4 paths. |
 | Upload decision default simplification | Upload Flow UX | M | Existing upload decision modal | Replace warning-memory behavior with explicit persisted default (`Always Add`, `Always Replace`, `Ask`) plus one-time override in modal. |
 
 ## Readiness 2: Depends on stabilization work
