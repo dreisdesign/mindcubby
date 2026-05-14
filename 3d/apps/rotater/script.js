@@ -372,6 +372,7 @@ const exportMotionRangeValEl = document.getElementById('exportMotionRangeVal');
 const autoUIAssistToggleEl = document.getElementById('autoUIAssistToggle');
 const exportCollapsedConfirmToggleEl = document.getElementById('exportCollapsedConfirmToggle');
 const resetWarningsToggleEl = document.getElementById('resetWarningsToggle');
+const btnResetEverythingEl = document.getElementById('btnResetEverything');
 const exportCollapsedConfirmOverlayEl = document.getElementById('exportCollapsedConfirmOverlay');
 const exportCollapsedConfirmSummaryEl = document.getElementById('exportCollapsedConfirmSummary');
 const exportCollapsedDontShowEl = document.getElementById('exportCollapsedDontShow');
@@ -5486,8 +5487,13 @@ async function loadFileFromIDB() {
 async function clearIDB() {
     try {
         const db = await openDB();
-        const tx = db.transaction(DB_STORE, 'readwrite');
-        tx.objectStore(DB_STORE).delete('stl');
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction(DB_STORE, 'readwrite');
+            tx.objectStore(DB_STORE).delete('stl');
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e?.target?.error || tx.error || new Error('Failed clearing IndexedDB store'));
+            tx.onabort = (e) => reject(e?.target?.error || tx.error || new Error('Aborted clearing IndexedDB store'));
+        });
     } catch (e) {
         console.warn('Could not clear IndexedDB:', e);
     }
@@ -7930,6 +7936,39 @@ function resetAllWarnings() {
     setTimeout(() => setStatus(''), 1800);
 }
 
+async function resetEverything() {
+    const ok = confirm(
+        'Reset everything?\n\nThis clears all Rotater saved settings (including lighting effects and animation), dismissed warnings, UI preferences, and stored STL/project data, then reloads the app.'
+    );
+    if (!ok) return;
+
+    suppressSave = true;
+    try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i += 1) {
+            const key = localStorage.key(i);
+            if (!key) continue;
+            if (key.startsWith('rotater') || key === SETTINGS_KEY) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach((key) => {
+            try { localStorage.removeItem(key); } catch (_) { }
+        });
+    } catch (_) { }
+
+    await clearIDB();
+
+    try {
+        history.replaceState({}, '', location.pathname + location.hash);
+    } catch (_) { }
+
+    setStatus('Everything reset. Reloading...');
+    setTimeout(() => {
+        location.reload();
+    }, 120);
+}
+
 async function triggerExportWithAssist(fmt) {
     const format = fmt || exportFormatEl?.value || exportFormatCollapsedEl?.value || 'gif';
     const isCollapsed = !!exportPanelEl?.classList.contains('is-collapsed');
@@ -9099,6 +9138,13 @@ if (resetWarningsToggleEl) {
     resetWarningsToggleEl.addEventListener('click', (e) => {
         e.preventDefault();
         resetAllWarnings();
+    });
+}
+
+if (btnResetEverythingEl) {
+    btnResetEverythingEl.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await resetEverything();
     });
 }
 

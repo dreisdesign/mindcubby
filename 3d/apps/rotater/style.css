@@ -5639,6 +5639,38 @@ html.crop-mode .crop-corner {
     background: color-mix(in srgb, var(--color-label, #666) 6%, transparent);
 }
 
+.copy-link-btn--danger {
+    color: #fff;
+    background: var(--palette-red-500);
+    border-color: color-mix(in srgb, var(--palette-red-500) 72%, #fff 28%);
+}
+
+.copy-link-btn--danger:hover {
+    background: color-mix(in srgb, var(--palette-red-500) 88%, #000 12%);
+    border-color: color-mix(in srgb, var(--palette-red-500) 70%, #000 30%);
+}
+
+.copy-link-btn--danger:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-red-500) 38%, transparent);
+}
+
+#btnResetEverything {
+    color: #fff;
+    background: var(--palette-red-500);
+    border-color: color-mix(in srgb, var(--palette-red-500) 72%, #fff 28%);
+}
+
+#btnResetEverything:hover {
+    background: color-mix(in srgb, var(--palette-red-500) 88%, #000 12%);
+    border-color: color-mix(in srgb, var(--palette-red-500) 70%, #000 30%);
+}
+
+#btnResetEverything:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-red-500) 38%, transparent);
+}
+
 .copy-link-btn--export {
     color: #fff;
     background: var(--color-export);
@@ -6148,6 +6180,12 @@ html.loaded .sidebar-tabs {
 .app-settings-reset-btn {
     width: fit-content;
     margin-top: 4px;
+}
+
+.app-settings-danger-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2px;
 }
 
 .app-settings-inline-group {

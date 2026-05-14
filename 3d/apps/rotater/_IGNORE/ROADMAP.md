@@ -5,27 +5,44 @@ Updated: 2026-05-14
 
 This roadmap is sorted by readiness (dependency order). Every project includes a project type, estimated difficulty, and required dependencies.
 
-## Integrated Configuration And Measurement System (Architecture Context)
+## Cohesive Program Plan
 
-This section preserves the merged plan where Track C is not standalone work; it is enabling infrastructure for Track A.
+### Phase 1 (current)
 
-### Track 1: Server-side storage strategy (combined A + C)
+1. Regression automation baseline (simple)
+2. Optional pre-commit smoke gate
+
+### Phase 2
+
+1. Auto-brightness toggle reveal animation
+2. Multipart selection language cleanup
+3. D-pad visibility preference
+4. Export duration selector parity
+
+### Phase 3
+
+1. TBD
+
+### Track Integration Map
+
+Track 1: Server-side storage strategy (combined A + C)
 
 - Problem: complex scene settings can exceed practical URL length limits for sharing.
-- Solution direction:
-	- Short-ID links (for example `?id=xyz123`) instead of full long query strings.
-	- External configuration locker service for full scene JSON (static-host friendly architecture).
-	- Zero-PII privacy model with passkey-style lock/unlock semantics.
-	- Local-to-cloud bridge via generated STL UIDs so local files can be rehydrated against saved scene JSON.
-	- Manual local JSON export/import fallback remains available for fully offline workflows.
+- Solution direction is implemented through existing roadmap items:
+	- `Short-link configuration locker`
+	- `Passkey-gated sync model`
+	- `Local-to-cloud STL UID rehydration`
+	- `Manual JSON fallback flow`
 
-### Track 2: Ruler and measurement system (feature enhancement)
+Track 2: Ruler and measurement system (feature enhancement)
 
-- Spatial context: toggleable real-world ruler units in the viewport.
-- Alignment and quality control: improve multipart placement/spacing workflows before save/share.
-- State persistence: ruler visibility/position/unit state is persisted and restored with scene settings.
+- Spatial context and alignment are implemented through existing roadmap items:
+	- `Ruler persistence polish`
+	- `Advanced measure mode`
+	- `Preview click-to-select model parts`
+	- `Drag / move models on plate`
 
-### Workflow legend
+### Shared workflow legend
 
 | Stage | Action | Technical detail |
 |---|---|---|
