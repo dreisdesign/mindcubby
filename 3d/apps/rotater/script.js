@@ -10477,6 +10477,8 @@ function renderModelPresets() {
         }
         const idx = Math.max(0, modelPartSelected || 0);
         const currentSettings = { ...getSelectedPartSettings() };
+        const preservedFinishMode = getFinishModeFromPartSettings(currentSettings);
+        const preservedFinishValue = finishSliderValueFromPartSettings(currentSettings);
         const customModelSettings = customModelSettingsByPart[idx] || { ...currentSettings };
 
         // Restore the part's custom profile but preserve the current finish state
@@ -10494,7 +10496,11 @@ function renderModelPresets() {
             phongReflection: currentSettings.phongReflection,
             matteRoughness: currentSettings.matteRoughness,
             matteReflection: currentSettings.matteReflection,
+            finishMode: preservedFinishMode,
+            finishValue: preservedFinishValue,
         };
+        // Keep stored finish metadata and material tuning in lockstep.
+        applyFinishModeValueToPartSettings(modelPartSettings[idx], preservedFinishMode, preservedFinishValue);
         modelPartBaseColors[idx] = modelPartSettings[idx].color || modelPartBaseColors[idx] || colorPick.value;
         activeModelPreset = 'custom';
         syncUIFromSelectedPart();

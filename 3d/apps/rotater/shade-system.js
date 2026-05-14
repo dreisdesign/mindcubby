@@ -39,7 +39,7 @@ function getColorRuleNumber(path, fallback = 0) {
 
 /**
  * Core shade computation in HSL space.
- * Preserves hue/saturation and adjusts only lightness based on shade.
+ * Adjusts lightness based on shade and applies lighter-side desaturation.
  *
  * @param {string} baseHex - Base color in #RRGGBB format
  * @param {number} shadeVal - Shade value from -100 (lighter) to +100 (darker)
@@ -62,6 +62,8 @@ export function blendShadeColor(baseHex, shadeVal, maxDeltaPercent) {
     if (shade < 0) {
         const delta = Math.max(0, Math.min(1, baseDelta * lightenScale));
         hsl.l = Math.max(0, Math.min(1, hsl.l + ((1 - hsl.l) * delta)));
+        // Lighter-side shade intentionally reduces saturation by 50%.
+        hsl.s = Math.max(0, Math.min(1, hsl.s * 0.5));
     } else {
         const delta = Math.max(0, Math.min(1, baseDelta * darkenScale));
         hsl.l = Math.max(0, Math.min(1, hsl.l * (1 - delta)));
