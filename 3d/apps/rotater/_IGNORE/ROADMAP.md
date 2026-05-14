@@ -7,17 +7,17 @@ This roadmap is sorted by readiness (dependency order). Every project includes a
 
 ## Cohesive Program Plan
 
-### Phase 1 (in progress)
+### Phase 1 (completed)
 
 1. Regression automation baseline (simple) - completed 2026-05-14: added `npm run test:smoke`
 2. Optional pre-commit smoke gate - completed 2026-05-14: added `npm run setup:precommit-smoke`
 
-### Phase 2
+### Phase 2 (completed)
 
-1. Auto-brightness toggle reveal animation
-2. Multipart selection language cleanup
-3. D-pad visibility preference
-4. Export duration selector parity
+1. Auto-brightness toggle reveal animation - completed 2026-05-14: Background and Surface shade sliders now reveal first, then animate from auto shade to the restored manual shade.
+2. Multipart selection language cleanup - completed 2026-05-14: multipart selector summary now uses clearer selected-part phrasing for 3+ selections.
+3. D-pad visibility preference - completed 2026-05-14: added App Settings toggle to show/hide D-pad controls; when hidden, Pause moves to the bottom-right overlay button.
+4. Export duration selector parity - completed 2026-05-14: GIF/MP4 now share duration dropdown labels with derived frame counts, and MP4 estimate row now includes frame count parity.
 
 ### Phase 3
 

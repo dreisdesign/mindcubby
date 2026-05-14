@@ -134,6 +134,13 @@ function getEffectiveExportFps(baseFps) {
     return Math.max(baseFps, Math.min(60, minSmoothFps));
 }
 
+function getEffectiveExportFpsForSeconds(baseFps, secondsPerRev) {
+    const secs = Math.max(1, Number(secondsPerRev) || 1);
+    const targetMaxDegreesPerFrame = 2.4;
+    const minSmoothFps = Math.ceil(360 / (targetMaxDegreesPerFrame * secs));
+    return Math.max(baseFps, Math.min(60, minSmoothFps));
+}
+
 function getSpeed() { return 60 / getSecondsPerRevolution(); }
 const TILT_RANGE_DEFAULT = 20;
 const SPIN_RANGE_DEFAULT = 360;
@@ -240,8 +247,39 @@ function exportFrames(fps = EXPORT.gif.fps) {
     return Math.max(1, Math.round(fps * secsPerRev));
 }
 
+function getRotationTimeSecondsByIndex(index) {
+    return SPEED_SECONDS_PER_REV[index] ?? SPEED_SECONDS_PER_REV[SPEED_DEFAULT];
+}
+
+function getExportFormatForDurationLabels(format = exportFormatEl?.value || 'gif') {
+    return format === 'mp4' ? 'mp4' : 'gif';
+}
+
+function getRotationFrameCountForSeconds(seconds, format = 'gif') {
+    const qualityValue = document.getElementById('exportQuality')?.value ?? 'std';
+    const preset = QUALITY_PRESETS[qualityValue] ?? QUALITY_PRESETS.std;
+    const baseFps = preset.fps;
+    const fps = getEffectiveExportFpsForSeconds(baseFps, seconds);
+    return Math.max(1, Math.round(fps * Math.max(1, Number(seconds) || 1)));
+}
+
+function formatRotationTimeOptionLabel(index, format = 'gif') {
+    const seconds = getRotationTimeSecondsByIndex(index);
+    const frames = getRotationFrameCountForSeconds(seconds, format);
+    return `${seconds} seconds (${frames} frames)`;
+}
+
+function refreshExportMotionSpeedOptionLabels(format = exportFormatEl?.value || 'gif') {
+    if (!exportMotionSpeedEl) return;
+    const normalizedFormat = getExportFormatForDurationLabels(format);
+    Array.from(exportMotionSpeedEl.options).forEach((option, idx) => {
+        option.textContent = formatRotationTimeOptionLabel(idx, normalizedFormat);
+    });
+}
+
 function updateEstimate() {
     if (!btnGif) return;
+    refreshExportMotionSpeedOptionLabels();
     const { fps: gFps } = EXPORT.gif;
     const { fps: mFps } = EXPORT.mp4;
 
@@ -252,12 +290,12 @@ function updateEstimate() {
     const gifEstEl = document.getElementById('gifEst');
     if (gifEstEl) gifEstEl.innerHTML = `${gN} frames &middot; <b class="export-info-time">${gSecs}s</b>`;
 
-    // MP4 — duration only
+    // MP4 — frames + duration
     const mN = exportFrames(mFps);
     const mSecs = (mN / mFps).toFixed(1);
     btnVideo.title = `Save MP4 video`;
     const mp4EstEl = document.getElementById('mp4Est');
-    if (mp4EstEl) mp4EstEl.innerHTML = `<b class="export-info-time">${mSecs}s</b>`;
+    if (mp4EstEl) mp4EstEl.innerHTML = `${mN} frames &middot; <b class="export-info-time">${mSecs}s</b>`;
 
     // Image — based on selected export dimensions
     const imgEstPng = document.getElementById('imgEstPng');
@@ -371,6 +409,7 @@ const exportMotionRangeLabelEl = document.getElementById('exportMotionRangeLabel
 const exportMotionRangeValEl = document.getElementById('exportMotionRangeVal');
 const autoUIAssistToggleEl = document.getElementById('autoUIAssistToggle');
 const exportCollapsedConfirmToggleEl = document.getElementById('exportCollapsedConfirmToggle');
+const showDpadToggleEl = document.getElementById('showDpadToggle');
 const resetWarningsToggleEl = document.getElementById('resetWarningsToggle');
 const btnResetEverythingEl = document.getElementById('btnResetEverything');
 const exportCollapsedConfirmOverlayEl = document.getElementById('exportCollapsedConfirmOverlay');
@@ -864,6 +903,7 @@ let autoDemoLoadScheduled = false;
 let _pausedBeforeStillExport = null;
 let buildPlateEnabled = true;
 let buildPlateColor = null;
+let lastManualBgShade = 0;
 let buildPlateShade = BUILD_PLATE_DEFAULTS.shade;
 let lastManualBuildPlateShade = BUILD_PLATE_DEFAULTS.shade;
 let manualBuildPlateShadeBeforeAuto = BUILD_PLATE_DEFAULTS.shade;
@@ -872,6 +912,7 @@ let buildPlateShape = BUILD_PLATE_DEFAULTS.shape; // rectangle | rounded | circl
 let buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
 let buildPlateWidth = BUILD_PLATE_DEFAULTS.width;
 let buildPlateDepth = BUILD_PLATE_DEFAULTS.depth;
+let dpadVisible = true;
 let exportMotionControlsEnabled = true;
 let _syncingExportMotionControls = false;
 let autoUIAssistEnabled = true;
@@ -1475,6 +1516,7 @@ function syncExportMotionControlsFromMain() {
         const mode = rotateModeEl.value || 'spin';
         if (exportMotionModeEl) exportMotionModeEl.value = mode;
         if (exportMotionSpeedEl) exportMotionSpeedEl.value = speedSlider.value;
+        refreshExportMotionSpeedOptionLabels();
 
         if (exportMotionRangeEl && exportMotionRangeValEl && exportMotionRangeLabelEl) {
             const useWobbleRange = mode === 'wobble';
@@ -1883,6 +1925,66 @@ function showModelUndoToast(message = 'Model updated') {
     modelUndoToast.setAttribute('aria-hidden', 'false');
     if (modelUndoToastTimer) window.clearTimeout(modelUndoToastTimer);
     modelUndoToastTimer = window.setTimeout(hideModelUndoToast, 5000);
+}
+
+let cancelBgShadeRevealAnimation = null;
+let cancelBuildPlateShadeRevealAnimation = null;
+
+function pulseShadeRevealRow(rowEl) {
+    if (!rowEl) return;
+    rowEl.classList.remove('shade-row-reveal');
+    // Force restart so repeated toggles replay the same reveal animation.
+    void rowEl.offsetWidth;
+    rowEl.classList.add('shade-row-reveal');
+}
+
+function animateShadeSliderValue(slider, fromValue, toValue, onStep, onDone, durationMs = 260) {
+    if (!slider) {
+        if (typeof onDone === 'function') onDone();
+        return () => {};
+    }
+
+    const from = Math.max(-100, Math.min(100, Number(fromValue) || 0));
+    const to = Math.max(-100, Math.min(100, Number(toValue) || 0));
+
+    let rafId = 0;
+    let canceled = false;
+
+    const finish = () => {
+        if (typeof onDone === 'function') onDone();
+    };
+
+    if (Math.abs(to - from) < 0.0001) {
+        slider.value = String(to);
+        if (typeof onStep === 'function') onStep(to);
+        finish();
+        return () => {};
+    }
+
+    const start = performance.now();
+    const duration = Math.max(120, Number(durationMs) || 260);
+
+    const tick = (now) => {
+        if (canceled) return;
+        const t = Math.max(0, Math.min(1, (now - start) / duration));
+        const eased = 1 - Math.pow(1 - t, 3);
+        const nextValue = from + ((to - from) * eased);
+        slider.value = String(nextValue);
+        if (typeof onStep === 'function') onStep(nextValue);
+
+        if (t < 1) {
+            rafId = requestAnimationFrame(tick);
+            return;
+        }
+        finish();
+    };
+
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+        canceled = true;
+        if (rafId) cancelAnimationFrame(rafId);
+    };
 }
 
 function updateAutoBgShadeControlVisibility() {
@@ -2981,12 +3083,14 @@ function renderModelPartSelectorSummary() {
     } else if (selectedCount <= 1) {
         titleText = `Part ${firstIndex + 1}: ${firstLabel}`;
     } else if (selectedCount === 2) {
-        titleText = `Parts ${selectedIndices[0] + 1} and ${selectedIndices[1] + 1}`;
+        titleText = `Parts ${selectedIndices[0] + 1} and ${selectedIndices[1] + 1} selected`;
     } else {
-        titleText = `Parts ${selectedIndices[0] + 1} +${selectedCount - 1} more`;
+        const listed = selectedIndices.slice(0, 3).map((idx) => idx + 1);
+        const suffix = selectedCount > 3 ? ', ...' : '';
+        titleText = `Parts ${listed.join(', ')} selected${suffix}`;
     }
 
-    const summaryText = `(${selectedCount}/${totalCount} Selected)`;
+    const summaryText = `${selectedCount} of ${totalCount} selected`;
 
     modelPartSelectorText.textContent = '';
 
@@ -5512,6 +5616,7 @@ function saveSettings() {
             color: colorPick.value,
             tone: opacitySlider ? opacitySlider.value : 0,
             bgOpacity: bgOpacitySlider ? bgOpacitySlider.value : "0",
+            bgManualShade: String(lastManualBgShade),
             bg: bgPick.value,
             shading: shadingEl.value,
             speed: speedSlider.value,
@@ -5564,6 +5669,7 @@ function saveSettings() {
             buildPlateSizePreset: buildPlateSizePreset,
             buildPlateWidth: String(buildPlateWidth),
             buildPlateDepth: String(buildPlateDepth),
+            showDpad: dpadVisible ? '1' : '0',
             exportMotionControls: exportMotionControlsEnabled ? '1' : '0',
             autoUIAssist: autoUIAssistEnabled ? '1' : '0',
             exportCollapsedConfirm: exportCollapsedConfirmEnabled ? '1' : '0',
@@ -5654,6 +5760,12 @@ function restoreSettings() {
                 const actualBgTone = Math.round(getSliderEffectiveValue(bgOpacitySlider));
                 const bgValEl = document.getElementById('bgOpacityVal');
                 if (bgValEl) bgValEl.textContent = (actualBgTone >= 0 ? '+' : '') + actualBgTone;
+            }
+            if (s.bgManualShade != null) {
+                const manualShade = parseInt(String(s.bgManualShade), 10);
+                if (Number.isFinite(manualShade)) {
+                    lastManualBgShade = Math.max(-100, Math.min(100, manualShade));
+                }
             }
             if (s.bg) bgPick.value = s.bg;
             if (s.shading) {
@@ -5879,6 +5991,9 @@ function restoreSettings() {
         if (s.exportMotionControls != null) {
             exportMotionControlsEnabled = (s.exportMotionControls === '1' || s.exportMotionControls === true || s.exportMotionControls === 1);
         }
+        if (s.showDpad != null) {
+            dpadVisible = (s.showDpad === '1' || s.showDpad === true || s.showDpad === 1);
+        }
         if (s.autoUIAssist != null) {
             autoUIAssistEnabled = (s.autoUIAssist === '1' || s.autoUIAssist === true || s.autoUIAssist === 1);
         }
@@ -5951,6 +6066,8 @@ function restoreSettings() {
         syncBuildPlateSizeUI();
         if (exportMotionControlsToggleEl) exportMotionControlsToggleEl.checked = exportMotionControlsEnabled;
         if (exportMotionControlsEl) exportMotionControlsEl.hidden = !exportMotionControlsEnabled;
+        if (showDpadToggleEl) showDpadToggleEl.checked = dpadVisible;
+        applyDpadVisibility();
         if (autoUIAssistToggleEl) autoUIAssistToggleEl.checked = autoUIAssistEnabled;
         if (exportCollapsedConfirmToggleEl) {
             exportCollapsedConfirmToggleEl.checked = exportCollapsedConfirmEnabled;
@@ -5968,6 +6085,9 @@ function restoreSettings() {
                 : String(getBgPresetDefaultTone(activeBgPreset));
             syncBgShadeReadout();
             updateBgShadeSliderVisual();
+            if (!isDynamicBg) {
+                lastManualBgShade = Math.round(getSliderEffectiveValue(bgOpacitySlider));
+            }
         }
         updateTiltRangeReset();
         wobbleSpinRangeResetBtn.classList.toggle('is-changed', parseFloat(wobbleSpinRangeSlider.value) !== WOBBLE_SPIN_RANGE_DEFAULT);
@@ -6823,6 +6943,10 @@ function updateExportPauseButtonUI() {
     btn.title = isPaused ? 'Resume rotation' : 'Pause rotation';
 }
 
+function applyDpadVisibility() {
+    document.documentElement.classList.toggle('dpad-hidden', !dpadVisible);
+}
+
 function togglePause() {
     if (rotateModeEl.value === 'off') return;
     isPaused = !isPaused;
@@ -6857,6 +6981,7 @@ function updateTiltRangeReset() {
 btnPause.addEventListener('click', togglePause);
 document.getElementById('btnExportPause')?.addEventListener('click', togglePause);
 updateExportPauseButtonUI();
+applyDpadVisibility();
 
 // Re-clicking active Spin card toggles CW/CCW; other active cards toggle pause
 document.querySelectorAll('input[name="rotateMode"]').forEach(input => {
@@ -7294,6 +7419,7 @@ if (opacitySlider) {
 if (bgOpacitySlider) {
     bgOpacitySlider.addEventListener('input', () => {
         const bgTone = Math.round(getSliderEffectiveValue(bgOpacitySlider));
+        if (!isDynamicBg) lastManualBgShade = bgTone;
         document.getElementById('bgOpacityVal').textContent = (bgTone >= 0 ? '+' : '') + bgTone;
         syncSliderTooltip(bgOpacitySlider);
         updateBgShadeSliderVisual();
@@ -7725,7 +7851,10 @@ function renderCollapsedExportSummary(fmt) {
     if (!exportCollapsedConfirmSummaryEl) return;
     const format = ({ gif: 'gif', mp4: 'mp4', png: 'png', jpg: 'jpg' })[fmt] || 'gif';
     const qualityValue = document.getElementById('exportQuality')?.value || 'std';
-    const speedValue = String(parseInt(speedSlider?.value || String(SPEED_DEFAULT), 10) || SPEED_DEFAULT);
+    const speedValue = String(Math.max(0, Math.min(
+        SPEED_SECONDS_PER_REV.length - 1,
+        parseInt(speedSlider?.value || String(SPEED_DEFAULT), 10) || SPEED_DEFAULT
+    )));
     const gridChecked = !!exportGridEl?.checked;
     const buildPlateChecked = !!(exportBuildPlateEl ? exportBuildPlateEl.checked : buildPlateEnabled);
     const bgChecked = !!exportBgColorEl?.checked;
@@ -7741,10 +7870,12 @@ function renderCollapsedExportSummary(fmt) {
         .map((key) => `<option value="${key}"${key === qualityValue ? ' selected' : ''}>${EXPORT_QUALITY_LABELS[key] || key}</option>`)
         .join('');
 
-    const speedOptions = [5, 10, 15, 20, 25, 30]
-        .map((seconds) => {
-            const value = String(seconds);
-            return `<option value="${value}"${value === speedValue ? ' selected' : ''}>${seconds}s</option>`;
+    const speedFormat = getExportFormatForDurationLabels(format);
+    const speedOptions = SPEED_SECONDS_PER_REV
+        .map((_seconds, idx) => {
+            const value = String(idx);
+            const label = formatRotationTimeOptionLabel(idx, speedFormat);
+            return `<option value="${value}"${value === speedValue ? ' selected' : ''}>${label}</option>`;
         })
         .join('');
 
@@ -8983,6 +9114,15 @@ if (exportMotionControlsToggleEl) {
     exportMotionControlsToggleEl.addEventListener('change', () => {
         exportMotionControlsEnabled = !!exportMotionControlsToggleEl.checked;
         if (exportMotionControlsEl) exportMotionControlsEl.hidden = !exportMotionControlsEnabled;
+        saveSettings();
+    });
+}
+
+if (showDpadToggleEl) {
+    showDpadToggleEl.checked = dpadVisible;
+    showDpadToggleEl.addEventListener('change', () => {
+        dpadVisible = !!showDpadToggleEl.checked;
+        applyDpadVisibility();
         saveSettings();
     });
 }
@@ -10737,13 +10877,60 @@ bgPick.addEventListener('input', (ev) => {
 const autoBgCheckEl = document.getElementById('autoBgCheck');
 if (autoBgCheckEl) {
     autoBgCheckEl.addEventListener('change', () => {
-        isDynamicBg = autoBgCheckEl.checked;
-        if (bgOpacitySlider && isDynamicBg) {
-            const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.background.shade), 10) || 0));
+        if (typeof cancelBgShadeRevealAnimation === 'function') {
+            cancelBgShadeRevealAnimation();
+            cancelBgShadeRevealAnimation = null;
+        }
+
+        const nextAutoBg = !!autoBgCheckEl.checked;
+        const wasAutoBg = !!isDynamicBg;
+        const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.background.shade), 10) || 0));
+        isDynamicBg = nextAutoBg;
+
+        if (bgOpacitySlider && nextAutoBg) {
+            lastManualBgShade = Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(bgOpacitySlider)) || 0));
             bgOpacitySlider.value = String(autoShade);
         }
+
         updateAutoBgShadeControlVisibility();
-        if (isDynamicBg) updateDynamicBg();
+
+        if (!nextAutoBg && wasAutoBg && bgOpacitySlider) {
+            const manualShade = Number(lastManualBgShade);
+            const targetShade = Number.isFinite(manualShade)
+                ? Math.max(-100, Math.min(100, Math.round(manualShade)))
+                : getBgPresetDefaultTone(activeBgPreset);
+
+            bgOpacitySlider.value = String(autoShade);
+
+            if (typeof cancelBgShadeRevealAnimation === 'function') {
+                cancelBgShadeRevealAnimation();
+                cancelBgShadeRevealAnimation = null;
+            }
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    pulseShadeRevealRow(bgOpacitySliderLabel);
+                    cancelBgShadeRevealAnimation = animateShadeSliderValue(
+                        bgOpacitySlider,
+                        autoShade,
+                        targetShade,
+                        () => {
+                            syncBgShadeReadout();
+                            updateBgShadeSliderVisual();
+                        },
+                        () => {
+                            cancelBgShadeRevealAnimation = null;
+                            bgOpacitySlider.dispatchEvent(new Event('input', { bubbles: true }));
+                            saveSettings();
+                            updateCardResetButtonStates();
+                        }
+                    );
+                });
+            });
+            return;
+        }
+
+        if (nextAutoBg) updateDynamicBg();
         else {
             // Restore base preset color when turning auto-adjust off
             if (activeBgPreset === 'modelcolor') {
@@ -10806,32 +10993,72 @@ if (buildPlateColorPickerEl) {
 
 if (buildPlateAutoBrightnessEl) {
     buildPlateAutoBrightnessEl.addEventListener('change', () => {
-        buildPlateAutoBrightnessEnabled = !!buildPlateAutoBrightnessEl.checked;
+        if (typeof cancelBuildPlateShadeRevealAnimation === 'function') {
+            cancelBuildPlateShadeRevealAnimation();
+            cancelBuildPlateShadeRevealAnimation = null;
+        }
+
+        const nextAuto = !!buildPlateAutoBrightnessEl.checked;
+        const wasAuto = !!buildPlateAutoBrightnessEnabled;
+        const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
+        buildPlateAutoBrightnessEnabled = nextAuto;
+
         if (buildPlateAutoBrightnessEnabled) {
             const manualShade = buildPlateShadeSliderEl
                 ? Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0))
                 : Math.max(-100, Math.min(100, parseInt(String(buildPlateShade), 10) || 0));
             lastManualBuildPlateShade = manualShade;
             manualBuildPlateShadeBeforeAuto = manualShade;
-            const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
             if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(autoShade);
             buildPlateShade = autoShade;
         } else {
-            const currentShade = activeBuildPlatePreset === 'modelcolor'
-                ? getComputedModelSyncTone(buildPlateSyncPartIndex)
-                : (buildPlateShadeSliderEl
-                    ? Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0))
-                    : Math.max(-100, Math.min(100, parseInt(String(buildPlateShade), 10) || 0)));
-            buildPlateShade = currentShade;
-            lastManualBuildPlateShade = buildPlateShade;
-            manualBuildPlateShadeBeforeAuto = buildPlateShade;
-            if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(buildPlateShade);
+            const rememberedShade = Number(lastManualBuildPlateShade);
+            const fallbackShade = getBuildPlatePresetDefaultTone(activeBuildPlatePreset);
+            const targetShade = Number.isFinite(rememberedShade)
+                ? Math.max(-100, Math.min(100, Math.round(rememberedShade)))
+                : fallbackShade;
+            buildPlateShade = targetShade;
+            lastManualBuildPlateShade = targetShade;
+            manualBuildPlateShadeBeforeAuto = targetShade;
         }
+
         syncBuildPlateShadeReadout();
         updateBuildPlateShadeControlVisibility();
+
+        if (!nextAuto && wasAuto && buildPlateShadeSliderEl) {
+            buildPlateShadeSliderEl.value = String(autoShade);
+
+            if (typeof cancelBuildPlateShadeRevealAnimation === 'function') {
+                cancelBuildPlateShadeRevealAnimation();
+                cancelBuildPlateShadeRevealAnimation = null;
+            }
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    pulseShadeRevealRow(buildPlateShadeRowEl);
+                    cancelBuildPlateShadeRevealAnimation = animateShadeSliderValue(
+                        buildPlateShadeSliderEl,
+                        autoShade,
+                        buildPlateShade,
+                        () => {
+                            syncBuildPlateShadeReadout();
+                        },
+                        () => {
+                            cancelBuildPlateShadeRevealAnimation = null;
+                            buildPlateShadeSliderEl.dispatchEvent(new Event('input', { bubbles: true }));
+                            saveSettings();
+                            updateCardResetButtonStates();
+                        }
+                    );
+                });
+            });
+            return;
+        }
+
         updateBuildPlateMaterial();
         refreshExportPreviewNow();
         saveSettings();
+        updateCardResetButtonStates();
     });
 }
 

@@ -8,6 +8,7 @@
 - **Multipart bulk edit MVP** — Model parts menu now includes per-row checkboxes plus a bulk action banner to apply active `Color`, `Shade`, or `Finish` values to checked parts
 - **Phase 1 regression automation baseline** — added a lightweight `npm run test:smoke` script to validate critical files, JSON parseability, and JS syntax for fast local regression checks
 - **Optional pre-commit smoke gate** — added setup/removal scripts to install a local git pre-commit hook that runs only fast Rotater smoke checks
+- **D-pad visibility preference** — App Settings now includes `Show D-pad controls`; turning it off hides the bottom camera D-pad and keeps Pause available at bottom-right
 
 ### Changed
 - **Renamed Export → Share (UI text only)** — the Export panel title and sidebar/canvas quick-action labels were updated to read `Share` to better reflect copy-link and save/share workflows.
@@ -36,9 +37,12 @@
 - **Build plate color picker parity** — Build Plate now exposes a custom color swatch button that opens the native picker with the same anchored behavior used by Custom color swatches
 - **Lighting lock control** — `Lock light to camera` is now a visible toggle in Lighting Effects (instead of a forced hidden state)
 - **Sidebar export entry placement** — desktop export entry now sits beside `Upload STL` in the sidebar brand row so export starts from the primary left-panel workflow
+- **Multipart selector summary wording** — 3+ selected-part summaries now use clearer phrasing (for example `Parts 1, 2, 3 selected`) with explicit count metadata
+- **Export duration selector parity** — Export `Time` options now show duration with derived frame counts using shared GIF/MP4 timing labels
 
 ### Fixed
 - **Color picker preview performance** — coalesced per-`input` color picker updates via `requestAnimationFrame` and streamlined preview/commit handling so dragging the OS picker remains responsive in multipart models (reduces UI lag during continuous input).
+- **Auto-brightness OFF reveal transition** — turning Background/Surface Auto brightness off now reveals the Shade row first, then animates the slider from the auto shade to the restored manual shade for clearer state feedback
 - **Surface Model Sync source persistence** — fixed an issue where the selected Model Sync source color was not persisted across refreshes; now uses the correct part-color source during restore.
 - **Multipart custom/reset refresh persistence** — preserved part appearance state more reliably across multipart reset/custom flows and refresh, preventing unintended fallback visuals after restore.
 - **D-pad horizontal centering** — camera D-pad now stays centered in the preview control bar instead of shifting with ruler width

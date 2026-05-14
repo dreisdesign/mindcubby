@@ -1074,6 +1074,14 @@ html.none-mode #btnExportPause {
     max-width: 100%;
 }
 
+html.dpad-hidden .canvas-bottom-center .cam-nav-row {
+    display: none !important;
+}
+
+html.dpad-hidden .canvas-overlay-br {
+    display: flex;
+}
+
 .cam-nav-row .ruler-hud {
     margin: 0;
     flex: 0 1 auto;
@@ -4813,6 +4821,11 @@ html.crop-mode.export-workspace-active .canvas-overlay-br {
     display: none !important;
 }
 
+html.dpad-hidden.export-workspace-active .canvas-overlay-br,
+html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
+    display: flex !important;
+}
+
 /* ── Ruler / dimensions HUD ── */
 
 .ruler-hud {
@@ -7341,6 +7354,21 @@ html.loaded.export-workspace-active .canvas-wrap {
     gap: 10px;
     flex-wrap: wrap;
     align-items: center;
+}
+
+@keyframes shade-row-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(3px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.control-label.shade-row-reveal {
+    animation: shade-row-reveal 220ms ease-out;
 }
 
 .bg-toggle-row .gif-option-check {
