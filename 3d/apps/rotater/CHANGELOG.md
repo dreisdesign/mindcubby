@@ -1,62 +1,81 @@
-# Changelog
-
-All notable changes to Rotater will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-<!-- Test file: MC3D-Fidget-Studio--3.Clicker.stl (412 triangles) -->
-<!-- v0.1.0 output: 295 KB GIF @ 72 frames, 24 fps, 720×720px -->
-<!-- v0.2.0 output: 698 KB GIF @ 144 frames, 24 fps, 720×720px -->
-
-<!-- v0.5.0 output: GIF ~4.9 MB @ 576 frames, 24 fps | MP4 ~3.6 MB @ 24s -->
-
-## [2.1.91] - 2026-05-11
-
-### Fixed
-- **Model reset now survives refresh for multipart sessions** — Clicking the Model(s) reset icon now immediately persists per-part reset state to multipart storage, preventing stale pre-reset part colors from reappearing after browser refresh.
-
-## [2.1.90] - 2026-05-11
-
-### Fixed
-- **Multipart refresh now preserves per-part model appearance** — Reloading a saved multi-part session no longer reapplies selected-part URL appearance params to every part, so individual part colors/presets remain intact after refresh.
-
-## [2.1.89] - 2026-05-11
-
-### Fixed
-- **Background model-sync now applies its manual preset default while Auto Brightness is OFF** — Switching Background from White/Black to Model Sync in manual mode now applies `presetShadeDefaults.background.modelcolor` immediately (matching Build Plate behavior and keeping slider alignment parity).
-
-## [2.1.88] - 2026-05-11
-
-### Changed
-- **Model preset defaults are now authoritative** — When a value exists in `presetShadeDefaults.model.<presetId>`, model tone uses that value even if the preset URL contains `op`.
-- **Centralized model tone control** — Quick preset tone positions can now be managed from `color-rules.json` without editing preset URL strings.
-
-## [2.1.87] - 2026-05-11
-
+## [Unreleased]
 ### Added
-- **Model preset shade defaults in `color-rules.json`** — Added `presetShadeDefaults.model` keyed by model preset id (`ceramic`, `ink`, `chrome`, `glass`, `chocolate`, `gumball`, `gold`, `custom`).
+- **Model footprint floor guides** — ruler grid now includes thin footprint lines derived from the loaded model bounds, aligned to the active ruler unit system (`mm` metric spacing or `in` imperial spacing)
+- **Export preview visible border** — the mini export preview now always has a visible border; border strengthens when background is off so the frame is clear on transparent renders
+- **Export Build Plate quick option** — Export quick options now include a dedicated `Build Plate` toggle so plate visibility can be controlled per-export without changing the main Build Plate card defaults
+- **Export workspace transparency checkerboard** — when Export `Background` is toggled off, the main export workspace viewport now shows a white/gray checkerboard behind the model to make alpha state explicit
+- **Build plate shape control** — Build Plate card now supports `Rectangle`, `Rounded`, and `Circle` footprint modes with live geometry switching
+- **Multipart bulk edit MVP** — Model parts menu now includes per-row checkboxes plus a bulk action banner to apply active `Color`, `Shade`, or `Finish` values to checked parts
 
 ### Changed
-- **Model preset tone fallback path** — When a model preset URL omits `op`, model tone now falls back to `presetShadeDefaults.model.<presetId>` instead of always defaulting to `0`.
-- **Model hover/apply parity** — Both preset hover preview and preset apply now use the same preset-id aware tone fallback logic.
-
-## [2.1.86] - 2026-05-11
+- **Renamed Export → Share (UI text only)** — the Export panel title and sidebar/canvas quick-action labels were updated to read `Share` to better reflect copy-link and save/share workflows.
+- **Ruler/build-plate export parity** — synchronize ruler and build-plate quick options with Export workspace controls so framing and plate visibility remain consistent when entering export/share mode.
+- **Background preset naming parity** — background preset naming now consistently uses `Model Sync` terminology in UI labels and related preset metadata.
+- **Shade-system auto-brightness refactor** — moved auto-brightness blend logic into a dedicated shade-system helper to keep background and surface auto paths aligned.
+- **Config-driven model preset tone defaults** — model preset default tones are now authoritative from `color-rules.json` (`presetShadeDefaults.model`) when present.
+- **Model preset tone tuning** — updated ceramic and ink model preset tone defaults for clearer visual separation in the standard lighting path.
+- **Manual crop close cleanup** — removed the in-frame top-right crop close button to avoid interfering with crop-corner dragging; export close now stays in the Export panel action row
+- **Export action row cleanup** — removed legacy in-canvas crop `Keep` and old D-pad `Close`; Export panel now provides an inline `Close` button beside `Export`
+- **Mobile top controls alignment** — mobile/narrow preview header now prioritizes Upload + Export actions, removes the filename chip from that row, and adds a compact quick-close/reset action beside Export for cleaner parity with desktop flow
+- **Info entry location** — `About Rotater` access moved to the App Settings card action row (bottom-right)
+- **Ruler HUD compact unit switch** — replaced the wider `mm / Imperial` hint-style switch with a compact unit toggle button to save bottom-bar space
+- **Surface card hierarchy + presets** — renamed the `Build Plate` card to `Surface`, kept `Grid` and `Build Plate` as peer toggles, and replaced the old plate color button with Background-style `White`, `Black`, `Model Sync`, and `Custom` thumb presets plus a matching multipart sync-source selector
+- **Watermark quick option temporarily removed** — removed the non-functional Export `Watermark` toggle and watermark compositing path for now; this will be revisited in a future iteration
+- **Export workspace consolidation (phase 1)** — Export now enters a shared framing workspace based on crop mode, using the main viewer as the active preview instead of relying on a separate duplicate preview workflow
+- **Export control zones simplified** — Export workspace `Pause` and `Close` actions now live in the bottom d-pad control bar (to the right of the d-pad), and `Close` is now an icon + text button instead of a floating top-right icon-only control
+- **Finish wording clarity** — model finish-strength slider label now reads `Surface Finish` (was `Shading`) to match Matte/Satin/Gloss behavior
+- **Upload STL modal timing** — Upload STL buttons now open the Add/Replace decision modal before opening the file picker when a model is already loaded
+- **Package action placement** — `Download Project ZIP` now lives in the Export panel, and package import is available directly from the Upload STL choice flow
+- **Model manager semantics** — per-part 3-dot menus removed `Add STL`; single-model sessions now hide the part dropdown and show an exposed 3-dot actions menu
+- **Collapsed Export review UX** — collapsed-review confirmation now uses actionable switches/dropdowns that update the live Export settings immediately
+- **Card reset affordance state** — Model, Background, Build Plate, Lighting, and Animation reset buttons are disabled until the corresponding card has changes to reset
+- **Chevron orientation consistency** — file chip, part selectors, export panel, and app settings chevrons now follow a single convention: right = collapsed, down = expanded
+- **Roadmap cleanup** — removed the obsolete background texture slider roadmap item
+- **Build plate color picker parity** — Build Plate now exposes a custom color swatch button that opens the native picker with the same anchored behavior used by Custom color swatches
+- **Lighting lock control** — `Lock light to camera` is now a visible toggle in Lighting Effects (instead of a forced hidden state)
+- **Sidebar export entry placement** — desktop export entry now sits beside `Upload STL` in the sidebar brand row so export starts from the primary left-panel workflow
 
 ### Fixed
-- **Surface auto OFF now matches Background behavior** — Turning Surface Auto Brightness OFF no longer restores the previous manual shade; it now keeps the current auto shade/color position (same behavior as Background).
+- **Color picker preview performance** — coalesced per-`input` color picker updates via `requestAnimationFrame` and streamlined preview/commit handling so dragging the OS picker remains responsive in multipart models (reduces UI lag during continuous input).
+- **Surface Model Sync source persistence** — fixed an issue where the selected Model Sync source color was not persisted across refreshes; now uses the correct part-color source during restore.
+- **Multipart custom/reset refresh persistence** — preserved part appearance state more reliably across multipart reset/custom flows and refresh, preventing unintended fallback visuals after restore.
+- **D-pad horizontal centering** — camera D-pad now stays centered in the preview control bar instead of shifting with ruler width
+- **Mobile preview order and Info access** — on narrow widths the preview now sits above the control panel, the duplicate canvas logo/header are hidden, and the Info card is reachable from the sidebar action row
+- **Desktop load card overlap** — Effects panel no longer force-renders while hidden in desktop layout, preventing Lighting/Animation cards from stacking over Theme cards during startup/tab initialization
+- **Surface auto-brightness visibility sync** — Surface `Shade` row now updates immediately on toggle and initial UI wiring so it stays hidden whenever `Auto brightness` is enabled
+- **Surface preset startup regression** — closed the Background preset renderer correctly so the Surface preset row initializes on load again; mobile Info card build/date labels now stay aligned with the shared app build constants
+- **Auto brightness slider visibility** — the Background `Shade` slider now hides when `Auto brightness` is enabled; Surface `Auto brightness` now follows the same interaction pattern
+- **Undo toast noise** — `Model updated` undo toast now appears only for batch edits instead of single-part model tweaks
+- **Export workspace preview parity** — in export framing workspace, `Background`, `Grid`, and `Build Plate` quick options now apply directly to the live export viewport and to exported output, restoring parity with prior mini-preview behavior
+- **Build plate finish control scope** — clicking Build Plate `Matte/Satin/Gloss` no longer changes model finish mode; model finish handlers are now scoped only to model finish controls
+- **Build plate shade visual mismatch** — strengthened build plate shade response so darker/lighter slider values are more accurate on the live plate surface
+- **Grid visibility with plate disabled** — grid now remains visible in the live preview when `Build Plate` is off; shadow-catcher no longer depth-occludes grid rendering
+- **MP4 export late-frame stalls** — added WebCodecs encoder queue backpressure handling plus explicit `Finalizing video…` progress stage to avoid apparent hangs near the final frames
+- **Startup transition consistency + staged fades** — both first-time and returning refresh paths now follow one startup sequence (`Splash -> Full UI shell -> Model ready`) with matched fade transitions between stages
+- **Rotation Time accuracy under load** — viewer animation now uses delta-time based updates so selected durations stay consistent when FPS dips
+- **Export workspace outside-click close** — while crop framing is active, clicking outside the crop frame now closes Export workspace; inside-frame clicks continue to orbit/pan/zoom as expected
+- **Hard-refresh splash responsiveness** — restore completion now always marks the app as loaded and dismisses splash promptly; heavy demo auto-load is deferred and skipped for returning users to reduce startup blocking
+- **Duplicate export surfaces reduced** — removed the canvas mini export card, removed the standalone crop button, and hid the duplicate export preview panel so export framing now centers on one live viewer surface
+- **Multipart row-action bulk behavior** — row-level `Hide` and `Remove` now apply to the active checked selection when multiple parts are selected, matching bulk-edit expectations
+- **Multipart checkbox visibility in multi-select mode** — on hover-capable desktop devices, row checkboxes now stay visible while multi-selection is active instead of disappearing until hover/focus
+- **Model sync thumbnail distortion** — multipart summary thumbnails now render each part into square tiles, preventing stretched part previews when background sync is enabled
+- **Model manager checkbox multi-select** — part selection checkboxes now correctly support multi-select; clicking a part button no longer clears other bulk selections
+- **Model manager checkbox state consistency** — checkbox states now remain consistent across card/grid view switches and part selection interactions
+- **Model manager checkbox visual parity** — the bulk toggle control beside `Card/Grid` now uses the same checkbox style and indeterminate behavior as row-level part checkboxes
+- **Build plate shade response curve** — build plate shade now uses a dedicated capped curve (±20% brightness envelope) so tone changes are more controlled and predictable across colors
+- **Build plate URL round-trip completeness** — URL serialization now always includes valid `bpc` and numeric `bps` values (including defaults such as `0`) to improve settings restoration consistency
+- **Mobile / narrow viewport layout** — sidebar on narrow viewports (<900px) now maintains a minimum width instead of being squeezed; below 640px switches to full-height stacked layout with expanded canvas
+- **Rotation Time hidden for still formats** — Export motion `Rotation Time` field and the motion controls block are now hidden when PNG or JPEG format is selected
+- **Right-panel card shadow clipping** — added padding to the desktop v2 effects panel so card drop-shadows are no longer cut off at the panel edges
+- **Single-model actions menu alignment** — exposed 3-dot menu is now anchored and centered correctly on the single-model selector card
+- **Finish slider fill desync on hard refresh** — finish-strength slider track fill now re-syncs with the knob position on startup/restore (no user interaction required)
+- **Mobile App Settings quick action** — top-right App Settings icon now opens the settings dock reliably in mobile/tablet layouts
+- **Right-drag pan drift** — right-button drag is now constrained to vertical movement so framing stays horizontally centered
 
-## [2.1.85] - 2026-05-11
+### Security
+- **ZIP import hardening** — package import now validates entry paths (blocks traversal), enforces file-type allowlists (`.stl` + `package.json`), and applies archive/extract size and entry-count guards before loading STL buffers
 
-### Fixed
-- **Background and Surface auto-brightness now use matching default blend strength** — `autoBrightness.buildPlate.maxBlendPercent` is now aligned to `40` (same as Background), so when both are on Auto and synced to the same source color they follow the same auto-tone response.
-- **Auto-brightness fallback parity in module math** — `shade-system.js` build plate auto fallbacks now default to `40` as well, matching background behavior when rule data is missing.
-
-## [2.1.84] - 2026-05-11
-
-### Fixed
-- **Surface auto OFF now restores from a direct pre-auto snapshot** — Added `manualBuildPlateShadeBeforeAuto` as a dedicated runtime snapshot captured exactly when Surface auto-brightness is turned ON, then used as the primary restore source when turned OFF.
-- **Manual snapshot now stays in sync across restore/manual/preset paths** — Snapshot is updated when manual shade is restored from settings, when manual slider input changes shade, and when manual-mode preset defaults are applied.
+## [2.1.2] - 2026-05-08
 - **Prevents state clobber from intermediate code paths while auto is ON** — OFF restore no longer depends solely on mutable cache values that can be overwritten by later flows.
 
 ## [2.1.83] - 2026-05-11
@@ -302,74 +321,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Build plate model sync + auto brightness** — Fixed initialization bug where restoring settings with model sync + auto brightness could produce a stale color; `getBuildPlateSyncSourceColor()` now uses `modelPartBaseColors[0]` as primary source for single-part models; `buildPlateAutoBrightnessEl.checked` is now explicitly synced on restore
 - **Export grid** — Grid now appears correctly in the export preview even when the main-view ruler is disabled; the grid helper is created on demand for export if needed
 - **Defaults: model sync + auto brightness** — Build Plate and Background now default to `Model Sync` preset with Auto Brightness enabled for new visitors
-
-## [Unreleased]
-### Added
-- **Model footprint floor guides** — ruler grid now includes thin footprint lines derived from the loaded model bounds, aligned to the active ruler unit system (`mm` metric spacing or `in` imperial spacing)
-- **Export preview visible border** — the mini export preview now always has a visible border; border strengthens when background is off so the frame is clear on transparent renders
-- **Export Build Plate quick option** — Export quick options now include a dedicated `Build Plate` toggle so plate visibility can be controlled per-export without changing the main Build Plate card defaults
-- **Export workspace transparency checkerboard** — when Export `Background` is toggled off, the main export workspace viewport now shows a white/gray checkerboard behind the model to make alpha state explicit
-- **Build plate shape control** — Build Plate card now supports `Rectangle`, `Rounded`, and `Circle` footprint modes with live geometry switching
-- **Multipart bulk edit MVP** — Model parts menu now includes per-row checkboxes plus a bulk action banner to apply active `Color`, `Shade`, or `Finish` values to checked parts
-
-### Changed
-- **Manual crop close cleanup** — removed the in-frame top-right crop close button to avoid interfering with crop-corner dragging; export close now stays in the Export panel action row
-- **Export action row cleanup** — removed legacy in-canvas crop `Keep` and old D-pad `Close`; Export panel now provides an inline `Close` button beside `Export`
-- **Mobile top controls alignment** — mobile/narrow preview header now prioritizes Upload + Export actions, removes the filename chip from that row, and adds a compact quick-close/reset action beside Export for cleaner parity with desktop flow
-- **Info entry location** — `About Rotater` access moved to the App Settings card action row (bottom-right)
-- **Ruler HUD compact unit switch** — replaced the wider `mm / Imperial` hint-style switch with a compact unit toggle button to save bottom-bar space
-- **Surface card hierarchy + presets** — renamed the `Build Plate` card to `Surface`, kept `Grid` and `Build Plate` as peer toggles, and replaced the old plate color button with Background-style `White`, `Black`, `Model Sync`, and `Custom` thumb presets plus a matching multipart sync-source selector
-- **Watermark quick option temporarily removed** — removed the non-functional Export `Watermark` toggle and watermark compositing path for now; this will be revisited in a future iteration
-- **Export workspace consolidation (phase 1)** — Export now enters a shared framing workspace based on crop mode, using the main viewer as the active preview instead of relying on a separate duplicate preview workflow
-- **Export control zones simplified** — Export workspace `Pause` and `Close` actions now live in the bottom d-pad control bar (to the right of the d-pad), and `Close` is now an icon + text button instead of a floating top-right icon-only control
-- **Finish wording clarity** — model finish-strength slider label now reads `Surface Finish` (was `Shading`) to match Matte/Satin/Gloss behavior
-- **Upload STL modal timing** — Upload STL buttons now open the Add/Replace decision modal before opening the file picker when a model is already loaded
-- **Package action placement** — `Download Project ZIP` now lives in the Export panel, and package import is available directly from the Upload STL choice flow
-- **Model manager semantics** — per-part 3-dot menus removed `Add STL`; single-model sessions now hide the part dropdown and show an exposed 3-dot actions menu
-- **Collapsed Export review UX** — collapsed-review confirmation now uses actionable switches/dropdowns that update the live Export settings immediately
-- **Card reset affordance state** — Model, Background, Build Plate, Lighting, and Animation reset buttons are disabled until the corresponding card has changes to reset
-- **Chevron orientation consistency** — file chip, part selectors, export panel, and app settings chevrons now follow a single convention: right = collapsed, down = expanded
-- **Roadmap cleanup** — removed the obsolete background texture slider roadmap item
-- **Build plate color picker parity** — Build Plate now exposes a custom color swatch button that opens the native picker with the same anchored behavior used by Custom color swatches
-- **Lighting lock control** — `Lock light to camera` is now a visible toggle in Lighting Effects (instead of a forced hidden state)
-- **Sidebar export entry placement** — desktop export entry now sits beside `Upload STL` in the sidebar brand row so export starts from the primary left-panel workflow
-
-### Fixed
-- **D-pad horizontal centering** — camera D-pad now stays centered in the preview control bar instead of shifting with ruler width
-- **Mobile preview order and Info access** — on narrow widths the preview now sits above the control panel, the duplicate canvas logo/header are hidden, and the Info card is reachable from the sidebar action row
-- **Desktop load card overlap** — Effects panel no longer force-renders while hidden in desktop layout, preventing Lighting/Animation cards from stacking over Theme cards during startup/tab initialization
-- **Surface auto-brightness visibility sync** — Surface `Shade` row now updates immediately on toggle and initial UI wiring so it stays hidden whenever `Auto brightness` is enabled
-- **Surface preset startup regression** — closed the Background preset renderer correctly so the Surface preset row initializes on load again; mobile Info card build/date labels now stay aligned with the shared app build constants
-- **Auto brightness slider visibility** — the Background `Shade` slider now hides when `Auto brightness` is enabled; Surface `Auto brightness` now follows the same interaction pattern
-- **Undo toast noise** — `Model updated` undo toast now appears only for batch edits instead of single-part model tweaks
-- **Export workspace preview parity** — in export framing workspace, `Background`, `Grid`, and `Build Plate` quick options now apply directly to the live export viewport and to exported output, restoring parity with prior mini-preview behavior
-- **Build plate finish control scope** — clicking Build Plate `Matte/Satin/Gloss` no longer changes model finish mode; model finish handlers are now scoped only to model finish controls
-- **Build plate shade visual mismatch** — strengthened build plate shade response so darker/lighter slider values are reflected more accurately on the live plate surface
-- **Grid visibility with plate disabled** — grid now remains visible in the live preview when `Build Plate` is off; shadow-catcher no longer depth-occludes grid rendering
-- **MP4 export late-frame stalls** — added WebCodecs encoder queue backpressure handling plus explicit `Finalizing video…` progress stage to avoid apparent hangs near the final frames (for example around `109/120`)
-- **Startup transition consistency + staged fades** — both first-time (incognito/new) and returning refresh paths now follow one startup sequence (`Splash -> Full UI shell -> Model ready`) with matched fade transitions between stages
-- **Rotation Time accuracy under load** — viewer animation now uses delta-time based updates (`controls.update(delta)` + time-based phase advance), so 5s/10s/etc. timing stays consistent even when FPS dips
-- **Export workspace outside-click close** — while crop framing is active, clicking outside the crop frame now closes Export workspace; inside-frame clicks continue to orbit/pan/zoom as expected
-- **Hard-refresh splash responsiveness** — restore completion now always marks the app as loaded and dismisses splash promptly; heavy demo auto-load is deferred and skipped for returning users to reduce startup blocking
-- **Duplicate export surfaces reduced** — removed the canvas mini export card, removed the standalone crop button, and hid the duplicate export preview panel so export framing now centers on one live viewer surface
-- **Multipart row-action bulk behavior** — row-level `Hide` and `Remove` now apply to the active checked selection when multiple parts are selected, matching bulk-edit expectations
-- **Multipart checkbox visibility in multi-select mode** — on hover-capable desktop devices, row checkboxes now stay visible while multi-selection is active instead of disappearing until hover/focus
-- **Model sync thumbnail distortion** — multipart summary thumbnails now render each part into square tiles, preventing stretched part previews when background sync is enabled
-- **Model manager checkbox multi-select** — part selection checkboxes now correctly support multi-select; clicking a part button no longer clears other bulk selections
-- **Model manager checkbox state consistency** — checkbox states now remain consistent across card/grid view switches and part selection interactions
-- **Model manager checkbox visual parity** — the bulk toggle control beside `Card/Grid` now uses the same checkbox style and indeterminate behavior as row-level part checkboxes
-- **Build plate shade response curve** — build plate shade now uses a dedicated capped curve (±20% brightness envelope) so tone changes are more controlled and predictable across colors
-- **Build plate URL round-trip completeness** — URL serialization now always includes valid `bpc` and numeric `bps` values (including defaults such as `0`) to improve settings restoration consistency
-- **Mobile / narrow viewport layout** — sidebar on narrow viewports (<900px) now maintains a minimum width instead of being squeezed; below 640px switches to full-height stacked layout with expanded canvas
-- **Rotation Time hidden for still formats** — Export motion `Rotation Time` field and the motion controls block are now hidden when PNG or JPEG format is selected
-- **Right-panel card shadow clipping** — added padding to the desktop v2 effects panel so card drop-shadows are no longer cut off at the panel edges
-- **Single-model actions menu alignment** — exposed 3-dot menu is now anchored and centered correctly on the single-model selector card
-- **Finish slider fill desync on hard refresh** — finish-strength slider track fill now re-syncs with the knob position on startup/restore (no user interaction required)
-- **Mobile App Settings quick action** — top-right App Settings icon now opens the settings dock reliably in mobile/tablet layouts
-- **Right-drag pan drift** — right-button drag is now constrained to vertical movement so framing stays horizontally centered
-
-### Security
-- **ZIP import hardening** — package import now validates entry paths (blocks traversal), enforces file-type allowlists (`.stl` + `package.json`), and applies archive/extract size and entry-count guards before loading STL buffers
 
 ## [2.1.2] - 2026-05-08
 

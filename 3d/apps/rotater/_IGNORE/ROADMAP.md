@@ -1,158 +1,99 @@
 # Rotater Roadmap
 ---
 
-Updated: 2026-05-11
+Updated: 2026-05-14
 
-Arrows to switch the active selected model 
+This roadmap is sorted by readiness (dependency order). Every project includes a project type, estimated difficulty, and required dependencies.
 
+## Integrated Configuration And Measurement System (Architecture Context)
 
-Updated: 2026-05-11
+This section preserves the merged plan where Track C is not standalone work; it is enabling infrastructure for Track A.
 
+### Track 1: Server-side storage strategy (combined A + C)
 
-## Language
-(Needs some thought) When 3+ parts are selected - update the wording in the dropdown from "Parts 1 +2 more" "(3/3 Selected) to "Parts 1, 2, 3" - or something better. "Part 1 
+- Problem: complex scene settings can exceed practical URL length limits for sharing.
+- Solution direction:
+	- Short-ID links (for example `?id=xyz123`) instead of full long query strings.
+	- External configuration locker service for full scene JSON (static-host friendly architecture).
+	- Zero-PII privacy model with passkey-style lock/unlock semantics.
+	- Local-to-cloud bridge via generated STL UIDs so local files can be rehydrated against saved scene JSON.
+	- Manual local JSON export/import fallback remains available for fully offline workflows.
 
----
+### Track 2: Ruler and measurement system (feature enhancement)
 
-## D-Pad
-- New setting for App Settings: Show/Hide D-Pad
-- When D-Pad  hidden: Position the Pause button to the bottom right. 
+- Spatial context: toggleable real-world ruler units in the viewport.
+- Alignment and quality control: improve multipart placement/spacing workflows before save/share.
+- State persistence: ruler visibility/position/unit state is persisted and restored with scene settings.
 
----
+### Workflow legend
 
-## New feature: "New version indicator" - in the app settings card: a little red badge on the Info Icon.
+| Stage | Action | Technical detail |
+|---|---|---|
+| Setup | Upload local STLs | App generates UIDs for file matching. |
+| Design | Adjust settings and use ruler | Changes are tracked in scene JSON state. |
+| Save | Enter passkey and sync | Full JSON is stored in locker service; short ID is returned. |
+| Share | Distribute short URL | Link stays clean and below URL length limits. |
+| Load | Open link and re-upload local files | App fetches scene JSON and rehydrates by UID match. |
 
----
+## Readiness 1: Ready Now (no blockers)
 
-## Make surface finish slider only available when Fine tuning for precise control is turned on in settings
+| Project | Project Type | Estimated Difficulty | Dependencies | Scope |
+|---|---|---|---|---|
+| Regression automation baseline (simple) | QA / Tooling | M | None | Create lightweight automated smoke tests (unit + integration) for highest-risk regressions from changelog history, keeping runtime short so maintenance stays low. |
+| Optional pre-commit smoke gate | Dev Workflow | S | Regression automation baseline (simple) | Add an optional git pre-commit hook that runs only fast checks (smoke tests + lint) so automation helps without creating heavy workflow friction. |
+| Model list sorting controls | Model Manager UX | S | None | Add model list sorting options with explicit choices: A-Z (ascending) and Z-A (descending). Keep A-Z as the default baseline order. |
+| Auto-brightness toggle reveal animation | Microinteraction UX | S | None | When Auto Brightness is toggled OFF, reveal the shade slider first, then animate the knob from auto position (for example -100) toward neutral center so the state change is visible. |
+| Multipart selection language cleanup | UX Copy | S | None | Replace compressed multi-select wording with clearer selected-part wording for 3+ selections (for example `Parts 1, 2, 3 selected`). |
+| Active part arrow navigation | Interaction Design | S | None | Add next/previous arrows to switch active selected model part directly from the selector UI. |
+| D-pad visibility preference | UX Settings | S | None | Add App Settings toggle for Show/Hide D-pad; when hidden, move Pause control to bottom-right for accessible reach. |
+| New version indicator badge | Release UX | S | None | Add a small red badge to the Info entry in App Settings when build metadata indicates a newer version is available. |
+| Export duration selector parity | Export UX | M | None | Replace static frame-count display with shared GIF/MP4 duration dropdown that shows duration and derived frame count. |
+| Upload decision default simplification | Upload Flow UX | M | Existing upload decision modal | Replace warning-memory behavior with explicit persisted default (`Always Add`, `Always Replace`, `Ask`) plus one-time override in modal. |
 
----
-## Refactor for Industry Standards
-Most modern development practices (using frameworks like React, Vue, or Svelte) favor Modularization.
-Metric	Assessment
-0–300 lines	Ideal; highly readable and focused.
-300–600 lines	Acceptable for complex components.
-600–1,000 lines	Warning; consider breaking into smaller modules.
-1,000+ lines	High technical debt; refactoring is recommended.
-Recommendation
-Break the file down into smaller, reusable modules using ES Modules (import/export). Group logic by functionality, such as utility functions, API calls, and UI components.
+## Readiness 2: Depends on stabilization work
 
+| Project | Project Type | Estimated Difficulty | Dependencies | Scope |
+|---|---|---|---|---|
+| Multipart persistence hardening | State Persistence | M | Regression automation baseline (simple) | Close remaining refresh/restore edge cases for multipart appearance, checkbox state, and URL/local storage parity. |
+| Preview click-to-select model parts | Interaction Design | M | Multipart persistence hardening | Allow clicking visible model geometry in the preview to set the active part/model target, with robust hidden-part filtering and selector sync. |
+| JavaScript module refactor (sortable naming) | Code Architecture | L | Regression automation baseline (simple) | Split script logic into JS modules, adopt sortable file naming, and migrate incrementally behind stable import boundaries. |
+| Functions index + Copilot docs map | AI-assisted Dev Workflow | M | JavaScript module refactor (sortable naming) | Create a maintained functions index and Copilot instruction references that point to project docs so AI-assisted edits can resolve context faster. |
+| Export workspace consolidation finish pass | Rendering UX | M | Multipart persistence hardening | Complete one-surface export framing cleanup and remove remaining duplicate or legacy interaction paths. |
+| Ruler persistence polish | Workspace Tools | M | Multipart persistence hardening | Ensure ruler visibility, unit mode, and placement state round-trip reliably in saved state and shared links. |
 
----
+## Readiness 3: Requires core architecture pieces
 
-Create an automation for testing. NPM?
-Plan: review all changelogs / bug fixes to collect and identify common bugs and regressions. 
-Solution: create an automated test to run and catch them.
+| Project | Project Type | Estimated Difficulty | Dependencies | Scope |
+|---|---|---|---|---|
+| Advanced measure mode | Geometry Tools | L | Ruler persistence polish, Preview click-to-select model parts | Add two-point mesh measurement via raycast + ruler units with robust hidden-part and transparent-material filtering. |
+| Settings-only undo stack | Interaction System | L | Multipart persistence hardening | Implement Cmd/Ctrl+Z for settings mutations only, isolated from file operations (load/append/replace). |
+| Drag / move models on plate | Geometry Interaction | XL | Preview click-to-select model parts, Settings-only undo stack, Multipart persistence hardening | Add direct model dragging/placement on the build plate with floor constraints, transform persistence, and predictable multi-model interaction rules. |
+| Pinnable cards | UI Architecture | L | Settings-only undo stack | Pin/unpin cards to a quick-access rail with persistent state, keyboard support, and overflow handling. |
 
+## Readiness 4: Cross-system initiatives
 
+| Project | Project Type | Estimated Difficulty | Dependencies | Scope |
+|---|---|---|---|---|
+| Full-screen model manager | Product Feature | L | Multipart persistence hardening | Build a dedicated model manager with larger thumbnails, rename, reorder, replace, remove, and visibility workflows. |
+| Short-link configuration locker | Cloud Infrastructure | XL | Backend service decision | Use short IDs in URLs and store full scene JSON in an external service suitable for static hosting workflows. |
+| Passkey-gated sync model | Privacy/Security | XL | Short-link configuration locker | Enable account-less passkey-gated lock/unlock semantics with zero-PII storage patterns. |
+| Local-to-cloud STL UID rehydration | Data Mapping | XL | Short-link configuration locker, passkey-gated sync model | Match local STL uploads to server-stored scene JSON using generated UIDs when opening shared links. |
+| Manual JSON fallback flow | Reliability | M | Short-link configuration locker | Keep fully offline export/import JSON flow available as a no-server fallback path. |
 
+## Readiness 5: Optional backlog
 
----
+| Project | Project Type | Estimated Difficulty | Dependencies | Scope |
+|---|---|---|---|---|
+| Optional filename label in exports | Export UX | S | Export workspace consolidation finish pass | Add optional filename burn-in overlay for exported media. |
+| Watermark redesign and reintroduction | Branding / Export | M | Export workspace consolidation finish pass | Revisit watermark only after validating consistent behavior across GIF/MP4/PNG/JPEG pipelines. |
+| Single-click canvas full-screen | Viewer UX | S | Export workspace consolidation finish pass | Add instant full-screen viewer mode with reliable mobile and desktop behavior. |
+| Batch export presets | Export Workflow | M | Regression automation baseline (simple) | Save and reapply repeatable export settings for listing-generation workflows. |
+| Preset gallery with save-as | Preset Management | M | Full-screen model manager | Add named preset library and save-as flow for reusable model looks. |
 
-Updated: 2026-05-07
+## Status Notes
 
-This file is intentionally split into two buckets:
-- Up Next: concrete tasks we should execute soon.
-- Idea Stage: valid ideas that are not scheduled yet.
-
----
-
-## Current State Snapshot
-
-- Multi-part bulk edit is moving to a live-edit model: select parts, then any color/shade/finish changes apply to all selected parts in real time.
-- Light lock behavior is now user-controllable via a visible toggle (lock light to camera on/off).
-- Import package is available in Upload flow, and package export naming now uses Project ZIP wording.
-- Export workspace close behavior and crop outside-click interactions are stabilized.
-- Rotation timing now uses elapsed-time updates so selected duration matches real time more closely under load.
-- Startup splash/restore responsiveness has been improved for hard-refresh and returning-session flows.
-
----
-
-## Up Next (Execution Queue)
-
-1. Export duration dropdown (GIF + MP4)
-- Replace the current static frame-count text area (for example "300 frames") with a duration dropdown that shows both duration and derived frame count in each option.
-- Keep GIF and MP4 behavior aligned so both formats use the same duration options and frame math presentation.
-- Example option format: "10.0s · 300 frames".
-- Persist the selected duration and keep estimate labels in sync when FPS or format changes.
-
-2. Batch 1: Export/crop consolidation (ship next)
-- Reuse crop mode as the export workspace instead of maintaining separate main-view, mini-export, and export-overlay preview surfaces.
-- Add a new Export entry beside Upload STL in the left panel.
-- Remove the mini export card from the canvas UI.
-- Remove the standalone crop button from the main viewer.
-- Keep exactly one live preview and move export controls beside it.
-- Apply the full-screen dark/blur treatment during export mode and keep the D-pad available.
-- Standardize shared export button and icon sizing during this pass.
-- Keep preview/export framing unified to prevent squish/skew regressions.
-
-3. Batch 2: Persistence + multipart hardening
-- Keep multipart checkboxes visible when bulk selection is active.
-- Make 3-dot part actions apply to the current bulk-selected set when appropriate.
-- Normalize build-plate shade behavior to match the midpoint-based shade model used elsewhere.
-- Fix URL persistence gaps for model shade, build-plate color, and build-plate shade.
-- Run regression checks for refresh persistence, export mode transitions, and mobile layout.
-
-4. Upload decision UX simplification
-- Replace current warning-style memory flow with explicit segmented default: Always Add / Always Replace / Ask.
-- Keep one-click override in modal so users can bypass default per upload.
-
----
-
-## Idea Stage (Not Scheduled Yet)
-
-### Model Manager (larger scope)
-- Full-screen model manager modal: larger thumbnails, rename, reorder (drag), replace, remove, and visibility in one workspace.
-
-### Export Workspace Cleanup (resolved by consolidation)
-- Mini export icon polish, duplicate preview sizing, overlay-only crop affordances, and two-preview performance tuning are intentionally not being pursued as standalone fixes.
-- Those issues are superseded by the export/crop merge because the affected UI surfaces will be removed.
-
-### Pinnable Cards (planned)
-- Goal: any card (for example Build Plate) can be pinned into a quick-access tab rail for focus workflows.
-- UX: pin/unpin per card from card header menu; pinned cards appear as tabs that jump focus and open the relevant section.
-- Behavior rules:
-	- Pinned cards preserve their expanded/collapsed state.
-	- Pins are layout-aware: desktop rail + mobile accordion-compatible fallback.
-	- Maximum visible pinned tabs with overflow menu when exceeded.
-- Delivery plan:
-	- Phase 1: data model + persistent pin state + basic tab rail navigation.
-	- Phase 2: focus mode transitions and keyboard shortcuts.
-	- Phase 3: drag reorder of pinned tabs + overflow polish.
-
-### Measurement
-- Advanced measure mode: click two mesh points and display live distance labels using raycast + ruler units.
-
-### Undo
-- Settings-only undo stack (Cmd/Ctrl+Z) separated from model file load/append/replace actions.
-
-### Optional Product Ideas
-- Optional filename label burned into export output.
-- Revisit export watermark feature (deferred): redesign and re-implement only after behavior is validated across GIF/MP4/PNG/JPEG.
-- Single-click full-screen canvas expand.
-- Batch export presets for repeated listing generation.
-- Preset gallery with save-as modal.
-
----
-
-## Dependency Notes
-
-- Full-screen manager should include thumbnail virtualization before enabling very large multipart sessions.
-- Advanced measure mode depends on robust raycast hit filtering so hidden parts and transparent materials do not produce incorrect picks.
-- Undo should be scoped to settings first to avoid file mutation complexity in early versions.
-
----
-Imported from next.md
-
-Modal Manager: List view /  thumbnail grid view / current card view.
-
-Pinnable cards plan:
-- Pin button on card header menus.
-- Pinned cards become quick tabs for focus switching.
-- Persist pin order/state and support overflow handling.
-
-Animation shold have the same title treatment as Lighting Effects etc.
-
-Idea: HOld down command to enter a select mode to select model by clicking on it. This was previously implemented but removed because it was obtrusive. By requiring command it will work without being an issue.
-
- ![Persistent Add Model button takes upa a lot of space... hmm](image-1.png)
+| Item | Status |
+|---|---|
+| Legacy standalone "Export Workspace Cleanup" item | Folded into Export workspace consolidation finish pass (not tracked separately). |
+| Prior mixed "report + queue" layout | Replaced by dependency-ordered project planning layout. |
+| Testing scripts + pre-commit request | Consolidated into one testing baseline project plus an optional pre-commit gate to avoid duplicate roadmap items. |
