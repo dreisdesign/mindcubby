@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "bump:build": "node scripts/bump-build.mjs"
+    "bump:build": "node scripts/bump-build.mjs",
+    "test:smoke": "node scripts/test-smoke.mjs",
+    "setup:precommit-smoke": "node scripts/setup-precommit-smoke.mjs",
+    "remove:precommit-smoke": "node scripts/setup-precommit-smoke.mjs --remove"
   }
 }

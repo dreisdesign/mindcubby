@@ -6,6 +6,8 @@
 - **Export workspace transparency checkerboard** — when Export `Background` is toggled off, the main export workspace viewport now shows a white/gray checkerboard behind the model to make alpha state explicit
 - **Build plate shape control** — Build Plate card now supports `Rectangle`, `Rounded`, and `Circle` footprint modes with live geometry switching
 - **Multipart bulk edit MVP** — Model parts menu now includes per-row checkboxes plus a bulk action banner to apply active `Color`, `Shade`, or `Finish` values to checked parts
+- **Phase 1 regression automation baseline** — added a lightweight `npm run test:smoke` script to validate critical files, JSON parseability, and JS syntax for fast local regression checks
+- **Optional pre-commit smoke gate** — added setup/removal scripts to install a local git pre-commit hook that runs only fast Rotater smoke checks
 
 ### Changed
 - **Renamed Export → Share (UI text only)** — the Export panel title and sidebar/canvas quick-action labels were updated to read `Share` to better reflect copy-link and save/share workflows.

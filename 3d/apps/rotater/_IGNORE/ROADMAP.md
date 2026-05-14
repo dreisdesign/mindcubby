@@ -7,10 +7,10 @@ This roadmap is sorted by readiness (dependency order). Every project includes a
 
 ## Cohesive Program Plan
 
-### Phase 1 (current)
+### Phase 1 (in progress)
 
-1. Regression automation baseline (simple)
-2. Optional pre-commit smoke gate
+1. Regression automation baseline (simple) - completed 2026-05-14: added `npm run test:smoke`
+2. Optional pre-commit smoke gate - completed 2026-05-14: added `npm run setup:precommit-smoke`
 
 ### Phase 2
 
@@ -114,3 +114,9 @@ Track 2: Ruler and measurement system (feature enhancement)
 | Legacy standalone "Export Workspace Cleanup" item | Folded into Export workspace consolidation finish pass (not tracked separately). |
 | Prior mixed "report + queue" layout | Replaced by dependency-ordered project planning layout. |
 | Testing scripts + pre-commit request | Consolidated into one testing baseline project plus an optional pre-commit gate to avoid duplicate roadmap items. |
+
+## Execution Notes
+
+- Run smoke checks: `npm run test:smoke`
+- Install optional pre-commit smoke hook: `npm run setup:precommit-smoke`
+- Remove optional pre-commit smoke hook: `npm run remove:precommit-smoke`
