@@ -546,6 +546,7 @@ let partThumbScratchCanvas = null;
 let partThumbScratchCtx = null;
 let multipartPartBounds = null;
 let modelPartDimensions = [];
+let modelPartBoundsBoxes = [];
 let pendingUrlModelAppearanceOverride = null;
 let pendingReplacePartIndex = -1;
 let currentModelBuffer = null;
@@ -887,6 +888,9 @@ let spinDir = 1; // 1 = clockwise, -1 = counter-clockwise
 const renderDeltaClock = new THREE.Clock();
 const rulerPartHoverRaycaster = new THREE.Raycaster();
 const rulerPartHoverPointerNdc = new THREE.Vector2();
+const rulerHoveredPartBoxSizeTmp = new THREE.Vector3();
+const rulerHoveredPartBoxCenterTmp = new THREE.Vector3();
+let rulerHoveredPartBoxWire = null;
 let modelDims = null;  // { w, d, h } in mm (STL units: x=width, y=depth, z=height)
 let exportCamDist = null; // stored export camera distance (fit-to-frame, independent of viewport zoom)
 let exportCamElev = 0;   // stored export camera elevation (radians)
@@ -1942,14 +1946,6 @@ function showModelUndoToast(message = 'Model updated') {
 
 let cancelBgShadeRevealAnimation = null;
 let cancelBuildPlateShadeRevealAnimation = null;
-
-function pulseShadeRevealRow(rowEl) {
-    if (!rowEl) return;
-    rowEl.classList.remove('shade-row-reveal');
-    // Force restart so repeated toggles replay the same reveal animation.
-    void rowEl.offsetWidth;
-    rowEl.classList.add('shade-row-reveal');
-}
 
 function animateShadeSliderValue(slider, fromValue, toValue, onStep, onDone, durationMs = 260) {
     if (!slider) {
@@ -3043,6 +3039,7 @@ function renderModelPartThumbnails() {
             opt.classList.toggle('is-selected', idx === modelPartSelected);
         });
     }
+    syncRulerHoverSelectorState();
     if (bgModelSyncSelectorMenu && activeBgPreset === 'modelcolor') {
         bgModelSyncSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
             const idx = parseInt(opt.dataset.partIndex, 10);
@@ -3478,6 +3475,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             modelPartAddNextBtn.disabled = true;
             modelPartAddNextBtn.title = '';
         }
+        syncRulerHoverSelectorState();
         return;
     }
 
@@ -3796,6 +3794,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     syncModelPartBulkUIState();
     syncBgModelSyncSourceUI();
     syncBuildPlateModelSyncSourceUI();
+    syncRulerHoverSelectorState();
     queueModelPartThumbsRender();
 }
 
@@ -3955,6 +3954,7 @@ function loadPreparedGeometry(geo, name) {
     if (mesh && camera) savedCamPos = camera.position.clone();
 
     if (mesh) {
+        disposeRulerHoveredPartVisual();
         scene.remove(mesh);
         mesh.geometry.dispose();
         disposeMaterials(mesh.material);
@@ -3966,6 +3966,9 @@ function loadPreparedGeometry(geo, name) {
     modelDims = { w: sz.x, d: sz.y, h: sz.z };
     if (!isMultipartModel() || modelPartDimensions.length !== modelPartNames.length) {
         modelPartDimensions = [{ ...modelDims }];
+    }
+    if (!isMultipartModel() || modelPartBoundsBoxes.length !== modelPartNames.length) {
+        modelPartBoundsBoxes = geo.boundingBox ? [geo.boundingBox.clone()] : [];
     }
     setRulerHoveredPartIndex(-1);
 
@@ -4078,6 +4081,7 @@ function loadSTLBuffer(buffer, name) {
     pendingBulkSelectedPartIndices = null;
     multipartPartBounds = null;
     modelPartDimensions = [];
+    modelPartBoundsBoxes = [];
     currentModelBuffer = buffer;
     modelPartSelected = 0;
     bulkSelectedPartIndices.clear();
@@ -4126,6 +4130,7 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
     const center = unionBox.getCenter(new THREE.Vector3());
     const computedPartBounds = [];
     const computedPartDimensions = [];
+    const computedPartBoxes = [];
     for (const geo of parsed) {
         geo.translate(-center.x, -center.y, -center.z);
         geo.computeBoundingBox();
@@ -4138,14 +4143,17 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
                 radius: Math.max(size.length() * 0.5, 0.001),
             });
             computedPartDimensions.push({ w: size.x, d: size.y, h: size.z });
+            computedPartBoxes.push(box.clone());
         } else {
             computedPartBounds.push({ center: new THREE.Vector3(0, 0, 0), radius: Math.max(0.001, modelRadius || 1) });
             computedPartDimensions.push({ w: 0, d: 0, h: 0 });
+            computedPartBoxes.push(new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0)));
         }
         geo.computeVertexNormals();
     }
     multipartPartBounds = computedPartBounds;
     modelPartDimensions = computedPartDimensions;
+    modelPartBoundsBoxes = computedPartBoxes;
     setRulerHoveredPartIndex(-1);
 
     const merged = BufferGeometryUtils.mergeGeometries(parsed, true);
@@ -4844,10 +4852,86 @@ function clearExportFrame() {
 }
 
 // ── Ruler / dimensions HUD ────────────────────────────────────────────────────
+function disposeRulerHoveredPartVisual() {
+    if (!rulerHoveredPartBoxWire) return;
+    if (rulerHoveredPartBoxWire.parent) rulerHoveredPartBoxWire.parent.remove(rulerHoveredPartBoxWire);
+    if (rulerHoveredPartBoxWire.geometry?.dispose) rulerHoveredPartBoxWire.geometry.dispose();
+    const mat = rulerHoveredPartBoxWire.material;
+    if (Array.isArray(mat)) mat.forEach((entry) => entry?.dispose?.());
+    else mat?.dispose?.();
+    rulerHoveredPartBoxWire = null;
+}
+
+function ensureRulerHoveredPartVisual() {
+    if (!mesh) return null;
+    if (rulerHoveredPartBoxWire && rulerHoveredPartBoxWire.parent !== mesh) {
+        disposeRulerHoveredPartVisual();
+    }
+    if (!rulerHoveredPartBoxWire) {
+        const boxEdges = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1));
+        const boxMat = new THREE.LineBasicMaterial({
+            color: PALETTE.preset.modelShadeFallback || '#2e2b74',
+            transparent: true,
+            opacity: 0.92,
+            depthTest: false,
+            depthWrite: false,
+        });
+        rulerHoveredPartBoxWire = new THREE.LineSegments(boxEdges, boxMat);
+        rulerHoveredPartBoxWire.name = 'rulerHoveredPartBoxWire';
+        rulerHoveredPartBoxWire.visible = false;
+        rulerHoveredPartBoxWire.renderOrder = 40;
+        rulerHoveredPartBoxWire.frustumCulled = false;
+        mesh.add(rulerHoveredPartBoxWire);
+    }
+    return rulerHoveredPartBoxWire;
+}
+
+function syncRulerHoverSelectorState() {
+    const activeHoverIndex = (rulerPartHoverEnabled && rulerHoveredPartIndex >= 0) ? rulerHoveredPartIndex : -1;
+    if (modelPartSelectorBtn) modelPartSelectorBtn.classList.toggle('is-ruler-hovering', activeHoverIndex >= 0);
+    if (!modelPartSelectorMenu) return;
+    modelPartSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
+        const idx = parseInt(opt.dataset.partIndex, 10);
+        opt.classList.toggle('is-ruler-hovered', idx === activeHoverIndex);
+    });
+}
+
+function updateRulerHoveredPartVisual() {
+    const canShowHoverBox = !!(
+        mesh
+        && rulerPartHoverEnabled
+        && isMultipartModel()
+        && rulerHoveredPartIndex >= 0
+        && rulerHoveredPartIndex < modelPartBoundsBoxes.length
+        && modelPartBoundsBoxes[rulerHoveredPartIndex]
+    );
+
+    if (!canShowHoverBox) {
+        if (rulerHoveredPartBoxWire) rulerHoveredPartBoxWire.visible = false;
+        return;
+    }
+
+    const hoverBox = ensureRulerHoveredPartVisual();
+    if (!hoverBox) return;
+
+    const box = modelPartBoundsBoxes[rulerHoveredPartIndex];
+    const size = box.getSize(rulerHoveredPartBoxSizeTmp);
+    const center = box.getCenter(rulerHoveredPartBoxCenterTmp);
+    hoverBox.position.copy(center);
+    hoverBox.scale.set(
+        Math.max(0.001, size.x),
+        Math.max(0.001, size.y),
+        Math.max(0.001, size.z)
+    );
+    hoverBox.visible = true;
+}
+
 function setRulerHoveredPartIndex(partIndex) {
     const normalized = (Number.isInteger(partIndex) && partIndex >= 0) ? partIndex : -1;
     if (rulerHoveredPartIndex === normalized) return;
     rulerHoveredPartIndex = normalized;
+    updateRulerHoveredPartVisual();
+    syncRulerHoverSelectorState();
     if (rulerPartHoverEnabled) updateRulerHUD();
 }
 
@@ -4865,6 +4949,8 @@ function setRulerPartHoverEnabled(enabled, persist = true) {
         togglePause();
     }
     if (!next) rulerHoveredPartIndex = -1;
+    updateRulerHoveredPartVisual();
+    syncRulerHoverSelectorState();
     updateRulerHUD();
     if (persist) saveSettings();
 }
@@ -11063,7 +11149,6 @@ if (autoBgCheckEl) {
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    pulseShadeRevealRow(bgOpacitySliderLabel);
                     cancelBgShadeRevealAnimation = animateShadeSliderValue(
                         bgOpacitySlider,
                         fromShade,
@@ -11116,7 +11201,6 @@ if (autoBgCheckEl) {
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    pulseShadeRevealRow(bgOpacitySliderLabel);
                     cancelBgShadeRevealAnimation = animateShadeSliderValue(
                         bgOpacitySlider,
                         autoShade,
@@ -11227,7 +11311,6 @@ if (buildPlateAutoBrightnessEl) {
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    pulseShadeRevealRow(buildPlateShadeRowEl);
                     cancelBuildPlateShadeRevealAnimation = animateShadeSliderValue(
                         buildPlateShadeSliderEl,
                         fromShade,
@@ -11289,7 +11372,6 @@ if (buildPlateAutoBrightnessEl) {
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    pulseShadeRevealRow(buildPlateShadeRowEl);
                     cancelBuildPlateShadeRevealAnimation = animateShadeSliderValue(
                         buildPlateShadeSliderEl,
                         autoShade,

@@ -1307,6 +1307,11 @@ html.loaded .controls-bar.hidden {
     border-color: var(--palette-blueberry-500);
 }
 
+.thumb-select-btn.is-ruler-hovering {
+    border-color: var(--palette-blueberry-600);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-300) 52%, transparent), var(--shadow-soft);
+}
+
 .thumb-select-btn.is-static {
     grid-template-columns: 96px minmax(0, 1fr);
     cursor: default;
@@ -1837,6 +1842,18 @@ html.loaded .controls-bar.hidden {
     box-shadow: 0 0 0 2px var(--color-primary);
 }
 
+.thumb-select-option.is-ruler-hovered {
+    border-color: var(--palette-blueberry-600);
+    background: color-mix(in srgb, white 46%, var(--palette-blueberry-100) 54%);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-400) 68%, transparent 32%);
+}
+
+#modelPartSelectorMenu.model-selector-view--grid .thumb-select-option.is-ruler-hovered {
+    border-color: var(--palette-blueberry-600);
+    background: color-mix(in srgb, #fff 48%, var(--palette-blueberry-100) 52%);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-400) 68%, transparent 32%);
+}
+
 .thumb-select-option-canvas {
     width: 72px;
     height: 72px;
@@ -2275,6 +2292,17 @@ html.theme-dark .thumb-select-option.is-selected {
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
+html.theme-dark .thumb-select-btn.is-ruler-hovering {
+    border-color: var(--palette-blueberry-300);
+    box-shadow: 0 0 0 2px rgba(179, 168, 247, 0.52), var(--shadow-soft);
+}
+
+html.theme-dark .thumb-select-option.is-ruler-hovered {
+    border-color: rgba(232, 227, 255, 0.95);
+    background: rgba(88, 76, 160, 0.52);
+    box-shadow: 0 0 0 2px rgba(179, 168, 247, 0.62);
+}
+
 html.theme-dark #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option {
     border-color: rgba(179, 168, 247, 0.4);
     background: rgba(34, 30, 70, 0.52);
@@ -2283,6 +2311,12 @@ html.theme-dark #modelPartSelectorMenu.model-selector-view--grid .thumb-select-o
 html.theme-dark #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option.is-selected {
     border: 2px solid rgba(232, 227, 255, 0.92);
     background: rgba(74, 64, 140, 0.5);
+    box-shadow: none;
+}
+
+html.theme-dark #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option.is-ruler-hovered {
+    border: 2px solid rgba(232, 227, 255, 0.95);
+    background: rgba(92, 82, 170, 0.58);
     box-shadow: none;
 }
 

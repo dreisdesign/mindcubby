@@ -10,6 +10,7 @@
 - **Optional pre-commit smoke gate** — added setup/removal scripts to install a local git pre-commit hook that runs only fast Rotater smoke checks
 - **D-pad visibility preference** — App Settings now includes `Show D-pad controls`; turning it off hides the bottom camera D-pad and keeps Pause available at bottom-right
 - **Ruler part-hover inspect mode** — ruler HUD now includes a `Part hover` toggle; when enabled, hovering multipart geometry updates W/D/H to the hovered part dimensions
+- **Ruler hover focus highlight** — hovered multipart parts now show a live 3D bounding-box outline, and the matching row in the model selector is highlighted for clear target context
 
 ### Changed
 - **Renamed Export → Share (UI text only)** — the Export panel title and sidebar/canvas quick-action labels were updated to read `Share` to better reflect copy-link and save/share workflows.
@@ -48,6 +49,7 @@
 - **Auto-brightness OFF reveal transition** — turning Background/Surface Auto brightness off now reveals the Shade row first, then animates the slider from the auto shade to the restored manual shade for clearer state feedback
 - **Auto-brightness ON/OFF animation parity** — Background and Surface auto-brightness toggles now animate both directions with smoother ease-in-out motion
 - **Auto-brightness slider motion restore** — restored the original fast slider-knob travel profile so auto-toggle transitions visibly slide the knob (not just row reveal/fade)
+- **Auto slider motion clarity** — removed shade-row reveal fades from auto toggles so the visible transition emphasizes knob travel to the new value
 - **Surface Model Sync source persistence** — fixed an issue where the selected Model Sync source color was not persisted across refreshes; now uses the correct part-color source during restore.
 - **Multipart custom/reset refresh persistence** — preserved part appearance state more reliably across multipart reset/custom flows and refresh, preventing unintended fallback visuals after restore.
 - **D-pad horizontal centering** — camera D-pad now stays centered in the preview control bar instead of shifting with ruler width
