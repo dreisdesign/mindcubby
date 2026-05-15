@@ -4966,7 +4966,8 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-300) 75%, transparent);
 }
 
-.ruler-part-hover-toggle {
+.ruler-part-hover-toggle,
+.ruler-part-select-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -4984,7 +4985,8 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
     transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.ruler-part-hover-toggle:hover {
+.ruler-part-hover-toggle:hover,
+.ruler-part-select-toggle:hover {
     background: rgba(46, 43, 116, 0.14);
     border-color: color-mix(in srgb, var(--palette-blueberry-500) 74%, transparent);
 }
@@ -4995,7 +4997,14 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
     color: #fff;
 }
 
-.ruler-part-hover-toggle:focus-visible {
+.ruler-part-select-toggle.is-active {
+    background: #1f7a5a;
+    border-color: #1f7a5a;
+    color: #fff;
+}
+
+.ruler-part-hover-toggle:focus-visible,
+.ruler-part-select-toggle:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-300) 75%, transparent);
 }
@@ -5084,7 +5093,8 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
         font-size: 9px;
     }
 
-    .ruler-part-hover-toggle {
+    .ruler-part-hover-toggle,
+    .ruler-part-select-toggle {
         min-width: 64px;
         height: 24px;
         padding: 0 8px;
@@ -7010,7 +7020,8 @@ html.loaded.layout-v2-desktop .ruler-unit-toggle {
     color: #fff;
 }
 
-html.loaded.layout-v2-desktop .ruler-part-hover-toggle {
+html.loaded.layout-v2-desktop .ruler-part-hover-toggle,
+html.loaded.layout-v2-desktop .ruler-part-select-toggle {
     min-width: 94px;
     height: 30px;
     padding: 0 12px;
@@ -7023,6 +7034,12 @@ html.loaded.layout-v2-desktop .ruler-part-hover-toggle {
 html.loaded.layout-v2-desktop .ruler-part-hover-toggle.is-active {
     background: var(--palette-blueberry-500);
     border-color: var(--palette-blueberry-500);
+    color: #fff;
+}
+
+html.loaded.layout-v2-desktop .ruler-part-select-toggle.is-active {
+    background: #1f7a5a;
+    border-color: #1f7a5a;
     color: #fff;
 }
 

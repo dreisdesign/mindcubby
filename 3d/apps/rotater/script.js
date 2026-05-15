@@ -151,6 +151,11 @@ const VIEWPORT_FIT_SCALE = 1.55; // Smaller than 1.8 so default/reset framing is
 const VIEWPORT_AA_SCALE = 1.0; // Prioritize realtime smoothness in the main viewport
 const VIEWPORT_PIXEL_RATIO_MIN = 1;
 const VIEWPORT_PIXEL_RATIO_MAX = 1.6;
+const VIEWPORT_AA_PRESETS = {
+    low: { min: 1.0, max: 1.2 },
+    medium: { min: 1.0, max: 1.4 },
+    high: { min: VIEWPORT_PIXEL_RATIO_MIN, max: VIEWPORT_PIXEL_RATIO_MAX },
+};
 const BUILD_PLATE_TEXTURES_ENABLED = false; // Flat plate avoids extra texture work in dense multipart scenes
 const AUTO_LOAD_BENCHY_ON_IDLE = true;
 const AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS = 1200;
@@ -165,6 +170,11 @@ const BUILD_PLATE_DEFAULTS = {
     width: 220,
     depth: 220,
 };
+
+function normalizeViewportAaPreset(preset) {
+    const key = String(preset || 'high').trim().toLowerCase();
+    return Object.prototype.hasOwnProperty.call(VIEWPORT_AA_PRESETS, key) ? key : 'high';
+}
 const PALETTE = {
     fallback: '#ffffff',
     text: {
@@ -407,6 +417,7 @@ const exportMotionSpeedEl = document.getElementById('exportMotionSpeed');
 const exportMotionRangeEl = document.getElementById('exportMotionRange');
 const exportMotionRangeLabelEl = document.getElementById('exportMotionRangeLabel');
 const exportMotionRangeValEl = document.getElementById('exportMotionRangeVal');
+const rulerSelectToggleEl = document.getElementById('rulerSelectToggle');
 const autoUIAssistToggleEl = document.getElementById('autoUIAssistToggle');
 const exportCollapsedConfirmToggleEl = document.getElementById('exportCollapsedConfirmToggle');
 const showDpadToggleEl = document.getElementById('showDpadToggle');
@@ -418,6 +429,7 @@ const exportCollapsedDontShowEl = document.getElementById('exportCollapsedDontSh
 const btnExportCollapsedConfirmClose = document.getElementById('btnExportCollapsedConfirmClose');
 const btnExportCollapsedConfirmCancel = document.getElementById('btnExportCollapsedConfirmCancel');
 const btnExportCollapsedConfirmContinue = document.getElementById('btnExportCollapsedConfirmContinue');
+const viewportAaPresetEl = document.getElementById('viewportAaPreset');
 const buildPlateSizePresetEl = document.getElementById('buildPlateSizePreset');
 const buildPlateCustomSizeRowEl = document.getElementById('buildPlateCustomSizeRow');
 const buildPlateCustomWidthEl = document.getElementById('buildPlateCustomWidth');
@@ -513,10 +525,15 @@ let rulerEnabled = true;
 let rulerUnit = 'metric';
 let rulerLinesVisible = true;
 let rulerPartHoverEnabled = false;
+let rulerPartSelectMultiEnabled = false;
 let rulerHoveredPartIndex = -1;
 let rulerOverlayEl = null;
 let rulerGridHelper = null;
 let rulerGridSize = 0;
+let rulerGridDivisions = 0;
+let rulerGridSpanX = 0;
+let rulerGridSpanZ = 0;
+let rulerGridStepMm = 0;
 let rulerFootprintHelper = null;
 let rulerFootprintSignature = '';
 const RULER_DYNAMIC_LINES_ENABLED = false;
@@ -921,6 +938,7 @@ let buildPlateShape = BUILD_PLATE_DEFAULTS.shape; // rectangle | rounded | circl
 let buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
 let buildPlateWidth = BUILD_PLATE_DEFAULTS.width;
 let buildPlateDepth = BUILD_PLATE_DEFAULTS.depth;
+let viewportAaPreset = 'high';
 let dpadVisible = true;
 let exportMotionControlsEnabled = true;
 let _syncingExportMotionControls = false;
@@ -1046,7 +1064,9 @@ function isCanvasPointInsideCropFrame(clientX, clientY) {
 
 function getViewportPixelRatio() {
     const dpr = window.devicePixelRatio || 1;
-    return Math.min(Math.max(dpr * VIEWPORT_AA_SCALE, VIEWPORT_PIXEL_RATIO_MIN), VIEWPORT_PIXEL_RATIO_MAX);
+    const presetKey = normalizeViewportAaPreset(viewportAaPreset);
+    const preset = VIEWPORT_AA_PRESETS[presetKey] || VIEWPORT_AA_PRESETS.high;
+    return Math.min(Math.max(dpr * VIEWPORT_AA_SCALE, preset.min), preset.max);
 }
 
 function getViewportFitDistance() {
@@ -4900,7 +4920,7 @@ function updateRulerHoveredPartVisual() {
     const canShowHoverBox = !!(
         mesh
         && rulerPartHoverEnabled
-        && isMultipartModel()
+        && hasModelParts()
         && rulerHoveredPartIndex >= 0
         && rulerHoveredPartIndex < modelPartBoundsBoxes.length
         && modelPartBoundsBoxes[rulerHoveredPartIndex]
@@ -4955,9 +4975,17 @@ function setRulerPartHoverEnabled(enabled, persist = true) {
     if (persist) saveSettings();
 }
 
+function setRulerPartSelectMultiEnabled(enabled, persist = true) {
+    const next = !!enabled;
+    if (rulerPartSelectMultiEnabled === next) return;
+    rulerPartSelectMultiEnabled = next;
+    updateRulerHUD();
+    if (persist) saveSettings();
+}
+
 function getRulerDisplayedDims() {
     const canShowPartDims = rulerPartHoverEnabled
-        && isMultipartModel()
+        && hasModelParts()
         && rulerHoveredPartIndex >= 0
         && rulerHoveredPartIndex < modelPartDimensions.length;
     if (canShowPartDims) {
@@ -4971,6 +4999,8 @@ function getRulerDisplayedDims() {
 
 function resolveHoveredPartIndexFromIntersection(intersection) {
     if (!intersection) return -1;
+
+    if (hasModelParts() && modelPartNames.length === 1) return 0;
 
     const faceMaterialIndex = intersection.face?.materialIndex;
     if (Number.isInteger(faceMaterialIndex) && faceMaterialIndex >= 0) return faceMaterialIndex;
@@ -4994,40 +5024,58 @@ function resolveHoveredPartIndexFromIntersection(intersection) {
     return -1;
 }
 
-function updateRulerPartHoverFromPointerEvent(ev) {
-    if (!canvas || !camera || !mesh || !rulerEnabled || !rulerPartHoverEnabled || !isMultipartModel()) return;
+function resolveHoveredPartIndexFromPointerEvent(ev) {
+    if (!canvas || !camera || !mesh || !rulerEnabled || !rulerPartHoverEnabled || !hasModelParts()) return -1;
 
     const rect = canvas.getBoundingClientRect();
-    if (!rect.width || !rect.height) {
-        setRulerHoveredPartIndex(-1);
-        return;
-    }
+    if (!rect.width || !rect.height) return -1;
 
     const x = (ev.clientX - rect.left) / rect.width;
     const y = (ev.clientY - rect.top) / rect.height;
-    if (x < 0 || x > 1 || y < 0 || y > 1) {
-        setRulerHoveredPartIndex(-1);
-        return;
-    }
+    if (x < 0 || x > 1 || y < 0 || y > 1) return -1;
 
     rulerPartHoverPointerNdc.set(x * 2 - 1, -(y * 2 - 1));
     rulerPartHoverRaycaster.setFromCamera(rulerPartHoverPointerNdc, camera);
     const hits = rulerPartHoverRaycaster.intersectObject(mesh, false);
-    if (!hits.length) {
-        setRulerHoveredPartIndex(-1);
-        return;
-    }
+    if (!hits.length) return -1;
 
     const partIndex = resolveHoveredPartIndexFromIntersection(hits[0]);
-    if (!Number.isInteger(partIndex) || partIndex < 0 || partIndex >= modelPartNames.length) {
-        setRulerHoveredPartIndex(-1);
-        return;
-    }
-    if (modelPartSettings?.[partIndex]?.hidden) {
-        setRulerHoveredPartIndex(-1);
-        return;
+    if (!Number.isInteger(partIndex) || partIndex < 0 || partIndex >= modelPartNames.length) return -1;
+    if (modelPartSettings?.[partIndex]?.hidden) return -1;
+    return partIndex;
+}
+
+function selectModelPartFromRulerHover(partIndex, multiSelect = false) {
+    const idx = Number.isInteger(partIndex) ? partIndex : -1;
+    if (idx < 0 || idx >= modelPartNames.length) return;
+
+    if (!isMultipartModel()) {
+        modelPartSelected = 0;
+        bulkSelectedPartIndices.clear();
+    } else if (multiSelect) {
+        const isSelected = bulkSelectedPartIndices.has(idx);
+        setBulkPartSelected(idx, !isSelected);
+        if (!bulkSelectedPartIndices.size) modelPartSelected = idx;
+        syncActivePartFromUiSelection();
+    } else {
+        modelPartSelected = idx;
+        bulkSelectedPartIndices.clear();
+        setBulkPartSelected(idx, true);
+        syncActivePartFromUiSelection();
     }
 
+    syncUIFromSelectedPart();
+    applyPartColorsToMesh();
+    applyCurrentTextureTuning();
+    syncModelPartSelectorUI(!!(modelPartSelectorMenu && !modelPartSelectorMenu.hidden));
+    syncModelPartCheckboxStates();
+    syncModelPartBulkUIState();
+    queueModelPartThumbsRender();
+    saveSettings();
+}
+
+function updateRulerPartHoverFromPointerEvent(ev) {
+    const partIndex = resolveHoveredPartIndexFromPointerEvent(ev);
     setRulerHoveredPartIndex(partIndex);
 }
 
@@ -5043,6 +5091,7 @@ function updateRulerHUD() {
 
     const hoverToggle = document.getElementById('rulerHoverToggle');
     const hoverLabelEl = document.getElementById('rulerHoverLabel');
+    const selectToggle = document.getElementById('rulerSelectToggle');
     const hoveredPartName = (rulerHoveredPartIndex >= 0)
         ? truncatePartNameForUi(modelPartNames[rulerHoveredPartIndex] || `Part ${rulerHoveredPartIndex + 1}`, 18)
         : '';
@@ -5062,6 +5111,20 @@ function updateRulerHUD() {
         if (hoverAvailable && rulerPartHoverEnabled && hoveredPartName) hoverLabelEl.textContent = hoveredPartName;
         else if (hoverAvailable && rulerPartHoverEnabled) hoverLabelEl.textContent = 'Hover part';
         else hoverLabelEl.textContent = 'Part hover';
+    }
+
+    if (selectToggle) {
+        const canSelectByClick = hoverAvailable && rulerPartHoverEnabled;
+        selectToggle.hidden = !canSelectByClick;
+        const multiSelectOn = canSelectByClick && rulerPartSelectMultiEnabled;
+        selectToggle.classList.toggle('is-active', multiSelectOn);
+        selectToggle.setAttribute('aria-pressed', multiSelectOn ? 'true' : 'false');
+        selectToggle.setAttribute('aria-label', multiSelectOn
+            ? 'Disable multi-select for part picking'
+            : 'Enable multi-select for part picking');
+        selectToggle.title = multiSelectOn
+            ? 'Select mode on (click parts to add/remove from selection)'
+            : 'Select mode off (click part to single-select)';
     }
 
     const dims = getRulerDisplayedDims() || modelDims;
@@ -5230,6 +5293,149 @@ function drawRulerOverlay(ctx, width, height, cam, options = {}) {
     } catch (e) {
         return;
     }
+}
+
+function formatRulerIncrementLabel(mm, includeUnit = false) {
+    const raw = (rulerUnit === 'imperial') ? (mm / 25.4) : mm;
+    const rounded = (rulerUnit === 'imperial')
+        ? (raw >= 10 ? Math.round(raw).toString() : raw.toFixed(1).replace(/\.0$/, ''))
+        : Math.round(raw).toString();
+    if (!includeUnit) return rounded;
+    return `${rounded} ${rulerUnitSuffix()}`;
+}
+
+function drawRulerHoverGridIncrements(ctx, width, height, cam) {
+    if (!rulerEnabled || !rulerPartHoverEnabled || !rulerLinesVisible || !mesh || !cam) return;
+
+    const spanX = Math.max(20, rulerGridSpanX || clampBuildPlateSize(buildPlateWidth, BUILD_PLATE_DEFAULTS.width));
+    const spanZ = Math.max(20, rulerGridSpanZ || clampBuildPlateSize(buildPlateDepth, BUILD_PLATE_DEFAULTS.depth));
+    const stepMm = Math.max(1, rulerGridStepMm || getRulerGridIncrementStepMm(Math.max(spanX, spanZ)));
+    const centerX = rulerGridHelper?.position?.x ?? buildPlateMesh?.position?.x ?? 0;
+    const centerZ = rulerGridHelper?.position?.z ?? buildPlateMesh?.position?.z ?? 0;
+    const gridY = rulerGridHelper?.position?.y ?? buildPlateMesh?.position?.y ?? 0;
+    const halfX = spanX * 0.5;
+    const halfZ = spanZ * 0.5;
+
+    const frontMid = projectToCanvas(new THREE.Vector3(centerX, gridY, centerZ - halfZ), cam, width, height);
+    const backMid = projectToCanvas(new THREE.Vector3(centerX, gridY, centerZ + halfZ), cam, width, height);
+    const leftMid = projectToCanvas(new THREE.Vector3(centerX - halfX, gridY, centerZ), cam, width, height);
+    const rightMid = projectToCanvas(new THREE.Vector3(centerX + halfX, gridY, centerZ), cam, width, height);
+    if (!Number.isFinite(frontMid.x) || !Number.isFinite(frontMid.y)
+        || !Number.isFinite(backMid.x) || !Number.isFinite(backMid.y)
+        || !Number.isFinite(leftMid.x) || !Number.isFinite(leftMid.y)
+        || !Number.isFinite(rightMid.x) || !Number.isFinite(rightMid.y)) {
+        return;
+    }
+
+    const labelEdgeZ = (frontMid.y > backMid.y) ? (centerZ - halfZ) : (centerZ + halfZ);
+    const labelEdgeX = (leftMid.x < rightMid.x) ? (centerX - halfX) : (centerX + halfX);
+
+    const ticksX = Math.max(1, Math.floor(spanX / stepMm));
+    const ticksZ = Math.max(1, Math.floor(spanZ / stepMm));
+    const maxLabels = 12;
+    const skipX = Math.max(1, Math.ceil((ticksX + 1) / maxLabels));
+    const skipZ = Math.max(1, Math.ceil((ticksZ + 1) / maxLabels));
+
+    ctx.save();
+    ctx.font = '600 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillStyle = 'rgba(35, 31, 80, 0.86)';
+    ctx.strokeStyle = 'rgba(58, 52, 122, 0.52)';
+    ctx.lineWidth = 1;
+    ctx.textBaseline = 'middle';
+
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= ticksX; i += skipX) {
+        const distMm = Math.min(spanX, i * stepMm);
+        const worldX = (centerX - halfX) + distMm;
+        const pt = projectToCanvas(new THREE.Vector3(worldX, gridY, labelEdgeZ), cam, width, height);
+        if (!Number.isFinite(pt.x) || !Number.isFinite(pt.y)) continue;
+        const label = formatRulerIncrementLabel(distMm, i === 0);
+        const tickDir = (labelEdgeZ < centerZ) ? -1 : 1;
+        ctx.beginPath();
+        ctx.moveTo(pt.x, pt.y);
+        ctx.lineTo(pt.x, pt.y + (tickDir * 6));
+        ctx.stroke();
+        ctx.fillText(label, pt.x, pt.y + (tickDir * 16));
+    }
+
+    ctx.textAlign = (labelEdgeX < centerX) ? 'right' : 'left';
+    for (let i = 0; i <= ticksZ; i += skipZ) {
+        const distMm = Math.min(spanZ, i * stepMm);
+        const worldZ = (centerZ - halfZ) + distMm;
+        const pt = projectToCanvas(new THREE.Vector3(labelEdgeX, gridY, worldZ), cam, width, height);
+        if (!Number.isFinite(pt.x) || !Number.isFinite(pt.y)) continue;
+        const label = formatRulerIncrementLabel(distMm, i === 0);
+        const tickDir = (labelEdgeX < centerX) ? -1 : 1;
+        ctx.beginPath();
+        ctx.moveTo(pt.x, pt.y);
+        ctx.lineTo(pt.x + (tickDir * 6), pt.y);
+        ctx.stroke();
+        ctx.fillText(label, pt.x + (tickDir * 12), pt.y);
+    }
+    ctx.restore();
+}
+
+function drawRulerHoverPartContextualDims(ctx, width, height, cam) {
+    if (!rulerEnabled || !rulerPartHoverEnabled || !hasModelParts() || !mesh || !cam) return;
+    if (rulerHoveredPartIndex < 0 || rulerHoveredPartIndex >= modelPartBoundsBoxes.length) return;
+
+    const partBox = modelPartBoundsBoxes[rulerHoveredPartIndex];
+    if (!partBox || partBox.isEmpty?.()) return;
+
+    const min = partBox.min;
+    const max = partBox.max;
+    const cornersLocal = [
+        new THREE.Vector3(min.x, min.y, min.z), // 0
+        new THREE.Vector3(max.x, min.y, min.z), // 1
+        new THREE.Vector3(min.x, max.y, min.z), // 2
+        new THREE.Vector3(max.x, max.y, min.z), // 3
+        new THREE.Vector3(min.x, min.y, max.z), // 4
+        new THREE.Vector3(max.x, min.y, max.z), // 5
+        new THREE.Vector3(min.x, max.y, max.z), // 6
+        new THREE.Vector3(max.x, max.y, max.z), // 7
+    ];
+    const cornersScreen = cornersLocal.map((point) => projectToCanvas(point.clone().applyMatrix4(mesh.matrixWorld), cam, width, height));
+    if (cornersScreen.some((point) => !Number.isFinite(point.x) || !Number.isFinite(point.y))) return;
+
+    const center = cornersScreen.reduce((acc, point) => {
+        acc.x += point.x;
+        acc.y += point.y;
+        return acc;
+    }, new THREE.Vector2(0, 0)).multiplyScalar(1 / cornersScreen.length);
+
+    const findBestAxisEdge = (axisBit) => {
+        let best = null;
+        for (let base = 0; base < 8; base += 1) {
+            if (base & axisBit) continue;
+            const pair = base | axisBit;
+            const a = cornersScreen[base];
+            const b = cornersScreen[pair];
+            const len = a.distanceTo(b);
+            if (!best || len > best.len) best = { a, b, len };
+        }
+        return best;
+    };
+
+    const hoveredDims = (rulerHoveredPartIndex >= 0 && rulerHoveredPartIndex < modelPartDimensions.length)
+        ? modelPartDimensions[rulerHoveredPartIndex]
+        : modelDims;
+    if (!hoveredDims) return;
+
+    const axisSpecs = [
+        { axisBit: 1, label: 'W', value: hoveredDims.w, offset: 16, labelOffset: 16 },
+        { axisBit: 2, label: 'D', value: hoveredDims.d, offset: 22, labelOffset: 18 },
+        { axisBit: 4, label: 'H', value: hoveredDims.h, offset: 16, labelOffset: 16 },
+    ];
+
+    axisSpecs.forEach((spec) => {
+        const edge = findBestAxisEdge(spec.axisBit);
+        if (!edge || edge.len < 18 || !Number.isFinite(spec.value)) return;
+        const text = `${spec.label} ${formatRulerValue(spec.value)} ${rulerUnitSuffix()}`;
+        drawMeasurement(ctx, edge.a, edge.b, text, center, {
+            offset: spec.offset,
+            labelOffset: spec.labelOffset,
+        });
+    });
 }
 
 function getRulerScreenLayout(width, height, cam = camera, safeArea = null) {
@@ -5521,28 +5727,24 @@ function updateLiveRulerOverlay() {
     const overlay = ensureRulerOverlayEl();
     if (!overlay) return;
     updateRulerGrid();
-    if (!RULER_DYNAMIC_LINES_ENABLED) {
+
+    const canRenderRulerOverlay = !!(rulerEnabled && modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
+    const showDynamicLines = !!(canRenderRulerOverlay && RULER_DYNAMIC_LINES_ENABLED && rulerLinesVisible);
+    const showHoverContextualDims = !!(canRenderRulerOverlay && rulerPartHoverEnabled && rulerHoveredPartIndex >= 0);
+    const showHoverIncrements = !!(canRenderRulerOverlay && rulerPartHoverEnabled && rulerLinesVisible);
+
+    if (!showDynamicLines && !showHoverContextualDims && !showHoverIncrements) {
         overlay.style.display = 'none';
         const ctx = overlay.getContext?.('2d');
         if (ctx) ctx.clearRect(0, 0, overlay.width || 0, overlay.height || 0);
         return;
     }
-    if (!rulerEnabled || !rulerLinesVisible || !modelDims || !viewerSec || viewerSec.classList.contains('hidden')) {
-        overlay.style.display = 'none';
-        const ctx = overlay.getContext?.('2d');
-        if (ctx) ctx.clearRect(0, 0, overlay.width || 0, overlay.height || 0);
-        return;
-    }
+
     overlay.style.display = '';
     const wrap = canvas?.parentElement;
     if (!wrap) return;
     const cssW = wrap.clientWidth;
     const cssH = wrap.clientHeight;
-    const layout = getRulerScreenLayout(cssW, cssH, camera, getLiveRulerSafeArea(wrap));
-    if (!layout) {
-        overlay.style.display = 'none';
-        return;
-    }
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const pxW = Math.max(2, Math.round(cssW * dpr));
     const pxH = Math.max(2, Math.round(cssH * dpr));
@@ -5554,7 +5756,17 @@ function updateLiveRulerOverlay() {
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cssW, cssH);
-    drawRulerOverlay(ctx, cssW, cssH, camera, { layout });
+
+    if (showDynamicLines) {
+        const layout = getRulerScreenLayout(cssW, cssH, camera, getLiveRulerSafeArea(wrap));
+        if (layout) drawRulerOverlay(ctx, cssW, cssH, camera, { layout });
+    }
+    if (showHoverIncrements) {
+        drawRulerHoverGridIncrements(ctx, cssW, cssH, camera);
+    }
+    if (showHoverContextualDims) {
+        drawRulerHoverPartContextualDims(ctx, cssW, cssH, camera);
+    }
 }
 
 function disposeRulerFootprintHelper() {
@@ -5673,12 +5885,28 @@ function updateRulerFootprintHelper(worldBox, gridY) {
     rulerFootprintHelper.position.set(0, gridY + 0.03, 0);
 }
 
+function getRulerGridIncrementStepMm(spanMm) {
+    const span = Math.max(20, Number(spanMm) || 0);
+    if (rulerUnit === 'imperial') {
+        if (span <= 320) return 25.4;     // 1 in
+        if (span <= 620) return 50.8;     // 2 in
+        return 101.6;                     // 4 in
+    }
+    if (span <= 260) return 10;
+    if (span <= 520) return 25;
+    if (span <= 1000) return 50;
+    return 100;
+}
+
 function updateRulerGrid() {
     if (!scene) return;
     const shouldShow = !!(rulerEnabled && rulerLinesVisible && mesh && modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
     if (!shouldShow) {
         if (rulerGridHelper) rulerGridHelper.visible = false;
         if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
+        rulerGridSpanX = 0;
+        rulerGridSpanZ = 0;
+        rulerGridStepMm = 0;
         return;
     }
 
@@ -5686,11 +5914,19 @@ function updateRulerGrid() {
     if (!worldBox || worldBox.isEmpty()) {
         if (rulerGridHelper) rulerGridHelper.visible = false;
         if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
+        rulerGridSpanX = 0;
+        rulerGridSpanZ = 0;
+        rulerGridStepMm = 0;
         return;
     }
 
-    const targetSize = Math.max(40, Math.ceil((Math.max(modelDims.w, modelDims.d) * 1.6) / 5) * 5);
-    const divisions = Math.max(8, Math.min(42, Math.round(targetSize / 6)));
+    const plateSpanX = clampBuildPlateSize(buildPlateWidth, BUILD_PLATE_DEFAULTS.width);
+    const plateSpanZ = clampBuildPlateSize(buildPlateDepth, BUILD_PLATE_DEFAULTS.depth);
+    const targetSpanX = Math.max(40, plateSpanX);
+    const targetSpanZ = Math.max(40, plateSpanZ);
+    const targetSize = Math.max(targetSpanX, targetSpanZ);
+    const stepMm = getRulerGridIncrementStepMm(targetSize);
+    const divisions = Math.max(4, Math.min(200, Math.round(targetSize / Math.max(1, stepMm))));
 
     const getColorRelativeLuminance = (color) => {
         const toLinear = (channel) => {
@@ -5732,7 +5968,7 @@ function updateRulerGrid() {
 
     const palette = getGridContrastPalette();
 
-    if (!rulerGridHelper || Math.abs(rulerGridSize - targetSize) > 0.5) {
+    if (!rulerGridHelper || Math.abs(rulerGridSize - targetSize) > 0.5 || divisions !== rulerGridDivisions) {
         if (rulerGridHelper) scene.remove(rulerGridHelper);
         rulerGridHelper = new THREE.GridHelper(targetSize, divisions, palette.center, palette.lines);
         const mats = Array.isArray(rulerGridHelper.material) ? rulerGridHelper.material : [rulerGridHelper.material];
@@ -5745,6 +5981,7 @@ function updateRulerGrid() {
         rulerGridHelper.renderOrder = -1;
         scene.add(rulerGridHelper);
         rulerGridSize = targetSize;
+        rulerGridDivisions = divisions;
     } else {
         if (typeof rulerGridHelper.setColors === 'function') {
             rulerGridHelper.setColors(palette.center, palette.lines);
@@ -5759,10 +5996,18 @@ function updateRulerGrid() {
     rulerGridHelper.visible = true;
     const modelGap = Math.max(0.4, modelRadius * 0.02);
     let gridY = worldBox.min.y - modelGap;
+    const worldCenter = worldBox.getCenter(new THREE.Vector3());
+    let gridCenterX = worldCenter.x;
+    let gridCenterZ = worldCenter.z;
     if (buildPlateMesh?.visible) {
         gridY = buildPlateMesh.position.y + Math.max(0.03, modelRadius * 0.0012);
+        gridCenterX = buildPlateMesh.position.x;
+        gridCenterZ = buildPlateMesh.position.z;
     }
-    rulerGridHelper.position.set(0, gridY, 0);
+    rulerGridHelper.position.set(gridCenterX, gridY, gridCenterZ);
+    rulerGridSpanX = targetSpanX;
+    rulerGridSpanZ = targetSpanZ;
+    rulerGridStepMm = stepMm;
     if (RULER_FOOTPRINT_ENABLED) {
         updateRulerFootprintHelper(worldBox, gridY);
     } else if (rulerFootprintHelper) {
@@ -5890,6 +6135,7 @@ function saveSettings() {
             rulerUnit: rulerUnit,
             rulerGridVisible: rulerLinesVisible ? '1' : '0',
             rulerPartHover: rulerPartHoverEnabled ? '1' : '0',
+            rulerPartSelectMulti: rulerPartSelectMultiEnabled ? '1' : '0',
             buildPlate: buildPlateEnabled ? '1' : '0',
             buildPlatePreset: activeBuildPlatePreset,
             buildPlateSyncPartIndex: String(buildPlateSyncPartIndex || 0),
@@ -5902,6 +6148,7 @@ function saveSettings() {
             buildPlateSizePreset: buildPlateSizePreset,
             buildPlateWidth: String(buildPlateWidth),
             buildPlateDepth: String(buildPlateDepth),
+            viewportAaPreset: viewportAaPreset,
             showDpad: dpadVisible ? '1' : '0',
             exportMotionControls: exportMotionControlsEnabled ? '1' : '0',
             autoUIAssist: autoUIAssistEnabled ? '1' : '0',
@@ -6217,6 +6464,7 @@ function restoreSettings() {
         }
         if (s.buildPlateWidth != null) buildPlateWidth = clampBuildPlateSize(s.buildPlateWidth, BUILD_PLATE_DEFAULTS.width);
         if (s.buildPlateDepth != null) buildPlateDepth = clampBuildPlateSize(s.buildPlateDepth, BUILD_PLATE_DEFAULTS.depth);
+        if (s.viewportAaPreset != null) viewportAaPreset = normalizeViewportAaPreset(s.viewportAaPreset);
         if (buildPlateSizePreset !== 'custom' && BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset]) {
             buildPlateWidth = BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset].w;
             buildPlateDepth = BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset].d;
@@ -6246,6 +6494,9 @@ function restoreSettings() {
         if (s.rulerPartHover != null) {
             rulerPartHoverEnabled = (s.rulerPartHover === '1' || s.rulerPartHover === true || s.rulerPartHover === 1);
             if (!rulerPartHoverEnabled) rulerHoveredPartIndex = -1;
+        }
+        if (s.rulerPartSelectMulti != null) {
+            rulerPartSelectMultiEnabled = (s.rulerPartSelectMulti === '1' || s.rulerPartSelectMulti === true || s.rulerPartSelectMulti === 1);
         }
         if (s.activeBgPreset) activeBgPreset = s.activeBgPreset;
         if (s.activeModelPreset) activeModelPreset = s.activeModelPreset;
@@ -6303,6 +6554,7 @@ function restoreSettings() {
         syncBuildPlateSizeUI();
         if (exportMotionControlsToggleEl) exportMotionControlsToggleEl.checked = exportMotionControlsEnabled;
         if (exportMotionControlsEl) exportMotionControlsEl.hidden = !exportMotionControlsEnabled;
+        if (viewportAaPresetEl) viewportAaPresetEl.value = viewportAaPreset;
         if (showDpadToggleEl) showDpadToggleEl.checked = dpadVisible;
         applyDpadVisibility();
         if (autoUIAssistToggleEl) autoUIAssistToggleEl.checked = autoUIAssistEnabled;
@@ -6412,6 +6664,7 @@ function getURLSettings(searchStr = location.search) {
         rulerUnit: g('ru'),
         rulerGridVisible: g('rg'),
         rulerPartHover: g('rh'),
+        rulerPartSelectMulti: g('rs'),
         buildPlate: g('bp'),
         buildPlatePreset: g('bpr'),
         buildPlateSyncPartIndex: g('bpsp'),
@@ -6424,6 +6677,7 @@ function getURLSettings(searchStr = location.search) {
         buildPlateSizePreset: g('bpp'),
         buildPlateWidth: g('bpw'),
         buildPlateDepth: g('bpd'),
+        viewportAaPreset: g('va'),
         buildPlateTexture: g('bpt'),
         rulerLinesVisible: g('rl'),
         activeBgPreset: g('abp'),
@@ -6492,6 +6746,7 @@ function settingsToURL() {
     if (rulerUnit === 'imperial') p.set('ru', 'i');
     if (!rulerLinesVisible) p.set('rg', '0');
     if (rulerPartHoverEnabled) p.set('rh', '1');
+    if (rulerPartSelectMultiEnabled) p.set('rs', '1');
     if (!buildPlateEnabled) p.set('bp', '0');
     p.set('bpr', activeBuildPlatePreset || 'modelcolor');
     if (buildPlateSyncPartIndex > 0) p.set('bpsp', String(buildPlateSyncPartIndex));
@@ -6506,6 +6761,7 @@ function settingsToURL() {
     if (buildPlateSizePreset && buildPlateSizePreset !== '220x220') p.set('bpp', buildPlateSizePreset);
     if (buildPlateWidth !== 220) p.set('bpw', String(buildPlateWidth));
     if (buildPlateDepth !== 220) p.set('bpd', String(buildPlateDepth));
+    if (viewportAaPreset !== 'high') p.set('va', viewportAaPreset);
     p.set('abp', activeBgPreset || 'modelcolor');
     p.set('amp', activeModelPreset || 'custom');
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
@@ -9366,6 +9622,16 @@ if (showDpadToggleEl) {
     });
 }
 
+if (viewportAaPresetEl) {
+    viewportAaPresetEl.value = normalizeViewportAaPreset(viewportAaPreset);
+    viewportAaPresetEl.addEventListener('change', () => {
+        viewportAaPreset = normalizeViewportAaPreset(viewportAaPresetEl.value);
+        viewportAaPresetEl.value = viewportAaPreset;
+        syncCanvasSize();
+        saveSettings();
+    });
+}
+
 if (buildPlateSizePresetEl) {
     buildPlateSizePresetEl.value = buildPlateSizePreset;
     buildPlateSizePresetEl.addEventListener('change', () => {
@@ -9710,9 +9976,16 @@ function confirmCropMode() {
 updateFrameOverlayButtonUI();
 
 canvas?.addEventListener('click', (e) => {
-    if (!exportWorkspaceActive || !exportFrameEnabled) return;
-    if (isCanvasPointInsideCropFrame(e.clientX, e.clientY)) return;
-    closeExportWorkspace();
+    if (exportWorkspaceActive && exportFrameEnabled) {
+        if (isCanvasPointInsideCropFrame(e.clientX, e.clientY)) return;
+        closeExportWorkspace();
+        return;
+    }
+
+    if (!rulerEnabled || !rulerPartHoverEnabled || !hasModelParts()) return;
+    const partIndex = resolveHoveredPartIndexFromPointerEvent(e);
+    if (partIndex < 0) return;
+    selectModelPartFromRulerHover(partIndex, rulerPartSelectMultiEnabled);
 });
 
 document.addEventListener('keydown', e => {
@@ -11498,6 +11771,19 @@ if (rulerHoverToggleEl) {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             _toggleRulerHover();
+        }
+    });
+}
+
+if (rulerSelectToggleEl) {
+    const _toggleRulerSelect = () => {
+        setRulerPartSelectMultiEnabled(!rulerPartSelectMultiEnabled, true);
+    };
+    rulerSelectToggleEl.addEventListener('click', _toggleRulerSelect);
+    rulerSelectToggleEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            _toggleRulerSelect();
         }
     });
 }

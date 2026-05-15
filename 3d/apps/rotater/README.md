@@ -112,6 +112,22 @@ For full design-token and runtime-default documentation, see `DESIGN-REFERENCE.m
 
 See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 
+### App Settings controls
+
+- **Fine tuning for precise control**: turns off coarse snap-only behavior and enables finer slider granularity for detailed adjustments.
+- **Export motion controls**: shows or hides the motion mode/speed/range controls inside the Export modal.
+- **Auto UI changes**: when enabled, Export can auto-expand from collapsed state and apply helper flows.
+- **Export collapsed confirmation**: shows a confirmation step before exporting from collapsed Export UI; this toggle is available when **Auto UI changes** is on.
+- **Show D-pad controls**: shows/hides the camera D-pad overlay in the viewer; Pause remains available in the bottom-right overlay action.
+- **Reset all warnings**: re-enables previously dismissed warning prompts (for example upload choice and collapsed-export confirmations).
+- **Viewport Edge Smoothing**: sets main-view anti-aliasing quality (`Low`, `Medium`, `High`) by adjusting viewport render pixel-ratio bounds.
+- **Build Plate Size**: sets the virtual build plate dimensions used by Surface/Grid context (`180x180`, `220x220`, `235x235`, `256x256`, `300x300`, or `Custom`).
+- **Custom Build Plate Width/Depth**: when `Custom` is selected, sets plate width/depth in mm.
+- **Load 3D Benchy**: loads the default Benchy test model.
+- **Dark mode**: toggles app theme.
+- **About Rotater**: opens version/build info and project links.
+- **Reset Everything**: clears all saved Rotater state (including lighting, animation, UI preferences, dismissed warnings, and stored model/project data) and reloads.
+
 ### Viewer controls
 
 - **Drag** to orbit · **Scroll** to zoom · **Right-drag up/down** to pan vertically
