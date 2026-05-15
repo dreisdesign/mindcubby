@@ -101,11 +101,11 @@ For full design-token and runtime-default documentation, see `DESIGN-REFERENCE.m
 - **Export** opens the export workspace from the left controls; framing now reuses the main viewer instead of a separate duplicate preview
 - **Copy Link** (inside the Export modal) copies a shareable URL for the current scene, including build plate/background sync and auto-brightness settings
 - **Save Project** (inside the Export modal) saves a single ZIP package containing `package.json` plus the original STL file(s)
-- **Import Package** is part of the Upload STL flow (choice modal button) and accepts Rotater `.zip` packages for quick restore/testing
+- **Import Package** is part of the Upload STL flow (picker/drop zone) and accepts Rotater `.zip` packages for quick restore/testing
 - ZIP package import now validates file paths, type allowlist (`.stl` + `package.json`), and archive size limits before loading
-- **Collapsed Export Assist** (App Settings) can auto-expand export when collapsed and show a one-time confirmation before continuing
+- **Collapsed Export Assist** auto-expands export when collapsed and can show a one-time confirmation before continuing
 - **Reset all warnings** (App Settings) re-enables warning dialogs that were previously dismissed (for example collapsed export confirmation and upload choice prompt)
-- **Export Motion Controls** (App Settings) toggles curated mode/time/range controls directly inside the Export overlay
+- Export motion mode/speed/range controls are always shown inside the Export overlay
 - **Build Plate controls** are now in their own dedicated card (separate from Background)
 - **Background** and **Build Plate** now default to `Model Sync` with Auto Brightness enabled for new visitors
 - **Load 3D Benchy** is available in App Settings for a quick test-model reset
@@ -115,12 +115,8 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 ### App Settings controls
 
 - **Fine tuning for precise control**: turns off coarse snap-only behavior and enables finer slider granularity for detailed adjustments.
-- **Export motion controls**: shows or hides the motion mode/speed/range controls inside the Export modal.
-- **Auto UI changes**: when enabled, Export can auto-expand from collapsed state and apply helper flows.
-- **Export collapsed confirmation**: shows a confirmation step before exporting from collapsed Export UI; this toggle is available when **Auto UI changes** is on.
 - **Show D-pad controls**: shows/hides the camera D-pad overlay in the viewer; Pause remains available in the bottom-right overlay action.
 - **Reset all warnings**: re-enables previously dismissed warning prompts (for example upload choice and collapsed-export confirmations).
-- **Viewport Edge Smoothing**: sets main-view anti-aliasing quality (`Low`, `Medium`, `High`) by adjusting viewport render pixel-ratio bounds.
 - **Build Plate Size**: sets the virtual build plate dimensions used by Surface/Grid context (`180x180`, `220x220`, `235x235`, `256x256`, `300x300`, or `Custom`).
 - **Custom Build Plate Width/Depth**: when `Custom` is selected, sets plate width/depth in mm.
 - **Load 3D Benchy**: loads the default Benchy test model.

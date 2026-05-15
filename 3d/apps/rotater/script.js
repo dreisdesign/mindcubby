@@ -151,11 +151,6 @@ const VIEWPORT_FIT_SCALE = 1.55; // Smaller than 1.8 so default/reset framing is
 const VIEWPORT_AA_SCALE = 1.0; // Prioritize realtime smoothness in the main viewport
 const VIEWPORT_PIXEL_RATIO_MIN = 1;
 const VIEWPORT_PIXEL_RATIO_MAX = 1.6;
-const VIEWPORT_AA_PRESETS = {
-    low: { min: 1.0, max: 1.2 },
-    medium: { min: 1.0, max: 1.4 },
-    high: { min: VIEWPORT_PIXEL_RATIO_MIN, max: VIEWPORT_PIXEL_RATIO_MAX },
-};
 const BUILD_PLATE_TEXTURES_ENABLED = false; // Flat plate avoids extra texture work in dense multipart scenes
 const AUTO_LOAD_BENCHY_ON_IDLE = true;
 const AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS = 1200;
@@ -169,12 +164,8 @@ const BUILD_PLATE_DEFAULTS = {
     sizePreset: '220x220',
     width: 220,
     depth: 220,
-};
-
-function normalizeViewportAaPreset(preset) {
-    const key = String(preset || 'high').trim().toLowerCase();
-    return Object.prototype.hasOwnProperty.call(VIEWPORT_AA_PRESETS, key) ? key : 'high';
 }
+};
 const PALETTE = {
     fallback: '#ffffff',
     text: {
@@ -406,11 +397,9 @@ const uploadChoiceDropZoneEl = document.getElementById('uploadChoiceDropZone');
 const uploadChoiceBrowseBtnEl = document.getElementById('btnUploadChoiceBrowse');
 const btnUploadChoiceClose = document.getElementById('btnUploadChoiceClose');
 const btnUploadChoiceCancel = document.getElementById('btnUploadChoiceCancel');
-const btnUploadChoiceImport = document.getElementById('btnUploadChoiceImport');
-const btnUploadChoiceAdd = document.getElementById('btnUploadChoiceAdd');
 const btnUploadChoiceReplace = document.getElementById('btnUploadChoiceReplace');
+const btnUploadChoiceNewPlate = document.getElementById('btnUploadChoiceNewPlate');
 const btnDownloadPackage = document.getElementById('btnDownloadPackage');
-const exportMotionControlsToggleEl = document.getElementById('exportMotionControlsToggle');
 const exportMotionControlsEl = document.getElementById('exportMotionControls');
 const exportMotionModeEl = document.getElementById('exportMotionMode');
 const exportMotionSpeedEl = document.getElementById('exportMotionSpeed');
@@ -418,8 +407,6 @@ const exportMotionRangeEl = document.getElementById('exportMotionRange');
 const exportMotionRangeLabelEl = document.getElementById('exportMotionRangeLabel');
 const exportMotionRangeValEl = document.getElementById('exportMotionRangeVal');
 const rulerSelectToggleEl = document.getElementById('rulerSelectToggle');
-const autoUIAssistToggleEl = document.getElementById('autoUIAssistToggle');
-const exportCollapsedConfirmToggleEl = document.getElementById('exportCollapsedConfirmToggle');
 const showDpadToggleEl = document.getElementById('showDpadToggle');
 const resetWarningsToggleEl = document.getElementById('resetWarningsToggle');
 const btnResetEverythingEl = document.getElementById('btnResetEverything');
@@ -429,7 +416,6 @@ const exportCollapsedDontShowEl = document.getElementById('exportCollapsedDontSh
 const btnExportCollapsedConfirmClose = document.getElementById('btnExportCollapsedConfirmClose');
 const btnExportCollapsedConfirmCancel = document.getElementById('btnExportCollapsedConfirmCancel');
 const btnExportCollapsedConfirmContinue = document.getElementById('btnExportCollapsedConfirmContinue');
-const viewportAaPresetEl = document.getElementById('viewportAaPreset');
 const buildPlateSizePresetEl = document.getElementById('buildPlateSizePreset');
 const buildPlateCustomSizeRowEl = document.getElementById('buildPlateCustomSizeRow');
 const buildPlateCustomWidthEl = document.getElementById('buildPlateCustomWidth');
@@ -938,7 +924,6 @@ let buildPlateShape = BUILD_PLATE_DEFAULTS.shape; // rectangle | rounded | circl
 let buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
 let buildPlateWidth = BUILD_PLATE_DEFAULTS.width;
 let buildPlateDepth = BUILD_PLATE_DEFAULTS.depth;
-let viewportAaPreset = 'high';
 let dpadVisible = true;
 let exportMotionControlsEnabled = true;
 let _syncingExportMotionControls = false;
@@ -946,9 +931,10 @@ let autoUIAssistEnabled = true;
 let exportCollapsedConfirmEnabled = true;
 let _exportCollapsedConfirmResolver = null;
 let uploadChoicePromptEnabled = true;
-let uploadDefaultAction = 'replace'; // replace | add
+let uploadDefaultAction = 'newplate'; // newplate | replace
 let _uploadChoiceResolver = null;
-let pendingUploadAction = null; // replace | add | import (set before opening file picker)
+let pendingUploadAction = null; // replace | newplate (set before opening file picker)
+let rulerHoverNoHitSinceMs = 0;
 const textureTuneState = {
     light: TEXTURE_TUNE_DEFAULTS.light,
     contrast: TEXTURE_TUNE_DEFAULTS.contrast,
@@ -1064,9 +1050,7 @@ function isCanvasPointInsideCropFrame(clientX, clientY) {
 
 function getViewportPixelRatio() {
     const dpr = window.devicePixelRatio || 1;
-    const presetKey = normalizeViewportAaPreset(viewportAaPreset);
-    const preset = VIEWPORT_AA_PRESETS[presetKey] || VIEWPORT_AA_PRESETS.high;
-    return Math.min(Math.max(dpr * VIEWPORT_AA_SCALE, preset.min), preset.max);
+    return Math.min(Math.max(dpr * VIEWPORT_AA_SCALE, VIEWPORT_PIXEL_RATIO_MIN), VIEWPORT_PIXEL_RATIO_MAX);
 }
 
 function getViewportFitDistance() {
@@ -4312,7 +4296,8 @@ function loop() {
         if (exportFrameEnabled) drawExportFrame();
         if (rulerEnabled) {
             const now = performance.now();
-            if (now - _lastRulerOverlayUpdateMs >= 120) {
+            const overlayIntervalMs = rulerPartHoverEnabled ? 28 : 80;
+            if (now - _lastRulerOverlayUpdateMs >= overlayIntervalMs) {
                 updateLiveRulerOverlay();
                 _lastRulerOverlayUpdateMs = now;
             }
@@ -4889,14 +4874,17 @@ function ensureRulerHoveredPartVisual() {
     }
     if (!rulerHoveredPartBoxWire) {
         const boxEdges = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1));
-        const boxMat = new THREE.LineBasicMaterial({
+        const boxMat = new THREE.LineDashedMaterial({
             color: PALETTE.preset.modelShadeFallback || '#2e2b74',
             transparent: true,
             opacity: 0.92,
+            dashSize: 0.08,
+            gapSize: 0.05,
             depthTest: false,
             depthWrite: false,
         });
         rulerHoveredPartBoxWire = new THREE.LineSegments(boxEdges, boxMat);
+        rulerHoveredPartBoxWire.computeLineDistances();
         rulerHoveredPartBoxWire.name = 'rulerHoveredPartBoxWire';
         rulerHoveredPartBoxWire.visible = false;
         rulerHoveredPartBoxWire.renderOrder = 40;
@@ -5076,6 +5064,20 @@ function selectModelPartFromRulerHover(partIndex, multiSelect = false) {
 
 function updateRulerPartHoverFromPointerEvent(ev) {
     const partIndex = resolveHoveredPartIndexFromPointerEvent(ev);
+    if (partIndex < 0) {
+        if (rulerHoveredPartIndex >= 0) {
+            const now = performance.now();
+            if (!rulerHoverNoHitSinceMs) {
+                rulerHoverNoHitSinceMs = now;
+                return;
+            }
+            if (now - rulerHoverNoHitSinceMs < 90) return;
+        }
+        rulerHoverNoHitSinceMs = 0;
+        setRulerHoveredPartIndex(-1);
+        return;
+    }
+    rulerHoverNoHitSinceMs = 0;
     setRulerHoveredPartIndex(partIndex);
 }
 
@@ -5133,8 +5135,8 @@ function updateRulerHUD() {
     if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';
     const next = (rulerUnit === 'imperial') ? 'Metric' : 'Imperial';
     if (unitToggle) unitToggle.setAttribute('aria-label', `Switch to ${next.toLowerCase()} units`);
+    document.getElementById('rulerL').textContent = formatRulerValue(dims.d);
     document.getElementById('rulerW').textContent = formatRulerValue(dims.w);
-    document.getElementById('rulerD').textContent = formatRulerValue(dims.d);
     document.getElementById('rulerH').textContent = formatRulerValue(dims.h);
 }
 
@@ -5235,7 +5237,15 @@ function drawMeasurementLabel(ctx, text, position, align = 'center') {
 }
 
 function drawMeasurement(ctx, start, end, text, center, options = {}) {
-    const { offset = 24, labelOffset = 22, extension = 6, align = 'center' } = options;
+    const {
+        offset = 24,
+        labelOffset = 22,
+        extension = 6,
+        align = 'center',
+        dashed = false,
+        showConnectors = true,
+        showArrows = true,
+    } = options;
     const edge = end.clone().sub(start);
     const edgeLen = edge.length();
     if (edgeLen < 8) return;
@@ -5250,17 +5260,23 @@ function drawMeasurement(ctx, start, end, text, center, options = {}) {
 
     ctx.strokeStyle = 'rgba(35, 35, 42, 0.78)';
     ctx.lineWidth = 2;
+    ctx.setLineDash(dashed ? [7, 5] : []);
     ctx.beginPath();
-    ctx.moveTo(start.x, start.y);
-    ctx.lineTo(a.x, a.y);
-    ctx.moveTo(end.x, end.y);
-    ctx.lineTo(b.x, b.y);
+    if (showConnectors) {
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(a.x, a.y);
+        ctx.moveTo(end.x, end.y);
+        ctx.lineTo(b.x, b.y);
+    }
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
+    ctx.setLineDash([]);
 
-    drawArrowCap(ctx, b, a, extension);
-    drawArrowCap(ctx, a, b, extension);
+    if (showArrows) {
+        drawArrowCap(ctx, b, a, extension);
+        drawArrowCap(ctx, a, b, extension);
+    }
 
     const labelPos = a.clone().add(b).multiplyScalar(0.5).add(normal.multiplyScalar(labelOffset));
     drawMeasurementLabel(ctx, text, labelPos, align);
@@ -5332,12 +5348,19 @@ function drawRulerHoverGridIncrements(ctx, width, height, cam) {
 
     const ticksX = Math.max(1, Math.floor(spanX / stepMm));
     const ticksZ = Math.max(1, Math.floor(spanZ / stepMm));
-    const maxLabels = 12;
-    const skipX = Math.max(1, Math.ceil((ticksX + 1) / maxLabels));
-    const skipZ = Math.max(1, Math.ceil((ticksZ + 1) / maxLabels));
+    const compact = width < 720 || height < 560;
+    const tiny = width < 560 || height < 440;
+    const maxLabelsX = tiny ? 5 : (compact ? 7 : 12);
+    const maxLabelsZ = tiny ? 4 : (compact ? 6 : 12);
+    const skipX = Math.max(1, Math.ceil((ticksX + 1) / maxLabelsX));
+    const skipZ = Math.max(1, Math.ceil((ticksZ + 1) / maxLabelsZ));
 
     ctx.save();
-    ctx.font = '600 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = tiny
+        ? '600 9px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+        : (compact
+            ? '600 10px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+            : '600 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif');
     ctx.fillStyle = 'rgba(35, 31, 80, 0.86)';
     ctx.strokeStyle = 'rgba(58, 52, 122, 0.52)';
     ctx.lineWidth = 1;
@@ -5351,11 +5374,13 @@ function drawRulerHoverGridIncrements(ctx, width, height, cam) {
         if (!Number.isFinite(pt.x) || !Number.isFinite(pt.y)) continue;
         const label = formatRulerIncrementLabel(distMm, i === 0);
         const tickDir = (labelEdgeZ < centerZ) ? -1 : 1;
+        const tickLen = tiny ? 4 : 6;
+        const textOffset = tiny ? 12 : 16;
         ctx.beginPath();
         ctx.moveTo(pt.x, pt.y);
-        ctx.lineTo(pt.x, pt.y + (tickDir * 6));
+        ctx.lineTo(pt.x, pt.y + (tickDir * tickLen));
         ctx.stroke();
-        ctx.fillText(label, pt.x, pt.y + (tickDir * 16));
+        ctx.fillText(label, pt.x, pt.y + (tickDir * textOffset));
     }
 
     ctx.textAlign = (labelEdgeX < centerX) ? 'right' : 'left';
@@ -5366,11 +5391,13 @@ function drawRulerHoverGridIncrements(ctx, width, height, cam) {
         if (!Number.isFinite(pt.x) || !Number.isFinite(pt.y)) continue;
         const label = formatRulerIncrementLabel(distMm, i === 0);
         const tickDir = (labelEdgeX < centerX) ? -1 : 1;
+        const tickLen = tiny ? 4 : 6;
+        const textOffset = tiny ? 9 : 12;
         ctx.beginPath();
         ctx.moveTo(pt.x, pt.y);
-        ctx.lineTo(pt.x + (tickDir * 6), pt.y);
+        ctx.lineTo(pt.x + (tickDir * tickLen), pt.y);
         ctx.stroke();
-        ctx.fillText(label, pt.x + (tickDir * 12), pt.y);
+        ctx.fillText(label, pt.x + (tickDir * textOffset), pt.y);
     }
     ctx.restore();
 }
@@ -5422,9 +5449,9 @@ function drawRulerHoverPartContextualDims(ctx, width, height, cam) {
     if (!hoveredDims) return;
 
     const axisSpecs = [
-        { axisBit: 1, label: 'W', value: hoveredDims.w, offset: 16, labelOffset: 16 },
-        { axisBit: 2, label: 'D', value: hoveredDims.d, offset: 22, labelOffset: 18 },
-        { axisBit: 4, label: 'H', value: hoveredDims.h, offset: 16, labelOffset: 16 },
+        { axisBit: 2, label: 'L', value: hoveredDims.d, offset: 20, labelOffset: 14 },
+        { axisBit: 1, label: 'W', value: hoveredDims.w, offset: 16, labelOffset: 14 },
+        { axisBit: 4, label: 'H', value: hoveredDims.h, offset: 16, labelOffset: 14 },
     ];
 
     axisSpecs.forEach((spec) => {
@@ -5434,6 +5461,9 @@ function drawRulerHoverPartContextualDims(ctx, width, height, cam) {
         drawMeasurement(ctx, edge.a, edge.b, text, center, {
             offset: spec.offset,
             labelOffset: spec.labelOffset,
+            dashed: true,
+            showConnectors: false,
+            showArrows: true,
         });
     });
 }
@@ -6148,11 +6178,7 @@ function saveSettings() {
             buildPlateSizePreset: buildPlateSizePreset,
             buildPlateWidth: String(buildPlateWidth),
             buildPlateDepth: String(buildPlateDepth),
-            viewportAaPreset: viewportAaPreset,
             showDpad: dpadVisible ? '1' : '0',
-            exportMotionControls: exportMotionControlsEnabled ? '1' : '0',
-            autoUIAssist: autoUIAssistEnabled ? '1' : '0',
-            exportCollapsedConfirm: exportCollapsedConfirmEnabled ? '1' : '0',
             uploadChoicePrompt: uploadChoicePromptEnabled ? '1' : '0',
             uploadDefaultAction: uploadDefaultAction,
             activeBgPreset: activeBgPreset,
@@ -6464,28 +6490,24 @@ function restoreSettings() {
         }
         if (s.buildPlateWidth != null) buildPlateWidth = clampBuildPlateSize(s.buildPlateWidth, BUILD_PLATE_DEFAULTS.width);
         if (s.buildPlateDepth != null) buildPlateDepth = clampBuildPlateSize(s.buildPlateDepth, BUILD_PLATE_DEFAULTS.depth);
-        if (s.viewportAaPreset != null) viewportAaPreset = normalizeViewportAaPreset(s.viewportAaPreset);
         if (buildPlateSizePreset !== 'custom' && BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset]) {
             buildPlateWidth = BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset].w;
             buildPlateDepth = BUILD_PLATE_SIZE_PRESETS[buildPlateSizePreset].d;
         }
-        if (s.exportMotionControls != null) {
-            exportMotionControlsEnabled = (s.exportMotionControls === '1' || s.exportMotionControls === true || s.exportMotionControls === 1);
-        }
+        exportMotionControlsEnabled = true;
         if (s.showDpad != null) {
             dpadVisible = (s.showDpad === '1' || s.showDpad === true || s.showDpad === 1);
         }
-        if (s.autoUIAssist != null) {
-            autoUIAssistEnabled = (s.autoUIAssist === '1' || s.autoUIAssist === true || s.autoUIAssist === 1);
-        }
-        if (s.exportCollapsedConfirm != null) {
-            exportCollapsedConfirmEnabled = (s.exportCollapsedConfirm === '1' || s.exportCollapsedConfirm === true || s.exportCollapsedConfirm === 1);
-        }
+        autoUIAssistEnabled = true;
+        exportCollapsedConfirmEnabled = true;
         if (s.uploadChoicePrompt != null) {
             uploadChoicePromptEnabled = (s.uploadChoicePrompt === '1' || s.uploadChoicePrompt === true || s.uploadChoicePrompt === 1);
         }
-        if (s.uploadDefaultAction === 'add' || s.uploadDefaultAction === 'replace') {
+        if (s.uploadDefaultAction === 'replace' || s.uploadDefaultAction === 'newplate') {
             uploadDefaultAction = s.uploadDefaultAction;
+        } else if (s.uploadDefaultAction === 'add') {
+            // Legacy migration: old "add" behavior maps to "replace" in the simplified picker.
+            uploadDefaultAction = 'replace';
         }
         if (exportGridEl) exportGridEl.checked = rulerEnabled;
         if (exportBuildPlateEl && s.exportBuildPlate == null) exportBuildPlateEl.checked = buildPlateEnabled;
@@ -6552,16 +6574,10 @@ function restoreSettings() {
         updateRulerHUD();
         if (buildPlateToggleEl) buildPlateToggleEl.checked = buildPlateEnabled;
         syncBuildPlateSizeUI();
-        if (exportMotionControlsToggleEl) exportMotionControlsToggleEl.checked = exportMotionControlsEnabled;
-        if (exportMotionControlsEl) exportMotionControlsEl.hidden = !exportMotionControlsEnabled;
-        if (viewportAaPresetEl) viewportAaPresetEl.value = viewportAaPreset;
+        exportMotionControlsEnabled = true;
+        if (exportMotionControlsEl) exportMotionControlsEl.hidden = false;
         if (showDpadToggleEl) showDpadToggleEl.checked = dpadVisible;
         applyDpadVisibility();
-        if (autoUIAssistToggleEl) autoUIAssistToggleEl.checked = autoUIAssistEnabled;
-        if (exportCollapsedConfirmToggleEl) {
-            exportCollapsedConfirmToggleEl.checked = exportCollapsedConfirmEnabled;
-            exportCollapsedConfirmToggleEl.disabled = !autoUIAssistEnabled;
-        }
         updateBuildPlateMaterial();
         updateAutoBgShadeControlVisibility();
         updateBuildPlateShadeControlVisibility();
@@ -6677,14 +6693,13 @@ function getURLSettings(searchStr = location.search) {
         buildPlateSizePreset: g('bpp'),
         buildPlateWidth: g('bpw'),
         buildPlateDepth: g('bpd'),
-        viewportAaPreset: g('va'),
         buildPlateTexture: g('bpt'),
         rulerLinesVisible: g('rl'),
         activeBgPreset: g('abp'),
         activeModelPreset: g('amp'),
         modelSyncPart: g('bsp'),
         uploadChoicePrompt: g('uap'),
-        uploadDefaultAction: p.has('uam') ? (p.get('uam') === 'a' ? 'add' : 'replace') : null,
+        uploadDefaultAction: p.has('uam') ? (p.get('uam') === 'r' ? 'replace' : 'newplate') : null,
     };
 }
 
@@ -6761,12 +6776,11 @@ function settingsToURL() {
     if (buildPlateSizePreset && buildPlateSizePreset !== '220x220') p.set('bpp', buildPlateSizePreset);
     if (buildPlateWidth !== 220) p.set('bpw', String(buildPlateWidth));
     if (buildPlateDepth !== 220) p.set('bpd', String(buildPlateDepth));
-    if (viewportAaPreset !== 'high') p.set('va', viewportAaPreset);
     p.set('abp', activeBgPreset || 'modelcolor');
     p.set('amp', activeModelPreset || 'custom');
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
     if (!uploadChoicePromptEnabled) p.set('uap', '0');
-    if (uploadDefaultAction === 'add') p.set('uam', 'a');
+    if (uploadDefaultAction === 'replace') p.set('uam', 'r');
     // Re-inject passthrough params captured at startup (e.g. debug=1)
     _passthroughParams.forEach((v, k) => { if (!p.has(k)) p.set(k, v); });
     history.replaceState(null, '', '?' + p.toString());
@@ -6877,8 +6891,8 @@ function readFileAsArrayBuffer(file) {
     });
 }
 
-function openUploadFilePicker(action = 'replace') {
-    pendingUploadAction = (action === 'add' || action === 'import') ? action : 'replace';
+function openUploadFilePicker(action = 'newplate') {
+    pendingUploadAction = (action === 'replace') ? 'replace' : 'newplate';
     if (fileInput) fileInput.click();
 }
 
@@ -6887,16 +6901,12 @@ async function requestUploadFlowFromButtons() {
     dismissStartupSplash();
 
     if (!mesh) {
-        openUploadFilePicker('replace');
+        openUploadFilePicker('newplate');
         return;
     }
 
     const requestedAction = await promptUploadChoice(null);
-    if (requestedAction === 'import') {
-        openUploadFilePicker('import');
-        return;
-    }
-    if (requestedAction !== 'add' && requestedAction !== 'replace') return;
+    if (requestedAction !== 'replace' && requestedAction !== 'newplate') return;
     openUploadFilePicker(requestedAction);
 }
 
@@ -6912,9 +6922,9 @@ async function handlePickedUploadFiles(fileList, requestedActionOverride = null)
         return;
     }
 
-    const stlActionOverride = (requestedActionOverride === 'add' || requestedActionOverride === 'replace')
+    const stlActionOverride = (requestedActionOverride === 'replace' || requestedActionOverride === 'newplate')
         ? requestedActionOverride
-        : (requestedActionOverride === 'import' ? 'replace' : null);
+        : null;
 
     if (stlFiles.length) {
         await handleFiles(stlFiles, stlActionOverride);
@@ -6930,28 +6940,37 @@ async function handleFiles(fileList, requestedActionOverride = null) {
     const files = Array.from(fileList || []).filter(f => f?.name?.toLowerCase?.().endsWith('.stl'));
     if (!files.length) return;
 
-    let requestedAction = (requestedActionOverride === 'add' || requestedActionOverride === 'replace')
+    let requestedAction = (requestedActionOverride === 'replace' || requestedActionOverride === 'newplate')
         ? requestedActionOverride
-        : 'replace';
+        : 'newplate';
 
     if (mesh && !requestedActionOverride) {
         requestedAction = await promptUploadChoice(files);
-        if (requestedAction !== 'add' && requestedAction !== 'replace') {
+        if (requestedAction !== 'replace' && requestedAction !== 'newplate') {
             return;
         }
     }
 
-    if (!mesh) requestedAction = 'replace';
+    if (!mesh) requestedAction = 'newplate';
 
-    if (mesh && requestedAction === 'add') {
-        try {
-            await appendSTLPartsToCurrentModel(files);
-        } catch (err) {
-            setStatus('Error: ' + (err?.message || 'Failed to add STL part(s).'));
-            console.error(err);
-            setTimeout(() => setStatus(''), 5000);
+    if (mesh && requestedAction === 'replace') {
+        if (isMultipartModel()) {
+            if (files.length !== 1) {
+                setStatus('Replace supports one STL at a time for multipart. Use New Plate for multiple files.');
+                setTimeout(() => setStatus(''), 3200);
+                return;
+            }
+            try {
+                await replaceMultipartPart(Math.max(0, modelPartSelected), files[0]);
+                saveSettings();
+            } catch (err) {
+                setStatus('Error: ' + (err?.message || 'Failed to replace STL part.'));
+                console.error(err);
+                setTimeout(() => setStatus(''), 5000);
+            }
+            return;
         }
-        return;
+        // Single-model replace falls through to same load path as new plate.
     }
 
     const isMultipart = files.length > 1;
@@ -8521,18 +8540,18 @@ function closeUploadChoicePrompt(action = 'cancel') {
 function applyUploadChoicePreference(action) {
     if (!uploadChoiceDontShowEl?.checked) return;
     uploadChoicePromptEnabled = false;
-    uploadDefaultAction = action === 'add' ? 'add' : 'replace';
+    uploadDefaultAction = action === 'replace' ? 'replace' : 'newplate';
     saveSettings();
 }
 
 function promptUploadChoice(files) {
-    if (!mesh) return Promise.resolve('replace');
-    if (!uploadChoicePromptEnabled || !uploadChoiceOverlayEl) return Promise.resolve(uploadDefaultAction || 'replace');
+    if (!mesh) return Promise.resolve('newplate');
+    if (!uploadChoicePromptEnabled || !uploadChoiceOverlayEl) return Promise.resolve(uploadDefaultAction || 'newplate');
 
     if (uploadChoiceTextEl) {
         const incomingLabel = getUploadIncomingLabel(files);
         if (Array.from(files || []).length) {
-            uploadChoiceTextEl.textContent = `Load ${incomingLabel}: add them to your current plate, or create a new plate and replace the current model.`;
+            uploadChoiceTextEl.textContent = `Load ${incomingLabel}: replace the current model, or start a new plate.`;
         } else {
             uploadChoiceTextEl.textContent = `Drop STL/ZIP files below or choose an action to continue.`;
         }
@@ -8549,12 +8568,8 @@ function promptUploadChoice(files) {
 function resetAllWarnings() {
     exportCollapsedConfirmEnabled = true;
     uploadChoicePromptEnabled = true;
-    uploadDefaultAction = 'replace';
+    uploadDefaultAction = 'newplate';
 
-    if (exportCollapsedConfirmToggleEl) {
-        exportCollapsedConfirmToggleEl.checked = true;
-        exportCollapsedConfirmToggleEl.disabled = !autoUIAssistEnabled;
-    }
     if (uploadChoiceDontShowEl) uploadChoiceDontShowEl.checked = false;
 
     saveSettings();
@@ -8608,7 +8623,6 @@ async function triggerExportWithAssist(fmt) {
         if (!proceed) return;
         if (exportCollapsedDontShowEl?.checked) {
             exportCollapsedConfirmEnabled = false;
-            if (exportCollapsedConfirmToggleEl) exportCollapsedConfirmToggleEl.checked = false;
             saveSettings();
         }
     }
@@ -9604,30 +9618,14 @@ if (fineTuningCheckEl) {
     });
 }
 
-if (exportMotionControlsToggleEl) {
-    exportMotionControlsToggleEl.checked = exportMotionControlsEnabled;
-    exportMotionControlsToggleEl.addEventListener('change', () => {
-        exportMotionControlsEnabled = !!exportMotionControlsToggleEl.checked;
-        if (exportMotionControlsEl) exportMotionControlsEl.hidden = !exportMotionControlsEnabled;
-        saveSettings();
-    });
-}
+exportMotionControlsEnabled = true;
+if (exportMotionControlsEl) exportMotionControlsEl.hidden = false;
 
 if (showDpadToggleEl) {
     showDpadToggleEl.checked = dpadVisible;
     showDpadToggleEl.addEventListener('change', () => {
         dpadVisible = !!showDpadToggleEl.checked;
         applyDpadVisibility();
-        saveSettings();
-    });
-}
-
-if (viewportAaPresetEl) {
-    viewportAaPresetEl.value = normalizeViewportAaPreset(viewportAaPreset);
-    viewportAaPresetEl.addEventListener('change', () => {
-        viewportAaPreset = normalizeViewportAaPreset(viewportAaPresetEl.value);
-        viewportAaPresetEl.value = viewportAaPreset;
-        syncCanvasSize();
         saveSettings();
     });
 }
@@ -9668,26 +9666,6 @@ if (buildPlateCustomDepthEl) {
 syncBuildPlateSizeUI();
 syncExportMotionControlsFromMain();
 
-if (autoUIAssistToggleEl) {
-    autoUIAssistToggleEl.checked = autoUIAssistEnabled;
-    autoUIAssistToggleEl.addEventListener('change', () => {
-        autoUIAssistEnabled = !!autoUIAssistToggleEl.checked;
-        if (exportCollapsedConfirmToggleEl) {
-            exportCollapsedConfirmToggleEl.disabled = !autoUIAssistEnabled;
-        }
-        saveSettings();
-    });
-}
-
-if (exportCollapsedConfirmToggleEl) {
-    exportCollapsedConfirmToggleEl.checked = exportCollapsedConfirmEnabled;
-    exportCollapsedConfirmToggleEl.disabled = !autoUIAssistEnabled;
-    exportCollapsedConfirmToggleEl.addEventListener('change', () => {
-        exportCollapsedConfirmEnabled = !!exportCollapsedConfirmToggleEl.checked;
-        saveSettings();
-    });
-}
-
 btnExportCollapsedConfirmClose?.addEventListener('click', () => closeCollapsedExportConfirm(false));
 btnExportCollapsedConfirmCancel?.addEventListener('click', () => closeCollapsedExportConfirm(false));
 btnExportCollapsedConfirmContinue?.addEventListener('click', () => closeCollapsedExportConfirm(true));
@@ -9697,14 +9675,13 @@ exportCollapsedConfirmOverlayEl?.addEventListener('click', (e) => {
 
 btnUploadChoiceClose?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
 btnUploadChoiceCancel?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
-btnUploadChoiceImport?.addEventListener('click', () => closeUploadChoicePrompt('import'));
-btnUploadChoiceAdd?.addEventListener('click', () => {
-    applyUploadChoicePreference('add');
-    closeUploadChoicePrompt('add');
-});
 btnUploadChoiceReplace?.addEventListener('click', () => {
     applyUploadChoicePreference('replace');
     closeUploadChoicePrompt('replace');
+});
+btnUploadChoiceNewPlate?.addEventListener('click', () => {
+    applyUploadChoicePreference('newplate');
+    closeUploadChoicePrompt('newplate');
 });
 uploadChoiceBrowseBtnEl?.addEventListener('click', () => {
     closeUploadChoicePrompt('cancel');

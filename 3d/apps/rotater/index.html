@@ -225,10 +225,10 @@
                             </div>
                             <div class="cam-nav-row" aria-label="Viewer controls">
                                 <div id="rulerHUD" class="ruler-hud" hidden>
-                                    <span class="ruler-dim"><span class="ruler-axis">W</span><span id="rulerW"
+                                    <span class="ruler-dim"><span class="ruler-axis">L</span><span id="rulerL"
                                         class="ruler-val">—</span></span>
                                     <span class="ruler-sep" aria-hidden="true">·</span>
-                                    <span class="ruler-dim"><span class="ruler-axis">D</span><span id="rulerD"
+                                    <span class="ruler-dim"><span class="ruler-axis">W</span><span id="rulerW"
                                         class="ruler-val">—</span></span>
                                     <span class="ruler-sep" aria-hidden="true">·</span>
                                     <span class="ruler-dim"><span class="ruler-axis">H</span><span id="rulerH"
@@ -720,27 +720,10 @@
                                 <label class="gif-option-check adv-section-check" title="Remove snap points">
                                     <input type="checkbox" id="fineTuningCheck"> Fine tuning for precise control
                                 </label>
-                                <label class="gif-option-check adv-section-check" title="Show curated motion controls in the Export panel">
-                                    <input type="checkbox" id="exportMotionControlsToggle" checked> Export motion controls
-                                </label>
-                                <label class="gif-option-check adv-section-check" title="Auto-expand export panel and show helper confirmation when exporting from collapsed state">
-                                    <input type="checkbox" id="autoUIAssistToggle" checked> Auto UI changes
-                                </label>
-                                <label class="gif-option-check adv-section-check" title="Show confirmation when exporting from collapsed panel">
-                                    <input type="checkbox" id="exportCollapsedConfirmToggle" checked> Export collapsed confirmation
-                                </label>
                                 <label class="gif-option-check adv-section-check" title="Show camera D-pad controls in the viewer">
                                     <input type="checkbox" id="showDpadToggle" checked> Show D-pad controls
                                 </label>
                                 <button id="resetWarningsToggle" class="copy-link-btn copy-link-btn--secondary copy-link-btn--compact app-settings-reset-btn" type="button" title="Re-enable warning dialogs you dismissed earlier">Reset all warnings</button>
-                            </div>
-                            <div class="app-settings-inline-group">
-                                <label class="control-label app-settings-inline-label" for="viewportAaPreset">Viewport Edge Smoothing</label>
-                                <select id="viewportAaPreset" class="export-select app-settings-select" aria-label="Viewport edge smoothing preset">
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high" selected>High</option>
-                                </select>
                             </div>
                             <div class="app-settings-inline-group">
                                 <label class="control-label app-settings-inline-label" for="buildPlateSizePreset">Build Plate Size</label>
@@ -1033,9 +1016,8 @@
                     </button>
                     <div class="upload-choice-actions">
                         <button id="btnUploadChoiceCancel" class="copy-link-btn copy-link-btn--secondary" type="button">Cancel</button>
-                        <button id="btnUploadChoiceImport" class="copy-link-btn copy-link-btn--secondary" type="button">Import Settings Package (.zip)</button>
-                        <button id="btnUploadChoiceAdd" class="copy-link-btn copy-link-btn--secondary" type="button">Add to Current Plate</button>
-                        <button id="btnUploadChoiceReplace" class="export-btn export-btn--main" type="button">Create New Plate (Replace)</button>
+                        <button id="btnUploadChoiceReplace" class="copy-link-btn copy-link-btn--secondary" type="button">Replace</button>
+                        <button id="btnUploadChoiceNewPlate" class="export-btn export-btn--main" type="button">New Plate</button>
                     </div>
                 </div>
             </div>
