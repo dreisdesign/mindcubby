@@ -9,23 +9,32 @@ This roadmap is sorted by readiness (dependency order). Every project includes a
 
 ### Phase 1 (completed)
 
-1. Regression automation baseline (simple) - completed 2026-05-14: added `npm run test:smoke`
-2. Optional pre-commit smoke gate - completed 2026-05-14: added `npm run setup:precommit-smoke`
+Completed items moved to `CHANGELOG.md` (see the Unreleased section for details):
+
+- Regression automation baseline — `npm run test:smoke`
+- Optional pre-commit smoke gate — `npm run setup:precommit-smoke`
 
 ### Phase 2 (completed)
 
-1. Auto-brightness toggle reveal animation - completed 2026-05-14: Background and Surface shade sliders now reveal first, then animate from auto shade to the restored manual shade.
-2. Multipart selection language cleanup - completed 2026-05-14: multipart selector summary now uses clearer selected-part phrasing for 3+ selections.
-3. D-pad visibility preference - completed 2026-05-14: added App Settings toggle to show/hide D-pad controls; when hidden, Pause moves to the bottom-right overlay button.
-4. Export duration selector parity - completed 2026-05-14: GIF/MP4 now share duration dropdown labels with derived frame counts, and MP4 estimate row now includes frame count parity.
+Completed items moved to `CHANGELOG.md` (see Unreleased):
+
+- Auto-brightness toggle reveal animation
+- Multipart selection language cleanup
+- D-pad visibility preference
+- Export duration selector parity
 
 ### Phase 3
 
-1. Auto-brightness two-way easing polish - completed 2026-05-14: Background and Surface now animate both ON and OFF transitions with smoother easing.
-2. Multipart selector filename-first summary - completed 2026-05-14: selector title now shows the first selected part filename (truncated) while preserving `N of M selected` metadata.
-3. Small-browser App Settings access fix - completed 2026-05-14: App Settings canvas quick action remains visible on narrower desktop/tablet widths.
-4. Track 2 ruler hover inspection mode - completed 2026-05-14: ruler now includes a part-hover toggle that updates W/D/H from the currently hovered model part.
-5. Fast-follow queued: interactive Export duration dropdown refinements (label/estimate responsiveness parity across GIF/MP4).
+Completed items moved to `CHANGELOG.md`:
+
+- Auto-brightness two-way easing polish
+- Multipart selector filename-first summary
+- Small-browser App Settings access fix
+- Track 2 ruler hover inspection mode
+
+Remaining / Fast-follow:
+
+1. Interactive Export duration dropdown refinements — queued (label/estimate responsiveness parity across GIF/MP4)
 
 ### Track Integration Map
 
