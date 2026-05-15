@@ -9,28 +9,15 @@ This roadmap is sorted by readiness (dependency order). Every project includes a
 
 ### Phase 1 (completed)
 
-Completed items moved to `CHANGELOG.md` (see the Unreleased section for details):
-
-- Regression automation baseline — `npm run test:smoke`
-- Optional pre-commit smoke gate — `npm run setup:precommit-smoke`
+Completed work archived in `_IGNORE/ROADMAP_ARCHIVE.md` and tracked in `CHANGELOG.md` (Unreleased).
 
 ### Phase 2 (completed)
 
-Completed items moved to `CHANGELOG.md` (see Unreleased):
-
-- Auto-brightness toggle reveal animation
-- Multipart selection language cleanup
-- D-pad visibility preference
-- Export duration selector parity
+Completed work archived in `_IGNORE/ROADMAP_ARCHIVE.md` and tracked in `CHANGELOG.md` (Unreleased).
 
 ### Phase 3
 
-Completed items moved to `CHANGELOG.md`:
-
-- Auto-brightness two-way easing polish
-- Multipart selector filename-first summary
-- Small-browser App Settings access fix
-- Track 2 ruler hover inspection mode
+Completed work archived in `_IGNORE/ROADMAP_ARCHIVE.md` and tracked in `CHANGELOG.md` (Unreleased).
 
 Remaining / Fast-follow:
 
@@ -81,6 +68,8 @@ Track 2: Ruler and measurement system (feature enhancement)
 | Export duration selector parity | Export UX | M | None | Replace static frame-count display with shared GIF/MP4 duration dropdown that shows duration and derived frame count. |
 | Interactive export duration dropdown refinements (fast-follow) | Export UX | S | Export duration selector parity | Improve dropdown interaction polish so duration labels, frame counts, and estimate rows update with tighter parity across GIF and MP4 paths. |
 | Upload decision default simplification | Upload Flow UX | M | Existing upload decision modal | Replace warning-memory behavior with explicit persisted default (`Always Add`, `Always Replace`, `Ask`) plus one-time override in modal. |
+| Reset everything also resets Lighting Effects & Animation | UX Settings | S | None | Extend the global `Reset everything` action to clear the Lighting Effects and Animation card state (speed, tilt/wobble, light height/intensity) so a full reset is comprehensive. |
+| Ruler part-hover supports single-part models | Bugfix | S | None | Ensure `Part hover` mode can be enabled and displays dimensions even when the model has a single part. |
 
 ## Readiness 2: Depends on stabilization work
 
@@ -88,6 +77,7 @@ Track 2: Ruler and measurement system (feature enhancement)
 |---|---|---|---|---|
 | Multipart persistence hardening | State Persistence | M | Regression automation baseline (simple) | Close remaining refresh/restore edge cases for multipart appearance, checkbox state, and URL/local storage parity. |
 | Preview click-to-select model parts | Interaction Design | M | Multipart persistence hardening | Allow clicking visible model geometry in the preview to set the active part/model target, with robust hidden-part filtering and selector sync. |
+| Click-to-select parts (single & multi-select) | Interaction Design | M | Preview click-to-select model parts | Allow clicking geometry to select a single part; support multi-select via modifier keys (Shift/Cmd) and keep the selector UI in sync. |
 | JavaScript module refactor (sortable naming) | Code Architecture | L | Regression automation baseline (simple) | Split script logic into JS modules, adopt sortable file naming, and migrate incrementally behind stable import boundaries. |
 | Functions index + Copilot docs map | AI-assisted Dev Workflow | M | JavaScript module refactor (sortable naming) | Create a maintained functions index and Copilot instruction references that point to project docs so AI-assisted edits can resolve context faster. |
 | Export workspace consolidation finish pass | Rendering UX | M | Multipart persistence hardening | Complete one-surface export framing cleanup and remove remaining duplicate or legacy interaction paths. |

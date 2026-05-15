@@ -5038,7 +5038,7 @@ function updateRulerHUD() {
     document.documentElement.classList.toggle('ruler-visible', !!modelDims && !!rulerEnabled);
     if (!modelDims) return;
 
-    const hoverAvailable = isMultipartModel() && modelPartDimensions.length > 1;
+    const hoverAvailable = modelPartDimensions && modelPartDimensions.length > 0;
     if (!hoverAvailable) rulerHoveredPartIndex = -1;
 
     const hoverToggle = document.getElementById('rulerHoverToggle');
