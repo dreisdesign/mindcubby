@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.1.91**
+**Version (current workspace): 2.1.94**
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
@@ -119,6 +119,7 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 - **Reset all warnings**: re-enables previously dismissed warning prompts (for example upload choice and collapsed-export confirmations).
 - **Build Plate Size**: sets the virtual build plate dimensions used by Surface/Grid context (`180x180`, `220x220`, `235x235`, `256x256`, `300x300`, or `Custom`).
 - **Custom Build Plate Width/Depth**: when `Custom` is selected, sets plate width/depth in mm.
+- **Ruler Units**: switches measurement units between metric (`mm`) and imperial (`in`).
 - **Load 3D Benchy**: loads the default Benchy test model.
 - **Dark mode**: toggles app theme.
 - **About Rotater**: opens version/build info and project links.
@@ -128,10 +129,13 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 
 - **Drag** to orbit · **Scroll** to zoom · **Right-drag up/down** to pan vertically
 - **Spacebar** — pause / resume rotation
+- **Esc** — collapse expanded preview only (no action when preview is already collapsed)
 - **D-pad** (bottom-center of viewer) — orbit the camera in 45° snapped increments
   - Arrow keys (←↑↓→) do the same thing from the keyboard
   - Center button of the D-pad pauses / resumes (⏸/▶)
 - **Reset camera** button (⟳, D-pad center) — recenters the model in the export frame
+- **Ruler HUD controls** — `Inspect` hover mode can be toggled independently from `Select`; geometry click-select remains available while ruler is enabled
+- **Top-right utility controls** — include App Settings plus a sidepanel hide/show toggle (close icon when visible, expand icon when hidden)
 - **Export workspace framing** — entering Export enables the crop/framing workspace on the main viewer
   - The viewer dims and blurs outside the crop frame
   - Export quick options (`Background`, `Grid`, `Build Plate`) apply directly to the live export workspace viewport while framing

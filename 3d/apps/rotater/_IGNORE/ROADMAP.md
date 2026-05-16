@@ -1,7 +1,7 @@
 # Rotater Roadmap
 ---
 
-Updated: 2026-05-14
+Updated: 2026-05-15
 
 This roadmap is sorted by readiness (dependency order). Every project includes a project type, estimated difficulty, and required dependencies.
 
@@ -39,8 +39,9 @@ Track 2: Ruler and measurement system (feature enhancement)
 - Spatial context and alignment are implemented through existing roadmap items:
 	- `Ruler persistence polish`
 	- `Ruler part-hover inspect mode` (implemented)
+	- `Preview click-to-select model parts` (implemented)
+	- `Click-to-select parts (single & multi-select)` (implemented)
 	- `Advanced measure mode`
-	- `Preview click-to-select model parts`
 	- `Drag / move models on plate`
 
 ### Shared workflow legend
@@ -76,8 +77,6 @@ Track 2: Ruler and measurement system (feature enhancement)
 | Project | Project Type | Estimated Difficulty | Dependencies | Scope |
 |---|---|---|---|---|
 | Multipart persistence hardening | State Persistence | M | Regression automation baseline (simple) | Close remaining refresh/restore edge cases for multipart appearance, checkbox state, and URL/local storage parity. |
-| Preview click-to-select model parts | Interaction Design | M | Multipart persistence hardening | Allow clicking visible model geometry in the preview to set the active part/model target, with robust hidden-part filtering and selector sync. |
-| Click-to-select parts (single & multi-select) | Interaction Design | M | Preview click-to-select model parts | Allow clicking geometry to select a single part; support multi-select via modifier keys (Shift/Cmd) and keep the selector UI in sync. |
 | JavaScript module refactor (sortable naming) | Code Architecture | L | Regression automation baseline (simple) | Split script logic into JS modules, adopt sortable file naming, and migrate incrementally behind stable import boundaries. |
 | Functions index + Copilot docs map | AI-assisted Dev Workflow | M | JavaScript module refactor (sortable naming) | Create a maintained functions index and Copilot instruction references that point to project docs so AI-assisted edits can resolve context faster. |
 | Export workspace consolidation finish pass | Rendering UX | M | Multipart persistence hardening | Complete one-surface export framing cleanup and remove remaining duplicate or legacy interaction paths. |
@@ -87,9 +86,9 @@ Track 2: Ruler and measurement system (feature enhancement)
 
 | Project | Project Type | Estimated Difficulty | Dependencies | Scope |
 |---|---|---|---|---|
-| Advanced measure mode | Geometry Tools | L | Ruler persistence polish, Preview click-to-select model parts | Add two-point mesh measurement via raycast + ruler units with robust hidden-part and transparent-material filtering. |
+| Advanced measure mode | Geometry Tools | L | Ruler persistence polish, Multipart persistence hardening | Add two-point mesh measurement via raycast + ruler units with robust hidden-part and transparent-material filtering. |
 | Settings-only undo stack | Interaction System | L | Multipart persistence hardening | Implement Cmd/Ctrl+Z for settings mutations only, isolated from file operations (load/append/replace). |
-| Drag / move models on plate | Geometry Interaction | XL | Preview click-to-select model parts, Settings-only undo stack, Multipart persistence hardening | Add direct model dragging/placement on the build plate with floor constraints, transform persistence, and predictable multi-model interaction rules. |
+| Drag / move models on plate | Geometry Interaction | XL | Settings-only undo stack, Multipart persistence hardening | Add direct model dragging/placement on the build plate with floor constraints, transform persistence, and predictable multi-model interaction rules. |
 | Pinnable cards | UI Architecture | L | Settings-only undo stack | Pin/unpin cards to a quick-access rail with persistent state, keyboard support, and overflow handling. |
 
 ## Readiness 4: Cross-system initiatives
@@ -117,6 +116,7 @@ Track 2: Ruler and measurement system (feature enhancement)
 | Item | Status |
 |---|---|
 | Legacy standalone "Export Workspace Cleanup" item | Folded into Export workspace consolidation finish pass (not tracked separately). |
+| Preview click-to-select + Select mode projects | Implemented and removed from the open roadmap. |
 | Prior mixed "report + queue" layout | Replaced by dependency-ordered project planning layout. |
 | Testing scripts + pre-commit request | Consolidated into one testing baseline project plus an optional pre-commit gate to avoid duplicate roadmap items. |
 

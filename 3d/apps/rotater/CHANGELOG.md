@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+- **Interaction mode picker (Inspect / Multi-Select)** — replaced separate `Inspect`/`Select` HUD toggles with a single grouped picker; `Select` renamed to `Multi-Select`; picker modes are mutually-exclusive and auto-pause rotation while active.
+- **Config: partInteractionModes** — added `partInteractionModes` to `color-rules.json` to control opacity/saturation profiles for `inspect` and `select` modes; visuals are applied dynamically to part materials and persisted in color rules.
+- **Canvas sidepanel quick toggle** — added a top-right canvas utility button to hide/show sidepanels; the icon now swaps between close and expand states and persists across refreshes
 - **Model footprint floor guides** — ruler grid now includes thin footprint lines derived from the loaded model bounds, aligned to the active ruler unit system (`mm` metric spacing or `in` imperial spacing)
 - **Export preview visible border** — the mini export preview now always has a visible border; border strengthens when background is off so the frame is clear on transparent renders
 - **Export Build Plate quick option** — Export quick options now include a dedicated `Build Plate` toggle so plate visibility can be controlled per-export without changing the main Build Plate card defaults
@@ -12,7 +15,16 @@
 - **Ruler part-hover inspect mode** — ruler HUD now includes a `Part hover` toggle; when enabled, hovering multipart geometry updates W/D/H to the hovered part dimensions
 - **Ruler hover focus highlight** — hovered multipart parts now show a live 3D bounding-box outline, and the matching row in the model selector is highlighted for clear target context
 
-### Changed
+-### Changed
+- **Inspect hover dims only** — Inspect mode now shows only hovered-part dimensions in the ruler HUD; the previous ruler fallback readout is hidden while inspecting or multi-selecting.
+- **Pause/play disabled while interacting** — Pause and Export pause controls are disabled while `Inspect` or `Multi-Select` modes are active; controls show the tooltip "Not available while inspecting/selecting".
+- **Sidepanel toggle restyle** — replaced the expand/close icon with a circular utility button and corrected expand/close orientation behavior.
+- **Finish spacing** — added spacing above the Matte/Satin/Gloss finish buttons for improved visual separation.
+- **Ruler unit control moved to App Settings** — `mm/in` unit switching now lives in App Settings (instead of the persistent bottom ruler HUD) to reduce always-on canvas control noise
+- **Ruler select mode decoupled from inspect mode** — part click-select now works whenever ruler is enabled, without requiring Inspect mode to be active first
+- **Ruler select icon/style parity** — Select mode now uses the `pan_tool_alt` icon and active styling that matches Inspect mode (removed the separate green active treatment)
+- **Surface Finish control order** — model Surface card now presents controls in the order `label -> strength slider -> Matte/Satin/Gloss buttons`
+- **Upload icon consistency** — both canvas and sidebar Upload STL actions now use the same Add (`+`) icon path
 - **Renamed Export → Share (UI text only)** — the Export panel title and sidebar/canvas quick-action labels were updated to read `Share` to better reflect copy-link and save/share workflows.
 - **Ruler/build-plate export parity** — synchronize ruler and build-plate quick options with Export workspace controls so framing and plate visibility remain consistent when entering export/share mode.
 - **Background preset naming parity** — background preset naming now consistently uses `Model Sync` terminology in UI labels and related preset metadata.
@@ -45,6 +57,10 @@
 - **Ruler hover inspection focus** — enabling `Part hover` mode now auto-pauses model rotation so hovered-part measurement is easier to read
 
 ### Fixed
+- **Esc preview toggle direction** — pressing `Esc` now collapses the preview only when it is expanded, and does nothing when already collapsed.
+- **Paused-state hard refresh restore** — pause/resume state now persists in settings and is restored after hard refresh, including pause button/icon state
+- **Inspect focus clarity on multipart models** — while Inspect mode is hovering one part, non-hovered parts now dim to improve focus on the active target
+- **Persistent ruler-dim readout noise** — bottom ruler L/W/H values no longer remain persistently visible when Inspect mode is off
 - **Color picker preview performance** — coalesced per-`input` color picker updates via `requestAnimationFrame` and streamlined preview/commit handling so dragging the OS picker remains responsive in multipart models (reduces UI lag during continuous input).
 - **Auto-brightness OFF reveal transition** — turning Background/Surface Auto brightness off now reveals the Shade row first, then animates the slider from the auto shade to the restored manual shade for clearer state feedback
 - **Auto-brightness ON/OFF animation parity** — Background and Surface auto-brightness toggles now animate both directions with smoother ease-in-out motion

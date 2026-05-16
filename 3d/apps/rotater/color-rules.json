@@ -59,5 +59,46 @@
       "gold": 0,
       "custom": 0
     }
+  },
+  "partInteractionModes": {
+    "_note": "Visual emphasis rules for Inspect and Multi-Select modes. Keys must match exact state names used by the runtime (see getPartInteractionVisualProfile in script.js). Values are percentages: 100 = full/unchanged, lower = faded/desaturated.",
+
+    "inspect": {
+      "_states": "base = all non-hovered parts; hovered = the single part under the cursor",
+      "base": {
+        "_note": "Non-hovered parts remain unchanged in Inspect mode",
+        "opacityPercent": 100,
+        "saturationPercent": 100
+      },
+      "hovered": {
+        "_note": "The part currently under cursor: full emphasis",
+        "opacityPercent": 100,
+        "saturationPercent": 100
+      }
+    },
+
+    "select": {
+      "_states": "base = unselected & unhovered; selected = checked but not hovered; hoveredUnselected = cursor over unselected; hoveredSelected = cursor over selected",
+      "base": {
+        "_note": "Default dim state for parts that are neither selected nor hovered",
+        "opacityPercent": 75,
+        "saturationPercent": 30
+      },
+      "selected": {
+        "_note": "Checked (selected) parts that are not currently hovered",
+        "opacityPercent": 100,
+        "saturationPercent": 100
+      },
+      "hoveredUnselected": {
+        "_note": "Cursor is over this part but it is not yet selected",
+        "opacityPercent": 75,
+        "saturationPercent": 30
+      },
+      "hoveredSelected": {
+        "_note": "Cursor is over this part and it is already selected",
+        "opacityPercent": 100,
+        "saturationPercent": 100
+      }
+    }
   }
 }

@@ -42,6 +42,28 @@ function checkNodeSyntax(relPath) {
   }
 }
 
+function stripEsmSyntaxForCompile(source) {
+  return source
+    .replace(/^\s*import\s+[^;]+;\s*$/gm, '')
+    .replace(/\bimport\.meta\b/g, '({})')
+    .replace(/^\s*export\s+default\s+/gm, '')
+    .replace(/^\s*export\s+(?=(async\s+)?function|const\s+|let\s+|var\s+|class\s+)/gm, '')
+    .replace(/^\s*export\s*\{[^}]*\}\s*;?\s*$/gm, '');
+}
+
+function checkCompileSyntax(relPath) {
+  const full = assertFile(relPath);
+  try {
+    const source = fs.readFileSync(full, 'utf8');
+    const compileSource = stripEsmSyntaxForCompile(source);
+    // Compile only; do not execute. This catches malformed token structure reliably.
+    new Function(compileSource);
+    pass(`Compile syntax OK: ${relPath}`);
+  } catch (err) {
+    fail(`Compile syntax failed for ${relPath}: ${err.message}`);
+  }
+}
+
 function expectSubstring(relPath, needle) {
   const full = assertFile(relPath);
   const content = fs.readFileSync(full, 'utf8');
@@ -63,11 +85,16 @@ checkNodeSyntax('script.js');
 checkNodeSyntax('shade-system.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
+checkCompileSyntax('script.js');
+checkCompileSyntax('shade-system.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');
+expectSubstring('index.html', 'id="btnClearBuildPlate"');
 expectSubstring('index.html', 'id="btnLoadBenchy"');
 expectSubstring('index.html', 'id="exportFormat"');
+expectSubstring('index.html', 'data-copy-link-label');
 expectSubstring('script.js', 'function resetEverything()');
+expectSubstring('script.js', 'async function clearBuildPlateModels()');
 expectSubstring('script.js', 'function restoreSettings()');
 expectSubstring('script.js', 'function saveSettings()');
 

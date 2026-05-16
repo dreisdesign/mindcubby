@@ -9,7 +9,8 @@ import JSZip from 'jszip';
 import * as ShadeSystem from './shade-system.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
-const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tsh=115&tpr=100&tpe=125&tcr=100&tce=200&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
+const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
+const SKIP_DEFAULT_PRESET_ONCE_KEY = 'rotater_skipDefaultPresetOnce';
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
 // Export quality presets — base short-edge size + fps + bitrate.
@@ -164,7 +165,6 @@ const BUILD_PLATE_DEFAULTS = {
     sizePreset: '220x220',
     width: 220,
     depth: 220,
-}
 };
 const PALETTE = {
     fallback: '#ffffff',
@@ -218,12 +218,12 @@ const PALETTE = {
     },
 };
 const TEXTURE_TUNE_DEFAULTS = {
-    light: 100,
+    light: 120,
     contrast: 100,
     highlights: 100,
-    shadows: 45,
-    shadowAzimuth: 48,
-    shadowHeight: 100,
+    shadows: 50,
+    shadowAzimuth: 180,
+    shadowHeight: 130,
     metallicRoughness: 30,
     metallicMetalness: 65,
     metallicReflection: 100,
@@ -392,9 +392,12 @@ const partReplaceInput = document.getElementById('partReplaceInput');
 const partAppendInput = document.getElementById('partAppendInput');
 const uploadChoiceOverlayEl = document.getElementById('uploadChoiceOverlay');
 const uploadChoiceTextEl = document.getElementById('uploadChoiceText');
-const uploadChoiceDontShowEl = document.getElementById('uploadChoiceDontShow');
 const uploadChoiceDropZoneEl = document.getElementById('uploadChoiceDropZone');
-const uploadChoiceBrowseBtnEl = document.getElementById('btnUploadChoiceBrowse');
+const uploadChoiceDecisionEl = document.getElementById('uploadChoiceDecision');
+const uploadChoiceActionsRightEl = document.getElementById('uploadChoiceActionsRight');
+const uploadChoiceFileListWrapEl = document.getElementById('uploadChoiceListWrap');
+const uploadChoiceFileListEl = document.getElementById('uploadChoiceFileList');
+const btnUploadChoiceShowMore = document.getElementById('btnUploadChoiceShowMore');
 const btnUploadChoiceClose = document.getElementById('btnUploadChoiceClose');
 const btnUploadChoiceCancel = document.getElementById('btnUploadChoiceCancel');
 const btnUploadChoiceReplace = document.getElementById('btnUploadChoiceReplace');
@@ -410,6 +413,8 @@ const rulerSelectToggleEl = document.getElementById('rulerSelectToggle');
 const showDpadToggleEl = document.getElementById('showDpadToggle');
 const resetWarningsToggleEl = document.getElementById('resetWarningsToggle');
 const btnResetEverythingEl = document.getElementById('btnResetEverything');
+const btnClearBuildPlateEl = document.getElementById('btnClearBuildPlate');
+const btnToggleSidepanelsEl = document.getElementById('btnToggleSidepanels');
 const exportCollapsedConfirmOverlayEl = document.getElementById('exportCollapsedConfirmOverlay');
 const exportCollapsedConfirmSummaryEl = document.getElementById('exportCollapsedConfirmSummary');
 const exportCollapsedDontShowEl = document.getElementById('exportCollapsedDontShow');
@@ -421,8 +426,7 @@ const buildPlateCustomSizeRowEl = document.getElementById('buildPlateCustomSizeR
 const buildPlateCustomWidthEl = document.getElementById('buildPlateCustomWidth');
 const buildPlateCustomDepthEl = document.getElementById('buildPlateCustomDepth');
 const btnPause = document.getElementById('btnPause');
-const iconPause = document.getElementById('iconPause');
-const iconPlay = document.getElementById('iconPlay');
+const iconPlayPause = document.getElementById('iconPlayPause');
 const rotateModeEl = {
     get value() { return document.querySelector('input[name="rotateMode"]:checked')?.value ?? 'spin'; },
     set value(v) { const el = document.querySelector(`input[name="rotateMode"][value="${v}"]`); if (el) el.checked = true; },
@@ -765,6 +769,36 @@ const DEFAULT_COLOR_RULES = {
             custom: 0,
         },
     },
+    partInteractionModes: {
+        select: {
+            base: {
+                opacityPercent: 25,
+                saturationPercent: 25,
+            },
+            selected: {
+                opacityPercent: 100,
+                saturationPercent: 100,
+            },
+            hoveredUnselected: {
+                opacityPercent: 75,
+                saturationPercent: 25,
+            },
+            hoveredSelected: {
+                opacityPercent: 100,
+                saturationPercent: 100,
+            },
+        },
+        inspect: {
+            base: {
+                opacityPercent: 25,
+                saturationPercent: 25,
+            },
+            hovered: {
+                opacityPercent: 100,
+                saturationPercent: 100,
+            },
+        },
+    },
 };
 
 let colorRules = JSON.parse(JSON.stringify(DEFAULT_COLOR_RULES));
@@ -933,6 +967,9 @@ let _exportCollapsedConfirmResolver = null;
 let uploadChoicePromptEnabled = true;
 let uploadDefaultAction = 'newplate'; // newplate | replace
 let _uploadChoiceResolver = null;
+let uploadChoiceSelectedFiles = [];
+let uploadChoiceShowAllFiles = false;
+const UPLOAD_CHOICE_FILE_PREVIEW_LIMIT = 5;
 let pendingUploadAction = null; // replace | newplate (set before opening file picker)
 let rulerHoverNoHitSinceMs = 0;
 const textureTuneState = {
@@ -1918,6 +1955,13 @@ function getPartOptionMoreIconSVG() {
     return '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="5" r="1.9" fill="currentColor"></circle><circle cx="12" cy="12" r="1.9" fill="currentColor"></circle><circle cx="12" cy="19" r="1.9" fill="currentColor"></circle></svg>';
 }
 
+function getPartVisibilityIconSVG(isHidden = false) {
+    if (isHidden) {
+        return '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M21.2002 20.4004L19.7998 21.7998L15.5996 17.6504C15.0165 17.8336 14.4293 17.9709 13.8379 18.0625C13.2462 18.1542 12.6333 18.2002 12 18.2002C9.48337 18.2002 7.24204 17.5039 5.27539 16.1123C3.30873 14.7206 1.88333 12.9169 1 10.7002C1.35 9.81686 1.79186 8.99564 2.3252 8.2373C2.85847 7.47911 3.46716 6.8001 4.15039 6.2002L1.40039 3.40039L2.7998 2L21.2002 20.4004ZM5.5498 7.60059C5.06659 8.03384 4.62452 8.50883 4.22461 9.02539C3.82473 9.54195 3.48346 10.1003 3.2002 10.7002C4.03349 12.3834 5.22889 13.7213 6.78711 14.7129C8.34544 15.7046 10.0833 16.2002 12 16.2002C12.3332 16.2002 12.6581 16.1793 12.9746 16.1377C13.2913 16.096 13.6169 16.05 13.9502 16L13.0498 15.0498C12.8666 15.0998 12.6919 15.1381 12.5254 15.1631C12.3587 15.1881 12.1833 15.2002 12 15.2002C10.75 15.2002 9.6875 14.7627 8.8125 13.8877C7.9375 13.0127 7.5 11.9502 7.5 10.7002C7.5 10.5169 7.51211 10.3415 7.53711 10.1748C7.56211 10.0083 7.60043 9.83357 7.65039 9.65039L5.5498 7.60059Z"></path><path fill="currentColor" d="M12 3.2002C14.5166 3.2002 16.758 3.89645 18.7246 5.28809C20.6913 6.67975 22.1167 8.48353 23 10.7002C22.6167 11.6835 22.1123 12.5958 21.4873 13.4375C20.8623 14.2792 20.1331 15.0171 19.2998 15.6504L17.8496 14.25C18.4828 13.7668 19.0455 13.2379 19.5371 12.6631C20.0288 12.0881 20.4498 11.4335 20.7998 10.7002C19.9665 9.01696 18.7711 7.67914 17.2129 6.6875C15.6546 5.69583 13.9167 5.2002 12 5.2002C11.5168 5.2002 11.0418 5.23316 10.5752 5.2998C10.1086 5.36647 9.65017 5.46726 9.2002 5.60059L7.65039 4.0498C8.33355 3.76658 9.03352 3.55472 9.75 3.41309C10.4667 3.27142 11.2167 3.2002 12 3.2002Z"></path><path fill="currentColor" d="M12 6.2002C13.25 6.2002 14.3125 6.6377 15.1875 7.5127C16.0625 8.38769 16.5 9.4502 16.5 10.7002C16.5 11.0335 16.467 11.3461 16.4004 11.6377C16.3337 11.9294 16.2329 12.2167 16.0996 12.5L14.6504 11.0498C14.8002 10.2666 14.5745 9.53378 13.9746 8.85059C13.3747 8.16736 12.6002 7.89996 11.6504 8.0498L10.2002 6.60059C10.4835 6.46725 10.7708 6.36647 11.0625 6.2998C11.3541 6.23315 11.6667 6.2002 12 6.2002Z"></path></svg>';
+    }
+    return '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M12 7C13.25 7 14.3125 7.4375 15.1875 8.3125C16.0625 9.1875 16.5 10.25 16.5 11.5C16.5 12.75 16.0625 13.8125 15.1875 14.6875C14.3125 15.5625 13.25 16 12 16C10.75 16 9.6875 15.5625 8.8125 14.6875C7.9375 13.8125 7.5 12.75 7.5 11.5C7.5 10.25 7.9375 9.1875 8.8125 8.3125C9.6875 7.4375 10.75 7 12 7ZM12 8.7998C11.25 8.7998 10.6129 9.06289 10.0879 9.58789C9.56289 10.1129 9.2998 10.75 9.2998 11.5C9.2998 12.25 9.56289 12.8871 10.0879 13.4121C10.6129 13.9371 11.25 14.2002 12 14.2002C12.75 14.2002 13.3871 13.9371 13.9121 13.4121C14.4371 12.8871 14.7002 12.25 14.7002 11.5C14.7002 10.75 14.4371 10.1129 13.9121 9.58789C13.3871 9.06289 12.75 8.7998 12 8.7998Z"></path><path fill="currentColor" d="M12 4C14.4333 4 16.6504 4.67878 18.6504 6.03711C20.6503 7.39544 22.1 9.2167 23 11.5C22.1 13.7833 20.6503 15.6046 18.6504 16.9629C16.6504 18.3212 14.4333 19 12 19C9.56667 19 7.34961 18.3212 5.34961 16.9629C3.34965 15.6046 1.89999 13.7833 1 11.5C1.89999 9.2167 3.34965 7.39544 5.34961 6.03711C7.34961 4.67878 9.56667 4 12 4ZM12 6C10.1167 6 8.38748 6.49567 6.8125 7.4873C5.23752 8.47896 4.03353 9.8167 3.2002 11.5C4.03353 13.1833 5.23752 14.521 6.8125 15.5127C8.38748 16.5043 10.1167 17 12 17C13.8833 17 15.6125 16.5043 17.1875 15.5127C18.7625 14.521 19.9665 13.1833 20.7998 11.5C19.9665 9.8167 18.7625 8.47896 17.1875 7.4873C15.6125 6.49567 13.8833 6 12 6Z"></path></svg>';
+}
+
 function getChevronDownIconSVG(size = 20) {
     return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"></path></svg>`;
 }
@@ -2786,6 +2830,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
         transparent: m?.transparent,
         opacity: m?.opacity,
         depthWrite: m?.depthWrite,
+        visible: typeof m?.visible === 'boolean' ? m.visible : true,
         emissiveHex: m?.emissive?.getHex?.() ?? 0,
         emissiveIntensity: m?.emissiveIntensity ?? 1,
         wireframe: m?.wireframe ?? false,
@@ -2797,10 +2842,12 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
             m.transparent = false;
             m.opacity = 1;
             m.depthWrite = true;
+            m.visible = true;
         } else {
             m.transparent = true;
             m.opacity = 0;
             m.depthWrite = false;
+            m.visible = false;
         }
         m.emissive.setHex(0x000000);
         m.emissiveIntensity = 1;
@@ -2914,6 +2961,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
         s.mat.transparent = s.transparent;
         s.mat.opacity = s.opacity;
         s.mat.depthWrite = s.depthWrite;
+        s.mat.visible = s.visible;
         s.mat.emissive.setHex(s.emissiveHex);
         s.mat.emissiveIntensity = s.emissiveIntensity;
         s.mat.wireframe = s.wireframe;
@@ -3425,17 +3473,135 @@ function computeBuildPlateAutoBrightnessColor(baseHex) {
 }
 
 
+function getRulerInteractionMode() {
+    if (rulerPartHoverEnabled) return 'inspect';
+    if (rulerPartSelectMultiEnabled) return 'select';
+    return null;
+}
+
+function getRulerInteractionModeVerb(mode = getRulerInteractionMode()) {
+    if (mode === 'inspect') return 'inspecting';
+    if (mode === 'select') return 'selecting';
+    return '';
+}
+
+function getPartInteractionVisualProfile(mode, stateKey, fallbackOpacityPercent, fallbackSaturationPercent) {
+    const defaultStateRule = DEFAULT_COLOR_RULES.partInteractionModes?.[mode]?.[stateKey] || {};
+    const opacityPercent = getColorRuleNumber(
+        `partInteractionModes.${mode}.${stateKey}.opacityPercent`,
+        defaultStateRule.opacityPercent ?? fallbackOpacityPercent
+    );
+    const saturationPercent = getColorRuleNumber(
+        `partInteractionModes.${mode}.${stateKey}.saturationPercent`,
+        defaultStateRule.saturationPercent ?? fallbackSaturationPercent
+    );
+    return {
+        opacity: THREE.MathUtils.clamp(opacityPercent / 100, 0, 1),
+        saturation: THREE.MathUtils.clamp(saturationPercent / 100, 0, 1),
+    };
+}
+
+function getPartInteractionVisualState(partIndex, selectedSet) {
+    const mode = getRulerInteractionMode();
+    if (!mode) return { opacity: 1, saturation: 1 };
+
+    const hasHoverTarget = !!(
+        hasModelParts()
+        && rulerHoveredPartIndex >= 0
+        && rulerHoveredPartIndex < modelPartNames.length
+    );
+    const isHovered = hasHoverTarget && rulerHoveredPartIndex === partIndex;
+
+    if (mode === 'inspect') {
+        return getPartInteractionVisualProfile(
+            'inspect',
+            isHovered ? 'hovered' : 'base',
+            isHovered ? 100 : 25,
+            isHovered ? 100 : 25
+        );
+    }
+
+    const isSelected = !!selectedSet?.has(partIndex);
+    if (isSelected && isHovered) {
+        return getPartInteractionVisualProfile('select', 'hoveredSelected', 100, 100);
+    }
+    if (isSelected) {
+        return getPartInteractionVisualProfile('select', 'selected', 100, 100);
+    }
+    if (isHovered) {
+        return getPartInteractionVisualProfile('select', 'hoveredUnselected', 75, 25);
+    }
+    return getPartInteractionVisualProfile('select', 'base', 25, 25);
+}
+
+function applyPartInteractionVisualsToMeshMaterials() {
+    const mats = getMeshMaterials();
+    if (!mats.length) return;
+
+    const selectedSet = (getRulerInteractionMode() === 'select')
+        ? new Set(getUiSelectedPartIndices())
+        : null;
+    const hsl = { h: 0, s: 0, l: 0 };
+
+    mats.forEach((mat, idx) => {
+        if (!mat) return;
+
+        if (!mat.userData.partVisualBaseInitialized) {
+            mat.userData.partVisualBaseInitialized = true;
+            mat.userData.partVisualBaseOpacity = Number.isFinite(mat.opacity) ? mat.opacity : 1;
+            mat.userData.partVisualBaseTransparent = !!mat.transparent;
+            mat.userData.partVisualBaseDepthWrite = (typeof mat.depthWrite === 'boolean') ? mat.depthWrite : true;
+        }
+
+        const visual = getPartInteractionVisualState(idx, selectedSet);
+        const baseOpacity = Number.isFinite(mat.userData.partVisualBaseOpacity)
+            ? mat.userData.partVisualBaseOpacity
+            : 1;
+        const targetOpacity = THREE.MathUtils.clamp(baseOpacity * visual.opacity, 0, 1);
+
+        mat.opacity = targetOpacity;
+        mat.transparent = !!mat.userData.partVisualBaseTransparent || targetOpacity < (baseOpacity - 1e-4) || targetOpacity < 0.999;
+        if (typeof mat.userData.partVisualBaseDepthWrite === 'boolean') {
+            mat.depthWrite = mat.transparent ? false : mat.userData.partVisualBaseDepthWrite;
+        }
+
+        if (mat.color) {
+            const baseHex = Number.isFinite(mat.userData.partVisualBaseColorHex)
+                ? mat.userData.partVisualBaseColorHex
+                : mat.color.getHex();
+            mat.color.setHex(baseHex);
+            if (visual.saturation < 0.999) {
+                mat.color.getHSL(hsl);
+                mat.color.setHSL(hsl.h, THREE.MathUtils.clamp(hsl.s * visual.saturation, 0, 1), hsl.l);
+            }
+        }
+
+        mat.needsUpdate = true;
+    });
+}
+
+
 function applyPartColorsToMesh() {
     const mats = getMeshMaterials();
     if (!mats.length) return;
     mats.forEach((mat, idx) => {
-        if (!mat || !mat.color) return;
+        if (!mat) return;
+        if (!mat.userData.partVisualBaseInitialized) {
+            mat.userData.partVisualBaseInitialized = true;
+            mat.userData.partVisualBaseOpacity = Number.isFinite(mat.opacity) ? mat.opacity : 1;
+            mat.userData.partVisualBaseTransparent = !!mat.transparent;
+            mat.userData.partVisualBaseDepthWrite = (typeof mat.depthWrite === 'boolean') ? mat.depthWrite : true;
+        }
         const s = getPartSettings(idx);
         const baseHex = s.color || modelPartBaseColors[idx] || colorPick.value;
-        mat.color.set(computeTonedColor(baseHex, s.tone ?? 0));
+        if (mat.color) {
+            const toned = computeTonedColor(baseHex, s.tone ?? 0);
+            mat.userData.partVisualBaseColorHex = toned.getHex();
+            mat.color.setHex(mat.userData.partVisualBaseColorHex);
+        }
         mat.visible = s.hidden !== true;
-        mat.needsUpdate = true;
     });
+    applyPartInteractionVisualsToMeshMaterials();
     if (activeBuildPlatePreset === 'modelcolor') updateBuildPlateMaterial();
 }
 
@@ -3562,11 +3728,11 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             opt.draggable = !!window.matchMedia && window.matchMedia('(pointer:fine)').matches;
             opt.setAttribute('role', 'option');
             const settings = getPartSettings(idx);
-            const hideLabel = settings.hidden ? 'Show' : 'Hide';
+            const visibilityLabel = settings.hidden ? 'Show model' : 'Hide model';
             const mutateDisabledAttr = canMutateFiles ? '' : ' disabled title="Part source files are unavailable for editing"';
             const bulkLabel = `Select part ${idx + 1} for bulk edit`;
             const syncOn = activeBgPreset === 'modelcolor' && idx === bgSyncPartIndex;
-            opt.innerHTML = `<label class="thumb-select-option-check" title="${bulkLabel}" aria-label="${bulkLabel}"><input type="checkbox" class="thumb-select-option-check-input" data-part-bulk-select="${idx}"></label><button type="button" class="thumb-select-option-main" data-part-select="${idx}"><span class="thumb-select-option-thumb-wrap"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-sync-badge" aria-hidden="true">Sync</span></span><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">${getPartOptionMoreIconSVG()}</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action" data-part-action="hide" data-part-index="${idx}">${hideLabel}</button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="bg-sync-toggle" data-part-index="${idx}"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}"${mutateDisabledAttr}>Delete Model</button></div>`;
+            opt.innerHTML = `<label class="thumb-select-option-check" title="${bulkLabel}" aria-label="${bulkLabel}"><input type="checkbox" class="thumb-select-option-check-input" data-part-bulk-select="${idx}"></label><button type="button" class="thumb-select-option-main" data-part-select="${idx}"><span class="thumb-select-option-thumb-wrap"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas><span class="thumb-select-sync-badge" aria-hidden="true">Sync</span><span class="part-visibility-toggle${settings.hidden ? ' is-hidden' : ''}" data-part-visibility-toggle="${idx}" aria-label="${visibilityLabel}" title="${visibilityLabel}">${getPartVisibilityIconSVG(settings.hidden)}</span></span><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">${getPartOptionMoreIconSVG()}</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="bg-sync-toggle" data-part-index="${idx}"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}"${mutateDisabledAttr}>Delete Model</button></div>`;
 
             const bulkCheck = opt.querySelector('[data-part-bulk-select]');
             const bulkCheckWrap = opt.querySelector('.thumb-select-option-check');
@@ -3635,6 +3801,23 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 saveSettings();
             });
 
+            opt.querySelector('[data-part-visibility-toggle]')?.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                const partIdx = parseInt(ev.currentTarget?.dataset?.partVisibilityToggle || '-1', 10);
+                if (!Number.isFinite(partIdx) || partIdx < 0) return;
+                const targetPartIndices = getPartActionTargetIndices(partIdx);
+                pushModelUndoState({ showToast: targetPartIndices.length > 1 });
+                const partSettings = getPartSettings(partIdx);
+                const nextHidden = !partSettings.hidden;
+                targetPartIndices.forEach((targetIdx) => {
+                    getPartSettings(targetIdx).hidden = nextHidden;
+                });
+                applyPartColorsToMesh();
+                syncModelPartSelectorUI(true);
+                saveSettings();
+            });
+
             opt.querySelector('[data-part-more]')?.addEventListener('click', (ev) => {
                 ev.stopPropagation();
                 const menu = opt.querySelector('.part-option-actions');
@@ -3657,20 +3840,6 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     if (action === 'replace') {
                         pendingReplacePartIndex = partIdx;
                         partReplaceInput?.click();
-                        return;
-                    }
-
-                    if (action === 'hide') {
-                        pushModelUndoState({ showToast: targetPartIndices.length > 1 });
-                        const partSettings = getPartSettings(partIdx);
-                        const nextHidden = !partSettings.hidden;
-                        targetPartIndices.forEach((idx) => {
-                            const settings = getPartSettings(idx);
-                            settings.hidden = nextHidden;
-                        });
-                        applyPartColorsToMesh();
-                        syncModelPartSelectorUI();
-                        saveSettings();
                         return;
                     }
 
@@ -3723,10 +3892,8 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             modelPartSelectorMenu.appendChild(opt);
         });
     } else if (modelPartSingleActions) {
-        const settings = getPartSettings(0);
-        const hideLabel = settings.hidden ? 'Show Model' : 'Hide Model';
         const syncOn = activeBgPreset === 'modelcolor';
-        modelPartSingleActions.innerHTML = `<button type="button" class="part-option-action" data-single-action="replace">Replace STL</button><button type="button" class="part-option-action" data-single-action="hide">${hideLabel}</button><button type="button" class="part-option-action part-option-action--toggle" data-single-action="bg-sync-toggle"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button>`;
+        modelPartSingleActions.innerHTML = `<button type="button" class="part-option-action" data-single-action="replace">Replace STL</button><button type="button" class="part-option-action part-option-action--toggle" data-single-action="bg-sync-toggle"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button>`;
 
         modelPartSingleActions.querySelectorAll('.part-option-action').forEach((actionBtn) => {
             actionBtn.addEventListener('click', (ev) => {
@@ -3735,15 +3902,6 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 if (action === 'replace') {
                     closeModelPartActionMenus();
                     openUploadFilePicker('replace');
-                    return;
-                }
-                if (action === 'hide') {
-                    const partSettings = getPartSettings(0);
-                    partSettings.hidden = !partSettings.hidden;
-                    applyPartColorsToMesh();
-                    syncModelPartSelectorUI();
-                    saveSettings();
-                    closeModelPartActionMenus();
                     return;
                 }
                 if (action === 'bg-sync-toggle') {
@@ -4021,8 +4179,7 @@ function loadPreparedGeometry(geo, name) {
     if (!isPaused) {
         controls.autoRotate = rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360);
         document.documentElement.classList.remove('rotation-paused');
-        iconPause.style.display = '';
-        iconPlay.style.display = 'none';
+        // iconPlayPause always visible
     } else {
         controls.autoRotate = false;
     }
@@ -4296,7 +4453,7 @@ function loop() {
         if (exportFrameEnabled) drawExportFrame();
         if (rulerEnabled) {
             const now = performance.now();
-            const overlayIntervalMs = rulerPartHoverEnabled ? 28 : 80;
+            const overlayIntervalMs = getRulerInteractionMode() ? 28 : 80;
             if (now - _lastRulerOverlayUpdateMs >= overlayIntervalMs) {
                 updateLiveRulerOverlay();
                 _lastRulerOverlayUpdateMs = now;
@@ -4895,7 +5052,7 @@ function ensureRulerHoveredPartVisual() {
 }
 
 function syncRulerHoverSelectorState() {
-    const activeHoverIndex = (rulerPartHoverEnabled && rulerHoveredPartIndex >= 0) ? rulerHoveredPartIndex : -1;
+    const activeHoverIndex = (getRulerInteractionMode() && rulerHoveredPartIndex >= 0) ? rulerHoveredPartIndex : -1;
     if (modelPartSelectorBtn) modelPartSelectorBtn.classList.toggle('is-ruler-hovering', activeHoverIndex >= 0);
     if (!modelPartSelectorMenu) return;
     modelPartSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
@@ -4907,7 +5064,7 @@ function syncRulerHoverSelectorState() {
 function updateRulerHoveredPartVisual() {
     const canShowHoverBox = !!(
         mesh
-        && rulerPartHoverEnabled
+        && getRulerInteractionMode()
         && hasModelParts()
         && rulerHoveredPartIndex >= 0
         && rulerHoveredPartIndex < modelPartBoundsBoxes.length
@@ -4939,50 +5096,68 @@ function setRulerHoveredPartIndex(partIndex) {
     if (rulerHoveredPartIndex === normalized) return;
     rulerHoveredPartIndex = normalized;
     updateRulerHoveredPartVisual();
+    applyPartInteractionVisualsToMeshMaterials();
     syncRulerHoverSelectorState();
-    if (rulerPartHoverEnabled) updateRulerHUD();
+    if (getRulerInteractionMode()) updateRulerHUD();
+}
+
+function ensurePausedForInteractionMode() {
+    if (!getRulerInteractionMode()) {
+        updatePauseControlAvailability();
+        return;
+    }
+    if (rotateModeEl?.value === 'off') {
+        updatePauseControlAvailability();
+        return;
+    }
+    if (!isPaused) setPauseState(true, false, true);
+    else updatePauseControlAvailability();
 }
 
 function setRulerPartHoverEnabled(enabled, persist = true) {
     const next = !!enabled;
+    if (next && rulerPartSelectMultiEnabled) {
+        rulerPartSelectMultiEnabled = false;
+    }
     if (rulerPartHoverEnabled === next) {
-        if (!next && rulerHoveredPartIndex !== -1) {
-            rulerHoveredPartIndex = -1;
+        if (!next && !rulerPartSelectMultiEnabled && rulerHoveredPartIndex !== -1) {
+            setRulerHoveredPartIndex(-1);
             updateRulerHUD();
         }
+        ensurePausedForInteractionMode();
         return;
     }
     rulerPartHoverEnabled = next;
-    if (next && !isPaused && rotateModeEl?.value !== 'off') {
-        togglePause();
+    if (!next && !rulerPartSelectMultiEnabled) {
+        setRulerHoveredPartIndex(-1);
     }
-    if (!next) rulerHoveredPartIndex = -1;
     updateRulerHoveredPartVisual();
+    applyPartInteractionVisualsToMeshMaterials();
     syncRulerHoverSelectorState();
+    ensurePausedForInteractionMode();
     updateRulerHUD();
     if (persist) saveSettings();
 }
 
 function setRulerPartSelectMultiEnabled(enabled, persist = true) {
     const next = !!enabled;
+    if (next && rulerPartHoverEnabled) {
+        rulerPartHoverEnabled = false;
+    }
     if (rulerPartSelectMultiEnabled === next) return;
     rulerPartSelectMultiEnabled = next;
+    if (!next && !rulerPartHoverEnabled) {
+        setRulerHoveredPartIndex(-1);
+    }
+    applyPartInteractionVisualsToMeshMaterials();
+    ensurePausedForInteractionMode();
     updateRulerHUD();
     if (persist) saveSettings();
 }
 
 function getRulerDisplayedDims() {
-    const canShowPartDims = rulerPartHoverEnabled
-        && hasModelParts()
-        && rulerHoveredPartIndex >= 0
-        && rulerHoveredPartIndex < modelPartDimensions.length;
-    if (canShowPartDims) {
-        const hoveredDims = modelPartDimensions[rulerHoveredPartIndex];
-        if (hoveredDims && Number.isFinite(hoveredDims.w) && Number.isFinite(hoveredDims.d) && Number.isFinite(hoveredDims.h)) {
-            return hoveredDims;
-        }
-    }
-    return modelDims;
+    // Dims are shown in canvas 3D annotations only; never in the bottom HUD.
+    return null;
 }
 
 function resolveHoveredPartIndexFromIntersection(intersection) {
@@ -5013,7 +5188,7 @@ function resolveHoveredPartIndexFromIntersection(intersection) {
 }
 
 function resolveHoveredPartIndexFromPointerEvent(ev) {
-    if (!canvas || !camera || !mesh || !rulerEnabled || !rulerPartHoverEnabled || !hasModelParts()) return -1;
+    if (!canvas || !camera || !mesh || !rulerEnabled || !hasModelParts()) return -1;
 
     const rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return -1;
@@ -5063,6 +5238,12 @@ function selectModelPartFromRulerHover(partIndex, multiSelect = false) {
 }
 
 function updateRulerPartHoverFromPointerEvent(ev) {
+    if (!getRulerInteractionMode()) {
+        rulerHoverNoHitSinceMs = 0;
+        if (rulerHoveredPartIndex >= 0) setRulerHoveredPartIndex(-1);
+        return;
+    }
+
     const partIndex = resolveHoveredPartIndexFromPointerEvent(ev);
     if (partIndex < 0) {
         if (rulerHoveredPartIndex >= 0) {
@@ -5088,11 +5269,16 @@ function updateRulerHUD() {
     document.documentElement.classList.toggle('ruler-visible', !!modelDims && !!rulerEnabled);
     if (!modelDims) return;
 
-    const hoverAvailable = modelPartDimensions && modelPartDimensions.length > 0;
-    if (!hoverAvailable) rulerHoveredPartIndex = -1;
+    const hoverAvailable = modelPartNames && modelPartNames.length > 0;
+    if (!hoverAvailable) setRulerHoveredPartIndex(-1);
+    if (!hoverAvailable && rulerPartSelectMultiEnabled) {
+        setRulerPartSelectMultiEnabled(false, false);
+    }
+
+    const mode = getRulerInteractionMode();
+    const pickerEl = document.getElementById('rulerModePicker');
 
     const hoverToggle = document.getElementById('rulerHoverToggle');
-    const hoverLabelEl = document.getElementById('rulerHoverLabel');
     const selectToggle = document.getElementById('rulerSelectToggle');
     const hoveredPartName = (rulerHoveredPartIndex >= 0)
         ? truncatePartNameForUi(modelPartNames[rulerHoveredPartIndex] || `Part ${rulerHoveredPartIndex + 1}`, 18)
@@ -5100,44 +5286,51 @@ function updateRulerHUD() {
 
     if (hoverToggle) {
         hoverToggle.hidden = !hoverAvailable;
-        const isHoverActive = hoverAvailable && rulerPartHoverEnabled;
+        const isHoverActive = hoverAvailable && mode === 'inspect';
         hoverToggle.classList.toggle('is-active', isHoverActive);
-        hoverToggle.setAttribute('aria-pressed', isHoverActive ? 'true' : 'false');
-        hoverToggle.setAttribute('aria-label', isHoverActive ? 'Disable part hover dimensions' : 'Enable part hover dimensions');
         hoverToggle.title = isHoverActive
-            ? (hoveredPartName ? `Part hover on (${hoveredPartName})` : 'Part hover on (move cursor over part)')
-            : 'Enable part hover dimensions';
-    }
-
-    if (hoverLabelEl) {
-        if (hoverAvailable && rulerPartHoverEnabled && hoveredPartName) hoverLabelEl.textContent = hoveredPartName;
-        else if (hoverAvailable && rulerPartHoverEnabled) hoverLabelEl.textContent = 'Hover part';
-        else hoverLabelEl.textContent = 'Part hover';
+            ? 'Inspect'
+            : 'Inspect';
     }
 
     if (selectToggle) {
-        const canSelectByClick = hoverAvailable && rulerPartHoverEnabled;
+        const canSelectByClick = hoverAvailable && modelPartNames.length > 1;
         selectToggle.hidden = !canSelectByClick;
-        const multiSelectOn = canSelectByClick && rulerPartSelectMultiEnabled;
+        const multiSelectOn = canSelectByClick && mode === 'select';
         selectToggle.classList.toggle('is-active', multiSelectOn);
-        selectToggle.setAttribute('aria-pressed', multiSelectOn ? 'true' : 'false');
-        selectToggle.setAttribute('aria-label', multiSelectOn
-            ? 'Disable multi-select for part picking'
-            : 'Enable multi-select for part picking');
-        selectToggle.title = multiSelectOn
-            ? 'Select mode on (click parts to add/remove from selection)'
-            : 'Select mode off (click part to single-select)';
+        selectToggle.title = 'Select';
+        const selectRadio = document.getElementById('rulerModeSelect');
+        if (selectRadio) selectRadio.disabled = !canSelectByClick;
+        if (!canSelectByClick && rulerPartSelectMultiEnabled) {
+            setRulerPartSelectMultiEnabled(false, false);
+        }
     }
 
-    const dims = getRulerDisplayedDims() || modelDims;
+    // Sync radio state
+    const noneRadio = document.getElementById('rulerModeNone');
+    const inspectRadio = document.getElementById('rulerModeInspect');
+    const selectRadioEl = document.getElementById('rulerModeSelect');
+    if (noneRadio && inspectRadio && selectRadioEl) {
+        if (mode === 'inspect') inspectRadio.checked = true;
+        else if (mode === 'select') selectRadioEl.checked = true;
+        else noneRadio.checked = true;
+    }
+
+    if (pickerEl) {
+        const noOptions = !!((hoverToggle?.hidden ?? true) && (selectToggle?.hidden ?? true));
+        pickerEl.hidden = noOptions;
+    }
+
+    const dims = getRulerDisplayedDims();
+    hud.classList.toggle('is-dims-hidden', !dims);
     const unitEl = document.getElementById('rulerUnitVal');
     const unitToggle = document.getElementById('rulerUnitToggle');
     if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';
     const next = (rulerUnit === 'imperial') ? 'Metric' : 'Imperial';
     if (unitToggle) unitToggle.setAttribute('aria-label', `Switch to ${next.toLowerCase()} units`);
-    document.getElementById('rulerL').textContent = formatRulerValue(dims.d);
-    document.getElementById('rulerW').textContent = formatRulerValue(dims.w);
-    document.getElementById('rulerH').textContent = formatRulerValue(dims.h);
+    document.getElementById('rulerL').textContent = dims ? formatRulerValue(dims.d) : '—';
+    document.getElementById('rulerW').textContent = dims ? formatRulerValue(dims.w) : '—';
+    document.getElementById('rulerH').textContent = dims ? formatRulerValue(dims.h) : '—';
 }
 
 function rulerUnitSuffix() {
@@ -5321,7 +5514,7 @@ function formatRulerIncrementLabel(mm, includeUnit = false) {
 }
 
 function drawRulerHoverGridIncrements(ctx, width, height, cam) {
-    if (!rulerEnabled || !rulerPartHoverEnabled || !rulerLinesVisible || !mesh || !cam) return;
+    if (!rulerEnabled || !getRulerInteractionMode() || !rulerLinesVisible || !mesh || !cam) return;
 
     const spanX = Math.max(20, rulerGridSpanX || clampBuildPlateSize(buildPlateWidth, BUILD_PLATE_DEFAULTS.width));
     const spanZ = Math.max(20, rulerGridSpanZ || clampBuildPlateSize(buildPlateDepth, BUILD_PLATE_DEFAULTS.depth));
@@ -5403,7 +5596,7 @@ function drawRulerHoverGridIncrements(ctx, width, height, cam) {
 }
 
 function drawRulerHoverPartContextualDims(ctx, width, height, cam) {
-    if (!rulerEnabled || !rulerPartHoverEnabled || !hasModelParts() || !mesh || !cam) return;
+    if (!rulerEnabled || !getRulerInteractionMode() || !hasModelParts() || !mesh || !cam) return;
     if (rulerHoveredPartIndex < 0 || rulerHoveredPartIndex >= modelPartBoundsBoxes.length) return;
 
     const partBox = modelPartBoundsBoxes[rulerHoveredPartIndex];
@@ -5759,9 +5952,10 @@ function updateLiveRulerOverlay() {
     updateRulerGrid();
 
     const canRenderRulerOverlay = !!(rulerEnabled && modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
-    const showDynamicLines = !!(canRenderRulerOverlay && RULER_DYNAMIC_LINES_ENABLED && rulerLinesVisible);
-    const showHoverContextualDims = !!(canRenderRulerOverlay && rulerPartHoverEnabled && rulerHoveredPartIndex >= 0);
-    const showHoverIncrements = !!(canRenderRulerOverlay && rulerPartHoverEnabled && rulerLinesVisible);
+    const interactionModeActive = !!getRulerInteractionMode();
+    const showDynamicLines = !!(canRenderRulerOverlay && !interactionModeActive && RULER_DYNAMIC_LINES_ENABLED && rulerLinesVisible);
+    const showHoverContextualDims = !!(canRenderRulerOverlay && interactionModeActive && rulerHoveredPartIndex >= 0);
+    const showHoverIncrements = false;
 
     if (!showDynamicLines && !showHoverContextualDims && !showHoverIncrements) {
         overlay.style.display = 'none';
@@ -6132,6 +6326,7 @@ function saveSettings() {
             tiltRange: tiltRangeSlider.value,
             wobbleSpinRange: wobbleSpinRangeSlider.value,
             spinDir: spinDir,
+            paused: isPaused ? '1' : '0',
             gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
 
             exportQuality: document.getElementById('exportQuality')?.value ?? 'std',
@@ -6217,7 +6412,13 @@ function restoreSettings() {
             if (saved) localS = JSON.parse(saved) || {};
         } catch (e) { }
 
-        const defaultSearchStr = typeof DEFAULT_SETTINGS_URL !== 'undefined' && DEFAULT_SETTINGS_URL.includes('?')
+        let skipDefaultPresetOnce = false;
+        try {
+            skipDefaultPresetOnce = sessionStorage.getItem(SKIP_DEFAULT_PRESET_ONCE_KEY) === '1';
+            if (skipDefaultPresetOnce) sessionStorage.removeItem(SKIP_DEFAULT_PRESET_ONCE_KEY);
+        } catch (_) { }
+
+        const defaultSearchStr = (!skipDefaultPresetOnce && typeof DEFAULT_SETTINGS_URL !== 'undefined' && DEFAULT_SETTINGS_URL.includes('?'))
             ? '?' + DEFAULT_SETTINGS_URL.split('?')[1] : '';
         const defaultS = getURLSettings(defaultSearchStr) || {};
 
@@ -6320,6 +6521,9 @@ function restoreSettings() {
             if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
             if (s.wobbleSpinRange) wobbleSpinRangeSlider.value = s.wobbleSpinRange;
             if (s.spinDir != null) spinDir = parseFloat(s.spinDir) < 0 ? -1 : 1;
+            if (s.paused != null) {
+                isPaused = (s.paused === true || s.paused === '1' || s.paused === 1);
+            }
             if (m === 'tilt' || m === 'spin' || m === 'wobble') updateRangeSliderForMode(m);
             else tiltRangeVal.textContent = (s.tiltRange || tiltRangeSlider.value) + '°';
             document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin' || m === 'wobble');
@@ -6515,11 +6719,14 @@ function restoreSettings() {
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
         if (s.rulerPartHover != null) {
             rulerPartHoverEnabled = (s.rulerPartHover === '1' || s.rulerPartHover === true || s.rulerPartHover === 1);
-            if (!rulerPartHoverEnabled) rulerHoveredPartIndex = -1;
         }
         if (s.rulerPartSelectMulti != null) {
             rulerPartSelectMultiEnabled = (s.rulerPartSelectMulti === '1' || s.rulerPartSelectMulti === true || s.rulerPartSelectMulti === 1);
         }
+        if (rulerPartSelectMultiEnabled && rulerPartHoverEnabled) {
+            rulerPartHoverEnabled = false;
+        }
+        if (!rulerPartHoverEnabled && !rulerPartSelectMultiEnabled) rulerHoveredPartIndex = -1;
         if (s.activeBgPreset) activeBgPreset = s.activeBgPreset;
         if (s.activeModelPreset) activeModelPreset = s.activeModelPreset;
         if ((activeBgPreset === 'white' || activeBgPreset === 'black') && bgOpacitySlider) {
@@ -6558,6 +6765,9 @@ function restoreSettings() {
         document.documentElement.classList.toggle('tilt-mode', curMode === 'tilt' || curMode === 'spin' || curMode === 'wobble');
         document.documentElement.classList.toggle('wobble-mode', curMode === 'wobble');
         if (curMode === 'tilt' || curMode === 'spin' || curMode === 'wobble') updateRangeSliderForMode(curMode);
+        if (curMode === 'off') isPaused = false;
+        setPauseState(isPaused, false, true);
+        ensurePausedForInteractionMode();
         updateShadingThumbs();
         updateColorSwatches();
         updateTextureTuneUI();
@@ -6891,8 +7101,8 @@ function readFileAsArrayBuffer(file) {
     });
 }
 
-function openUploadFilePicker(action = 'newplate') {
-    pendingUploadAction = (action === 'replace') ? 'replace' : 'newplate';
+function openUploadFilePicker(action = null) {
+    pendingUploadAction = (action === 'replace' || action === 'newplate') ? action : null;
     if (fileInput) fileInput.click();
 }
 
@@ -6900,14 +7110,16 @@ async function requestUploadFlowFromButtons() {
     suppressAutoDemoModelLoad();
     dismissStartupSplash();
 
-    if (!mesh) {
-        openUploadFilePicker('newplate');
+    if (mesh && uploadChoiceOverlayEl) {
+        setUploadChoiceFiles([]);
+        if (uploadChoiceTextEl) uploadChoiceTextEl.textContent = 'Drop STL or ZIP files here, or click Browse.';
+        uploadChoiceDropZoneEl?.classList.remove('is-dragover');
+        uploadChoiceOverlayEl.hidden = false;
         return;
     }
 
-    const requestedAction = await promptUploadChoice(null);
-    if (requestedAction !== 'replace' && requestedAction !== 'newplate') return;
-    openUploadFilePicker(requestedAction);
+    pendingUploadAction = null;
+    fileInput?.click();
 }
 
 async function handlePickedUploadFiles(fileList, requestedActionOverride = null) {
@@ -7451,10 +7663,51 @@ partAppendInput?.addEventListener('change', async (ev) => {
 
 function updateExportPauseButtonUI() {
     const btn = document.getElementById('btnExportPause');
-    if (!btn) return;
-    btn.classList.toggle('is-paused', isPaused);
-    btn.setAttribute('aria-label', isPaused ? 'Resume rotation' : 'Pause rotation');
-    btn.title = isPaused ? 'Resume rotation' : 'Pause rotation';
+    if (btn) btn.classList.toggle('is-paused', isPaused);
+    // Update main pause button active state
+    btnPause.classList.toggle('is-playing', !isPaused);
+    updatePauseControlAvailability();
+}
+
+function getPauseInteractionLockMessage() {
+    return '';
+}
+
+function updatePauseControlAvailability() {
+    const lockedMessage = getPauseInteractionLockMessage();
+    const isLocked = !!lockedMessage;
+    const activeLabel = 'Play/Pause';
+
+    const applyButtonState = (btnEl) => {
+        if (!btnEl) return;
+        if ('disabled' in btnEl) btnEl.disabled = isLocked;
+        btnEl.classList.toggle('is-locked', isLocked);
+        btnEl.setAttribute('aria-disabled', isLocked ? 'true' : 'false');
+        btnEl.setAttribute('aria-label', isLocked ? lockedMessage : activeLabel);
+        btnEl.title = isLocked ? lockedMessage : activeLabel;
+    };
+
+    applyButtonState(btnPause);
+    applyButtonState(document.getElementById('btnExportPause'));
+}
+
+function setPauseState(nextPaused, persist = true, allowLockedResume = false) {
+    if (rotateModeEl.value === 'off') nextPaused = false;
+
+    if (!nextPaused && !allowLockedResume && getPauseInteractionLockMessage()) {
+        updatePauseControlAvailability();
+        return false;
+    }
+
+    isPaused = !!nextPaused;
+    if (controls) {
+        controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
+    }
+    document.documentElement.classList.toggle('rotation-paused', isPaused);
+    // iconPlayPause is a combined static icon — no display toggle needed
+    updateExportPauseButtonUI();
+    if (persist) saveSettings();
+    return true;
 }
 
 function applyDpadVisibility() {
@@ -7463,14 +7716,7 @@ function applyDpadVisibility() {
 
 function togglePause() {
     if (rotateModeEl.value === 'off') return;
-    isPaused = !isPaused;
-    controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
-    document.documentElement.classList.toggle('rotation-paused', isPaused);
-    iconPause.style.display = isPaused ? 'none' : '';
-    iconPlay.style.display = isPaused ? '' : 'none';
-    btnPause.setAttribute('aria-label', isPaused ? 'Resume rotation' : 'Pause rotation');
-    btnPause.title = isPaused ? 'Resume rotation' : 'Pause rotation';
-    updateExportPauseButtonUI();
+    setPauseState(!isPaused, true, false);
 }
 
 function toggleSpinDir() {
@@ -7510,10 +7756,33 @@ document.querySelectorAll('input[name="rotateMode"]').forEach(input => {
     });
 });
 document.addEventListener('keydown', e => {
-    // Space: pause/resume
-    if (e.code === 'Space' && e.target === document.body) {
+    const target = e.target;
+    const isEditableTarget = !!(
+        target
+        && (
+            target.tagName === 'INPUT'
+            || target.tagName === 'TEXTAREA'
+            || target.tagName === 'SELECT'
+            || target.isContentEditable
+        )
+    );
+
+    // Space: always pause/resume outside editable fields.
+    if (e.code === 'Space' && !isEditableTarget) {
         e.preventDefault();
+        e.stopPropagation();
         togglePause();
+        return;
+    }
+    // Escape: collapse preview only when currently expanded.
+    if (e.code === 'Escape') {
+        const previewExpanded = document.documentElement.classList.contains('sidebar-collapsed');
+        if (previewExpanded) {
+            e.preventDefault();
+            e.stopPropagation();
+            const btnToggleSidepanels = document.getElementById('btnToggleSidepanels');
+            if (btnToggleSidepanels) btnToggleSidepanels.click();
+        }
         return;
     }
     // Arrow keys: D-pad orbit snap (only when not typing in an input)
@@ -7595,13 +7864,7 @@ document.getElementById('btnCamReset').addEventListener('click', () => {
     // In Tilt/Wobble mode, pause so the model holds the neutral level position
     const m = rotateModeEl.value;
     if ((m === 'tilt' || m === 'wobble') && !isPaused) {
-        isPaused = true;
-        controls.autoRotate = false;
-        iconPause.style.display = 'none';
-        iconPlay.style.display = '';
-        btnPause.setAttribute('aria-label', 'Resume rotation');
-        btnPause.title = 'Resume rotation';
-        document.documentElement.classList.add('rotation-paused');
+        setPauseState(true, false, true);
     }
     renderer.render(scene, camera);
 });
@@ -7610,12 +7873,7 @@ document.getElementById('btnExportPng').addEventListener('click', async () => {
     if (!mesh) return;
     // Pause if not already
     if (!isPaused) {
-        isPaused = true;
-        controls.autoRotate = false;
-        iconPause.style.display = 'none';
-        iconPlay.style.display = '';
-        btnPause.setAttribute('aria-label', 'Resume rotation');
-        btnPause.title = 'Resume rotation';
+        setPauseState(true, false, true);
     }
     const isTransparent = document.getElementById('exportTransparentPng')?.checked ?? false;
 
@@ -7632,12 +7890,7 @@ document.getElementById('btnExportPng').addEventListener('click', async () => {
 document.getElementById('btnExportJpeg').addEventListener('click', async () => {
     if (!mesh) return;
     if (!isPaused) {
-        isPaused = true;
-        controls.autoRotate = false;
-        iconPause.style.display = 'none';
-        iconPlay.style.display = '';
-        btnPause.setAttribute('aria-label', 'Resume rotation');
-        btnPause.title = 'Resume rotation';
+        setPauseState(true, false, true);
     }
     const { quality } = EXPORT.image;
     try {
@@ -8195,16 +8448,16 @@ exportDimensionInputs.forEach(input => {
 
 // ── Export format switcher ────────────────────────────────────────────────────
 const FORMAT_LABELS = {
-    gif: 'Export',
-    mp4: 'Export',
-    png: 'Export',
-    jpg: 'Export',
+    gif: 'Export GIF',
+    mp4: 'Export MP4',
+    png: 'Export PNG',
+    jpg: 'Export JPEG',
 };
 const FORMAT_SHORT_LABELS = {
-    gif: 'Export',
-    mp4: 'Export',
-    png: 'Export',
-    jpg: 'Export',
+    gif: 'Export GIF',
+    mp4: 'Export MP4',
+    png: 'Export PNG',
+    jpg: 'Export JPEG',
 };
 const FORMAT_BTNS = { gif: 'btnExportGif', mp4: 'btnExportVideo', png: 'btnExportPng', jpg: 'btnExportJpeg' };
 
@@ -8527,9 +8780,66 @@ function getUploadIncomingLabel(files) {
     return arr.length > 1 ? `${arr.length} files` : `"${arr[0]?.name || 'file'}"`;
 }
 
+function setUploadChoiceStepState(hasFiles) {
+    if (uploadChoiceDecisionEl) uploadChoiceDecisionEl.hidden = !hasFiles;
+    if (uploadChoiceActionsRightEl) uploadChoiceActionsRightEl.hidden = !hasFiles;
+}
+
+function renderUploadChoiceFileList() {
+    if (!uploadChoiceFileListWrapEl || !uploadChoiceFileListEl) return;
+
+    uploadChoiceFileListEl.textContent = '';
+    const total = uploadChoiceSelectedFiles.length;
+    if (!total) {
+        uploadChoiceFileListWrapEl.hidden = true;
+        if (btnUploadChoiceShowMore) btnUploadChoiceShowMore.hidden = true;
+        return;
+    }
+
+    uploadChoiceFileListWrapEl.hidden = false;
+    const showAll = uploadChoiceShowAllFiles || total <= UPLOAD_CHOICE_FILE_PREVIEW_LIMIT;
+    const visibleFiles = showAll ? uploadChoiceSelectedFiles : uploadChoiceSelectedFiles.slice(0, UPLOAD_CHOICE_FILE_PREVIEW_LIMIT);
+
+    visibleFiles.forEach((file, index) => {
+        const item = document.createElement('li');
+        item.className = 'upload-choice-file-item';
+
+        const idx = document.createElement('span');
+        idx.className = 'upload-choice-file-index';
+        idx.textContent = String(index + 1).padStart(2, '0');
+
+        const name = document.createElement('span');
+        name.className = 'upload-choice-file-name';
+        name.textContent = file?.name || 'Unnamed file';
+
+        item.append(idx, name);
+        uploadChoiceFileListEl.appendChild(item);
+    });
+
+    if (!btnUploadChoiceShowMore) return;
+    if (total > UPLOAD_CHOICE_FILE_PREVIEW_LIMIT) {
+        btnUploadChoiceShowMore.hidden = false;
+        btnUploadChoiceShowMore.textContent = showAll ? 'Show less' : `Show ${total - UPLOAD_CHOICE_FILE_PREVIEW_LIMIT} more`;
+        btnUploadChoiceShowMore.setAttribute('aria-expanded', showAll ? 'true' : 'false');
+    } else {
+        btnUploadChoiceShowMore.hidden = true;
+    }
+}
+
+function setUploadChoiceFiles(fileList) {
+    uploadChoiceSelectedFiles = Array.from(fileList || []).filter((file) => {
+        const name = String(file?.name || '');
+        return /\.(stl|zip)$/i.test(name);
+    });
+    uploadChoiceShowAllFiles = false;
+    renderUploadChoiceFileList();
+    setUploadChoiceStepState(uploadChoiceSelectedFiles.length > 0);
+}
+
 function closeUploadChoicePrompt(action = 'cancel') {
     if (uploadChoiceOverlayEl) uploadChoiceOverlayEl.hidden = true;
     uploadChoiceDropZoneEl?.classList.remove('is-dragover');
+    setUploadChoiceFiles([]);
     if (_uploadChoiceResolver) {
         const resolve = _uploadChoiceResolver;
         _uploadChoiceResolver = null;
@@ -8537,26 +8847,21 @@ function closeUploadChoicePrompt(action = 'cancel') {
     }
 }
 
-function applyUploadChoicePreference(action) {
-    if (!uploadChoiceDontShowEl?.checked) return;
-    uploadChoicePromptEnabled = false;
-    uploadDefaultAction = action === 'replace' ? 'replace' : 'newplate';
-    saveSettings();
-}
-
 function promptUploadChoice(files) {
     if (!mesh) return Promise.resolve('newplate');
-    if (!uploadChoicePromptEnabled || !uploadChoiceOverlayEl) return Promise.resolve(uploadDefaultAction || 'newplate');
+    if (!uploadChoiceOverlayEl) return Promise.resolve(uploadDefaultAction || 'newplate');
+
+    setUploadChoiceFiles(files);
+    const hasFiles = uploadChoiceSelectedFiles.length > 0;
 
     if (uploadChoiceTextEl) {
-        const incomingLabel = getUploadIncomingLabel(files);
-        if (Array.from(files || []).length) {
-            uploadChoiceTextEl.textContent = `Load ${incomingLabel}: replace the current model, or start a new plate.`;
+        if (hasFiles) {
+            const incomingLabel = getUploadIncomingLabel(uploadChoiceSelectedFiles);
+            uploadChoiceTextEl.textContent = `Choose how to load ${incomingLabel}.`;
         } else {
-            uploadChoiceTextEl.textContent = `Drop STL/ZIP files below or choose an action to continue.`;
+            uploadChoiceTextEl.textContent = 'Drop STL or ZIP files here, or click Browse.';
         }
     }
-    if (uploadChoiceDontShowEl) uploadChoiceDontShowEl.checked = false;
     uploadChoiceDropZoneEl?.classList.remove('is-dragover');
     uploadChoiceOverlayEl.hidden = false;
 
@@ -8570,20 +8875,16 @@ function resetAllWarnings() {
     uploadChoicePromptEnabled = true;
     uploadDefaultAction = 'newplate';
 
-    if (uploadChoiceDontShowEl) uploadChoiceDontShowEl.checked = false;
-
     saveSettings();
     setStatus('Warning dialogs reset.');
     setTimeout(() => setStatus(''), 1800);
 }
 
 async function resetEverything() {
-    const ok = confirm(
-        'Reset everything?\n\nThis clears all Rotater saved settings (including lighting effects and animation), dismissed warnings, UI preferences, and stored STL/project data, then reloads the app.'
-    );
-    if (!ok) return;
+    await resetSettingsOnly();
+}
 
-    suppressSave = true;
+function clearRotaterLocalSettings() {
     try {
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i += 1) {
@@ -8597,14 +8898,23 @@ async function resetEverything() {
             try { localStorage.removeItem(key); } catch (_) { }
         });
     } catch (_) { }
+}
 
-    await clearIDB();
+async function resetSettingsOnly() {
+    const ok = confirm(
+        'Reset settings?\n\nThis clears saved Rotater settings (including lighting effects and animation) and reloads the app. Your STL/project files stay on the build plate.'
+    );
+    if (!ok) return;
 
+    suppressSave = true;
+    clearRotaterLocalSettings();
+
+    try { localStorage.setItem('rotater_hasSession', '1'); } catch (_) { }
     try {
-        history.replaceState({}, '', location.pathname + location.hash);
+        history.replaceState({}, '', location.pathname);
     } catch (_) { }
 
-    setStatus('Everything reset. Reloading...');
+    setStatus('Settings reset. Reloading...');
     setTimeout(() => {
         location.reload();
     }, 120);
@@ -8714,12 +9024,9 @@ if (exportMotionRangeEl) {
 
 rotateModeEl.addEventListener('change', () => {
     const m = rotateModeEl.value;
-    // switching mode resumes rotation
+    // switching mode resumes rotation unless inspect/select mode is locking pause
     if (isPaused) {
-        isPaused = false;
-        iconPause.style.display = '';
-        iconPlay.style.display = 'none';
-        document.documentElement.classList.remove('rotation-paused');
+        setPauseState(false, false, false);
     }
     // Restore mesh to neutral when leaving tilt/wobble modes
     if (m !== 'tilt' && m !== 'wobble' && mesh) {
@@ -8739,6 +9046,7 @@ rotateModeEl.addEventListener('change', () => {
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin' || m === 'wobble');
     document.documentElement.classList.toggle('wobble-mode', m === 'wobble');
     if (m === 'tilt' || m === 'spin' || m === 'wobble') updateRangeSliderForMode(m);
+    ensurePausedForInteractionMode();
     syncExportMotionControlsFromMain();
     saveSettings();
 });
@@ -8918,7 +9226,19 @@ function updateCardResetButtonStates() {
         || (!buildPlateAutoBrightnessEnabled && (parseInt(String(buildPlateShade), 10) || 0) !== BUILD_PLATE_DEFAULTS.shade)
         || (buildPlateShape || BUILD_PLATE_DEFAULTS.shape) !== BUILD_PLATE_DEFAULTS.shape;
 
-    const lightingDirty = CARD_RESET_LIGHTING_SLIDERS.some((id) => !sliderMatchesResetMidpoint(id));
+    const lightingSliderDefaults = {
+        textureTuneShadows: TEXTURE_TUNE_DEFAULTS.shadows,
+        textureTuneLightSource: TEXTURE_TUNE_DEFAULTS.shadowAzimuth,
+        textureTuneLight: TEXTURE_TUNE_DEFAULTS.light,
+        textureTuneLightHeight: TEXTURE_TUNE_DEFAULTS.shadowHeight,
+        textureTuneContrast: TEXTURE_TUNE_DEFAULTS.contrast,
+        textureTuneHighlights: TEXTURE_TUNE_DEFAULTS.highlights,
+    };
+    const lightingDirty = CARD_RESET_LIGHTING_SLIDERS.some((id) => {
+        const input = document.getElementById(id);
+        if (!(input instanceof HTMLInputElement) || input.type !== 'range') return false;
+        return parseFloat(input.value) !== lightingSliderDefaults[id];
+    }) || textureTuneState.lightLock !== TEXTURE_TUNE_DEFAULTS.lightLock;
 
     const speedValue = parseInt(speedSlider?.value || String(SPEED_DEFAULT), 10);
     const animationDirty = speedValue !== SPEED_DEFAULT
@@ -9054,7 +9374,24 @@ btnResetBuildPlateCard?.addEventListener('click', () => {
 });
 
 btnResetLightingCard?.addEventListener('click', () => {
-    resetCardSlidersToMiddle(CARD_RESET_LIGHTING_SLIDERS);
+    const lightingSliderDefaults = {
+        textureTuneShadows: TEXTURE_TUNE_DEFAULTS.shadows,
+        textureTuneLightSource: TEXTURE_TUNE_DEFAULTS.shadowAzimuth,
+        textureTuneLight: TEXTURE_TUNE_DEFAULTS.light,
+        textureTuneLightHeight: TEXTURE_TUNE_DEFAULTS.shadowHeight,
+        textureTuneContrast: TEXTURE_TUNE_DEFAULTS.contrast,
+        textureTuneHighlights: TEXTURE_TUNE_DEFAULTS.highlights,
+    };
+    CARD_RESET_LIGHTING_SLIDERS.forEach((id) => {
+        const input = document.getElementById(id);
+        if (!(input instanceof HTMLInputElement) || input.type !== 'range') return;
+        input.value = String(lightingSliderDefaults[id] ?? midpointForRangeInput(input));
+        input.dispatchEvent(new Event('input'));
+    });
+    if (textureTuneLightLockBox) {
+        textureTuneLightLockBox.checked = TEXTURE_TUNE_DEFAULTS.lightLock;
+        textureTuneLightLockBox.dispatchEvent(new Event('change'));
+    }
     updateCardResetButtonStates();
 });
 
@@ -9168,8 +9505,69 @@ const handleClearModelRequest = async (e) => {
     await loadBenchyModel();
 };
 
+async function clearBuildPlateModels() {
+    suppressAutoDemoModelLoad();
+
+    if (mesh) {
+        disposeRulerHoveredPartVisual();
+        scene.remove(mesh);
+        mesh.geometry.dispose();
+        disposeMaterials(mesh.material);
+        mesh = null;
+    }
+
+    await clearIDB();
+
+    currentModelBuffer = null;
+    modelPartNames = [];
+    modelPartBaseColors = [];
+    modelPartSettings = [];
+    customModelSettingsByPart = {};
+    modelPartFiles = null;
+    modelPartDisplayOrder = [];
+    pendingModelPartDisplayOrder = null;
+    pendingBulkSelectedPartIndices = null;
+    multipartPartBounds = null;
+    modelPartDimensions = [];
+    modelPartBoundsBoxes = [];
+    modelPartSelected = 0;
+    bulkSelectedPartIndices.clear();
+    bgSyncPartIndex = 0;
+    buildPlateSyncPartIndex = 0;
+    modelDims = null;
+    modelRadius = 1;
+    currentFileName = 'model';
+
+    setDisplayedFileName('No model loaded');
+    setRulerHoveredPartIndex(-1);
+    closeThumbSelectMenus();
+    closeFileChipPartsMenu();
+    syncModelPartSelectorUI();
+    syncBgModelSyncSourceUI();
+    syncBuildPlateModelSyncSourceUI();
+    syncFileChipMultipartUI();
+    rebuildFileChipPartsMenu();
+    updateRulerHUD();
+    updateLiveRulerOverlay();
+
+    const compactBtnLabel = document.getElementById('compactBtnLabel');
+    if (compactBtnLabel) compactBtnLabel.textContent = 'Upload STL';
+
+    setStatus('Build plate cleared.');
+    setTimeout(() => setStatus(''), 1800);
+}
+
 document.getElementById('btnClearModel')?.addEventListener('click', handleClearModelRequest);
 document.getElementById('btnClearModelQuick')?.addEventListener('click', handleClearModelRequest);
+btnClearBuildPlateEl?.addEventListener('click', async () => {
+    if (!mesh) {
+        setStatus('Build plate is already empty.');
+        setTimeout(() => setStatus(''), 1800);
+        return;
+    }
+    if (!confirm('Clear build plate?\n\nThis removes all loaded STL models and keeps your settings.')) return;
+    await clearBuildPlateModels();
+});
 
 async function loadBenchyModel({ clearStoredModel = true } = {}) {
     try {
@@ -9344,8 +9742,6 @@ function applyDesktopV2Layout() {
     const exportOverlayEl = document.getElementById('exportOverlay');
     const openExportBtn = document.getElementById('btnOpenExportModal');
     if (desktopV2) {
-        document.documentElement.classList.remove('sidebar-collapsed');
-        try { localStorage.setItem('rotater_sidebarCollapsed', '0'); } catch (_) { }
         if (openExportBtn) {
             openExportBtn.hidden = false;
         }
@@ -9375,10 +9771,6 @@ function applyDesktopV2Layout() {
         ensureDesktopV2RailObserver();
         queueDesktopV2RailLayoutSync();
     } else {
-        if (tabletTabs) {
-            document.documentElement.classList.remove('sidebar-collapsed');
-            try { localStorage.setItem('rotater_sidebarCollapsed', '0'); } catch (_) { }
-        }
         if (openExportBtn) {
             openExportBtn.hidden = false;
         }
@@ -9411,6 +9803,39 @@ function applyAppSettingsDockState(collapsed) {
     body.hidden = !!collapsed;
     toggle.setAttribute('aria-expanded', String(!collapsed));
     queueDesktopV2RailLayoutSync();
+}
+
+function applySidepanelsHiddenState(hidden, persist = true) {
+    const next = !!hidden;
+    const root = document.documentElement;
+    root.classList.toggle('sidepanels-hidden', next);
+    // Keep legacy class in sync for existing layout/CSS hooks.
+    root.classList.toggle('sidebar-collapsed', next);
+
+    if (btnToggleSidepanelsEl) {
+        btnToggleSidepanelsEl.classList.toggle('is-hidden', next);
+        btnToggleSidepanelsEl.setAttribute('aria-label', next ? 'Exit expanded preview' : 'Expand preview');
+        btnToggleSidepanelsEl.title = next ? 'Exit expanded preview' : 'Expand preview';
+    }
+
+    const collapseBtn = document.getElementById('btnCollapseSidebar');
+    if (collapseBtn) {
+        collapseBtn.title = next ? 'Show sidepanels' : 'Hide sidepanels';
+    }
+
+    if (persist) {
+        try {
+            localStorage.setItem('rotater_sidepanelsHidden', next ? '1' : '0');
+            localStorage.setItem('rotater_sidebarCollapsed', next ? '1' : '0');
+        } catch (_) { }
+    }
+
+    syncCanvasSize();
+}
+
+function toggleSidepanelsHiddenState(persist = true) {
+    const hidden = document.documentElement.classList.contains('sidepanels-hidden');
+    applySidepanelsHiddenState(!hidden, persist);
 }
 
 function switchTab(tab) {
@@ -9482,9 +9907,8 @@ document.getElementById('btnAppSettingsCanvas')?.addEventListener('click', () =>
     if (root.classList.contains('layout-mobile-accordion')) applyMobileAccordionState('theme');
     else switchTab('theme');
 
-    if (root.classList.contains('sidebar-collapsed')) {
-        root.classList.remove('sidebar-collapsed');
-        try { localStorage.setItem('rotater_sidebarCollapsed', '0'); } catch (_) { }
+    if (root.classList.contains('sidepanels-hidden')) {
+        applySidepanelsHiddenState(false, true);
     }
 
     applyAppSettingsDockState(false);
@@ -9675,18 +10099,11 @@ exportCollapsedConfirmOverlayEl?.addEventListener('click', (e) => {
 
 btnUploadChoiceClose?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
 btnUploadChoiceCancel?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
-btnUploadChoiceReplace?.addEventListener('click', () => {
-    applyUploadChoicePreference('replace');
-    closeUploadChoicePrompt('replace');
-});
-btnUploadChoiceNewPlate?.addEventListener('click', () => {
-    applyUploadChoicePreference('newplate');
-    closeUploadChoicePrompt('newplate');
-});
-uploadChoiceBrowseBtnEl?.addEventListener('click', () => {
-    closeUploadChoicePrompt('cancel');
-    pendingUploadAction = null;
-    fileInput?.click();
+btnUploadChoiceReplace?.addEventListener('click', () => closeUploadChoicePrompt('replace'));
+btnUploadChoiceNewPlate?.addEventListener('click', () => closeUploadChoicePrompt('newplate'));
+btnUploadChoiceShowMore?.addEventListener('click', () => {
+    uploadChoiceShowAllFiles = !uploadChoiceShowAllFiles;
+    renderUploadChoiceFileList();
 });
 
 async function handleUploadChoiceDroppedFiles(fileList) {
@@ -9710,7 +10127,7 @@ if (uploadChoiceDropZoneEl) {
     uploadChoiceDropZoneEl.addEventListener('click', () => {
         closeUploadChoicePrompt('cancel');
         pendingUploadAction = null;
-        fileInput?.click();
+        openUploadFilePicker(null);
     });
 
     uploadChoiceDropZoneEl.addEventListener('dragenter', (e) => {
@@ -9766,25 +10183,23 @@ if (resetWarningsToggleEl) {
 if (btnResetEverythingEl) {
     btnResetEverythingEl.addEventListener('click', async (e) => {
         e.preventDefault();
-        await resetEverything();
+        await resetSettingsOnly();
     });
 }
 
 // ── Sidebar collapse toggle ──────────────────────────────────────────────────────
 document.getElementById('btnCollapseSidebar')?.addEventListener('click', () => {
-    const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
-    const btn = document.getElementById('btnCollapseSidebar');
-    if (btn) btn.title = collapsed ? 'Expand panel' : 'Collapse panel';
-    try { localStorage.setItem('rotater_sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) { }
-    syncCanvasSize(); // immediate; ResizeObserver handles transition frames
+    toggleSidepanelsHiddenState(true);
+});
+btnToggleSidepanelsEl?.addEventListener('click', () => {
+    toggleSidepanelsHiddenState(true);
 });
 // Restore collapse state
 try {
-    if (localStorage.getItem('rotater_sidebarCollapsed') === '1') {
-        document.documentElement.classList.add('sidebar-collapsed');
-        const btn = document.getElementById('btnCollapseSidebar');
-        if (btn) btn.title = 'Expand panel';
-    }
+    const stored = localStorage.getItem('rotater_sidepanelsHidden');
+    const legacy = localStorage.getItem('rotater_sidebarCollapsed');
+    const shouldHide = (stored === '1') || (stored == null && legacy === '1');
+    applySidepanelsHiddenState(shouldHide, false);
 } catch (e) { }
 
 ['btnOpenExportModal', 'btnOpenExportModalMobile', 'btnOpenExportModalMini'].forEach((id) => {
@@ -9806,13 +10221,14 @@ document.getElementById('btnCopyLink')?.addEventListener('click', function () {
     settingsToURL();
     const url = location.href;
     const btn = this;
-    const prev = btn.textContent;
+    const labelEl = btn.querySelector('[data-copy-link-label]') || btn;
+    const prev = labelEl.textContent;
     navigator.clipboard.writeText(url).then(() => {
-        btn.textContent = 'Copied!';
-        setTimeout(() => { btn.textContent = prev; }, 1800);
+        labelEl.textContent = 'Copied!';
+        setTimeout(() => { labelEl.textContent = prev; }, 1800);
     }).catch(() => {
-        btn.textContent = 'Copy failed';
-        setTimeout(() => { btn.textContent = prev; }, 1800);
+        labelEl.textContent = 'Copy failed';
+        setTimeout(() => { labelEl.textContent = prev; }, 1800);
     });
 });
 
@@ -9889,6 +10305,38 @@ document.getElementById('btnInfoClose').addEventListener('click', () => {
 document.getElementById('infoOverlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) document.getElementById('infoOverlay').hidden = true;
 });
+
+// ── Help overlay ──────────────────────────────────────────────────────────────
+const helpOverlayEl = document.getElementById('helpOverlay');
+const helpPanelEl = helpOverlayEl?.querySelector('.help-panel') || null;
+const btnHelpCanvasEl = document.getElementById('btnHelpCanvas');
+
+function positionHelpOverlay() {
+    if (!helpOverlayEl || !helpPanelEl || !btnHelpCanvasEl) return;
+    const rect = btnHelpCanvasEl.getBoundingClientRect();
+    const margin = 10;
+    const panelWidth = helpPanelEl.offsetWidth || 300;
+    const maxLeft = Math.max(margin, window.innerWidth - panelWidth - margin);
+    const left = Math.max(margin, Math.min(rect.right - panelWidth, maxLeft));
+    const top = Math.max(margin, rect.bottom + 8);
+    helpPanelEl.style.left = `${left}px`;
+    helpPanelEl.style.top = `${top}px`;
+}
+
+btnHelpCanvasEl?.addEventListener('click', () => {
+    if (!helpOverlayEl) return;
+    helpOverlayEl.hidden = false;
+    positionHelpOverlay();
+});
+document.getElementById('btnHelpClose')?.addEventListener('click', () => {
+    document.getElementById('helpOverlay').hidden = true;
+});
+document.getElementById('helpOverlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) document.getElementById('helpOverlay').hidden = true;
+});
+window.addEventListener('resize', () => {
+    if (helpOverlayEl && !helpOverlayEl.hidden) positionHelpOverlay();
+});
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && exportCollapsedConfirmOverlayEl && !exportCollapsedConfirmOverlayEl.hidden) {
         closeCollapsedExportConfirm(false);
@@ -9904,6 +10352,9 @@ document.addEventListener('keydown', (e) => {
     }
     if (e.key === 'Escape' && !document.getElementById('infoOverlay').hidden) {
         document.getElementById('infoOverlay').hidden = true;
+    }
+    if (e.key === 'Escape' && !document.getElementById('helpOverlay').hidden) {
+        document.getElementById('helpOverlay').hidden = true;
     }
 });
 
@@ -9959,7 +10410,7 @@ canvas?.addEventListener('click', (e) => {
         return;
     }
 
-    if (!rulerEnabled || !rulerPartHoverEnabled || !hasModelParts()) return;
+    if (!rulerEnabled || !hasModelParts()) return;
     const partIndex = resolveHoveredPartIndexFromPointerEvent(e);
     if (partIndex < 0) return;
     selectModelPartFromRulerHover(partIndex, rulerPartSelectMultiEnabled);
@@ -10026,11 +10477,11 @@ canvas?.addEventListener('pointermove', (e) => {
 }, { passive: true });
 
 canvas?.addEventListener('pointerleave', () => {
-    if (rulerPartHoverEnabled) setRulerHoveredPartIndex(-1);
+    if (getRulerInteractionMode()) setRulerHoveredPartIndex(-1);
 });
 
 canvas?.addEventListener('pointercancel', () => {
-    if (rulerPartHoverEnabled) setRulerHoveredPartIndex(-1);
+    if (getRulerInteractionMode()) setRulerHoveredPartIndex(-1);
 });
 
 const exportPreviewCanvas = document.getElementById('exportPreview');
@@ -11738,29 +12189,54 @@ if (rulerUnitToggleEl) {
     });
 }
 
-const rulerHoverToggleEl = document.getElementById('rulerHoverToggle');
-if (rulerHoverToggleEl) {
-    const _toggleRulerHover = () => {
-        setRulerPartHoverEnabled(!rulerPartHoverEnabled, true);
+// Radio-based mode picker (Inspect / Select)
+const rulerModePickerEl = document.getElementById('rulerModePicker');
+if (rulerModePickerEl) {
+    const resolveRulerModeRadio = (eventTarget) => {
+        if (!eventTarget) return null;
+        const direct = eventTarget.closest('input[type="radio"][name="rulerMode"]');
+        if (direct) return direct;
+        const label = eventTarget.closest('label');
+        return label ? label.querySelector('input[type="radio"][name="rulerMode"]') : null;
     };
-    rulerHoverToggleEl.addEventListener('click', _toggleRulerHover);
-    rulerHoverToggleEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            _toggleRulerHover();
+
+    // Track whether the clicked radio was already selected, to support click-to-toggle-off / select-all cycling.
+    let _radioWasCheckedOnPointerDown = false;
+    rulerModePickerEl.addEventListener('pointerdown', (e) => {
+        const radio = resolveRulerModeRadio(e.target);
+        _radioWasCheckedOnPointerDown = radio ? radio.checked : false;
+    });
+    rulerModePickerEl.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'inspect') {
+            setRulerPartHoverEnabled(true, true);
+        } else if (val === 'select') {
+            setRulerPartSelectMultiEnabled(true, true);
+        } else {
+            setRulerPartHoverEnabled(false, false);
+            setRulerPartSelectMultiEnabled(false, true);
         }
     });
-}
-
-if (rulerSelectToggleEl) {
-    const _toggleRulerSelect = () => {
-        setRulerPartSelectMultiEnabled(!rulerPartSelectMultiEnabled, true);
-    };
-    rulerSelectToggleEl.addEventListener('click', _toggleRulerSelect);
-    rulerSelectToggleEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            _toggleRulerSelect();
+    rulerModePickerEl.addEventListener('click', (e) => {
+        const radio = resolveRulerModeRadio(e.target);
+        if (!radio || radio.value === 'none') return;
+        if (radio.value === 'select' && _radioWasCheckedOnPointerDown) {
+            // Second click on Select exits Select mode.
+            setBulkPartSelectionForAll(false);
+            const noneRadio = document.getElementById('rulerModeNone');
+            if (noneRadio) {
+                noneRadio.checked = true;
+                setRulerPartSelectMultiEnabled(false, true);
+            }
+            return;
+        }
+        if (radio.value !== 'select' && _radioWasCheckedOnPointerDown) {
+            const noneRadio = document.getElementById('rulerModeNone');
+            if (noneRadio) {
+                noneRadio.checked = true;
+                setRulerPartHoverEnabled(false, false);
+                setRulerPartSelectMultiEnabled(false, true);
+            }
         }
     });
 }

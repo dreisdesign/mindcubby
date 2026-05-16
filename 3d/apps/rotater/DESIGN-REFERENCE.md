@@ -184,3 +184,91 @@ Source Sans 3 is the only typeface. Size tokens:
 | Radio pill group | `4px` |
 | Canvas overlay buttons | `50%` (circle) |
 | Cam nav buttons | `6px` |
+
+---
+
+## color-rules.json Reference
+
+`color-rules.json` is a runtime configuration file loaded at startup via `loadColorRules()` and deep-merged with `DEFAULT_COLOR_RULES` in `script.js` using `mergePlainObject()`. The merged result is stored in the `colorRules` object and read at runtime via `getColorRuleNumber(path, fallback)`.
+
+Keys beginning with `_` (e.g. `_note`, `_formula`, `_states`) are documentation comments and are ignored by the merge logic (they are just inert strings).
+
+### Top-Level Keys
+
+#### `modelShade`
+Controls the snap-step behavior of the manual Model Tone slider.
+
+| Key | Type | Description |
+|---|---|---|
+| `jumpPercent` | number | Size of each shade step as a percentage |
+| `snapCount` | number | Total number of snap stops (odd = symmetric around center) |
+
+**Formula:** max effect = `jumpPercent × ((snapCount - 1) / 2)`
+
+---
+
+#### `surfaceShade`
+Same snap-step behavior as `modelShade`, but applied to the Background and Build Plate manual shade sliders (only when auto-brightness is OFF).
+
+---
+
+#### `shadeResponse`
+Asymmetric scaling of the manual shade curve. `1.0` = full effect; `< 1` softens; `> 1` amplifies.
+
+| Key | Description |
+|---|---|
+| `lightenScale` | Multiplier applied to the lightening direction |
+| `darkenScale` | Multiplier applied to the darkening direction |
+
+---
+
+#### `autoBrightness`
+Auto-brightness target shade values for Background and Build Plate. Values are on the same `-100 → +100` scale as the manual shade slider.
+
+| Sub-key | Description |
+|---|---|
+| `background.shade` | Auto shade for the canvas background |
+| `buildPlate.shade` | Auto shade for the build plate |
+
+---
+
+#### `presetShadeDefaults`
+Default shade values applied when a user selects a background or model preset. Allows presets like "black" or "ceramic" to start with an appropriate tone.
+
+| Sub-keys | Description |
+|---|---|
+| `background.white/black/modelcolor/custom` | Background shade on preset select |
+| `buildPlate.white/black/modelcolor/custom` | Build plate shade on preset select |
+| `model.ceramic/ink/chrome/glass/…/custom` | Model tone on preset select |
+
+---
+
+#### `partInteractionModes`
+Visual emphasis rules for **Inspect** and **Multi-Select** modes. Values are percentages where `100` = full/unchanged and lower values fade or desaturate the part.
+
+> **Important:** Keys must exactly match the state names the runtime reads via `getPartInteractionVisualProfile()`. Wrong key names silently fall back to `DEFAULT_COLOR_RULES` (which uses `25%` for `base` states).
+
+**`inspect` states:**
+
+| State key | When it applies |
+|---|---|
+| `base` | All non-hovered parts while Inspect mode is active |
+| `hovered` | The single part currently under the cursor |
+
+**`select` states:**
+
+| State key | When it applies |
+|---|---|
+| `base` | Parts that are neither selected nor hovered |
+| `selected` | Parts that are checked/selected but not currently hovered |
+| `hoveredUnselected` | Cursor is over a part that is not yet selected |
+| `hoveredSelected` | Cursor is over a part that is already selected |
+
+Each state object accepts:
+
+| Key | Description |
+|---|---|
+| `opacityPercent` | Opacity (100 = fully opaque, 0 = invisible) |
+| `saturationPercent` | Color saturation (100 = full color, 0 = grayscale) |
+
+**Relationship to `DEFAULT_COLOR_RULES`:** Values in `color-rules.json` override only the matching keys; all other keys remain at their code defaults. This means you only need to include the keys you want to customize.
