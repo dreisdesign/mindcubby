@@ -95,7 +95,7 @@
             const _t = localStorage.getItem('rotater-theme') || 'light';
             document.documentElement.classList.add('theme-' + _t);
         } catch (e) { document.documentElement.classList.add('theme-light'); }</script>
-    <script type="importmap">
+    <script id="rotaterImportMap" type="importmap">
     {
         "imports": {
             "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
@@ -1083,10 +1083,33 @@
     <script>
         (() => {
             const build = window.ROTATER_BUILD || 'dev';
-            const scriptEl = document.createElement('script');
-            scriptEl.type = 'module';
-            scriptEl.src = `script.js?v=${encodeURIComponent(build)}`;
-            document.body.appendChild(scriptEl);
+            const importMapEl = document.getElementById('rotaterImportMap');
+            const supportsImportMap = typeof HTMLScriptElement !== 'undefined'
+                && typeof HTMLScriptElement.supports === 'function'
+                && HTMLScriptElement.supports('importmap');
+
+            const appendAppScript = (type = 'module') => {
+                const scriptEl = document.createElement('script');
+                scriptEl.type = type;
+                scriptEl.src = `script.js?v=${encodeURIComponent(build)}`;
+                document.body.appendChild(scriptEl);
+            };
+
+            if (supportsImportMap) {
+                appendAppScript('module');
+                return;
+            }
+
+            if (importMapEl) importMapEl.type = 'importmap-shim';
+            const shimEl = document.createElement('script');
+            shimEl.async = true;
+            shimEl.src = 'https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.min.js';
+            shimEl.onload = () => appendAppScript('module-shim');
+            shimEl.onerror = () => {
+                document.documentElement.classList.remove('booting');
+                console.error('Rotater failed to load import-map shim.');
+            };
+            document.head.appendChild(shimEl);
         })();
     </script>
 
