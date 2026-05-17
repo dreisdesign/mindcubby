@@ -1088,10 +1088,20 @@
                 && typeof HTMLScriptElement.supports === 'function'
                 && HTMLScriptElement.supports('importmap');
 
+            const dismissBooting = () => document.documentElement.classList.remove('booting');
+
+            // Safety-net: if nothing else dismisses the splash within 20 s, force it away.
+            const splashGuard = setTimeout(dismissBooting, 20000);
+
             const appendAppScript = (type = 'module') => {
                 const scriptEl = document.createElement('script');
                 scriptEl.type = type;
                 scriptEl.src = `script.js?v=${encodeURIComponent(build)}`;
+                scriptEl.onerror = () => {
+                    clearTimeout(splashGuard);
+                    dismissBooting();
+                    console.error('Rotater script.js failed to load.');
+                };
                 document.body.appendChild(scriptEl);
             };
 
@@ -1106,7 +1116,8 @@
             shimEl.src = 'https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.min.js';
             shimEl.onload = () => appendAppScript('module-shim');
             shimEl.onerror = () => {
-                document.documentElement.classList.remove('booting');
+                clearTimeout(splashGuard);
+                dismissBooting();
                 console.error('Rotater failed to load import-map shim.');
             };
             document.head.appendChild(shimEl);
