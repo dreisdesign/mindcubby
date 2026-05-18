@@ -1135,13 +1135,13 @@ html.none-mode #btnExportPause {
 
 .cam-nav-row {
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 24px;
+    align-items: center;
     pointer-events: auto;
     position: static;
-    width: auto;
+    width: fit-content;
     max-width: 100%;
+    margin: 0 auto;
 }
 
 html.dpad-hidden .canvas-bottom-center .cam-nav-row {
@@ -1154,18 +1154,13 @@ html.dpad-hidden .canvas-overlay-br {
 
 .cam-nav-row .ruler-hud {
     margin: 0;
-    flex: 0 1 auto;
+    min-width: 0;
+    justify-self: end;
 }
 
 .cam-nav-row .cam-nav {
     position: static;
     transform: none !important;
-    flex: 0 0 auto;
-}
-
-.cam-nav-row .cam-nav-actions {
-    margin: 0;
-    flex: 0 0 auto;
 }
 
 .cam-nav-actions {
@@ -1200,6 +1195,13 @@ html.dpad-hidden .canvas-overlay-br {
 
 .cam-nav-action-btn:hover {
     background: rgba(21, 18, 43, 0.98);
+}
+
+.cam-nav-action-btn.is-active,
+#btnInspectMode.is-active {
+    background: var(--palette-blueberry-200);
+    border-color: var(--palette-blueberry-500);
+    color: var(--palette-blueberry-500);
 }
 
 .cam-btn {
@@ -1513,6 +1515,11 @@ html.loaded .controls-bar.hidden {
     transform: rotate(0deg);
 }
 
+#modelPartSelectorBtn .thumb-select-chevron,
+#modelPartSelectorBtn[aria-expanded="true"] .thumb-select-chevron {
+    transform: none;
+}
+
 .thumb-select-menu {
     position: absolute;
     left: 0;
@@ -1540,8 +1547,8 @@ html.loaded .controls-bar.hidden {
 }
 
 .model-bulk-bar {
-    margin-bottom: 8px;
-    padding: 8px;
+    margin-bottom: 0;
+    padding: 6px;
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 70%, white 30%);
     border-radius: 10px;
     background: color-mix(in srgb, #fff 78%, var(--palette-blueberry-100) 22%);
@@ -1550,9 +1557,10 @@ html.loaded .controls-bar.hidden {
 
 .model-bulk-bar-actions {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto auto minmax(180px, 280px);
     align-items: center;
     gap: 8px;
+    justify-content: flex-start;
 }
 
 .model-bulk-icon-btn,
@@ -1575,7 +1583,15 @@ html.loaded .controls-bar.hidden {
 }
 
 .model-bulk-toggle-all {
-    position: relative;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    flex: 0 0 20px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
 }
 
 .model-bulk-toggle-all .thumb-select-option-check-input {
@@ -1611,11 +1627,22 @@ html.loaded .controls-bar.hidden {
     background: color-mix(in srgb, #fff 70%, var(--palette-blueberry-100) 30%);
 }
 
+.model-bulk-toggle-all:hover {
+    border-color: transparent;
+    background: transparent;
+}
+
+.model-bulk-icon-btn.is-active {
+    border-color: var(--palette-blueberry-500);
+    background: var(--palette-blueberry-200);
+    color: var(--palette-blueberry-500);
+}
+
 .model-bulk-view {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 4px;
-    width: 100%;
+    width: min(100%, 280px);
     padding: 2px;
     border-radius: 999px;
     background: color-mix(in srgb, var(--palette-blueberry-100) 70%, #fff 30%);
@@ -1671,6 +1698,96 @@ html.loaded .controls-bar.hidden {
     overflow: visible;
 }
 
+#modelPartSelectorMenu.thumb-select-menu--floating-card {
+    position: fixed;
+    left: 12px;
+    top: 120px;
+    right: auto;
+    bottom: auto;
+    width: min(720px, calc(100vw - 24px));
+    min-width: 360px;
+    max-width: min(860px, calc(100vw - 24px));
+    max-height: min(760px, calc(100vh - 24px));
+    overflow: auto;
+    resize: both;
+    padding: 6px;
+    z-index: 140;
+    box-shadow: 0 22px 44px rgba(14, 12, 35, 0.28), 0 8px 20px rgba(14, 12, 35, 0.2);
+    border-radius: 16px;
+}
+
+#modelPartSelectorMenu .model-selector-floating-header {
+    display: none;
+}
+
+#modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header {
+    position: sticky;
+    top: -6px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: -6px -6px 4px;
+    padding: 8px 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 75%, white 25%);
+    background: color-mix(in srgb, var(--color-surface-raised, #fff) 94%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    cursor: grab;
+    user-select: none;
+}
+
+#modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header.is-dragging {
+    cursor: grabbing;
+}
+
+#modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-drag-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: color-mix(in srgb, var(--color-on-surface, #2e2b74) 58%, transparent);
+}
+
+#modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-on-surface, #2e2b74) 72%, transparent);
+}
+
+#modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-close {
+    margin-left: auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--palette-blueberry-400) 62%, white 38%);
+    background: color-mix(in srgb, #fff 84%, var(--palette-blueberry-100) 16%);
+    color: var(--palette-blueberry-800);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+#modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-close:hover {
+    border-color: color-mix(in srgb, var(--palette-blueberry-700) 68%, white 32%);
+    background: color-mix(in srgb, #fff 72%, var(--palette-blueberry-100) 28%);
+}
+
+#modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-close:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 36%, transparent);
+}
+
+#modelPartSelectorMenu.thumb-select-menu--floating-card.model-selector-view--grid .model-selector-floating-header,
+#modelPartSelectorMenu.thumb-select-menu--floating-card.model-selector-view--card .model-selector-floating-header,
+#modelPartSelectorMenu.thumb-select-menu--floating-card.model-selector-view--list .model-selector-floating-header {
+    grid-column: 1 / -1;
+}
+
 #modelPartSelectorMenu .thumb-select-option {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: flex-start;
@@ -1703,6 +1820,11 @@ html.loaded .controls-bar.hidden {
     }
 
     #modelPartSelectorMenu .thumb-select-option:has(.thumb-select-option-check-input:checked) .thumb-select-option-check {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    #modelPartSelectorMenu.has-empty-selection .thumb-select-option .thumb-select-option-check {
         opacity: 1;
         pointer-events: auto;
     }
@@ -1854,36 +1976,66 @@ html.loaded .controls-bar.hidden {
     grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
+#modelPartSelectorMenu.model-selector-view--card {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+}
+
+#modelPartSelectorMenu.model-selector-view--card .model-bulk-bar,
+#modelPartSelectorMenu.model-selector-view--card .thumb-select-menu-add-row {
+    margin-bottom: 2px;
+}
+
+#modelPartSelectorMenu.model-selector-view--card .thumb-select-option {
+    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 78%, white 22%);
+    background: color-mix(in srgb, #fff 84%, var(--palette-blueberry-100) 16%);
+    padding: 10px;
+}
+
+#modelPartSelectorMenu.model-selector-view--card .thumb-select-option.is-selected {
+    border: 2px solid var(--palette-blueberry-500);
+    background: color-mix(in srgb, #fff 62%, var(--palette-blueberry-100) 38%);
+    box-shadow: none;
+}
+
 #modelPartSelectorMenu.model-selector-view--grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, auto));
+    grid-auto-rows: min-content;
     gap: 8px;
+    margin-top: 6px;
+    justify-content: start;
+    align-content: start;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .model-bulk-bar,
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-menu-add-row {
     grid-column: 1 / -1;
+    margin-top: 0;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 4px;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-main {
     grid-template-columns: 1fr;
-    gap: 6px;
-    padding-top: 20px;
+    gap: 4px;
+    padding-top: 8px;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-thumb-wrap {
-    width: 100%;
+    width: min(100%, 170px);
+    margin: 0 auto;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-canvas {
     width: 100%;
     height: auto;
     aspect-ratio: 1 / 1;
+    max-height: 170px;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-text {
@@ -1921,7 +2073,7 @@ html.loaded .controls-bar.hidden {
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option {
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 78%, white 22%);
     background: color-mix(in srgb, #fff 84%, var(--palette-blueberry-100) 16%);
-    padding: 10px;
+    padding: 8px;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option.is-selected {
@@ -2118,6 +2270,10 @@ html.loaded .controls-bar.hidden {
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 75%, white 25%);
+}
+
+.thumb-select-menu-add-row:empty {
+    display: none;
 }
 
 .thumb-select-add-slot--menu {
@@ -2389,6 +2545,11 @@ html.theme-dark .model-bulk-toggle-all {
     background: rgba(30, 25, 62, 0.26);
     border-color: rgba(179, 168, 247, 0.42);
     color: var(--palette-blueberry-100);
+}
+
+html.theme-dark .model-bulk-toggle-all {
+    background: transparent;
+    border-color: transparent;
 }
 
 html.theme-dark .model-bulk-view {
@@ -2708,7 +2869,7 @@ html.loaded footer {
     bottom: 16px;
     right: 16px;
     z-index: 5;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
@@ -4444,6 +4605,7 @@ html.loaded .menu-btn {
 
     #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option {
         padding: 8px;
+        min-height: 0;
     }
 
     #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-main {
@@ -4452,8 +4614,8 @@ html.loaded .menu-btn {
     }
 
     #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-canvas {
-        aspect-ratio: 4 / 3;
-        max-height: 96px;
+        aspect-ratio: 1 / 1;
+        max-height: 124px;
     }
 
     #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-text {
@@ -4648,8 +4810,8 @@ html.loaded .menu-btn {
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
-/* Keep export bottom-row action buttons aligned with the existing dark D-pad style. */
-.cam-nav-actions .cam-nav-action-btn {
+/* Keep preview action buttons aligned with the existing D-pad style. */
+.canvas-overlay-br .cam-nav-action-btn {
     width: 52px;
     height: 52px;
     border-radius: 999px;
@@ -4659,10 +4821,16 @@ html.loaded .menu-btn {
     box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
 }
 
-.cam-nav-actions .cam-nav-action-btn:hover {
+.canvas-overlay-br .cam-nav-action-btn:hover {
     border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
     color: var(--palette-blueberry-500);
     background: #fff;
+}
+
+.canvas-overlay-br .cam-nav-action-btn.is-active {
+    background: var(--palette-blueberry-200);
+    border-color: var(--palette-blueberry-500);
+    color: var(--palette-blueberry-500);
 }
 
 #btnExportPause {
@@ -5182,16 +5350,16 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
 
 .ruler-part-hover-toggle,
 .ruler-part-select-toggle {
-    width: 52px;
-    height: 52px;
-    padding: 0;
+    min-width: 112px;
+    height: 40px;
+    padding: 0 12px;
     border-radius: 999px;
-    border: 2px solid rgba(74, 67, 145, 0.14);
+    border: 2px solid rgba(74, 67, 145, 0.18);
     background: #fff;
-    color: var(--palette-blueberry-600);
+    color: color-mix(in srgb, var(--palette-blueberry-500) 62%, white);
     cursor: pointer;
     box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
-    transition: border-color 0.15s, color 0.15s, opacity 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, opacity 0.15s;
 }
 
 .ruler-mode-picker {
@@ -5225,15 +5393,14 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0;
-    min-width: 0;
+    gap: 8px;
     cursor: pointer;
     user-select: none;
 }
 
 .ruler-toggle-icon {
-    width: 26px;
-    height: 26px;
+    width: 18px;
+    height: 18px;
     display: block;
     flex: 0 0 auto;
     fill: currentColor;
@@ -5241,7 +5408,15 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
 
 #rulerHoverLabel,
 #rulerSelectLabel {
-    display: none;
+    display: inline;
+}
+
+.ruler-toggle-text {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 #rulerSelectToggle {
@@ -5256,19 +5431,15 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
 .ruler-part-select-toggle:hover {
     border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
     color: var(--palette-blueberry-500);
-    background: #fff;
+    background: color-mix(in srgb, var(--palette-blueberry-100) 58%, #fff);
 }
 
-.ruler-part-hover-toggle.is-active {
-    background: #fff;
-    border-color: var(--palette-blueberry-500);
-    color: var(--palette-blueberry-500);
-}
-
+.ruler-part-hover-toggle.is-active,
 .ruler-part-select-toggle.is-active {
-    background: #fff;
+    background: var(--palette-blueberry-200);
     border-color: var(--palette-blueberry-500);
     color: var(--palette-blueberry-500);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-500) 14%, transparent), 0 8px 20px rgba(18, 16, 48, 0.16);
 }
 
 .ruler-part-hover-toggle:disabled,
@@ -5284,8 +5455,8 @@ html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
 .ruler-part-select-toggle:disabled:hover,
 .ruler-part-select-toggle:has(input:disabled):hover {
     background: #fff;
-    border-color: rgba(74, 67, 145, 0.14);
-    color: var(--palette-blueberry-600);
+    border-color: rgba(74, 67, 145, 0.18);
+    color: color-mix(in srgb, var(--palette-blueberry-500) 62%, white);
 }
 
 .ruler-part-hover-toggle:focus-visible,
@@ -6644,11 +6815,12 @@ html.loaded .sidebar-tabs {
     margin-top: 2px;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
 .export-primary-row .export-btn {
-    flex: 1 1 auto;
+    flex: 1 1 170px;
     width: auto;
     min-height: 52px;
     font-size: var(--text-lg);
@@ -6656,17 +6828,21 @@ html.loaded .sidebar-tabs {
 }
 
 .export-primary-row .export-close-inline {
-    flex: 0 0 auto;
+    flex: 1 1 auto;
     min-height: 52px;
-    padding: 0 16px;
+    min-width: 0;
+    padding: 0 12px;
     font-weight: 700;
+    justify-content: center;
 }
 
 .export-primary-row .export-copy-inline {
-    flex: 0 0 auto;
+    flex: 1 1 auto;
     min-height: 52px;
-    padding: 0 14px;
+    min-width: 0;
+    padding: 0 12px;
     font-weight: 700;
+    justify-content: center;
 }
 
 .export-primary-row .export-copy-inline svg {
@@ -7513,9 +7689,9 @@ html.loaded.layout-v2-desktop .ruler-part-select-toggle {
     width: 52px;
     height: 52px;
     padding: 0;
-    border-color: rgba(74, 67, 145, 0.14);
+    border-color: rgba(74, 67, 145, 0.18);
     background: #fff;
-    color: var(--palette-blueberry-600);
+    color: color-mix(in srgb, var(--palette-blueberry-500) 62%, white);
 }
 
 html.loaded.layout-v2-desktop .ruler-mode-picker {
@@ -7525,14 +7701,9 @@ html.loaded.layout-v2-desktop .ruler-mode-picker {
     background: transparent;
 }
 
-html.loaded.layout-v2-desktop .ruler-part-hover-toggle.is-active {
-    background: #fff;
-    border-color: var(--palette-blueberry-500);
-    color: var(--palette-blueberry-500);
-}
-
+html.loaded.layout-v2-desktop .ruler-part-hover-toggle.is-active,
 html.loaded.layout-v2-desktop .ruler-part-select-toggle.is-active {
-    background: #fff;
+    background: var(--palette-blueberry-200);
     border-color: var(--palette-blueberry-500);
     color: var(--palette-blueberry-500);
 }
@@ -8187,6 +8358,11 @@ html.theme-dark .adv-section-check input[type="checkbox"] {
 #bgModelSyncSelector .thumb-select-canvas {
     width: 56px;
     height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+    max-width: 56px;
+    max-height: 56px;
+    flex: 0 0 56px;
     border-radius: 12px;
 }
 
@@ -8233,6 +8409,11 @@ html.theme-dark .adv-section-check input[type="checkbox"] {
 #buildPlateModelSyncSelector .thumb-select-canvas {
     width: 56px;
     height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+    max-width: 56px;
+    max-height: 56px;
+    flex: 0 0 56px;
     border-radius: 12px;
 }
 

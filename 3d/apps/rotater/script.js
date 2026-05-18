@@ -322,6 +322,7 @@ const colorPick = document.getElementById('colorPicker');
 const opacitySlider = document.getElementById('opacitySlider');
 const opacityVal = document.getElementById('opacityVal');
 const quickPresetsBar = document.getElementById('quickPresetsBar');
+const modelCardSliders = document.querySelector('#modelBox .model-sliders');
 const modelPartThumbsWrap = document.getElementById('modelPartThumbsWrap');
 const modelPartSelectorEl = document.getElementById('modelPartSelector');
 const modelPartSelectorBtn = document.getElementById('modelPartSelectorBtn');
@@ -345,6 +346,7 @@ const buildPlateModelSyncSelectorText = document.getElementById('buildPlateModel
 const modelUndoToast = document.getElementById('modelUndoToast');
 const modelUndoToastText = document.getElementById('modelUndoToastText');
 const btnModelUndoToast = document.getElementById('btnModelUndoToast');
+const btnInspectMode = document.getElementById('btnInspectMode');
 const bgPick = document.getElementById('bgPicker');
 const bgOpacitySlider = document.getElementById('bgOpacitySlider');
 const bgOpacitySliderLabel = bgOpacitySlider?.closest('.control-label');
@@ -427,6 +429,7 @@ const buildPlateCustomWidthEl = document.getElementById('buildPlateCustomWidth')
 const buildPlateCustomDepthEl = document.getElementById('buildPlateCustomDepth');
 const btnPause = document.getElementById('btnPause');
 const iconPlayPause = document.getElementById('iconPlayPause');
+const iconExportPlayPause = document.getElementById('iconExportPlayPause');
 const rotateModeEl = {
     get value() { return document.querySelector('input[name="rotateMode"]:checked')?.value ?? 'spin'; },
     set value(v) { const el = document.querySelector(`input[name="rotateMode"][value="${v}"]`); if (el) el.checked = true; },
@@ -2216,12 +2219,23 @@ function syncModelPartBulkUIState() {
         toggleAllControl.title = selectedCount >= partCount ? 'Clear selection' : 'Select all';
         toggleAllControl.setAttribute('aria-label', toggleAllControl.title);
     }
+
+    const multiToggle = modelPartSelectorMenu.querySelector('[data-bulk-action="toggle-multi"]');
+    if (multiToggle) {
+        const isActive = isModelPartPreviewMultiSelectActive();
+        const label = isActive ? 'Multi-select on' : 'Multi-select off';
+        multiToggle.classList.toggle('is-active', isActive);
+        multiToggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        multiToggle.title = label;
+        multiToggle.setAttribute('aria-label', label);
+    }
 }
 
 function syncModelPartCheckboxStates() {
     if (!modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
     const effectiveSelection = new Set(getUiSelectedPartIndices());
     modelPartSelectorMenu.classList.toggle('has-multi-selection', effectiveSelection.size > 0);
+    modelPartSelectorMenu.classList.toggle('has-empty-selection', effectiveSelection.size === 0);
     modelPartSelectorMenu.querySelectorAll('.thumb-select-option-check-input[data-part-bulk-select]').forEach((inputEl) => {
         const idx = parseInt(inputEl.dataset.partBulkSelect || '-1', 10);
         inputEl.checked = effectiveSelection.has(idx);
@@ -2635,6 +2649,7 @@ function syncUIFromSelectedPart() {
     reconcileModelPresetFromSettings(true);
     updateModelSelection();
     updateCardResetButtonStates();
+    updateModelCardSelectionVisibility();
 }
 
 // null = all parts dirty; a Set = only the indices in the set need re-rendering
@@ -2825,6 +2840,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     const savedBuildPlateVisible = buildPlateMesh?.visible;
     const savedRulerGridVisible = rulerGridHelper?.visible;
     const savedRulerFootprintVisible = rulerFootprintHelper?.visible;
+    const savedRulerHoveredPartBoxVisible = rulerHoveredPartBoxWire?.visible;
     const saved = mats.map((m) => ({
         mat: m,
         transparent: m?.transparent,
@@ -2884,6 +2900,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (buildPlateMesh) buildPlateMesh.visible = false;
     if (rulerGridHelper) rulerGridHelper.visible = false;
     if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
+    if (rulerHoveredPartBoxWire) rulerHoveredPartBoxWire.visible = false;
 
     scene.background = null;
     renderer.setClearColor(0x000000, 0);
@@ -2978,6 +2995,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     if (buildPlateMesh && typeof savedBuildPlateVisible === 'boolean') buildPlateMesh.visible = savedBuildPlateVisible;
     if (rulerGridHelper && typeof savedRulerGridVisible === 'boolean') rulerGridHelper.visible = savedRulerGridVisible;
     if (rulerFootprintHelper && typeof savedRulerFootprintVisible === 'boolean') rulerFootprintHelper.visible = savedRulerFootprintVisible;
+    if (rulerHoveredPartBoxWire && typeof savedRulerHoveredPartBoxVisible === 'boolean') rulerHoveredPartBoxWire.visible = savedRulerHoveredPartBoxVisible;
     // Live-view repaint is deferred to renderModelPartThumbnails() to avoid
     // one full-scene render per part (22 renders for 22 parts).
 }
@@ -3086,9 +3104,10 @@ function renderModelPartThumbnails() {
     if (anyRendered && scene && camera && !isExporting) renderer.render(scene, camera);
 
     if (modelPartSelectorMenu) {
+        const uiSelectedIndices = new Set(getUiSelectedPartIndices());
         modelPartSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
             const idx = parseInt(opt.dataset.partIndex, 10);
-            opt.classList.toggle('is-selected', idx === modelPartSelected);
+            opt.classList.toggle('is-selected', uiSelectedIndices.has(idx));
         });
     }
     syncRulerHoverSelectorState();
@@ -3123,6 +3142,7 @@ function renderModelPartThumbnails() {
 function renderModelPartSelectorSummary() {
     if (!modelPartSelectorText || !modelPartSelectorBtn || !hasModelParts()) return;
     if (!isMultipartModel()) {
+        updateModelCardSelectionVisibility();
         if (modelPartSelectorThumb) modelPartSelectorThumb.hidden = false;
         modelPartSelectorBtn.classList.remove('is-empty-selection');
         const selectedName = modelPartNames[modelPartSelected] || `Part ${modelPartSelected + 1}`;
@@ -3134,6 +3154,7 @@ function renderModelPartSelectorSummary() {
     const selectedIndices = getUiSelectedPartIndices();
     const selectedCount = selectedIndices.length;
     const totalCount = modelPartNames.length;
+    updateModelCardSelectionVisibility();
     if (modelPartSelectorThumb) modelPartSelectorThumb.hidden = selectedCount === 0;
     modelPartSelectorBtn.classList.toggle('is-empty-selection', selectedCount === 0);
     const firstIndex = selectedIndices[0] ?? Math.max(0, modelPartSelected);
@@ -3167,8 +3188,35 @@ function renderModelPartSelectorSummary() {
 }
 
 function closeThumbSelectMenus() {
-    if (modelPartSelectorMenu) modelPartSelectorMenu.hidden = true;
+    closeThumbSelectMenusByMode({ includeModelSelector: true });
+}
+
+function isModelPartFloatingCardOpen() {
+    return !!(modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorMenu.classList.contains('thumb-select-menu--floating-card'));
+}
+
+function closeModelPartSelectorMenu() {
+    let changedModelSelectorMenuState = false;
+    if (modelPartSelectorMenu && !modelPartSelectorMenu.hidden) {
+        modelPartSelectorMenu.hidden = true;
+        changedModelSelectorMenuState = true;
+        if (rulerPartSelectMultiEnabled) setRulerPartSelectMultiEnabled(false, false);
+    }
     if (modelPartSelectorBtn) modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
+    if (changedModelSelectorMenuState) {
+        _modelPartMenuDragState = null;
+        const floatingHeader = modelPartSelectorMenu?.querySelector('.model-selector-floating-header');
+        if (floatingHeader) floatingHeader.classList.remove('is-dragging');
+        applyPartInteractionVisualsToMeshMaterials();
+        syncRulerHoverSelectorState();
+        updateRulerHUD();
+    }
+    return changedModelSelectorMenuState;
+}
+
+function closeThumbSelectMenusByMode(options = {}) {
+    const includeModelSelector = options.includeModelSelector !== false;
+    if (includeModelSelector) closeModelPartSelectorMenu();
     if (bgModelSyncSelectorMenu) bgModelSyncSelectorMenu.hidden = true;
     if (bgModelSyncSelectorBtn) bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
     if (buildPlateModelSyncSelectorMenu) buildPlateModelSyncSelectorMenu.hidden = true;
@@ -3212,6 +3260,23 @@ function positionModelPartActionMenu(menuEl, anchorEl) {
 
 function positionThumbSelectMenu(menuEl, anchorBtn) {
     if (!menuEl || !anchorBtn) return;
+    if (menuEl === modelPartSelectorMenu) {
+        const floatingDesktopMenu = isDesktopV2Layout() && window.matchMedia && window.matchMedia('(pointer:fine)').matches;
+        if (floatingDesktopMenu) {
+            positionFloatingModelPartSelectorMenu(anchorBtn);
+            return;
+        }
+        menuEl.classList.remove('thumb-select-menu--floating-card');
+        const floatingHeader = menuEl.querySelector('.model-selector-floating-header');
+        if (floatingHeader) floatingHeader.remove();
+        menuEl.style.left = '';
+        menuEl.style.top = '';
+        menuEl.style.right = '';
+        menuEl.style.bottom = '';
+        menuEl.style.width = '';
+        menuEl.style.height = '';
+        menuEl.style.maxHeight = '';
+    }
     const gap = 8;
     const viewportPad = 12;
     const minPanelHeight = 170;
@@ -3223,6 +3288,116 @@ function positionThumbSelectMenu(menuEl, anchorBtn) {
     menuEl.classList.toggle('thumb-select-menu--above', openAbove);
     menuEl.style.maxHeight = `${available}px`;
 }
+
+function ensureModelPartFloatingHeader() {
+    if (!modelPartSelectorMenu) return null;
+    let headerEl = modelPartSelectorMenu.querySelector('.model-selector-floating-header');
+    if (headerEl) return headerEl;
+    headerEl = document.createElement('div');
+    headerEl.className = 'model-selector-floating-header';
+    headerEl.innerHTML = `<span class="model-selector-floating-drag-indicator" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.05078 16C9.63381 16.0001 10.1212 16.1955 10.5127 16.5869C10.9044 16.9786 11.1006 17.4665 11.1006 18.0498C11.1006 18.5998 10.9044 19.079 10.5127 19.4873C10.1211 19.8955 9.63392 20.0995 9.05078 20.0996C8.46745 20.0996 7.97956 19.8956 7.58789 19.4873C7.19626 19.079 7 18.5998 7 18.0498C7 17.4665 7.19623 16.9786 7.58789 16.5869C7.97953 16.1953 8.46752 16 9.05078 16Z"/><path d="M15.251 16C15.834 16.0001 16.3214 16.1955 16.7129 16.5869C17.1046 16.9786 17.3008 17.4665 17.3008 18.0498C17.3008 18.5998 17.1046 19.079 16.7129 19.4873C16.3213 19.8955 15.8341 20.0995 15.251 20.0996C14.6677 20.0996 14.1797 19.8956 13.7881 19.4873C13.3964 19.079 13.2002 18.5998 13.2002 18.0498C13.2002 17.4665 13.3964 16.9786 13.7881 16.5869C14.1797 16.1954 14.6678 16 15.251 16Z"/><path d="M9.05078 10C9.63381 10.0001 10.1212 10.1955 10.5127 10.5869C10.9044 10.9786 11.1006 11.4665 11.1006 12.0498C11.1006 12.6331 10.9044 13.121 10.5127 13.5127C10.1212 13.9041 9.63382 14.0995 9.05078 14.0996C8.46752 14.0996 7.97953 13.9043 7.58789 13.5127C7.19622 13.121 7 12.6331 7 12.0498C7 11.4665 7.19623 10.9786 7.58789 10.5869C7.97953 10.1953 8.46752 10 9.05078 10Z"/><path d="M15.251 10C15.834 10.0001 16.3214 10.1955 16.7129 10.5869C17.1046 10.9786 17.3008 11.4665 17.3008 12.0498C17.3008 12.6331 17.1046 13.121 16.7129 13.5127C16.3214 13.9041 15.834 14.0995 15.251 14.0996C14.6678 14.0996 14.1797 13.9042 13.7881 13.5127C13.3964 13.121 13.2002 12.6331 13.2002 12.0498C13.2002 11.4665 13.3964 10.9786 13.7881 10.5869C14.1797 10.1954 14.6678 10 15.251 10Z"/><path d="M9.05078 4C9.63381 4.00007 10.1212 4.19554 10.5127 4.58691C10.9044 4.97858 11.1006 5.46648 11.1006 6.0498C11.1006 6.63314 10.9044 7.12103 10.5127 7.5127C10.1212 7.90407 9.63382 8.09954 9.05078 8.09961C8.46752 8.09961 7.97953 7.90427 7.58789 7.5127C7.19622 7.12103 7 6.63314 7 6.0498C7 5.46648 7.19623 4.97858 7.58789 4.58691C7.97953 4.19535 8.46752 4 9.05078 4Z"/><path d="M15.251 4C15.834 4.00011 16.3214 4.19552 16.7129 4.58691C17.1046 4.97858 17.3008 5.46648 17.3008 6.0498C17.3008 6.63314 17.1046 7.12103 16.7129 7.5127C16.3214 7.90409 15.834 8.0995 15.251 8.09961C14.6678 8.09961 14.1797 7.9042 13.7881 7.5127C13.3964 7.12103 13.2002 6.63314 13.2002 6.0498C13.2002 5.46648 13.3964 4.97858 13.7881 4.58691C14.1797 4.19541 14.6678 4 15.251 4Z"/></svg></span><span class="model-selector-floating-title">Models</span><button type="button" class="model-selector-floating-close" aria-label="Close model picker" title="Close model picker"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71 12 12l6.3 6.29-1.42 1.42L10.59 13.4l-6.3 6.31-1.42-1.42L9.17 12l-6.3-6.29 1.42-1.42 6.3 6.31 6.29-6.31z"/></svg></button>`;
+    headerEl.querySelector('.model-selector-floating-close')?.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        closeModelPartSelectorMenu();
+    });
+    headerEl.addEventListener('pointerdown', (ev) => {
+        const floatingDesktopMenu = isDesktopV2Layout() && window.matchMedia && window.matchMedia('(pointer:fine)').matches;
+        if (!floatingDesktopMenu || !modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
+        if (ev.button !== 0) return;
+        if (ev.target instanceof Element && ev.target.closest('button,a,input,select,label,textarea')) return;
+        const rect = modelPartSelectorMenu.getBoundingClientRect();
+        _modelPartMenuDragState = {
+            startX: ev.clientX,
+            startY: ev.clientY,
+            startLeft: rect.left,
+            startTop: rect.top,
+        };
+        headerEl.classList.add('is-dragging');
+        headerEl.setPointerCapture?.(ev.pointerId);
+        ev.preventDefault();
+        ev.stopPropagation();
+    });
+    modelPartSelectorMenu.prepend(headerEl);
+    return headerEl;
+}
+
+function clampModelPartSelectorMenuPosition(left, top) {
+    if (!modelPartSelectorMenu) return { left, top };
+    const rect = modelPartSelectorMenu.getBoundingClientRect();
+    const pad = 8;
+    const minVisibleHeight = 220;
+    const maxLeft = Math.max(pad, window.innerWidth - rect.width - pad);
+    const maxTop = Math.max(pad, window.innerHeight - minVisibleHeight);
+    return {
+        left: Math.max(pad, Math.min(maxLeft, left)),
+        top: Math.max(pad, Math.min(maxTop, top)),
+    };
+}
+
+function setModelPartSelectorMenuPosition(left, top, persist = true) {
+    if (!modelPartSelectorMenu) return;
+    const clamped = clampModelPartSelectorMenuPosition(left, top);
+    modelPartSelectorMenu.style.left = `${Math.round(clamped.left)}px`;
+    modelPartSelectorMenu.style.top = `${Math.round(clamped.top)}px`;
+    modelPartSelectorMenu.style.right = 'auto';
+    modelPartSelectorMenu.style.bottom = 'auto';
+    const maxH = Math.max(220, Math.floor(window.innerHeight - clamped.top - 8));
+    modelPartSelectorMenu.style.maxHeight = `${maxH}px`;
+    if (!persist) return;
+    try {
+        localStorage.setItem(MODEL_PART_MENU_POS_STORAGE_KEY, JSON.stringify({ left: Math.round(clamped.left), top: Math.round(clamped.top) }));
+    } catch (_) { }
+}
+
+function restoreModelPartSelectorMenuPosition() {
+    if (!modelPartSelectorMenu) return false;
+    try {
+        const raw = localStorage.getItem(MODEL_PART_MENU_POS_STORAGE_KEY);
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Number.isFinite(parsed.left) || !Number.isFinite(parsed.top)) return false;
+        setModelPartSelectorMenuPosition(parsed.left, parsed.top, false);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function positionFloatingModelPartSelectorMenu(anchorBtn) {
+    if (!modelPartSelectorMenu || !anchorBtn) return;
+    modelPartSelectorMenu.classList.add('thumb-select-menu--floating-card');
+    modelPartSelectorMenu.classList.remove('thumb-select-menu--above');
+    ensureModelPartFloatingHeader();
+    const restoredPos = restoreModelPartSelectorMenuPosition();
+    if (!restoredPos) {
+        const anchorRect = anchorBtn.getBoundingClientRect();
+        setModelPartSelectorMenuPosition(anchorRect.left, anchorRect.bottom + 10, false);
+    }
+}
+
+function initializeModelPartSelectorMenuDrag() {
+    const onPointerMove = (ev) => {
+        if (!_modelPartMenuDragState) return;
+        const nextLeft = _modelPartMenuDragState.startLeft + (ev.clientX - _modelPartMenuDragState.startX);
+        const nextTop = _modelPartMenuDragState.startTop + (ev.clientY - _modelPartMenuDragState.startY);
+        setModelPartSelectorMenuPosition(nextLeft, nextTop, false);
+    };
+
+    const onPointerUp = () => {
+        if (!_modelPartMenuDragState || !modelPartSelectorMenu) return;
+        const headerEl = modelPartSelectorMenu.querySelector('.model-selector-floating-header');
+        if (headerEl) headerEl.classList.remove('is-dragging');
+        const rect = modelPartSelectorMenu.getBoundingClientRect();
+        setModelPartSelectorMenuPosition(rect.left, rect.top, true);
+        _modelPartMenuDragState = null;
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+}
+
+initializeModelPartSelectorMenuDrag();
 
 function trapMenuWheelScroll(menuEl) {
     if (!menuEl || menuEl.dataset.wheelTrapBound === '1') return;
@@ -3258,6 +3433,9 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
         modelPartSelectorBtn.setAttribute('aria-expanded', 'true');
         syncModelPartCheckboxStates();
         syncModelPartBulkUIState();
+        applyPartInteractionVisualsToMeshMaterials();
+        syncRulerHoverSelectorState();
+        updateRulerHUD();
         queueModelPartThumbsRender();
     }
 });
@@ -3313,6 +3491,17 @@ buildPlateModelSyncSelectorBtn?.addEventListener('click', (ev) => {
 window.addEventListener('resize', () => {
     if (modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorBtn) {
         positionThumbSelectMenu(modelPartSelectorMenu, modelPartSelectorBtn);
+    } else if (modelPartSelectorMenu) {
+        modelPartSelectorMenu.classList.remove('thumb-select-menu--floating-card');
+        const floatingHeader = modelPartSelectorMenu.querySelector('.model-selector-floating-header');
+        if (floatingHeader) floatingHeader.remove();
+        modelPartSelectorMenu.style.left = '';
+        modelPartSelectorMenu.style.top = '';
+        modelPartSelectorMenu.style.right = '';
+        modelPartSelectorMenu.style.bottom = '';
+        modelPartSelectorMenu.style.width = '';
+        modelPartSelectorMenu.style.height = '';
+        modelPartSelectorMenu.style.maxHeight = '';
     }
     if (bgModelSyncSelectorMenu && !bgModelSyncSelectorMenu.hidden && bgModelSyncSelectorBtn) {
         positionThumbSelectMenu(bgModelSyncSelectorMenu, bgModelSyncSelectorBtn);
@@ -3327,8 +3516,9 @@ btnModelUndoToast?.addEventListener('click', (ev) => {
     undoLastModelChange();
 });
 
-document.addEventListener('click', () => {
-    closeThumbSelectMenus();
+document.addEventListener('click', (ev) => {
+    if (isModelPartPreviewMultiSelectActive() && ev.target === canvas) return;
+    closeThumbSelectMenusByMode({ includeModelSelector: false });
     closeFileChipPartsMenu();
     closeModelPartActionMenus();
 });
@@ -3474,13 +3664,26 @@ function computeBuildPlateAutoBrightnessColor(baseHex) {
 
 
 function getRulerInteractionMode() {
-    if (rulerPartHoverEnabled) return 'inspect';
-    if (rulerPartSelectMultiEnabled) return 'select';
+    if (!hasModelParts()) return null;
+    if (isModelPartSelectorMenuOpen() || rulerPartSelectMultiEnabled || getUiSelectedPartIndices().length === 0) return 'select';
     return null;
 }
 
+function isModelPartSelectorMenuOpen() {
+    return !!(modelPartSelectorMenu && !modelPartSelectorMenu.hidden && isMultipartModel());
+}
+
+function isModelPartPreviewMultiSelectActive() {
+    return isModelPartSelectorMenuOpen() && rulerPartSelectMultiEnabled;
+}
+
+function updateModelCardSelectionVisibility() {
+    const hideControls = isMultipartModel() && getUiSelectedPartIndices().length === 0;
+    if (quickPresetsBar) quickPresetsBar.hidden = hideControls;
+    if (modelCardSliders) modelCardSliders.hidden = hideControls;
+}
+
 function getRulerInteractionModeVerb(mode = getRulerInteractionMode()) {
-    if (mode === 'inspect') return 'inspecting';
     if (mode === 'select') return 'selecting';
     return '';
 }
@@ -3504,6 +3707,7 @@ function getPartInteractionVisualProfile(mode, stateKey, fallbackOpacityPercent,
 function getPartInteractionVisualState(partIndex, selectedSet) {
     const mode = getRulerInteractionMode();
     if (!mode) return { opacity: 1, saturation: 1 };
+    if (mode === 'select' && !isModelPartPreviewMultiSelectActive()) return { opacity: 1, saturation: 1 };
 
     const hasHoverTarget = !!(
         hasModelParts()
@@ -3512,26 +3716,20 @@ function getPartInteractionVisualState(partIndex, selectedSet) {
     );
     const isHovered = hasHoverTarget && rulerHoveredPartIndex === partIndex;
 
-    if (mode === 'inspect') {
-        return getPartInteractionVisualProfile(
-            'inspect',
-            isHovered ? 'hovered' : 'base',
-            isHovered ? 100 : 25,
-            isHovered ? 100 : 25
-        );
+    const isSelected = !!selectedSet?.has(partIndex);
+    let visual;
+    if (isSelected && isHovered) {
+        visual = getPartInteractionVisualProfile('select', 'hoveredSelected', 100, 100);
+    } else if (isSelected) {
+        visual = getPartInteractionVisualProfile('select', 'selected', 100, 100);
+    } else if (isHovered) {
+        visual = getPartInteractionVisualProfile('select', 'hoveredUnselected', 75, 25);
+    } else {
+        visual = getPartInteractionVisualProfile('select', 'base', 25, 25);
     }
 
-    const isSelected = !!selectedSet?.has(partIndex);
-    if (isSelected && isHovered) {
-        return getPartInteractionVisualProfile('select', 'hoveredSelected', 100, 100);
-    }
-    if (isSelected) {
-        return getPartInteractionVisualProfile('select', 'selected', 100, 100);
-    }
-    if (isHovered) {
-        return getPartInteractionVisualProfile('select', 'hoveredUnselected', 75, 25);
-    }
-    return getPartInteractionVisualProfile('select', 'base', 25, 25);
+    // Keep geometry fully opaque in list/card selection workflows.
+    return { ...visual, opacity: 1 };
 }
 
 function applyPartInteractionVisualsToMeshMaterials() {
@@ -3695,7 +3893,8 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
         const allSelected = partCount > 0 && selectedCount >= partCount;
         const bulkBar = document.createElement('div');
         bulkBar.className = 'model-bulk-bar';
-        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><label class="model-bulk-toggle-all" title="${allSelected ? 'Clear selection' : 'Select all'}" aria-label="${allSelected ? 'Clear selection' : 'Select all'}"><input type="checkbox" class="thumb-select-option-check-input" data-bulk-action="toggle-all"></label><div class="model-bulk-view" role="group" aria-label="Model selector view"><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'card' ? ' is-active' : ''}" data-model-view="card">Card</button><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'grid' ? ' is-active' : ''}" data-model-view="grid">Grid</button></div></div>`;
+        const multiActive = isModelPartPreviewMultiSelectActive();
+        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><label class="model-bulk-toggle-all" title="${allSelected ? 'Clear selection' : 'Select all'}" aria-label="${allSelected ? 'Clear selection' : 'Select all'}"><input type="checkbox" class="thumb-select-option-check-input" data-bulk-action="toggle-all"></label><button type="button" class="model-bulk-icon-btn${multiActive ? ' is-active' : ''}" data-bulk-action="toggle-multi" aria-pressed="${multiActive ? 'true' : 'false'}" title="${multiActive ? 'Multi-select on' : 'Multi-select off'}" aria-label="${multiActive ? 'Multi-select on' : 'Multi-select off'}"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.44629 2.64061C6.98011 2.38929 7.47813 2.44248 7.93945 2.79979L18.3447 10.9639C18.8764 11.375 19.0317 11.9013 18.8115 12.541C18.5912 13.1804 18.1426 13.4999 17.4658 13.5H13.6758L16.5098 19.5859C16.7343 20.0642 16.7594 20.5458 16.585 21.0303C16.4103 21.5147 16.0831 21.8672 15.6045 22.0879C15.1221 22.3125 14.6407 22.3376 14.1602 22.1631C13.6795 21.9886 13.3261 21.6622 13.1016 21.1836L10.249 15.0908L8.20703 17.9512C7.7999 18.5202 7.27113 18.6983 6.62109 18.4863C5.97111 18.2743 5.64648 17.8217 5.64648 17.1279V3.90233C5.64655 3.31272 5.91272 2.89193 6.44629 2.64061Z"/></svg></button><div class="model-bulk-view" role="group" aria-label="Model selector view"><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'card' ? ' is-active' : ''}" data-model-view="card">Card</button><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'grid' ? ' is-active' : ''}" data-model-view="grid">Grid</button></div></div>`;
         bulkBar.addEventListener('click', (ev) => ev.stopPropagation());
         bulkBar.querySelector('[data-bulk-action="toggle-all"]')?.addEventListener('change', (ev) => {
             ev.stopPropagation();
@@ -3706,10 +3905,18 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 modelPartSelected = Math.max(0, Math.min(modelPartSelected, Math.max(0, modelPartNames.length - 1)));
             }
             syncActivePartFromUiSelection();
+            applyPartInteractionVisualsToMeshMaterials();
             syncModelPartCheckboxStates();
             syncModelPartBulkUIState();
             queueModelPartThumbsRender();
             saveSettings();
+        });
+        bulkBar.querySelector('[data-bulk-action="toggle-multi"]')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            const enable = !rulerPartSelectMultiEnabled;
+            setRulerPartSelectMultiEnabled(enable, true);
+            syncModelPartBulkUIState();
+            queueModelPartThumbsRender();
         });
         bulkBar.querySelectorAll('[data-model-view]').forEach((btn) => btn.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -3750,6 +3957,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     // Add or remove from bulk selection
                     setBulkPartSelected(idx, isNowChecked);
                     syncActivePartFromUiSelection();
+                    applyPartInteractionVisualsToMeshMaterials();
                     // Re-sync all states to ensure consistency
                     syncModelPartCheckboxStates();
                     syncModelPartBulkUIState();
@@ -3758,14 +3966,20 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 }, false);
             }
 
-            opt.addEventListener('dragstart', (ev) => {
-                ev.dataTransfer?.setData('text/plain', String(idx));
-                ev.dataTransfer.effectAllowed = 'move';
-                opt.classList.add('is-dragging');
-            });
-            opt.addEventListener('dragend', () => {
-                opt.classList.remove('is-dragging');
-            });
+            const bindPartDragSource = (sourceEl) => {
+                if (!sourceEl || !opt.draggable) return;
+                sourceEl.draggable = true;
+                sourceEl.addEventListener('dragstart', (ev) => {
+                    ev.dataTransfer?.setData('text/plain', String(idx));
+                    ev.dataTransfer.effectAllowed = 'move';
+                    opt.classList.add('is-dragging');
+                });
+                sourceEl.addEventListener('dragend', () => {
+                    opt.classList.remove('is-dragging');
+                });
+            };
+            bindPartDragSource(opt);
+            bindPartDragSource(opt.querySelector('[data-part-select]'));
             opt.addEventListener('dragover', (ev) => {
                 ev.preventDefault();
                 ev.dataTransfer.dropEffect = 'move';
@@ -3794,7 +4008,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 syncUIFromSelectedPart();
                 applyPartColorsToMesh();
                 applyCurrentTextureTuning();
-                closeThumbSelectMenus();
+                if (!isModelPartFloatingCardOpen()) closeThumbSelectMenus();
                 syncModelPartCheckboxStates();
                 syncModelPartBulkUIState();
                 queueModelPartThumbsRender();
@@ -3950,6 +4164,10 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             modelPartSelectorThumb.classList.remove('js-part-thumb-preview');
             delete modelPartSelectorThumb.dataset.partIndex;
         }
+    }
+
+    if (!singleModel && modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorMenu.classList.contains('thumb-select-menu--floating-card')) {
+        ensureModelPartFloatingHeader();
     }
 
     syncUIFromSelectedPart();
@@ -4696,6 +4914,9 @@ let _hintVisibleBeforeCrop = null;
 let exportWorkspaceActive = false;
 let _cropAppliedCameraZoomScale = false;
 let _exportPanelDragState = null;
+let _modelPartMenuDragState = null;
+
+const MODEL_PART_MENU_POS_STORAGE_KEY = 'rotater_modelPartMenuPos';
 
 function clampExportPanelPosition(left, top) {
     if (!exportPanelEl) return { left, top };
@@ -4787,6 +5008,7 @@ function setExportWorkspaceActive(active) {
         if (exportBuildPlateEl) exportBuildPlateEl.checked = !!buildPlateEnabled;
     }
     updateExportWorkspaceTransparencyPattern();
+    updateExportPauseButtonUI();
     try { localStorage.setItem('rotater_exportWorkspaceActive', exportWorkspaceActive ? '1' : '0'); } catch (_) { }
     syncCanvasSize();
     requestAnimationFrame(() => syncCanvasSize());
@@ -5052,7 +5274,7 @@ function ensureRulerHoveredPartVisual() {
 }
 
 function syncRulerHoverSelectorState() {
-    const activeHoverIndex = (getRulerInteractionMode() && rulerHoveredPartIndex >= 0) ? rulerHoveredPartIndex : -1;
+    const activeHoverIndex = (hasModelParts() && rulerHoveredPartIndex >= 0) ? rulerHoveredPartIndex : -1;
     if (modelPartSelectorBtn) modelPartSelectorBtn.classList.toggle('is-ruler-hovering', activeHoverIndex >= 0);
     if (!modelPartSelectorMenu) return;
     modelPartSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
@@ -5064,7 +5286,6 @@ function syncRulerHoverSelectorState() {
 function updateRulerHoveredPartVisual() {
     const canShowHoverBox = !!(
         mesh
-        && getRulerInteractionMode()
         && hasModelParts()
         && rulerHoveredPartIndex >= 0
         && rulerHoveredPartIndex < modelPartBoundsBoxes.length
@@ -5098,7 +5319,7 @@ function setRulerHoveredPartIndex(partIndex) {
     updateRulerHoveredPartVisual();
     applyPartInteractionVisualsToMeshMaterials();
     syncRulerHoverSelectorState();
-    if (getRulerInteractionMode()) updateRulerHUD();
+    if (hasModelParts()) updateRulerHUD();
 }
 
 function ensurePausedForInteractionMode() {
@@ -5116,41 +5337,33 @@ function ensurePausedForInteractionMode() {
 
 function setRulerPartHoverEnabled(enabled, persist = true) {
     const next = !!enabled;
-    if (next && rulerPartSelectMultiEnabled) {
-        rulerPartSelectMultiEnabled = false;
-    }
     if (rulerPartHoverEnabled === next) {
-        if (!next && !rulerPartSelectMultiEnabled && rulerHoveredPartIndex !== -1) {
-            setRulerHoveredPartIndex(-1);
-            updateRulerHUD();
-        }
         ensurePausedForInteractionMode();
         return;
     }
     rulerPartHoverEnabled = next;
-    if (!next && !rulerPartSelectMultiEnabled) {
-        setRulerHoveredPartIndex(-1);
-    }
-    updateRulerHoveredPartVisual();
-    applyPartInteractionVisualsToMeshMaterials();
-    syncRulerHoverSelectorState();
+    updateLiveRulerOverlay();
     ensurePausedForInteractionMode();
     updateRulerHUD();
     if (persist) saveSettings();
 }
 
 function setRulerPartSelectMultiEnabled(enabled, persist = true) {
-    const next = !!enabled;
+    const next = !!enabled && isModelPartSelectorMenuOpen() && isMultipartModel();
     if (next && rulerPartHoverEnabled) {
         rulerPartHoverEnabled = false;
     }
-    if (rulerPartSelectMultiEnabled === next) return;
+    if (rulerPartSelectMultiEnabled === next) {
+        updateRulerHUD();
+        return;
+    }
     rulerPartSelectMultiEnabled = next;
     if (!next && !rulerPartHoverEnabled) {
         setRulerHoveredPartIndex(-1);
     }
     applyPartInteractionVisualsToMeshMaterials();
     ensurePausedForInteractionMode();
+    syncModelPartBulkUIState();
     updateRulerHUD();
     if (persist) saveSettings();
 }
@@ -5188,7 +5401,7 @@ function resolveHoveredPartIndexFromIntersection(intersection) {
 }
 
 function resolveHoveredPartIndexFromPointerEvent(ev) {
-    if (!canvas || !camera || !mesh || !rulerEnabled || !hasModelParts()) return -1;
+    if (!canvas || !camera || !mesh || !hasModelParts()) return -1;
 
     const rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return -1;
@@ -5237,10 +5450,26 @@ function selectModelPartFromRulerHover(partIndex, multiSelect = false) {
     saveSettings();
 }
 
+function applyRulerBulkSelectionAndRefresh(selectAll) {
+    if (!isMultipartModel()) return;
+    setBulkPartSelectionForAll(!!selectAll);
+    syncActivePartFromUiSelection();
+    syncUIFromSelectedPart();
+    applyPartColorsToMesh();
+    applyCurrentTextureTuning();
+    syncModelPartSelectorUI(!!(modelPartSelectorMenu && !modelPartSelectorMenu.hidden));
+    syncModelPartCheckboxStates();
+    syncModelPartBulkUIState();
+    queueModelPartThumbsRender();
+    updateRulerHUD();
+    saveSettings();
+}
+
 function updateRulerPartHoverFromPointerEvent(ev) {
-    if (!getRulerInteractionMode()) {
+    if (!hasModelParts()) {
         rulerHoverNoHitSinceMs = 0;
         if (rulerHoveredPartIndex >= 0) setRulerHoveredPartIndex(-1);
+        if (canvas) canvas.style.cursor = '';
         return;
     }
 
@@ -5256,70 +5485,29 @@ function updateRulerPartHoverFromPointerEvent(ev) {
         }
         rulerHoverNoHitSinceMs = 0;
         setRulerHoveredPartIndex(-1);
+        if (canvas) canvas.style.cursor = '';
         return;
     }
     rulerHoverNoHitSinceMs = 0;
     setRulerHoveredPartIndex(partIndex);
+    if (canvas) canvas.style.cursor = 'pointer';
 }
 
 function updateRulerHUD() {
+    const inspectActive = !!(hasModelParts() && rulerPartHoverEnabled);
+    if (btnInspectMode) {
+        const label = inspectActive ? 'Measurements on' : 'Measurements off';
+        btnInspectMode.classList.toggle('is-active', inspectActive);
+        btnInspectMode.setAttribute('aria-pressed', inspectActive ? 'true' : 'false');
+        btnInspectMode.title = label;
+        btnInspectMode.setAttribute('aria-label', label);
+    }
+
     const hud = document.getElementById('rulerHUD');
     if (!hud) return;
-    hud.hidden = !modelDims;
-    document.documentElement.classList.toggle('ruler-visible', !!modelDims && !!rulerEnabled);
+    hud.hidden = true;
+    document.documentElement.classList.toggle('ruler-visible', false);
     if (!modelDims) return;
-
-    const hoverAvailable = modelPartNames && modelPartNames.length > 0;
-    if (!hoverAvailable) setRulerHoveredPartIndex(-1);
-    if (!hoverAvailable && rulerPartSelectMultiEnabled) {
-        setRulerPartSelectMultiEnabled(false, false);
-    }
-
-    const mode = getRulerInteractionMode();
-    const pickerEl = document.getElementById('rulerModePicker');
-
-    const hoverToggle = document.getElementById('rulerHoverToggle');
-    const selectToggle = document.getElementById('rulerSelectToggle');
-    const hoveredPartName = (rulerHoveredPartIndex >= 0)
-        ? truncatePartNameForUi(modelPartNames[rulerHoveredPartIndex] || `Part ${rulerHoveredPartIndex + 1}`, 18)
-        : '';
-
-    if (hoverToggle) {
-        hoverToggle.hidden = !hoverAvailable;
-        const isHoverActive = hoverAvailable && mode === 'inspect';
-        hoverToggle.classList.toggle('is-active', isHoverActive);
-        hoverToggle.title = isHoverActive
-            ? 'Inspect'
-            : 'Inspect';
-    }
-
-    if (selectToggle) {
-        const canSelectByClick = hoverAvailable && modelPartNames.length > 1;
-        selectToggle.hidden = !canSelectByClick;
-        const multiSelectOn = canSelectByClick && mode === 'select';
-        selectToggle.classList.toggle('is-active', multiSelectOn);
-        selectToggle.title = 'Select';
-        const selectRadio = document.getElementById('rulerModeSelect');
-        if (selectRadio) selectRadio.disabled = !canSelectByClick;
-        if (!canSelectByClick && rulerPartSelectMultiEnabled) {
-            setRulerPartSelectMultiEnabled(false, false);
-        }
-    }
-
-    // Sync radio state
-    const noneRadio = document.getElementById('rulerModeNone');
-    const inspectRadio = document.getElementById('rulerModeInspect');
-    const selectRadioEl = document.getElementById('rulerModeSelect');
-    if (noneRadio && inspectRadio && selectRadioEl) {
-        if (mode === 'inspect') inspectRadio.checked = true;
-        else if (mode === 'select') selectRadioEl.checked = true;
-        else noneRadio.checked = true;
-    }
-
-    if (pickerEl) {
-        const noOptions = !!((hoverToggle?.hidden ?? true) && (selectToggle?.hidden ?? true));
-        pickerEl.hidden = noOptions;
-    }
 
     const dims = getRulerDisplayedDims();
     hud.classList.toggle('is-dims-hidden', !dims || !rulerEnabled);
@@ -5596,7 +5784,7 @@ function drawRulerHoverGridIncrements(ctx, width, height, cam) {
 }
 
 function drawRulerHoverPartContextualDims(ctx, width, height, cam) {
-    if (!rulerEnabled || !getRulerInteractionMode() || !hasModelParts() || !mesh || !cam) return;
+    if (!rulerPartHoverEnabled || !hasModelParts() || !mesh || !cam) return;
     if (rulerHoveredPartIndex < 0 || rulerHoveredPartIndex >= modelPartBoundsBoxes.length) return;
 
     const partBox = modelPartBoundsBoxes[rulerHoveredPartIndex];
@@ -5951,10 +6139,10 @@ function updateLiveRulerOverlay() {
     if (!overlay) return;
     updateRulerGrid();
 
-    const canRenderRulerOverlay = !!(rulerEnabled && modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
-    const interactionModeActive = !!getRulerInteractionMode();
+    const canRenderRulerOverlay = !!(modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
+    const interactionModeActive = !!hasModelParts();
     const showDynamicLines = !!(canRenderRulerOverlay && !interactionModeActive && RULER_DYNAMIC_LINES_ENABLED && rulerLinesVisible);
-    const showHoverContextualDims = !!(canRenderRulerOverlay && interactionModeActive && rulerHoveredPartIndex >= 0);
+    const showHoverContextualDims = !!(canRenderRulerOverlay && rulerPartHoverEnabled && rulerHoveredPartIndex >= 0);
     const showHoverIncrements = false;
 
     if (!showDynamicLines && !showHoverContextualDims && !showHoverIncrements) {
@@ -7661,11 +7849,31 @@ partAppendInput?.addEventListener('change', async (ev) => {
     ev.target.value = '';
 });
 
+const PLAY_PAUSE_ICON_PATHS = {
+    play: '<path d="M6.69824 17.6097V6.39024C6.69824 5.98558 6.84083 5.64866 7.12599 5.37949C7.41133 5.11016 7.74341 4.97549 8.12224 4.97549C8.24141 4.97549 8.36416 4.99316 8.49049 5.02849C8.61683 5.06383 8.74224 5.12316 8.86674 5.20649L17.7065 10.8032C17.9308 10.9406 18.0981 11.1169 18.2082 11.3322C18.3182 11.5476 18.3732 11.7712 18.3732 12.003C18.3732 12.2348 18.3162 12.4574 18.202 12.6707C18.0877 12.8841 17.9225 13.0594 17.7065 13.1967L8.86674 18.7935C8.74224 18.8768 8.61499 18.9362 8.48499 18.9715C8.35499 19.0068 8.23133 19.0245 8.11399 19.0245C7.74066 19.0245 7.41133 18.8898 7.12599 18.6205C6.84083 18.3513 6.69824 18.0144 6.69824 17.6097Z" fill="currentColor"></path>',
+    pause: '<path d="M16.4974 19.982C15.7016 19.982 15.0316 19.7103 14.4874 19.167C13.9433 18.6235 13.6712 17.9521 13.6712 17.1527V6.80325C13.6712 6.00958 13.9429 5.33958 14.4864 4.79325C15.0299 4.24708 15.7013 3.974 16.5007 3.974C17.2943 3.974 17.9643 4.24708 18.5104 4.79325C19.0568 5.33958 19.3299 6.00958 19.3299 6.80325V17.1527C19.3299 17.9521 19.0568 18.6235 18.5104 19.167C17.9641 19.7103 17.2931 19.982 16.4974 19.982ZM7.49917 19.982C6.70551 19.982 6.03559 19.7103 5.48942 19.167C4.94309 18.6235 4.66992 17.9521 4.66992 17.1527V6.80325C4.66992 6.00958 4.94309 5.33958 5.48942 4.79325C6.03576 4.24708 6.70676 3.974 7.50242 3.974C8.29826 3.974 8.96826 4.24708 9.51242 4.79325C10.0566 5.33958 10.3287 6.00958 10.3287 6.80325V17.1527C10.3287 17.9521 10.0569 18.6235 9.51342 19.167C8.96992 19.7103 8.29851 19.982 7.49917 19.982Z" fill="currentColor"></path>',
+};
+
+function syncPlayPauseIcon(svgEl, iconName) {
+    if (!svgEl) return;
+    svgEl.innerHTML = PLAY_PAUSE_ICON_PATHS[iconName] || PLAY_PAUSE_ICON_PATHS.pause;
+}
+
 function updateExportPauseButtonUI() {
     const btn = document.getElementById('btnExportPause');
+    if (btn) {
+        btn.hidden = !exportWorkspaceActive;
+        btn.style.display = exportWorkspaceActive ? 'flex' : 'none';
+    }
+    if (btnPause) {
+        btnPause.hidden = !!exportWorkspaceActive;
+        btnPause.style.display = exportWorkspaceActive ? 'none' : '';
+    }
     if (btn) btn.classList.toggle('is-paused', isPaused);
-    // Update main pause button active state
-    btnPause.classList.toggle('is-playing', !isPaused);
+    btnPause?.classList.toggle('is-playing', !isPaused);
+    const nextIcon = isPaused ? 'play' : 'pause';
+    syncPlayPauseIcon(iconPlayPause, nextIcon);
+    syncPlayPauseIcon(iconExportPlayPause, nextIcon);
     updatePauseControlAvailability();
 }
 
@@ -7676,7 +7884,7 @@ function getPauseInteractionLockMessage() {
 function updatePauseControlAvailability() {
     const lockedMessage = getPauseInteractionLockMessage();
     const isLocked = !!lockedMessage;
-    const activeLabel = 'Play/Pause';
+    const activeLabel = isPaused ? 'Play rotation' : 'Pause rotation';
 
     const applyButtonState = (btnEl) => {
         if (!btnEl) return;
@@ -7704,7 +7912,6 @@ function setPauseState(nextPaused, persist = true, allowLockedResume = false) {
         controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
     }
     document.documentElement.classList.toggle('rotation-paused', isPaused);
-    // iconPlayPause is a combined static icon — no display toggle needed
     updateExportPauseButtonUI();
     if (persist) saveSettings();
     return true;
@@ -10232,6 +10439,35 @@ document.getElementById('btnCopyLink')?.addEventListener('click', function () {
     });
 });
 
+document.getElementById('btnCopyImageClipboard')?.addEventListener('click', async function () {
+    if (!mesh) return;
+    const btn = this;
+    const labelEl = btn.querySelector('[data-copy-image-label]') || btn;
+    const prev = labelEl.textContent;
+
+    const format = exportFormatEl?.value === 'jpg' ? 'jpg' : 'png';
+    const mime = format === 'jpg' ? 'image/jpeg' : 'image/png';
+    const quality = format === 'jpg' ? EXPORT.image.quality : undefined;
+
+    if (!navigator.clipboard || typeof window.ClipboardItem !== 'function') {
+        labelEl.textContent = 'Clipboard unavailable';
+        setTimeout(() => { labelEl.textContent = prev; }, 1800);
+        return;
+    }
+
+    try {
+        if (!isPaused) setPauseState(true, false, true);
+        const blob = await renderStillImageBlob(mime, { quality, transparent: false });
+        await navigator.clipboard.write([new ClipboardItem({ [mime]: blob })]);
+        labelEl.textContent = 'Image copied';
+    } catch (err) {
+        labelEl.textContent = 'Copy failed';
+        console.error(err);
+    } finally {
+        setTimeout(() => { labelEl.textContent = prev; }, 1800);
+    }
+});
+
 btnDownloadPackage?.addEventListener('click', async () => {
     if (!mesh) return;
     let prev = '';
@@ -10410,14 +10646,24 @@ canvas?.addEventListener('click', (e) => {
         return;
     }
 
-    if (!rulerEnabled || !hasModelParts()) return;
+    if (!hasModelParts()) return;
     const partIndex = resolveHoveredPartIndexFromPointerEvent(e);
-    if (partIndex < 0) return;
-    selectModelPartFromRulerHover(partIndex, rulerPartSelectMultiEnabled);
+    if (partIndex < 0) {
+        if (!isModelPartPreviewMultiSelectActive() && !isModelPartFloatingCardOpen()) closeThumbSelectMenus();
+        return;
+    }
+    selectModelPartFromRulerHover(partIndex, isModelPartPreviewMultiSelectActive());
+    if (!isModelPartPreviewMultiSelectActive() && !isModelPartFloatingCardOpen()) closeThumbSelectMenus();
 });
 
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && exportFrameEnabled) cancelCropMode();
+    if (e.key === 'Escape' && exportFrameEnabled) {
+        cancelCropMode();
+        return;
+    }
+    if (e.key === 'Escape') {
+        closeThumbSelectMenus();
+    }
     if ((e.key === 'Enter' || e.key === 'Return') && exportFrameEnabled) confirmCropMode();
 });
 
@@ -10477,11 +10723,13 @@ canvas?.addEventListener('pointermove', (e) => {
 }, { passive: true });
 
 canvas?.addEventListener('pointerleave', () => {
-    if (getRulerInteractionMode()) setRulerHoveredPartIndex(-1);
+    if (canvas) canvas.style.cursor = '';
+    setRulerHoveredPartIndex(-1);
 });
 
 canvas?.addEventListener('pointercancel', () => {
-    if (getRulerInteractionMode()) setRulerHoveredPartIndex(-1);
+    if (canvas) canvas.style.cursor = '';
+    setRulerHoveredPartIndex(-1);
 });
 
 const exportPreviewCanvas = document.getElementById('exportPreview');
@@ -12189,55 +12437,9 @@ if (rulerUnitToggleEl) {
     });
 }
 
-// Radio-based mode picker (Inspect / Select)
-const rulerModePickerEl = document.getElementById('rulerModePicker');
-if (rulerModePickerEl) {
-    const resolveRulerModeRadio = (eventTarget) => {
-        if (!eventTarget) return null;
-        const direct = eventTarget.closest('input[type="radio"][name="rulerMode"]');
-        if (direct) return direct;
-        const label = eventTarget.closest('label');
-        return label ? label.querySelector('input[type="radio"][name="rulerMode"]') : null;
-    };
-
-    // Track whether the clicked radio was already selected, to support click-to-toggle-off / select-all cycling.
-    let _radioWasCheckedOnPointerDown = false;
-    rulerModePickerEl.addEventListener('pointerdown', (e) => {
-        const radio = resolveRulerModeRadio(e.target);
-        _radioWasCheckedOnPointerDown = radio ? radio.checked : false;
-    });
-    rulerModePickerEl.addEventListener('change', (e) => {
-        const val = e.target.value;
-        if (val === 'inspect') {
-            setRulerPartHoverEnabled(true, true);
-        } else if (val === 'select') {
-            setRulerPartSelectMultiEnabled(true, true);
-        } else {
-            setRulerPartHoverEnabled(false, false);
-            setRulerPartSelectMultiEnabled(false, true);
-        }
-    });
-    rulerModePickerEl.addEventListener('click', (e) => {
-        const radio = resolveRulerModeRadio(e.target);
-        if (!radio || radio.value === 'none') return;
-        if (radio.value === 'select' && _radioWasCheckedOnPointerDown) {
-            // Second click on Select exits Select mode.
-            setBulkPartSelectionForAll(false);
-            const noneRadio = document.getElementById('rulerModeNone');
-            if (noneRadio) {
-                noneRadio.checked = true;
-                setRulerPartSelectMultiEnabled(false, true);
-            }
-            return;
-        }
-        if (radio.value !== 'select' && _radioWasCheckedOnPointerDown) {
-            const noneRadio = document.getElementById('rulerModeNone');
-            if (noneRadio) {
-                noneRadio.checked = true;
-                setRulerPartHoverEnabled(false, false);
-                setRulerPartSelectMultiEnabled(false, true);
-            }
-        }
+if (btnInspectMode) {
+    btnInspectMode.addEventListener('click', () => {
+        setRulerPartHoverEnabled(!rulerPartHoverEnabled, true);
     });
 }
 

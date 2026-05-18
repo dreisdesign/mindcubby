@@ -1,5 +1,6 @@
 ## [Unreleased]
 ### Added
+- **Share: Copy Image to clipboard** — added a new `Copy Image` action in the Share panel that copies the current still render directly to clipboard as PNG (or JPEG when JPG format is selected).
 - **Interaction mode picker (Inspect / Multi-Select)** — replaced separate `Inspect`/`Select` HUD toggles with a single grouped picker; `Select` renamed to `Multi-Select`; picker modes are mutually-exclusive and auto-pause rotation while active.
 - **Config: partInteractionModes** — added `partInteractionModes` to `color-rules.json` to control opacity/saturation profiles for `inspect` and `select` modes; visuals are applied dynamically to part materials and persisted in color rules.
 - **Canvas sidepanel quick toggle** — added a top-right canvas utility button to hide/show sidepanels; the icon now swaps between close and expand states and persists across refreshes
@@ -15,7 +16,16 @@
 - **Ruler part-hover inspect mode** — ruler HUD now includes a `Part hover` toggle; when enabled, hovering multipart geometry updates W/D/H to the hovered part dimensions
 - **Ruler hover focus highlight** — hovered multipart parts now show a live 3D bounding-box outline, and the matching row in the model selector is highlighted for clear target context
 
--### Changed
+### Changed
+- **Model picker floating-card behavior** — on desktop pointer layouts, the multipart model picker dropdown now opens as a draggable floating card with a sticky drag-handle header, matching the Share panel interaction style while preserving existing mobile dropdown behavior.
+- **Model picker close flow** — floating model picker now includes an explicit close button in the header; outside clicks no longer dismiss it, and selection interactions keep the picker open for continuous edits until explicitly closed.
+- **Model picker resizable floating window** — desktop floating model picker now supports drag-to-resize from the bottom-right corner, with safe min/max viewport clamping and persisted size across opens.
+- **Selection opacity parity with list view** — removed model opacity dimming during selection interactions so parts remain fully opaque while selecting in card/list workflows.
+- **Model picker responsive normalization + drag affordance** — polished the floating resize handle styling, capped floating window max size for readability, normalized grid/card option scaling to avoid stretched previews, and added a dedicated per-item drag grip so reorder is discoverable in Grid view.
+- **Model picker UX simplification** — removed the custom resize handle/drag-grip complexity; the floating card now uses native browser resize, keeps straightforward drag-to-reposition, and uses normalized grid sizing with empty add-row containers hidden to avoid phantom spacer blocks.
+- **Model picker collapsed affordance icon** — replaced the old dropdown-style down-chevron on the main model selector chip with a panel-launch icon to match floating-window behavior.
+- **Model picker card-view spacing parity** — restored explicit card-view tile padding/background treatment so card and grid/list states look consistent.
+- **Selection visual neutrality outside multi-select** — when multi-select is off, model opacity/saturation no longer shifts between parts during selection flow.
 - **Inspect hover dims only** — Inspect mode now shows only hovered-part dimensions in the ruler HUD; the previous ruler fallback readout is hidden while inspecting or multi-selecting.
 - **Pause/play disabled while interacting** — Pause and Export pause controls are disabled while `Inspect` or `Multi-Select` modes are active; controls show the tooltip "Not available while inspecting/selecting".
 - **Sidepanel toggle restyle** — replaced the expand/close icon with a circular utility button and corrected expand/close orientation behavior.
@@ -58,6 +68,29 @@
 - **Ruler hover inspection focus** — enabling `Part hover` mode now auto-pauses model rotation so hovered-part measurement is easier to read
 
 ### Fixed
+- **Multipart thumbnail framing stability** — thumbnail capture now hides ruler hover bounding-box overlays during offscreen rendering so preview thumbs keep stable framing/scale and no dashed helper wire leaks into tile images.
+- **Inspect mode visibility decoupled from Grid/Ruler toggle** — live inspect overlay and hovered-part contextual dimensions now render whenever inspect is active, even if the grid/ruler visibility toggle is off.
+- **Background/Build Plate sync thumbnail size stability** — locked sync selector thumbnail canvases to fixed dimensions so preview thumbs no longer shrink when selecting different model parts.
+- **Click-select fallback after deselect-all** — removed the remaining ruler-toggle gate from canvas click selection so clicking a model always re-selects it even after `Deselect all`, with or without multi-select enabled.
+- **Multi-select hover feedback gating** — removed remaining ruler-toggle dependency from hover preview state so model hover outlines/selector hover feedback remain active while multi-select is enabled.
+- **Share action row clipping** — `Copy Image` now participates in a responsive wrapped action row so the button is fully visible in compact Share panel widths.
+- **Play button duplication hardening** — preview and Share pause controls now use explicit runtime `display` toggling to guarantee only one play/pause button is visible at a time.
+- **Duplicate play controls in preview** — main preview now hides the export pause/play control outside Share workspace, and hides the regular pause button while Share workspace is active so only one play/pause control appears at a time.
+- **Canvas multi-select pick reliability** — model picking for hover/click selection no longer depends on ruler toggle state, fixing cases where multi-select appeared active but clicking models did nothing.
+- **Hover selection affordance** — multipart hover now always shows the dashed model bounding box (selection indicator) without dashed arrows/dimension callouts, and the canvas cursor switches to pointer when hovering a selectable part.
+- **Select-all visual feedback parity** — bulk `Select all`/checkbox selection now immediately updates part opacity/saturation preview treatment.
+- **Inspect toggle semantics** — the bottom-right inspect button now acts as a measurements toggle (`Measurements on/off`) while selection hover outlines remain available independently.
+- **Model picker collapse rules** — clicking preview model/build-plate now collapses the model picker in single-select flow, while active multi-select mode keeps the picker open for consecutive picks.
+- **Select mode icon update** — model picker multi-select button now uses the provided arrow selector icon path.
+- **Duplicate playback controls** — the export pause/play button is now hidden outside export workspace to avoid duplicate play controls in regular preview mode.
+- **Model picker zero-selection clarity** — multipart picker checkboxes now stay visible when no parts are selected, making re-selection and bulk targeting discoverable immediately.
+- **Selection mode gating and reset behavior** — preview single-click now defaults to single-part selection and multi-select is restricted to picker-open + multi-select toggle state.
+- **Inspect/playback control placement** — moved inspect and export play/pause controls to the bottom-right preview action cluster so the D-pad remains centered and visually isolated.
+- **No-selection model settings visibility** — model quick presets and slider controls now hide when zero multipart parts are selected to prevent editing against an empty target.
+- **Viewer control state parity** — main and export pause buttons now swap between the provided Play and Pause SVG icons, keep their labels in sync with the live paused state, and continue using the shared pause wiring.
+- **Multipart deselect-all feedback** — clearing Select mode bulk selection now removes the lingering visual selected state from multipart tiles, so `Deselect all` reads correctly in the HUD and selector.
+- **D-pad center alignment** — bottom viewer controls now use a centered three-column layout so the D-pad stays locked to the middle while the ruler HUD and playback controls sit outside it.
+- **Ruler mode contrast** — active `Inspect` and `Select` buttons now use the same light-purple filled state as Animation cards with stronger icon/text contrast against their white inactive state.
 - **Esc preview toggle direction** — pressing `Esc` now collapses the preview only when it is expanded, and does nothing when already collapsed.
 - **Paused-state hard refresh restore** — pause/resume state now persists in settings and is restored after hard refresh, including pause button/icon state
 - **Inspect focus clarity on multipart models** — while Inspect mode is hovering one part, non-hovered parts now dim to improve focus on the active target
