@@ -2937,7 +2937,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
                 const w = maxX - minX + 1;
                 const h = maxY - minY + 1;
                 const side = Math.max(w, h);
-                const pad = Math.max(6, Math.floor(side * 0.14));
+                const pad = Math.max(4, Math.floor(side * 0.09));
                 const cropSide = Math.min(Math.max(side + pad * 2, 1), rtW);
                 const cx = Math.floor((minX + maxX) / 2);
                 const cy = Math.floor((minY + maxY) / 2);

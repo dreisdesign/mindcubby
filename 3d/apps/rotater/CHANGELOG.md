@@ -31,6 +31,7 @@
 - **Selection visual neutrality in select mode** — model opacity/saturation no longer shifts between parts while using select/multi-select workflows.
 - **Model picker visual cleanup pass (Card/Grid)** — rebuilt card/grid tile spacing for tighter, consistent paddings, refined text rhythm, and cleaner professional alignment while keeping the existing interaction model.
 - **Model picker drag-handle parity with Share** — floating modal header drag affordance now uses centered top placement and rotated indicator treatment matching Share panel behavior.
+- **Model picker grid real-estate optimization** — grid now packs compact fixed-size tiles with smoother responsive breakpoints so additional cards fit per row instead of growing tile footprints.
 - **Inspect hover dims only** — Inspect mode now shows only hovered-part dimensions in the ruler HUD; the previous ruler fallback readout is hidden while inspecting or multi-selecting.
 - **Pause/play disabled while interacting** — Pause and Export pause controls are disabled while `Inspect` or `Multi-Select` modes are active; controls show the tooltip "Not available while inspecting/selecting".
 - **Sidepanel toggle restyle** — replaced the expand/close icon with a circular utility button and corrected expand/close orientation behavior.
@@ -75,6 +76,7 @@
 ### Fixed
 - **Model modal close-policy regressions** — floating model modal no longer closes during color/preset interactions; close is now limited to explicit `X` action or keyboard `Esc`.
 - **Model picker default-open legacy fallback** — default-open multipart selector now consistently initializes in floating modal mode (desktop pointer workflows), instead of intermittently rendering as the legacy inline dropdown.
+- **Model picker grid right-gap snapping** — refined responsive column sizing/packing to remove odd right-side dead space at intermediate modal widths.
 - **Multipart thumbnail framing stability** — thumbnail capture now hides ruler hover bounding-box overlays during offscreen rendering so preview thumbs keep stable framing/scale and no dashed helper wire leaks into tile images.
 - **Inspect mode visibility decoupled from Grid/Ruler toggle** — live inspect overlay and hovered-part contextual dimensions now render whenever inspect is active, even if the grid/ruler visibility toggle is off.
 - **Background/Build Plate sync thumbnail size stability** — locked sync selector thumbnail canvases to fixed dimensions so preview thumbs no longer shrink when selecting different model parts.
