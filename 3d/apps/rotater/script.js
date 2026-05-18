@@ -3196,6 +3196,10 @@ function isModelPartFloatingCardOpen() {
     return !!(modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorMenu.classList.contains('thumb-select-menu--floating-card'));
 }
 
+function shouldUseFloatingModelPartSelector() {
+    return isMultipartModel() && !!window.matchMedia && window.matchMedia('(pointer:fine)').matches;
+}
+
 function closeModelPartSelectorMenu(force = false) {
     if (!force && isModelPartFloatingCardOpen()) return false;
     let changedModelSelectorMenuState = false;
@@ -3264,7 +3268,7 @@ function positionModelPartActionMenu(menuEl, anchorEl) {
 function positionThumbSelectMenu(menuEl, anchorBtn) {
     if (!menuEl || !anchorBtn) return;
     if (menuEl === modelPartSelectorMenu) {
-        const floatingDesktopMenu = isDesktopV2Layout() && window.matchMedia && window.matchMedia('(pointer:fine)').matches;
+        const floatingDesktopMenu = shouldUseFloatingModelPartSelector();
         if (floatingDesktopMenu) {
             positionFloatingModelPartSelectorMenu(anchorBtn);
             return;
@@ -3305,7 +3309,7 @@ function ensureModelPartFloatingHeader() {
         closeModelPartSelectorMenu(true);
     });
     headerEl.addEventListener('pointerdown', (ev) => {
-        const floatingDesktopMenu = isDesktopV2Layout() && window.matchMedia && window.matchMedia('(pointer:fine)').matches;
+        const floatingDesktopMenu = shouldUseFloatingModelPartSelector();
         if (!floatingDesktopMenu || !modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
         if (ev.button !== 0) return;
         if (ev.target instanceof Element && ev.target.closest('button,a,input,select,label,textarea')) return;
@@ -3858,9 +3862,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     const canMutateFiles = !!modelPartFiles && modelPartFiles.length === partCount;
     const canAppend = singleModel ? !!currentModelBuffer : canMutateFiles;
     const shouldAutoOpenMultipartMenu = !singleModel
-        && isDesktopV2Layout()
-        && !!window.matchMedia
-        && window.matchMedia('(pointer:fine)').matches
+        && shouldUseFloatingModelPartSelector()
         && !modelPartSelectorClosedByUser;
     const shouldKeepOpen = keepMenuOpen || shouldAutoOpenMultipartMenu;
     pruneBulkPartSelection();
@@ -4175,6 +4177,10 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             modelPartSelectorThumb.classList.remove('js-part-thumb-preview');
             delete modelPartSelectorThumb.dataset.partIndex;
         }
+    }
+
+    if (!singleModel && modelPartSelectorMenu && modelPartSelectorBtn && !modelPartSelectorMenu.hidden) {
+        positionThumbSelectMenu(modelPartSelectorMenu, modelPartSelectorBtn);
     }
 
     if (!singleModel && modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorMenu.classList.contains('thumb-select-menu--floating-card')) {

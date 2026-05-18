@@ -1548,7 +1548,7 @@ html.loaded .controls-bar.hidden {
 
 .model-bulk-bar {
     margin-bottom: 0;
-    padding: 6px;
+    padding: 8px;
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 70%, white 30%);
     border-radius: 10px;
     background: color-mix(in srgb, #fff 78%, var(--palette-blueberry-100) 22%);
@@ -1558,7 +1558,7 @@ html.loaded .controls-bar.hidden {
 .model-bulk-bar-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .model-bulk-icon-btn,
@@ -1727,11 +1727,11 @@ html.loaded .controls-bar.hidden {
     z-index: 2;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 8px;
     margin: -6px -6px 4px;
-    padding: 8px 10px;
-    border-bottom: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 75%, white 25%);
+    padding: 24px 12px 8px;
+    border-bottom: none;
     background: color-mix(in srgb, var(--color-surface-raised, #fff) 94%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -1739,15 +1739,31 @@ html.loaded .controls-bar.hidden {
     user-select: none;
 }
 
+#modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header::after {
+    content: '';
+    position: absolute;
+    left: -6px;
+    right: -6px;
+    bottom: 0;
+    height: 1px;
+    background: color-mix(in srgb, var(--palette-blueberry-300) 75%, white 25%);
+}
+
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header.is-dragging {
     cursor: grabbing;
 }
 
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-drag-indicator {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     color: color-mix(in srgb, var(--color-on-surface, #2e2b74) 58%, transparent);
+    opacity: 0.7;
+    pointer-events: none;
 }
 
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-title {
@@ -1979,7 +1995,7 @@ html.loaded .controls-bar.hidden {
 
 #modelPartSelectorMenu.model-selector-view--card {
     display: grid;
-    gap: 8px;
+    gap: 10px;
     align-content: start;
 }
 
@@ -1991,16 +2007,22 @@ html.loaded .controls-bar.hidden {
 #modelPartSelectorMenu.model-selector-view--card .thumb-select-option {
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 78%, white 22%);
     background: color-mix(in srgb, #fff 84%, var(--palette-blueberry-100) 16%);
-    padding: 12px;
+    border-radius: 14px;
+    padding: 10px;
 }
 
 #modelPartSelectorMenu.model-selector-view--card .thumb-select-option-main {
-    gap: 12px;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 10px;
 }
 
 #modelPartSelectorMenu.model-selector-view--card .thumb-select-option-check {
-    min-height: 78px;
-    padding-top: 2px;
+    min-height: 88px;
+    padding-top: 4px;
+}
+
+#modelPartSelectorMenu.model-selector-view--card .thumb-select-option-thumb-wrap {
+    width: 88px;
 }
 
 #modelPartSelectorMenu.model-selector-view--card .thumb-select-option.is-selected {
@@ -2011,11 +2033,11 @@ html.loaded .controls-bar.hidden {
 
 #modelPartSelectorMenu.model-selector-view--grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, auto));
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
     grid-auto-rows: min-content;
-    gap: 8px;
+    gap: 10px;
     margin-top: 6px;
-    justify-content: start;
+    justify-content: stretch;
     align-content: start;
 }
 
@@ -2032,12 +2054,12 @@ html.loaded .controls-bar.hidden {
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-main {
     grid-template-columns: 1fr;
-    gap: 4px;
-    padding-top: 12px;
+    gap: 6px;
+    padding-top: 14px;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-thumb-wrap {
-    width: min(100%, 148px);
+    width: min(100%, 112px);
     margin: 0 auto;
 }
 
@@ -2045,17 +2067,17 @@ html.loaded .controls-bar.hidden {
     width: 100%;
     height: auto;
     aspect-ratio: 1 / 1;
-    max-height: 148px;
+    max-height: 112px;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-text {
-    font-size: 12px;
-    line-height: 1.22;
+    font-size: 11px;
+    line-height: 1.25;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    min-height: calc(2 * 1.22em);
+    min-height: calc(2 * 1.25em);
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .part-option-more {
@@ -2071,8 +2093,8 @@ html.loaded .controls-bar.hidden {
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-check {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 12px;
+    left: 12px;
     min-height: 24px;
     width: 24px;
     border-radius: 6px;
@@ -2083,6 +2105,7 @@ html.loaded .controls-bar.hidden {
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option {
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 78%, white 22%);
     background: color-mix(in srgb, #fff 84%, var(--palette-blueberry-100) 16%);
+    border-radius: 14px;
     padding: 12px;
 }
 
