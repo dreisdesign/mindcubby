@@ -1726,14 +1726,16 @@ html.loaded .controls-bar.hidden {
 
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header {
     position: sticky;
-    top: -6px;
+    top: 0;
+    left: -6px;
+    right: -6px;
     z-index: 2;
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 8px;
-    margin: -6px -6px 4px;
-    padding: 24px 12px 8px;
+    margin: 0;
+    padding: 24px 18px 8px;
     border-bottom: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 75%, white 25%);
     background: color-mix(in srgb, var(--color-surface-raised, #fff) 80%, transparent);
     backdrop-filter: blur(3px);
@@ -1977,6 +1979,7 @@ html.loaded .controls-bar.hidden {
     display: grid;
     gap: 8px;
     align-content: start;
+    max-width: 400px;
 }
 
 #modelPartSelectorMenu.model-selector-view--card .model-bulk-bar,
@@ -2023,11 +2026,10 @@ html.loaded .controls-bar.hidden {
 
 #modelPartSelectorMenu.model-selector-view--grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(132px, 148px));
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     grid-auto-rows: min-content;
     gap: 8px;
-    margin-top: 6px;
-    justify-content: space-between;
+    margin-top: 0;
     align-content: start;
 }
 
