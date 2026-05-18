@@ -1710,14 +1710,17 @@ html.loaded .controls-bar.hidden {
     max-height: min(760px, calc(100vh - 24px));
     overflow-x: hidden;
     overflow-y: auto;
+    scrollbar-gutter: stable;
     background: color-mix(in srgb, var(--color-surface-raised, #fff) 80%, transparent);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
     resize: both;
-    padding: 6px;
+    padding: 0;
     z-index: 140;
     box-shadow: 0 22px 44px rgba(14, 12, 35, 0.28), 0 8px 20px rgba(14, 12, 35, 0.2);
     border-radius: 16px;
+    display: flex;
+    flex-direction: column;
 }
 
 #modelPartSelectorMenu .model-selector-floating-header {
@@ -1727,21 +1730,22 @@ html.loaded .controls-bar.hidden {
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header {
     position: sticky;
     top: 0;
-    left: -6px;
-    right: -6px;
+    left: 0;
+    right: 0;
     z-index: 2;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
+    gap: 12px;
     margin: 0;
-    padding: 24px 18px 8px;
+    padding: 20px 18px 12px;
     border-bottom: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 75%, white 25%);
     background: color-mix(in srgb, var(--color-surface-raised, #fff) 80%, transparent);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
     cursor: grab;
     user-select: none;
+    border-radius: 16px 16px 0 0;
 }
 
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header.is-dragging {
@@ -1762,26 +1766,27 @@ html.loaded .controls-bar.hidden {
 }
 
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-title {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--color-on-surface, #2e2b74) 72%, transparent);
+    color: var(--color-on-surface, #2e2b74);
 }
 
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-close {
     margin-left: auto;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-400) 62%, white 38%);
     background: color-mix(in srgb, #fff 84%, var(--palette-blueberry-100) 16%);
     color: var(--palette-blueberry-800);
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     padding: 0;
+    flex-shrink: 0;
 }
 
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-close:hover {
@@ -1980,6 +1985,8 @@ html.loaded .controls-bar.hidden {
     gap: 8px;
     align-content: start;
     max-width: 400px;
+    padding: 8px 6px;
+    overflow-y: auto;
 }
 
 #modelPartSelectorMenu.model-selector-view--card .model-bulk-bar,
