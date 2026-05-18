@@ -5265,7 +5265,7 @@ function updateRulerPartHoverFromPointerEvent(ev) {
 function updateRulerHUD() {
     const hud = document.getElementById('rulerHUD');
     if (!hud) return;
-    hud.hidden = !modelDims || !rulerEnabled;
+    hud.hidden = !modelDims;
     document.documentElement.classList.toggle('ruler-visible', !!modelDims && !!rulerEnabled);
     if (!modelDims) return;
 
@@ -5322,7 +5322,7 @@ function updateRulerHUD() {
     }
 
     const dims = getRulerDisplayedDims();
-    hud.classList.toggle('is-dims-hidden', !dims);
+    hud.classList.toggle('is-dims-hidden', !dims || !rulerEnabled);
     const unitEl = document.getElementById('rulerUnitVal');
     const unitToggle = document.getElementById('rulerUnitToggle');
     if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';

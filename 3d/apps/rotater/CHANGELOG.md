@@ -21,6 +21,7 @@
 - **Sidepanel toggle restyle** — replaced the expand/close icon with a circular utility button and corrected expand/close orientation behavior.
 - **Finish spacing** — added spacing above the Matte/Satin/Gloss finish buttons for improved visual separation.
 - **Ruler unit control moved to App Settings** — `mm/in` unit switching now lives in App Settings (instead of the persistent bottom ruler HUD) to reduce always-on canvas control noise
+- **Grid toggle no longer hides Inspect/Select** — turning Grid off now keeps the ruler HUD interaction picker visible so Inspect and Select remain available independently of the grid state
 - **Ruler select mode decoupled from inspect mode** — part click-select now works whenever ruler is enabled, without requiring Inspect mode to be active first
 - **Ruler select icon/style parity** — Select mode now uses the `pan_tool_alt` icon and active styling that matches Inspect mode (removed the separate green active treatment)
 - **Surface Finish control order** — model Surface card now presents controls in the order `label -> strength slider -> Matte/Satin/Gloss buttons`
