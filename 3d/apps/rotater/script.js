@@ -558,6 +558,7 @@ let multipartPartBounds = null;
 let modelPartDimensions = [];
 let modelPartBoundsBoxes = [];
 let pendingUrlModelAppearanceOverride = null;
+let modelPartSelectorClosedByUser = false;
 let pendingReplacePartIndex = -1;
 let currentModelBuffer = null;
 let bulkSelectedPartIndices = new Set();
@@ -3195,12 +3196,14 @@ function isModelPartFloatingCardOpen() {
     return !!(modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorMenu.classList.contains('thumb-select-menu--floating-card'));
 }
 
-function closeModelPartSelectorMenu() {
+function closeModelPartSelectorMenu(force = false) {
+    if (!force && isModelPartFloatingCardOpen()) return false;
     let changedModelSelectorMenuState = false;
     if (modelPartSelectorMenu && !modelPartSelectorMenu.hidden) {
         modelPartSelectorMenu.hidden = true;
         changedModelSelectorMenuState = true;
         if (rulerPartSelectMultiEnabled) setRulerPartSelectMultiEnabled(false, false);
+        if (force) modelPartSelectorClosedByUser = true;
     }
     if (modelPartSelectorBtn) modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
     if (changedModelSelectorMenuState) {
@@ -3299,7 +3302,7 @@ function ensureModelPartFloatingHeader() {
     headerEl.querySelector('.model-selector-floating-close')?.addEventListener('click', (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
-        closeModelPartSelectorMenu();
+        closeModelPartSelectorMenu(true);
     });
     headerEl.addEventListener('pointerdown', (ev) => {
         const floatingDesktopMenu = isDesktopV2Layout() && window.matchMedia && window.matchMedia('(pointer:fine)').matches;
@@ -3425,6 +3428,7 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
     ev.stopPropagation();
     if (modelPartSelectorBtn.classList.contains('is-static')) return;
     const open = modelPartSelectorMenu && !modelPartSelectorMenu.hidden;
+    modelPartSelectorClosedByUser = false;
     closeThumbSelectMenus();
     if (modelPartSelectorMenu && !open) {
         modelPartSelectorMenu.hidden = false;
@@ -3707,7 +3711,7 @@ function getPartInteractionVisualProfile(mode, stateKey, fallbackOpacityPercent,
 function getPartInteractionVisualState(partIndex, selectedSet) {
     const mode = getRulerInteractionMode();
     if (!mode) return { opacity: 1, saturation: 1 };
-    if (mode === 'select' && !isModelPartPreviewMultiSelectActive()) return { opacity: 1, saturation: 1 };
+    if (mode === 'select') return { opacity: 1, saturation: 1 };
 
     const hasHoverTarget = !!(
         hasModelParts()
@@ -3843,6 +3847,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             modelPartAddNextBtn.disabled = true;
             modelPartAddNextBtn.title = '';
         }
+        modelPartSelectorClosedByUser = false;
         syncRulerHoverSelectorState();
         return;
     }
@@ -3852,13 +3857,19 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     const singleModel = partCount <= 1;
     const canMutateFiles = !!modelPartFiles && modelPartFiles.length === partCount;
     const canAppend = singleModel ? !!currentModelBuffer : canMutateFiles;
+    const shouldAutoOpenMultipartMenu = !singleModel
+        && isDesktopV2Layout()
+        && !!window.matchMedia
+        && window.matchMedia('(pointer:fine)').matches
+        && !modelPartSelectorClosedByUser;
+    const shouldKeepOpen = keepMenuOpen || shouldAutoOpenMultipartMenu;
     pruneBulkPartSelection();
     if (modelPartSelectorEl) modelPartSelectorEl.hidden = false;
     modelPartSelectorBtn.hidden = false;
     modelPartSelectorBtn.classList.toggle('is-static', singleModel);
     modelPartSelectorBtn.classList.toggle('is-multipart-summary', !singleModel);
-    modelPartSelectorMenu.hidden = !keepMenuOpen;
-    modelPartSelectorBtn.setAttribute('aria-expanded', keepMenuOpen ? 'true' : 'false');
+    modelPartSelectorMenu.hidden = !shouldKeepOpen;
+    modelPartSelectorBtn.setAttribute('aria-expanded', shouldKeepOpen ? 'true' : 'false');
 
     if (modelPartSingleMenuRow) {
         modelPartSingleMenuRow.hidden = !singleModel;
@@ -10662,6 +10673,10 @@ document.addEventListener('keydown', e => {
         return;
     }
     if (e.key === 'Escape') {
+        if (isModelPartFloatingCardOpen()) {
+            closeModelPartSelectorMenu(true);
+            return;
+        }
         closeThumbSelectMenus();
     }
     if ((e.key === 'Enter' || e.key === 'Return') && exportFrameEnabled) confirmCropMode();

@@ -24,8 +24,11 @@
 - **Model picker responsive normalization + drag affordance** — polished the floating resize handle styling, capped floating window max size for readability, normalized grid/card option scaling to avoid stretched previews, and added a dedicated per-item drag grip so reorder is discoverable in Grid view.
 - **Model picker UX simplification** — removed the custom resize handle/drag-grip complexity; the floating card now uses native browser resize, keeps straightforward drag-to-reposition, and uses normalized grid sizing with empty add-row containers hidden to avoid phantom spacer blocks.
 - **Model picker collapsed affordance icon** — replaced the old dropdown-style down-chevron on the main model selector chip with a panel-launch icon to match floating-window behavior.
+- **Model picker default-open desktop behavior** — multipart model modal now opens by default on desktop pointer layouts and remains open until explicitly closed.
+- **Model picker top-row density + alignment** — Card/Grid segmented control now hugs content and is right-aligned within the bulk row; top spacing and padding were tuned for cleaner balance.
+- **Model picker grid thumbnail spacing** — reduced grid thumbnail size and increased tile padding so checkbox and thumb spacing read cleaner.
 - **Model picker card-view spacing parity** — restored explicit card-view tile padding/background treatment so card and grid/list states look consistent.
-- **Selection visual neutrality outside multi-select** — when multi-select is off, model opacity/saturation no longer shifts between parts during selection flow.
+- **Selection visual neutrality in select mode** — model opacity/saturation no longer shifts between parts while using select/multi-select workflows.
 - **Inspect hover dims only** — Inspect mode now shows only hovered-part dimensions in the ruler HUD; the previous ruler fallback readout is hidden while inspecting or multi-selecting.
 - **Pause/play disabled while interacting** — Pause and Export pause controls are disabled while `Inspect` or `Multi-Select` modes are active; controls show the tooltip "Not available while inspecting/selecting".
 - **Sidepanel toggle restyle** — replaced the expand/close icon with a circular utility button and corrected expand/close orientation behavior.
@@ -68,6 +71,7 @@
 - **Ruler hover inspection focus** — enabling `Part hover` mode now auto-pauses model rotation so hovered-part measurement is easier to read
 
 ### Fixed
+- **Model modal close-policy regressions** — floating model modal no longer closes during color/preset interactions; close is now limited to explicit `X` action or keyboard `Esc`.
 - **Multipart thumbnail framing stability** — thumbnail capture now hides ruler hover bounding-box overlays during offscreen rendering so preview thumbs keep stable framing/scale and no dashed helper wire leaks into tile images.
 - **Inspect mode visibility decoupled from Grid/Ruler toggle** — live inspect overlay and hovered-part contextual dimensions now render whenever inspect is active, even if the grid/ruler visibility toggle is off.
 - **Background/Build Plate sync thumbnail size stability** — locked sync selector thumbnail canvases to fixed dimensions so preview thumbs no longer shrink when selecting different model parts.

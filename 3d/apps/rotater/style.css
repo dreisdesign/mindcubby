@@ -1556,11 +1556,9 @@ html.loaded .controls-bar.hidden {
 }
 
 .model-bulk-bar-actions {
-    display: grid;
-    grid-template-columns: auto auto minmax(180px, 280px);
+    display: flex;
     align-items: center;
     gap: 8px;
-    justify-content: flex-start;
 }
 
 .model-bulk-icon-btn,
@@ -1642,7 +1640,9 @@ html.loaded .controls-bar.hidden {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 4px;
-    width: min(100%, 280px);
+    width: fit-content;
+    min-width: 210px;
+    margin-left: auto;
     padding: 2px;
     border-radius: 999px;
     background: color-mix(in srgb, var(--palette-blueberry-100) 70%, #fff 30%);
@@ -1709,6 +1709,7 @@ html.loaded .controls-bar.hidden {
     max-width: min(860px, calc(100vw - 24px));
     max-height: min(760px, calc(100vh - 24px));
     overflow: auto;
+    scrollbar-gutter: auto;
     resize: both;
     padding: 6px;
     z-index: 140;
@@ -1990,7 +1991,16 @@ html.loaded .controls-bar.hidden {
 #modelPartSelectorMenu.model-selector-view--card .thumb-select-option {
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 78%, white 22%);
     background: color-mix(in srgb, #fff 84%, var(--palette-blueberry-100) 16%);
-    padding: 10px;
+    padding: 12px;
+}
+
+#modelPartSelectorMenu.model-selector-view--card .thumb-select-option-main {
+    gap: 12px;
+}
+
+#modelPartSelectorMenu.model-selector-view--card .thumb-select-option-check {
+    min-height: 78px;
+    padding-top: 2px;
 }
 
 #modelPartSelectorMenu.model-selector-view--card .thumb-select-option.is-selected {
@@ -2023,11 +2033,11 @@ html.loaded .controls-bar.hidden {
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-main {
     grid-template-columns: 1fr;
     gap: 4px;
-    padding-top: 8px;
+    padding-top: 12px;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-thumb-wrap {
-    width: min(100%, 170px);
+    width: min(100%, 148px);
     margin: 0 auto;
 }
 
@@ -2035,7 +2045,7 @@ html.loaded .controls-bar.hidden {
     width: 100%;
     height: auto;
     aspect-ratio: 1 / 1;
-    max-height: 170px;
+    max-height: 148px;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-text {
@@ -2061,8 +2071,8 @@ html.loaded .controls-bar.hidden {
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-check {
     position: absolute;
-    top: 8px;
-    left: 8px;
+    top: 10px;
+    left: 10px;
     min-height: 24px;
     width: 24px;
     border-radius: 6px;
@@ -2073,7 +2083,7 @@ html.loaded .controls-bar.hidden {
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option {
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 78%, white 22%);
     background: color-mix(in srgb, #fff 84%, var(--palette-blueberry-100) 16%);
-    padding: 8px;
+    padding: 12px;
 }
 
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option.is-selected {
