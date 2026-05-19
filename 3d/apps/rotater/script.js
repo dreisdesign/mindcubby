@@ -427,6 +427,13 @@ const buildPlateSizePresetEl = document.getElementById('buildPlateSizePreset');
 const buildPlateCustomSizeRowEl = document.getElementById('buildPlateCustomSizeRow');
 const buildPlateCustomWidthEl = document.getElementById('buildPlateCustomWidth');
 const buildPlateCustomDepthEl = document.getElementById('buildPlateCustomDepth');
+const showDpadToggleModalEl = document.getElementById('showDpadToggle-modal');
+const buildPlateSizePresetModalEl = document.getElementById('buildPlateSizePreset-modal');
+const buildPlateCustomSizeRowModalEl = document.getElementById('buildPlateCustomSizeRow-modal');
+const buildPlateCustomWidthModalEl = document.getElementById('buildPlateCustomWidth-modal');
+const buildPlateCustomDepthModalEl = document.getElementById('buildPlateCustomDepth-modal');
+const fineTuningCheckModalEl = document.getElementById('fineTuningCheck-modal');
+const btnThemeToggleRailModalEl = document.getElementById('btnThemeToggleRail-modal');
 const btnPause = document.getElementById('btnPause');
 const iconPlayPause = document.getElementById('iconPlayPause');
 const iconExportPlayPause = document.getElementById('iconExportPlayPause');
@@ -1559,9 +1566,13 @@ function applyBuildPlateSizePreset(preset) {
 
 function syncBuildPlateSizeUI() {
     if (buildPlateSizePresetEl) buildPlateSizePresetEl.value = buildPlateSizePreset;
+    if (buildPlateSizePresetModalEl) buildPlateSizePresetModalEl.value = buildPlateSizePreset;
     if (buildPlateCustomSizeRowEl) buildPlateCustomSizeRowEl.hidden = buildPlateSizePreset !== 'custom';
+    if (buildPlateCustomSizeRowModalEl) buildPlateCustomSizeRowModalEl.hidden = buildPlateSizePreset !== 'custom';
     if (buildPlateCustomWidthEl) buildPlateCustomWidthEl.value = String(buildPlateWidth);
+    if (buildPlateCustomWidthModalEl) buildPlateCustomWidthModalEl.value = String(buildPlateWidth);
     if (buildPlateCustomDepthEl) buildPlateCustomDepthEl.value = String(buildPlateDepth);
+    if (buildPlateCustomDepthModalEl) buildPlateCustomDepthModalEl.value = String(buildPlateDepth);
 }
 
 function syncExportMotionControlsFromMain() {
@@ -10285,6 +10296,11 @@ document.getElementById('btnToggleAppSettings')?.addEventListener('click', () =>
 document.getElementById('btnThemeToggleRail')?.addEventListener('click', () => {
     document.getElementById('btnThemeToggle')?.click();
 });
+if (btnThemeToggleRailModalEl) {
+    btnThemeToggleRailModalEl.addEventListener('click', () => {
+        document.getElementById('btnThemeToggle')?.click();
+    });
+}
 
 applyDesktopV2Layout();
 try {
@@ -10389,7 +10405,7 @@ if (fineTuningCheckEl) {
     applyFineTuningUIState(fineTuningCheckEl.checked);
     updateTextureTuneUI();
     syncAllRangeFillIndicators();
-    fineTuningCheckEl.addEventListener('change', () => {
+    const fineTuningHandler = () => {
         applyFineTuningUIState(fineTuningCheckEl.checked);
 
         if (!fineTuningMode) {
@@ -10406,7 +10422,14 @@ if (fineTuningCheckEl) {
         persistCurrentMultipartParts();
         queueModelPartThumbsRender();
         saveSettings();
-    });
+    };
+    fineTuningCheckEl.addEventListener('change', fineTuningHandler);
+    if (fineTuningCheckModalEl) {
+        fineTuningCheckModalEl.addEventListener('change', () => {
+            fineTuningCheckEl.checked = fineTuningCheckModalEl.checked;
+            fineTuningHandler();
+        });
+    }
 }
 
 exportMotionControlsEnabled = true;
@@ -10414,44 +10437,79 @@ if (exportMotionControlsEl) exportMotionControlsEl.hidden = false;
 
 if (showDpadToggleEl) {
     showDpadToggleEl.checked = dpadVisible;
-    showDpadToggleEl.addEventListener('change', () => {
+    const dpadHandler = () => {
         dpadVisible = !!showDpadToggleEl.checked;
         applyDpadVisibility();
         saveSettings();
-    });
+    };
+    showDpadToggleEl.addEventListener('change', dpadHandler);
+    if (showDpadToggleModalEl) {
+        showDpadToggleModalEl.checked = dpadVisible;
+        showDpadToggleModalEl.addEventListener('change', () => {
+            showDpadToggleEl.checked = showDpadToggleModalEl.checked;
+            dpadHandler();
+        });
+    }
 }
 
 if (buildPlateSizePresetEl) {
     buildPlateSizePresetEl.value = buildPlateSizePreset;
-    buildPlateSizePresetEl.addEventListener('change', () => {
+    const buildPlateChangeHandler = () => {
         applyBuildPlateSizePreset(buildPlateSizePresetEl.value);
+        if (buildPlateSizePresetModalEl) buildPlateSizePresetModalEl.value = buildPlateSizePresetEl.value;
         syncBuildPlateSizeUI();
         if (mesh) updateShadowCatcherPlacement();
         refreshExportPreviewNow();
         saveSettings();
-    });
+    };
+    buildPlateSizePresetEl.addEventListener('change', buildPlateChangeHandler);
+    if (buildPlateSizePresetModalEl) {
+        buildPlateSizePresetModalEl.value = buildPlateSizePreset;
+        buildPlateSizePresetModalEl.addEventListener('change', () => {
+            buildPlateSizePresetEl.value = buildPlateSizePresetModalEl.value;
+            buildPlateChangeHandler();
+        });
+    }
 }
 
 if (buildPlateCustomWidthEl) {
-    buildPlateCustomWidthEl.addEventListener('input', () => {
+    const customWidthHandler = () => {
         buildPlateSizePreset = 'custom';
         buildPlateWidth = clampBuildPlateSize(buildPlateCustomWidthEl.value, buildPlateWidth);
+        if (buildPlateSizePresetEl) buildPlateSizePresetEl.value = 'custom';
+        if (buildPlateSizePresetModalEl) buildPlateSizePresetModalEl.value = 'custom';
         syncBuildPlateSizeUI();
         if (mesh) updateShadowCatcherPlacement();
         refreshExportPreviewNow();
         saveSettings();
-    });
+    };
+    buildPlateCustomWidthEl.addEventListener('input', customWidthHandler);
+    if (buildPlateCustomWidthModalEl) {
+        buildPlateCustomWidthModalEl.addEventListener('input', () => {
+            buildPlateCustomWidthEl.value = buildPlateCustomWidthModalEl.value;
+            customWidthHandler();
+        });
+    }
 }
 
 if (buildPlateCustomDepthEl) {
-    buildPlateCustomDepthEl.addEventListener('input', () => {
+    const customDepthHandler = () => {
         buildPlateSizePreset = 'custom';
         buildPlateDepth = clampBuildPlateSize(buildPlateCustomDepthEl.value, buildPlateDepth);
+        if (buildPlateSizePresetEl) buildPlateSizePresetEl.value = 'custom';
+        if (buildPlateSizePresetModalEl) buildPlateSizePresetModalEl.value = 'custom';
         syncBuildPlateSizeUI();
         if (mesh) updateShadowCatcherPlacement();
         refreshExportPreviewNow();
         saveSettings();
-    });
+    };
+    buildPlateCustomDepthEl.addEventListener('input', customDepthHandler);
+    if (buildPlateCustomDepthModalEl) {
+        buildPlateCustomDepthModalEl.addEventListener('input', () => {
+            buildPlateCustomDepthEl.value = buildPlateCustomDepthModalEl.value;
+            customDepthHandler();
+        });
+    }
 }
 
 syncBuildPlateSizeUI();
@@ -10694,7 +10752,7 @@ btnDownloadPackage?.addEventListener('click', async () => {
 });
 
 // ── Info overlay ──────────────────────────────────────────────────────────────
-['btnInfoAppSettings'].forEach((id) => {
+['btnInfoAppSettings', 'btnInfoCanvas'].forEach((id) => {
     document.getElementById(id)?.addEventListener('click', () => {
         document.getElementById('infoOverlay').hidden = false;
     });
