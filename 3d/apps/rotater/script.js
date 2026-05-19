@@ -5649,11 +5649,8 @@ function updateRulerHUD() {
 
     const dims = getRulerDisplayedDims();
     hud.classList.toggle('is-dims-hidden', !dims || !rulerEnabled);
-    const unitEl = document.getElementById('rulerUnitVal');
-    const unitToggle = document.getElementById('rulerUnitToggle');
-    if (unitEl) unitEl.textContent = (rulerUnit === 'imperial') ? 'in' : 'mm';
-    const next = (rulerUnit === 'imperial') ? 'Metric' : 'Imperial';
-    if (unitToggle) unitToggle.setAttribute('aria-label', `Switch to ${next.toLowerCase()} units`);
+    const rulerUnitSelect = document.getElementById('rulerUnitSelect');
+    if (rulerUnitSelect) rulerUnitSelect.value = rulerUnit;
     document.getElementById('rulerL').textContent = dims ? formatRulerValue(dims.d) : '—';
     document.getElementById('rulerW').textContent = dims ? formatRulerValue(dims.w) : '—';
     document.getElementById('rulerH').textContent = dims ? formatRulerValue(dims.h) : '—';
@@ -12604,19 +12601,16 @@ if (buildPlateShapeWrapEl) {
     });
 }
 
-const rulerUnitToggleEl = document.getElementById('rulerUnitToggle');
-if (rulerUnitToggleEl) {
-    const _toggleRulerUnit = () => {
-        rulerUnit = (rulerUnit === 'metric') ? 'imperial' : 'metric';
+const rulerUnitSelectEl = document.getElementById('rulerUnitSelect');
+if (rulerUnitSelectEl) {
+    const _updateRulerUnitFromSelect = () => {
+        rulerUnit = rulerUnitSelectEl.value === 'imperial' ? 'imperial' : 'metric';
         updateRulerHUD();
         updateLiveRulerOverlay();
         refreshExportPreviewNow();
         saveSettings();
     };
-    rulerUnitToggleEl.addEventListener('click', _toggleRulerUnit);
-    rulerUnitToggleEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _toggleRulerUnit(); }
-    });
+    rulerUnitSelectEl.addEventListener('change', _updateRulerUnitFromSelect);
 }
 
 if (btnInspectMode) {
