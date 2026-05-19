@@ -978,7 +978,8 @@ html.loaded .canvas-mini-export-card {
 .canvas-utility-btn:hover {
     border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
     color: var(--palette-blueberry-500);
-    background: rgba(255, 255, 255, 0.9);
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
 }
 
 .canvas-utility-btn:active {
@@ -1885,11 +1886,11 @@ html.loaded .controls-bar.hidden {
 
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-minimize {
     margin-left: auto;
-    width: 28px;
-    height: 28px;
+    width: 34px;
+    height: 34px;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--palette-blueberry-400) 62%, white 38%);
-    background: color-mix(in srgb, #fff 84%, var(--palette-blueberry-100) 16%);
+    border: 1.5px solid var(--border-color, rgba(0, 0, 0, 0.12));
+    background: var(--color-surface-raised, rgba(255, 255, 255, 0.9));
     color: var(--palette-blueberry-800);
     display: flex;
     align-items: center;
@@ -1897,11 +1898,18 @@ html.loaded .controls-bar.hidden {
     cursor: pointer;
     padding: 0;
     flex-shrink: 0;
+    box-shadow: var(--shadow-soft);
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, transform 0.1s;
 }
 
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-minimize:hover {
-    border-color: color-mix(in srgb, var(--palette-blueberry-700) 68%, white 32%);
-    background: color-mix(in srgb, #fff 72%, var(--palette-blueberry-100) 28%);
+    border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
+}
+
+#modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-minimize:active {
+    transform: scale(0.95);
 }
 
 #modelPartSelectorMenu.thumb-select-menu--floating-card .model-selector-floating-header .model-selector-floating-minimize:focus-visible {
@@ -4603,6 +4611,13 @@ html.loaded .menu-btn {
     color: inherit;
 }
 
+.info-icon-btn.canvas-utility-btn:hover {
+    color: var(--palette-blueberry-500);
+    background: #fff;
+    border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
+    box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
+}
+
 .info-icon-btn:hover {
     color: var(--color-on-surface);
     background: color-mix(in srgb, var(--palette-blueberry-500) 12%, transparent);
@@ -4960,8 +4975,8 @@ html.loaded .menu-btn {
 .settings-close-btn {
     width: 36px;
     height: 36px;
-    border: none;
-    background: transparent;
+    border: 1.5px solid var(--border-color, rgba(0, 0, 0, 0.12));
+    background: var(--color-surface-raised, rgba(255, 255, 255, 0.9));
     color: var(--color-on-surface, #555);
     border-radius: 50%;
     cursor: pointer;
@@ -4969,11 +4984,18 @@ html.loaded .menu-btn {
     align-items: center;
     justify-content: center;
     padding: 0;
-    transition: background 0.12s;
+    box-shadow: var(--shadow-soft);
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, transform 0.1s;
 }
 
 .settings-close-btn:hover {
     background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
+    box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
+}
+
+.settings-close-btn:active {
+    transform: scale(0.95);
 }
 
 .settings-close-btn:focus-visible {
@@ -5063,6 +5085,7 @@ html.theme-dark .settings-action-btn:hover {
 
 html.theme-dark .settings-close-btn:hover {
     background: color-mix(in srgb, var(--palette-blueberry-400) 12%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 45%, transparent);
 }
 
 /* ── Color picker cards ── */

@@ -5918,11 +5918,35 @@ function drawRulerHoverGridIncrements(ctx, width, height, cam) {
     ctx.restore();
 }
 
+function getSelectedPartsUnionBoxForInspect() {
+    if (!isMultipartModel() || !Array.isArray(modelPartBoundsBoxes) || !modelPartBoundsBoxes.length) return null;
+    const selected = getUiSelectedPartIndices();
+    if (selected.length < 2) return null;
+
+    let union = null;
+    selected.forEach((idx) => {
+        if (!Number.isInteger(idx) || idx < 0 || idx >= modelPartBoundsBoxes.length) return;
+        if (modelPartSettings?.[idx]?.hidden) return;
+        const partBox = modelPartBoundsBoxes[idx];
+        if (!partBox || partBox.isEmpty?.()) return;
+        if (!union) union = partBox.clone();
+        else union.union(partBox);
+    });
+
+    if (!union || union.isEmpty?.()) return null;
+    return union;
+}
+
 function drawRulerHoverPartContextualDims(ctx, width, height, cam) {
     if (!rulerPartHoverEnabled || !hasModelParts() || !mesh || !cam) return;
-    if (rulerHoveredPartIndex < 0 || rulerHoveredPartIndex >= modelPartBoundsBoxes.length) return;
+    const selectedUnionBox = getSelectedPartsUnionBoxForInspect();
+    const useGroupedSelection = !!selectedUnionBox;
 
-    const partBox = modelPartBoundsBoxes[rulerHoveredPartIndex];
+    if (!useGroupedSelection && (rulerHoveredPartIndex < 0 || rulerHoveredPartIndex >= modelPartBoundsBoxes.length)) return;
+
+    const partBox = useGroupedSelection
+        ? selectedUnionBox
+        : modelPartBoundsBoxes[rulerHoveredPartIndex];
     if (!partBox || partBox.isEmpty?.()) return;
 
     const min = partBox.min;
@@ -5959,9 +5983,14 @@ function drawRulerHoverPartContextualDims(ctx, width, height, cam) {
         return best;
     };
 
-    const hoveredDims = (rulerHoveredPartIndex >= 0 && rulerHoveredPartIndex < modelPartDimensions.length)
-        ? modelPartDimensions[rulerHoveredPartIndex]
-        : modelDims;
+    const hoveredDims = useGroupedSelection
+        ? (() => {
+            const size = partBox.getSize(new THREE.Vector3());
+            return { w: size.x, d: size.y, h: size.z };
+        })()
+        : ((rulerHoveredPartIndex >= 0 && rulerHoveredPartIndex < modelPartDimensions.length)
+            ? modelPartDimensions[rulerHoveredPartIndex]
+            : modelDims);
     if (!hoveredDims) return;
 
     const axisSpecs = [
@@ -6277,7 +6306,8 @@ function updateLiveRulerOverlay() {
     const canRenderRulerOverlay = !!(modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
     const interactionModeActive = !!hasModelParts();
     const showDynamicLines = !!(canRenderRulerOverlay && !interactionModeActive && RULER_DYNAMIC_LINES_ENABLED && rulerLinesVisible);
-    const showHoverContextualDims = !!(canRenderRulerOverlay && rulerPartHoverEnabled && rulerHoveredPartIndex >= 0);
+    const hasInspectSelectionGroup = !!(isMultipartModel() && getUiSelectedPartIndices().length > 1);
+    const showHoverContextualDims = !!(canRenderRulerOverlay && rulerPartHoverEnabled && (rulerHoveredPartIndex >= 0 || hasInspectSelectionGroup));
     const showHoverIncrements = false;
 
     if (!showDynamicLines && !showHoverContextualDims && !showHoverIncrements) {
