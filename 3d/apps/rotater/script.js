@@ -554,6 +554,8 @@ let partThumbRenderTarget = null;
 let partThumbCamera = null;
 let partThumbScratchCanvas = null;
 let partThumbScratchCtx = null;
+let bgModelSyncMenuAnchorEl = null;
+let buildPlateModelSyncMenuAnchorEl = null;
 let multipartPartBounds = null;
 let modelPartDimensions = [];
 let modelPartBoundsBoxes = [];
@@ -3262,9 +3264,15 @@ function closeModelPartSelectorMenu(force = false) {
 function closeThumbSelectMenusByMode(options = {}) {
     const includeModelSelector = options.includeModelSelector !== false;
     if (includeModelSelector) closeModelPartSelectorMenu();
-    if (bgModelSyncSelectorMenu) bgModelSyncSelectorMenu.hidden = true;
+    if (bgModelSyncSelectorMenu) {
+        bgModelSyncSelectorMenu.hidden = true;
+        resetSyncMenuFloatingStyle(bgModelSyncSelectorMenu);
+    }
     if (bgModelSyncSelectorBtn) bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
-    if (buildPlateModelSyncSelectorMenu) buildPlateModelSyncSelectorMenu.hidden = true;
+    if (buildPlateModelSyncSelectorMenu) {
+        buildPlateModelSyncSelectorMenu.hidden = true;
+        resetSyncMenuFloatingStyle(buildPlateModelSyncSelectorMenu);
+    }
     if (buildPlateModelSyncSelectorBtn) buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
     closeModelPartActionMenus();
 }
@@ -3339,6 +3347,80 @@ function positionThumbSelectMenu(menuEl, anchorBtn) {
     const available = Math.max(140, Math.floor((openAbove ? spaceAbove : spaceBelow)));
     menuEl.classList.toggle('thumb-select-menu--above', openAbove);
     menuEl.style.maxHeight = `${available}px`;
+}
+
+function resetSyncMenuFloatingStyle(menuEl) {
+    if (!menuEl) return;
+    menuEl.style.position = '';
+    menuEl.style.left = '';
+    menuEl.style.right = '';
+    menuEl.style.top = '';
+    menuEl.style.bottom = '';
+    menuEl.style.width = '';
+    menuEl.style.transform = '';
+}
+
+function positionSyncMenuAtAnchor(menuEl, anchorEl) {
+    if (!menuEl || !anchorEl) return;
+    const gap = 8;
+    const viewportPad = 12;
+    const minPanelHeight = 170;
+    const anchorRect = anchorEl.getBoundingClientRect();
+    const preferredWidth = Math.max(220, Math.min(300, Math.round(anchorRect.width + 44)));
+    const width = Math.max(200, Math.min(preferredWidth, Math.floor(window.innerWidth - viewportPad * 2)));
+    const spaceBelow = Math.max(0, window.innerHeight - anchorRect.bottom - viewportPad - gap);
+    const spaceAbove = Math.max(0, anchorRect.top - viewportPad - gap);
+    const openAbove = spaceBelow < minPanelHeight && spaceAbove > spaceBelow;
+    const available = Math.max(140, Math.floor(openAbove ? spaceAbove : spaceBelow));
+
+    let left = anchorRect.left + ((anchorRect.width - width) / 2);
+    left = Math.max(viewportPad, Math.min(left, window.innerWidth - width - viewportPad));
+
+    menuEl.style.position = 'fixed';
+    menuEl.style.left = `${Math.round(left)}px`;
+    menuEl.style.right = 'auto';
+    menuEl.style.width = `${Math.round(width)}px`;
+    menuEl.style.top = `${Math.round(openAbove ? (anchorRect.top - gap) : (anchorRect.bottom + gap))}px`;
+    menuEl.style.bottom = 'auto';
+    menuEl.style.transform = openAbove ? 'translateY(-100%)' : 'none';
+    menuEl.style.maxHeight = `${available}px`;
+    menuEl.classList.toggle('thumb-select-menu--above', openAbove);
+}
+
+function resolveBgModelSyncAnchorEl() {
+    return bgModelSyncMenuAnchorEl || document.getElementById('bg-preset-modelcolor') || bgModelSyncSelectorBtn;
+}
+
+function resolveBuildPlateModelSyncAnchorEl() {
+    return buildPlateModelSyncMenuAnchorEl || document.getElementById('build-plate-preset-modelcolor') || buildPlateModelSyncSelectorBtn;
+}
+
+function openBgModelSyncMenu(anchorEl = null) {
+    if (!bgModelSyncSelectorMenu) return;
+    const open = !bgModelSyncSelectorMenu.hidden;
+    if (anchorEl instanceof Element) bgModelSyncMenuAnchorEl = anchorEl;
+    const targetAnchor = resolveBgModelSyncAnchorEl();
+    closeThumbSelectMenus();
+    if (open || !targetAnchor) return;
+    bgModelSyncSelectorMenu.hidden = false;
+    positionSyncMenuAtAnchor(bgModelSyncSelectorMenu, targetAnchor);
+    bgModelSyncSelectorMenu.scrollTop = 0;
+    if (bgModelSyncSelectorBtn) bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
+    queueModelPartThumbsRender();
+}
+
+function openBuildPlateModelSyncMenu(anchorEl = null) {
+    if (!buildPlateModelSyncSelectorMenu) return;
+    const open = !buildPlateModelSyncSelectorMenu.hidden;
+    if (anchorEl instanceof Element) buildPlateModelSyncMenuAnchorEl = anchorEl;
+    const targetAnchor = resolveBuildPlateModelSyncAnchorEl();
+    closeThumbSelectMenus();
+    if (open || !targetAnchor) return;
+    buildPlateModelSyncSelectorMenu.hidden = false;
+    positionSyncMenuAtAnchor(buildPlateModelSyncSelectorMenu, targetAnchor);
+    buildPlateModelSyncSelectorMenu.scrollTop = 0;
+    if (buildPlateModelSyncSelectorBtn) buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
+    queueModelPartThumbsRender();
 }
 
 function ensureModelPartFloatingHeader() {
@@ -3513,28 +3595,12 @@ modelPartAddNextBtn?.addEventListener('click', () => {
 
 bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
     ev.stopPropagation();
-    const open = bgModelSyncSelectorMenu && !bgModelSyncSelectorMenu.hidden;
-    closeThumbSelectMenus();
-    if (bgModelSyncSelectorMenu && !open) {
-        bgModelSyncSelectorMenu.hidden = false;
-        positionThumbSelectMenu(bgModelSyncSelectorMenu, bgModelSyncSelectorBtn);
-        bgModelSyncSelectorMenu.scrollTop = 0;
-        bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
-        queueModelPartThumbsRender();
-    }
+    openBgModelSyncMenu(bgModelSyncSelectorBtn);
 });
 
 buildPlateModelSyncSelectorBtn?.addEventListener('click', (ev) => {
     ev.stopPropagation();
-    const open = buildPlateModelSyncSelectorMenu && !buildPlateModelSyncSelectorMenu.hidden;
-    closeThumbSelectMenus();
-    if (buildPlateModelSyncSelectorMenu && !open) {
-        buildPlateModelSyncSelectorMenu.hidden = false;
-        positionThumbSelectMenu(buildPlateModelSyncSelectorMenu, buildPlateModelSyncSelectorBtn);
-        buildPlateModelSyncSelectorMenu.scrollTop = 0;
-        buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
-        queueModelPartThumbsRender();
-    }
+    openBuildPlateModelSyncMenu(buildPlateModelSyncSelectorBtn);
 });
 
 [modelPartSelectorMenu, bgModelSyncSelectorMenu, buildPlateModelSyncSelectorMenu].forEach((menuEl) => {
@@ -3556,11 +3622,13 @@ window.addEventListener('resize', () => {
         modelPartSelectorMenu.style.height = '';
         modelPartSelectorMenu.style.maxHeight = '';
     }
-    if (bgModelSyncSelectorMenu && !bgModelSyncSelectorMenu.hidden && bgModelSyncSelectorBtn) {
-        positionThumbSelectMenu(bgModelSyncSelectorMenu, bgModelSyncSelectorBtn);
+    if (bgModelSyncSelectorMenu && !bgModelSyncSelectorMenu.hidden) {
+        const bgAnchor = resolveBgModelSyncAnchorEl();
+        if (bgAnchor) positionSyncMenuAtAnchor(bgModelSyncSelectorMenu, bgAnchor);
     }
-    if (buildPlateModelSyncSelectorMenu && !buildPlateModelSyncSelectorMenu.hidden && buildPlateModelSyncSelectorBtn) {
-        positionThumbSelectMenu(buildPlateModelSyncSelectorMenu, buildPlateModelSyncSelectorBtn);
+    if (buildPlateModelSyncSelectorMenu && !buildPlateModelSyncSelectorMenu.hidden) {
+        const buildPlateAnchor = resolveBuildPlateModelSyncAnchorEl();
+        if (buildPlateAnchor) positionSyncMenuAtAnchor(buildPlateModelSyncSelectorMenu, buildPlateAnchor);
     }
 });
 
@@ -4291,8 +4359,8 @@ function syncStoredBuildPlateColorToVisibleBase() {
 function syncBgModelSyncSourceUI() {
     if (!bgModelSyncSourceWrap || !bgModelSyncSelectorMenu || !bgModelSyncSelectorBtn) return;
     const visible = activeBgPreset === 'modelcolor' && isMultipartModel();
-    bgModelSyncSourceWrap.hidden = !visible;
-    bgModelSyncSourceWrap.setAttribute('aria-hidden', String(!visible));
+    bgModelSyncSourceWrap.hidden = false;
+    bgModelSyncSourceWrap.setAttribute('aria-hidden', 'true');
     if (!visible) {
         bgModelSyncSelectorMenu.innerHTML = '';
         bgModelSyncSelectorMenu.hidden = true;
@@ -4341,10 +4409,19 @@ function syncBgModelSyncSourceUI() {
         paintThumbFallback(bgModelSyncSelectorThumb, bgSyncPartIndex);
         renderSinglePartThumbnail(bgModelSyncSelectorThumb, bgSyncPartIndex);
     }
+    const bgPresetThumbCanvas = document.getElementById('bg-preset-modelcolor-canvas');
+    if (bgPresetThumbCanvas instanceof HTMLCanvasElement) {
+        bgPresetThumbCanvas.classList.add('js-part-thumb-preview');
+        bgPresetThumbCanvas.dataset.partIndex = String(bgSyncPartIndex);
+        paintThumbFallback(bgPresetThumbCanvas, bgSyncPartIndex);
+        renderSinglePartThumbnail(bgPresetThumbCanvas, bgSyncPartIndex);
+    }
     if (bgModelSyncSelectorText) {
         const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
         bgModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
         bgModelSyncSelectorBtn.title = `Background sync: ${selectedName}`;
+        const bgPresetThumb = document.getElementById('bg-preset-modelcolor');
+        if (bgPresetThumb) bgPresetThumb.title = `Model Sync: ${selectedName}`;
     }
     updateBgShadeSliderVisual();
     queueModelPartThumbsRender();
@@ -10634,6 +10711,40 @@ document.getElementById('helpOverlay')?.addEventListener('click', (e) => {
 window.addEventListener('resize', () => {
     if (helpOverlayEl && !helpOverlayEl.hidden) positionHelpOverlay();
 });
+
+// ── App Settings overlay ──────────────────────────────────────────────────────
+const appSettingsOverlayEl = document.getElementById('appSettingsOverlay');
+const appSettingsPanelEl = appSettingsOverlayEl?.querySelector('.app-settings-panel') || null;
+const btnAppSettingsCanvasEl = document.getElementById('btnAppSettingsCanvas');
+
+function positionAppSettingsOverlay() {
+    if (!appSettingsOverlayEl || !appSettingsPanelEl || !btnAppSettingsCanvasEl) return;
+    const helpRect = document.getElementById('btnHelpCanvas')?.getBoundingClientRect() || { right: 0, bottom: 0 };
+    const settingsRect = btnAppSettingsCanvasEl.getBoundingClientRect();
+    const margin = 10;
+    const panelWidth = appSettingsPanelEl.offsetWidth || 340;
+    const maxLeft = Math.max(margin, window.innerWidth - panelWidth - margin);
+    const left = Math.max(margin, Math.min(settingsRect.right - panelWidth, maxLeft));
+    const top = Math.max(margin, settingsRect.bottom + 8);
+    appSettingsPanelEl.style.left = `${left}px`;
+    appSettingsPanelEl.style.top = `${top}px`;
+}
+
+btnAppSettingsCanvasEl?.addEventListener('click', () => {
+    if (!appSettingsOverlayEl) return;
+    appSettingsOverlayEl.hidden = false;
+    positionAppSettingsOverlay();
+});
+document.getElementById('btnAppSettingsClose')?.addEventListener('click', () => {
+    document.getElementById('appSettingsOverlay').hidden = true;
+});
+document.getElementById('appSettingsOverlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) document.getElementById('appSettingsOverlay').hidden = true;
+});
+window.addEventListener('resize', () => {
+    if (appSettingsOverlayEl && !appSettingsOverlayEl.hidden) positionAppSettingsOverlay();
+});
+
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && exportCollapsedConfirmOverlayEl && !exportCollapsedConfirmOverlayEl.hidden) {
         closeCollapsedExportConfirm(false);
@@ -12080,8 +12191,8 @@ function updateBuildPlateSelection() {
 function syncBuildPlateModelSyncSourceUI() {
     if (!buildPlateModelSyncSourceWrap || !buildPlateModelSyncSelectorMenu || !buildPlateModelSyncSelectorBtn) return;
     const visible = activeBuildPlatePreset === 'modelcolor' && isMultipartModel();
-    buildPlateModelSyncSourceWrap.hidden = !visible;
-    buildPlateModelSyncSourceWrap.setAttribute('aria-hidden', String(!visible));
+    buildPlateModelSyncSourceWrap.hidden = false;
+    buildPlateModelSyncSourceWrap.setAttribute('aria-hidden', 'true');
     if (!visible) {
         buildPlateModelSyncSelectorMenu.innerHTML = '';
         buildPlateModelSyncSelectorMenu.hidden = true;
@@ -12121,10 +12232,19 @@ function syncBuildPlateModelSyncSourceUI() {
         buildPlateModelSyncSelectorThumb.dataset.partIndex = String(buildPlateSyncPartIndex);
         paintThumbFallback(buildPlateModelSyncSelectorThumb, buildPlateSyncPartIndex);
     }
+    const buildPresetThumbCanvas = document.getElementById('build-plate-preset-modelcolor-canvas');
+    if (buildPresetThumbCanvas instanceof HTMLCanvasElement) {
+        buildPresetThumbCanvas.classList.add('js-part-thumb-preview');
+        buildPresetThumbCanvas.dataset.partIndex = String(buildPlateSyncPartIndex);
+        paintThumbFallback(buildPresetThumbCanvas, buildPlateSyncPartIndex);
+        renderSinglePartThumbnail(buildPresetThumbCanvas, buildPlateSyncPartIndex);
+    }
     if (buildPlateModelSyncSelectorText) {
         const selectedName = modelPartNames[buildPlateSyncPartIndex] || `Part ${buildPlateSyncPartIndex + 1}`;
         buildPlateModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
         buildPlateModelSyncSelectorBtn.title = `Surface sync: ${selectedName}`;
+        const buildPresetThumb = document.getElementById('build-plate-preset-modelcolor');
+        if (buildPresetThumb) buildPresetThumb.title = `Model Sync: ${selectedName}`;
     }
     updateBuildPlateShadeControlVisibility();
     queueModelPartThumbsRender();
@@ -12525,7 +12645,7 @@ function renderBgPresets() {
         wrap.style.alignItems = 'center';
 
         const swatchInner = preset.id === 'modelcolor'
-            ? `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:transparent;display:flex;align-items:center;justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.2 12.05C7.2 12.65 7.308 13.246 7.524 13.838C7.74 14.43 8.072 14.979 8.52 15.485L8.565 15.53V14.815C8.565 14.476 8.685 14.186 8.925 13.945C9.165 13.705 9.455 13.585 9.795 13.585C10.135 13.585 10.425 13.705 10.665 13.945C10.905 14.186 11.025 14.476 11.025 14.815V18.695C11.025 19.034 10.905 19.324 10.665 19.565C10.425 19.805 10.135 19.925 9.795 19.925H5.91C5.57 19.925 5.28 19.805 5.04 19.565C4.8 19.324 4.68 19.034 4.68 18.695C4.68 18.355 4.8 18.065 5.04 17.825C5.28 17.584 5.57 17.464 5.91 17.464H7.08L7.035 17.419C6.249 16.633 5.671 15.783 5.301 14.869C4.931 13.955 4.746 13.015 4.746 12.05C4.746 10.515 5.145 9.106 5.943 7.823C6.741 6.539 7.816 5.575 9.168 4.931C9.445 4.793 9.722 4.808 10 4.978C10.277 5.147 10.469 5.393 10.577 5.715C10.669 6.023 10.657 6.331 10.542 6.639C10.426 6.947 10.223 7.186 9.93 7.355C9.1 7.832 8.435 8.485 7.935 9.315C7.435 10.146 7.2 11.057 7.2 12.05ZM16.8 12C16.8 11.4 16.692 10.804 16.476 10.212C16.26 9.62 15.928 9.071 15.48 8.565L15.435 8.52V9.235C15.435 9.575 15.315 9.864 15.075 10.105C14.835 10.345 14.545 10.465 14.205 10.465C13.865 10.465 13.575 10.345 13.335 10.105C13.095 9.864 12.975 9.575 12.975 9.235V5.35C12.975 5.01 13.095 4.72 13.335 4.48C13.575 4.239 13.865 4.12 14.205 4.12H18.09C18.43 4.12 18.72 4.239 18.96 4.48C19.2 4.72 19.32 5.01 19.32 5.35C19.32 5.689 19.2 5.979 18.96 6.22C18.72 6.46 18.43 6.58 18.09 6.58H16.92L16.965 6.625C17.751 7.411 18.329 8.261 18.699 9.175C19.069 10.089 19.254 11.03 19.254 12C19.254 13.535 18.855 14.944 18.057 16.227C17.259 17.511 16.184 18.475 14.832 19.119C14.555 19.257 14.277 19.242 14 19.073C13.723 18.903 13.531 18.657 13.423 18.335C13.331 18.028 13.343 17.72 13.458 17.412C13.574 17.104 13.777 16.864 14.07 16.695C14.9 16.218 15.565 15.565 16.065 14.735C16.565 13.905 16.8 12.993 16.8 12Z" fill="currentColor"/></svg></span>`
+            ? `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:#f6f5ff;border:1.5px solid color-mix(in srgb, var(--palette-blueberry-300) 64%, white 36%);display:flex;align-items:center;justify-content:center;"><canvas id="bg-preset-modelcolor-canvas" class="js-part-thumb-preview" data-part-index="${bgSyncPartIndex}" width="56" height="56" aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:block;"></canvas></span>`
             : `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? PALETTE.preset.bgBorderLight : (preset.id === 'black' ? PALETTE.preset.bgBorderDark : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
@@ -12537,6 +12657,13 @@ function renderBgPresets() {
 
         const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
+            if (preset.id === 'modelcolor' && isMultipartModel()) {
+                if (preset.id === activeBgPreset) {
+                    syncBgModelSyncSourceUI();
+                    openBgModelSyncMenu(document.getElementById('bg-preset-modelcolor') || actionArea);
+                    return;
+                }
+            }
             if (preset.id === activeBgPreset && preset.id !== 'white' && preset.id !== 'black') return;
 
             activeBgPreset = preset.id;
@@ -12560,9 +12687,7 @@ function renderBgPresets() {
             if (preset.id === 'modelcolor' && bgModelSyncSelectorMenu && bgModelSyncSelectorBtn) {
                 requestAnimationFrame(() => {
                     syncBgModelSyncSourceUI();
-                    bgModelSyncSelectorMenu.hidden = false;
-                    positionThumbSelectMenu(bgModelSyncSelectorMenu, bgModelSyncSelectorBtn);
-                    bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
+                    openBgModelSyncMenu(document.getElementById('bg-preset-modelcolor') || actionArea);
                 });
             }
         });
@@ -12646,7 +12771,7 @@ function renderBuildPlatePresets() {
         wrap.style.alignItems = 'center';
 
         const swatchInner = preset.id === 'modelcolor'
-            ? `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:transparent;display:flex;align-items:center;justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.2 12.05C7.2 12.65 7.308 13.246 7.524 13.838C7.74 14.43 8.072 14.979 8.52 15.485L8.565 15.53V14.815C8.565 14.476 8.685 14.186 8.925 13.945C9.165 13.705 9.455 13.585 9.795 13.585C10.135 13.585 10.425 13.705 10.665 13.945C10.905 14.186 11.025 14.476 11.025 14.815V18.695C11.025 19.034 10.905 19.324 10.665 19.565C10.425 19.805 10.135 19.925 9.795 19.925H5.91C5.57 19.925 5.28 19.805 5.04 19.565C4.8 19.324 4.68 19.034 4.68 18.695C4.68 18.355 4.8 18.065 5.04 17.825C5.28 17.584 5.57 17.464 5.91 17.464H7.08L7.035 17.419C6.249 16.633 5.671 15.783 5.301 14.869C4.931 13.955 4.746 13.015 4.746 12.05C4.746 10.515 5.145 9.106 5.943 7.823C6.741 6.539 7.816 5.575 9.168 4.931C9.445 4.793 9.722 4.808 10 4.978C10.277 5.147 10.469 5.393 10.577 5.715C10.669 6.023 10.657 6.331 10.542 6.639C10.426 6.947 10.223 7.186 9.93 7.355C9.1 7.832 8.435 8.485 7.935 9.315C7.435 10.146 7.2 11.057 7.2 12.05ZM16.8 12C16.8 11.4 16.692 10.804 16.476 10.212C16.26 9.62 15.928 9.071 15.48 8.565L15.435 8.52V9.235C15.435 9.575 15.315 9.864 15.075 10.105C14.835 10.345 14.545 10.465 14.205 10.465C13.865 10.465 13.575 10.345 13.335 10.105C13.095 9.864 12.975 9.575 12.975 9.235V5.35C12.975 5.01 13.095 4.72 13.335 4.48C13.575 4.239 13.865 4.12 14.205 4.12H18.09C18.43 4.12 18.72 4.239 18.96 4.48C19.2 4.72 19.32 5.01 19.32 5.35C19.32 5.689 19.2 5.979 18.96 6.22C18.72 6.46 18.43 6.58 18.09 6.58H16.92L16.965 6.625C17.751 7.411 18.329 8.261 18.699 9.175C19.069 10.089 19.254 11.03 19.254 12C19.254 13.535 18.855 14.944 18.057 16.227C17.259 17.511 16.184 18.475 14.832 19.119C14.555 19.257 14.277 19.242 14 19.073C13.723 18.903 13.531 18.657 13.423 18.335C13.331 18.028 13.343 17.72 13.458 17.412C13.574 17.104 13.777 16.864 14.07 16.695C14.9 16.218 15.565 15.565 16.065 14.735C16.565 13.905 16.8 12.993 16.8 12Z" fill="currentColor"/></svg></span>`
+            ? `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:#f6f5ff;border:1.5px solid color-mix(in srgb, var(--palette-blueberry-300) 64%, white 36%);display:flex;align-items:center;justify-content:center;"><canvas id="build-plate-preset-modelcolor-canvas" class="js-part-thumb-preview" data-part-index="${buildPlateSyncPartIndex}" width="56" height="56" aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:block;"></canvas></span>`
             : `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? PALETTE.preset.bgBorderLight : (preset.id === 'black' ? PALETTE.preset.bgBorderDark : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
@@ -12658,6 +12783,13 @@ function renderBuildPlatePresets() {
 
         const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
+            if (preset.id === 'modelcolor' && isMultipartModel()) {
+                if (preset.id === activeBuildPlatePreset) {
+                    syncBuildPlateModelSyncSourceUI();
+                    openBuildPlateModelSyncMenu(document.getElementById('build-plate-preset-modelcolor') || actionArea);
+                    return;
+                }
+            }
             if (preset.id === activeBuildPlatePreset && preset.id !== 'white' && preset.id !== 'black') return;
 
             activeBuildPlatePreset = preset.id;
@@ -12694,9 +12826,7 @@ function renderBuildPlatePresets() {
             if (preset.id === 'modelcolor' && buildPlateModelSyncSelectorMenu && buildPlateModelSyncSelectorBtn) {
                 requestAnimationFrame(() => {
                     syncBuildPlateModelSyncSourceUI();
-                    buildPlateModelSyncSelectorMenu.hidden = false;
-                    positionThumbSelectMenu(buildPlateModelSyncSelectorMenu, buildPlateModelSyncSelectorBtn);
-                    buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
+                    openBuildPlateModelSyncMenu(document.getElementById('build-plate-preset-modelcolor') || actionArea);
                 });
             }
         });

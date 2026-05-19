@@ -304,6 +304,19 @@ html.loaded .sidebar {
         min-width: 0;
         justify-content: center;
     }
+
+    /* On mobile/tablet, hide the floating button and show the persistent dock */
+    #btnAppSettingsCanvas {
+        display: none !important;
+    }
+
+    #appSettingsDock {
+        display: block !important;
+    }
+
+    #appSettingsOverlay {
+        display: none !important;
+    }
 }
 
 @media (max-width: 640px) {
@@ -374,6 +387,19 @@ html.loaded .sidebar {
         border-left: 1px solid var(--border-color);
         overflow: hidden;
         transition: width 0.2s ease;
+    }
+
+    /* On desktop, show the floating settings button and hide the persistent dock */
+    #btnAppSettingsCanvas {
+        display: inline-flex !important;
+    }
+
+    #appSettingsDock {
+        display: none !important;
+    }
+
+    #appSettingsOverlay {
+        display: block !important;
     }
 
     html.loaded.sidebar-collapsed .sidebar,
@@ -1656,14 +1682,17 @@ html.loaded .controls-bar.hidden {
 }
 
 .model-bulk-switch-track {
-    width: 92px;
-    height: 32px;
+    --bulk-switch-track-width: 48px;
+    --bulk-switch-track-padding: 3px;
+    --bulk-switch-thumb-width: 32px;
+    width: var(--bulk-switch-track-width);
+    height: 30px;
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--color-label) 34%, white 66%);
     background: color-mix(in srgb, var(--color-label) 26%, white 74%);
     display: inline-flex;
     align-items: center;
-    padding: 4px;
+    padding: var(--bulk-switch-track-padding);
     box-shadow: inset 0 1px 2px rgba(46, 43, 116, 0.08);
     transition: background 140ms ease, border-color 140ms ease;
     position: relative;
@@ -1671,7 +1700,7 @@ html.loaded .controls-bar.hidden {
 }
 
 .model-bulk-switch-thumb {
-    width: 36px;
+    width: var(--bulk-switch-thumb-width);
     height: 24px;
     border-radius: 999px;
     background: #fff;
@@ -1688,10 +1717,10 @@ html.loaded .controls-bar.hidden {
 
 .model-bulk-switch-state {
     position: static;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 900;
     color: currentColor;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.04em;
     line-height: 1;
     transition: color 140ms ease;
     white-space: nowrap;
@@ -1705,7 +1734,7 @@ html.loaded .controls-bar.hidden {
 }
 
 .model-bulk-switch.is-active .model-bulk-switch-thumb {
-    transform: translateX(48px);
+    transform: translateX(calc(var(--bulk-switch-track-width) - (var(--bulk-switch-track-padding) * 2) - var(--bulk-switch-thumb-width) - 1px));
     color: var(--color-primary-darker);
 }
 
@@ -2061,6 +2090,7 @@ html.loaded .controls-bar.hidden {
 #modelPartSelectorMenu.model-selector-view--list .thumb-select-menu-add-row,
 #modelPartSelectorMenu.model-selector-view--grid .thumb-select-menu-add-row {
     padding: 8px;
+    margin: 8px 8px 6px 8px;
     border-bottom: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 75%, white 25%);
     flex-shrink: 0;
 }
@@ -6661,6 +6691,18 @@ select {
     box-shadow: 0 0 0 2px var(--color-primary);
 }
 
+/* ── Model Sync thumbnails: no border unless selected ── */
+#bg-preset-modelcolor,
+#build-plate-preset-modelcolor {
+    border: none !important;
+    background-color: color-mix(in srgb, var(--palette-blueberry-100) 48%, white 52%) !important;
+}
+
+#bgPresetsBar .shading-option.is-selected #bg-preset-modelcolor,
+#buildPlatePresetsBar .shading-option.is-selected #build-plate-preset-modelcolor {
+    border: 2px solid var(--color-primary) !important;
+}
+
 /* ── Custom slot overwrite button ── */
 .preset-save-btn {
     display: none;
@@ -6823,6 +6865,45 @@ html.loaded .sidebar-tabs {
 
 .app-settings-dock-body[hidden] {
     display: none !important;
+}
+
+.app-settings-dock[hidden],
+.app-settings-dock[hidden] * {
+    display: none !important;
+}
+
+.app-settings-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: 999;
+    pointer-events: none;
+}
+
+.app-settings-overlay:not([hidden]) {
+    pointer-events: auto;
+}
+
+.app-settings-panel {
+    position: fixed;
+    max-width: 360px;
+    min-width: 340px;
+    max-height: 80vh;
+    overflow-y: auto;
+    pointer-events: auto;
+    border-radius: var(--radius-card);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-card);
+}
+
+.app-settings-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
 }
 
 .app-settings-actions-row {
@@ -7523,13 +7604,13 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
         position: fixed;
         top: var(--desktop-v2-effects-top, 310px);
         right: 16px;
-        width: calc(clamp(320px, 24vw, 420px) + 14px);
+        width: calc(clamp(320px, 24vw, 420px));
         max-height: var(--desktop-v2-effects-max-height, calc(100vh - 220px));
         overflow-x: visible;
         overflow-y: auto;
-        scrollbar-gutter: stable both-edges;
+        scrollbar-gutter: auto;
         z-index: 40;
-        padding: 6px 22px 40px 10px;
+        padding: 6px 16px 40px 10px;
     }
 
     html.loaded.layout-v2-desktop .tab-panel--effects .controls-section-box {
@@ -8287,8 +8368,8 @@ html.loaded.export-workspace-active .canvas-wrap {
 
 .build-plate-controls {
     display: grid;
-    gap: 10px;
-    padding: 10px;
+    gap: 8px;
+    padding: 8px;
     border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent 18%);
     background: color-mix(in srgb, var(--surface-elev) 86%, #fff 14%);
@@ -8474,13 +8555,13 @@ html.theme-dark .adv-section-check input[type="checkbox"] {
 
 #bgModelSyncSourceWrap {
     width: 100%;
-    margin: 8px 0 4px;
+    margin: 0;
 }
 
 #bgModelSyncSelector .thumb-select-btn {
     grid-template-columns: 56px minmax(0, 1fr) auto;
     gap: 10px;
-    padding: 6px;
+    padding: 8px;
     min-height: 64px;
     border-radius: 14px;
     box-shadow: var(--shadow-soft);
@@ -8525,13 +8606,36 @@ html.theme-dark .adv-section-check input[type="checkbox"] {
 
 #buildPlateModelSyncSourceWrap {
     width: 100%;
-    margin: 8px 0 4px;
+    margin: 0;
+}
+
+#bgModelSyncSourceWrap,
+#buildPlateModelSyncSourceWrap {
+    position: relative;
+    height: 0;
+    overflow: visible;
+    pointer-events: none;
+}
+
+#bgModelSyncSourceWrap .thumb-select,
+#buildPlateModelSyncSourceWrap .thumb-select {
+    position: static;
+}
+
+#bgModelSyncSelectorBtn,
+#buildPlateModelSyncSelectorBtn {
+    display: none !important;
+}
+
+#bgModelSyncSelectorMenu,
+#buildPlateModelSyncSelectorMenu {
+    pointer-events: auto;
 }
 
 #buildPlateModelSyncSelector .thumb-select-btn {
     grid-template-columns: 56px minmax(0, 1fr) auto;
     gap: 10px;
-    padding: 6px;
+    padding: 8px;
     min-height: 64px;
     border-radius: 14px;
     box-shadow: var(--shadow-soft);

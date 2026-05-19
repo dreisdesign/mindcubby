@@ -1,11 +1,22 @@
 ## [2.2.20] - 2026-05-19
 
 ### Fixed
-- **Multipart Model Picker UI**: tightened the multi-select toggle and cleaned up the floating Models card header
-  - Reduced the switch width so the knob travels about 48px between On and Off states
-  - Kept the ON/OFF label centered inside the white knob with the state-specific colors from the screenshot
-  - Restored padding on the top bulk row so the main checkbox/count line up with the model rows below
-  - Replaced the floating card's down-arrow affordance with the standard X close button
+- **UI Spacing & Padding Cleanup**: Standardized padding and margins across Background and Surface sections for consistent visual hierarchy
+  - Reduced build-plate-controls padding from 10px to 8px and gap from 10px to 8px
+  - Aligned Model Sync preset padding with Background controls (8px)
+  - Fixed extra vertical space below dividers in Surface Finish section
+- **Model Sync Dropdown Opening**: Fixed preset thumbnail click handler to properly open the Model Sync dropdown when clicking a Model Sync thumbnail
+- **Model Sync Thumbnail Borders**: Removed borders from Model Sync thumbnails by default; borders now only appear when selected (matching Model Color selector behavior)
+- **Right Panel Scrollbar Gutter**: Fixed persistent right-margin gutter in Effects panel by changing `scrollbar-gutter` from `stable both-edges` to `auto`
+
+### Changed
+- **App Settings Redesign**: Converted App Settings from a persistent dock card to a floating modal panel (similar to Help panel)
+  - Settings button now displays as a floating icon button next to Help on desktop layouts
+  - On mobile/tablet (≤899px width), the persistent dock is shown instead of the floating button to save UI real estate
+  - Floating panel positions dynamically near the settings icon with viewport clamping
+  - Dialog closes by clicking the X button or clicking outside the panel
+- **Model Sync Selection Architecture**: Model Sync preset rows now use zero-height hosts with floating menu positioning
+  - Selecting Model Sync thumbnails now anchors the dropdown to the clicked preset for better spatial context
 
 ---
 
