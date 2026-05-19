@@ -978,7 +978,7 @@ html.loaded .canvas-mini-export-card {
 .canvas-utility-btn:hover {
     border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
     color: var(--palette-blueberry-500);
-    background: color-mix(in srgb, var(--palette-blueberry-100) 58%, #fff);
+    background: rgba(255, 255, 255, 0.9);
 }
 
 .canvas-utility-btn:active {
@@ -1880,7 +1880,6 @@ html.loaded .controls-bar.hidden {
     font-size: 16px;
     font-weight: 800;
     letter-spacing: 0.04em;
-    text-transform: uppercase;
     color: var(--color-on-surface, #2e2b74);
 }
 
@@ -4974,7 +4973,7 @@ html.loaded .menu-btn {
 }
 
 .settings-close-btn:hover {
-    background: var(--palette-blueberry-100);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
 }
 
 .settings-close-btn:focus-visible {
@@ -5063,7 +5062,7 @@ html.theme-dark .settings-action-btn:hover {
 }
 
 html.theme-dark .settings-close-btn:hover {
-    background: rgba(179, 168, 247, 0.1);
+    background: color-mix(in srgb, var(--palette-blueberry-400) 12%, transparent);
 }
 
 /* ── Color picker cards ── */
@@ -6538,19 +6537,19 @@ html.none-mode .rotation-group {
 
 @keyframes rot-tilt {
     0% {
-        transform: translateY(0);
+        transform: rotateX(0deg);
     }
 
     25% {
-        transform: translateY(-6px);
+        transform: rotateX(-12deg);
     }
 
     75% {
-        transform: translateY(6px);
+        transform: rotateX(12deg);
     }
 
     100% {
-        transform: translateY(0);
+        transform: rotateX(0deg);
     }
 }
 
@@ -6583,23 +6582,23 @@ html.spin-ccw .rotation-option:has(input[value="spin"]:checked):hover .rotation-
 
 @keyframes rot-wobble {
     0% {
-        transform: rotate(0deg) scale(1);
+        transform: rotateX(0deg) rotateY(0deg);
     }
 
     25% {
-        transform: rotate(90deg) scale(1.1);
+        transform: rotateX(-8deg) rotateY(90deg);
     }
 
     50% {
-        transform: rotate(180deg) scale(1);
+        transform: rotateX(0deg) rotateY(180deg);
     }
 
     75% {
-        transform: rotate(270deg) scale(1.1);
+        transform: rotateX(8deg) rotateY(270deg);
     }
 
     100% {
-        transform: rotate(360deg) scale(1);
+        transform: rotateX(0deg) rotateY(360deg);
     }
 }
 
