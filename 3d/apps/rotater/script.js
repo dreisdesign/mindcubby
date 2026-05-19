@@ -9931,7 +9931,7 @@ async function clearBuildPlateModels() {
 
 document.getElementById('btnClearModel')?.addEventListener('click', handleClearModelRequest);
 document.getElementById('btnClearModelQuick')?.addEventListener('click', handleClearModelRequest);
-btnClearBuildPlateEl?.addEventListener('click', async () => {
+const clearBuildPlateHandler = async () => {
     if (!mesh) {
         setStatus('Build plate is already empty.');
         setTimeout(() => setStatus(''), 1800);
@@ -9939,7 +9939,9 @@ btnClearBuildPlateEl?.addEventListener('click', async () => {
     }
     if (!confirm('Clear build plate?\n\nThis removes all loaded STL models and keeps your settings.')) return;
     await clearBuildPlateModels();
-});
+};
+btnClearBuildPlateEl?.addEventListener('click', clearBuildPlateHandler);
+document.getElementById('btnClearBuildPlate-modal')?.addEventListener('click', clearBuildPlateHandler);
 
 async function loadBenchyModel({ clearStoredModel = true } = {}) {
     try {
@@ -9959,6 +9961,12 @@ async function loadBenchyModel({ clearStoredModel = true } = {}) {
 }
 
 document.getElementById('btnLoadBenchy')?.addEventListener('click', async () => {
+    if (currentFileName !== '3dbenchy') {
+        if (!confirm('Load 3D Benchy test model?')) return;
+    }
+    await loadBenchyModel();
+});
+document.getElementById('btnLoadBenchy-modal')?.addEventListener('click', async () => {
     if (currentFileName !== '3dbenchy') {
         if (!confirm('Load 3D Benchy test model?')) return;
     }
@@ -10533,17 +10541,21 @@ uploadChoiceOverlayEl?.addEventListener('drop', (e) => {
 });
 
 if (resetWarningsToggleEl) {
-    resetWarningsToggleEl.addEventListener('click', (e) => {
+    const resetWarningsHandler = (e) => {
         e.preventDefault();
         resetAllWarnings();
-    });
+    };
+    resetWarningsToggleEl.addEventListener('click', resetWarningsHandler);
+    document.getElementById('resetWarningsToggle-modal')?.addEventListener('click', resetWarningsHandler);
 }
 
 if (btnResetEverythingEl) {
-    btnResetEverythingEl.addEventListener('click', async (e) => {
+    const handler = async (e) => {
         e.preventDefault();
         await resetSettingsOnly();
-    });
+    };
+    btnResetEverythingEl.addEventListener('click', handler);
+    document.getElementById('btnResetEverything-modal')?.addEventListener('click', handler);
 }
 
 // ── Sidebar collapse toggle ──────────────────────────────────────────────────────
