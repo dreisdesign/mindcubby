@@ -960,6 +960,10 @@ html.loaded .canvas-mini-export-card {
     fill: currentColor;
 }
 
+#btnAppSettingsCanvas {
+    display: inline-flex;
+}
+
 .canvas-utility-btn svg {
     fill: currentColor;
     color: inherit;
@@ -3022,10 +3026,6 @@ html.loaded footer {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-#btnAppSettingsCanvas {
-    display: none !important;
 }
 
 /* ── Canvas bottom-right overlay group ── */
@@ -6881,6 +6881,11 @@ html.loaded .sidebar-tabs {
     background: transparent;
     z-index: 999;
     pointer-events: none;
+    display: block;
+}
+
+.app-settings-overlay[hidden] {
+    display: none !important;
 }
 
 .app-settings-overlay:not([hidden]) {
