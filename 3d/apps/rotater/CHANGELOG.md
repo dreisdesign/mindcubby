@@ -1,3 +1,15 @@
+## [2.2.22] - 2026-05-19
+
+### Fixed
+- **Model picker and upload flow regressions**: fine-tuning slider stepping now preserves centered defaults, multi-select defaults to OFF on open/load, outside-click closes the floating 3D model picker again, hide-model toggle state text matches actual hidden state, and row 3-dot menus now stay above scrolling content.
+- **Dark theme contrast parity**: improved dark contrast for model picker shells/cards, part action menus, inspect/quick action controls, and Share format active tab state.
+- **Upload choice empty spacer**: hidden upload choice step now fully collapses to prevent an empty pre-upload box.
+
+### Changed
+- **Upload action hierarchy swap**: swapped Upload modal action emphasis and placement so `Add to Plate` is secondary and `Create New Plate` is now the primary CTA.
+
+---
+
 ## [2.2.21] - 2026-05-19
 
 ### Fixed

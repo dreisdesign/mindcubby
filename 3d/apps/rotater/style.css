@@ -976,7 +976,7 @@ html.loaded .canvas-mini-export-card {
 }
 
 .canvas-utility-btn:hover {
-    border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
     color: var(--palette-blueberry-500);
     background: #fff;
     box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
@@ -1586,7 +1586,7 @@ html.loaded .controls-bar.hidden {
 .model-bulk-bar {
     margin-bottom: 0;
     padding: 8px;
-    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 70%, white 30%);
+    border: none;
     border-radius: 10px;
     background: color-mix(in srgb, #fff 78%, var(--palette-blueberry-100) 22%);
     display: block;
@@ -2003,7 +2003,7 @@ html.loaded .controls-bar.hidden {
 }
 
 .thumb-select-sync-badge {
-    display: none;
+    display: none !important;
     position: absolute;
     right: 8px;
     bottom: 8px;
@@ -2271,6 +2271,12 @@ html.loaded .controls-bar.hidden {
 .thumb-select-option:hover {
     border-color: color-mix(in srgb, var(--palette-blueberry-300) 85%, white 15%);
     background: color-mix(in srgb, white 30%, var(--palette-blueberry-100) 70%);
+}
+
+.thumb-select-option.is-bg-sync-source {
+    border: 2px solid var(--palette-blueberry-500);
+    background: color-mix(in srgb, #fff 62%, var(--palette-blueberry-100) 38%);
+    box-shadow: none;
 }
 
 .thumb-select-option.is-dragging {
@@ -2557,7 +2563,7 @@ html.loaded .controls-bar.hidden {
 
 .part-option-actions {
     position: fixed;
-    z-index: 120;
+    z-index: 220;
     width: 186px;
     max-width: calc(100vw - 20px);
     background: var(--color-surface-raised);
@@ -2572,13 +2578,9 @@ html.loaded .controls-bar.hidden {
 }
 
 .thumb-select-option .part-option-actions {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    left: auto;
-    bottom: auto;
-    width: min(190px, calc(100% - 16px));
-    max-width: none;
+    position: fixed;
+    width: 186px;
+    max-width: calc(100vw - 20px);
 }
 
 .part-option-actions[hidden] {
@@ -2703,12 +2705,12 @@ html.theme-dark .thumb-select-summary-check {
 
 html.theme-dark .thumb-select-btn,
 html.theme-dark .thumb-select-menu {
-    background: rgba(30, 25, 62, 0.18);
-    border-color: rgba(179, 168, 247, 0.3);
+    background: rgba(30, 25, 62, 0.42);
+    border-color: rgba(179, 168, 247, 0.42);
 }
 
 html.theme-dark .model-bulk-bar {
-    border-color: rgba(179, 168, 247, 0.44);
+    border-color: transparent;
     background: rgba(34, 30, 70, 0.52);
 }
 
@@ -2774,6 +2776,12 @@ html.theme-dark #modelPartSelectorMenu.model-selector-view--grid .thumb-select-o
     background: rgba(34, 30, 70, 0.52);
 }
 
+html.theme-dark #modelPartSelectorMenu.model-selector-view--card .thumb-select-option,
+html.theme-dark #modelPartSelectorMenu.model-selector-view--list .thumb-select-option {
+    border-color: rgba(179, 168, 247, 0.4);
+    background: rgba(34, 30, 70, 0.52);
+}
+
 html.theme-dark #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option.is-selected {
     border: 2px solid rgba(232, 227, 255, 0.92);
     background: rgba(74, 64, 140, 0.5);
@@ -2792,6 +2800,32 @@ html.theme-dark .thumb-select-option-canvas {
     background: transparent;
 }
 
+html.theme-dark .thumb-select-option.is-bg-sync-source {
+    border: 2px solid rgba(232, 227, 255, 0.92);
+    background: rgba(74, 64, 140, 0.5);
+    box-shadow: none;
+}
+
+html.theme-dark #btnInspectMode.is-active,
+html.theme-dark .canvas-overlay-br .cam-nav-action-btn.is-active {
+    background: rgba(242, 240, 255, 0.95);
+    border-color: rgba(179, 168, 247, 0.6);
+    color: var(--palette-blueberry-900);
+}
+
+html.theme-dark .canvas-overlay-br .cam-nav-action-btn {
+    background: rgba(34, 30, 70, 0.88);
+    color: var(--palette-blueberry-100);
+    border-color: rgba(179, 168, 247, 0.36);
+    box-shadow: 0 10px 24px rgba(8, 6, 20, 0.38);
+}
+
+html.theme-dark .canvas-overlay-br .cam-nav-action-btn:hover {
+    background: rgba(56, 48, 104, 0.96);
+    color: #fff;
+    border-color: rgba(179, 168, 247, 0.48);
+}
+
 html.theme-dark .part-visibility-toggle {
     background: rgba(30, 25, 62, 0.38);
     border-color: rgba(179, 168, 247, 0.46);
@@ -2807,6 +2841,20 @@ html.theme-dark .part-visibility-toggle.is-hidden {
     color: #ffd990;
     border-color: rgba(255, 203, 122, 0.72);
     background: rgba(108, 76, 20, 0.68);
+}
+
+html.theme-dark .part-option-actions {
+    background: rgba(28, 24, 58, 0.98);
+    border-color: rgba(179, 168, 247, 0.42);
+    box-shadow: 0 18px 36px rgba(8, 6, 20, 0.42);
+}
+
+html.theme-dark .part-option-action {
+    color: var(--palette-blueberry-100);
+}
+
+html.theme-dark .part-option-action:hover {
+    background: rgba(84, 72, 156, 0.38);
 }
 
 html.theme-dark .model-single-menu-btn {
@@ -4614,7 +4662,7 @@ html.loaded .menu-btn {
 .info-icon-btn.canvas-utility-btn:hover {
     color: var(--palette-blueberry-500);
     background: #fff;
-    border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
     box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
 }
 
@@ -4990,7 +5038,7 @@ html.loaded .menu-btn {
 
 .settings-close-btn:hover {
     background: color-mix(in srgb, var(--color-primary) 6%, transparent);
-    border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
     box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
 }
 
@@ -5015,7 +5063,7 @@ html.loaded .menu-btn {
 }
 
 .canvas-overlay-br .cam-nav-action-btn:hover {
-    border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
     color: var(--palette-blueberry-500);
     background: #fff;
 }
@@ -5085,7 +5133,7 @@ html.theme-dark .settings-action-btn:hover {
 
 html.theme-dark .settings-close-btn:hover {
     background: color-mix(in srgb, var(--palette-blueberry-400) 12%, transparent);
-    border-color: color-mix(in srgb, var(--palette-blueberry-300) 45%, transparent);
+    border-color: rgba(179, 168, 247, 0.48);
 }
 
 /* ── Color picker cards ── */
@@ -6373,6 +6421,7 @@ html.crop-mode .crop-corner {
 
 .copy-link-btn:hover {
     background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
 }
 
 .copy-link-btn:active {
@@ -6391,6 +6440,7 @@ html.crop-mode .crop-corner {
 
 .copy-link-btn--secondary:hover {
     background: color-mix(in srgb, var(--color-label, #666) 6%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
 }
 
 .copy-link-btn--danger {
@@ -6400,8 +6450,8 @@ html.crop-mode .crop-corner {
 }
 
 .copy-link-btn--danger:hover {
-    background: color-mix(in srgb, var(--palette-red-500) 88%, #000 12%);
-    border-color: color-mix(in srgb, var(--palette-red-500) 70%, #000 30%);
+    background: color-mix(in srgb, var(--palette-red-500) 92%, #000 8%);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
 }
 
 .copy-link-btn--danger:focus-visible {
@@ -6416,8 +6466,8 @@ html.crop-mode .crop-corner {
 }
 
 #btnResetEverything:hover {
-    background: color-mix(in srgb, var(--palette-red-500) 88%, #000 12%);
-    border-color: color-mix(in srgb, var(--palette-red-500) 70%, #000 30%);
+    background: color-mix(in srgb, var(--palette-red-500) 92%, #000 8%);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
 }
 
 #btnResetEverything:focus-visible {
@@ -6436,7 +6486,7 @@ html.crop-mode .crop-corner {
 
 .copy-link-btn--export:hover {
     background: var(--color-export-hover);
-    border-color: color-mix(in srgb, var(--color-export-hover) 70%, #fff 30%);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
 }
 
 html.none-mode .range-label {
@@ -6942,20 +6992,6 @@ html.loaded .sidebar-tabs {
     gap: 10px;
 }
 
-.app-settings-info-btn {
-    width: 36px;
-    height: 36px;
-    flex: 0 0 36px;
-    border-radius: 10px;
-    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 70%, transparent);
-    background: color-mix(in srgb, var(--palette-blueberry-100) 84%, #fff 16%);
-    color: var(--palette-blueberry-500);
-}
-
-.app-settings-info-btn:hover {
-    background: color-mix(in srgb, var(--palette-blueberry-100) 70%, #fff 30%);
-}
-
 .sidebar-brand-row {
     display: none;
 }
@@ -7195,6 +7231,10 @@ html.loaded .sidebar-tabs {
 .upload-choice-step {
     display: grid;
     gap: 8px;
+}
+
+.upload-choice-step[hidden] {
+    display: none !important;
 }
 
 .upload-choice-step-label {
@@ -7788,6 +7828,12 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
         display: none;
     }
 
+    html.loaded.layout-v2-desktop .settings-overlay.help-overlay .settings-divider {
+        display: block;
+        background: color-mix(in srgb, var(--palette-blueberry-300) 58%, transparent);
+        margin: 6px 14px;
+    }
+
     html.loaded.layout-v2-desktop #btnOpenExportModal {
         display: inline-flex;
     }
@@ -8215,6 +8261,21 @@ html.loaded.export-workspace-active .canvas-wrap {
     background: #fff;
     color: var(--color-on-surface);
     box-shadow: 0 1px 2px rgba(20, 18, 43, 0.12);
+}
+
+html.theme-dark .export-format-tabs {
+    border-color: rgba(179, 168, 247, 0.36);
+    background: rgba(42, 36, 82, 0.88);
+}
+
+html.theme-dark .export-format-tab {
+    color: rgba(232, 227, 255, 0.74);
+}
+
+html.theme-dark .export-format-tab.is-active {
+    background: rgba(242, 240, 255, 0.96);
+    color: var(--palette-blueberry-900);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
 }
 
 .export-format-tab:focus-visible {
