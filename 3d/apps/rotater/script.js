@@ -10247,19 +10247,6 @@ document.getElementById('btnToggleAppSettings')?.addEventListener('click', () =>
     try { localStorage.setItem('rotater_appSettingsCollapsed', collapsed ? '1' : '0'); } catch (_) { }
 });
 
-document.getElementById('btnAppSettingsCanvas')?.addEventListener('click', () => {
-    const root = document.documentElement;
-    if (root.classList.contains('layout-mobile-accordion')) applyMobileAccordionState('theme');
-    else switchTab('theme');
-
-    if (root.classList.contains('sidepanels-hidden')) {
-        applySidepanelsHiddenState(false, true);
-    }
-
-    applyAppSettingsDockState(false);
-    try { localStorage.setItem('rotater_appSettingsCollapsed', '0'); } catch (_) { }
-});
-
 document.getElementById('btnThemeToggleRail')?.addEventListener('click', () => {
     document.getElementById('btnThemeToggle')?.click();
 });
@@ -10735,11 +10722,12 @@ btnAppSettingsCanvasEl?.addEventListener('click', () => {
     appSettingsOverlayEl.hidden = false;
     positionAppSettingsOverlay();
 });
-document.getElementById('btnAppSettingsClose')?.addEventListener('click', () => {
-    document.getElementById('appSettingsOverlay').hidden = true;
+document.getElementById('btnAppSettingsClose')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (appSettingsOverlayEl) appSettingsOverlayEl.hidden = true;
 });
-document.getElementById('appSettingsOverlay')?.addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) document.getElementById('appSettingsOverlay').hidden = true;
+appSettingsOverlayEl?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget && appSettingsOverlayEl) appSettingsOverlayEl.hidden = true;
 });
 window.addEventListener('resize', () => {
     if (appSettingsOverlayEl && !appSettingsOverlayEl.hidden) positionAppSettingsOverlay();
