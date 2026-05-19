@@ -1,8 +1,12 @@
 ## [2.2.21] - 2026-05-19
 
+### Fixed
+- **Ruler Units selector functionality**: replaced non-functional toggle button with working dropdown select showing "Millimeters (MM)" and "Inches (IN)" options for improved clarity and reliability.
+
 ### Changed
 - **Model section naming parity**: renamed the Model card heading and floating picker heading to `3D Models` for consistent wording in settings UI.
 - **Canvas utility hover parity**: updated the top-right utility button hover treatment (expand, app settings, help) to match the inspect/play interaction family.
+- **Animation preview rotations**: fixed Tilt animation to use horizontal (rotateX) motion and Wobble to combine both rotateX and rotateY for realistic preview behavior.
 - **Roadmap cleanup**: removed items already completed from the active `_IGNORE/ROADMAP.md`, updated dependency references, and refreshed roadmap status metadata.
 
 ---
