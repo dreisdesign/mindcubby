@@ -1,3 +1,25 @@
+## [2.2.20] - 2026-05-19
+
+### Fixed
+- **Multipart Model Picker UI**: tightened the multi-select toggle and cleaned up the floating Models card header
+  - Reduced the switch width so the knob travels about 48px between On and Off states
+  - Kept the ON/OFF label centered inside the white knob with the state-specific colors from the screenshot
+  - Restored padding on the top bulk row so the main checkbox/count line up with the model rows below
+  - Replaced the floating card's down-arrow affordance with the standard X close button
+
+---
+
+## [2.2.19] - 2026-05-19
+
+### Fixed
+- **Multipart Model Picker UI**: Restyled the multi-select toggle to match the reference mockup
+  - The ON/OFF label now sits inside the moving knob instead of floating on the track
+  - Active state uses a dark purple background with a white knob and dark purple ON text
+  - Inactive state uses a gray background with a white knob and gray OFF text
+  - Widened the switch so the knob text stays centered and readable in both states
+
+---
+
 ## [Unreleased]
 ### Added
 - **Share: Copy Image to clipboard** — added a new `Copy Image` action in the Share panel that copies the current still render directly to clipboard as PNG (or JPEG when JPG format is selected).
@@ -31,8 +53,16 @@
 - **Selection visual neutrality in select mode** — model opacity/saturation no longer shifts between parts while using select/multi-select workflows.
 - **Model picker visual cleanup pass (Card/Grid)** — rebuilt card/grid tile spacing for tighter, consistent paddings, refined text rhythm, and cleaner professional alignment while keeping the existing interaction model.
 - **Model picker drag-handle parity with Share** — floating modal header drag affordance now uses centered top placement and rotated indicator treatment matching Share panel behavior.
+- **Model picker multi-select visibility** — row checkboxes now stay hidden until multi-select mode is enabled; the modal keeps its native resize handle and no longer depends on hover for checkbox visibility.
 - **Model picker grid real-estate optimization** — grid now packs compact fixed-size tiles with smoother responsive breakpoints so additional cards fit per row instead of growing tile footprints.
-- **Model picker modal layout polish** — card view now constrains to 400px max-width for cleaner proportions, header stretches full-width without gaps, and grid columns use auto-fit sizing to eliminate awkward overlaps.\n- **Model picker header refinement** — MODELS text is now bold and large (16px), header fills modal width with rounded top corners, X button properly aligned and sized, scrollbar gutter removed to eliminate right-side dead space.\n- **Inspect hover dims only** — Inspect mode now shows only hovered-part dimensions in the ruler HUD; the previous ruler fallback readout is hidden while inspecting or multi-selecting.
+- **Model picker modal layout polish** — card view now constrains to 400px max-width for cleaner proportions, header stretches full-width without gaps, and grid columns use auto-fit sizing to eliminate awkward overlaps.
+- **Model picker header refinement** — MODELS text is now bold and large (16px), header fills modal width with rounded top corners, X button properly aligned and sized, scrollbar gutter removed to eliminate right-side dead space.
+- **Model picker list/grid shell parity** — list and grid now share the same bulk-row and scroll-container structure, and the list toggle label now reads `List` while preserving existing internal view-mode wiring.
+- **Model picker consolidated card view** — removed the list/grid switch and keep one optimized card layout; selected parts now sort to the top and the multi-select control is right-aligned as a proper switch.
+- **Model picker minimize affordance** — the floating model picker now uses a minimize button in the header instead of a dismiss-style close, matching the new modal treatment.
+- **Model picker mockup parity pass** — bulk selection checkbox/count now stay hidden until Multi-select is ON, the Multi-select switch now shows explicit `On`/`Off` text, row 3-dot action menus are vertically centered, and the header minimize icon now uses the provided down-arrow glyph treatment.
+- **Model picker parity follow-up** — enforced CSS gating so bulk checkbox/count cannot appear while Multi-select is OFF, moved `Off` state text to the right side of the switch (with `On` on the left when active), and removed forced stable scrollbar gutter reservation from the picker shell/items.
+- **Inspect hover dims only** — Inspect mode now shows only hovered-part dimensions in the ruler HUD; the previous ruler fallback readout is hidden while inspecting or multi-selecting.
 - **Pause/play disabled while interacting** — Pause and Export pause controls are disabled while `Inspect` or `Multi-Select` modes are active; controls show the tooltip "Not available while inspecting/selecting".
 - **Sidepanel toggle restyle** — replaced the expand/close icon with a circular utility button and corrected expand/close orientation behavior.
 - **Finish spacing** — added spacing above the Matte/Satin/Gloss finish buttons for improved visual separation.
@@ -77,6 +107,8 @@
 - **Model modal close-policy regressions** — floating model modal no longer closes during color/preset interactions; close is now limited to explicit `X` action or keyboard `Esc`.
 - **Model picker default-open legacy fallback** — default-open multipart selector now consistently initializes in floating modal mode (desktop pointer workflows), instead of intermittently rendering as the legacy inline dropdown.
 - **Model picker grid right-gap snapping** — refined responsive column sizing/packing to remove odd right-side dead space at intermediate modal widths.
+- **Model picker grid width containment** — grid tiles now use fixed card widths within a shared scroll container so the grid no longer stretches beyond list/card modal proportions.
+- **Model picker row actions clipping/overlap** — repositioned per-row 3-dot action buttons to keep them fully inside card bounds in both list/card and grid views.
 - **Multipart thumbnail framing stability** — thumbnail capture now hides ruler hover bounding-box overlays during offscreen rendering so preview thumbs keep stable framing/scale and no dashed helper wire leaks into tile images.
 - **Inspect mode visibility decoupled from Grid/Ruler toggle** — live inspect overlay and hovered-part contextual dimensions now render whenever inspect is active, even if the grid/ruler visibility toggle is off.
 - **Background/Build Plate sync thumbnail size stability** — locked sync selector thumbnail canvases to fixed dimensions so preview thumbs no longer shrink when selecting different model parts.

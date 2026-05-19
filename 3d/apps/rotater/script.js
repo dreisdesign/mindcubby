@@ -573,7 +573,7 @@ const BULK_SELECT_ICON_PATHS = {
     all: 'M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2Zm-9 14-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9Z',
 };
 
-const MODEL_SELECTOR_VIEW_MODES = ['card', 'grid'];
+const MODEL_SELECTOR_VIEW_MODES = ['card'];
 
 try {
     const savedViewMode = localStorage.getItem('rotater_modelPartSelectorViewMode');
@@ -1925,7 +1925,13 @@ function ensureModelPartDisplayOrder() {
 
 function getOrderedPartIndices() {
     ensureModelPartDisplayOrder();
-    return modelPartDisplayOrder.slice();
+    const ordered = modelPartDisplayOrder.slice();
+    const selected = new Set(getUiSelectedPartIndices());
+    if (!selected.size) return ordered;
+    return [
+        ...ordered.filter((idx) => selected.has(idx)),
+        ...ordered.filter((idx) => !selected.has(idx)),
+    ];
 }
 
 function movePartInDisplayOrder(fromIdx, toIdx) {
@@ -1968,6 +1974,14 @@ function getPartVisibilityIconSVG(isHidden = false) {
 
 function getChevronDownIconSVG(size = 20) {
     return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"></path></svg>`;
+}
+
+function getKeyboardArrowDownIconSVG(size = 20) {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><path fill="currentColor" d="M16.6992 8C17.0659 8 17.375 8.125 17.625 8.375C17.8748 8.62491 18 8.93334 18 9.2998C18 9.66626 17.8747 9.97469 17.625 10.2246L12.9248 14.9248C12.7916 15.0581 12.6499 15.1545 12.5 15.2129C12.3501 15.2712 12.1831 15.2998 12 15.2998C11.8169 15.2998 11.6499 15.2711 11.5 15.2129C11.35 15.1546 11.2076 15.0581 11.0742 14.9248L6.375 10.2246C6.125 9.97461 6 9.66647 6 9.2998C6.00004 8.93322 6.12504 8.62496 6.375 8.375C6.62496 8.12516 6.93326 8 7.2998 8C7.66634 8.00007 7.97468 8.12507 8.22461 8.375L12 12.1504L15.7744 8.375C16.0243 8.12507 16.3327 8.00007 16.6992 8Z"></path></svg>`;
+}
+
+function getCloseIconSVG(size = 20) {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.3 9.17 12 2.88 5.71 4.29 4.29l6.3 6.29 6.3-6.29z"></path></svg>`;
 }
 
 function hideModelUndoToast() {
@@ -2092,9 +2106,7 @@ function getBulkSelectionSummaryText() {
 }
 
 function applyModelPartSelectorViewMode(mode, rerender = false) {
-    const nextMode = MODEL_SELECTOR_VIEW_MODES.includes(mode) ? mode : 'card';
-    modelPartSelectorViewMode = nextMode;
-    try { localStorage.setItem('rotater_modelPartSelectorViewMode', nextMode); } catch (_) { }
+    modelPartSelectorViewMode = 'card';
     if (rerender) syncModelPartSelectorUI(true);
 }
 
@@ -2132,9 +2144,7 @@ function restoreModelUndoState(snapshot) {
     activeBgPreset = snapshot.activeBgPreset || activeBgPreset;
     bgSyncPartIndex = Math.max(0, Math.min(parseInt(String(snapshot.bgSyncPartIndex ?? 0), 10) || 0, Math.max(0, modelPartNames.length - 1)));
     modelPartSelected = Math.max(0, Math.min(parseInt(String(snapshot.modelPartSelected ?? 0), 10) || 0, Math.max(0, modelPartNames.length - 1)));
-    modelPartSelectorViewMode = MODEL_SELECTOR_VIEW_MODES.includes(snapshot.modelPartSelectorViewMode)
-        ? snapshot.modelPartSelectorViewMode
-        : modelPartSelectorViewMode;
+    modelPartSelectorViewMode = 'card';
     if (Array.isArray(snapshot.modelPartBaseColors)) modelPartBaseColors = [...snapshot.modelPartBaseColors];
     if (Array.isArray(snapshot.modelPartSettings)) modelPartSettings = snapshot.modelPartSettings.map((settings) => ({ ...settings }));
     if (snapshot.customModelSettingsByPart && typeof snapshot.customModelSettingsByPart === 'object') {
@@ -2205,12 +2215,22 @@ function syncModelPartBulkUIState() {
     const selectedCount = getUiSelectedPartIndices().length;
     const partCount = modelPartNames.length;
     if (modelPartSelectorText && isMultipartModel()) renderModelPartSelectorSummary();
+    const multiActive = isModelPartPreviewMultiSelectActive();
+    modelPartSelectorMenu.classList.toggle('is-multi-select-mode', multiActive);
     const toggleAllControl = modelPartSelectorMenu.querySelector('[data-bulk-action="toggle-all"]');
+    const toggleAllWrap = toggleAllControl instanceof Element
+        ? toggleAllControl.closest('.model-bulk-toggle-all')
+        : null;
+    if (toggleAllWrap instanceof HTMLElement) {
+        toggleAllWrap.hidden = !multiActive;
+        toggleAllWrap.setAttribute('aria-hidden', multiActive ? 'false' : 'true');
+    }
     if (toggleAllControl instanceof HTMLInputElement) {
         const allSelected = partCount > 0 && selectedCount >= partCount;
         const partiallySelected = selectedCount > 0 && selectedCount < partCount;
         toggleAllControl.checked = allSelected;
         toggleAllControl.indeterminate = partiallySelected;
+        toggleAllControl.tabIndex = multiActive ? 0 : -1;
         const labelText = allSelected ? 'Clear selection' : 'Select all';
         toggleAllControl.title = labelText;
         toggleAllControl.setAttribute('aria-label', labelText);
@@ -2221,14 +2241,28 @@ function syncModelPartBulkUIState() {
         toggleAllControl.setAttribute('aria-label', toggleAllControl.title);
     }
 
+    const selectionCountLabel = modelPartSelectorMenu.querySelector('[data-bulk-selection-count]');
+    if (selectionCountLabel instanceof HTMLElement) {
+        selectionCountLabel.hidden = !multiActive;
+        selectionCountLabel.setAttribute('aria-hidden', multiActive ? 'false' : 'true');
+        selectionCountLabel.textContent = `${selectedCount}/${partCount} Selected`;
+    }
+
     const multiToggle = modelPartSelectorMenu.querySelector('[data-bulk-action="toggle-multi"]');
     if (multiToggle) {
-        const isActive = isModelPartPreviewMultiSelectActive();
-        const label = isActive ? 'Multi-select on' : 'Multi-select off';
-        multiToggle.classList.toggle('is-active', isActive);
-        multiToggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        const label = multiActive ? 'Multi-select on' : 'Multi-select off';
+        multiToggle.classList.toggle('is-active', multiActive);
+        multiToggle.setAttribute('aria-pressed', multiActive ? 'true' : 'false');
         multiToggle.title = label;
         multiToggle.setAttribute('aria-label', label);
+        const multiToggleInput = multiToggle.querySelector('input[type="checkbox"]');
+        if (multiToggleInput instanceof HTMLInputElement && multiToggleInput.checked !== multiActive) {
+            multiToggleInput.checked = multiActive;
+        }
+        const switchState = multiToggle.querySelector('[data-bulk-switch-state]');
+        if (switchState instanceof HTMLElement) {
+            switchState.textContent = multiActive ? 'On' : 'Off';
+        }
     }
 }
 
@@ -2237,6 +2271,7 @@ function syncModelPartCheckboxStates() {
     const effectiveSelection = new Set(getUiSelectedPartIndices());
     modelPartSelectorMenu.classList.toggle('has-multi-selection', effectiveSelection.size > 0);
     modelPartSelectorMenu.classList.toggle('has-empty-selection', effectiveSelection.size === 0);
+    modelPartSelectorMenu.classList.toggle('is-multi-select-mode', isModelPartPreviewMultiSelectActive());
     modelPartSelectorMenu.querySelectorAll('.thumb-select-option-check-input[data-part-bulk-select]').forEach((inputEl) => {
         const idx = parseInt(inputEl.dataset.partBulkSelect || '-1', 10);
         inputEl.checked = effectiveSelection.has(idx);
@@ -3197,7 +3232,10 @@ function isModelPartFloatingCardOpen() {
 }
 
 function shouldUseFloatingModelPartSelector() {
-    return isMultipartModel() && !!window.matchMedia && window.matchMedia('(pointer:fine)').matches;
+    return isMultipartModel()
+        && !!window.matchMedia
+        && window.matchMedia('(pointer:fine)').matches
+        && window.innerWidth >= 900;
 }
 
 function closeModelPartSelectorMenu(force = false) {
@@ -3242,6 +3280,13 @@ function closeModelPartActionMenus() {
 
 function positionModelPartActionMenu(menuEl, anchorEl) {
     if (!menuEl || !anchorEl) return;
+
+    if (anchorEl.closest?.('.thumb-select-option')) {
+        menuEl.style.left = '';
+        menuEl.style.top = '';
+        menuEl.style.width = '';
+        return;
+    }
 
     const anchorRect = anchorEl.getBoundingClientRect();
     const sideGap = 10;
@@ -3302,8 +3347,8 @@ function ensureModelPartFloatingHeader() {
     if (headerEl) return headerEl;
     headerEl = document.createElement('div');
     headerEl.className = 'model-selector-floating-header';
-    headerEl.innerHTML = `<span class="model-selector-floating-drag-indicator" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.05078 16C9.63381 16.0001 10.1212 16.1955 10.5127 16.5869C10.9044 16.9786 11.1006 17.4665 11.1006 18.0498C11.1006 18.5998 10.9044 19.079 10.5127 19.4873C10.1211 19.8955 9.63392 20.0995 9.05078 20.0996C8.46745 20.0996 7.97956 19.8956 7.58789 19.4873C7.19626 19.079 7 18.5998 7 18.0498C7 17.4665 7.19623 16.9786 7.58789 16.5869C7.97953 16.1953 8.46752 16 9.05078 16Z"/><path d="M15.251 16C15.834 16.0001 16.3214 16.1955 16.7129 16.5869C17.1046 16.9786 17.3008 17.4665 17.3008 18.0498C17.3008 18.5998 17.1046 19.079 16.7129 19.4873C16.3213 19.8955 15.8341 20.0995 15.251 20.0996C14.6677 20.0996 14.1797 19.8956 13.7881 19.4873C13.3964 19.079 13.2002 18.5998 13.2002 18.0498C13.2002 17.4665 13.3964 16.9786 13.7881 16.5869C14.1797 16.1954 14.6678 16 15.251 16Z"/><path d="M9.05078 10C9.63381 10.0001 10.1212 10.1955 10.5127 10.5869C10.9044 10.9786 11.1006 11.4665 11.1006 12.0498C11.1006 12.6331 10.9044 13.121 10.5127 13.5127C10.1212 13.9041 9.63382 14.0995 9.05078 14.0996C8.46752 14.0996 7.97953 13.9043 7.58789 13.5127C7.19622 13.121 7 12.6331 7 12.0498C7 11.4665 7.19623 10.9786 7.58789 10.5869C7.97953 10.1953 8.46752 10 9.05078 10Z"/><path d="M15.251 10C15.834 10.0001 16.3214 10.1955 16.7129 10.5869C17.1046 10.9786 17.3008 11.4665 17.3008 12.0498C17.3008 12.6331 17.1046 13.121 16.7129 13.5127C16.3214 13.9041 15.834 14.0995 15.251 14.0996C14.6678 14.0996 14.1797 13.9042 13.7881 13.5127C13.3964 13.121 13.2002 12.6331 13.2002 12.0498C13.2002 11.4665 13.3964 10.9786 13.7881 10.5869C14.1797 10.1954 14.6678 10 15.251 10Z"/><path d="M9.05078 4C9.63381 4.00007 10.1212 4.19554 10.5127 4.58691C10.9044 4.97858 11.1006 5.46648 11.1006 6.0498C11.1006 6.63314 10.9044 7.12103 10.5127 7.5127C10.1212 7.90407 9.63382 8.09954 9.05078 8.09961C8.46752 8.09961 7.97953 7.90427 7.58789 7.5127C7.19622 7.12103 7 6.63314 7 6.0498C7 5.46648 7.19623 4.97858 7.58789 4.58691C7.97953 4.19535 8.46752 4 9.05078 4Z"/><path d="M15.251 4C15.834 4.00011 16.3214 4.19552 16.7129 4.58691C17.1046 4.97858 17.3008 5.46648 17.3008 6.0498C17.3008 6.63314 17.1046 7.12103 16.7129 7.5127C16.3214 7.90409 15.834 8.0995 15.251 8.09961C14.6678 8.09961 14.1797 7.9042 13.7881 7.5127C13.3964 7.12103 13.2002 6.63314 13.2002 6.0498C13.2002 5.46648 13.3964 4.97858 13.7881 4.58691C14.1797 4.19541 14.6678 4 15.251 4Z"/></svg></span><span class="model-selector-floating-title">Models</span><button type="button" class="model-selector-floating-close" aria-label="Close model picker" title="Close model picker"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71 12 12l6.3 6.29-1.42 1.42L10.59 13.4l-6.3 6.31-1.42-1.42L9.17 12l-6.3-6.29 1.42-1.42 6.3 6.31 6.29-6.31z"/></svg></button>`;
-    headerEl.querySelector('.model-selector-floating-close')?.addEventListener('click', (ev) => {
+    headerEl.innerHTML = `<span class="model-selector-floating-drag-indicator" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.05078 16C9.63381 16.0001 10.1212 16.1955 10.5127 16.5869C10.9044 16.9786 11.1006 17.4665 11.1006 18.0498C11.1006 18.5998 10.9044 19.079 10.5127 19.4873C10.1211 19.8955 9.63392 20.0995 9.05078 20.0996C8.46745 20.0996 7.97956 19.8956 7.58789 19.4873C7.19626 19.079 7 18.5998 7 18.0498C7 17.4665 7.19623 16.9786 7.58789 16.5869C7.97953 16.1953 8.46752 16 9.05078 16Z"/><path d="M15.251 16C15.834 16.0001 16.3214 16.1955 16.7129 16.5869C17.1046 16.9786 17.3008 17.4665 17.3008 18.0498C17.3008 18.5998 17.1046 19.079 16.7129 19.4873C16.3213 19.8955 15.8341 20.0995 15.251 20.0996C14.6677 20.0996 14.1797 19.8956 13.7881 19.4873C13.3964 19.079 13.2002 18.5998 13.2002 18.0498C13.2002 17.4665 13.3964 16.9786 13.7881 16.5869C14.1797 16.1954 14.6678 16 15.251 16Z"/><path d="M9.05078 10C9.63381 10.0001 10.1212 10.1955 10.5127 10.5869C10.9044 10.9786 11.1006 11.4665 11.1006 12.0498C11.1006 12.6331 10.9044 13.121 10.5127 13.5127C10.1212 13.9041 9.63382 14.0995 9.05078 14.0996C8.46752 14.0996 7.97953 13.9043 7.58789 13.5127C7.19622 13.121 7 12.6331 7 12.0498C7 11.4665 7.19623 10.9786 7.58789 10.5869C7.97953 10.1953 8.46752 10 9.05078 10Z"/><path d="M15.251 10C15.834 10.0001 16.3214 10.1955 16.7129 10.5869C17.1046 10.9786 17.3008 11.4665 17.3008 12.0498C17.3008 12.6331 17.1046 13.121 16.7129 13.5127C16.3214 13.9041 15.834 14.0995 15.251 14.0996C14.6678 14.0996 14.1797 13.9042 13.7881 13.5127C13.3964 13.121 13.2002 12.6331 13.2002 12.0498C13.2002 11.4665 13.3964 10.9786 13.7881 10.5869C14.1797 10.1954 14.6678 10 15.251 10Z"/><path d="M9.05078 4C9.63381 4.00007 10.1212 4.19554 10.5127 4.58691C10.9044 4.97858 11.1006 5.46648 11.1006 6.0498C11.1006 6.63314 10.9044 7.12103 10.5127 7.5127C10.1212 7.90407 9.63382 8.09954 9.05078 8.09961C8.46752 8.09961 7.97953 7.90427 7.58789 7.5127C7.19626 7.12103 7 6.63314 7 6.0498C7 5.46648 7.19623 4.97858 7.58789 4.58691C7.97953 4.19535 8.46752 4 9.05078 4Z"/><path d="M15.251 4C15.834 4.00011 16.3214 4.19552 16.7129 4.58691C17.1046 4.97858 17.3008 5.46648 17.3008 6.0498C17.3008 6.63314 17.1046 7.12103 16.7129 7.5127C16.3214 7.90409 15.834 8.0995 15.251 8.09961C14.6678 8.09961 14.1797 7.9042 13.7881 7.5127C13.3964 7.12103 13.2002 6.63314 13.2002 6.0498C13.2002 5.46648 13.3964 4.97858 13.7881 4.58691C14.1797 4.19541 14.6678 4 15.251 4Z"/></svg></span><span class="model-selector-floating-title">Models</span><button type="button" class="model-selector-floating-minimize" aria-label="Close model picker" title="Close model picker">${getCloseIconSVG(18)}</button>`;
+    headerEl.querySelector('.model-selector-floating-minimize')?.addEventListener('click', (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
         closeModelPartSelectorMenu(true);
@@ -3493,7 +3538,7 @@ buildPlateModelSyncSelectorBtn?.addEventListener('click', (ev) => {
 });
 
 [modelPartSelectorMenu, bgModelSyncSelectorMenu, buildPlateModelSyncSelectorMenu].forEach((menuEl) => {
-    trapMenuWheelScroll(menuEl);
+    trapMenuWheelScroll(menuEl?.querySelector?.('.model-selector-items') || menuEl);
 });
 
 window.addEventListener('resize', () => {
@@ -3907,7 +3952,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
         const bulkBar = document.createElement('div');
         bulkBar.className = 'model-bulk-bar';
         const multiActive = isModelPartPreviewMultiSelectActive();
-        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><label class="model-bulk-toggle-all" title="${allSelected ? 'Clear selection' : 'Select all'}" aria-label="${allSelected ? 'Clear selection' : 'Select all'}"><input type="checkbox" class="thumb-select-option-check-input" data-bulk-action="toggle-all"></label><button type="button" class="model-bulk-icon-btn${multiActive ? ' is-active' : ''}" data-bulk-action="toggle-multi" aria-pressed="${multiActive ? 'true' : 'false'}" title="${multiActive ? 'Multi-select on' : 'Multi-select off'}" aria-label="${multiActive ? 'Multi-select on' : 'Multi-select off'}"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.44629 2.64061C6.98011 2.38929 7.47813 2.44248 7.93945 2.79979L18.3447 10.9639C18.8764 11.375 19.0317 11.9013 18.8115 12.541C18.5912 13.1804 18.1426 13.4999 17.4658 13.5H13.6758L16.5098 19.5859C16.7343 20.0642 16.7594 20.5458 16.585 21.0303C16.4103 21.5147 16.0831 21.8672 15.6045 22.0879C15.1221 22.3125 14.6407 22.3376 14.1602 22.1631C13.6795 21.9886 13.3261 21.6622 13.1016 21.1836L10.249 15.0908L8.20703 17.9512C7.7999 18.5202 7.27113 18.6983 6.62109 18.4863C5.97111 18.2743 5.64648 17.8217 5.64648 17.1279V3.90233C5.64655 3.31272 5.91272 2.89193 6.44629 2.64061Z"/></svg></button><div class="model-bulk-view" role="group" aria-label="Model selector view"><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'card' ? ' is-active' : ''}" data-model-view="card">Card</button><button type="button" class="model-bulk-view-btn${modelPartSelectorViewMode === 'grid' ? ' is-active' : ''}" data-model-view="grid">Grid</button></div></div>`;
+        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><div class="model-bulk-selection"><label class="model-bulk-toggle-all" title="${allSelected ? 'Clear selection' : 'Select all'}" aria-label="${allSelected ? 'Clear selection' : 'Select all'}"${multiActive ? '' : ' hidden aria-hidden="true"'}><input type="checkbox" class="thumb-select-option-check-input" data-bulk-action="toggle-all"${multiActive ? '' : ' tabindex="-1"'}></label><span class="model-bulk-selection-count" data-bulk-selection-count${multiActive ? '' : ' hidden aria-hidden="true"'}>${selectedCount}/${partCount} Selected</span></div><button type="button" class="model-bulk-switch model-bulk-switch--multi${multiActive ? ' is-active' : ''}" data-bulk-action="toggle-multi" aria-pressed="${multiActive ? 'true' : 'false'}" title="${multiActive ? 'Multi-select on' : 'Multi-select off'}" aria-label="${multiActive ? 'Multi-select on' : 'Multi-select off'}"><span class="model-bulk-switch-label">Multi-select</span><span class="model-bulk-switch-track" aria-hidden="true"><span class="model-bulk-switch-thumb"><span class="model-bulk-switch-state" data-bulk-switch-state>${multiActive ? 'On' : 'Off'}</span></span></span></button></div>`;
         bulkBar.addEventListener('click', (ev) => ev.stopPropagation());
         bulkBar.querySelector('[data-bulk-action="toggle-all"]')?.addEventListener('change', (ev) => {
             ev.stopPropagation();
@@ -3931,13 +3976,12 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             syncModelPartBulkUIState();
             queueModelPartThumbsRender();
         });
-        bulkBar.querySelectorAll('[data-model-view]').forEach((btn) => btn.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            applyModelPartSelectorViewMode(btn.dataset.modelView, true);
-        }));
         modelPartSelectorMenu.appendChild(bulkBar);
+        const modelSelectorItems = document.createElement('div');
+        modelSelectorItems.className = 'model-selector-items';
+        modelPartSelectorMenu.appendChild(modelSelectorItems);
         modelPartSelectorMenu.classList.remove('model-selector-view--card', 'model-selector-view--list', 'model-selector-view--grid');
-        modelPartSelectorMenu.classList.add(`model-selector-view--${modelPartSelectorViewMode}`);
+        modelPartSelectorMenu.classList.add('model-selector-view--card');
 
         getOrderedPartIndices().forEach((idx) => {
             const name = modelPartNames[idx];
@@ -4116,7 +4160,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 });
             });
 
-            modelPartSelectorMenu.appendChild(opt);
+            modelSelectorItems.appendChild(opt);
         });
     } else if (modelPartSingleActions) {
         const syncOn = activeBgPreset === 'modelcolor';
