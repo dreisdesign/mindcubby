@@ -1,3 +1,12 @@
+## [2.2.21] - 2026-05-19
+
+### Changed
+- **Model section naming parity**: renamed the Model card heading and floating picker heading to `3D Models` for consistent wording in settings UI.
+- **Canvas utility hover parity**: updated the top-right utility button hover treatment (expand, app settings, help) to match the inspect/play interaction family.
+- **Roadmap cleanup**: removed items already completed from the active `_IGNORE/ROADMAP.md`, updated dependency references, and refreshed roadmap status metadata.
+
+---
+
 ## [2.2.20] - 2026-05-19
 
 ### Fixed

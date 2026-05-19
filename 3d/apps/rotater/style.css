@@ -966,6 +966,8 @@ html.loaded .canvas-mini-export-card {
 
 #btnAppSettingsCanvas {
     display: inline-flex;
+    position: relative;
+    z-index: 1001;
 }
 
 .canvas-utility-btn svg {
@@ -976,7 +978,7 @@ html.loaded .canvas-mini-export-card {
 .canvas-utility-btn:hover {
     border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
     color: var(--palette-blueberry-500);
-    background: #fff;
+    background: color-mix(in srgb, var(--palette-blueberry-100) 58%, #fff);
 }
 
 .canvas-utility-btn:active {
@@ -6890,10 +6892,6 @@ html.loaded .sidebar-tabs {
 
 .app-settings-overlay[hidden] {
     display: none !important;
-}
-
-.app-settings-overlay:not([hidden]) {
-    pointer-events: auto;
 }
 
 .app-settings-panel {
