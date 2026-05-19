@@ -398,8 +398,12 @@ html.loaded .sidebar {
         display: none !important;
     }
 
-    #appSettingsOverlay {
+    #appSettingsOverlay:not([hidden]) {
         display: block !important;
+    }
+
+    #appSettingsOverlay[hidden] {
+        display: none !important;
     }
 
     html.loaded.sidebar-collapsed .sidebar,
