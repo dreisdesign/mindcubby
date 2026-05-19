@@ -432,6 +432,7 @@ const buildPlateSizePresetModalEl = document.getElementById('buildPlateSizePrese
 const buildPlateCustomSizeRowModalEl = document.getElementById('buildPlateCustomSizeRow-modal');
 const buildPlateCustomWidthModalEl = document.getElementById('buildPlateCustomWidth-modal');
 const buildPlateCustomDepthModalEl = document.getElementById('buildPlateCustomDepth-modal');
+const rulerUnitSelectModalEl = document.getElementById('rulerUnitSelect-modal');
 const fineTuningCheckModalEl = document.getElementById('fineTuningCheck-modal');
 const btnThemeToggleRailModalEl = document.getElementById('btnThemeToggleRail-modal');
 const btnPause = document.getElementById('btnPause');
@@ -483,6 +484,8 @@ const textureTuneMetalnessRow = document.getElementById('textureTuneMetalnessRow
 const finishControlGroupEl = document.getElementById('finishControlGroup');
 const themeToggleRailLabel = document.getElementById('themeToggleRailLabel');
 const themeToggleRailIconPath = document.getElementById('themeToggleRailIconPath');
+const themeToggleRailLabelModal = document.getElementById('themeToggleRailLabel-modal');
+const themeToggleRailIconPathModal = document.getElementById('themeToggleRailIconPath-modal');
 const btnResetModelCard = document.getElementById('btnResetModelCard');
 const btnResetBackgroundCard = document.getElementById('btnResetBackgroundCard');
 const btnResetBuildPlateCard = document.getElementById('btnResetBuildPlateCard');
@@ -5746,6 +5749,7 @@ function updateRulerHUD() {
     hud.classList.toggle('is-dims-hidden', !dims || !rulerEnabled);
     const rulerUnitSelect = document.getElementById('rulerUnitSelect');
     if (rulerUnitSelect) rulerUnitSelect.value = rulerUnit;
+    if (rulerUnitSelectModalEl) rulerUnitSelectModalEl.value = rulerUnit;
     document.getElementById('rulerL').textContent = dims ? formatRulerValue(dims.d) : '—';
     document.getElementById('rulerW').textContent = dims ? formatRulerValue(dims.w) : '—';
     document.getElementById('rulerH').textContent = dims ? formatRulerValue(dims.h) : '—';
@@ -10082,8 +10086,10 @@ function applyTheme(theme) {
     const path = document.getElementById('themeToggleIconPath');
     if (label) label.textContent = isDark ? 'Light mode' : 'Dark mode';
     if (themeToggleRailLabel) themeToggleRailLabel.textContent = isDark ? 'Light mode' : 'Dark mode';
+    if (themeToggleRailLabelModal) themeToggleRailLabelModal.textContent = isDark ? 'Light mode' : 'Dark mode';
     if (path) path.setAttribute('d', iconPathD);
     if (themeToggleRailIconPath) themeToggleRailIconPath.setAttribute('d', iconPathD);
+    if (themeToggleRailIconPathModal) themeToggleRailIconPathModal.setAttribute('d', iconPathD);
 }
 
 // Sync label/icon to whatever theme was applied on load
@@ -12769,15 +12775,22 @@ if (buildPlateShapeWrapEl) {
 }
 
 const rulerUnitSelectEl = document.getElementById('rulerUnitSelect');
+const _updateRulerUnitFromSelect = (sourceEl) => {
+    rulerUnit = sourceEl?.value === 'imperial' ? 'imperial' : 'metric';
+    if (rulerUnitSelectEl && rulerUnitSelectEl !== sourceEl) rulerUnitSelectEl.value = rulerUnit;
+    if (rulerUnitSelectModalEl && rulerUnitSelectModalEl !== sourceEl) rulerUnitSelectModalEl.value = rulerUnit;
+    updateRulerHUD();
+    updateLiveRulerOverlay();
+    refreshExportPreviewNow();
+    saveSettings();
+};
 if (rulerUnitSelectEl) {
-    const _updateRulerUnitFromSelect = () => {
-        rulerUnit = rulerUnitSelectEl.value === 'imperial' ? 'imperial' : 'metric';
-        updateRulerHUD();
-        updateLiveRulerOverlay();
-        refreshExportPreviewNow();
-        saveSettings();
-    };
-    rulerUnitSelectEl.addEventListener('change', _updateRulerUnitFromSelect);
+    rulerUnitSelectEl.value = rulerUnit;
+    rulerUnitSelectEl.addEventListener('change', () => _updateRulerUnitFromSelect(rulerUnitSelectEl));
+}
+if (rulerUnitSelectModalEl) {
+    rulerUnitSelectModalEl.value = rulerUnit;
+    rulerUnitSelectModalEl.addEventListener('change', () => _updateRulerUnitFromSelect(rulerUnitSelectModalEl));
 }
 
 if (btnInspectMode) {
