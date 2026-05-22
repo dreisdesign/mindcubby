@@ -1970,13 +1970,7 @@ function ensureModelPartDisplayOrder() {
 
 function getOrderedPartIndices() {
     ensureModelPartDisplayOrder();
-    const ordered = modelPartDisplayOrder.slice();
-    const selected = new Set(getUiSelectedPartIndices());
-    if (!selected.size) return ordered;
-    return [
-        ...ordered.filter((idx) => selected.has(idx)),
-        ...ordered.filter((idx) => !selected.has(idx)),
-    ];
+    return modelPartDisplayOrder.slice();
 }
 
 function movePartInDisplayOrder(fromIdx, toIdx) {
@@ -3533,18 +3527,30 @@ initializeModelPartSelectorMenuDrag();
 function trapMenuWheelScroll(menuEl) {
     if (!menuEl || menuEl.dataset.wheelTrapBound === '1') return;
     menuEl.dataset.wheelTrapBound = '1';
-    menuEl.addEventListener('wheel', (ev) => {
-        const deltaY = ev.deltaY || 0;
-        if (!deltaY) return;
-        const maxScroll = Math.max(0, menuEl.scrollHeight - menuEl.clientHeight);
-        if (maxScroll <= 0) {
-            ev.preventDefault();
-            ev.stopPropagation();
-            return;
+
+    const resolveScrollTarget = (startEl) => {
+        let el = startEl;
+        while (el && el !== document.body) {
+            if (el.scrollHeight > el.clientHeight + 1) return el;
+            el = el.parentElement;
         }
-        const prev = menuEl.scrollTop;
+        return null;
+    };
+
+    menuEl.addEventListener('wheel', (ev) => {
+        const deltaY = Number(ev.deltaY) || 0;
+        if (!deltaY) return;
+
+        const rawTarget = ev.target instanceof Element ? ev.target : menuEl;
+        const scrollTarget = resolveScrollTarget(rawTarget) || resolveScrollTarget(menuEl);
+        if (!scrollTarget) return;
+
+        const maxScroll = Math.max(0, scrollTarget.scrollHeight - scrollTarget.clientHeight);
+        if (maxScroll <= 0) return;
+
+        const prev = scrollTarget.scrollTop;
         const next = Math.max(0, Math.min(maxScroll, prev + deltaY));
-        menuEl.scrollTop = next;
+        scrollTarget.scrollTop = next;
         if (next !== prev || (deltaY < 0 && prev <= 0) || (deltaY > 0 && prev >= maxScroll)) {
             ev.preventDefault();
         }
@@ -4221,6 +4227,24 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             });
 
             opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
+                clearPresetHoverPreview();
+                // Main row click is single-select: switch active part and replace bulk set.
+                modelPartSelected = idx;
+                bulkSelectedPartIndices.clear();
+                setBulkPartSelected(idx, true);
+                syncUIFromSelectedPart();
+                applyPartColorsToMesh();
+                applyCurrentTextureTuning();
+                if (!isModelPartFloatingCardOpen()) closeThumbSelectMenus();
+                syncModelPartCheckboxStates();
+                syncModelPartBulkUIState();
+                queueModelPartThumbsRender();
+                saveSettings();
+            });
+
+            opt.addEventListener('click', (ev) => {
+                if (!(ev.target instanceof Element)) return;
+                if (ev.target.closest('button,input,label,a,.part-option-actions')) return;
                 clearPresetHoverPreview();
                 // Main row click is single-select: switch active part and replace bulk set.
                 modelPartSelected = idx;
