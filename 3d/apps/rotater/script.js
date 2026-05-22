@@ -11,6 +11,12 @@ import {
     closeModelPartActionMenus as closeModelPartActionMenusModule,
     positionModelPartActionMenu as positionModelPartActionMenuModule,
 } from './modules/model-part-action-menus.js';
+import {
+    createOrbitFrameStateStore,
+    getOrbitFrameStateFast as getOrbitFrameStateFastModule,
+    getOrbitFrameState as getOrbitFrameStateModule,
+    setCameraFromOrbitState as setCameraFromOrbitStateModule,
+} from './modules/orbit-frame-state.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -1023,42 +1029,18 @@ function syncLightRig() {
     if (scene) scene.environmentRotation.y = az;
 }
 
-const _orbitStateScratch = {
-    target: new THREE.Vector3(),
-    dist: 1,
-    elev: 0,
-    az: 0,
-};
-const _orbitOffsetScratch = new THREE.Vector3();
+const orbitFrameStateStore = createOrbitFrameStateStore();
 
 function getOrbitFrameStateFast() {
-    const target = controls?.target || _orbitStateScratch.target.set(0, 0, 0);
-    _orbitStateScratch.target.copy(target);
-    _orbitOffsetScratch.copy(camera.position).sub(target);
-    const dist = Math.max(_orbitOffsetScratch.length(), 1e-6);
-    _orbitStateScratch.dist = dist;
-    _orbitStateScratch.elev = Math.asin(Math.max(-1, Math.min(1, _orbitOffsetScratch.y / dist)));
-    _orbitStateScratch.az = Math.atan2(_orbitOffsetScratch.x, _orbitOffsetScratch.z);
-    return _orbitStateScratch;
+    return getOrbitFrameStateFastModule(camera, controls, orbitFrameStateStore);
 }
 
 function getOrbitFrameState() {
-    const s = getOrbitFrameStateFast();
-    return {
-        target: s.target.clone(),
-        dist: s.dist,
-        elev: s.elev,
-        az: s.az,
-    };
+    return getOrbitFrameStateModule(camera, controls, orbitFrameStateStore);
 }
 
 function setCameraFromOrbitState(cam, target, dist, elev, az) {
-    cam.position.set(
-        target.x + dist * Math.cos(elev) * Math.sin(az),
-        target.y + dist * Math.sin(elev),
-        target.z + dist * Math.cos(elev) * Math.cos(az)
-    );
-    cam.lookAt(target);
+    setCameraFromOrbitStateModule(cam, target, dist, elev, az);
 }
 
 function getCropFrameRect(w, h) {

@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 2
+- Completed slices: 3
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -24,12 +24,19 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates through thin wrappers
 - Shipped in commit: 4e12bc4
 
+3. Orbit frame-state utility extraction
+- Module: [modules/orbit-frame-state.js](modules/orbit-frame-state.js)
+- Scope: non-allocating orbit frame-state reads and camera placement math
+- script.js now delegates through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
 |---|---|---|---|
 | [modules/menu-positioning.js](modules/menu-positioning.js) | Compute menu placement coordinates with viewport and local container constraints | Active | feaecd3 |
 | [modules/model-part-action-menus.js](modules/model-part-action-menus.js) | Close and place model-part action menus | Active | 4e12bc4 |
+| [modules/orbit-frame-state.js](modules/orbit-frame-state.js) | Orbit frame-state reads and camera-from-orbit transform helpers | Active | pending |
 
 ## Recent Milestone Commits
 

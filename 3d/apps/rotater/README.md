@@ -20,6 +20,7 @@ Current extracted modules:
 |---|---|---|
 | [modules/menu-positioning.js](modules/menu-positioning.js) | Shared menu placement math for viewport/panel-aware positioning | Active |
 | [modules/model-part-action-menus.js](modules/model-part-action-menus.js) | Model-part action menu close/reset and placement behavior | Active |
+| [modules/orbit-frame-state.js](modules/orbit-frame-state.js) | Orbit frame-state helpers and camera orbit transform math | Active |
 
 ---
 
