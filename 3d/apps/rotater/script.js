@@ -7,7 +7,10 @@ import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 import JSZip from 'jszip';
 import * as ShadeSystem from './shade-system.js';
-import { computeActionMenuPlacement } from './modules/menu-positioning.js';
+import {
+    closeModelPartActionMenus as closeModelPartActionMenusModule,
+    positionModelPartActionMenu as positionModelPartActionMenuModule,
+} from './modules/model-part-action-menus.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -3312,48 +3315,17 @@ function closeThumbSelectMenusByMode(options = {}) {
 }
 
 function closeModelPartActionMenus() {
-    document.querySelectorAll('.part-option-actions').forEach((menu) => {
-        menu.hidden = true;
-        menu.style.position = '';
-        menu.style.left = '';
-        menu.style.top = '';
-        menu.style.right = '';
-        menu.style.bottom = '';
-        menu.style.width = '';
-    });
-    if (modelPartSingleMenuBtn) modelPartSingleMenuBtn.setAttribute('aria-expanded', 'false');
+    closeModelPartActionMenusModule({ modelPartSingleMenuBtn });
 }
 
 function positionModelPartActionMenu(menuEl, anchorEl) {
-    if (!menuEl || !anchorEl) return;
-
-    const anchorRect = anchorEl.getBoundingClientRect();
-    const sideGap = 10;
-    const maxMenuW = Math.max(160, Math.min(220, window.innerWidth - (sideGap * 2)));
-    const menuRect = menuEl.getBoundingClientRect();
-    const menuW = Math.max(160, Math.min(maxMenuW, menuRect.width || maxMenuW));
-    const menuH = Math.max(120, menuRect.height || 138);
-    const floatingPanelEl = anchorEl.closest('#modelPartSelectorMenu.thumb-select-menu--floating-card');
-    const relativeContainerEl = floatingPanelEl
-        ? anchorEl.closest('.thumb-select-option, .model-single-menu-row')
-        : null;
-    const placement = computeActionMenuPlacement({
-        anchorRect,
-        menuWidth: menuW,
-        menuHeight: menuH,
+    positionModelPartActionMenuModule({
+        menuEl,
+        anchorEl,
+        modelPartSelectorMenu,
         viewportWidth: window.innerWidth,
         viewportHeight: window.innerHeight,
-        sideGap,
-        boundaryRect: floatingPanelEl?.getBoundingClientRect?.() || null,
-        containerRect: relativeContainerEl?.getBoundingClientRect?.() || null,
     });
-
-    menuEl.style.width = `${placement.width}px`;
-    menuEl.style.position = placement.mode;
-    menuEl.style.right = '';
-    menuEl.style.bottom = '';
-    menuEl.style.left = `${placement.left}px`;
-    menuEl.style.top = `${placement.top}px`;
 }
 
 function positionThumbSelectMenu(menuEl, anchorBtn) {
