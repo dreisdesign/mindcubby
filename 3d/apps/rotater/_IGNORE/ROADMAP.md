@@ -25,6 +25,7 @@ Goal: tighten reliability and interaction parity in existing flows before major 
 | A7 | New version indicator badge | Release UX | S | None | Add subtle update badge on About/App Settings entry when newer build metadata exists. |
 | A8 | Upload modal persistence during native picker | Upload Flow UX | S | A4 | Prevent upload choice modal from closing while the OS file picker is open; when files are selected, update the modal file list and actions instead of re-opening. |
 | A9 | Info panel keyboard shortcuts | UX / Docs | S | None | Add keyboard shortcuts list to the Info panel under "Navigate the 3d..." (minimum: `Esc` to close, `Space` to pause/play). |
+| A10 | Model picker default positioning | UX | S | None | On desktop, prefer positioning the model picker modal anchored over the preview area (right side), not overlapping the left sidebar; support draggable/resizable floating behavior but default to preview-aligned placement. |
 
 ## Phase B: Export and Workspace Foundation
 
@@ -38,6 +39,7 @@ Goal: complete one-surface export workflow and prepare for richer export/preset 
 | B4 | Single-click canvas full-screen | Viewer UX | S | B1 | Add robust full-screen viewer entry/exit for desktop and mobile. |
 | B5 | Watermark redesign and reintroduction | Branding/Export | M | B1 | Reintroduce watermark with consistent output behavior across GIF/MP4/PNG/JPEG. |
 | B6 | Batch export presets | Export Workflow | M | B1 | Save and reapply reusable export settings for repetitive listing workflows. |
+| B7 | Export time estimation & encoding performance | Export UX / Perf | M | B1 | Improve pre-export time estimates by adding a short preflight benchmark (sample frame render + encode timings), show live progress, and explore faster encoding paths (WebCodecs, WASM encoders, workerized dithering); investigate dithering cost and options for palette reuse to reduce per-frame work. |
 
 ## Phase C: Interaction and Architecture Expansion
 
