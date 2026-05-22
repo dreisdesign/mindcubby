@@ -10,6 +10,17 @@ Note: `_IGNORE/ROADMAP.md` is now an open-items-only roadmap; completed work has
 
 Note: UI label update — The in-app `Export` panel label and quick-action buttons were renamed to `Share` on 2026-05-14 to better reflect link/copy semantics. The underlying export/share functionality (Copy Link, Save Project ZIP, format options) is unchanged.
 
+## Refactor Progress (C1)
+
+Refactor progress is tracked in [REFACTOR_PROGRESS.md](REFACTOR_PROGRESS.md).
+
+Current extracted modules:
+
+| Module | Responsibility | Status |
+|---|---|---|
+| [modules/menu-positioning.js](modules/menu-positioning.js) | Shared menu placement math for viewport/panel-aware positioning | Active |
+| [modules/model-part-action-menus.js](modules/model-part-action-menus.js) | Model-part action menu close/reset and placement behavior | Active |
+
 ---
 
 ## Web App

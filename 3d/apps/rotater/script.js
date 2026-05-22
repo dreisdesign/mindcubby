@@ -4973,11 +4973,14 @@ function loop() {
 }
 
 // ── Export preview thumbnail ──────────────────────────────────────────────────
-let _previewTick = 0;
 let _previewRt = null;
 let _previewRtWidth = 0;
 let _previewRtHeight = 0;
 let _previewCam = null;
+let _lastExportPreviewUpdateMs = 0;
+
+const EXPORT_PREVIEW_DPR_MAX = 1;
+const EXPORT_PREVIEW_INTERVAL_MS = 160;
 
 function isExportPreviewActive() {
     const pv = document.getElementById('exportPreview');
@@ -5048,10 +5051,13 @@ function applyExportSceneForRender({ forceTransparent = false } = {}) {
 
 function updateExportPreview(force = false) {
     if (!isExportPreviewActive()) return;
-    if (force) _previewTick = 0;
+    if (force) {
+        _lastExportPreviewUpdateMs = 0;
+    }
     if (!force) {
-        const stride = exportFrameEnabled ? 2 : 4;
-        if (++_previewTick % stride !== 0) return;
+        const now = performance.now();
+        if (now - _lastExportPreviewUpdateMs < EXPORT_PREVIEW_INTERVAL_MS) return;
+        _lastExportPreviewUpdateMs = now;
     }
     const pv = document.getElementById('exportPreview');
     if (!pv) return;
@@ -5079,7 +5085,7 @@ function updateExportPreview(force = false) {
 
     const cssW = cw;
     const cssH = ch;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, EXPORT_PREVIEW_DPR_MAX);
     // Determine the true aspect ratio we want the mini preview canvas to have.
     // In crop mode, we preview the ENTIRE viewport (to show the semi-transparent black overlay).
     // In normal mode, we preview exactly the cropped region being exported.
