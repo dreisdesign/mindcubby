@@ -7418,6 +7418,26 @@ html.loaded .sidebar-tabs {
     flex-wrap: nowrap;
 }
 
+.upload-choice-actions-right[hidden] {
+    display: none !important;
+}
+
+.upload-choice-action-btn--add {
+    border-color: color-mix(in srgb, var(--palette-blueberry-600) 72%, transparent 28%);
+    color: var(--palette-blueberry-700);
+    background: color-mix(in srgb, #fff 86%, var(--palette-blueberry-100) 14%);
+}
+
+.upload-choice-action-btn--add:hover {
+    border-color: var(--palette-blueberry-600);
+    background: color-mix(in srgb, #fff 76%, var(--palette-blueberry-100) 24%);
+    color: var(--palette-blueberry-800);
+}
+
+.upload-choice-action-btn--add:active {
+    transform: translateY(1px);
+}
+
 html.theme-dark .upload-choice-dropzone {
     border-color: rgba(179, 168, 247, 0.5);
     background: rgba(40, 34, 76, 0.52);
@@ -7462,6 +7482,18 @@ html.theme-dark .upload-choice-file-remove:hover {
 
 html.theme-dark .upload-choice-file-index {
     color: var(--palette-blueberry-200);
+}
+
+html.theme-dark .upload-choice-action-btn--add {
+    border-color: rgba(179, 168, 247, 0.7);
+    color: #e7e2ff;
+    background: rgba(52, 44, 102, 0.5);
+}
+
+html.theme-dark .upload-choice-action-btn--add:hover {
+    border-color: rgba(222, 214, 255, 0.84);
+    background: rgba(76, 65, 140, 0.62);
+    color: #ffffff;
 }
 
 html.theme-dark .upload-choice-show-more {
