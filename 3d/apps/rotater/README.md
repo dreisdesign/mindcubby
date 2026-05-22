@@ -22,6 +22,7 @@ Current extracted modules:
 | [modules/model-part-action-menus.js](modules/model-part-action-menus.js) | Model-part action menu close/reset and placement behavior | Active |
 | [modules/orbit-frame-state.js](modules/orbit-frame-state.js) | Orbit frame-state helpers and camera orbit transform math | Active |
 | [modules/viewport-performance.js](modules/viewport-performance.js) | Adaptive viewport quality and pixel-ratio helpers | Active |
+| [modules/model-picker-controller.js](modules/model-picker-controller.js) | Controller helpers for selector/sync menu open-close behavior | Active |
 
 ---
 

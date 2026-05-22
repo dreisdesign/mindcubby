@@ -22,6 +22,14 @@ import {
     getViewportPixelRatio as getViewportPixelRatioModule,
     updateViewportPerformanceState as updateViewportPerformanceStateModule,
 } from './modules/viewport-performance.js';
+import {
+    closeModelPartSelectorMenuController,
+    resetSyncMenuFloatingStyleController,
+    positionSyncMenuAtAnchorController,
+    resolveModelSyncAnchorController,
+    openSyncSourceMenuController,
+    closeThumbSelectMenusByModeController,
+} from './modules/model-picker-controller.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -3282,40 +3290,32 @@ function shouldUseFloatingModelPartSelector() {
 }
 
 function closeModelPartSelectorMenu(force = false) {
-    if (!force && isModelPartFloatingCardOpen()) return false;
-    let changedModelSelectorMenuState = false;
-    if (modelPartSelectorMenu && !modelPartSelectorMenu.hidden) {
-        modelPartSelectorMenu.hidden = true;
-        changedModelSelectorMenuState = true;
-        if (rulerPartSelectMultiEnabled) setRulerPartSelectMultiEnabled(false, false);
-        if (force) modelPartSelectorClosedByUser = true;
-    }
-    if (modelPartSelectorBtn) modelPartSelectorBtn.setAttribute('aria-expanded', 'false');
-    if (changedModelSelectorMenuState) {
-        _modelPartMenuDragState = null;
-        const floatingHeader = modelPartSelectorMenu?.querySelector('.model-selector-floating-header');
-        if (floatingHeader) floatingHeader.classList.remove('is-dragging');
-        applyPartInteractionVisualsToMeshMaterials();
-        syncRulerHoverSelectorState();
-        updateRulerHUD();
-    }
-    return changedModelSelectorMenuState;
+    return closeModelPartSelectorMenuController({
+        force,
+        modelPartSelectorMenu,
+        modelPartSelectorBtn,
+        isModelPartFloatingCardOpen,
+        rulerPartSelectMultiEnabled,
+        setRulerPartSelectMultiEnabled,
+        setModelPartSelectorClosedByUser: (value) => { modelPartSelectorClosedByUser = !!value; },
+        setModelPartMenuDragState: (value) => { _modelPartMenuDragState = value; },
+        applyPartInteractionVisualsToMeshMaterials,
+        syncRulerHoverSelectorState,
+        updateRulerHUD,
+    });
 }
 
 function closeThumbSelectMenusByMode(options = {}) {
-    const includeModelSelector = options.includeModelSelector !== false;
-    if (includeModelSelector) closeModelPartSelectorMenu();
-    if (bgModelSyncSelectorMenu) {
-        bgModelSyncSelectorMenu.hidden = true;
-        resetSyncMenuFloatingStyle(bgModelSyncSelectorMenu);
-    }
-    if (bgModelSyncSelectorBtn) bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
-    if (buildPlateModelSyncSelectorMenu) {
-        buildPlateModelSyncSelectorMenu.hidden = true;
-        resetSyncMenuFloatingStyle(buildPlateModelSyncSelectorMenu);
-    }
-    if (buildPlateModelSyncSelectorBtn) buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
-    closeModelPartActionMenus();
+    closeThumbSelectMenusByModeController({
+        includeModelSelector: options.includeModelSelector !== false,
+        closeModelPartSelectorMenu,
+        bgModelSyncSelectorMenu,
+        bgModelSyncSelectorBtn,
+        buildPlateModelSyncSelectorMenu,
+        buildPlateModelSyncSelectorBtn,
+        resetSyncMenuFloatingStyle,
+        closeModelPartActionMenus,
+    });
 }
 
 function closeModelPartActionMenus() {
@@ -3364,77 +3364,60 @@ function positionThumbSelectMenu(menuEl, anchorBtn) {
 }
 
 function resetSyncMenuFloatingStyle(menuEl) {
-    if (!menuEl) return;
-    menuEl.style.position = '';
-    menuEl.style.left = '';
-    menuEl.style.right = '';
-    menuEl.style.top = '';
-    menuEl.style.bottom = '';
-    menuEl.style.width = '';
-    menuEl.style.transform = '';
+    resetSyncMenuFloatingStyleController(menuEl);
 }
 
 function positionSyncMenuAtAnchor(menuEl, anchorEl) {
-    if (!menuEl || !anchorEl) return;
-    const gap = 8;
-    const viewportPad = 12;
-    const minPanelHeight = 170;
-    const anchorRect = anchorEl.getBoundingClientRect();
-    const preferredWidth = Math.max(220, Math.min(300, Math.round(anchorRect.width + 44)));
-    const width = Math.max(200, Math.min(preferredWidth, Math.floor(window.innerWidth - viewportPad * 2)));
-    const spaceBelow = Math.max(0, window.innerHeight - anchorRect.bottom - viewportPad - gap);
-    const spaceAbove = Math.max(0, anchorRect.top - viewportPad - gap);
-    const openAbove = spaceBelow < minPanelHeight && spaceAbove > spaceBelow;
-    const available = Math.max(140, Math.floor(openAbove ? spaceAbove : spaceBelow));
-
-    let left = anchorRect.left + ((anchorRect.width - width) / 2);
-    left = Math.max(viewportPad, Math.min(left, window.innerWidth - width - viewportPad));
-
-    menuEl.style.position = 'fixed';
-    menuEl.style.left = `${Math.round(left)}px`;
-    menuEl.style.right = 'auto';
-    menuEl.style.width = `${Math.round(width)}px`;
-    menuEl.style.top = `${Math.round(openAbove ? (anchorRect.top - gap) : (anchorRect.bottom + gap))}px`;
-    menuEl.style.bottom = 'auto';
-    menuEl.style.transform = openAbove ? 'translateY(-100%)' : 'none';
-    menuEl.style.maxHeight = `${available}px`;
-    menuEl.classList.toggle('thumb-select-menu--above', openAbove);
+    positionSyncMenuAtAnchorController({
+        menuEl,
+        anchorEl,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+    });
 }
 
 function resolveBgModelSyncAnchorEl() {
-    return bgModelSyncMenuAnchorEl || document.getElementById('bg-preset-modelcolor') || bgModelSyncSelectorBtn;
+    return resolveModelSyncAnchorController({
+        explicitAnchorEl: bgModelSyncMenuAnchorEl,
+        fallbackAnchorId: 'bg-preset-modelcolor',
+        fallbackBtn: bgModelSyncSelectorBtn,
+        documentRef: document,
+    });
 }
 
 function resolveBuildPlateModelSyncAnchorEl() {
-    return buildPlateModelSyncMenuAnchorEl || document.getElementById('build-plate-preset-modelcolor') || buildPlateModelSyncSelectorBtn;
+    return resolveModelSyncAnchorController({
+        explicitAnchorEl: buildPlateModelSyncMenuAnchorEl,
+        fallbackAnchorId: 'build-plate-preset-modelcolor',
+        fallbackBtn: buildPlateModelSyncSelectorBtn,
+        documentRef: document,
+    });
 }
 
 function openBgModelSyncMenu(anchorEl = null) {
-    if (!bgModelSyncSelectorMenu) return;
-    const open = !bgModelSyncSelectorMenu.hidden;
-    if (anchorEl instanceof Element) bgModelSyncMenuAnchorEl = anchorEl;
-    const targetAnchor = resolveBgModelSyncAnchorEl();
-    closeThumbSelectMenus();
-    if (open || !targetAnchor) return;
-    bgModelSyncSelectorMenu.hidden = false;
-    positionSyncMenuAtAnchor(bgModelSyncSelectorMenu, targetAnchor);
-    bgModelSyncSelectorMenu.scrollTop = 0;
-    if (bgModelSyncSelectorBtn) bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
-    queueModelPartThumbsRender();
+    openSyncSourceMenuController({
+        menuEl: bgModelSyncSelectorMenu,
+        selectorBtn: bgModelSyncSelectorBtn,
+        anchorEl,
+        setAnchorEl: (value) => { bgModelSyncMenuAnchorEl = value; },
+        resolveAnchorEl: resolveBgModelSyncAnchorEl,
+        closeThumbSelectMenus,
+        positionSyncMenuAtAnchor,
+        queueModelPartThumbsRender,
+    });
 }
 
 function openBuildPlateModelSyncMenu(anchorEl = null) {
-    if (!buildPlateModelSyncSelectorMenu) return;
-    const open = !buildPlateModelSyncSelectorMenu.hidden;
-    if (anchorEl instanceof Element) buildPlateModelSyncMenuAnchorEl = anchorEl;
-    const targetAnchor = resolveBuildPlateModelSyncAnchorEl();
-    closeThumbSelectMenus();
-    if (open || !targetAnchor) return;
-    buildPlateModelSyncSelectorMenu.hidden = false;
-    positionSyncMenuAtAnchor(buildPlateModelSyncSelectorMenu, targetAnchor);
-    buildPlateModelSyncSelectorMenu.scrollTop = 0;
-    if (buildPlateModelSyncSelectorBtn) buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'true');
-    queueModelPartThumbsRender();
+    openSyncSourceMenuController({
+        menuEl: buildPlateModelSyncSelectorMenu,
+        selectorBtn: buildPlateModelSyncSelectorBtn,
+        anchorEl,
+        setAnchorEl: (value) => { buildPlateModelSyncMenuAnchorEl = value; },
+        resolveAnchorEl: resolveBuildPlateModelSyncAnchorEl,
+        closeThumbSelectMenus,
+        positionSyncMenuAtAnchor,
+        queueModelPartThumbsRender,
+    });
 }
 
 function ensureModelPartFloatingHeader() {
