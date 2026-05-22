@@ -26,6 +26,7 @@ Goal: tighten reliability and interaction parity in existing flows before major 
 | A8 | Upload modal persistence during native picker | Upload Flow UX | S | A4 | Prevent upload choice modal from closing while the OS file picker is open; when files are selected, update the modal file list and actions instead of re-opening. |
 | A9 | Info panel keyboard shortcuts | UX / Docs | S | None | Add keyboard shortcuts list to the Info panel under "Navigate the 3d..." (minimum: `Esc` to close, `Space` to pause/play). |
 | A10 | Model picker default positioning | UX | S | None | On desktop, prefer positioning the model picker modal anchored over the preview area (right side), not overlapping the left sidebar; support draggable/resizable floating behavior but default to preview-aligned placement. |
+| A11 | Slider precise text entry mode | Controls UX | M | A1 | Add optional text-based numeric entry for slider-backed controls (shade/finish/etc.) with validation, keyboard support, and parity with existing slider snapping. |
 
 ## Phase B: Export and Workspace Foundation
 

@@ -7,10 +7,12 @@ import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 import JSZip from 'jszip';
 import * as ShadeSystem from './shade-system.js';
+import { computeActionMenuPlacement } from './modules/menu-positioning.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
 const SKIP_DEFAULT_PRESET_ONCE_KEY = 'rotater_skipDefaultPresetOnce';
+const CANVAS_ORBIT_CLICK_DRAG_THRESHOLD_PX = 6;
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
 // Export quality presets — base short-edge size + fps + bitrate.
@@ -1496,7 +1498,9 @@ function openAnchoredColorPicker(inputEl, anchorEl) {
     }, 260);
 }
 
-function updateBuildPlateMaterial() {
+function updateBuildPlateMaterial(options = {}) {
+    const skipTextureRefresh = options?.skipTextureRefresh === true;
+    const skipControlSync = options?.skipControlSync === true;
     const shade = Math.max(-100, Math.min(100, Number(buildPlateShade) || 0));
     const baseHex = getActiveBuildPlateBaseColor();
     const toned = buildPlateAutoBrightnessEnabled
@@ -1509,19 +1513,23 @@ function updateBuildPlateMaterial() {
         syncBuildPlateShapeMesh();
         buildPlateMesh.material.color.set(toned);
 
-        const previousMap = buildPlateMesh.material.map;
-        const repeatX = previousMap?.repeat?.x || Math.max(4, Math.round((buildPlateMesh.scale?.x || buildPlateWidth || 220) / 8));
-        const repeatY = previousMap?.repeat?.y || Math.max(4, Math.round((buildPlateMesh.scale?.y || buildPlateDepth || 220) / 8));
-        if (previousMap) {
-            previousMap.dispose();
-            buildPlateMesh.material.map = null;
-        }
-        if (BUILD_PLATE_TEXTURES_ENABLED) {
-            buildPlateMesh.material.map = createBuildPlateTexture(toned, buildPlateFinish);
-            buildPlateMesh.material.map.repeat.set(repeatX, repeatY);
+        if (!skipTextureRefresh) {
+            const previousMap = buildPlateMesh.material.map;
+            const repeatX = previousMap?.repeat?.x || Math.max(4, Math.round((buildPlateMesh.scale?.x || buildPlateWidth || 220) / 8));
+            const repeatY = previousMap?.repeat?.y || Math.max(4, Math.round((buildPlateMesh.scale?.y || buildPlateDepth || 220) / 8));
+            if (previousMap) {
+                previousMap.dispose();
+                buildPlateMesh.material.map = null;
+            }
+            if (BUILD_PLATE_TEXTURES_ENABLED) {
+                buildPlateMesh.material.map = createBuildPlateTexture(toned, buildPlateFinish);
+                buildPlateMesh.material.map.repeat.set(repeatX, repeatY);
+            }
         }
         buildPlateMesh.material.needsUpdate = true;
     }
+
+    if (skipControlSync) return;
 
     if (buildPlateControlsEl) buildPlateControlsEl.hidden = !buildPlateEnabled;
     if (buildPlateConfigBodyEl) buildPlateConfigBodyEl.hidden = false;
@@ -3306,8 +3314,12 @@ function closeThumbSelectMenusByMode(options = {}) {
 function closeModelPartActionMenus() {
     document.querySelectorAll('.part-option-actions').forEach((menu) => {
         menu.hidden = true;
+        menu.style.position = '';
         menu.style.left = '';
         menu.style.top = '';
+        menu.style.right = '';
+        menu.style.bottom = '';
+        menu.style.width = '';
     });
     if (modelPartSingleMenuBtn) modelPartSingleMenuBtn.setAttribute('aria-expanded', 'false');
 }
@@ -3318,24 +3330,30 @@ function positionModelPartActionMenu(menuEl, anchorEl) {
     const anchorRect = anchorEl.getBoundingClientRect();
     const sideGap = 10;
     const maxMenuW = Math.max(160, Math.min(220, window.innerWidth - (sideGap * 2)));
-    menuEl.style.width = `${maxMenuW}px`;
-    menuEl.style.position = 'fixed';
-
     const menuRect = menuEl.getBoundingClientRect();
     const menuW = Math.max(160, Math.min(maxMenuW, menuRect.width || maxMenuW));
     const menuH = Math.max(120, menuRect.height || 138);
+    const floatingPanelEl = anchorEl.closest('#modelPartSelectorMenu.thumb-select-menu--floating-card');
+    const relativeContainerEl = floatingPanelEl
+        ? anchorEl.closest('.thumb-select-option, .model-single-menu-row')
+        : null;
+    const placement = computeActionMenuPlacement({
+        anchorRect,
+        menuWidth: menuW,
+        menuHeight: menuH,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        sideGap,
+        boundaryRect: floatingPanelEl?.getBoundingClientRect?.() || null,
+        containerRect: relativeContainerEl?.getBoundingClientRect?.() || null,
+    });
 
-    let left = anchorRect.right - menuW;
-    left = Math.max(sideGap, Math.min(left, window.innerWidth - menuW - sideGap));
-
-    let top = anchorRect.bottom + 8;
-    if (top + menuH > window.innerHeight - sideGap) {
-        top = anchorRect.top - menuH - 8;
-    }
-    top = Math.max(sideGap, Math.min(top, window.innerHeight - menuH - sideGap));
-
-    menuEl.style.left = `${Math.round(left)}px`;
-    menuEl.style.top = `${Math.round(top)}px`;
+    menuEl.style.width = `${placement.width}px`;
+    menuEl.style.position = placement.mode;
+    menuEl.style.right = '';
+    menuEl.style.bottom = '';
+    menuEl.style.left = `${placement.left}px`;
+    menuEl.style.top = `${placement.top}px`;
 }
 
 function positionThumbSelectMenu(menuEl, anchorBtn) {
@@ -3577,7 +3595,12 @@ function trapMenuWheelScroll(menuEl) {
 
 modelPartSelectorBtn?.addEventListener('click', (ev) => {
     ev.stopPropagation();
-    if (modelPartSelectorBtn.classList.contains('is-static')) return;
+    if (modelPartSelectorBtn.classList.contains('is-static')) {
+        // In single-model mode the static selector button spans the card and can
+        // sit under the 3-dot action menu; treat clicks as backdrop dismisses.
+        closeModelPartActionMenus();
+        return;
+    }
     const open = modelPartSelectorMenu && !modelPartSelectorMenu.hidden;
     modelPartSelectorClosedByUser = false;
     closeThumbSelectMenus();
@@ -3699,7 +3722,19 @@ document.addEventListener('click', (ev) => {
         if (buildPlateModelSyncSelectorBtn) buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
     }
     closeFileChipPartsMenu();
-    if (!(target instanceof Element && target.closest('.part-option-actions, [data-part-more], #modelPartSingleMenuBtn'))) {
+    if (target instanceof Element) {
+        const actionMenuEl = target.closest('.part-option-actions');
+        const clickedActionToggle = !!target.closest('[data-part-more], #modelPartSingleMenuBtn');
+        const clickedActionButton = !!target.closest('.part-option-action');
+        // Clicking menu backdrop/padding should dismiss it, especially when the
+        // menu overlaps the model card area.
+        const clickedActionMenuBackdrop = !!actionMenuEl && !clickedActionButton;
+        if (!actionMenuEl && !clickedActionToggle) {
+            closeModelPartActionMenus();
+        } else if (clickedActionMenuBackdrop) {
+            closeModelPartActionMenus();
+        }
+    } else {
         closeModelPartActionMenus();
     }
 });
@@ -3998,7 +4033,9 @@ function applyPartInteractionVisualsToMeshMaterials() {
 }
 
 
-function applyPartColorsToMesh() {
+function applyPartColorsToMesh(options = {}) {
+    const syncBuildPlate = options?.syncBuildPlate !== false;
+    const buildPlatePreview = options?.buildPlatePreview === true;
     const mats = getMeshMaterials();
     if (!mats.length) return;
     mats.forEach((mat, idx) => {
@@ -4019,7 +4056,9 @@ function applyPartColorsToMesh() {
         mat.visible = s.hidden !== true;
     });
     applyPartInteractionVisualsToMeshMaterials();
-    if (activeBuildPlatePreset === 'modelcolor') updateBuildPlateMaterial();
+    if (syncBuildPlate && activeBuildPlatePreset === 'modelcolor') {
+        updateBuildPlateMaterial(buildPlatePreview ? { skipTextureRefresh: true, skipControlSync: true } : undefined);
+    }
 }
 
 function rebuildMeshMaterialsForCurrentShading() {
@@ -8704,6 +8743,12 @@ function flushModelToneCommit() {
     }
     const thumbTargets = pendingModelToneThumbTargets;
     pendingModelToneThumbTargets = null;
+    if (activeBuildPlatePreset === 'modelcolor') {
+        updateBuildPlateMaterial();
+        refreshExportPreviewNow();
+    }
+    updateShadingThumbs();
+    updateColorSwatches();
     persistCurrentMultipartParts({ immediate: true });
     saveSettings();
     if (thumbTargets !== null) queueModelPartThumbsRender(thumbTargets);
@@ -8730,7 +8775,7 @@ if (opacitySlider) {
         const targets = applyToModelPartEditTargets((partSettings) => {
             partSettings.tone = toneVal;
         });
-        if (mesh) applyPartColorsToMesh();
+        if (mesh) applyPartColorsToMesh({ buildPlatePreview: activeBuildPlatePreset === 'modelcolor' });
         if (activeBgPreset === 'modelcolor') {
             const syncColor = getModelSyncSourceColor();
             bgPick.value = syncColor;
@@ -8739,7 +8784,6 @@ if (opacitySlider) {
             else applyBackgroundFromBaseColor(syncColor);
             updateBgShadeSliderVisual();
         }
-        updateShadingThumbs();
         updateShadeSliderVisual();
         scheduleModelToneCommit(targets);
     });
@@ -8767,15 +8811,11 @@ if (bgOpacitySlider) {
                 syncSliderTooltip(opacitySlider);
                 updateShadeSliderVisual();
             }
-            if (mesh) applyPartColorsToMesh();
+            if (mesh) applyPartColorsToMesh({ buildPlatePreview: activeBuildPlatePreset === 'modelcolor' });
             const syncColor = getModelSyncSourceColor();
             bgPick.value = syncColor;
             applyBackgroundFromBaseColor(syncColor);
-            updateShadingThumbs();
-            updateColorSwatches();
-            persistCurrentMultipartParts();
-            queueModelPartThumbsRender([idx]);
-            saveSettings();
+            scheduleModelToneCommit([idx]);
             return;
         }
 
@@ -8784,6 +8824,13 @@ if (bgOpacitySlider) {
         if (renderer) renderer.setClearColor(c, 1);
         updateBuildPlateMaterial();
         if (isDynamicBg) updateDynamicBg();
+        saveSettings();
+    });
+    bgOpacitySlider.addEventListener('change', () => {
+        if (activeBgPreset === 'modelcolor' && !isDynamicBg) {
+            flushModelToneCommit();
+            return;
+        }
         saveSettings();
     });
 }
@@ -11109,7 +11156,59 @@ function confirmCropMode() {
 
 updateFrameOverlayButtonUI();
 
+canvas?.addEventListener('pointerdown', (e) => {
+    if (!isCanvasOrbitClickGuardEligible(e)) return;
+    _pendingCanvasOrbitDrag = {
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        startEvent: {
+            pointerId: e.pointerId,
+            pointerType: e.pointerType,
+            isPrimary: e.isPrimary,
+            button: e.button,
+            buttons: e.buttons,
+            clientX: e.clientX,
+            clientY: e.clientY,
+            screenX: e.screenX,
+            screenY: e.screenY,
+            ctrlKey: e.ctrlKey,
+            shiftKey: e.shiftKey,
+            altKey: e.altKey,
+            metaKey: e.metaKey,
+            pressure: e.pressure,
+            tangentialPressure: e.tangentialPressure,
+            tiltX: e.tiltX,
+            tiltY: e.tiltY,
+            twist: e.twist,
+            width: e.width,
+            height: e.height,
+        },
+        activated: false,
+    };
+    e.stopImmediatePropagation();
+}, true);
+
+window.addEventListener('pointermove', (e) => {
+    if (!_pendingCanvasOrbitDrag || !_pendingCanvasOrbitDrag.startEvent || !e.isTrusted) return;
+    if (e.pointerId !== _pendingCanvasOrbitDrag.pointerId) return;
+    if (_pendingCanvasOrbitDrag.activated) return;
+
+    const dx = e.clientX - _pendingCanvasOrbitDrag.startX;
+    const dy = e.clientY - _pendingCanvasOrbitDrag.startY;
+    if ((dx * dx) + (dy * dy) < (CANVAS_ORBIT_CLICK_DRAG_THRESHOLD_PX * CANVAS_ORBIT_CLICK_DRAG_THRESHOLD_PX)) {
+        e.stopImmediatePropagation();
+        return;
+    }
+
+    _pendingCanvasOrbitDrag.activated = true;
+    dispatchSyntheticCanvasPointer('pointerdown', _pendingCanvasOrbitDrag.startEvent);
+    dispatchSyntheticCanvasPointer('pointermove', e);
+    e.stopImmediatePropagation();
+}, true);
+
 canvas?.addEventListener('click', (e) => {
+    closeModelPartActionMenus();
     if (exportWorkspaceActive && exportFrameEnabled) {
         if (isCanvasPointInsideCropFrame(e.clientX, e.clientY)) return;
         closeExportWorkspace();
@@ -11181,10 +11280,23 @@ canvas?.addEventListener('pointerdown', (e) => {
 }, true);
 
 window.addEventListener('pointerup', (e) => {
+    if (_pendingCanvasOrbitDrag && e.isTrusted && e.pointerId === _pendingCanvasOrbitDrag.pointerId) {
+        if (_pendingCanvasOrbitDrag.activated) {
+            dispatchSyntheticCanvasPointer('pointerup', e);
+            e.stopImmediatePropagation();
+        }
+        _pendingCanvasOrbitDrag = null;
+    }
     if (e.button === 2) endRightPanVerticalLock();
 }, true);
 
 window.addEventListener('pointercancel', () => {
+    if (_pendingCanvasOrbitDrag) {
+        if (_pendingCanvasOrbitDrag.activated) {
+            dispatchSyntheticCanvasPointer('pointercancel', _pendingCanvasOrbitDrag.startEvent);
+        }
+        _pendingCanvasOrbitDrag = null;
+    }
     endRightPanVerticalLock();
 }, true);
 
@@ -11247,6 +11359,56 @@ function forwardPreviewPointerToMainCanvas(e) {
     }
 }
 
+function isCanvasOrbitClickGuardEligible(e) {
+    return !!(
+        canvas
+        && controls
+        && e?.isTrusted
+        && e.target === canvas
+        && e.button === 0
+        && !e.shiftKey
+        && !e.altKey
+        && !e.ctrlKey
+        && !e.metaKey
+        && !_cropCornerDrag
+    );
+}
+
+function dispatchSyntheticCanvasPointer(type, source) {
+    if (!canvas || !source) return;
+    const init = {
+        pointerId: source.pointerId,
+        pointerType: source.pointerType,
+        isPrimary: source.isPrimary,
+        button: source.button,
+        buttons: source.buttons,
+        clientX: source.clientX,
+        clientY: source.clientY,
+        screenX: source.screenX,
+        screenY: source.screenY,
+        ctrlKey: source.ctrlKey,
+        shiftKey: source.shiftKey,
+        altKey: source.altKey,
+        metaKey: source.metaKey,
+        pressure: source.pressure,
+        tangentialPressure: source.tangentialPressure,
+        tiltX: source.tiltX,
+        tiltY: source.tiltY,
+        twist: source.twist,
+        width: source.width,
+        height: source.height,
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+    };
+    try {
+        canvas.dispatchEvent(new PointerEvent(type, init));
+    } catch (_) {
+        if (type === 'pointercancel') return;
+        canvas.dispatchEvent(new MouseEvent(type.replace('pointer', 'mouse'), init));
+    }
+}
+
 if (exportPreviewForwardHost) {
     ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((eventName) => {
         exportPreviewForwardHost.addEventListener(eventName, (e) => {
@@ -11292,6 +11454,7 @@ if (exportPreviewForwardHost) {
 
 // ── Crop corner drag to snap aspect ratio ─────────────────────────────────────
 let _cropCornerDrag = null; // { id, startX, startY, initW, initH } or null
+let _pendingCanvasOrbitDrag = null;
 
 ['TL', 'TR', 'BL', 'BR'].forEach(cid => {
     const el = document.getElementById(`cropCorner${cid}`);
@@ -12851,8 +13014,7 @@ if (buildPlateShadeSliderEl) {
                 syncSliderTooltip(opacitySlider);
                 updateShadeSliderVisual();
             }
-            if (mesh) applyPartColorsToMesh();
-            updateBuildPlateMaterial();
+            if (mesh) applyPartColorsToMesh({ buildPlatePreview: true });
             if (activeBgPreset === 'modelcolor' && !isDynamicBg && idx === bgSyncPartIndex) {
                 const syncColor = getModelSyncSourceColor();
                 bgPick.value = syncColor;
@@ -12860,12 +13022,7 @@ if (buildPlateShadeSliderEl) {
                 updateAutoBgShadeControlVisibility();
                 updateBgShadeSliderVisual();
             }
-            updateShadingThumbs();
-            updateColorSwatches();
-            persistCurrentMultipartParts();
-            queueModelPartThumbsRender([idx]);
-            refreshExportPreviewNow();
-            saveSettings();
+            scheduleModelToneCommit([idx]);
             return;
         }
 
@@ -12874,6 +13031,14 @@ if (buildPlateShadeSliderEl) {
             manualBuildPlateShadeBeforeAuto = buildPlateShade;
         }
         updateBuildPlateMaterial();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+    buildPlateShadeSliderEl.addEventListener('change', () => {
+        if (!buildPlateAutoBrightnessEnabled && activeBuildPlatePreset === 'modelcolor') {
+            flushModelToneCommit();
+            return;
+        }
         refreshExportPreviewNow();
         saveSettings();
     });

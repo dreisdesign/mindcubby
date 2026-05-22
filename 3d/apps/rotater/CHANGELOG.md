@@ -79,6 +79,7 @@
 - **Ruler hover focus highlight** — hovered multipart parts now show a live 3D bounding-box outline, and the matching row in the model selector is highlighted for clear target context
 
 ### Changed
+- **C1 module refactor started** — extracted shared action-menu placement math into `modules/menu-positioning.js` and wired picker action-menu positioning through the new helper to reduce `script.js` surface area.
 - **Roadmap restructuring (incomplete-only)** — `_IGNORE/ROADMAP.md` now tracks only incomplete work in a cohesive phase-based structure; completed work remains in this changelog.
 - **Export start-position decision** — kept current export start behavior unchanged; users can pause at the desired pose before export.
 - **Model picker floating-card behavior** — on desktop pointer layouts, the multipart model picker dropdown now opens as a draggable floating card with a sticky drag-handle header, matching the Share panel interaction style while preserving existing mobile dropdown behavior.
@@ -146,6 +147,9 @@
 - **Ruler hover inspection focus** — enabling `Part hover` mode now auto-pauses model rotation so hovered-part measurement is easier to read
 
 ### Fixed
+- **Single-model 3-dot overlap dismissal** — clicks in overlap regions that landed on the static model-card selector layer now correctly dismiss the 3-dot actions menu.
+- **Action-menu anchoring in floating picker** — row 3-dot action menus now anchor against the floating picker/card context instead of drifting to viewport-fixed locations.
+- **Preview click-to-pause jank** — plain preview clicks no longer trigger interaction pause; Orbit drag handling now requires real pointer movement, keeping click-only interactions stable.
 - **Shade slider drag jank under load** — reduced drag-time stalls by deferring expensive persistence/thumbnail work to commit timing and avoiding per-sample shade-selector rebuilds during continuous slider input.
 - **Model modal close-policy regressions** — floating model modal no longer closes during color/preset interactions; close is now limited to explicit `X` action or keyboard `Esc`.
 - **Model picker default-open legacy fallback** — default-open multipart selector now consistently initializes in floating modal mode (desktop pointer workflows), instead of intermittently rendering as the legacy inline dropdown.

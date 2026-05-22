@@ -65,30 +65,11 @@ If you want to change startup defaults and card reset behavior in code, these ar
   - `background.shade` and `buildPlate.shade` set the auto-brightness direction (`-100` white side, `+100` black side)
   - `maxBlendPercent` sets the strongest blend amount at `|shade|=100`
   - default parity: `background.maxBlendPercent = 40` and `buildPlate.maxBlendPercent = 40`
-- `color-rules.json` -> `presetShadeDefaults`:
-  - manual shade defaults per preset (`white=-100`, `black=+100`)
-  - model quick preset defaults are keyed by preset id under `presetShadeDefaults.model` (for example `ink`, `ceramic`)
-  - when a `presetShadeDefaults.model.<presetId>` value exists, it is authoritative for model tone (overrides preset URL `op`)
-- `script.js` -> card reset handlers:
-  - `btnResetBackgroundCard` restores `Model Sync + Auto brightness`
-  - `btnResetBuildPlateCard` restores `Model Sync + Auto brightness`
-
-For full design-token and runtime-default documentation, see `DESIGN-REFERENCE.md`.
-
-### Loading a model
 
 - Drag and drop any STL file onto the page, or click **Upload STL**
 - Upload STL buttons now open the Add/Replace choice modal **before** the file picker when a model is already loaded:
-  - **Add to existing plate** appends the incoming STL file(s) as new parts
-  - **Create new plate / replace** replaces the current model
-- Multi-part import: select or drop multiple STL files at once to load them as one aligned object (keeps original CAD offsets for multi-color part stacks)
-- Multi-part editing: use **Part Color Target** in the Model card to choose which part you are editing
 - Multi-part bulk edit: in **Part Color Target**, check multiple parts and use the bulk banner to apply active **Color**, **Shade**, or **Finish** values to all checked parts  - Bulk checkboxes support true multi-select: select any combination of parts to edit them together
   - Clicking a part thumbnail or button activates it for editing without clearing other selections- Model card manager behavior:
-  - For multipart models, each part row keeps **Replace**, **Hide/Show**, **Background Color Sync**, and **Delete** in the 3-dot menu
-  - Bulk selection checkboxes always reflect the effective model edit targets and remain consistent when switching **Card** / **Grid** view modes
-  - The bulk toggle beside **Card / Grid** uses the same checkbox system and visual style as row checkboxes
-  - For a single model, the part dropdown is hidden and an exposed 3-dot menu is shown instead
 - Model preset cards now apply on click only
 - The model and all settings persist across page refreshes — no re-upload needed
 - Hard refresh startup now exits the splash immediately after restore pass, and demo-model auto-load is deferred for smoother initial interaction
@@ -98,13 +79,12 @@ For full design-token and runtime-default documentation, see `DESIGN-REFERENCE.m
   - Each expanded row supports **Replace**, **Add**, and **×** remove for individual part operations (remove when 2+ parts are loaded)
   - Click **×** while showing the demo to open the file picker
   - Click **×** while showing your own model to reset back to the demo (3D Benchy)
-- **Export** opens the export workspace from the left controls; framing now reuses the main viewer instead of a separate duplicate preview
 - **Copy Link** (inside the Export modal) copies a shareable URL for the current scene, including build plate/background sync and auto-brightness settings
 - **Save Project** (inside the Export modal) saves a single ZIP package containing `package.json` plus the original STL file(s)
 - **Import Package** is part of the Upload STL flow (picker/drop zone) and accepts Rotater `.zip` packages for quick restore/testing
 - ZIP package import now validates file paths, type allowlist (`.stl` + `package.json`), and archive size limits before loading
 - **Collapsed Export Assist** auto-expands export when collapsed and can show a one-time confirmation before continuing
-- **Reset all warnings** (App Settings) re-enables warning dialogs that were previously dismissed (for example collapsed export confirmation and upload choice prompt)
+- Single-model 3-dot menus now dismiss reliably when clicking outside, including overlap areas where the menu crosses the model card hit-region.
 - Export motion mode/speed/range controls are always shown inside the Export overlay
 - **Build Plate controls** are now in their own dedicated card (separate from Background)
 - **Background** and **Build Plate** now default to `Model Sync` with Auto Brightness enabled for new visitors
@@ -114,8 +94,6 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 
 ### App Settings controls
 
-- **Fine tuning for precise control**: turns off coarse snap-only behavior and enables finer slider granularity for detailed adjustments.
-- **Show D-pad controls**: shows/hides the camera D-pad overlay in the viewer; Pause remains available in the bottom-right overlay action.
 - **Dev mode (show FPS)**: enables a lightweight FPS readout overlay in the viewer for performance diagnostics (off by default).
 - **Reset all warnings**: re-enables previously dismissed warning prompts (for example upload choice and collapsed-export confirmations).
 - **Build Plate Size**: sets the virtual build plate dimensions used by Surface/Grid context (`180x180`, `220x220`, `235x235`, `256x256`, `300x300`, or `Custom`).
@@ -129,16 +107,12 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 ### Viewer controls
 
 - **Drag** to orbit · **Scroll** to zoom · **Right-drag up/down** to pan vertically
+  - Plain click in preview no longer pauses rotation; orbit interaction starts only after real pointer movement.
 - **Spacebar** — pause / resume rotation
 - **Esc** — collapse expanded preview only (no action when preview is already collapsed)
 - **D-pad** (bottom-center of viewer) — orbit the camera in 45° snapped increments
   - Arrow keys (←↑↓→) do the same thing from the keyboard
   - Center button of the D-pad pauses / resumes (⏸/▶)
-- **Reset camera** button (⟳, D-pad center) — recenters the model in the export frame
-- **Ruler HUD controls** — `Inspect` hover mode can be toggled independently from `Select`; geometry click-select remains available while ruler is enabled
-- **Top-right utility controls** — include App Settings plus a sidepanel hide/show toggle (close icon when visible, expand icon when hidden)
-- **Export workspace framing** — entering Export enables the crop/framing workspace on the main viewer
-  - The viewer dims and blurs outside the crop frame
   - Export quick options (`Background`, `Grid`, `Build Plate`) apply directly to the live export workspace viewport while framing
   - When `Background` is off, the export workspace viewport shows a white/gray checkerboard to indicate transparency
   - Clicking outside the crop frame closes Export workspace
@@ -174,7 +148,6 @@ When a multi-part model is loaded:
 |---|---|
 | Color → Model | Model face color (click swatch to open color picker) |
 | Color → BG | Background color (click swatch to open color picker) |
-| Build Plate | Solid slicer-style floor plane beneath the model (toggle in Background card) |
 | Build Plate Preset | `White`, `Black`, `Model Sync`, or `Custom` |
 | Build Plate Auto Brightness | Automatically lightens the selected build plate color or synced model color for better scene contrast |
 | Plate Color | Build plate color picker (shown when Build Plate is enabled) |
