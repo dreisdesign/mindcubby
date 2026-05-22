@@ -17,6 +17,11 @@ import {
     getOrbitFrameState as getOrbitFrameStateModule,
     setCameraFromOrbitState as setCameraFromOrbitStateModule,
 } from './modules/orbit-frame-state.js';
+import {
+    createViewportPerformanceState,
+    getViewportPixelRatio as getViewportPixelRatioModule,
+    updateViewportPerformanceState as updateViewportPerformanceStateModule,
+} from './modules/viewport-performance.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -559,6 +564,7 @@ const RULER_FOOTPRINT_ENABLED = false;
 let fpsSampleAccumMs = 0;
 let fpsSampleFrames = 0;
 const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
+const VIEWPORT_PERF_MIN_QUALITY_SCALE = 0.62;
 let modelPartNames = [];
 let modelPartBaseColors = [];
 let modelPartSettings = [];
@@ -1030,6 +1036,8 @@ function syncLightRig() {
 }
 
 const orbitFrameStateStore = createOrbitFrameStateStore();
+const viewportPerformanceState = createViewportPerformanceState();
+let currentViewportPixelRatio = 0;
 
 function getOrbitFrameStateFast() {
     return getOrbitFrameStateFastModule(camera, controls, orbitFrameStateStore);
@@ -1095,8 +1103,22 @@ function isCanvasPointInsideCropFrame(clientX, clientY) {
 }
 
 function getViewportPixelRatio() {
-    const dpr = window.devicePixelRatio || 1;
-    return Math.min(Math.max(dpr * VIEWPORT_AA_SCALE, VIEWPORT_PIXEL_RATIO_MIN), VIEWPORT_PIXEL_RATIO_MAX);
+    return getViewportPixelRatioModule(
+        window.devicePixelRatio || 1,
+        VIEWPORT_AA_SCALE,
+        VIEWPORT_PIXEL_RATIO_MIN,
+        VIEWPORT_PIXEL_RATIO_MAX,
+        viewportPerformanceState
+    );
+}
+
+function applyViewportPixelRatioIfNeeded(force = false) {
+    if (!renderer) return false;
+    const nextPixelRatio = getViewportPixelRatio();
+    if (!force && Math.abs(nextPixelRatio - currentViewportPixelRatio) < 0.001) return false;
+    currentViewportPixelRatio = nextPixelRatio;
+    renderer.setPixelRatio(nextPixelRatio);
+    return true;
 }
 
 function getViewportFitDistance() {
@@ -1154,7 +1176,7 @@ function updateCameraClipPlanes(force = false) {
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initThree() {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: false });
-    renderer.setPixelRatio(getViewportPixelRatio());
+    applyViewportPixelRatioIfNeeded(true);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = false;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1291,7 +1313,7 @@ function syncCanvasSize() {
     // Don't override the renderer size or camera aspect during export — the
     // export pipeline sets its own dimensions and restores them when done.
     if (isExporting) return;
-    renderer.setPixelRatio(getViewportPixelRatio());
+    applyViewportPixelRatioIfNeeded();
     renderer.setSize(w, h, false); // false = don't touch CSS
     if (camera) {
         camera.aspect = w / h;
@@ -4866,6 +4888,11 @@ function loop() {
     const deltaSec = Math.min(Math.max(renderDeltaClock.getDelta(), 0), 0.1);
     const phaseStep = (2 * Math.PI / Math.max(1e-6, getSecondsPerRevolution())) * deltaSec;
     if (!isExporting) {
+        const viewportQualityChanged = updateViewportPerformanceStateModule(viewportPerformanceState, deltaSec, {
+            enabled: !isExporting,
+            minQualityScale: VIEWPORT_PERF_MIN_QUALITY_SCALE,
+        });
+        if (viewportQualityChanged) applyViewportPixelRatioIfNeeded();
         if (!isPaused && rotateModeEl.value === 'tilt' && mesh) {
             // Tilt: pitch the mesh around its X axis — camera orbits freely
             controls.autoRotate = false;
