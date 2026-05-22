@@ -413,10 +413,12 @@ const exportMotionRangeLabelEl = document.getElementById('exportMotionRangeLabel
 const exportMotionRangeValEl = document.getElementById('exportMotionRangeVal');
 const rulerSelectToggleEl = document.getElementById('rulerSelectToggle');
 const showDpadToggleEl = document.getElementById('showDpadToggle');
+const devModeToggleEl = document.getElementById('devModeToggle');
 const resetWarningsToggleEl = document.getElementById('resetWarningsToggle');
 const btnResetEverythingEl = document.getElementById('btnResetEverything');
 const btnClearBuildPlateEl = document.getElementById('btnClearBuildPlate');
 const btnToggleSidepanelsEl = document.getElementById('btnToggleSidepanels');
+const fpsReadoutEl = document.getElementById('fpsReadout');
 const exportCollapsedConfirmOverlayEl = document.getElementById('exportCollapsedConfirmOverlay');
 const exportCollapsedConfirmSummaryEl = document.getElementById('exportCollapsedConfirmSummary');
 const exportCollapsedDontShowEl = document.getElementById('exportCollapsedDontShow');
@@ -433,6 +435,7 @@ const buildPlateCustomSizeRowModalEl = document.getElementById('buildPlateCustom
 const buildPlateCustomWidthModalEl = document.getElementById('buildPlateCustomWidth-modal');
 const buildPlateCustomDepthModalEl = document.getElementById('buildPlateCustomDepth-modal');
 const rulerUnitSelectModalEl = document.getElementById('rulerUnitSelect-modal');
+const devModeToggleModalEl = document.getElementById('devModeToggle-modal');
 const fineTuningCheckModalEl = document.getElementById('fineTuningCheck-modal');
 const btnThemeToggleRailModalEl = document.getElementById('btnThemeToggleRail-modal');
 const btnPause = document.getElementById('btnPause');
@@ -502,7 +505,7 @@ const APP_PARAM_KEYS = new Set([
     'rv', 'ru', 'rl', 'rg', 'rh',
     'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp', 'bsp',
     'bp', 'bpc', 'bpt', 'bps', 'bpms', 'bpf', 'bpp', 'bpw', 'bpd', 'bpsh',
-    'uap', 'uam'
+    'uap', 'uam', 'dv'
 ]);
 const _passthroughParams = (() => {
     const p = new URLSearchParams(location.search);
@@ -529,6 +532,7 @@ let rulerUnit = 'metric';
 let rulerLinesVisible = true;
 let rulerPartHoverEnabled = false;
 let rulerPartSelectMultiEnabled = false;
+let devModeEnabled = false;
 let rulerHoveredPartIndex = -1;
 let rulerOverlayEl = null;
 let rulerGridHelper = null;
@@ -541,6 +545,8 @@ let rulerFootprintHelper = null;
 let rulerFootprintSignature = '';
 const RULER_DYNAMIC_LINES_ENABLED = false;
 const RULER_FOOTPRINT_ENABLED = false;
+let fpsSampleAccumMs = 0;
+let fpsSampleFrames = 0;
 const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
 let modelPartNames = [];
 let modelPartBaseColors = [];
@@ -3838,6 +3844,40 @@ function computeBuildPlateAutoBrightnessColor(baseHex) {
     return ShadeSystem.computeBuildPlateAutoBrightnessColor(baseHex);
 }
 
+function syncDevModeToggleUI() {
+    document.documentElement.classList.toggle('dev-mode', !!devModeEnabled);
+    if (devModeToggleEl) devModeToggleEl.checked = !!devModeEnabled;
+    if (devModeToggleModalEl) devModeToggleModalEl.checked = !!devModeEnabled;
+    if (fpsReadoutEl) {
+        fpsReadoutEl.hidden = !devModeEnabled;
+        if (devModeEnabled && !fpsReadoutEl.textContent) fpsReadoutEl.textContent = 'FPS --';
+    }
+}
+
+function setDevModeEnabled(enabled, persist = true) {
+    devModeEnabled = !!enabled;
+    document.documentElement.classList.toggle('dev-mode', devModeEnabled);
+    if (!devModeEnabled) {
+        fpsSampleAccumMs = 0;
+        fpsSampleFrames = 0;
+        if (fpsReadoutEl) fpsReadoutEl.textContent = '';
+    }
+    syncDevModeToggleUI();
+    if (persist) saveSettings();
+}
+
+function updateFpsReadout(deltaSec) {
+    if (!devModeEnabled || !fpsReadoutEl) return;
+    const deltaMs = Math.max(0, Math.min(250, (Number(deltaSec) || 0) * 1000));
+    fpsSampleAccumMs += deltaMs;
+    fpsSampleFrames += 1;
+    if (fpsSampleAccumMs < 300) return;
+    const fps = (fpsSampleFrames * 1000) / Math.max(1, fpsSampleAccumMs);
+    fpsReadoutEl.textContent = `FPS ${fps.toFixed(1)}`;
+    fpsSampleAccumMs = 0;
+    fpsSampleFrames = 0;
+}
+
 
 function getRulerInteractionMode() {
     if (!hasModelParts()) return null;
@@ -4905,7 +4945,7 @@ function loop() {
             restoreViewportExportScene?.();
         }
         if (exportFrameEnabled) drawExportFrame();
-        if (rulerEnabled) {
+        if (rulerEnabled || rulerPartHoverEnabled) {
             const now = performance.now();
             const overlayIntervalMs = getRulerInteractionMode() ? 28 : 80;
             if (now - _lastRulerOverlayUpdateMs >= overlayIntervalMs) {
@@ -4913,6 +4953,7 @@ function loop() {
                 _lastRulerOverlayUpdateMs = now;
             }
         }
+        updateFpsReadout(deltaSec);
         updateExportPreview();
     }
 }
@@ -5240,7 +5281,7 @@ function setExportWorkspaceActive(active) {
     const exportOverlayEl = document.getElementById('exportOverlay');
     if (exportOverlayEl) exportOverlayEl.hidden = !exportWorkspaceActive;
     if (exportWorkspaceActive) {
-        if (exportGridEl) exportGridEl.checked = !!rulerEnabled;
+        if (exportGridEl) exportGridEl.checked = !!rulerLinesVisible;
         if (exportBuildPlateEl) exportBuildPlateEl.checked = !!buildPlateEnabled;
     }
     updateExportWorkspaceTransparencyPattern();
@@ -6757,8 +6798,27 @@ async function clearIDB() {
 }
 
 const SETTINGS_KEY = 'rotater_settings';
+let settingsToURLTimer = 0;
+
+function flushSettingsToURL() {
+    if (settingsToURLTimer) {
+        clearTimeout(settingsToURLTimer);
+        settingsToURLTimer = 0;
+    }
+    settingsToURL();
+}
+
+function scheduleSettingsToURL(delayMs = 120) {
+    if (settingsToURLTimer) clearTimeout(settingsToURLTimer);
+    settingsToURLTimer = setTimeout(() => {
+        settingsToURLTimer = 0;
+        settingsToURL();
+    }, delayMs);
+}
 
 function saveSettings() {
+    const options = arguments[0] || {};
+    const immediateUrlSync = !!options?.immediateUrlSync;
     if (DEV_LOG) console.log(`[rotater] saveSettings called at ${Date.now()}`);
     if (suppressSave) {
         if (DEV_LOG) console.log(`[rotater] saveSettings suppressed at ${Date.now()}`);
@@ -6828,6 +6888,7 @@ function saveSettings() {
             showDpad: dpadVisible ? '1' : '0',
             uploadChoicePrompt: uploadChoicePromptEnabled ? '1' : '0',
             uploadDefaultAction: uploadDefaultAction,
+            devMode: devModeEnabled ? '1' : '0',
             activeBgPreset: activeBgPreset,
             activeModelPreset: activeModelPreset,
             modelPartSelected: String(modelPartSelected || 0),
@@ -6848,7 +6909,8 @@ function saveSettings() {
             });
         } catch (e) { }
     }
-    settingsToURL();
+    if (immediateUrlSync) flushSettingsToURL();
+    else scheduleSettingsToURL();
 }
 
 function restoreSettings() {
@@ -7154,6 +7216,11 @@ function restoreSettings() {
         if (s.showDpad != null) {
             dpadVisible = (s.showDpad === '1' || s.showDpad === true || s.showDpad === 1);
         }
+        if (s.devMode != null) {
+            devModeEnabled = (s.devMode === '1' || s.devMode === true || s.devMode === 1);
+        } else {
+            devModeEnabled = false;
+        }
         autoUIAssistEnabled = true;
         exportCollapsedConfirmEnabled = true;
         if (s.uploadChoicePrompt != null) {
@@ -7165,7 +7232,7 @@ function restoreSettings() {
             // Legacy migration: old "add" behavior maps to "replace" in the simplified picker.
             uploadDefaultAction = 'replace';
         }
-        if (exportGridEl) exportGridEl.checked = rulerEnabled;
+        if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
         if (exportBuildPlateEl && s.exportBuildPlate == null) exportBuildPlateEl.checked = buildPlateEnabled;
         if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
@@ -7237,6 +7304,7 @@ function restoreSettings() {
         exportMotionControlsEnabled = true;
         if (exportMotionControlsEl) exportMotionControlsEl.hidden = false;
         if (showDpadToggleEl) showDpadToggleEl.checked = dpadVisible;
+        syncDevModeToggleUI();
         applyDpadVisibility();
         updateBuildPlateMaterial();
         updateAutoBgShadeControlVisibility();
@@ -7360,6 +7428,7 @@ function getURLSettings(searchStr = location.search) {
         modelSyncPart: g('bsp'),
         uploadChoicePrompt: g('uap'),
         uploadDefaultAction: p.has('uam') ? (p.get('uam') === 'r' ? 'replace' : 'newplate') : null,
+        devMode: g('dv'),
     };
 }
 
@@ -7441,6 +7510,7 @@ function settingsToURL() {
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
     if (!uploadChoicePromptEnabled) p.set('uap', '0');
     if (uploadDefaultAction === 'replace') p.set('uam', 'r');
+    if (devModeEnabled) p.set('dv', '1');
     // Re-inject passthrough params captured at startup (e.g. debug=1)
     _passthroughParams.forEach((v, k) => { if (!p.has(k)) p.set(k, v); });
     history.replaceState(null, '', '?' + p.toString());
@@ -8560,6 +8630,8 @@ function persistCurrentMultipartParts({ immediate = false } = {}) {
 let colorCommitTimer = 0;
 let pendingColorThumbTargets = null;
 let colorPickPreviewFrame = 0;
+let modelToneCommitTimer = 0;
+let pendingModelToneThumbTargets = null;
 
 function applyColorPickPreview() {
     if (isMultipartModel()) {
@@ -8620,6 +8692,24 @@ function scheduleColorCommit(thumbTargets = null) {
     colorCommitTimer = setTimeout(flushColorCommit, 100);
 }
 
+function flushModelToneCommit() {
+    if (modelToneCommitTimer) {
+        clearTimeout(modelToneCommitTimer);
+        modelToneCommitTimer = 0;
+    }
+    const thumbTargets = pendingModelToneThumbTargets;
+    pendingModelToneThumbTargets = null;
+    persistCurrentMultipartParts({ immediate: true });
+    saveSettings();
+    if (thumbTargets !== null) queueModelPartThumbsRender(thumbTargets);
+}
+
+function scheduleModelToneCommit(thumbTargets = null) {
+    pendingModelToneThumbTargets = thumbTargets;
+    if (modelToneCommitTimer) clearTimeout(modelToneCommitTimer);
+    modelToneCommitTimer = setTimeout(flushModelToneCommit, 120);
+}
+
 colorPick.addEventListener('input', (ev) => {
     scheduleColorPickPreview();
 });
@@ -8645,10 +8735,11 @@ if (opacitySlider) {
             updateBgShadeSliderVisual();
         }
         updateShadingThumbs();
-        persistCurrentMultipartParts();
         updateShadeSliderVisual();
-        queueModelPartThumbsRender(targets);
-        saveSettings();
+        scheduleModelToneCommit(targets);
+    });
+    opacitySlider.addEventListener('change', () => {
+        flushModelToneCommit();
     });
 }
 
@@ -8863,7 +8954,7 @@ function setExportQualityValue(value) {
 syncExportQualitySliderFromSelect();
 
 if (exportGridEl) {
-    exportGridEl.checked = rulerEnabled;
+    exportGridEl.checked = rulerLinesVisible;
 }
 if (exportBuildPlateEl) {
     exportBuildPlateEl.checked = buildPlateEnabled;
@@ -8886,7 +8977,6 @@ exportQualitySliderEl?.addEventListener('input', () => {
 
 exportGridEl?.addEventListener('change', () => {
     const on = !!exportGridEl.checked;
-    rulerEnabled = on;
     rulerLinesVisible = on;
     if (rulerToggleEl) rulerToggleEl.checked = on;
     updateRulerHUD();
@@ -9254,6 +9344,16 @@ function setUploadChoiceStepState(hasFiles) {
     if (uploadChoiceActionsRightEl) uploadChoiceActionsRightEl.hidden = !hasFiles;
 }
 
+function syncUploadChoicePromptText() {
+    if (!uploadChoiceTextEl) return;
+    if (uploadChoiceSelectedFiles.length > 0) {
+        const incomingLabel = getUploadIncomingLabel(uploadChoiceSelectedFiles);
+        uploadChoiceTextEl.textContent = `Choose how to load ${incomingLabel}.`;
+    } else {
+        uploadChoiceTextEl.textContent = 'Drop STL or ZIP files here, or click Browse.';
+    }
+}
+
 function renderUploadChoiceFileList() {
     if (!uploadChoiceFileListWrapEl || !uploadChoiceFileListEl) return;
 
@@ -9281,7 +9381,15 @@ function renderUploadChoiceFileList() {
         name.className = 'upload-choice-file-name';
         name.textContent = file?.name || 'Unnamed file';
 
-        item.append(idx, name);
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'upload-choice-file-remove';
+        removeBtn.setAttribute('aria-label', `Remove ${file?.name || 'file'}`);
+        removeBtn.title = `Remove ${file?.name || 'file'}`;
+        removeBtn.dataset.removeFileIndex = String(index);
+        removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+
+        item.append(idx, name, removeBtn);
         uploadChoiceFileListEl.appendChild(item);
     });
 
@@ -9301,6 +9409,7 @@ function setUploadChoiceFiles(fileList) {
         return /\.(stl|zip)$/i.test(name);
     });
     uploadChoiceShowAllFiles = false;
+    syncUploadChoicePromptText();
     renderUploadChoiceFileList();
     setUploadChoiceStepState(uploadChoiceSelectedFiles.length > 0);
 }
@@ -9321,16 +9430,7 @@ function promptUploadChoice(files) {
     if (!uploadChoiceOverlayEl) return Promise.resolve(uploadDefaultAction || 'newplate');
 
     setUploadChoiceFiles(files);
-    const hasFiles = uploadChoiceSelectedFiles.length > 0;
-
-    if (uploadChoiceTextEl) {
-        if (hasFiles) {
-            const incomingLabel = getUploadIncomingLabel(uploadChoiceSelectedFiles);
-            uploadChoiceTextEl.textContent = `Choose how to load ${incomingLabel}.`;
-        } else {
-            uploadChoiceTextEl.textContent = 'Drop STL or ZIP files here, or click Browse.';
-        }
-    }
+    syncUploadChoicePromptText();
     uploadChoiceDropZoneEl?.classList.remove('is-dragover');
     uploadChoiceOverlayEl.hidden = false;
 
@@ -10540,6 +10640,21 @@ if (showDpadToggleEl) {
     }
 }
 
+if (devModeToggleEl) {
+    devModeToggleEl.checked = !!devModeEnabled;
+    const devModeHandler = () => {
+        setDevModeEnabled(!!devModeToggleEl.checked, true);
+    };
+    devModeToggleEl.addEventListener('change', devModeHandler);
+    if (devModeToggleModalEl) {
+        devModeToggleModalEl.checked = !!devModeEnabled;
+        devModeToggleModalEl.addEventListener('change', () => {
+            devModeToggleEl.checked = devModeToggleModalEl.checked;
+            devModeHandler();
+        });
+    }
+}
+
 if (buildPlateSizePresetEl) {
     buildPlateSizePresetEl.value = buildPlateSizePreset;
     const buildPlateChangeHandler = () => {
@@ -10617,6 +10732,18 @@ btnUploadChoiceNewPlate?.addEventListener('click', () => closeUploadChoicePrompt
 btnUploadChoiceShowMore?.addEventListener('click', () => {
     uploadChoiceShowAllFiles = !uploadChoiceShowAllFiles;
     renderUploadChoiceFileList();
+});
+
+uploadChoiceFileListEl?.addEventListener('click', (ev) => {
+    const btn = ev.target?.closest?.('[data-remove-file-index]');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.removeFileIndex, 10);
+    if (!Number.isInteger(idx) || idx < 0 || idx >= uploadChoiceSelectedFiles.length) return;
+    uploadChoiceSelectedFiles.splice(idx, 1);
+    uploadChoiceShowAllFiles = false;
+    syncUploadChoicePromptText();
+    renderUploadChoiceFileList();
+    setUploadChoiceStepState(uploadChoiceSelectedFiles.length > 0);
 });
 
 async function handleUploadChoiceDroppedFiles(fileList) {
@@ -11061,6 +11188,7 @@ canvas?.addEventListener('contextmenu', (e) => {
 });
 
 canvas?.addEventListener('pointermove', (e) => {
+    if (!rulerPartHoverEnabled && !isModelPartPreviewMultiSelectActive()) return;
     updateRulerPartHoverFromPointerEvent(e);
 }, { passive: true });
 
@@ -12550,12 +12678,11 @@ updateAutoBgShadeControlVisibility();
 
 const rulerToggleEl = document.getElementById('rulerToggle');
 if (rulerToggleEl) {
-    rulerToggleEl.checked = !!rulerEnabled;
+    rulerToggleEl.checked = !!rulerLinesVisible;
     rulerToggleEl.addEventListener('change', () => {
-        rulerEnabled = rulerToggleEl.checked;
-        rulerLinesVisible = rulerEnabled;
-        if (!rulerEnabled) setRulerHoveredPartIndex(-1);
-        if (exportGridEl) exportGridEl.checked = rulerEnabled;
+        rulerLinesVisible = rulerToggleEl.checked;
+        if (!rulerLinesVisible && !rulerPartHoverEnabled) setRulerHoveredPartIndex(-1);
+        if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
         updateRulerHUD();
         updateLiveRulerOverlay();
         refreshExportPreviewNow();
@@ -13076,9 +13203,9 @@ function renderModelShadeSelector() {
     });
 }
 
-// Add an event listener to opacitySlider to re-render the dots when loaded from localstorage
+// Re-render dots when a shade change is committed, not on every drag sample.
 if (opacitySlider) {
-    opacitySlider.addEventListener('input', () => {
+    opacitySlider.addEventListener('change', () => {
         renderModelShadeSelector();
     });
 }

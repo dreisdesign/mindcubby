@@ -116,6 +116,7 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 
 - **Fine tuning for precise control**: turns off coarse snap-only behavior and enables finer slider granularity for detailed adjustments.
 - **Show D-pad controls**: shows/hides the camera D-pad overlay in the viewer; Pause remains available in the bottom-right overlay action.
+- **Dev mode (show FPS)**: enables a lightweight FPS readout overlay in the viewer for performance diagnostics (off by default).
 - **Reset all warnings**: re-enables previously dismissed warning prompts (for example upload choice and collapsed-export confirmations).
 - **Build Plate Size**: sets the virtual build plate dimensions used by Surface/Grid context (`180x180`, `220x220`, `235x235`, `256x256`, `300x300`, or `Custom`).
 - **Custom Build Plate Width/Depth**: when `Custom` is selected, sets plate width/depth in mm.
@@ -213,6 +214,8 @@ On first visit after texture updates, the tune icon shows a small **NEW** badge 
 | Range | Oscillation amplitude for Tilt (10°–50°) and arc width for Spin (45°–360°); controls tilt depth for Wobble |
 
 Rotation timing is now time-based (delta-time corrected), so selected seconds-per-revolution stay accurate even when frame rate drops.
+
+Shade drag responsiveness note: model tone/opacity drag now prioritizes immediate visual feedback and defers heavier persistence/thumbnail work to commit timing for smoother interaction on larger scenes.
 
 ### Export preview
 

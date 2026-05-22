@@ -1,115 +1,76 @@
 # Rotater Roadmap
----
 
-Updated: 2026-05-19
+Updated: 2026-05-22
 
-This roadmap is sorted by readiness (dependency order). Every project includes a project type, estimated difficulty, and required dependencies.
+This roadmap contains only incomplete work. Completed items belong in `CHANGELOG.md`.
 
-## Cohesive Program Plan
+## Planning Principles
 
-### Phase 1 (completed)
+- Keep one active source of truth for open work.
+- Sequence work by dependency so foundational stability lands first.
+- Favor small, user-visible wins in each phase while unlocking larger architecture items.
 
-Completed work archived in `_IGNORE/ROADMAP_ARCHIVE.md` and tracked in `CHANGELOG.md` (Unreleased).
+## Phase A: Stability and UX Consistency (Now)
 
-### Phase 2 (completed)
+Goal: tighten reliability and interaction parity in existing flows before major feature expansion.
 
-Completed work archived in `_IGNORE/ROADMAP_ARCHIVE.md` and tracked in `CHANGELOG.md` (Unreleased).
+| Priority | Project | Type | Difficulty | Dependencies | Outcome |
+|---|---|---|---|---|---|
+| A1 | Multipart persistence hardening | State Persistence | M | None | Close refresh/restore edge cases for multipart appearance, selection state, and URL/local parity. |
+| A2 | Interactive export duration dropdown refinements | Export UX | S | None | Tighten label, frame count, and estimate responsiveness parity across GIF/MP4. |
+| A3 | Ruler part-hover supports single-part models | Bugfix | S | None | Ensure inspect hover dimensions work for single-part models, not only multipart. |
+| A4 | Upload decision default simplification | Upload Flow UX | M | Existing upload decision modal | Replace warning-memory behavior with explicit persisted default (`Always Add`, `Always Replace`, `Ask`) and one-shot override in modal. |
+| A5 | Model list sorting controls | Model Manager UX | S | None | Add explicit `A-Z` / `Z-A` sorting, keep `A-Z` as default baseline. |
+| A6 | Active part arrow navigation | Interaction Design | S | None | Add next/previous controls to switch active selected part directly from selector UI. |
+| A7 | New version indicator badge | Release UX | S | None | Add subtle update badge on About/App Settings entry when newer build metadata exists. |
 
-### Phase 3
+## Phase B: Export and Workspace Foundation
 
-Completed work archived in `_IGNORE/ROADMAP_ARCHIVE.md` and tracked in `CHANGELOG.md` (Unreleased).
+Goal: complete one-surface export workflow and prepare for richer export/preset features.
 
-Remaining / Fast-follow:
+| Priority | Project | Type | Difficulty | Dependencies | Outcome |
+|---|---|---|---|---|---|
+| B1 | Export workspace consolidation finish pass | Rendering UX | M | A1 | Complete one-surface framing cleanup and remove duplicate/legacy interaction paths. |
+| B2 | Ruler persistence polish | Workspace Tools | M | A1 | Ensure ruler visibility, units, and placement state round-trip reliably through save/share flows. |
+| B3 | Optional filename label in exports | Export UX | S | B1 | Add optional filename burn-in overlay for exported media. |
+| B4 | Single-click canvas full-screen | Viewer UX | S | B1 | Add robust full-screen viewer entry/exit for desktop and mobile. |
+| B5 | Watermark redesign and reintroduction | Branding/Export | M | B1 | Reintroduce watermark with consistent output behavior across GIF/MP4/PNG/JPEG. |
+| B6 | Batch export presets | Export Workflow | M | B1 | Save and reapply reusable export settings for repetitive listing workflows. |
 
-1. Interactive Export duration dropdown refinements — queued (label/estimate responsiveness parity across GIF/MP4)
+## Phase C: Interaction and Architecture Expansion
 
-### Track Integration Map
+Goal: establish maintainable structure and advanced editing interactions.
 
-Track 1: Server-side storage strategy (combined A + C)
+| Priority | Project | Type | Difficulty | Dependencies | Outcome |
+|---|---|---|---|---|---|
+| C1 | JavaScript module refactor (sortable naming) | Code Architecture | L | A1 | Split `script.js` into stable modules with clear boundaries and sortable naming. |
+| C2 | Functions index + Copilot docs map | AI-assisted Dev Workflow | M | C1 | Add maintained function index and docs map for faster safe AI-assisted edits. |
+| C3 | Settings-only undo stack | Interaction System | L | A1 | Implement Cmd/Ctrl+Z for settings mutations only, isolated from file operations. |
+| C4 | Advanced measure mode | Geometry Tools | L | B2, C3 | Add two-point mesh measurements via raycast with robust filtering and unit parity. |
+| C5 | Drag/move models on plate | Geometry Interaction | XL | A1, C3 | Add direct model placement with floor constraints, persisted transforms, and predictable multi-model behavior. |
+| C6 | Pinnable cards | UI Architecture | L | C3 | Add pin/unpin quick-access rail with persistence, keyboard support, and overflow handling. |
+| C7 | Full-screen model manager | Product Feature | L | A1 | Build dedicated manager with larger thumbs, rename/reorder/replace/remove/visibility workflows. |
+| C8 | Preset gallery with save-as | Preset Management | M | C7 | Add named preset library and save-as flow for reusable appearance setups. |
 
-- Problem: complex scene settings can exceed practical URL length limits for sharing.
-- Solution direction is implemented through existing roadmap items:
-	- `Short-link configuration locker`
-	- `Passkey-gated sync model`
-	- `Local-to-cloud STL UID rehydration`
-	- `Manual JSON fallback flow`
+## Phase D: Share and Cloud Strategy (Optional Program)
 
-Track 2: Ruler and measurement system (feature enhancement)
+Goal: support short-link scene sharing for complex workspaces while preserving offline fallback.
 
-- Spatial context and alignment are implemented through existing roadmap items:
-	- `Ruler persistence polish`
-	- `Advanced measure mode`
-	- `Drag / move models on plate`
+| Priority | Project | Type | Difficulty | Dependencies | Outcome |
+|---|---|---|---|---|---|
+| D1 | Short-link configuration locker | Cloud Infrastructure | XL | Backend service decision | Use short IDs in URLs and store full scene JSON in an external locker service. |
+| D2 | Passkey-gated sync model | Privacy/Security | XL | D1 | Enable account-less passkey-gated lock/unlock with zero-PII storage model. |
+| D3 | Local-to-cloud STL UID rehydration | Data Mapping | XL | D1, D2 | Match local STL uploads to stored scene JSON via generated UIDs when opening shared links. |
+| D4 | Manual JSON fallback flow | Reliability | M | D1 | Preserve fully offline JSON import/export path as no-server fallback. |
 
-### Shared workflow legend
+## Triage Queue (Needs Validation)
 
-| Stage | Action | Technical detail |
-|---|---|---|
-| Setup | Upload local STLs | App generates UIDs for file matching. |
-| Design | Adjust settings and use ruler | Changes are tracked in scene JSON state. |
-| Save | Enter passkey and sync | Full JSON is stored in locker service; short ID is returned. |
-| Share | Distribute short URL | Link stays clean and below URL length limits. |
-| Load | Open link and re-upload local files | App fetches scene JSON and rehydrates by UID match. |
+- Pendulum animation option with selectable pivot (top or bottom anchor).
+- Crop/export simultaneous mode exploration with share-overlay toggle for comparing framed export and regular workspace views.
+- Click-to-edit build plate interaction concept (direct canvas affordance vs settings-first flow).
 
-## Readiness 1: Ready Now (no blockers)
-
-| Project | Project Type | Estimated Difficulty | Dependencies | Scope |
-|---|---|---|---|---|
-| Model list sorting controls | Model Manager UX | S | None | Add model list sorting options with explicit choices: A-Z (ascending) and Z-A (descending). Keep A-Z as the default baseline order. |
-| Active part arrow navigation | Interaction Design | S | None | Add next/previous arrows to switch active selected model part directly from the selector UI. |
-| New version indicator badge | Release UX | S | None | Add a small red badge to the Info entry in App Settings when build metadata indicates a newer version is available. |
-| Interactive export duration dropdown refinements (fast-follow) | Export UX | S | None | Improve dropdown interaction polish so duration labels, frame counts, and estimate rows update with tighter parity across GIF and MP4 paths. |
-| Upload decision default simplification | Upload Flow UX | M | Existing upload decision modal | Replace warning-memory behavior with explicit persisted default (`Always Add`, `Always Replace`, `Ask`) plus one-time override in modal. |
-| Reset everything also resets Lighting Effects & Animation | UX Settings | S | None | Extend the global `Reset everything` action to clear the Lighting Effects and Animation card state (speed, tilt/wobble, light height/intensity) so a full reset is comprehensive. |
-| Ruler part-hover supports single-part models | Bugfix | S | None | Ensure `Part hover` mode can be enabled and displays dimensions even when the model has a single part. |
-
-## Readiness 2: Depends on stabilization work
-
-| Project | Project Type | Estimated Difficulty | Dependencies | Scope |
-|---|---|---|---|---|
-| Multipart persistence hardening | State Persistence | M | None | Close remaining refresh/restore edge cases for multipart appearance, checkbox state, and URL/local storage parity. |
-| JavaScript module refactor (sortable naming) | Code Architecture | L | None | Split script logic into JS modules, adopt sortable file naming, and migrate incrementally behind stable import boundaries. |
-| Functions index + Copilot docs map | AI-assisted Dev Workflow | M | JavaScript module refactor (sortable naming) | Create a maintained functions index and Copilot instruction references that point to project docs so AI-assisted edits can resolve context faster. |
-| Export workspace consolidation finish pass | Rendering UX | M | Multipart persistence hardening | Complete one-surface export framing cleanup and remove remaining duplicate or legacy interaction paths. |
-| Ruler persistence polish | Workspace Tools | M | Multipart persistence hardening | Ensure ruler visibility, unit mode, and placement state round-trip reliably in saved state and shared links. |
-
-## Readiness 3: Requires core architecture pieces
-
-| Project | Project Type | Estimated Difficulty | Dependencies | Scope |
-|---|---|---|---|---|
-| Advanced measure mode | Geometry Tools | L | Ruler persistence polish, Multipart persistence hardening | Add two-point mesh measurement via raycast + ruler units with robust hidden-part and transparent-material filtering. |
-| Settings-only undo stack | Interaction System | L | Multipart persistence hardening | Implement Cmd/Ctrl+Z for settings mutations only, isolated from file operations (load/append/replace). |
-| Drag / move models on plate | Geometry Interaction | XL | Settings-only undo stack, Multipart persistence hardening | Add direct model dragging/placement on the build plate with floor constraints, transform persistence, and predictable multi-model interaction rules. |
-| Pinnable cards | UI Architecture | L | Settings-only undo stack | Pin/unpin cards to a quick-access rail with persistent state, keyboard support, and overflow handling. |
-
-## Readiness 4: Cross-system initiatives
-
-| Project | Project Type | Estimated Difficulty | Dependencies | Scope |
-|---|---|---|---|---|
-| Full-screen model manager | Product Feature | L | Multipart persistence hardening | Build a dedicated model manager with larger thumbnails, rename, reorder, replace, remove, and visibility workflows. |
-| Short-link configuration locker | Cloud Infrastructure | XL | Backend service decision | Use short IDs in URLs and store full scene JSON in an external service suitable for static hosting workflows. |
-| Passkey-gated sync model | Privacy/Security | XL | Short-link configuration locker | Enable account-less passkey-gated lock/unlock semantics with zero-PII storage patterns. |
-| Local-to-cloud STL UID rehydration | Data Mapping | XL | Short-link configuration locker, passkey-gated sync model | Match local STL uploads to server-stored scene JSON using generated UIDs when opening shared links. |
-| Manual JSON fallback flow | Reliability | M | Short-link configuration locker | Keep fully offline export/import JSON flow available as a no-server fallback path. |
-
-## Readiness 5: Optional backlog
-
-| Project | Project Type | Estimated Difficulty | Dependencies | Scope |
-|---|---|---|---|---|
-| Optional filename label in exports | Export UX | S | Export workspace consolidation finish pass | Add optional filename burn-in overlay for exported media. |
-| Watermark redesign and reintroduction | Branding / Export | M | Export workspace consolidation finish pass | Revisit watermark only after validating consistent behavior across GIF/MP4/PNG/JPEG pipelines. |
-| Single-click canvas full-screen | Viewer UX | S | Export workspace consolidation finish pass | Add instant full-screen viewer mode with reliable mobile and desktop behavior. |
-| Batch export presets | Export Workflow | M | None | Save and reapply repeatable export settings for listing-generation workflows. |
-| Preset gallery with save-as | Preset Management | M | Full-screen model manager | Add named preset library and save-as flow for reusable model looks. |
-
-## Status Notes
-
-| Item | Status |
-|---|---|
-| Legacy standalone "Export Workspace Cleanup" item | Folded into Export workspace consolidation finish pass (not tracked separately). |
-| Preview click-to-select + Select mode projects | Implemented and removed from the open roadmap. |
-| Prior mixed "report + queue" layout | Replaced by dependency-ordered project planning layout. |
-| Testing scripts + pre-commit request | Consolidated into one testing baseline project plus an optional pre-commit gate to avoid duplicate roadmap items. |
+Resolved decision:
+- Export start position remains unchanged for now. Users can pause at the desired orientation before exporting.
 
 ## Execution Notes
 

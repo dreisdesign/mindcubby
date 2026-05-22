@@ -163,6 +163,7 @@
                         <div id="cropCornerTR" class="crop-corner crop-corner--tr" aria-hidden="true"></div>
                         <div id="cropCornerBL" class="crop-corner crop-corner--bl" aria-hidden="true"></div>
                         <div id="cropCornerBR" class="crop-corner crop-corner--br" aria-hidden="true"></div>
+                        <div id="fpsReadout" class="fps-readout" hidden aria-live="polite" aria-atomic="true"></div>
                         <img src="rotater.svg" alt="ROTATER" class="logo canvas-logo canvas-logo--wordmark">
                         <img src="favicon.svg" alt="ROTATER" class="logo canvas-logo canvas-logo--icon">
                         <div class="canvas-top-right">
@@ -727,6 +728,9 @@
                                 <label class="gif-option-check adv-section-check" title="Show camera D-pad controls in the viewer">
                                     <input type="checkbox" id="showDpadToggle" checked> Show D-pad controls
                                 </label>
+                                <label class="gif-option-check adv-section-check" title="Enable development instrumentation overlays">
+                                    <input type="checkbox" id="devModeToggle"> Dev mode (show FPS)
+                                </label>
                                 <button id="resetWarningsToggle" class="copy-link-btn copy-link-btn--secondary copy-link-btn--compact app-settings-reset-btn" type="button" title="Re-enable warning dialogs you dismissed earlier">Reset all warnings</button>
                             </div>
                             <div class="app-settings-inline-group">
@@ -1042,15 +1046,15 @@
                         </div>
                     </div>
                     <div class="upload-choice-actions">
-                        <button id="btnUploadChoiceCancel" class="copy-link-btn copy-link-btn--secondary" type="button">Cancel</button>
+                        <button id="btnUploadChoiceCancel" class="copy-link-btn copy-link-btn--secondary upload-choice-action-btn" type="button">Cancel</button>
                         <div id="uploadChoiceActionsRight" class="upload-choice-actions-right" hidden>
-                            <button id="btnUploadChoiceReplace" class="copy-link-btn copy-link-btn--secondary" type="button">
+                            <button id="btnUploadChoiceReplace" class="copy-link-btn copy-link-btn--secondary upload-choice-action-btn" type="button">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                     <path d="M2.30469 5.89648C2.69927 5.89653 3.03349 6.03442 3.30762 6.31055C3.58191 6.58687 3.71972 6.92008 3.71973 7.31055V20.7578H17.166C17.5567 20.7578 17.8908 20.8948 18.167 21.1689C18.4433 21.4433 18.5811 21.7765 18.5811 22.167C18.581 22.5614 18.4432 22.8959 18.167 23.1699C17.8908 23.4443 17.5567 23.5811 17.166 23.5811H3.71973C2.93862 23.5811 2.27216 23.3063 1.72168 22.7559C1.17118 22.2054 0.896484 21.539 0.896484 20.7578V7.31055C0.896487 6.92005 1.03345 6.58688 1.30762 6.31055C1.58194 6.03442 1.91422 5.89648 2.30469 5.89648ZM20.5811 1.06641C21.3622 1.06641 22.0286 1.34284 22.5791 1.89551C23.1295 2.44798 23.4043 3.11539 23.4043 3.89648V15.9287C23.4043 16.7096 23.1293 17.3763 22.5791 17.9287C22.0286 18.4814 21.3622 18.7578 20.5811 18.7578H8.54883C7.76783 18.7578 7.10052 18.4814 6.54785 17.9287C5.99555 17.3763 5.71976 16.7097 5.71973 15.9287V3.89648C5.71973 3.11534 5.99538 2.448 6.54785 1.89551C7.10052 1.34284 7.76783 1.06641 8.54883 1.06641H20.5811ZM14.543 5.59082C14.1902 5.59083 13.8899 5.71651 13.6416 5.9668C13.3933 6.21726 13.2686 6.51756 13.2686 6.86816V8.63477H11.502C11.1472 8.63478 10.8459 8.75946 10.5977 9.00781C10.3494 9.2561 10.2247 9.55753 10.2246 9.91211C10.2246 10.2668 10.3493 10.5681 10.5977 10.8164C10.846 11.0649 11.1471 11.1894 11.502 11.1895H13.2686V12.9561C13.2686 13.3067 13.3933 13.6079 13.6416 13.8584C13.8899 14.1085 14.1903 14.2334 14.543 14.2334C14.8955 14.2334 15.197 14.1085 15.4473 13.8584C15.6976 13.6079 15.8232 13.3067 15.8232 12.9561V11.1895H17.584C17.9387 11.1895 18.2399 11.0649 18.4883 10.8164C18.7366 10.5681 18.8613 10.2667 18.8613 9.91211C18.8613 9.55753 18.7366 9.2561 18.4883 9.00781C18.24 8.75938 17.9386 8.63477 17.584 8.63477H15.8232V6.86816C15.8232 6.51756 15.6976 6.21726 15.4473 5.9668C15.1969 5.71646 14.8956 5.59082 14.543 5.59082Z" />
                                 </svg>
                                 <span>Add to Plate</span>
                             </button>
-                            <button id="btnUploadChoiceNewPlate" class="export-btn export-btn--main" type="button">
+                            <button id="btnUploadChoiceNewPlate" class="export-btn export-btn--main upload-choice-action-btn" type="button">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-8-2h2v-4h4v-2h-4V7h-2v4H7v2h4z" />
                                 </svg>
@@ -1146,6 +1150,9 @@
                         </label>
                         <label class="gif-option-check adv-section-check" title="Show camera D-pad controls in the viewer">
                             <input type="checkbox" id="showDpadToggle-modal" checked> Show D-pad controls
+                        </label>
+                        <label class="gif-option-check adv-section-check" title="Enable development instrumentation overlays">
+                            <input type="checkbox" id="devModeToggle-modal"> Dev mode (show FPS)
                         </label>
                         <button id="resetWarningsToggle-modal" class="copy-link-btn copy-link-btn--secondary copy-link-btn--compact app-settings-reset-btn" type="button" title="Re-enable warning dialogs you dismissed earlier">Reset all warnings</button>
                     </div>

@@ -62,6 +62,7 @@
 ## [Unreleased]
 ### Added
 - **Share: Copy Image to clipboard** — added a new `Copy Image` action in the Share panel that copies the current still render directly to clipboard as PNG (or JPEG when JPG format is selected).
+- **Dev Mode FPS overlay** — added `Dev mode (show FPS)` in App Settings (dock + modal) with an in-viewer FPS readout for runtime diagnostics; default state is OFF and persisted with other settings.
 - **Interaction mode picker (Inspect / Multi-Select)** — replaced separate `Inspect`/`Select` HUD toggles with a single grouped picker; `Select` renamed to `Multi-Select`; picker modes are mutually-exclusive and auto-pause rotation while active.
 - **Config: partInteractionModes** — added `partInteractionModes` to `color-rules.json` to control opacity/saturation profiles for `inspect` and `select` modes; visuals are applied dynamically to part materials and persisted in color rules.
 - **Canvas sidepanel quick toggle** — added a top-right canvas utility button to hide/show sidepanels; the icon now swaps between close and expand states and persists across refreshes
@@ -78,6 +79,8 @@
 - **Ruler hover focus highlight** — hovered multipart parts now show a live 3D bounding-box outline, and the matching row in the model selector is highlighted for clear target context
 
 ### Changed
+- **Roadmap restructuring (incomplete-only)** — `_IGNORE/ROADMAP.md` now tracks only incomplete work in a cohesive phase-based structure; completed work remains in this changelog.
+- **Export start-position decision** — kept current export start behavior unchanged; users can pause at the desired pose before export.
 - **Model picker floating-card behavior** — on desktop pointer layouts, the multipart model picker dropdown now opens as a draggable floating card with a sticky drag-handle header, matching the Share panel interaction style while preserving existing mobile dropdown behavior.
 - **Model picker close flow** — floating model picker now includes an explicit close button in the header; outside clicks no longer dismiss it, and selection interactions keep the picker open for continuous edits until explicitly closed.
 - **Model picker resizable floating window** — desktop floating model picker now supports drag-to-resize from the bottom-right corner, with safe min/max viewport clamping and persisted size across opens.
@@ -143,6 +146,7 @@
 - **Ruler hover inspection focus** — enabling `Part hover` mode now auto-pauses model rotation so hovered-part measurement is easier to read
 
 ### Fixed
+- **Shade slider drag jank under load** — reduced drag-time stalls by deferring expensive persistence/thumbnail work to commit timing and avoiding per-sample shade-selector rebuilds during continuous slider input.
 - **Model modal close-policy regressions** — floating model modal no longer closes during color/preset interactions; close is now limited to explicit `X` action or keyboard `Esc`.
 - **Model picker default-open legacy fallback** — default-open multipart selector now consistently initializes in floating modal mode (desktop pointer workflows), instead of intermittently rendering as the legacy inline dropdown.
 - **Model picker grid right-gap snapping** — refined responsive column sizing/packing to remove odd right-side dead space at intermediate modal widths.

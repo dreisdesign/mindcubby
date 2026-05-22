@@ -801,6 +801,32 @@ html.loaded .canvas-logo {
     min-width: 0;
 }
 
+.fps-readout {
+    position: absolute;
+    left: 20px;
+    bottom: 72px;
+    z-index: 6;
+    min-width: 78px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    background: rgba(16, 19, 41, 0.72);
+    color: #f5f7ff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+    pointer-events: none;
+    user-select: none;
+    backdrop-filter: blur(4px);
+}
+
+html.theme-light .fps-readout {
+    border-color: rgba(12, 20, 38, 0.22);
+    background: rgba(255, 255, 255, 0.82);
+    color: #1c2a45;
+}
+
 .canvas-export-btn {
     min-height: var(--control-height);
     border-radius: var(--radius-control);
@@ -7306,7 +7332,7 @@ html.loaded .sidebar-tabs {
 
 .upload-choice-file-item {
     display: grid;
-    grid-template-columns: 30px minmax(0, 1fr);
+    grid-template-columns: 30px minmax(0, 1fr) 28px;
     align-items: center;
     gap: 8px;
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-200) 65%, white 35%);
@@ -7329,6 +7355,27 @@ html.loaded .sidebar-tabs {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.upload-choice-file-remove {
+    width: 24px;
+    height: 24px;
+    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 66%, white 34%);
+    border-radius: 999px;
+    background: color-mix(in srgb, #fff 90%, var(--palette-blueberry-100) 10%);
+    color: var(--palette-blueberry-600);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
+}
+
+.upload-choice-file-remove:hover {
+    border-color: var(--palette-blueberry-500);
+    background: color-mix(in srgb, var(--palette-blueberry-100) 62%, #fff 38%);
+    color: var(--palette-blueberry-800);
 }
 
 .upload-choice-show-more {
@@ -7355,13 +7402,20 @@ html.loaded .sidebar-tabs {
     gap: 10px;
 }
 
+.upload-choice-action-btn {
+    min-width: 136px;
+    height: 42px;
+    justify-content: center;
+    padding: 10px 16px;
+}
+
 .upload-choice-actions-right {
     margin-left: auto;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 html.theme-dark .upload-choice-dropzone {
@@ -7394,6 +7448,18 @@ html.theme-dark .upload-choice-file-item {
     background: rgba(56, 48, 104, 0.38);
 }
 
+html.theme-dark .upload-choice-file-remove {
+    border-color: rgba(179, 168, 247, 0.5);
+    background: rgba(56, 48, 104, 0.52);
+    color: var(--palette-blueberry-200);
+}
+
+html.theme-dark .upload-choice-file-remove:hover {
+    border-color: rgba(222, 214, 255, 0.76);
+    background: rgba(86, 74, 145, 0.54);
+    color: #ffffff;
+}
+
 html.theme-dark .upload-choice-file-index {
     color: var(--palette-blueberry-200);
 }
@@ -7416,6 +7482,10 @@ html.theme-dark .upload-choice-show-more {
 
     .upload-choice-actions-right > button {
         flex: 1 1 auto;
+    }
+
+    .upload-choice-action-btn {
+        min-width: 0;
     }
 }
 
