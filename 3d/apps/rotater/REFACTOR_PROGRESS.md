@@ -40,7 +40,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - Module: [modules/model-picker-controller.js](modules/model-picker-controller.js)
 - Scope: menu open/close controller logic around model selector + sync source menus
 - script.js now delegates through thin wrappers
-- Shipped in commit: pending
+- Shipped in commit: 816338d
 
 ## Module Index (C1 Workstream)
 
@@ -50,10 +50,11 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/model-part-action-menus.js](modules/model-part-action-menus.js) | Close and place model-part action menus | Active | 4e12bc4 |
 | [modules/orbit-frame-state.js](modules/orbit-frame-state.js) | Orbit frame-state reads and camera-from-orbit transform helpers | Active | 4e885ed |
 | [modules/viewport-performance.js](modules/viewport-performance.js) | Adaptive viewport quality and pixel-ratio helpers | Active | 14ed52b |
-| [modules/model-picker-controller.js](modules/model-picker-controller.js) | Controller helpers for selector/sync menu open-close behavior | Active | pending |
+| [modules/model-picker-controller.js](modules/model-picker-controller.js) | Controller helpers for selector/sync menu open-close behavior | Active | 816338d |
 
 ## Recent Milestone Commits
 
+- 816338d refactor(c1): extract model picker controller module
 - 14ed52b refactor(c1): extract viewport performance module and adaptive DPR
 - 4e885ed refactor(c1): extract orbit frame-state helpers module
 - 4e12bc4 Continue C1: extract model-part action-menu module
