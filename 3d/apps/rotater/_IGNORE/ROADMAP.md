@@ -23,6 +23,8 @@ Goal: tighten reliability and interaction parity in existing flows before major 
 | A5 | Model list sorting controls | Model Manager UX | S | None | Add explicit `A-Z` / `Z-A` sorting, keep `A-Z` as default baseline. |
 | A6 | Active part arrow navigation | Interaction Design | S | None | Add next/previous controls to switch active selected part directly from selector UI. |
 | A7 | New version indicator badge | Release UX | S | None | Add subtle update badge on About/App Settings entry when newer build metadata exists. |
+| A8 | Upload modal persistence during native picker | Upload Flow UX | S | A4 | Prevent upload choice modal from closing while the OS file picker is open; when files are selected, update the modal file list and actions instead of re-opening. |
+| A9 | Info panel keyboard shortcuts | UX / Docs | S | None | Add keyboard shortcuts list to the Info panel under "Navigate the 3d..." (minimum: `Esc` to close, `Space` to pause/play). |
 
 ## Phase B: Export and Workspace Foundation
 
