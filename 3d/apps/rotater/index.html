@@ -1223,8 +1223,9 @@
 
             const dismissBooting = () => document.documentElement.classList.remove('booting');
 
-            // Safety-net: if nothing else dismisses the splash within 20 s, force it away.
-            const splashGuard = setTimeout(dismissBooting, 20000);
+            // Do not leave the UI hidden behind the splash while module/CDN loading
+            // or saved-session restore work is still in flight.
+            const splashGuard = setTimeout(dismissBooting, 1200);
 
             const appendAppScript = (type = 'module') => {
                 const scriptEl = document.createElement('script');

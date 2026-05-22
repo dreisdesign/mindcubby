@@ -3688,7 +3688,6 @@ document.addEventListener('click', (ev) => {
         || buildPlateModelSyncSelectorThumb?.contains(target)
     );
 
-    if (!clickedModelSelector) closeModelPartSelectorMenu(true);
     if (!clickedBgSync && bgModelSyncSelectorMenu) {
         bgModelSyncSelectorMenu.hidden = true;
         resetSyncMenuFloatingStyle(bgModelSyncSelectorMenu);
@@ -3891,6 +3890,10 @@ function isModelPartSelectorMenuOpen() {
 
 function isModelPartPreviewMultiSelectActive() {
     return isModelPartSelectorMenuOpen() && rulerPartSelectMultiEnabled;
+}
+
+function isModelPartPreviewHoverSelectionActive() {
+    return isModelPartSelectorMenuOpen() || rulerPartHoverEnabled;
 }
 
 function updateModelCardSelectionVisibility() {
@@ -7531,6 +7534,8 @@ async function restoreSession() {
 
     if (DEV_LOG) console.log(`[rotater] restoreSession: calling restoreSettings at ${Date.now()}`);
     restoreSettings();
+    // Do not keep the splash up while heavy saved-model restore/parsing continues.
+    dismissStartupSplash();
     updateColorSwatches(); // guaranteed init even if restoreSettings throws
     const saved = await loadFileFromIDB();
     if (!saved) {
@@ -11188,7 +11193,7 @@ canvas?.addEventListener('contextmenu', (e) => {
 });
 
 canvas?.addEventListener('pointermove', (e) => {
-    if (!rulerPartHoverEnabled && !isModelPartPreviewMultiSelectActive()) return;
+    if (!isModelPartPreviewHoverSelectionActive()) return;
     updateRulerPartHoverFromPointerEvent(e);
 }, { passive: true });
 
