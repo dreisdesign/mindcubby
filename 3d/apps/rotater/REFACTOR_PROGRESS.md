@@ -28,7 +28,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - Module: [modules/orbit-frame-state.js](modules/orbit-frame-state.js)
 - Scope: non-allocating orbit frame-state reads and camera placement math
 - script.js now delegates through thin wrappers
-- Shipped in commit: pending
+- Shipped in commit: 4e885ed
 
 ## Module Index (C1 Workstream)
 
@@ -36,10 +36,11 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 |---|---|---|---|
 | [modules/menu-positioning.js](modules/menu-positioning.js) | Compute menu placement coordinates with viewport and local container constraints | Active | feaecd3 |
 | [modules/model-part-action-menus.js](modules/model-part-action-menus.js) | Close and place model-part action menus | Active | 4e12bc4 |
-| [modules/orbit-frame-state.js](modules/orbit-frame-state.js) | Orbit frame-state reads and camera-from-orbit transform helpers | Active | pending |
+| [modules/orbit-frame-state.js](modules/orbit-frame-state.js) | Orbit frame-state reads and camera-from-orbit transform helpers | Active | 4e885ed |
 
 ## Recent Milestone Commits
 
+- 4e885ed refactor(c1): extract orbit frame-state helpers module
 - 4e12bc4 Continue C1: extract model-part action-menu module
 - feaecd3 Fix picker menu dismissal and preview click pause; update docs; start C1 module split
 
