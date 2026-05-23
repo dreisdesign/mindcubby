@@ -153,6 +153,9 @@ import {
 import {
     prepareExportPreviewPreflightController,
 } from './modules/export-preview-preflight.js';
+import {
+    prepareExportPreviewCanvasController,
+} from './modules/export-preview-canvas-prep.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5430,13 +5433,10 @@ function updateExportPreview(force = false) {
 
     const {
         pv,
-        fmt,
         expW,
         expH,
         isTransparentPreview,
     } = preflight;
-
-    const wrap = canvas?.parentElement;
     const {
         cw,
         ch,
@@ -5445,19 +5445,16 @@ function updateExportPreview(force = false) {
         pxW,
         pxH,
         cwAspect,
-    } = computeExportPreviewDimensionsController({
-        canvasWrapEl: wrap,
+    } = prepareExportPreviewCanvasController({
+        canvasEl: canvas,
         previewEl: pv,
         expW,
         expH,
         exportFrameEnabled,
         devicePixelRatio: window.devicePixelRatio,
         dprMax: EXPORT_PREVIEW_DPR_MAX,
-    });
-
-    syncExportPreviewTargetSizeController(pv, {
-        pxW,
-        pxH,
+        computeDimensions: computeExportPreviewDimensionsController,
+        syncTargetSize: syncExportPreviewTargetSizeController,
     });
 
     const cameraState = syncExportPreviewCameraStateController({

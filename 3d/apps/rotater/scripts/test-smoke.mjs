@@ -112,6 +112,7 @@ assertFile('modules/export-preview-overlays.js');
 assertFile('modules/export-preview-target-size.js');
 assertFile('modules/export-preview-resources.js');
 assertFile('modules/export-preview-preflight.js');
+assertFile('modules/export-preview-canvas-prep.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
@@ -153,6 +154,7 @@ checkNodeSyntax('modules/export-preview-overlays.js');
 checkNodeSyntax('modules/export-preview-target-size.js');
 checkNodeSyntax('modules/export-preview-resources.js');
 checkNodeSyntax('modules/export-preview-preflight.js');
+checkNodeSyntax('modules/export-preview-canvas-prep.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');
@@ -190,6 +192,7 @@ checkCompileSyntax('modules/export-preview-overlays.js');
 checkCompileSyntax('modules/export-preview-target-size.js');
 checkCompileSyntax('modules/export-preview-resources.js');
 checkCompileSyntax('modules/export-preview-preflight.js');
+checkCompileSyntax('modules/export-preview-canvas-prep.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');
 expectSubstring('index.html', 'id="btnClearBuildPlate"');
