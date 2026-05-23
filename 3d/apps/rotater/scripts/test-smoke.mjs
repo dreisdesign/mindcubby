@@ -124,6 +124,7 @@ assertFile('modules/export-crop-ui.js');
 assertFile('modules/crop-dimensions-dock.js');
 assertFile('modules/export-progress-overlay.js');
 assertFile('modules/export-status.js');
+assertFile('modules/export-busy-state.js');
 assertFile('modules/right-pan-lock.js');
 
 checkJson('color-rules.json');
@@ -178,6 +179,7 @@ checkNodeSyntax('modules/export-crop-ui.js');
 checkNodeSyntax('modules/crop-dimensions-dock.js');
 checkNodeSyntax('modules/export-progress-overlay.js');
 checkNodeSyntax('modules/export-status.js');
+checkNodeSyntax('modules/export-busy-state.js');
 checkNodeSyntax('modules/right-pan-lock.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
@@ -228,6 +230,7 @@ checkCompileSyntax('modules/export-crop-ui.js');
 checkCompileSyntax('modules/crop-dimensions-dock.js');
 checkCompileSyntax('modules/export-progress-overlay.js');
 checkCompileSyntax('modules/export-status.js');
+checkCompileSyntax('modules/export-busy-state.js');
 checkCompileSyntax('modules/right-pan-lock.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');

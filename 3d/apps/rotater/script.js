@@ -124,6 +124,9 @@ import {
     createExportStatusController,
 } from './modules/export-status.js';
 import {
+    createExportBusyStateController,
+} from './modules/export-busy-state.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11373,17 +11376,21 @@ const setAnimStatus = (msg, done, total) => {
     exportStatusController.setAnimStatus(msg, done, total);
 };
 
+const exportBusyStateController = createExportBusyStateController({
+    btnGif,
+    btnVideo,
+    btnPng,
+    getJpegBtn: () => document.getElementById('btnExportJpeg'),
+    getMainBtn: () => document.getElementById('btnExport'),
+    setIsExporting: (nextExporting) => {
+        isExporting = !!nextExporting;
+    },
+    showExportProgressOverlay,
+    hideExportProgressOverlay,
+});
+
 const setExporting = v => {
-    isExporting = v;
-    btnGif.disabled = v;
-    btnVideo.disabled = v;
-    if (btnPng) btnPng.disabled = v;
-    const jpegBtn = document.getElementById('btnExportJpeg');
-    if (jpegBtn) jpegBtn.disabled = v;
-    const mainBtn = document.getElementById('btnExport');
-    if (mainBtn) mainBtn.disabled = v;
-    if (v) showExportProgressOverlay('Preparing…');
-    else hideExportProgressOverlay();
+    exportBusyStateController.setExporting(v);
 };
 
 function download(data, filename, type) {

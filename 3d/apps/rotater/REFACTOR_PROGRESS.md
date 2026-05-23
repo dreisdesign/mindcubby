@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 52
+- Completed slices: 53
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -324,6 +324,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates status lane helper behavior through thin wrappers
 - Shipped in commit: pending
 
+53. Export busy-state controls extraction
+- Module: [modules/export-busy-state.js](modules/export-busy-state.js)
+- Scope: export button disabled-state and overlay-show/hide helper orchestration
+- script.js now delegates export busy-state helper behavior through a thin wrapper
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -379,6 +385,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/crop-dimensions-dock.js](modules/crop-dimensions-dock.js) | Crop dock visibility and positioning helper orchestration | Active | pending |
 | [modules/export-progress-overlay.js](modules/export-progress-overlay.js) | Export progress overlay element show/update/hide helper orchestration | Active | pending |
 | [modules/export-status.js](modules/export-status.js) | Export status + animation status lane helper orchestration | Active | pending |
+| [modules/export-busy-state.js](modules/export-busy-state.js) | Export busy-state button disable and overlay toggle helper orchestration | Active | pending |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active | pending |
 
 ## Recent Milestone Commits
@@ -392,9 +399,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export busy-state controls extraction
-- Target: export button disabled-state and overlay-show/hide helper orchestration
-- Candidate module: modules/export-busy-state.js
+1. Export progress paint throttling extraction
+- Target: export progress paint timing/throttle helper orchestration
+- Candidate module: modules/export-progress-timing.js
 
 ## Guardrails
 
