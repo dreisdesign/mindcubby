@@ -156,6 +156,9 @@ import {
 import {
     prepareExportPreviewCanvasController,
 } from './modules/export-preview-canvas-prep.js';
+import {
+    runExportPreviewPipelineController,
+} from './modules/export-preview-pipeline.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5409,124 +5412,74 @@ function applyExportSceneForRender({ forceTransparent = false } = {}) {
 }
 
 function updateExportPreview(force = false) {
-    const preflight = prepareExportPreviewPreflightController({
+    const pipelineResult = runExportPreviewPipelineController({
         force,
         nowMs: performance.now(),
         lastUpdateMs: _lastExportPreviewUpdateMs,
         intervalMs: EXPORT_PREVIEW_INTERVAL_MS,
         exportCamDist,
-        isPreviewActive: isExportPreviewActive,
-        evaluateTiming: evaluateExportPreviewTimingController,
-        getPreviewElement: () => document.getElementById('exportPreview'),
-        getFormat: () => exportFormatEl?.value ?? 'gif',
-        getPreviewExportSize,
-        getBgEnabled: () => exportBgColorEl?.checked ?? true,
-        deriveTransparency: deriveExportPreviewTransparencyController,
-        syncWrapTransparency: syncExportPreviewWrapTransparencyController,
-        getTransparentElements: () => ({
-            exportTransparentEl: document.getElementById('exportTransparent'),
-            exportTransparentPngEl: document.getElementById('exportTransparentPng'),
-        }),
-    });
-    _lastExportPreviewUpdateMs = preflight.nextLastUpdateMs;
-    if (!preflight.shouldRender) return;
-
-    const {
-        pv,
-        expW,
-        expH,
-        isTransparentPreview,
-    } = preflight;
-    const {
-        cw,
-        ch,
-        cssW,
-        cssH,
-        pxW,
-        pxH,
-        cwAspect,
-    } = prepareExportPreviewCanvasController({
+        exportCamElev,
+        exportCamZoom,
+        exportFrameEnabled,
         canvasEl: canvas,
-        previewEl: pv,
-        expW,
-        expH,
-        exportFrameEnabled,
-        devicePixelRatio: window.devicePixelRatio,
-        dprMax: EXPORT_PREVIEW_DPR_MAX,
-        computeDimensions: computeExportPreviewDimensionsController,
-        syncTargetSize: syncExportPreviewTargetSizeController,
-    });
-
-    const cameraState = syncExportPreviewCameraStateController({
-        exportFrameEnabled,
+        renderer,
+        scene,
+        sourceCamera: camera,
+        previewRt: _previewRt,
+        previewRtWidth: _previewRtWidth,
+        previewRtHeight: _previewRtHeight,
+        previewCam: _previewCam,
         getOrbitFrameState,
         getCropFrameVerticalScale,
-        sourceCameraZoom: camera.zoom || 1,
-    });
-    if (cameraState) {
-        exportCamDist = cameraState.exportCamDist;
-        exportCamElev = cameraState.exportCamElev;
-        exportCamZoom = cameraState.exportCamZoom;
-    }
-
-    // Render preview from export-effective scene state so it always matches export toggles.
-    ({
-        previewRt: _previewRt,
-        previewRtWidth: _previewRtWidth,
-        previewRtHeight: _previewRtHeight,
-        previewCam: _previewCam,
-    } = prepareExportPreviewResourcesController({
-        previewRt: _previewRt,
-        previewRtWidth: _previewRtWidth,
-        previewRtHeight: _previewRtHeight,
-        previewCam: _previewCam,
-        pxW,
-        pxH,
-        sourceCamera: camera,
-        exportFrameEnabled,
-        getOrbitFrameState,
         setCameraFromOrbitState,
-        ensureRenderTarget: ensureExportPreviewRenderTargetController,
-        ensurePreviewCamera: ensureAndConfigureExportPreviewCameraController,
+        getCropFrameRect,
+        drawRulerOverlay,
+        exportFormatEl,
+        exportBgColorEl,
+        exportPreviewDprMax: EXPORT_PREVIEW_DPR_MAX,
+        isPreviewActive: isExportPreviewActive,
+        evaluateTimingController: evaluateExportPreviewTimingController,
+        preflightController: prepareExportPreviewPreflightController,
+        canvasPrepController: prepareExportPreviewCanvasController,
+        cameraStateController: syncExportPreviewCameraStateController,
+        resourcesController: prepareExportPreviewResourcesController,
+        renderPassController: executeExportPreviewRenderPassController,
+        readbackCommitController: readbackAndCommitExportPreviewController,
+        overlaysController: applyExportPreviewOverlaysController,
+        getPreviewExportSize,
+        deriveTransparencyController: deriveExportPreviewTransparencyController,
+        syncWrapTransparencyController: syncExportPreviewWrapTransparencyController,
+        computeDimensionsController: computeExportPreviewDimensionsController,
+        syncTargetSizeController: syncExportPreviewTargetSizeController,
+        ensureRenderTargetController: ensureExportPreviewRenderTargetController,
+        ensurePreviewCameraController: ensureAndConfigureExportPreviewCameraController,
+        readExportPreviewImageDataController,
+        commitCanvasImageController: commitExportPreviewCanvasImageController,
+        drawCropOverlayController: drawExportPreviewCropOverlayController,
+        applyExportSceneForRender,
         createRenderTarget: (w, h) => new THREE.WebGLRenderTarget(w, h, {
             samples: renderer.capabilities.isWebGL2 ? 4 : 0,
         }),
         createPerspectiveCamera: () => new THREE.PerspectiveCamera(45, 1, 0.01, 1e6),
         srgbColorSpace: THREE.SRGBColorSpace,
-    }));
-
-    executeExportPreviewRenderPassController({
-        renderer,
-        previewRt: _previewRt,
-        scene,
-        previewCam: _previewCam,
-        applyExportSceneForRender,
-        isTransparentPreview,
+        getPreviewElement: () => document.getElementById('exportPreview'),
+        getTransparentElements: () => ({
+            exportTransparentEl: document.getElementById('exportTransparent'),
+            exportTransparentPngEl: document.getElementById('exportTransparentPng'),
+        }),
+        devicePixelRatio: window.devicePixelRatio,
     });
 
-    const canvasCommit = readbackAndCommitExportPreviewController({
-        renderer,
-        previewRt: _previewRt,
-        pxW,
-        pxH,
-        previewEl: pv,
-        readExportPreviewImageData: readExportPreviewImageDataController,
-        commitExportPreviewCanvasImage: commitExportPreviewCanvasImageController,
-    });
-    if (!canvasCommit.committed || !canvasCommit.ctx2d) return;
-    const ctx2d = canvasCommit.ctx2d;
+    _lastExportPreviewUpdateMs = pipelineResult.nextLastUpdateMs;
+    if (!pipelineResult.shouldRender) return;
 
-    applyExportPreviewOverlaysController(ctx2d, {
-        exportFrameEnabled,
-        pxW,
-        pxH,
-        cw,
-        ch,
-        drawCropOverlay: drawExportPreviewCropOverlayController,
-        getCropFrameRect,
-        drawRulerOverlay,
-        previewCam: _previewCam,
-    });
+    exportCamDist = pipelineResult.exportCamDist;
+    exportCamElev = pipelineResult.exportCamElev;
+    exportCamZoom = pipelineResult.exportCamZoom;
+    _previewRt = pipelineResult.previewRt;
+    _previewRtWidth = pipelineResult.previewRtWidth;
+    _previewRtHeight = pipelineResult.previewRtHeight;
+    _previewCam = pipelineResult.previewCam;
 }
 
 function refreshExportPreviewNow() {
