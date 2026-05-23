@@ -33,6 +33,7 @@ Current extracted modules:
 | [modules/export-labels.js](modules/export-labels.js) | Export format/quality/speed label and option-list composition helpers | Active |
 | [modules/export-workspace.js](modules/export-workspace.js) | Export workspace active-state orchestration and transparency/open-close helpers | Active |
 | [modules/export-transparency-sync.js](modules/export-transparency-sync.js) | Export transparency checkbox coupling and preview-sync orchestration helpers | Active |
+| [modules/export-panel-state.js](modules/export-panel-state.js) | Export panel collapsed-state persistence/restore and toggle routing helpers | Active |
 
 ---
 

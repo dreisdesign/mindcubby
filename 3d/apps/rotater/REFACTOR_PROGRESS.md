@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 15
+- Completed slices: 16
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -102,6 +102,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates transparency sync orchestration through thin wrappers
 - Shipped in commit: pending
 
+16. Export panel state extraction
+- Module: [modules/export-panel-state.js](modules/export-panel-state.js)
+- Scope: export panel collapsed-state persistence/restore and toggle routing helpers
+- script.js now delegates panel state persistence and toggle orchestration through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -121,6 +127,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-labels.js](modules/export-labels.js) | Export format/quality/speed label and option-list composition helpers | Active | pending |
 | [modules/export-workspace.js](modules/export-workspace.js) | Export workspace active-state orchestration and transparency/open-close helpers | Active | pending |
 | [modules/export-transparency-sync.js](modules/export-transparency-sync.js) | Export transparency checkbox coupling and preview-sync orchestration helpers | Active | pending |
+| [modules/export-panel-state.js](modules/export-panel-state.js) | Export panel collapsed-state persistence/restore and toggle routing helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -133,9 +140,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export panel collapsed-state persistence extraction
-- Target: export panel collapsed-state read/write + apply wiring helpers
-- Candidate module: modules/export-panel-state.js
+1. Export motion speed labels extraction
+- Target: refreshExportMotionSpeedOptionLabels and duration/frame label plumbing helpers
+- Candidate module: modules/export-motion-labels.js
 
 ## Guardrails
 

@@ -70,6 +70,11 @@ import {
 import {
     syncTransparentCheckboxesController,
 } from './modules/export-transparency-sync.js';
+import {
+    persistExportPanelCollapsedStateController,
+    restoreExportPanelCollapsedStateController,
+    handleExportPanelToggleController,
+} from './modules/export-panel-state.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -9526,10 +9531,13 @@ document.getElementById('exportPreviewDetails')?.addEventListener('toggle', () =
 });
 
 btnToggleExportPanel?.addEventListener('click', () => {
-    if (!exportPanelEl) return;
-    const collapsed = !exportPanelEl.classList.contains('is-collapsed');
-    applyExportPanelState(collapsed);
-    try { localStorage.setItem('rotater_exportPanelCollapsed', collapsed ? '1' : '0'); } catch (_) { }
+    handleExportPanelToggleController({
+        exportPanelEl,
+        applyExportPanelState,
+        persistExportPanelCollapsedState: (collapsed) => {
+            persistExportPanelCollapsedStateController(collapsed);
+        },
+    });
 });
 
 function renderCollapsedExportSummary(fmt) {
@@ -9657,7 +9665,7 @@ async function triggerExportWithAssist(fmt) {
     if (isCollapsed && autoUIAssistEnabled) {
         applyExportFormat(format);
         applyExportPanelState(false);
-        try { localStorage.setItem('rotater_exportPanelCollapsed', '0'); } catch (_) { }
+        persistExportPanelCollapsedStateController(false);
 
         const proceed = await promptCollapsedExportConfirm(format);
         if (!proceed) return;
@@ -10613,12 +10621,10 @@ try {
     applyAppSettingsDockState(true);
 }
 
-try {
-    const exportCollapsed = localStorage.getItem('rotater_exportPanelCollapsed');
-    applyExportPanelState(exportCollapsed === '1');
-} catch (_) {
-    applyExportPanelState(false);
-}
+restoreExportPanelCollapsedStateController({
+    applyExportPanelState,
+    fallback: false,
+});
 
 document.getElementById('btnToggleAppSettings')?.addEventListener('click', () => {
     const dock = document.getElementById('appSettingsDock');
