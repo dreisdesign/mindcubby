@@ -521,24 +521,8 @@ const btnResetAnimationCard = document.getElementById('btnResetAnimationCard');
 const btnResetExportCard = document.getElementById('btnResetExportCard');
 // Dev logging and a flag used to suppress saveSettings() while programmatically
 // applying restored settings so we don't overwrite localStorage/URL mid-restore.
-// Capture passthrough URL params (e.g. debug=1) once at startup so they survive
-// URL rewrites done by settingsToURL().
-const APP_PARAM_KEYS = new Set([
-    'c', 'b', 'op', 'sh', 'rm', 'sp', 'tr', 'wsr', 'sd', 'gl', 'ef', 'eq', 'ed', 'et', 'gd', 'jq',
-    'tto', 'tl', 'tc', 'thi', 'ts', 'tsa', 'tll', 'tsh', 'tmr', 'tmm', 'tme', 'tpr', 'tpe', 'tcr', 'tce',
-    'rv', 'ru', 'rl', 'rg', 'rh',
-    'ecd', 'ece', 'ecz', 'aba', 'abp', 'amp', 'bsp',
-    'bp', 'bpc', 'bpt', 'bps', 'bpms', 'bpf', 'bpp', 'bpw', 'bpd', 'bpsh',
-    'uap', 'uam', 'dv'
-]);
-const _passthroughParams = (() => {
-    const p = new URLSearchParams(location.search);
-    const out = new URLSearchParams();
-    p.forEach((v, k) => { if (!APP_PARAM_KEYS.has(k)) out.set(k, v); });
-    return out;
-})();
 // DEV_LOG: also persist in localStorage so it survives URL rewrites
-let DEV_LOG = _passthroughParams.has('debug') || location.search.includes('debug=1');
+let DEV_LOG = location.search.includes('debug=1');
 try {
     if (DEV_LOG) localStorage.setItem('rotater_devlog', '1');
     else if (localStorage.getItem('rotater_devlog') === '1') DEV_LOG = true;
@@ -2348,6 +2332,15 @@ function safeDownloadFileName(name, fallback = 'model.stl') {
     return raw.replace(/[\\/:*?"<>|]/g, '_');
 }
 
+function escapeHtml(text) {
+    return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function rebuildFileChipPartsMenu() {
     if (!fileChipPartsMenu) return;
     fileChipPartsMenu.innerHTML = '';
@@ -4155,6 +4148,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
 
         getOrderedPartIndices().forEach((idx) => {
             const name = modelPartNames[idx];
+            const safeName = escapeHtml(name);
             const opt = document.createElement('div');
             opt.className = 'thumb-select-option';
             if (activeBgPreset === 'modelcolor' && idx === bgSyncPartIndex) opt.classList.add('is-bg-sync-source');
@@ -4166,7 +4160,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             const mutateDisabledAttr = canMutateFiles ? '' : ' disabled title="Part source files are unavailable for editing"';
             const bulkLabel = `Select part ${idx + 1} for bulk edit`;
             const syncOn = activeBgPreset === 'modelcolor' && idx === bgSyncPartIndex;
-            opt.innerHTML = `<label class="thumb-select-option-check" title="${bulkLabel}" aria-label="${bulkLabel}"><input type="checkbox" class="thumb-select-option-check-input" data-part-bulk-select="${idx}"></label><button type="button" class="thumb-select-option-main" data-part-select="${idx}"><span class="thumb-select-option-thumb-wrap"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas></span><span class="thumb-select-option-text">Part ${idx + 1}: ${name}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">${getPartOptionMoreIconSVG()}</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="visibility-toggle" data-part-index="${idx}"><span>${visibilityLabel}</span><span class="option-switch${settings.hidden ? ' is-on' : ''}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="bg-sync-toggle" data-part-index="${idx}"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}"${mutateDisabledAttr}>Delete Model</button></div>`;
+            opt.innerHTML = `<label class="thumb-select-option-check" title="${bulkLabel}" aria-label="${bulkLabel}"><input type="checkbox" class="thumb-select-option-check-input" data-part-bulk-select="${idx}"></label><button type="button" class="thumb-select-option-main" data-part-select="${idx}"><span class="thumb-select-option-thumb-wrap"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas></span><span class="thumb-select-option-text">Part ${idx + 1}: ${safeName}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">${getPartOptionMoreIconSVG()}</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="visibility-toggle" data-part-index="${idx}"><span>${visibilityLabel}</span><span class="option-switch${settings.hidden ? ' is-on' : ''}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="bg-sync-toggle" data-part-index="${idx}"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}"${mutateDisabledAttr}>Delete Model</button></div>`;
 
             const bulkCheck = opt.querySelector('[data-part-bulk-select]');
             const bulkCheckWrap = opt.querySelector('.thumb-select-option-check');
@@ -4537,13 +4531,14 @@ function syncBgModelSyncSourceUI() {
     bgModelSyncSelectorMenu.hidden = true;
     bgModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
     modelPartNames.forEach((name, idx) => {
+        const safeName = escapeHtml(name);
         const opt = document.createElement('button');
         opt.type = 'button';
         opt.className = 'thumb-select-option';
         if (idx === bgSyncPartIndex) opt.classList.add('is-bg-sync-source');
         opt.dataset.partIndex = String(idx);
         opt.setAttribute('role', 'option');
-        opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="68" height="68" aria-hidden="true"></canvas><span class="thumb-select-option-text">${name}</span>`;
+        opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="68" height="68" aria-hidden="true"></canvas><span class="thumb-select-option-text">${safeName}</span>`;
         const optCanvas = opt.querySelector('.thumb-select-option-canvas');
         paintThumbFallback(optCanvas, idx);
         opt.addEventListener('click', () => {
@@ -7547,8 +7542,6 @@ function settingsToURL() {
     if (!uploadChoicePromptEnabled) p.set('uap', '0');
     if (uploadDefaultAction === 'replace') p.set('uam', 'r');
     if (devModeEnabled) p.set('dv', '1');
-    // Re-inject passthrough params captured at startup (e.g. debug=1)
-    _passthroughParams.forEach((v, k) => { if (!p.has(k)) p.set(k, v); });
     history.replaceState(null, '', '?' + p.toString());
 }
 
@@ -12662,13 +12655,14 @@ function syncBuildPlateModelSyncSourceUI() {
     buildPlateModelSyncSelectorMenu.hidden = true;
     buildPlateModelSyncSelectorBtn.setAttribute('aria-expanded', 'false');
     modelPartNames.forEach((name, idx) => {
+        const safeName = escapeHtml(name);
         const opt = document.createElement('button');
         opt.type = 'button';
         opt.className = 'thumb-select-option';
         if (idx === buildPlateSyncPartIndex) opt.classList.add('is-bg-sync-source');
         opt.dataset.partIndex = String(idx);
         opt.setAttribute('role', 'option');
-        opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="68" height="68" aria-hidden="true"></canvas><span class="thumb-select-option-text">${name}</span>`;
+        opt.innerHTML = `<canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="68" height="68" aria-hidden="true"></canvas><span class="thumb-select-option-text">${safeName}</span>`;
         const optCanvas = opt.querySelector('.thumb-select-option-canvas');
         paintThumbFallback(optCanvas, idx);
         opt.addEventListener('click', () => {
