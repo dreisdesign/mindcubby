@@ -30,9 +30,9 @@ Current extracted modules:
 
 ### Security Hardening
 
-- A baseline CSP is enabled in report-only mode via `Content-Security-Policy-Report-Only` in `index.html`.
+- A baseline CSP is enabled via `Content-Security-Policy` in `index.html`.
 - Current policy allows local app assets plus jsDelivr module dependencies while restricting high-risk directives (`object-src 'none'`, `frame-ancestors 'none'`, strict `base-uri`/`form-action`).
-- Recommended rollout path: keep report-only while validating browser console violations, then move to enforced `Content-Security-Policy` once stable.
+- Note: browsers ignore `Content-Security-Policy-Report-Only` when delivered via `<meta>`; use HTTP response headers if you want true report-only telemetry.
 - STL ingest guardrails are enabled for direct upload/import paths (file count, per-file size, total size, and triangle-budget limits).
 - STL parse/validation now runs in a dedicated Web Worker when available, with timeout protection to keep oversized or malicious files from freezing the main UI thread.
 - ZIP package import now includes additional decompression-abuse checks (entry compression-ratio caps plus existing archive/entry/extracted-size limits).

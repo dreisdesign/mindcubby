@@ -59,7 +59,12 @@ const EXPORT_GUARD_LIMITS = {
     maxHeight: 4096,
     maxPixelsPerFrame: 8_500_000,
     maxFramesPerJob: 1800,
-    maxPixelFramesPerJob: 1_000_000_000,
+    maxPixelFramesPerJob: {
+        default: 1_000_000_000,
+        capture: 1_400_000_000,
+        gif: 1_200_000_000,
+        mp4: 2_800_000_000,
+    },
 };
 
 const STL_PARSE_WORKER_TIMEOUT_BASE_MS = 20_000;
@@ -198,6 +203,11 @@ function validateExportWorkload({ format = 'export', width = 0, height = 0, fps 
     const safeFrames = Math.max(1, Math.floor(frames));
     const pixelsPerFrame = safeW * safeH;
     const pixelFrames = pixelsPerFrame * safeFrames;
+    const formatKey = String(format || '').toLowerCase();
+    const maxPixelFramesForFormat = Number(
+        EXPORT_GUARD_LIMITS.maxPixelFramesPerJob[formatKey]
+        ?? EXPORT_GUARD_LIMITS.maxPixelFramesPerJob.default
+    ) || EXPORT_GUARD_LIMITS.maxPixelFramesPerJob.default;
 
     if (safeW > EXPORT_GUARD_LIMITS.maxWidth || safeH > EXPORT_GUARD_LIMITS.maxHeight) {
         throw new Error(`${format.toUpperCase()} export is too large. Max ${EXPORT_GUARD_LIMITS.maxWidth}x${EXPORT_GUARD_LIMITS.maxHeight}.`);
@@ -211,8 +221,9 @@ function validateExportWorkload({ format = 'export', width = 0, height = 0, fps 
     if (safeFrames > EXPORT_GUARD_LIMITS.maxFramesPerJob) {
         throw new Error(`${format.toUpperCase()} frame count is too high.`);
     }
-    if (pixelFrames > EXPORT_GUARD_LIMITS.maxPixelFramesPerJob) {
-        throw new Error(`${format.toUpperCase()} workload is too high for safe in-browser export.`);
+    if (pixelFrames > maxPixelFramesForFormat) {
+        const maxMegaPixels = Math.round(maxPixelFramesForFormat / 1_000_000);
+        throw new Error(`${format.toUpperCase()} workload is too high for safe in-browser export. Try Medium quality or a less tall aspect ratio. (Limit: ~${maxMegaPixels} MPx-frames)`);
     }
 }
 
