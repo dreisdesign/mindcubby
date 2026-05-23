@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 27
+- Completed slices: 28
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -174,6 +174,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview camera setup/orbit application through thin wrappers
 - Shipped in commit: pending
 
+28. Export preview render-target extraction
+- Module: [modules/export-preview-render-target.js](modules/export-preview-render-target.js)
+- Scope: preview render-target allocation/reuse and color-space setup helpers
+- script.js now delegates preview render-target lifecycle through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -205,6 +211,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-transparency.js](modules/export-preview-transparency.js) | Export preview transparency derivation and preview-wrap class sync helpers | Active | pending |
 | [modules/export-preview-dimensions.js](modules/export-preview-dimensions.js) | Export preview size/scaling computation helpers for render target sizing | Active | pending |
 | [modules/export-preview-camera.js](modules/export-preview-camera.js) | Export preview camera setup and orbit-state application helpers | Active | pending |
+| [modules/export-preview-render-target.js](modules/export-preview-render-target.js) | Export preview render-target allocation/reuse and color-space setup helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -217,9 +224,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview render-target extraction
-- Target: preview render-target allocation/reuse and color space setup
-- Candidate module: modules/export-preview-render-target.js
+1. Export preview pixel readback extraction
+- Target: render-target pixel readback and imageData row-flip population
+- Candidate module: modules/export-preview-readback.js
 
 ## Guardrails
 

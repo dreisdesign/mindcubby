@@ -45,6 +45,7 @@ Current extracted modules:
 | [modules/export-preview-transparency.js](modules/export-preview-transparency.js) | Export preview transparency derivation and preview-wrap class sync helpers | Active |
 | [modules/export-preview-dimensions.js](modules/export-preview-dimensions.js) | Export preview size/scaling computation helpers for render target sizing | Active |
 | [modules/export-preview-camera.js](modules/export-preview-camera.js) | Export preview camera setup and orbit-state application helpers | Active |
+| [modules/export-preview-render-target.js](modules/export-preview-render-target.js) | Export preview render-target allocation/reuse and color-space setup helpers | Active |
 
 ---
 
