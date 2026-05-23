@@ -115,6 +115,9 @@ import {
     createExportCropUiController,
 } from './modules/export-crop-ui.js';
 import {
+    createCropDimensionsDockController,
+} from './modules/crop-dimensions-dock.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -5470,6 +5473,13 @@ const exportCropUiController = createExportCropUiController({
     orbitHintTextEl,
     orbitHintBarEl,
 });
+const cropDimensionsDockController = createCropDimensionsDockController({
+    cropDimensionsDock,
+    exportFormatEl,
+    rootEl: document.documentElement,
+    getExportFrameCanvas: () => document.getElementById('exportFrameCanvas'),
+    getCropFrameRect,
+});
 const rightPanLockController = createRightPanLockController();
 
 function setExportWorkspaceActive(active) {
@@ -5533,48 +5543,11 @@ function setShiftPanInteraction(active) {
 }
 
 function updateCropDimensionsDock(frameRect = null) {
-    const showDimensions = !!exportFormatEl?.value; // all formats support aspect presets
-    const inExportWorkspace = !!(exportWorkspaceActive && document.documentElement.classList.contains('export-workspace-active'));
-    const useDock = showDimensions && !!cropDimensionsDock && (inExportWorkspace || exportFrameEnabled);
-
-    if (!cropDimensionsDock) return;
-    if (!useDock) {
-        cropDimensionsDock.hidden = true;
-        cropDimensionsDock.setAttribute('aria-hidden', 'true');
-        return;
-    }
-
-    cropDimensionsDock.hidden = false;
-    cropDimensionsDock.setAttribute('aria-hidden', 'false');
-
-    // In export workspace the crop dock lives inside the export card, not on-canvas.
-    if (inExportWorkspace) {
-        cropDimensionsDock.style.left = '';
-        cropDimensionsDock.style.top = '';
-        return;
-    }
-
-    const fc = document.getElementById('exportFrameCanvas');
-    const wrap = fc?.parentElement;
-    if (!wrap) return;
-    const w = fc?.width || wrap.clientWidth;
-    const h = fc?.height || wrap.clientHeight;
-    if (!w || !h) return;
-
-    const rect = frameRect ?? getCropFrameRect(w, h);
-    if (!rect || rect.sw <= 0 || rect.sh <= 0) return;
-
-    const gap = Math.round(Math.max(8, Math.min(18, rect.sw * 0.032)));
-    const dockW = cropDimensionsDock.offsetWidth || 52;
-    const dockH = cropDimensionsDock.offsetHeight || 214;
-    const top = Math.max(8, Math.min(h - dockH - 8, rect.sy + (rect.sh - dockH) / 2));
-
-    // Keep the crop shapes in crop mode aligned right rigidly
-    const rightOffset = 16;
-    const left = Math.max(8, w - dockW - rightOffset);
-
-    cropDimensionsDock.style.left = `${Math.round(left)}px`;
-    cropDimensionsDock.style.top = `${Math.round(top)}px`;
+    cropDimensionsDockController.updateCropDimensionsDock({
+        frameRect,
+        exportWorkspaceActive,
+        exportFrameEnabled,
+    });
 }
 
 function drawExportFrame() {

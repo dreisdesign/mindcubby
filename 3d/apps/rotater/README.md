@@ -66,6 +66,7 @@ Current extracted modules:
 | [modules/export-panel-drag.js](modules/export-panel-drag.js) | Export panel drag and persisted positioning controller | Active |
 | [modules/export-workspace-runtime.js](modules/export-workspace-runtime.js) | Export workspace runtime wrappers for active-state/open-close flows | Active |
 | [modules/export-crop-ui.js](modules/export-crop-ui.js) | Export crop/frame button and orbit-hint UI controller | Active |
+| [modules/crop-dimensions-dock.js](modules/crop-dimensions-dock.js) | Crop dimensions dock visibility and positioning controller | Active |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active |
 
 ---
