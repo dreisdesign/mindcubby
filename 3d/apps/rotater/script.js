@@ -6,7 +6,7 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import { GIFEncoder, quantize, applyPalette, nearestColorIndex } from 'gifenc';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 import JSZip from 'jszip';
-import * as ShadeSystem from './shade-system.js';
+import * as ShadeSystem from './modules/shade-system.js';
 import {
     closeModelPartActionMenus as closeModelPartActionMenusModule,
     positionModelPartActionMenu as positionModelPartActionMenuModule,
@@ -2946,7 +2946,7 @@ function getShadeMaxDeltaPercent(rulePath) {
 }
 
 
-// Shade functions moved to shade-system.js module
+// Shade functions moved to modules/shade-system.js module
 // Use ShadeSystem.blendShadeColor, etc. instead
 
 
@@ -4109,7 +4109,7 @@ function disposeMaterials(materialLike) {
 }
 
 // Wrapper functions for shade system (module exported functions)
-// These maintain the original script.js interface while delegating to shade-system.js
+// These maintain the original script.js interface while delegating to modules/shade-system.js
 function blendShadeColor(baseHex, shadeVal, maxDeltaPercent) {
     return ShadeSystem.blendShadeColor(baseHex, shadeVal, maxDeltaPercent);
 }
@@ -12567,7 +12567,7 @@ function computeAutoBrightnessColor(baseHex) {
     return ShadeSystem.computeBackgroundAutoBrightnessColor(baseHex);
 }
 
-// Moved to shade-system.js module
+// Moved to modules/shade-system.js module
 
 
 function applyBgPresetDefaultTone(presetId) {
