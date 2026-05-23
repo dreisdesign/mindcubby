@@ -53,6 +53,7 @@ Current extracted modules:
 | [modules/export-preview-canvas-commit.js](modules/export-preview-canvas-commit.js) | Export preview 2D context image commit helpers | Active |
 | [modules/export-preview-camera-state.js](modules/export-preview-camera-state.js) | Export preview crop camera-state snapshot helpers | Active |
 | [modules/export-preview-readback-commit.js](modules/export-preview-readback-commit.js) | Export preview readback + canvas commit orchestration helpers | Active |
+| [modules/export-preview-overlays.js](modules/export-preview-overlays.js) | Export preview crop and ruler overlay orchestration helpers | Active |
 
 ---
 

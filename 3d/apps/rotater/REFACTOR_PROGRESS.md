@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 35
+- Completed slices: 36
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -222,6 +222,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates readback+commit path through thin wrappers
 - Shipped in commit: pending
 
+36. Export preview overlays extraction
+- Module: [modules/export-preview-overlays.js](modules/export-preview-overlays.js)
+- Scope: preview crop and ruler overlay orchestration helpers
+- script.js now delegates preview overlay orchestration through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -261,6 +267,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-canvas-commit.js](modules/export-preview-canvas-commit.js) | Export preview 2D context image commit helpers | Active | pending |
 | [modules/export-preview-camera-state.js](modules/export-preview-camera-state.js) | Export preview crop camera-state snapshot helpers | Active | pending |
 | [modules/export-preview-readback-commit.js](modules/export-preview-readback-commit.js) | Export preview readback + canvas commit orchestration helpers | Active | pending |
+| [modules/export-preview-overlays.js](modules/export-preview-overlays.js) | Export preview crop and ruler overlay orchestration helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -273,9 +280,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview overlay orchestration extraction
-- Target: crop-overlay + ruler-overlay orchestration helper for preview canvas
-- Candidate module: modules/export-preview-overlays.js
+1. Export preview target-size sync extraction
+- Target: preview canvas pixel-size assignment helper (pv.width/pv.height)
+- Candidate module: modules/export-preview-target-size.js
 
 ## Guardrails
 
