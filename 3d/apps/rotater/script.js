@@ -11753,15 +11753,17 @@ btnGif.addEventListener('click', async () => {
 btnVideo.addEventListener('click', async () => {
     if (!mesh) return;
     if (typeof VideoEncoder === 'undefined') {
-        setAnimStatus('Error: WebCodecs not supported in this browser (use Chrome/Edge/Safari 16.4+).');
+        const unsupportedMessage = 'Error: WebCodecs not supported in this browser (use Chrome/Edge/Safari 16.4+).';
+        setStatus(unsupportedMessage);
+        setAnimStatus(unsupportedMessage);
+        setTimeout(() => {
+            setStatus('');
+            setAnimStatus('');
+        }, 6000);
         return;
     }
-    setExporting(true);
-    // Yield one frame so the browser paints the freeze overlay before export
-    // rendering begins — prevents the distorted canvas from ever being visible.
-    await new Promise(r => requestAnimationFrame(r));
-    controls.autoRotate = false;
 
+    let mp4Preflight = null;
     try {
         if (exportFrameEnabled) syncExportCameraFromViewport();
         const { fps, bitrate, loops } = EXPORT.mp4;
@@ -11769,6 +11771,29 @@ btnVideo.addEventListener('click', async () => {
         const n = exportFrames(fps);
         const totalFrames = n * (loops + 1);
         validateExportWorkload({ format: 'mp4', width: W, height: H, fps, frames: totalFrames });
+        mp4Preflight = { fps, bitrate, W, H, n, totalFrames };
+    } catch (err) {
+        const message = 'Error: ' + (err?.message || 'MP4 export preflight failed.');
+        setStatus(message);
+        setAnimStatus(message);
+        setTimeout(() => {
+            setStatus('');
+            setAnimStatus('');
+        }, 6500);
+        return;
+    }
+
+    setExporting(true);
+    // Yield one frame so the browser paints the freeze overlay before export
+    // rendering begins — prevents the distorted canvas from ever being visible.
+    await new Promise(r => requestAnimationFrame(r));
+    controls.autoRotate = false;
+
+    try {
+        const { fps, bitrate, W, H, n, totalFrames } = mp4Preflight || {};
+        if (!fps || !bitrate || !W || !H || !n || !totalFrames) {
+            throw new Error('MP4 export preflight is unavailable. Please try again.');
+        }
 
         // Render directly to the main canvas at 2x resolution for SSAA
         const SSAA = 2;
@@ -11946,12 +11971,17 @@ btnVideo.addEventListener('click', async () => {
         download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
         setAnimStatus('MP4 saved ✓');
     } catch (err) {
-        setAnimStatus('Error: ' + err.message);
+        const message = 'Error: ' + (err?.message || 'MP4 export failed.');
+        setStatus(message);
+        setAnimStatus(message);
         console.error(err);
     } finally {
         setExporting(false);
         controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
-        setTimeout(() => setAnimStatus(''), 5000);
+        setTimeout(() => {
+            setStatus('');
+            setAnimStatus('');
+        }, 5000);
     }
 });
 
