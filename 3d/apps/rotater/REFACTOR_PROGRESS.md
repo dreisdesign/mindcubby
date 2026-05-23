@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 61
+- Completed slices: 62
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -378,6 +378,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates MP4 scene prep behavior through a thin wrapper
 - Shipped in commit: pending
 
+62. MP4 runtime extraction
+- Module: [modules/export-mp4-runtime.js](modules/export-mp4-runtime.js)
+- Scope: MP4 click-handler orchestration wrapper for guard/preflight/error/finalize flow
+- script.js now delegates MP4 runtime top-level flow through a thin wrapper
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -442,6 +448,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-mp4-encoder-queue.js](modules/export-mp4-encoder-queue.js) | MP4 encoder queue wait and busy-status notice helper orchestration | Active | pending |
 | [modules/export-mp4-codec-config.js](modules/export-mp4-codec-config.js) | MP4 AVC level selection and encoder configure helper orchestration | Active | pending |
 | [modules/export-mp4-scene-prep.js](modules/export-mp4-scene-prep.js) | MP4 scene prep helper orchestration for output canvas/context and scene restore wiring | Active | pending |
+| [modules/export-mp4-runtime.js](modules/export-mp4-runtime.js) | MP4 runtime orchestration wrapper for guard/preflight/error/finalize flow | Active | pending |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active | pending |
 
 ## Recent Milestone Commits
@@ -455,9 +462,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. MP4 runtime extraction
-- Target: MP4 click-handler orchestration wrapper with delegated sub-helpers
-- Candidate module: modules/export-mp4-runtime.js
+1. MP4 completion/finalization extraction
+- Target: MP4 encode flush/finalize and completion status helper orchestration
+- Candidate module: modules/export-mp4-finalize.js
 
 ## Guardrails
 

@@ -151,6 +151,9 @@ import {
     createExportMp4ScenePrepController,
 } from './modules/export-mp4-scene-prep.js';
 import {
+    createExportMp4RuntimeController,
+} from './modules/export-mp4-runtime.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11704,6 +11707,25 @@ const exportMp4ScenePrepController = createExportMp4ScenePrepController({
     createCanvas: () => document.createElement('canvas'),
     applyExportSceneForRender,
 });
+const exportMp4RuntimeController = createExportMp4RuntimeController({
+    getHasMesh: () => !!mesh,
+    hasVideoEncoderSupport: () => typeof VideoEncoder !== 'undefined',
+    preflightController: exportMp4PreflightController,
+    setExporting,
+    requestAnimationFrameFn: requestAnimationFrame,
+    setControlsAutoRotate: (enabled) => {
+        if (controls) controls.autoRotate = !!enabled;
+    },
+    setStatus,
+    setAnimStatus,
+    getAutoRotateRestoreState: () => !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360)),
+    scheduleClearStatus: (delayMs) => {
+        setTimeout(() => {
+            setStatus('');
+            setAnimStatus('');
+        }, delayMs);
+    },
+});
 
 // ── Floyd-Steinberg dithering ────────────────────────────────────────────────
 function applyPaletteDithered(data, palette, width, height) {
@@ -11752,23 +11774,8 @@ btnGif.addEventListener('click', async () => {
 
 // ── Video export (H.264 MP4 via WebCodecs + mp4-muxer) ───────────────────────
 btnVideo.addEventListener('click', async () => {
-    if (!mesh) return;
-    if (typeof VideoEncoder === 'undefined') {
-        exportMp4PreflightController.showUnsupportedWebCodecs();
-        return;
-    }
-
-    const mp4Preflight = exportMp4PreflightController.runMp4Preflight();
-    if (!mp4Preflight) return;
-
-    setExporting(true);
-    // Yield one frame so the browser paints the freeze overlay before export
-    // rendering begins — prevents the distorted canvas from ever being visible.
-    await new Promise(r => requestAnimationFrame(r));
-    controls.autoRotate = false;
-
-    try {
-        const { fps, bitrate, W, H, n, totalFrames } = exportMp4PreflightController.assertMp4Preflight(mp4Preflight);
+    await exportMp4RuntimeController.runMp4Export({
+        runEncodeFlow: async ({ fps, bitrate, W, H, n, totalFrames }) => {
 
         // Render directly to the main canvas at 2x resolution for SSAA
         const SSAA = 2;
@@ -11913,19 +11920,8 @@ btnVideo.addEventListener('click', async () => {
 
         download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
         setAnimStatus('MP4 saved ✓');
-    } catch (err) {
-        const message = 'Error: ' + (err?.message || 'MP4 export failed.');
-        setStatus(message);
-        setAnimStatus(message);
-        console.error(err);
-    } finally {
-        setExporting(false);
-        controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
-        setTimeout(() => {
-            setStatus('');
-            setAnimStatus('');
-        }, 5000);
-    }
+        },
+    });
 });
 
 // ── Restore on load ───────────────────────────────────────────────────────────
