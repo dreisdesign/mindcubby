@@ -108,57 +108,11 @@ import {
     evaluateExportPreviewTimingController,
 } from './modules/export-preview-timing.js';
 import {
-    deriveExportPreviewTransparencyController,
-    syncExportPreviewWrapTransparencyController,
-} from './modules/export-preview-transparency.js';
-import {
-    computeExportPreviewDimensionsController,
-} from './modules/export-preview-dimensions.js';
-import {
-    ensureAndConfigureExportPreviewCameraController,
-} from './modules/export-preview-camera.js';
-import {
-    ensureExportPreviewRenderTargetController,
-} from './modules/export-preview-render-target.js';
-import {
-    readExportPreviewImageDataController,
-} from './modules/export-preview-readback.js';
-import {
-    drawExportPreviewCropOverlayController,
-} from './modules/export-preview-crop-overlay.js';
-import {
     refreshExportPreviewNowController,
 } from './modules/export-preview-refresh.js';
 import {
-    executeExportPreviewRenderPassController,
-} from './modules/export-preview-render-pass.js';
-import {
-    commitExportPreviewCanvasImageController,
-} from './modules/export-preview-canvas-commit.js';
-import {
-    syncExportPreviewCameraStateController,
-} from './modules/export-preview-camera-state.js';
-import {
-    readbackAndCommitExportPreviewController,
-} from './modules/export-preview-readback-commit.js';
-import {
-    applyExportPreviewOverlaysController,
-} from './modules/export-preview-overlays.js';
-import {
-    syncExportPreviewTargetSizeController,
-} from './modules/export-preview-target-size.js';
-import {
-    prepareExportPreviewResourcesController,
-} from './modules/export-preview-resources.js';
-import {
-    prepareExportPreviewPreflightController,
-} from './modules/export-preview-preflight.js';
-import {
-    prepareExportPreviewCanvasController,
-} from './modules/export-preview-canvas-prep.js';
-import {
-    runExportPreviewPipelineController,
-} from './modules/export-preview-pipeline.js';
+    updateExportPreviewController,
+} from './modules/export-preview-update.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5412,7 +5366,7 @@ function applyExportSceneForRender({ forceTransparent = false } = {}) {
 }
 
 function updateExportPreview(force = false) {
-    const pipelineResult = runExportPreviewPipelineController({
+    const pipelineResult = updateExportPreviewController({
         force,
         nowMs: performance.now(),
         lastUpdateMs: _lastExportPreviewUpdateMs,
@@ -5439,34 +5393,8 @@ function updateExportPreview(force = false) {
         exportPreviewDprMax: EXPORT_PREVIEW_DPR_MAX,
         isPreviewActive: isExportPreviewActive,
         evaluateTimingController: evaluateExportPreviewTimingController,
-        preflightController: prepareExportPreviewPreflightController,
-        canvasPrepController: prepareExportPreviewCanvasController,
-        cameraStateController: syncExportPreviewCameraStateController,
-        resourcesController: prepareExportPreviewResourcesController,
-        renderPassController: executeExportPreviewRenderPassController,
-        readbackCommitController: readbackAndCommitExportPreviewController,
-        overlaysController: applyExportPreviewOverlaysController,
         getPreviewExportSize,
-        deriveTransparencyController: deriveExportPreviewTransparencyController,
-        syncWrapTransparencyController: syncExportPreviewWrapTransparencyController,
-        computeDimensionsController: computeExportPreviewDimensionsController,
-        syncTargetSizeController: syncExportPreviewTargetSizeController,
-        ensureRenderTargetController: ensureExportPreviewRenderTargetController,
-        ensurePreviewCameraController: ensureAndConfigureExportPreviewCameraController,
-        readExportPreviewImageDataController,
-        commitCanvasImageController: commitExportPreviewCanvasImageController,
-        drawCropOverlayController: drawExportPreviewCropOverlayController,
         applyExportSceneForRender,
-        createRenderTarget: (w, h) => new THREE.WebGLRenderTarget(w, h, {
-            samples: renderer.capabilities.isWebGL2 ? 4 : 0,
-        }),
-        createPerspectiveCamera: () => new THREE.PerspectiveCamera(45, 1, 0.01, 1e6),
-        srgbColorSpace: THREE.SRGBColorSpace,
-        getPreviewElement: () => document.getElementById('exportPreview'),
-        getTransparentElements: () => ({
-            exportTransparentEl: document.getElementById('exportTransparent'),
-            exportTransparentPngEl: document.getElementById('exportTransparentPng'),
-        }),
         devicePixelRatio: window.devicePixelRatio,
     });
 

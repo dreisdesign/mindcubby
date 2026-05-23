@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 41
+- Completed slices: 42
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -258,6 +258,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates export preview pipeline orchestration through thin wrappers
 - Shipped in commit: pending
 
+42. Export preview update entrypoint extraction
+- Module: [modules/export-preview-update.js](modules/export-preview-update.js)
+- Scope: export preview update entrypoint controller and dependency wiring
+- script.js now delegates updateExportPreview orchestration setup through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -303,6 +309,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-preflight.js](modules/export-preview-preflight.js) | Export preview context preflight orchestration helpers | Active | pending |
 | [modules/export-preview-canvas-prep.js](modules/export-preview-canvas-prep.js) | Export preview dimensions and target-size prep orchestration helpers | Active | pending |
 | [modules/export-preview-pipeline.js](modules/export-preview-pipeline.js) | Export preview end-to-end pipeline orchestration coordinator | Active | pending |
+| [modules/export-preview-update.js](modules/export-preview-update.js) | Export preview update entrypoint controller and dependency wiring | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -315,9 +322,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview pipeline args-bundle extraction
-- Target: reduce argument fan-out for pipeline invocation with a stable dependency bundle
-- Candidate module: modules/export-preview-pipeline-bundle.js
+1. Export preview state-commit extraction
+- Target: consolidate pipeline result -> local state assignments into dedicated helper
+- Candidate module: modules/export-preview-state-commit.js
 
 ## Guardrails
 
