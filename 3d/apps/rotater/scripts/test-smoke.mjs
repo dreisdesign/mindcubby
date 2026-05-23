@@ -77,12 +77,14 @@ assertFile('index.html');
 assertFile('script.js');
 assertFile('shade-system.js');
 assertFile('style.css');
+assertFile('modules/stl-parse-worker.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
 
 checkNodeSyntax('script.js');
 checkNodeSyntax('shade-system.js');
+checkNodeSyntax('modules/stl-parse-worker.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');
@@ -101,5 +103,8 @@ expectSubstring('script.js', 'const IMPORT_STL_LIMITS = {');
 expectSubstring('script.js', 'const EXPORT_GUARD_LIMITS = {');
 expectSubstring('script.js', 'maxCompressionRatio');
 expectSubstring('script.js', 'function validateExportWorkload(');
+expectSubstring('script.js', 'async function parseStlItemsWithWorker(');
+expectSubstring('script.js', 'async function parseSingleStlGeometry(');
+expectSubstring('script.js', 'async function parseMultipartStlGeometries(');
 
 console.log('All smoke checks passed.');

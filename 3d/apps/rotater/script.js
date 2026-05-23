@@ -62,6 +62,10 @@ const EXPORT_GUARD_LIMITS = {
     maxPixelFramesPerJob: 1_000_000_000,
 };
 
+const STL_PARSE_WORKER_TIMEOUT_BASE_MS = 20_000;
+const STL_PARSE_WORKER_TIMEOUT_PER_MB = 350;
+const STL_PARSE_WORKER_TIMEOUT_MAX_MS = 90_000;
+
 const IMAGE_DIMENSION_PRESETS = {
     square: { w: 1, h: 1, tag: '1x1' },
     portrait12: { w: 1, h: 2, tag: '1x2' },
@@ -210,6 +214,191 @@ function validateExportWorkload({ format = 'export', width = 0, height = 0, fps 
     if (pixelFrames > EXPORT_GUARD_LIMITS.maxPixelFramesPerJob) {
         throw new Error(`${format.toUpperCase()} workload is too high for safe in-browser export.`);
     }
+}
+
+function getStlParseTimeoutMs(items) {
+    const totalBytes = Array.from(items || []).reduce((sum, item) => sum + (Number(item?.buffer?.byteLength) || 0), 0);
+    const totalMb = totalBytes / (1024 * 1024);
+    return Math.max(
+        STL_PARSE_WORKER_TIMEOUT_BASE_MS,
+        Math.min(STL_PARSE_WORKER_TIMEOUT_MAX_MS, Math.round(STL_PARSE_WORKER_TIMEOUT_BASE_MS + (totalMb * STL_PARSE_WORKER_TIMEOUT_PER_MB)))
+    );
+}
+
+function createVector3FromPlain(value) {
+    return new THREE.Vector3(Number(value?.x) || 0, Number(value?.y) || 0, Number(value?.z) || 0);
+}
+
+function createBox3FromPlain(value) {
+    return new THREE.Box3(createVector3FromPlain(value?.min), createVector3FromPlain(value?.max));
+}
+
+function rebuildGeometryFromSerialized(payload) {
+    const geo = new THREE.BufferGeometry();
+    const positionArray = payload?.position instanceof Float32Array
+        ? payload.position
+        : new Float32Array(payload?.position || []);
+    geo.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
+
+    if (payload?.normal) {
+        const normalArray = payload.normal instanceof Float32Array
+            ? payload.normal
+            : new Float32Array(payload.normal);
+        geo.setAttribute('normal', new THREE.BufferAttribute(normalArray, 3));
+    }
+
+    if (payload?.index) {
+        const indexArray = payload.indexType === 'Uint32Array'
+            ? (payload.index instanceof Uint32Array ? payload.index : new Uint32Array(payload.index))
+            : (payload.index instanceof Uint16Array ? payload.index : new Uint16Array(payload.index));
+        geo.setIndex(new THREE.BufferAttribute(indexArray, 1));
+    }
+
+    geo.boundingBox = payload?.boundingBox ? createBox3FromPlain(payload.boundingBox) : null;
+    if (!geo.boundingBox) geo.computeBoundingBox();
+    return geo;
+}
+
+async function parseStlItemsWithWorker(items, mode = 'single') {
+    if (typeof Worker === 'undefined') return null;
+
+    let worker = null;
+    try {
+        worker = new Worker(new URL('./modules/stl-parse-worker.js', import.meta.url), { type: 'module' });
+    } catch (error) {
+        if (DEV_LOG) console.warn('[rotater] STL worker unavailable, falling back to main thread.', error);
+        return null;
+    }
+
+    const timeoutMs = getStlParseTimeoutMs(items);
+    const requestId = `stl-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const limits = {
+        maxTrianglesPerFile: IMPORT_STL_LIMITS.maxTrianglesPerFile,
+        maxTrianglesTotal: IMPORT_STL_LIMITS.maxTrianglesTotal,
+    };
+
+    return await new Promise((resolve, reject) => {
+            const cleanup = () => {
+                clearTimeout(timeoutId);
+                worker.removeEventListener('message', onMessage);
+                worker.removeEventListener('error', onError);
+                worker.terminate();
+            };
+
+            const onMessage = (event) => {
+                const data = event.data || {};
+                if (data.id !== requestId) return;
+                cleanup();
+                if (!data.ok) {
+                    reject(new Error(data.error || 'STL worker failed.'));
+                    return;
+                }
+                resolve(data.payload || null);
+            };
+
+            const onError = () => {
+                cleanup();
+                resolve(null);
+            };
+
+            const timeoutId = setTimeout(() => {
+                cleanup();
+                reject(new Error('STL parsing timed out.'));
+            }, timeoutMs);
+
+            worker.addEventListener('message', onMessage);
+            worker.addEventListener('error', onError);
+            try {
+                worker.postMessage({ id: requestId, mode, items, limits });
+            } catch (error) {
+                cleanup();
+                if (DEV_LOG) console.warn('[rotater] STL worker postMessage failed, falling back to main thread.', error);
+                resolve(null);
+            }
+        });
+}
+
+async function parseSingleStlGeometry(buffer, name) {
+    const workerPayload = await parseStlItemsWithWorker([{ name, buffer }], 'single');
+    if (workerPayload?.kind === 'single' && workerPayload.geometry) {
+        return rebuildGeometryFromSerialized(workerPayload.geometry);
+    }
+
+    const geo = new STLLoader().parse(buffer);
+    validateGeometryTriangleBudget(geo, name);
+    geo.computeBoundingBox();
+    const center = new THREE.Vector3();
+    geo.boundingBox?.getCenter(center);
+    geo.translate(-center.x, -center.y, -center.z);
+    geo.computeVertexNormals();
+    geo.computeBoundingBox();
+    return geo;
+}
+
+async function parseMultipartStlGeometries(buffers, names) {
+    const workerPayload = await parseStlItemsWithWorker(
+        buffers.map((buffer, idx) => ({ name: names?.[idx] || `Part ${idx + 1}`, buffer })),
+        'multi'
+    );
+
+    if (workerPayload?.kind === 'multi' && Array.isArray(workerPayload.geometries)) {
+        return {
+            geometries: workerPayload.geometries.map((geo) => rebuildGeometryFromSerialized(geo)),
+            partBounds: workerPayload.partBounds.map((entry) => ({
+                center: createVector3FromPlain(entry?.center),
+                radius: Math.max(0.001, Number(entry?.radius) || 0.001),
+            })),
+            partDimensions: workerPayload.partDimensions.map((entry) => ({
+                w: Number(entry?.w) || 0,
+                d: Number(entry?.d) || 0,
+                h: Number(entry?.h) || 0,
+            })),
+            partBoxes: workerPayload.partBoxes.map((entry) => createBox3FromPlain(entry)),
+        };
+    }
+
+    const parsed = [];
+    const unionBox = new THREE.Box3();
+    const loader = new STLLoader();
+    let totalTriangles = 0;
+    for (const buffer of buffers) {
+        const geo = loader.parse(buffer);
+        const label = names?.[parsed.length] || `Part ${parsed.length + 1}`;
+        const partTriangles = validateGeometryTriangleBudget(geo, label);
+        totalTriangles += partTriangles;
+        if (totalTriangles > IMPORT_STL_LIMITS.maxTrianglesTotal) {
+            geo.dispose?.();
+            parsed.forEach((g) => g?.dispose?.());
+            throw new Error(`Multipart triangle budget exceeded (${IMPORT_STL_LIMITS.maxTrianglesTotal.toLocaleString()}).`);
+        }
+        geo.computeBoundingBox();
+        if (geo.boundingBox) unionBox.union(geo.boundingBox);
+        parsed.push(geo);
+    }
+
+    const center = unionBox.getCenter(new THREE.Vector3());
+    const partBounds = [];
+    const partDimensions = [];
+    const partBoxes = [];
+    for (const geo of parsed) {
+        geo.translate(-center.x, -center.y, -center.z);
+        geo.computeBoundingBox();
+        const box = geo.boundingBox;
+        if (box) {
+            const boundsCenter = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            partBounds.push({ center: boundsCenter, radius: Math.max(size.length() * 0.5, 0.001) });
+            partDimensions.push({ w: size.x, d: size.y, h: size.z });
+            partBoxes.push(box.clone());
+        } else {
+            partBounds.push({ center: new THREE.Vector3(0, 0, 0), radius: Math.max(0.001, modelRadius || 1) });
+            partDimensions.push({ w: 0, d: 0, h: 0 });
+            partBoxes.push(new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0)));
+        }
+        geo.computeVertexNormals();
+    }
+
+    return { geometries: parsed, partBounds, partDimensions, partBoxes };
 }
 
 function getPreviewExportSize(_fmt) {
@@ -4840,9 +5029,8 @@ function loadPreparedGeometry(geo, name) {
 }
 
 // ── STL Loading ───────────────────────────────────────────────────────────────
-function loadSTLBuffer(buffer, name) {
-    const geo = new STLLoader().parse(buffer);
-    validateGeometryTriangleBudget(geo, name);
+async function loadSTLBuffer(buffer, name) {
+    const geo = await parseSingleStlGeometry(buffer, name);
 
     // Preserve camera distance when replacing a model (maintain user's zoom level)
     // Center and orient (STL files from slicers are Z-up; Three.js is Y-up)
@@ -4871,7 +5059,7 @@ function loadSTLBuffer(buffer, name) {
     loadPreparedGeometry(geo, name);
 }
 
-function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings = null) {
+async function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings = null) {
     if (!Array.isArray(buffers) || !buffers.length) return;
 
     modelPartNames = [...names];
@@ -4898,52 +5086,11 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
     syncActivePartFromUiSelection();
     applyPendingUrlModelAppearanceOverride();
 
-    const parsed = [];
-    const unionBox = new THREE.Box3();
-    const loader = new STLLoader();
-    let totalTriangles = 0;
-    for (const buffer of buffers) {
-        const geo = loader.parse(buffer);
-        const label = names?.[parsed.length] || `Part ${parsed.length + 1}`;
-        const partTriangles = validateGeometryTriangleBudget(geo, label);
-        totalTriangles += partTriangles;
-        if (totalTriangles > IMPORT_STL_LIMITS.maxTrianglesTotal) {
-            geo.dispose?.();
-            parsed.forEach((g) => g?.dispose?.());
-            throw new Error(`Multipart triangle budget exceeded (${IMPORT_STL_LIMITS.maxTrianglesTotal.toLocaleString()}).`);
-        }
-        geo.computeBoundingBox();
-        if (geo.boundingBox) unionBox.union(geo.boundingBox);
-        parsed.push(geo);
-    }
-
-    const center = unionBox.getCenter(new THREE.Vector3());
-    const computedPartBounds = [];
-    const computedPartDimensions = [];
-    const computedPartBoxes = [];
-    for (const geo of parsed) {
-        geo.translate(-center.x, -center.y, -center.z);
-        geo.computeBoundingBox();
-        const box = geo.boundingBox;
-        if (box) {
-            const boundsCenter = box.getCenter(new THREE.Vector3());
-            const size = box.getSize(new THREE.Vector3());
-            computedPartBounds.push({
-                center: boundsCenter,
-                radius: Math.max(size.length() * 0.5, 0.001),
-            });
-            computedPartDimensions.push({ w: size.x, d: size.y, h: size.z });
-            computedPartBoxes.push(box.clone());
-        } else {
-            computedPartBounds.push({ center: new THREE.Vector3(0, 0, 0), radius: Math.max(0.001, modelRadius || 1) });
-            computedPartDimensions.push({ w: 0, d: 0, h: 0 });
-            computedPartBoxes.push(new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0)));
-        }
-        geo.computeVertexNormals();
-    }
-    multipartPartBounds = computedPartBounds;
-    modelPartDimensions = computedPartDimensions;
-    modelPartBoundsBoxes = computedPartBoxes;
+    const parsedResult = await parseMultipartStlGeometries(buffers, names);
+    const parsed = parsedResult.geometries;
+    multipartPartBounds = parsedResult.partBounds;
+    modelPartDimensions = parsedResult.partDimensions;
+    modelPartBoundsBoxes = parsedResult.partBoxes;
     setRulerHoveredPartIndex(-1);
 
     const merged = BufferGeometryUtils.mergeGeometries(parsed, true);
@@ -7700,7 +7847,7 @@ async function restoreSession() {
             // URL model appearance params represent selected-part state; when restoring
             // a saved multipart session, preserve each part's persisted appearance.
             pendingUrlModelAppearanceOverride = null;
-            loadMultipartSTLBuffers(
+            await loadMultipartSTLBuffers(
                 saved.parts.map(p => p.buffer),
                 saved.parts.map(p => p.name),
                 saved.parts.map(p => p.color || colorPick.value),
@@ -7708,7 +7855,7 @@ async function restoreSession() {
             );
         } else {
             modelPartFiles = null;
-            loadSTLBuffer(saved.buffer, saved.name);
+            await loadSTLBuffer(saved.buffer, saved.name);
         }
     } catch (err) {
         setStatus('Saved model could not be restored: ' + (err?.message || 'validation failed.'));
@@ -7873,16 +8020,16 @@ async function handleFiles(fileList, requestedActionOverride = null) {
                 const buffer = await readFileAsArrayBuffer(file);
                 validateStlBufferFast(file.name, buffer);
                 return {
-                name: file.name,
-                buffer,
-                color: colorPick.value,
-                settings: createPartSettings(colorPick.value),
+                    name: file.name,
+                    buffer,
+                    color: colorPick.value,
+                    settings: createPartSettings(colorPick.value),
                 };
             }));
             await saveFilesToIDB(parts, displayName);
             saveSettings();
             modelPartFiles = parts.map(p => ({ name: p.name, buffer: p.buffer }));
-            loadMultipartSTLBuffers(parts.map(p => p.buffer), parts.map(p => p.name), parts.map(p => p.color));
+            await loadMultipartSTLBuffers(parts.map(p => p.buffer), parts.map(p => p.name), parts.map(p => p.color));
         } catch (err) {
             setStatus('Error: ' + (err?.message || 'Failed to load STL parts.'));
             console.error(err);
@@ -7898,7 +8045,7 @@ async function handleFiles(fileList, requestedActionOverride = null) {
         await saveFileToIDB(file.name, buffer);
         modelPartFiles = null;
         saveSettings();
-        loadSTLBuffer(buffer, file.name);
+        await loadSTLBuffer(buffer, file.name);
     } catch (err) {
         setStatus('Error: ' + (err?.message || 'Failed to load STL file.'));
         console.error(err);
@@ -7989,7 +8136,7 @@ async function appendSTLPartsToCurrentModel(fileList) {
     pendingModelPartSelected = Math.max(0, nextFiles.length - incoming.length);
     setDisplayedFileName(displayName);
     currentFileName = buildMultipartFileBase(nextNames);
-    loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
+    await loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
     rebuildFileChipPartsMenu();
     syncFileChipMultipartUI();
     saveSettings();
@@ -8181,7 +8328,7 @@ async function importRotaterPackage(zipFile) {
         modelPartFiles = importParts.map((part) => ({ name: part.name, buffer: part.buffer }));
         setDisplayedFileName(displayName);
         currentFileName = buildMultipartFileBase(importParts.map((part) => part.name));
-        loadMultipartSTLBuffers(
+        await loadMultipartSTLBuffers(
             importParts.map((part) => part.buffer),
             importParts.map((part) => part.name),
             importParts.map((part) => part.color),
@@ -8192,7 +8339,7 @@ async function importRotaterPackage(zipFile) {
         modelPartFiles = null;
         setDisplayedFileName(parts[0].name);
         currentFileName = stemFromFileName(parts[0].name);
-        loadSTLBuffer(parts[0].buffer, parts[0].name);
+        await loadSTLBuffer(parts[0].buffer, parts[0].name);
     }
 
     saveSettings();
@@ -8223,7 +8370,7 @@ async function replaceMultipartPart(partIdx, file) {
     pendingModelPartSelected = Math.min(index, nextFiles.length - 1);
     setDisplayedFileName(displayName);
     currentFileName = buildMultipartFileBase(nextNames);
-    loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
+    await loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
     rebuildFileChipPartsMenu();
     syncFileChipMultipartUI();
 }
@@ -8245,7 +8392,7 @@ async function removeMultipartPart(partIdx, options = {}) {
         currentFileName = stemFromFileName(nextFiles[0].name);
         setDisplayedFileName(nextFiles[0].name);
         modelPartFiles = null;
-        loadSTLBuffer(nextFiles[0].buffer, nextFiles[0].name);
+        await loadSTLBuffer(nextFiles[0].buffer, nextFiles[0].name);
     } else {
         pendingModelPartDisplayOrder = modelPartDisplayOrder
             .filter((idx) => idx !== index)
@@ -8261,7 +8408,7 @@ async function removeMultipartPart(partIdx, options = {}) {
         pendingModelPartSelected = Math.max(0, Math.min(modelPartSelected, nextFiles.length - 1));
         setDisplayedFileName(displayName);
         currentFileName = buildMultipartFileBase(nextNames);
-        loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
+        await loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
     }
 
     rebuildFileChipPartsMenu();
@@ -10342,7 +10489,7 @@ async function loadBenchyModel({ clearStoredModel = true } = {}) {
         currentFileName = '3dbenchy';
         if (!renderer) initThree();
         controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
-        loadSTLBuffer(buffer, '3dbenchy.stl');
+        await loadSTLBuffer(buffer, '3dbenchy.stl');
         return true;
     } catch (e) {
         return false;

@@ -34,6 +34,7 @@ Current extracted modules:
 - Current policy allows local app assets plus jsDelivr module dependencies while restricting high-risk directives (`object-src 'none'`, `frame-ancestors 'none'`, strict `base-uri`/`form-action`).
 - Recommended rollout path: keep report-only while validating browser console violations, then move to enforced `Content-Security-Policy` once stable.
 - STL ingest guardrails are enabled for direct upload/import paths (file count, per-file size, total size, and triangle-budget limits).
+- STL parse/validation now runs in a dedicated Web Worker when available, with timeout protection to keep oversized or malicious files from freezing the main UI thread.
 - ZIP package import now includes additional decompression-abuse checks (entry compression-ratio caps plus existing archive/entry/extracted-size limits).
 - Export guardrails cap unsafe workload combinations (resolution, FPS, frame count, and total pixel-frame budget) before render/encode starts.
 
