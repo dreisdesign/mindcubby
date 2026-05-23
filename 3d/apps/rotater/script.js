@@ -127,6 +127,9 @@ import {
     createExportBusyStateController,
 } from './modules/export-busy-state.js';
 import {
+    createExportProgressTimingController,
+} from './modules/export-progress-timing.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11333,15 +11336,6 @@ document.addEventListener('touchmove', e => {
 document.addEventListener('touchend', () => { _cropCornerDrag = null; });
 
 // ── Export helpers ────────────────────────────────────────────────────────────
-let _lastExportUiPaintAt = 0;
-async function maybePaintExportProgress(msg, done, total, force = false) {
-    const now = performance.now();
-    // Paint frequently at start (so early progress does not feel stuck), then throttle.
-    if (!force && done != null && done > 24 && (now - _lastExportUiPaintAt) < 90) return;
-    setAnimStatus(msg, done, total);
-    _lastExportUiPaintAt = now;
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-}
 const exportProgressOverlayController = createExportProgressOverlayController({
     getOverlayEl: () => document.getElementById('exportProgressOverlay'),
     getLabelEl: () => document.getElementById('exportProgressOverlayLabel'),
@@ -11375,6 +11369,16 @@ const setStatus = (msg) => {
 const setAnimStatus = (msg, done, total) => {
     exportStatusController.setAnimStatus(msg, done, total);
 };
+
+const exportProgressTimingController = createExportProgressTimingController({
+    nowMs: () => performance.now(),
+    requestAnimationFrameFn: requestAnimationFrame,
+    onPaintStatus: setAnimStatus,
+});
+
+async function maybePaintExportProgress(msg, done, total, force = false) {
+    await exportProgressTimingController.maybePaintExportProgress(msg, done, total, force);
+}
 
 const exportBusyStateController = createExportBusyStateController({
     btnGif,

@@ -70,6 +70,7 @@ Current extracted modules:
 | [modules/export-progress-overlay.js](modules/export-progress-overlay.js) | Export progress overlay element show/update/hide controller | Active |
 | [modules/export-status.js](modules/export-status.js) | Export status and animation status lane controller helpers | Active |
 | [modules/export-busy-state.js](modules/export-busy-state.js) | Export busy-state button disable and overlay toggle controller | Active |
+| [modules/export-progress-timing.js](modules/export-progress-timing.js) | Export progress paint timing/throttle controller | Active |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active |
 
 ---
