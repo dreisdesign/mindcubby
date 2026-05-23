@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 16
+- Completed slices: 17
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -108,6 +108,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates panel state persistence and toggle orchestration through thin wrappers
 - Shipped in commit: pending
 
+17. Export motion labels extraction
+- Module: [modules/export-motion-labels.js](modules/export-motion-labels.js)
+- Scope: export motion duration/frame label and speed-option text composition helpers
+- script.js now delegates motion label helpers through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -128,6 +134,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-workspace.js](modules/export-workspace.js) | Export workspace active-state orchestration and transparency/open-close helpers | Active | pending |
 | [modules/export-transparency-sync.js](modules/export-transparency-sync.js) | Export transparency checkbox coupling and preview-sync orchestration helpers | Active | pending |
 | [modules/export-panel-state.js](modules/export-panel-state.js) | Export panel collapsed-state persistence/restore and toggle routing helpers | Active | pending |
+| [modules/export-motion-labels.js](modules/export-motion-labels.js) | Export motion duration/frame label and speed-option text composition helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -140,9 +147,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export motion speed labels extraction
-- Target: refreshExportMotionSpeedOptionLabels and duration/frame label plumbing helpers
-- Candidate module: modules/export-motion-labels.js
+1. Export estimate summary extraction
+- Target: updateEstimate and related export button/title/summary text writes
+- Candidate module: modules/export-estimate.js
 
 ## Guardrails
 

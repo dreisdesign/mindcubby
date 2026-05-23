@@ -75,6 +75,13 @@ import {
     restoreExportPanelCollapsedStateController,
     handleExportPanelToggleController,
 } from './modules/export-panel-state.js';
+import {
+    getRotationTimeSecondsByIndexController,
+    getExportFormatForDurationLabelsController,
+    getRotationFrameCountForSecondsController,
+    formatRotationTimeOptionLabelController,
+    refreshExportMotionSpeedOptionLabelsController,
+} from './modules/export-motion-labels.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -648,32 +655,36 @@ function exportFrames(fps = EXPORT.gif.fps) {
 }
 
 function getRotationTimeSecondsByIndex(index) {
-    return SPEED_SECONDS_PER_REV[index] ?? SPEED_SECONDS_PER_REV[SPEED_DEFAULT];
+    return getRotationTimeSecondsByIndexController(index, {
+        speedSecondsPerRev: SPEED_SECONDS_PER_REV,
+        speedDefault: SPEED_DEFAULT,
+    });
 }
 
 function getExportFormatForDurationLabels(format = exportFormatEl?.value || 'gif') {
-    return format === 'mp4' ? 'mp4' : 'gif';
+    return getExportFormatForDurationLabelsController(format);
 }
 
 function getRotationFrameCountForSeconds(seconds, format = 'gif') {
-    const qualityValue = document.getElementById('exportQuality')?.value ?? 'std';
-    const preset = QUALITY_PRESETS[qualityValue] ?? QUALITY_PRESETS.std;
-    const baseFps = preset.fps;
-    const fps = getEffectiveExportFpsForSeconds(baseFps, seconds);
-    return Math.max(1, Math.round(fps * Math.max(1, Number(seconds) || 1)));
+    return getRotationFrameCountForSecondsController(seconds, format, {
+        getExportQualityValue: () => document.getElementById('exportQuality')?.value ?? 'std',
+        qualityPresets: QUALITY_PRESETS,
+        getEffectiveExportFpsForSeconds: (baseFps, secs) => getEffectiveExportFpsForSeconds(baseFps, secs),
+    });
 }
 
 function formatRotationTimeOptionLabel(index, format = 'gif') {
-    const seconds = getRotationTimeSecondsByIndex(index);
-    const frames = getRotationFrameCountForSeconds(seconds, format);
-    return `${seconds} seconds (${frames} frames)`;
+    return formatRotationTimeOptionLabelController(index, format, {
+        getRotationTimeSecondsByIndex,
+        getRotationFrameCountForSeconds,
+    });
 }
 
 function refreshExportMotionSpeedOptionLabels(format = exportFormatEl?.value || 'gif') {
-    if (!exportMotionSpeedEl) return;
-    const normalizedFormat = getExportFormatForDurationLabels(format);
-    Array.from(exportMotionSpeedEl.options).forEach((option, idx) => {
-        option.textContent = formatRotationTimeOptionLabel(idx, normalizedFormat);
+    refreshExportMotionSpeedOptionLabelsController(format, {
+        exportMotionSpeedEl,
+        getExportFormatForDurationLabels,
+        formatRotationTimeOptionLabel,
     });
 }
 
