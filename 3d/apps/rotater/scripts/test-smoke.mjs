@@ -127,6 +127,7 @@ assertFile('modules/export-status.js');
 assertFile('modules/export-busy-state.js');
 assertFile('modules/export-progress-timing.js');
 assertFile('modules/export-download.js');
+assertFile('modules/export-filename.js');
 assertFile('modules/right-pan-lock.js');
 
 checkJson('color-rules.json');
@@ -184,6 +185,7 @@ checkNodeSyntax('modules/export-status.js');
 checkNodeSyntax('modules/export-busy-state.js');
 checkNodeSyntax('modules/export-progress-timing.js');
 checkNodeSyntax('modules/export-download.js');
+checkNodeSyntax('modules/export-filename.js');
 checkNodeSyntax('modules/right-pan-lock.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
@@ -237,6 +239,7 @@ checkCompileSyntax('modules/export-status.js');
 checkCompileSyntax('modules/export-busy-state.js');
 checkCompileSyntax('modules/export-progress-timing.js');
 checkCompileSyntax('modules/export-download.js');
+checkCompileSyntax('modules/export-filename.js');
 checkCompileSyntax('modules/right-pan-lock.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');

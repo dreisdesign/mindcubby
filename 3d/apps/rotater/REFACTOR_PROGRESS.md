@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 55
+- Completed slices: 56
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -342,6 +342,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates download helper behavior through a thin wrapper
 - Shipped in commit: pending
 
+56. Export filename composition extraction
+- Module: [modules/export-filename.js](modules/export-filename.js)
+- Scope: export quality/modifier tags and filename composition helper orchestration
+- script.js now delegates export filename helper behavior through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -400,6 +406,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-busy-state.js](modules/export-busy-state.js) | Export busy-state button disable and overlay toggle helper orchestration | Active | pending |
 | [modules/export-progress-timing.js](modules/export-progress-timing.js) | Export progress paint timing/throttle helper orchestration | Active | pending |
 | [modules/export-download.js](modules/export-download.js) | Export blob download and URL revoke helper orchestration | Active | pending |
+| [modules/export-filename.js](modules/export-filename.js) | Export quality/modifier tags and filename composition helper orchestration | Active | pending |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active | pending |
 
 ## Recent Milestone Commits
@@ -413,9 +420,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export filename composition extraction
-- Target: export quality tag + modifier tags + filename helper orchestration
-- Candidate module: modules/export-filename.js
+1. GIF export runtime extraction
+- Target: GIF export click-handler orchestration (preflight, capture, encode, status/finally path)
+- Candidate module: modules/export-gif-runtime.js
 
 ## Guardrails
 

@@ -72,6 +72,7 @@ Current extracted modules:
 | [modules/export-busy-state.js](modules/export-busy-state.js) | Export busy-state button disable and overlay toggle controller | Active |
 | [modules/export-progress-timing.js](modules/export-progress-timing.js) | Export progress paint timing/throttle controller | Active |
 | [modules/export-download.js](modules/export-download.js) | Export blob download and URL revoke controller | Active |
+| [modules/export-filename.js](modules/export-filename.js) | Export quality/modifier tags and filename composition controller | Active |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active |
 
 ---

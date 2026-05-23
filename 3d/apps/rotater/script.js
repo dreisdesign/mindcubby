@@ -133,6 +133,9 @@ import {
     createExportDownloadController,
 } from './modules/export-download.js';
 import {
+    createExportFilenameController,
+} from './modules/export-filename.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11414,36 +11417,27 @@ function download(data, filename, type) {
     exportDownloadController.download(data, filename, type);
 }
 
+const exportFilenameController = createExportFilenameController({
+    getExportQuality: () => document.getElementById('exportQuality')?.value ?? 'std',
+    getGifLoopEnabled: () => document.getElementById('gifLoop')?.checked ?? true,
+    getGifDitherEnabled: () => document.getElementById('gifDither')?.checked ?? false,
+    getTransparentEnabled: () => document.getElementById('exportTransparent')?.checked ?? false,
+    getTransparentPngEnabled: () => document.getElementById('exportTransparentPng')?.checked,
+    getImagePresetTag: () => EXPORT.image.presetTag,
+    getCurrentFileName: () => currentFileName,
+    getRotateMode: () => rotateModeEl.value || 'spin',
+});
+
 function getQualityTag() {
-    const q = document.getElementById('exportQuality')?.value ?? 'std';
-    return ({ web: 'low', std: 'medium', high: 'high' }[q]) || q;
+    return exportFilenameController.getQualityTag();
 }
 
 function getExportModifierTags(format) {
-    const tags = [];
-    if (format === 'gif') {
-        const loopOn = document.getElementById('gifLoop')?.checked ?? true;
-        tags.push(loopOn ? 'loop' : 'noloop');
-        if (document.getElementById('gifDither')?.checked) tags.push('dither');
-        if (document.getElementById('exportTransparent')?.checked) tags.push('transparent');
-    } else if (format === 'png' || format === 'jpg') {
-        if (EXPORT.image.presetTag) tags.push(EXPORT.image.presetTag);
-        if (format !== 'png') return tags;
-        const transparentPng = document.getElementById('exportTransparentPng')?.checked
-            ?? document.getElementById('exportTransparent')?.checked
-            ?? false;
-        if (transparentPng) tags.push('transparent');
-    }
-    return tags;
+    return exportFilenameController.getExportModifierTags(format);
 }
 
 function buildExportFilename(format) {
-    const ext = ({ gif: 'gif', mp4: 'mp4', png: 'png', jpg: 'jpg' }[format]) || format;
-    const base = `Rotater_${currentFileName}`;
-    const mode = rotateModeEl.value || 'spin';
-    const quality = getQualityTag();
-    const modifiers = getExportModifierTags(format);
-    return [base, mode, quality, ...modifiers].join('_') + '.' + ext;
+    return exportFilenameController.buildExportFilename(format);
 }
 
 async function renderStillImageBlob(type, { quality = 0.92, transparent = false } = {}) {
