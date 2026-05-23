@@ -138,6 +138,9 @@ import {
 import {
     syncExportPreviewCameraStateController,
 } from './modules/export-preview-camera-state.js';
+import {
+    readbackAndCommitExportPreviewController,
+} from './modules/export-preview-readback-commit.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5485,20 +5488,14 @@ function updateExportPreview(force = false) {
         isTransparentPreview,
     });
 
-    const imgData = readExportPreviewImageDataController({
+    const canvasCommit = readbackAndCommitExportPreviewController({
         renderer,
         previewRt: _previewRt,
         pxW,
         pxH,
-        createImageData: (w, h) => {
-            const ctx = pv.getContext('2d');
-            return ctx ? ctx.createImageData(w, h) : null;
-        },
-    });
-    if (!imgData) return;
-    const canvasCommit = commitExportPreviewCanvasImageController({
         previewEl: pv,
-        imgData,
+        readExportPreviewImageData: readExportPreviewImageDataController,
+        commitExportPreviewCanvasImage: commitExportPreviewCanvasImageController,
     });
     if (!canvasCommit.committed || !canvasCommit.ctx2d) return;
     const ctx2d = canvasCommit.ctx2d;

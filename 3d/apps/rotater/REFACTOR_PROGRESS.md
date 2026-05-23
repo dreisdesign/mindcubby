@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 34
+- Completed slices: 35
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -216,6 +216,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview camera-state snapshot path through thin wrappers
 - Shipped in commit: pending
 
+35. Export preview readback-commit extraction
+- Module: [modules/export-preview-readback-commit.js](modules/export-preview-readback-commit.js)
+- Scope: preview readback + canvas commit orchestration helpers
+- script.js now delegates readback+commit path through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -254,6 +260,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-render-pass.js](modules/export-preview-render-pass.js) | Export preview render pass bind/render/unbind and scene-restore helpers | Active | pending |
 | [modules/export-preview-canvas-commit.js](modules/export-preview-canvas-commit.js) | Export preview 2D context image commit helpers | Active | pending |
 | [modules/export-preview-camera-state.js](modules/export-preview-camera-state.js) | Export preview crop camera-state snapshot helpers | Active | pending |
+| [modules/export-preview-readback-commit.js](modules/export-preview-readback-commit.js) | Export preview readback + canvas commit orchestration helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -266,9 +273,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview readback-commit orchestration extraction
-- Target: combine readback and canvas commit path into one orchestration helper
-- Candidate module: modules/export-preview-readback-commit.js
+1. Export preview overlay orchestration extraction
+- Target: crop-overlay + ruler-overlay orchestration helper for preview canvas
+- Candidate module: modules/export-preview-overlays.js
 
 ## Guardrails
 
