@@ -117,6 +117,7 @@ assertFile('modules/export-preview-pipeline.js');
 assertFile('modules/export-preview-update.js');
 assertFile('modules/export-preview-state-commit.js');
 assertFile('modules/export-preview-update-context.js');
+assertFile('modules/export-preview-runtime.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
@@ -163,6 +164,7 @@ checkNodeSyntax('modules/export-preview-pipeline.js');
 checkNodeSyntax('modules/export-preview-update.js');
 checkNodeSyntax('modules/export-preview-state-commit.js');
 checkNodeSyntax('modules/export-preview-update-context.js');
+checkNodeSyntax('modules/export-preview-runtime.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');
@@ -205,6 +207,7 @@ checkCompileSyntax('modules/export-preview-pipeline.js');
 checkCompileSyntax('modules/export-preview-update.js');
 checkCompileSyntax('modules/export-preview-state-commit.js');
 checkCompileSyntax('modules/export-preview-update-context.js');
+checkCompileSyntax('modules/export-preview-runtime.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');
 expectSubstring('index.html', 'id="btnClearBuildPlate"');

@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 44
+- Completed slices: 45
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -276,6 +276,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates update-context construction through thin wrappers
 - Shipped in commit: pending
 
+45. Export preview runtime extraction
+- Module: [modules/export-preview-runtime.js](modules/export-preview-runtime.js)
+- Scope: export preview runtime wrappers for update and refresh flows
+- script.js now delegates preview runtime wrappers through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -324,6 +330,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-update.js](modules/export-preview-update.js) | Export preview update entrypoint controller and dependency wiring | Active | pending |
 | [modules/export-preview-state-commit.js](modules/export-preview-state-commit.js) | Export preview pipeline-result state commit helpers | Active | pending |
 | [modules/export-preview-update-context.js](modules/export-preview-update-context.js) | Export preview update-context builder helpers | Active | pending |
+| [modules/export-preview-runtime.js](modules/export-preview-runtime.js) | Export preview runtime wrappers for update and refresh flows | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -336,8 +343,8 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview runtime extraction
-- Target: move updateExportPreview + refreshExportPreviewNow wrappers into dedicated runtime module
+1. Export preview wrapper removal extraction
+- Target: remove remaining updateExportPreview/refreshExportPreviewNow wrapper bodies in script.js
 - Candidate module: modules/export-preview-runtime.js
 
 ## Guardrails
