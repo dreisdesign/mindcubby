@@ -7576,7 +7576,7 @@ html.loaded.layout-tablet-tabs .sidebar-header {
 
 html.loaded.layout-mobile-accordion .sidebar-brand-row,
 html.loaded.layout-tablet-tabs .sidebar-brand-row {
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
