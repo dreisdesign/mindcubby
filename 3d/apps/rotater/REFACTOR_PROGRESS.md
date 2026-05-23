@@ -46,7 +46,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - Module: [modules/model-picker-floating.js](modules/model-picker-floating.js)
 - Scope: floating model picker card positioning, persisted placement restore, and drag lifecycle wiring
 - script.js now delegates through thin wrappers
-- Shipped in commit: pending
+- Shipped in commit: a3f92b3
 
 ## Module Index (C1 Workstream)
 
@@ -57,10 +57,11 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/orbit-frame-state.js](modules/orbit-frame-state.js) | Orbit frame-state reads and camera-from-orbit transform helpers | Active | 4e885ed |
 | [modules/viewport-performance.js](modules/viewport-performance.js) | Adaptive viewport quality and pixel-ratio helpers | Active | 14ed52b |
 | [modules/model-picker-controller.js](modules/model-picker-controller.js) | Controller helpers for selector/sync menu open-close behavior | Active | 816338d |
-| [modules/model-picker-floating.js](modules/model-picker-floating.js) | Floating picker card positioning, persisted placement restore, and drag lifecycle helpers | Active | pending |
+| [modules/model-picker-floating.js](modules/model-picker-floating.js) | Floating picker card positioning, persisted placement restore, and drag lifecycle helpers | Active | a3f92b3 |
 
 ## Recent Milestone Commits
 
+- a3f92b3 refactor(c1): extract model picker floating module
 - 816338d refactor(c1): extract model picker controller module
 - 14ed52b refactor(c1): extract viewport performance module and adaptive DPR
 - 4e885ed refactor(c1): extract orbit frame-state helpers module
