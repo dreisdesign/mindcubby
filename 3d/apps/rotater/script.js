@@ -61,6 +61,15 @@ import {
 import {
     renderCollapsedExportSummaryController,
 } from './modules/export-collapsed-summary.js';
+import {
+    updateExportWorkspaceTransparencyPatternController,
+    setExportWorkspaceActiveController,
+    openExportWorkspaceController,
+    closeExportWorkspaceController,
+} from './modules/export-workspace.js';
+import {
+    syncTransparentCheckboxesController,
+} from './modules/export-transparency-sync.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5599,26 +5608,32 @@ function initializeExportPanelDrag() {
 initializeExportPanelDrag();
 
 function setExportWorkspaceActive(active) {
-    exportWorkspaceActive = !!active;
-    document.documentElement.classList.toggle('export-workspace-active', exportWorkspaceActive);
     const exportOverlayEl = document.getElementById('exportOverlay');
-    if (exportOverlayEl) exportOverlayEl.hidden = !exportWorkspaceActive;
-    if (exportWorkspaceActive) {
-        if (exportGridEl) exportGridEl.checked = !!rulerLinesVisible;
-        if (exportBuildPlateEl) exportBuildPlateEl.checked = !!buildPlateEnabled;
-    }
-    updateExportWorkspaceTransparencyPattern();
-    updateExportPauseButtonUI();
-    try { localStorage.setItem('rotater_exportWorkspaceActive', exportWorkspaceActive ? '1' : '0'); } catch (_) { }
-    syncCanvasSize();
-    requestAnimationFrame(() => syncCanvasSize());
+    setExportWorkspaceActiveController(active, {
+        setExportWorkspaceActive: (nextActive) => {
+            exportWorkspaceActive = !!nextActive;
+        },
+        rootEl: document.documentElement,
+        exportOverlayEl,
+        exportGridEl,
+        rulerLinesVisible,
+        exportBuildPlateEl,
+        buildPlateEnabled,
+        updateExportWorkspaceTransparencyPattern,
+        updateExportPauseButtonUI,
+        syncCanvasSize,
+        persistWorkspaceActive: (nextActive) => {
+            try { localStorage.setItem('rotater_exportWorkspaceActive', nextActive ? '1' : '0'); } catch (_) { }
+        },
+    });
 }
 
 function updateExportWorkspaceTransparencyPattern() {
-    const wrap = canvas?.parentElement;
-    if (!wrap) return;
-    const transparent = !!(exportWorkspaceActive && !(exportBgColorEl?.checked ?? true));
-    wrap.classList.toggle('is-export-transparent', transparent);
+    updateExportWorkspaceTransparencyPatternController({
+        canvas,
+        exportWorkspaceActive,
+        exportBgColorEl,
+    });
 }
 
 function enterCropMode() {
@@ -5638,14 +5653,19 @@ function enterCropMode() {
 }
 
 function openExportWorkspace() {
-    setExportWorkspaceActive(true);
-    requestAnimationFrame(() => restoreExportPanelPosition());
-    enterCropMode();
+    openExportWorkspaceController({
+        setExportWorkspaceActive,
+        restoreExportPanelPosition,
+        enterCropMode,
+    });
 }
 
 function closeExportWorkspace() {
-    if (exportFrameEnabled) confirmCropMode();
-    setExportWorkspaceActive(false);
+    closeExportWorkspaceController({
+        exportFrameEnabled,
+        confirmCropMode,
+        setExportWorkspaceActive,
+    });
 }
 
 function updateFrameOverlayButtonUI() {
@@ -9670,30 +9690,16 @@ window.addEventListener('resize', () => updateExportActionLabels());
 
 // exportBgColor checkbox is canonical in UI; transparent inputs are kept for compatibility
 function syncTransparentCheckboxes(sourceId = 'exportBgColor') {
-    const transparentEl = document.getElementById('exportTransparent');
-    const transparentPngEl = document.getElementById('exportTransparentPng');
-    const bgToggleEl = document.getElementById('exportBgColor');
-
-    let transparent = false;
-    if (sourceId === 'exportBgColor') {
-        const hasBg = bgToggleEl?.checked ?? true;
-        transparent = !hasBg;
-    } else {
-        transparent = document.getElementById(sourceId)?.checked ?? false;
-    }
-
-    if (transparentEl) transparentEl.checked = transparent;
-    if (transparentPngEl) transparentPngEl.checked = transparent;
-    if (bgToggleEl) bgToggleEl.checked = !transparent;
-
-    // Update preview wrapper visual and refresh preview immediately
-    const wrap = document.querySelector('.export-preview-wrap');
-    if (wrap) {
-        wrap.classList.toggle('is-transparent', transparent);
-    }
-    updateExportWorkspaceTransparencyPattern();
-    updateEstimate(); saveSettings();
-    refreshExportPreviewNow();
+    syncTransparentCheckboxesController(sourceId, {
+        transparentEl: document.getElementById('exportTransparent'),
+        transparentPngEl: document.getElementById('exportTransparentPng'),
+        bgToggleEl: document.getElementById('exportBgColor'),
+        exportPreviewWrapEl: document.querySelector('.export-preview-wrap'),
+        updateExportWorkspaceTransparencyPattern,
+        updateEstimate,
+        saveSettings,
+        refreshExportPreviewNow,
+    });
 }
 document.getElementById('exportBgColor')?.addEventListener('change', () => syncTransparentCheckboxes('exportBgColor'));
 document.getElementById('exportTransparent')?.addEventListener('change', () => syncTransparentCheckboxes('exportTransparent'));

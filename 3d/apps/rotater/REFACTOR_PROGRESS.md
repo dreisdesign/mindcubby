@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 13
+- Completed slices: 15
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -90,6 +90,18 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js and summary renderer now delegate label/option composition through thin wrappers
 - Shipped in commit: pending
 
+14. Export workspace orchestration extraction
+- Module: [modules/export-workspace.js](modules/export-workspace.js)
+- Scope: export workspace active-state orchestration and transparency/open-close helper routing
+- script.js now delegates workspace state/open-close orchestration through thin wrappers
+- Shipped in commit: pending
+
+15. Export transparency sync extraction
+- Module: [modules/export-transparency-sync.js](modules/export-transparency-sync.js)
+- Scope: export transparency checkbox coupling and preview-sync orchestration helpers
+- script.js now delegates transparency sync orchestration through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -107,6 +119,8 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-collapsed-confirm.js](modules/export-collapsed-confirm.js) | Collapsed-export confirm modal open/close resolver orchestration helpers | Active | pending |
 | [modules/export-collapsed-summary.js](modules/export-collapsed-summary.js) | Collapsed-export summary rendering and control binding/sync helpers | Active | pending |
 | [modules/export-labels.js](modules/export-labels.js) | Export format/quality/speed label and option-list composition helpers | Active | pending |
+| [modules/export-workspace.js](modules/export-workspace.js) | Export workspace active-state orchestration and transparency/open-close helpers | Active | pending |
+| [modules/export-transparency-sync.js](modules/export-transparency-sync.js) | Export transparency checkbox coupling and preview-sync orchestration helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -119,9 +133,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. No additional C1 candidate currently listed
-- Target: reassess next highest-churn script.js region after this slice
-- Candidate module: tbd
+1. Export panel collapsed-state persistence extraction
+- Target: export panel collapsed-state read/write + apply wiring helpers
+- Candidate module: modules/export-panel-state.js
 
 ## Guardrails
 

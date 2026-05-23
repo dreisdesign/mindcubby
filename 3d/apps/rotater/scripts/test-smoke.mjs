@@ -86,6 +86,8 @@ assertFile('modules/upload-choice-ui.js');
 assertFile('modules/export-collapsed-confirm.js');
 assertFile('modules/export-collapsed-summary.js');
 assertFile('modules/export-labels.js');
+assertFile('modules/export-workspace.js');
+assertFile('modules/export-transparency-sync.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
@@ -101,6 +103,8 @@ checkNodeSyntax('modules/upload-choice-ui.js');
 checkNodeSyntax('modules/export-collapsed-confirm.js');
 checkNodeSyntax('modules/export-collapsed-summary.js');
 checkNodeSyntax('modules/export-labels.js');
+checkNodeSyntax('modules/export-workspace.js');
+checkNodeSyntax('modules/export-transparency-sync.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');
@@ -112,6 +116,8 @@ checkCompileSyntax('modules/upload-choice-ui.js');
 checkCompileSyntax('modules/export-collapsed-confirm.js');
 checkCompileSyntax('modules/export-collapsed-summary.js');
 checkCompileSyntax('modules/export-labels.js');
+checkCompileSyntax('modules/export-workspace.js');
+checkCompileSyntax('modules/export-transparency-sync.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');
 expectSubstring('index.html', 'id="btnClearBuildPlate"');

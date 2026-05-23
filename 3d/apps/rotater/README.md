@@ -31,6 +31,8 @@ Current extracted modules:
 | [modules/export-collapsed-confirm.js](modules/export-collapsed-confirm.js) | Collapsed-export confirm modal open/close resolver orchestration helpers | Active |
 | [modules/export-collapsed-summary.js](modules/export-collapsed-summary.js) | Collapsed-export summary rendering and control binding/sync helpers | Active |
 | [modules/export-labels.js](modules/export-labels.js) | Export format/quality/speed label and option-list composition helpers | Active |
+| [modules/export-workspace.js](modules/export-workspace.js) | Export workspace active-state orchestration and transparency/open-close helpers | Active |
+| [modules/export-transparency-sync.js](modules/export-transparency-sync.js) | Export transparency checkbox coupling and preview-sync orchestration helpers | Active |
 
 ---
 
