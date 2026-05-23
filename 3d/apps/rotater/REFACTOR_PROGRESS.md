@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 36
+- Completed slices: 37
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -228,6 +228,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview overlay orchestration through thin wrappers
 - Shipped in commit: pending
 
+37. Export preview target-size sync extraction
+- Module: [modules/export-preview-target-size.js](modules/export-preview-target-size.js)
+- Scope: preview canvas pixel target-size sync helpers
+- script.js now delegates preview canvas width/height sync through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -268,6 +274,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-camera-state.js](modules/export-preview-camera-state.js) | Export preview crop camera-state snapshot helpers | Active | pending |
 | [modules/export-preview-readback-commit.js](modules/export-preview-readback-commit.js) | Export preview readback + canvas commit orchestration helpers | Active | pending |
 | [modules/export-preview-overlays.js](modules/export-preview-overlays.js) | Export preview crop and ruler overlay orchestration helpers | Active | pending |
+| [modules/export-preview-target-size.js](modules/export-preview-target-size.js) | Export preview canvas pixel target-size sync helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -280,9 +287,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview target-size sync extraction
-- Target: preview canvas pixel-size assignment helper (pv.width/pv.height)
-- Candidate module: modules/export-preview-target-size.js
+1. Export preview resource setup extraction
+- Target: preview render-target plus preview camera setup orchestration helper
+- Candidate module: modules/export-preview-resources.js
 
 ## Guardrails
 
