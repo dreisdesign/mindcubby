@@ -51,6 +51,7 @@ Current extracted modules:
 | [modules/export-preview-refresh.js](modules/export-preview-refresh.js) | Export preview immediate + RAF refresh orchestration helpers | Active |
 | [modules/export-preview-render-pass.js](modules/export-preview-render-pass.js) | Export preview render pass bind/render/unbind and scene-restore helpers | Active |
 | [modules/export-preview-canvas-commit.js](modules/export-preview-canvas-commit.js) | Export preview 2D context image commit helpers | Active |
+| [modules/export-preview-camera-state.js](modules/export-preview-camera-state.js) | Export preview crop camera-state snapshot helpers | Active |
 
 ---
 
