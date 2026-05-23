@@ -4830,6 +4830,11 @@ html.loaded .menu-btn {
         font-size: var(--text-sm);
     }
 
+    .export-primary-row .export-close-inline,
+    .export-primary-row .export-copy-inline {
+        flex: 1 1 calc(50% - 4px);
+    }
+
     /* Hide download package button on mobile to save space */
     .sidebar-footer-actions.export-panel-package-row {
         display: none !important;

@@ -10766,6 +10766,10 @@ document.getElementById('btnExportWorkspaceClose')?.addEventListener('click', ()
     closeExportWorkspace();
 });
 
+document.getElementById('btnExportWorkspaceCloseHeader')?.addEventListener('click', () => {
+    closeExportWorkspace();
+});
+
 document.getElementById('btnCopyLink')?.addEventListener('click', function () {
     saveSettings();
     settingsToURL();
