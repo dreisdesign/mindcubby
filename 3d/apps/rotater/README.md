@@ -68,6 +68,7 @@ Current extracted modules:
 | [modules/export-crop-ui.js](modules/export-crop-ui.js) | Export crop/frame button and orbit-hint UI controller | Active |
 | [modules/crop-dimensions-dock.js](modules/crop-dimensions-dock.js) | Crop dimensions dock visibility and positioning controller | Active |
 | [modules/export-progress-overlay.js](modules/export-progress-overlay.js) | Export progress overlay element show/update/hide controller | Active |
+| [modules/export-status.js](modules/export-status.js) | Export status and animation status lane controller helpers | Active |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active |
 
 ---

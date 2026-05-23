@@ -121,6 +121,9 @@ import {
     createExportProgressOverlayController,
 } from './modules/export-progress-overlay.js';
 import {
+    createExportStatusController,
+} from './modules/export-status.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11327,19 +11330,6 @@ document.addEventListener('touchmove', e => {
 document.addEventListener('touchend', () => { _cropCornerDrag = null; });
 
 // ── Export helpers ────────────────────────────────────────────────────────────
-const setStatus = msg => { statusEl.textContent = msg; };
-const setAnimStatus = (msg, done, total) => {
-    if (animStatusEl) animStatusEl.textContent = msg;
-    const prog = document.getElementById('animProgress');
-    const fill = document.getElementById('animProgressFill');
-    if (prog && fill) {
-        const show = done != null && total != null && total > 0;
-        prog.hidden = !show;
-        if (show) fill.style.width = `${Math.round(done / total * 100)}%`;
-    }
-    // Also drive the in-viewport progress overlay
-    updateExportProgressOverlay(msg, done, total);
-};
 let _lastExportUiPaintAt = 0;
 async function maybePaintExportProgress(msg, done, total, force = false) {
     const now = performance.now();
@@ -11366,6 +11356,22 @@ function updateExportProgressOverlay(msg, done, total) {
 function hideExportProgressOverlay() {
     exportProgressOverlayController.hideExportProgressOverlay();
 }
+
+const exportStatusController = createExportStatusController({
+    statusEl,
+    animStatusEl,
+    getAnimProgressEl: () => document.getElementById('animProgress'),
+    getAnimProgressFillEl: () => document.getElementById('animProgressFill'),
+    onUpdateExportProgressOverlay: updateExportProgressOverlay,
+});
+
+const setStatus = (msg) => {
+    exportStatusController.setStatus(msg);
+};
+
+const setAnimStatus = (msg, done, total) => {
+    exportStatusController.setAnimStatus(msg, done, total);
+};
 
 const setExporting = v => {
     isExporting = v;
