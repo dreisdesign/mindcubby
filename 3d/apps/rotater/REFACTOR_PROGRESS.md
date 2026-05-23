@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 46
+- Completed slices: 47
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -288,6 +288,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates export panel drag/position orchestration through thin wrappers
 - Shipped in commit: pending
 
+47. Export workspace runtime extraction
+- Module: [modules/export-workspace-runtime.js](modules/export-workspace-runtime.js)
+- Scope: export workspace runtime wrappers for active-state and open-close flows
+- script.js now delegates workspace runtime wrappers through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -338,6 +344,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-update-context.js](modules/export-preview-update-context.js) | Export preview update-context builder helpers | Active | pending |
 | [modules/export-preview-runtime.js](modules/export-preview-runtime.js) | Export preview runtime wrappers for update and refresh flows | Active | pending |
 | [modules/export-panel-drag.js](modules/export-panel-drag.js) | Export panel drag and persisted positioning controller | Active | pending |
+| [modules/export-workspace-runtime.js](modules/export-workspace-runtime.js) | Export workspace runtime wrappers for active-state/open-close flows | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -350,8 +357,8 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export panel workspace-state extraction
-- Target: export workspace active-state wrapper and persistence handoff
+1. Export workspace entrypoint extraction
+- Target: consolidate set/open/close workspace wrappers into a single runtime entrypoint call
 - Candidate module: modules/export-workspace-runtime.js
 
 ## Guardrails

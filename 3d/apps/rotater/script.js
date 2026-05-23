@@ -62,12 +62,6 @@ import {
     renderCollapsedExportSummaryController,
 } from './modules/export-collapsed-summary.js';
 import {
-    updateExportWorkspaceTransparencyPatternController,
-    setExportWorkspaceActiveController,
-    openExportWorkspaceController,
-    closeExportWorkspaceController,
-} from './modules/export-workspace.js';
-import {
     syncTransparentCheckboxesController,
 } from './modules/export-transparency-sync.js';
 import {
@@ -114,6 +108,9 @@ import {
 import {
     createExportPanelDragController,
 } from './modules/export-panel-drag.js';
+import {
+    createExportWorkspaceRuntimeController,
+} from './modules/export-workspace-runtime.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5444,34 +5441,32 @@ exportPanelDragController.initializeExportPanelDrag();
 function restoreExportPanelPosition() {
     exportPanelDragController.restoreExportPanelPosition();
 }
+const exportWorkspaceRuntimeController = createExportWorkspaceRuntimeController({
+    rootEl: document.documentElement,
+    canvas,
+    exportBgColorEl,
+    exportGridEl,
+    exportBuildPlateEl,
+    getRulerLinesVisible: () => rulerLinesVisible,
+    getBuildPlateEnabled: () => buildPlateEnabled,
+    setWorkspaceActive: (nextActive) => {
+        exportWorkspaceActive = !!nextActive;
+    },
+    getWorkspaceActive: () => exportWorkspaceActive,
+    updateExportPauseButtonUI,
+    syncCanvasSize,
+    restoreExportPanelPosition,
+    enterCropMode,
+    confirmCropMode,
+    getExportFrameEnabled: () => exportFrameEnabled,
+});
 
 function setExportWorkspaceActive(active) {
-    const exportOverlayEl = document.getElementById('exportOverlay');
-    setExportWorkspaceActiveController(active, {
-        setExportWorkspaceActive: (nextActive) => {
-            exportWorkspaceActive = !!nextActive;
-        },
-        rootEl: document.documentElement,
-        exportOverlayEl,
-        exportGridEl,
-        rulerLinesVisible,
-        exportBuildPlateEl,
-        buildPlateEnabled,
-        updateExportWorkspaceTransparencyPattern,
-        updateExportPauseButtonUI,
-        syncCanvasSize,
-        persistWorkspaceActive: (nextActive) => {
-            try { localStorage.setItem('rotater_exportWorkspaceActive', nextActive ? '1' : '0'); } catch (_) { }
-        },
-    });
+    exportWorkspaceRuntimeController.setExportWorkspaceActive(active);
 }
 
 function updateExportWorkspaceTransparencyPattern() {
-    updateExportWorkspaceTransparencyPatternController({
-        canvas,
-        exportWorkspaceActive,
-        exportBgColorEl,
-    });
+    exportWorkspaceRuntimeController.updateExportWorkspaceTransparencyPattern();
 }
 
 function enterCropMode() {
@@ -5491,19 +5486,11 @@ function enterCropMode() {
 }
 
 function openExportWorkspace() {
-    openExportWorkspaceController({
-        setExportWorkspaceActive,
-        restoreExportPanelPosition,
-        enterCropMode,
-    });
+    exportWorkspaceRuntimeController.openExportWorkspace();
 }
 
 function closeExportWorkspace() {
-    closeExportWorkspaceController({
-        exportFrameEnabled,
-        confirmCropMode,
-        setExportWorkspaceActive,
-    });
+    exportWorkspaceRuntimeController.closeExportWorkspace();
 }
 
 function updateFrameOverlayButtonUI() {

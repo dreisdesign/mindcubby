@@ -64,6 +64,7 @@ Current extracted modules:
 | [modules/export-preview-update-context.js](modules/export-preview-update-context.js) | Export preview update-context builder helpers | Active |
 | [modules/export-preview-runtime.js](modules/export-preview-runtime.js) | Export preview runtime wrappers for update and refresh flows | Active |
 | [modules/export-panel-drag.js](modules/export-panel-drag.js) | Export panel drag and persisted positioning controller | Active |
+| [modules/export-workspace-runtime.js](modules/export-workspace-runtime.js) | Export workspace runtime wrappers for active-state/open-close flows | Active |
 
 ---
 
