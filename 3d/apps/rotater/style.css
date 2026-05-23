@@ -277,11 +277,11 @@ html.loaded .sidebar {
     }
 
     html.loaded .sidebar-header {
-        display: none !important;
+        display: none;
     }
 
     html.loaded .sidebar-brand-row {
-        display: none !important;
+        display: none;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
@@ -7576,7 +7576,7 @@ html.loaded.layout-tablet-tabs .sidebar-header {
 
 html.loaded.layout-mobile-accordion .sidebar-brand-row,
 html.loaded.layout-tablet-tabs .sidebar-brand-row {
-    display: flex !important;
+    display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
