@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 25
+- Completed slices: 26
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -162,6 +162,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview transparency derivation/wrap sync through thin wrappers
 - Shipped in commit: pending
 
+26. Export preview dimensions extraction
+- Module: [modules/export-preview-dimensions.js](modules/export-preview-dimensions.js)
+- Scope: preview size/scaling computation helpers for render target sizing
+- script.js now delegates preview dimensions and pixel sizing calculations through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -191,6 +197,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-scene-state.js](modules/export-preview-scene-state.js) | Export preview scene include/exclude and render-state restore orchestration helpers | Active | pending |
 | [modules/export-preview-timing.js](modules/export-preview-timing.js) | Export preview update timing and throttle gate helpers | Active | pending |
 | [modules/export-preview-transparency.js](modules/export-preview-transparency.js) | Export preview transparency derivation and preview-wrap class sync helpers | Active | pending |
+| [modules/export-preview-dimensions.js](modules/export-preview-dimensions.js) | Export preview size/scaling computation helpers for render target sizing | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -203,9 +210,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview dimensions extraction
-- Target: preview size/scaling computation helpers (previewW/H, box scaling, pxW/pxH)
-- Candidate module: modules/export-preview-dimensions.js
+1. Export preview camera setup extraction
+- Target: preview camera aspect/fov/zoom sync and orbit-state application branches
+- Candidate module: modules/export-preview-camera.js
 
 ## Guardrails
 

@@ -111,6 +111,9 @@ import {
     deriveExportPreviewTransparencyController,
     syncExportPreviewWrapTransparencyController,
 } from './modules/export-preview-transparency.js';
+import {
+    computeExportPreviewDimensionsController,
+} from './modules/export-preview-dimensions.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5389,29 +5392,25 @@ function updateExportPreview(force = false) {
     syncExportPreviewWrapTransparencyController(previewWrap, isTransparentPreview);
 
     const wrap = canvas?.parentElement;
-    const cw = wrap ? wrap.clientWidth : pv.offsetWidth || 160;
-    const ch = wrap ? wrap.clientHeight : pv.offsetWidth || 160;
-
-    const cssW = cw;
-    const cssH = ch;
-    const dpr = Math.min(window.devicePixelRatio || 1, EXPORT_PREVIEW_DPR_MAX);
-    // Determine the true aspect ratio we want the mini preview canvas to have.
-    // In crop mode, we preview the ENTIRE viewport (to show the semi-transparent black overlay).
-    // In normal mode, we preview exactly the cropped region being exported.
-    const previewW = exportFrameEnabled ? cw : expW;
-    const previewH = exportFrameEnabled ? ch : expH;
-
-    // Scale so the largest dimension fits inside a ~160px box to avoid rendering a huge proxy.
-    const maxDim = Math.max(previewW, previewH);
-    const boxSize = pv.parentElement?.clientWidth || 160;
-    const previewScale = boxSize / Math.max(1, maxDim);
-
-    const pxW = Math.max(2, Math.round(previewW * previewScale * dpr));
-    const pxH = Math.max(2, Math.round(previewH * previewScale * dpr));
+    const {
+        cw,
+        ch,
+        cssW,
+        cssH,
+        pxW,
+        pxH,
+        cwAspect,
+    } = computeExportPreviewDimensionsController({
+        canvasWrapEl: wrap,
+        previewEl: pv,
+        expW,
+        expH,
+        exportFrameEnabled,
+        devicePixelRatio: window.devicePixelRatio,
+        dprMax: EXPORT_PREVIEW_DPR_MAX,
+    });
 
     if (pv.width !== pxW || pv.height !== pxH) { pv.width = pxW; pv.height = pxH; }
-
-    const cwAspect = Math.max(1, cw) / Math.max(1, ch);
 
     if (exportFrameEnabled) {
         const { dist, elev } = getOrbitFrameState();
