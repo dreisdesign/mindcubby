@@ -37,6 +37,7 @@ Current extracted modules:
 - STL parse/validation now runs in a dedicated Web Worker when available, with timeout protection to keep oversized or malicious files from freezing the main UI thread.
 - ZIP package import now includes additional decompression-abuse checks (entry compression-ratio caps plus existing archive/entry/extracted-size limits).
 - Export guardrails cap unsafe workload combinations (resolution, FPS, frame count, and total pixel-frame budget) before render/encode starts.
+- Export workload budget is adaptive to device capability hints (`navigator.deviceMemory` / `navigator.hardwareConcurrency`) so stronger devices get more headroom while lower-end devices remain protected.
 
 Open `index.html` via a local server (ES modules require `http://`, not `file://`):
 

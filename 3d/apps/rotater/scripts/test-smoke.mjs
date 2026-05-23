@@ -103,6 +103,7 @@ expectSubstring('script.js', 'const IMPORT_STL_LIMITS = {');
 expectSubstring('script.js', 'const EXPORT_GUARD_LIMITS = {');
 expectSubstring('script.js', 'maxCompressionRatio');
 expectSubstring('script.js', 'function validateExportWorkload(');
+expectSubstring('script.js', 'function getExportCapabilityMultiplier(');
 expectSubstring('script.js', 'async function parseStlItemsWithWorker(');
 expectSubstring('script.js', 'async function parseSingleStlGeometry(');
 expectSubstring('script.js', 'async function parseMultipartStlGeometries(');

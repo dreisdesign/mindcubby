@@ -196,6 +196,30 @@ function validateGeometryTriangleBudget(geo, label = 'STL') {
     return triCount;
 }
 
+function getExportCapabilityMultiplier() {
+    let mul = 1;
+
+    const deviceMemory = Number(globalThis?.navigator?.deviceMemory);
+    if (Number.isFinite(deviceMemory)) {
+        if (deviceMemory <= 4) mul *= 0.82;
+        else if (deviceMemory >= 16) mul *= 1.22;
+        else if (deviceMemory >= 8) mul *= 1.10;
+    }
+
+    const cores = Number(globalThis?.navigator?.hardwareConcurrency);
+    if (Number.isFinite(cores)) {
+        if (cores <= 4) mul *= 0.88;
+        else if (cores >= 12) mul *= 1.16;
+        else if (cores >= 8) mul *= 1.08;
+    }
+
+    const ua = String(globalThis?.navigator?.userAgent || '').toLowerCase();
+    const isSafari = ua.includes('safari') && !ua.includes('chrome') && !ua.includes('chromium') && !ua.includes('crios');
+    if (isSafari) mul *= 0.96;
+
+    return Math.max(0.7, Math.min(1.45, mul));
+}
+
 function validateExportWorkload({ format = 'export', width = 0, height = 0, fps = 1, frames = 1 } = {}) {
     const safeW = Math.max(1, Math.floor(width));
     const safeH = Math.max(1, Math.floor(height));
@@ -208,6 +232,7 @@ function validateExportWorkload({ format = 'export', width = 0, height = 0, fps 
         EXPORT_GUARD_LIMITS.maxPixelFramesPerJob[formatKey]
         ?? EXPORT_GUARD_LIMITS.maxPixelFramesPerJob.default
     ) || EXPORT_GUARD_LIMITS.maxPixelFramesPerJob.default;
+    const adaptiveLimit = Math.max(300_000_000, Math.round(maxPixelFramesForFormat * getExportCapabilityMultiplier()));
 
     if (safeW > EXPORT_GUARD_LIMITS.maxWidth || safeH > EXPORT_GUARD_LIMITS.maxHeight) {
         throw new Error(`${format.toUpperCase()} export is too large. Max ${EXPORT_GUARD_LIMITS.maxWidth}x${EXPORT_GUARD_LIMITS.maxHeight}.`);
@@ -221,8 +246,8 @@ function validateExportWorkload({ format = 'export', width = 0, height = 0, fps 
     if (safeFrames > EXPORT_GUARD_LIMITS.maxFramesPerJob) {
         throw new Error(`${format.toUpperCase()} frame count is too high.`);
     }
-    if (pixelFrames > maxPixelFramesForFormat) {
-        const maxMegaPixels = Math.round(maxPixelFramesForFormat / 1_000_000);
+    if (pixelFrames > adaptiveLimit) {
+        const maxMegaPixels = Math.round(adaptiveLimit / 1_000_000);
         throw new Error(`${format.toUpperCase()} workload is too high for safe in-browser export. Try Medium quality or a less tall aspect ratio. (Limit: ~${maxMegaPixels} MPx-frames)`);
     }
 }
