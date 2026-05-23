@@ -1,5 +1,12 @@
 # Rotater Roadmap
 
+Updated: 2026-05-23
+Toggle: unsync BG shade slider so that model sync can be active and you can set the shade, but it doesnt change the shade of the model.
+
+Recent Bugs:
+- Grid gets 
+
+
 Updated: 2026-05-22
 
 This roadmap contains only incomplete work. Completed items belong in `CHANGELOG.md`.
