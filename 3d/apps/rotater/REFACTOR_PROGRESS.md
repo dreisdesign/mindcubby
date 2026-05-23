@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 21
+- Completed slices: 22
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -138,6 +138,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates rail layout sync/queue/observer helpers through thin wrappers
 - Shipped in commit: pending
 
+22. Export preview activity extraction
+- Module: [modules/export-preview-activity.js](modules/export-preview-activity.js)
+- Scope: export preview active-state visibility and readiness guard helpers
+- script.js now delegates preview active-state checks through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -163,6 +169,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-format-sync.js](modules/export-format-sync.js) | Export format tab/select synchronization and format-application orchestration helpers | Active | pending |
 | [modules/export-preview-details.js](modules/export-preview-details.js) | Export preview details toggle binding helpers for preview refresh and rail layout sync | Active | pending |
 | [modules/desktop-v2-rail-layout.js](modules/desktop-v2-rail-layout.js) | Desktop V2 effects rail sizing, RAF queueing, and resize observer lifecycle helpers | Active | pending |
+| [modules/export-preview-activity.js](modules/export-preview-activity.js) | Export preview active-state visibility guard helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -175,9 +182,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview activity guard extraction
-- Target: export preview active-state checks and visibility guards
-- Candidate module: modules/export-preview-activity.js
+1. Export preview scene-state extraction
+- Target: export scene include/exclude toggles and restore callback orchestration
+- Candidate module: modules/export-preview-scene-state.js
 
 ## Guardrails
 
