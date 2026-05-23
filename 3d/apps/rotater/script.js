@@ -145,6 +145,9 @@ import {
     createExportMp4EncoderQueueController,
 } from './modules/export-mp4-encoder-queue.js';
 import {
+    createExportMp4CodecConfigController,
+} from './modules/export-mp4-codec-config.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11693,6 +11696,7 @@ const exportMp4EncoderQueueController = createExportMp4EncoderQueueController({
     clearTimeoutFn: (id) => clearTimeout(id),
     maybePaintExportProgress,
 });
+const exportMp4CodecConfigController = createExportMp4CodecConfigController();
 
 // ── Floyd-Steinberg dithering ────────────────────────────────────────────────
 function applyPaletteDithered(data, palette, width, height) {
@@ -11785,14 +11789,12 @@ btnVideo.addEventListener('click', async () => {
         });
         // avc1.4200XX — Baseline profile
         // level 3.1 (0x1f) up to 720p, level 4.0 (0x28) up to 1080p, level 5.1 (0x33) up to 4K/2048x2048
-        const totalPixels = W * H;
-        const avcLevel = totalPixels > 2097152 ? '33' : (totalPixels > 921600 ? '28' : '1f');
-        encoder.configure({
-            codec: `avc1.4200${avcLevel}`,
+        exportMp4CodecConfigController.configureMp4Encoder({
+            encoder,
             width: W,
             height: H,
-            bitrate: bitrate,
-            framerate: fps,
+            bitrate,
+            fps,
         });
 
         const { target, dist, elev, az } = getOrbitFrameState();

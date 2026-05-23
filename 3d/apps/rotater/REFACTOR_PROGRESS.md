@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 59
+- Completed slices: 60
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -366,6 +366,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates MP4 encoder queue wait behavior through a thin wrapper
 - Shipped in commit: pending
 
+60. MP4 codec config extraction
+- Module: [modules/export-mp4-codec-config.js](modules/export-mp4-codec-config.js)
+- Scope: MP4 AVC level selection and encoder configure helper orchestration
+- script.js now delegates MP4 codec configure behavior through a thin wrapper
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -428,6 +434,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-gif-runtime.js](modules/export-gif-runtime.js) | GIF export runtime orchestration (preflight/capture/encode/finalize) | Active | pending |
 | [modules/export-mp4-preflight.js](modules/export-mp4-preflight.js) | MP4 preflight/workload guard and unsupported-WebCodecs handling | Active | pending |
 | [modules/export-mp4-encoder-queue.js](modules/export-mp4-encoder-queue.js) | MP4 encoder queue wait and busy-status notice helper orchestration | Active | pending |
+| [modules/export-mp4-codec-config.js](modules/export-mp4-codec-config.js) | MP4 AVC level selection and encoder configure helper orchestration | Active | pending |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active | pending |
 
 ## Recent Milestone Commits
@@ -441,9 +448,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. MP4 codec config extraction
-- Target: MP4 AVC level selection and encoder configure helper orchestration
-- Candidate module: modules/export-mp4-codec-config.js
+1. MP4 scene prep extraction
+- Target: MP4 export scene prep (out canvas/context and transparent scene restore setup)
+- Candidate module: modules/export-mp4-scene-prep.js
 
 ## Guardrails
 

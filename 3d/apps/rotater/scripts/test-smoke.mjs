@@ -131,6 +131,7 @@ assertFile('modules/export-filename.js');
 assertFile('modules/export-gif-runtime.js');
 assertFile('modules/export-mp4-preflight.js');
 assertFile('modules/export-mp4-encoder-queue.js');
+assertFile('modules/export-mp4-codec-config.js');
 assertFile('modules/right-pan-lock.js');
 
 checkJson('color-rules.json');
@@ -192,6 +193,7 @@ checkNodeSyntax('modules/export-filename.js');
 checkNodeSyntax('modules/export-gif-runtime.js');
 checkNodeSyntax('modules/export-mp4-preflight.js');
 checkNodeSyntax('modules/export-mp4-encoder-queue.js');
+checkNodeSyntax('modules/export-mp4-codec-config.js');
 checkNodeSyntax('modules/right-pan-lock.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
@@ -249,6 +251,7 @@ checkCompileSyntax('modules/export-filename.js');
 checkCompileSyntax('modules/export-gif-runtime.js');
 checkCompileSyntax('modules/export-mp4-preflight.js');
 checkCompileSyntax('modules/export-mp4-encoder-queue.js');
+checkCompileSyntax('modules/export-mp4-codec-config.js');
 checkCompileSyntax('modules/right-pan-lock.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');

@@ -76,6 +76,7 @@ Current extracted modules:
 | [modules/export-gif-runtime.js](modules/export-gif-runtime.js) | GIF export runtime orchestration controller (preflight/capture/encode/finalize) | Active |
 | [modules/export-mp4-preflight.js](modules/export-mp4-preflight.js) | MP4 preflight and unsupported-WebCodecs guard controller | Active |
 | [modules/export-mp4-encoder-queue.js](modules/export-mp4-encoder-queue.js) | MP4 encoder queue wait and busy-status notice controller | Active |
+| [modules/export-mp4-codec-config.js](modules/export-mp4-codec-config.js) | MP4 AVC level selection and encoder configure controller | Active |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active |
 
 ---
