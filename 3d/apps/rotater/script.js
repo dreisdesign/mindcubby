@@ -85,6 +85,13 @@ import {
 import {
     updateExportEstimateController,
 } from './modules/export-estimate.js';
+import {
+    updateExportActionLabelsController,
+    syncExportFormatTabsController,
+    applyExportFormatController,
+    bindExportFormatTabHandlersController,
+    bindExportFormatSelectChangeHandlersController,
+} from './modules/export-format-sync.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -9451,45 +9458,46 @@ function handleExportFormatAutoPause(fmt) {
 }
 
 function updateExportActionLabels(fmt = exportFormatEl?.value ?? exportFormatCollapsedEl?.value ?? 'gif') {
-    const panelWidth = exportPanelEl?.offsetWidth ?? 0;
-    const useShortPrimaryLabel = !!exportPanelEl?.classList.contains('is-collapsed') || (panelWidth > 0 && panelWidth < 360);
-    if (btnExportLabel) btnExportLabel.textContent = (useShortPrimaryLabel ? FORMAT_SHORT_LABELS[fmt] : FORMAT_LABELS[fmt]) ?? 'Export';
-    if (btnExportCollapsedLabel) btnExportCollapsedLabel.textContent = FORMAT_SHORT_LABELS[fmt] ?? 'Export';
+    updateExportActionLabelsController(fmt, {
+        exportPanelEl,
+        btnExportLabel,
+        btnExportCollapsedLabel,
+        formatShortLabels: FORMAT_SHORT_LABELS,
+        formatLabels: FORMAT_LABELS,
+    });
 }
 
 function syncExportFormatTabs(fmt) {
-    exportFormatTabEls.forEach((tabEl) => {
-        const active = tabEl.dataset.exportFormatTab === fmt;
-        tabEl.classList.toggle('is-active', active);
-        tabEl.setAttribute('aria-selected', active ? 'true' : 'false');
+    syncExportFormatTabsController(fmt, {
+        exportFormatTabEls,
     });
 }
 
 function applyExportFormat(fmt) {
-    if (exportFormatEl && exportFormatEl.value !== fmt) exportFormatEl.value = fmt;
-    if (exportMiniFormatEl && exportMiniFormatEl.value !== fmt) exportMiniFormatEl.value = fmt;
-    if (exportFormatCollapsedEl && exportFormatCollapsedEl.value !== fmt) exportFormatCollapsedEl.value = fmt;
-    document.querySelectorAll('.export-format-opts').forEach(el => { el.hidden = true; });
-    const opts = document.getElementById(`exportOpts-${fmt}`);
-    if (opts) opts.hidden = false;
-    applyExportQuickOptionsForFormat(fmt);
-    handleExportFormatAutoPause(fmt);
-    if (exportMotionControlsEl) exportMotionControlsEl.hidden = true;
-    updateCropDimensionsDock();
-    updateExportActionLabels(fmt);
-    syncExportFormatTabs(fmt);
-    updateEstimate();
-    refreshExportPreviewNow();
-    queueDesktopV2RailLayoutSync();
+    applyExportFormatController(fmt, {
+        exportFormatEl,
+        exportMiniFormatEl,
+        exportFormatCollapsedEl,
+        forEachExportFormatOpts: (cb) => {
+            document.querySelectorAll('.export-format-opts').forEach(cb);
+        },
+        getExportOptsEl: (formatId) => document.getElementById(`exportOpts-${formatId}`),
+        applyExportQuickOptionsForFormat,
+        handleExportFormatAutoPause,
+        exportMotionControlsEl,
+        updateCropDimensionsDock,
+        updateExportActionLabels,
+        syncExportFormatTabs,
+        updateEstimate,
+        refreshExportPreviewNow,
+        queueDesktopV2RailLayoutSync,
+    });
 }
 
-exportFormatTabEls.forEach((tabEl) => {
-    tabEl.addEventListener('click', () => {
-        const fmt = tabEl.dataset.exportFormatTab;
-        if (!fmt) return;
-        applyExportFormat(fmt);
-        saveSettings();
-    });
+bindExportFormatTabHandlersController({
+    exportFormatTabEls,
+    onApply: applyExportFormat,
+    onSave: saveSettings,
 });
 
 function applyExportPanelState(collapsed) {
@@ -9509,19 +9517,12 @@ function applyExportPanelState(collapsed) {
     queueDesktopV2RailLayoutSync();
 }
 
-exportFormatEl?.addEventListener('change', function () {
-    applyExportFormat(this.value);
-    saveSettings();
-});
-
-exportMiniFormatEl?.addEventListener('change', function () {
-    applyExportFormat(this.value);
-    saveSettings();
-});
-
-exportFormatCollapsedEl?.addEventListener('change', function () {
-    applyExportFormat(this.value);
-    saveSettings();
+bindExportFormatSelectChangeHandlersController({
+    exportFormatEl,
+    exportMiniFormatEl,
+    exportFormatCollapsedEl,
+    onApply: applyExportFormat,
+    onSave: saveSettings,
 });
 
 document.getElementById('exportPreviewDetails')?.addEventListener('toggle', () => {

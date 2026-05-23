@@ -91,6 +91,7 @@ assertFile('modules/export-transparency-sync.js');
 assertFile('modules/export-panel-state.js');
 assertFile('modules/export-motion-labels.js');
 assertFile('modules/export-estimate.js');
+assertFile('modules/export-format-sync.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
@@ -111,6 +112,7 @@ checkNodeSyntax('modules/export-transparency-sync.js');
 checkNodeSyntax('modules/export-panel-state.js');
 checkNodeSyntax('modules/export-motion-labels.js');
 checkNodeSyntax('modules/export-estimate.js');
+checkNodeSyntax('modules/export-format-sync.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');
@@ -127,6 +129,7 @@ checkCompileSyntax('modules/export-transparency-sync.js');
 checkCompileSyntax('modules/export-panel-state.js');
 checkCompileSyntax('modules/export-motion-labels.js');
 checkCompileSyntax('modules/export-estimate.js');
+checkCompileSyntax('modules/export-format-sync.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');
 expectSubstring('index.html', 'id="btnClearBuildPlate"');

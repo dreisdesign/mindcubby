@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 18
+- Completed slices: 19
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -120,6 +120,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates estimate updates through thin wrappers
 - Shipped in commit: pending
 
+19. Export format sync extraction
+- Module: [modules/export-format-sync.js](modules/export-format-sync.js)
+- Scope: export format tab/select synchronization and format-application orchestration helpers
+- script.js now delegates export format sync/apply helpers through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -142,6 +148,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-panel-state.js](modules/export-panel-state.js) | Export panel collapsed-state persistence/restore and toggle routing helpers | Active | pending |
 | [modules/export-motion-labels.js](modules/export-motion-labels.js) | Export motion duration/frame label and speed-option text composition helpers | Active | pending |
 | [modules/export-estimate.js](modules/export-estimate.js) | Export estimate button/title/text update orchestration helpers | Active | pending |
+| [modules/export-format-sync.js](modules/export-format-sync.js) | Export format tab/select synchronization and format-application orchestration helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -154,9 +161,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export format sync extraction
-- Target: applyExportFormat and associated format-tab/format-select synchronization plumbing
-- Candidate module: modules/export-format-sync.js
+1. Export preview details toggle extraction
+- Target: exportPreviewDetails toggle event wiring + related rail layout sync
+- Candidate module: modules/export-preview-details.js
 
 ## Guardrails
 
