@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 22
+- Completed slices: 23
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -144,6 +144,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview active-state checks through thin wrappers
 - Shipped in commit: pending
 
+23. Export preview scene-state extraction
+- Module: [modules/export-preview-scene-state.js](modules/export-preview-scene-state.js)
+- Scope: export preview scene include/exclude toggles and render-state restore orchestration
+- script.js now delegates preview scene-state apply/restore through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -170,6 +176,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-details.js](modules/export-preview-details.js) | Export preview details toggle binding helpers for preview refresh and rail layout sync | Active | pending |
 | [modules/desktop-v2-rail-layout.js](modules/desktop-v2-rail-layout.js) | Desktop V2 effects rail sizing, RAF queueing, and resize observer lifecycle helpers | Active | pending |
 | [modules/export-preview-activity.js](modules/export-preview-activity.js) | Export preview active-state visibility guard helpers | Active | pending |
+| [modules/export-preview-scene-state.js](modules/export-preview-scene-state.js) | Export preview scene include/exclude and render-state restore orchestration helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -182,9 +189,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview scene-state extraction
-- Target: export scene include/exclude toggles and restore callback orchestration
-- Candidate module: modules/export-preview-scene-state.js
+1. Export preview timing gate extraction
+- Target: preview update throttling gate and interval state checks
+- Candidate module: modules/export-preview-timing.js
 
 ## Guardrails
 

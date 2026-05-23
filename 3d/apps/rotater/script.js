@@ -101,6 +101,9 @@ import {
 import {
     isExportPreviewActiveController,
 } from './modules/export-preview-activity.js';
+import {
+    applyExportSceneForRenderController,
+} from './modules/export-preview-scene-state.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5326,53 +5329,31 @@ function isExportPreviewActive() {
 }
 
 function applyExportSceneForRender({ forceTransparent = false } = {}) {
-    if (!renderer || !scene) return () => { };
-
-    const includeBg = !!(exportBgColorEl?.checked ?? true);
-    const includeGrid = !!(exportGridEl?.checked ?? true);
-    const includeBuildPlate = !!(exportBuildPlateEl ? exportBuildPlateEl.checked : buildPlateEnabled);
-    const transparent = forceTransparent || !includeBg;
-
-    const savedBg = scene.background;
-    const savedClearColor = renderer.getClearColor(new THREE.Color());
-    const savedClearAlpha = renderer.getClearAlpha();
-    const savedBuildPlateVisible = buildPlateMesh?.visible;
-    const savedRulerGridVisible = rulerGridHelper?.visible;
-    const savedRulerFootprintVisible = rulerFootprintHelper?.visible;
-
-    if (buildPlateMesh) {
-        buildPlateMesh.visible = !!(includeBuildPlate && buildPlateEnabled && mesh);
-    }
-
-    const showGrid = !!(includeGrid && mesh);
-    if (showGrid && !rulerGridHelper && modelDims && scene) {
-        // Create the grid helper on demand for export even if ruler is off in main view
-        const _savedEnabled = rulerEnabled;
-        const _savedVisible = rulerLinesVisible;
-        rulerEnabled = true;
-        rulerLinesVisible = true;
-        updateRulerGrid();
-        rulerEnabled = _savedEnabled;
-        rulerLinesVisible = _savedVisible;
-        if (rulerGridHelper) rulerGridHelper.visible = false;
-        if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
-    }
-    if (rulerGridHelper) rulerGridHelper.visible = showGrid;
-    if (rulerFootprintHelper) rulerFootprintHelper.visible = showGrid;
-
-    if (transparent) {
-        scene.background = null;
-        renderer.setClearColor(0x000000, 0);
-    }
-
-    return () => {
-        scene.background = savedBg;
-        renderer.setClearColor(savedClearColor, savedClearAlpha);
-        if (buildPlateMesh && typeof savedBuildPlateVisible === 'boolean') buildPlateMesh.visible = savedBuildPlateVisible;
-        // If rulerGridHelper was null before (created on demand for export), hide it after; otherwise restore
-        if (rulerGridHelper) rulerGridHelper.visible = typeof savedRulerGridVisible === 'boolean' ? savedRulerGridVisible : false;
-        if (rulerFootprintHelper) rulerFootprintHelper.visible = typeof savedRulerFootprintVisible === 'boolean' ? savedRulerFootprintVisible : false;
-    };
+    return applyExportSceneForRenderController({
+        forceTransparent,
+        renderer,
+        scene,
+        three: THREE,
+        exportBgColorEl,
+        exportGridEl,
+        exportBuildPlateEl,
+        buildPlateEnabled,
+        hasMesh: !!mesh,
+        modelDims,
+        getBuildPlateMesh: () => buildPlateMesh,
+        getRulerGridHelper: () => rulerGridHelper,
+        getRulerFootprintHelper: () => rulerFootprintHelper,
+        getRulerState: () => ({
+            rulerEnabled,
+            rulerLinesVisible,
+        }),
+        setRulerState: (nextState) => {
+            if (!nextState) return;
+            rulerEnabled = !!nextState.rulerEnabled;
+            rulerLinesVisible = !!nextState.rulerLinesVisible;
+        },
+        updateRulerGrid,
+    });
 }
 
 function updateExportPreview(force = false) {

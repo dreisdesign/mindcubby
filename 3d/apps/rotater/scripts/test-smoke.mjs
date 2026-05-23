@@ -95,6 +95,7 @@ assertFile('modules/export-format-sync.js');
 assertFile('modules/export-preview-details.js');
 assertFile('modules/desktop-v2-rail-layout.js');
 assertFile('modules/export-preview-activity.js');
+assertFile('modules/export-preview-scene-state.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
@@ -119,6 +120,7 @@ checkNodeSyntax('modules/export-format-sync.js');
 checkNodeSyntax('modules/export-preview-details.js');
 checkNodeSyntax('modules/desktop-v2-rail-layout.js');
 checkNodeSyntax('modules/export-preview-activity.js');
+checkNodeSyntax('modules/export-preview-scene-state.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');
@@ -139,6 +141,7 @@ checkCompileSyntax('modules/export-format-sync.js');
 checkCompileSyntax('modules/export-preview-details.js');
 checkCompileSyntax('modules/desktop-v2-rail-layout.js');
 checkCompileSyntax('modules/export-preview-activity.js');
+checkCompileSyntax('modules/export-preview-scene-state.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');
 expectSubstring('index.html', 'id="btnClearBuildPlate"');
