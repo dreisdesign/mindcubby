@@ -8243,6 +8243,9 @@ async function removeMultipartPart(partIdx, options = {}) {
     const nextNames = nextFiles.map((part) => part.name);
     const nextColors = modelPartBaseColors.filter((_, idx) => idx !== index);
     const nextSettings = modelPartSettings.filter((_, idx) => idx !== index).map((s, idx) => ({ ...s, color: nextColors[idx] || s.color || colorPick.value }));
+    const nextSelected = modelPartSelected > index
+        ? (modelPartSelected - 1)
+        : (modelPartSelected === index ? Math.max(0, index - 1) : modelPartSelected);
 
     if (nextFiles.length === 1) {
         await saveFileToIDB(nextFiles[0].name, nextFiles[0].buffer);
@@ -8250,6 +8253,20 @@ async function removeMultipartPart(partIdx, options = {}) {
         setDisplayedFileName(nextFiles[0].name);
         modelPartFiles = null;
         await loadSTLBuffer(nextFiles[0].buffer, nextFiles[0].name);
+
+        // Preserve the surviving model's visual settings when collapsing multipart -> single.
+        const survivingColor = nextColors[0] || colorPick.value;
+        const survivingSettings = {
+            ...createPartSettings(survivingColor),
+            ...(nextSettings[0] || {}),
+            color: survivingColor,
+        };
+        modelPartBaseColors = [survivingColor];
+        modelPartSettings = [survivingSettings];
+        modelPartSelected = 0;
+        colorPick.value = survivingColor;
+        if (mesh) rebuildMeshMaterialsForCurrentShading();
+        syncUIFromSelectedPart();
     } else {
         pendingModelPartDisplayOrder = modelPartDisplayOrder
             .filter((idx) => idx !== index)
@@ -8262,7 +8279,7 @@ async function removeMultipartPart(partIdx, options = {}) {
             settings: nextSettings[idx] || createPartSettings(nextColors[idx] || colorPick.value),
         })), displayName);
         modelPartFiles = nextFiles;
-        pendingModelPartSelected = Math.max(0, Math.min(modelPartSelected, nextFiles.length - 1));
+        pendingModelPartSelected = Math.max(0, Math.min(nextSelected, nextFiles.length - 1));
         setDisplayedFileName(displayName);
         currentFileName = buildMultipartFileBase(nextNames);
         await loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
