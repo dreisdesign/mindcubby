@@ -56,6 +56,7 @@ Current extracted modules:
 | [modules/export-preview-overlays.js](modules/export-preview-overlays.js) | Export preview crop and ruler overlay orchestration helpers | Active |
 | [modules/export-preview-target-size.js](modules/export-preview-target-size.js) | Export preview canvas pixel target-size sync helpers | Active |
 | [modules/export-preview-resources.js](modules/export-preview-resources.js) | Export preview render-target and preview-camera setup orchestration helpers | Active |
+| [modules/export-preview-preflight.js](modules/export-preview-preflight.js) | Export preview context preflight orchestration helpers | Active |
 
 ---
 

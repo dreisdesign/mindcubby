@@ -150,6 +150,9 @@ import {
 import {
     prepareExportPreviewResourcesController,
 } from './modules/export-preview-resources.js';
+import {
+    prepareExportPreviewPreflightController,
+} from './modules/export-preview-preflight.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5403,29 +5406,35 @@ function applyExportSceneForRender({ forceTransparent = false } = {}) {
 }
 
 function updateExportPreview(force = false) {
-    if (!isExportPreviewActive()) return;
-    const timing = evaluateExportPreviewTimingController({
+    const preflight = prepareExportPreviewPreflightController({
         force,
         nowMs: performance.now(),
         lastUpdateMs: _lastExportPreviewUpdateMs,
         intervalMs: EXPORT_PREVIEW_INTERVAL_MS,
+        exportCamDist,
+        isPreviewActive: isExportPreviewActive,
+        evaluateTiming: evaluateExportPreviewTimingController,
+        getPreviewElement: () => document.getElementById('exportPreview'),
+        getFormat: () => exportFormatEl?.value ?? 'gif',
+        getPreviewExportSize,
+        getBgEnabled: () => exportBgColorEl?.checked ?? true,
+        deriveTransparency: deriveExportPreviewTransparencyController,
+        syncWrapTransparency: syncExportPreviewWrapTransparencyController,
+        getTransparentElements: () => ({
+            exportTransparentEl: document.getElementById('exportTransparent'),
+            exportTransparentPngEl: document.getElementById('exportTransparentPng'),
+        }),
     });
-    _lastExportPreviewUpdateMs = timing.nextLastUpdateMs;
-    if (!timing.shouldRender) return;
-    const pv = document.getElementById('exportPreview');
-    if (!pv) return;
-    if (exportCamDist === null) return; // not ready yet
+    _lastExportPreviewUpdateMs = preflight.nextLastUpdateMs;
+    if (!preflight.shouldRender) return;
 
-    const fmt = exportFormatEl?.value ?? 'gif';
-    const { width: expW, height: expH } = getPreviewExportSize(fmt);
-    const previewWrap = pv.parentElement;
-    const bgEnabled = exportBgColorEl?.checked ?? true;
-    const isTransparentPreview = deriveExportPreviewTransparencyController(fmt, {
-        bgEnabled,
-        exportTransparentEl: document.getElementById('exportTransparent'),
-        exportTransparentPngEl: document.getElementById('exportTransparentPng'),
-    });
-    syncExportPreviewWrapTransparencyController(previewWrap, isTransparentPreview);
+    const {
+        pv,
+        fmt,
+        expW,
+        expH,
+        isTransparentPreview,
+    } = preflight;
 
     const wrap = canvas?.parentElement;
     const {
