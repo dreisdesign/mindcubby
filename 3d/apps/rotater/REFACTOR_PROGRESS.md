@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 23
+- Completed slices: 24
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -150,6 +150,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview scene-state apply/restore through thin wrappers
 - Shipped in commit: pending
 
+24. Export preview timing extraction
+- Module: [modules/export-preview-timing.js](modules/export-preview-timing.js)
+- Scope: export preview update timing and throttle gate helpers
+- script.js now delegates preview update throttle gate through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -177,6 +183,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/desktop-v2-rail-layout.js](modules/desktop-v2-rail-layout.js) | Desktop V2 effects rail sizing, RAF queueing, and resize observer lifecycle helpers | Active | pending |
 | [modules/export-preview-activity.js](modules/export-preview-activity.js) | Export preview active-state visibility guard helpers | Active | pending |
 | [modules/export-preview-scene-state.js](modules/export-preview-scene-state.js) | Export preview scene include/exclude and render-state restore orchestration helpers | Active | pending |
+| [modules/export-preview-timing.js](modules/export-preview-timing.js) | Export preview update timing and throttle gate helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -189,9 +196,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview timing gate extraction
-- Target: preview update throttling gate and interval state checks
-- Candidate module: modules/export-preview-timing.js
+1. Export preview transparency extraction
+- Target: transparent-preview derivation and preview wrap class update helpers
+- Candidate module: modules/export-preview-transparency.js
 
 ## Guardrails
 
