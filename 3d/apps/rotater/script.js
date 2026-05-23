@@ -114,6 +114,9 @@ import {
 import {
     createExportCropUiController,
 } from './modules/export-crop-ui.js';
+import {
+    createRightPanLockController,
+} from './modules/right-pan-lock.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -1369,11 +1372,7 @@ let _cropBackupDist = null; // exportCamDist saved on crop-mode enter, restored 
 let _cropBackupElev = 0;
 let _cropBackupZoom = 1;
 let _cropBackupCameraZoom = 1;
-let _controlsDefaultMouseButtons = null;
-let _controlsDefaultTouches = null;
 let _shiftPanActive = false;
-let _rightPanVerticalLockActive = false;
-let _rightPanVerticalLock = null;
 let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, updated each frame
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
@@ -1678,15 +1677,19 @@ function initThree() {
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
     controls.enableZoom = true;
     updateOrbitDistanceLimits(false);
-    _controlsDefaultMouseButtons = { ...controls.mouseButtons };
-    _controlsDefaultTouches = { ...controls.touches };
+    rightPanLockController.setDefaults({
+        mouseButtons: controls.mouseButtons,
+        touches: controls.touches,
+    });
     controls.addEventListener('start', () => {
         if (!exportFrameEnabled) return;
         _cropLiveSyncArmed = true;
         syncExportCameraFromViewport();
     });
     controls.addEventListener('change', () => {
-        if (_rightPanVerticalLockActive) enforceRightPanVerticalLock();
+        if (rightPanLockController.isVerticalLockActive()) {
+            rightPanLockController.enforceVerticalLock({ controls, camera });
+        }
     });
 
     syncCanvasSize();
@@ -5467,6 +5470,7 @@ const exportCropUiController = createExportCropUiController({
     orbitHintTextEl,
     orbitHintBarEl,
 });
+const rightPanLockController = createRightPanLockController();
 
 function setExportWorkspaceActive(active) {
     exportWorkspaceRuntimeController.setExportWorkspaceActive(active);
@@ -5509,39 +5513,23 @@ function updateCropHintUI() {
 }
 
 function beginRightPanVerticalLock() {
-    if (!controls || !camera) return;
-    _rightPanVerticalLockActive = true;
-    _rightPanVerticalLock = {
-        targetX: controls.target.x,
-        targetZ: controls.target.z,
-        cameraX: camera.position.x,
-        cameraZ: camera.position.z,
-    };
+    rightPanLockController.beginVerticalLock({ controls, camera });
 }
 
 function enforceRightPanVerticalLock() {
-    if (!_rightPanVerticalLockActive || !_rightPanVerticalLock || !controls || !camera) return;
-    controls.target.x = _rightPanVerticalLock.targetX;
-    controls.target.z = _rightPanVerticalLock.targetZ;
-    camera.position.x = _rightPanVerticalLock.cameraX;
-    camera.position.z = _rightPanVerticalLock.cameraZ;
+    rightPanLockController.enforceVerticalLock({ controls, camera });
 }
 
 function endRightPanVerticalLock() {
-    _rightPanVerticalLockActive = false;
-    _rightPanVerticalLock = null;
+    rightPanLockController.endVerticalLock();
 }
 
 function setShiftPanInteraction(active) {
-    if (!controls) return;
-    if (active) {
-        controls.enablePan = true;
-        controls.screenSpacePanning = true;
-        controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
-        return;
-    }
-    if (_controlsDefaultMouseButtons) controls.mouseButtons = { ..._controlsDefaultMouseButtons };
-    if (_controlsDefaultTouches) controls.touches = { ..._controlsDefaultTouches };
+    rightPanLockController.setShiftPanInteraction({
+        active,
+        controls,
+        mousePanButton: THREE.MOUSE.PAN,
+    });
 }
 
 function updateCropDimensionsDock(frameRect = null) {

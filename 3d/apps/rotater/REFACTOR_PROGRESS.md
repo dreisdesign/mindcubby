@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 48
+- Completed slices: 49
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -300,6 +300,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates crop/frame hint UI updates through thin wrappers
 - Shipped in commit: pending
 
+49. Right-pan interaction extraction
+- Module: [modules/right-pan-lock.js](modules/right-pan-lock.js)
+- Scope: right-pan vertical-lock and shift-pan interaction controller
+- script.js now delegates right-pan interaction helpers through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -352,6 +358,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-panel-drag.js](modules/export-panel-drag.js) | Export panel drag and persisted positioning controller | Active | pending |
 | [modules/export-workspace-runtime.js](modules/export-workspace-runtime.js) | Export workspace runtime wrappers for active-state/open-close flows | Active | pending |
 | [modules/export-crop-ui.js](modules/export-crop-ui.js) | Export crop/frame button and orbit-hint UI controller | Active | pending |
+| [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -364,9 +371,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Right-pan interaction extraction
-- Target: begin/enforce/end vertical-lock and shift-pan interaction helpers
-- Candidate module: modules/right-pan-lock.js
+1. Crop dimensions dock extraction
+- Target: crop dock visibility/positioning helper orchestration
+- Candidate module: modules/crop-dimensions-dock.js
 
 ## Guardrails
 

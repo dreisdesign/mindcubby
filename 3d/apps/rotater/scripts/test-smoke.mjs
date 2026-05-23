@@ -121,6 +121,7 @@ assertFile('modules/export-preview-runtime.js');
 assertFile('modules/export-panel-drag.js');
 assertFile('modules/export-workspace-runtime.js');
 assertFile('modules/export-crop-ui.js');
+assertFile('modules/right-pan-lock.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
@@ -171,6 +172,7 @@ checkNodeSyntax('modules/export-preview-runtime.js');
 checkNodeSyntax('modules/export-panel-drag.js');
 checkNodeSyntax('modules/export-workspace-runtime.js');
 checkNodeSyntax('modules/export-crop-ui.js');
+checkNodeSyntax('modules/right-pan-lock.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');
@@ -217,6 +219,7 @@ checkCompileSyntax('modules/export-preview-runtime.js');
 checkCompileSyntax('modules/export-panel-drag.js');
 checkCompileSyntax('modules/export-workspace-runtime.js');
 checkCompileSyntax('modules/export-crop-ui.js');
+checkCompileSyntax('modules/right-pan-lock.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');
 expectSubstring('index.html', 'id="btnClearBuildPlate"');
