@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 54
+- Completed slices: 55
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -336,6 +336,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates progress paint helper behavior through a thin wrapper
 - Shipped in commit: pending
 
+55. Export download helper extraction
+- Module: [modules/export-download.js](modules/export-download.js)
+- Scope: export blob download and URL revoke helper orchestration
+- script.js now delegates download helper behavior through a thin wrapper
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -393,6 +399,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-status.js](modules/export-status.js) | Export status + animation status lane helper orchestration | Active | pending |
 | [modules/export-busy-state.js](modules/export-busy-state.js) | Export busy-state button disable and overlay toggle helper orchestration | Active | pending |
 | [modules/export-progress-timing.js](modules/export-progress-timing.js) | Export progress paint timing/throttle helper orchestration | Active | pending |
+| [modules/export-download.js](modules/export-download.js) | Export blob download and URL revoke helper orchestration | Active | pending |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active | pending |
 
 ## Recent Milestone Commits
@@ -406,9 +413,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export download helper extraction
-- Target: blob/download anchor creation and revoke helper orchestration
-- Candidate module: modules/export-download.js
+1. Export filename composition extraction
+- Target: export quality tag + modifier tags + filename helper orchestration
+- Candidate module: modules/export-filename.js
 
 ## Guardrails
 

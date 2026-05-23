@@ -130,6 +130,9 @@ import {
     createExportProgressTimingController,
 } from './modules/export-progress-timing.js';
 import {
+    createExportDownloadController,
+} from './modules/export-download.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11397,14 +11400,18 @@ const setExporting = v => {
     exportBusyStateController.setExporting(v);
 };
 
+const exportDownloadController = createExportDownloadController({
+    createObjectUrl: (blob) => URL.createObjectURL(blob),
+    revokeObjectUrl: (href) => URL.revokeObjectURL(href),
+    createAnchor: ({ href, download }) => Object.assign(document.createElement('a'), {
+        href,
+        download,
+    }),
+    scheduleRevoke: (fn, delayMs) => setTimeout(fn, delayMs),
+});
+
 function download(data, filename, type) {
-    const blob = data instanceof Blob ? data : new Blob([data], { type });
-    const a = Object.assign(document.createElement('a'), {
-        href: URL.createObjectURL(blob),
-        download: filename,
-    });
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    exportDownloadController.download(data, filename, type);
 }
 
 function getQualityTag() {
