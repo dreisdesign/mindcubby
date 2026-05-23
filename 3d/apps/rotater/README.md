@@ -26,6 +26,11 @@ Current extracted modules:
 | [modules/model-picker-floating.js](modules/model-picker-floating.js) | Floating model picker card positioning, persistence, and drag lifecycle helpers | Active |
 | [modules/model-edit-commit.js](modules/model-edit-commit.js) | Deferred commit queues and requestAnimationFrame preview scheduling for model edit flows | Active |
 | [modules/settings-url-sync.js](modules/settings-url-sync.js) | Debounced URL settings sync controller for save/flush timing behavior | Active |
+| [modules/upload-action-controller.js](modules/upload-action-controller.js) | Upload flow action normalization plus pending-action and prompt resolver orchestration | Active |
+| [modules/upload-choice-ui.js](modules/upload-choice-ui.js) | Upload-choice modal file-list rendering, prompt text sync, and local view-state helpers | Active |
+| [modules/export-collapsed-confirm.js](modules/export-collapsed-confirm.js) | Collapsed-export confirm modal open/close resolver orchestration helpers | Active |
+| [modules/export-collapsed-summary.js](modules/export-collapsed-summary.js) | Collapsed-export summary rendering and control binding/sync helpers | Active |
+| [modules/export-labels.js](modules/export-labels.js) | Export format/quality/speed label and option-list composition helpers | Active |
 
 ---
 

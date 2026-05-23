@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 8
+- Completed slices: 13
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -60,6 +60,36 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates timer orchestration through thin wrappers
 - Shipped in commit: pending
 
+9. Upload/import action orchestration extraction
+- Module: [modules/upload-action-controller.js](modules/upload-action-controller.js)
+- Scope: upload action normalization plus pending-action and prompt resolver orchestration
+- script.js now delegates action routing state through thin wrappers
+- Shipped in commit: pending
+
+10. Upload choice UI state extraction
+- Module: [modules/upload-choice-ui.js](modules/upload-choice-ui.js)
+- Scope: upload choice file-list rendering/view-state helpers and prompt text synchronization
+- script.js now delegates upload-choice UI state/render through thin wrappers
+- Shipped in commit: pending
+
+11. Collapsed export warning orchestration extraction
+- Module: [modules/export-collapsed-confirm.js](modules/export-collapsed-confirm.js)
+- Scope: collapsed export confirm resolver lifecycle and modal open/close routing
+- script.js now delegates confirm prompt resolver orchestration through thin wrappers
+- Shipped in commit: pending
+
+12. Collapsed export summary rendering extraction
+- Module: [modules/export-collapsed-summary.js](modules/export-collapsed-summary.js)
+- Scope: collapsed export summary UI markup and bound control synchronization wiring
+- script.js now delegates summary render/bind orchestration through thin wrappers
+- Shipped in commit: pending
+
+13. Export labels/options helper extraction
+- Module: [modules/export-labels.js](modules/export-labels.js)
+- Scope: export format/quality/speed label and option-list composition helpers
+- script.js and summary renderer now delegate label/option composition through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -72,6 +102,11 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/model-picker-floating.js](modules/model-picker-floating.js) | Floating picker card positioning, persisted placement restore, and drag lifecycle helpers | Active | a3f92b3 |
 | [modules/model-edit-commit.js](modules/model-edit-commit.js) | Deferred commit queues and RAF preview scheduling helpers for model edit flows | Active | pending |
 | [modules/settings-url-sync.js](modules/settings-url-sync.js) | Debounced URL settings sync controller for save/flush timing behavior | Active | pending |
+| [modules/upload-action-controller.js](modules/upload-action-controller.js) | Upload flow action normalization plus pending-action and prompt resolver orchestration | Active | pending |
+| [modules/upload-choice-ui.js](modules/upload-choice-ui.js) | Upload-choice modal file-list rendering, prompt text sync, and local view-state helpers | Active | pending |
+| [modules/export-collapsed-confirm.js](modules/export-collapsed-confirm.js) | Collapsed-export confirm modal open/close resolver orchestration helpers | Active | pending |
+| [modules/export-collapsed-summary.js](modules/export-collapsed-summary.js) | Collapsed-export summary rendering and control binding/sync helpers | Active | pending |
+| [modules/export-labels.js](modules/export-labels.js) | Export format/quality/speed label and option-list composition helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -84,9 +119,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Upload/import action orchestration extraction
-- Target: upload choice action resolver flow and pending upload action routing
-- Candidate module: modules/upload-action-controller.js
+1. No additional C1 candidate currently listed
+- Target: reassess next highest-churn script.js region after this slice
+- Candidate module: tbd
 
 ## Guardrails
 

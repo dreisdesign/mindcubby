@@ -48,6 +48,19 @@ import {
 import {
     createSettingsUrlSyncController,
 } from './modules/settings-url-sync.js';
+import {
+    createUploadActionController,
+    normalizeUploadAction,
+} from './modules/upload-action-controller.js';
+import {
+    createUploadChoiceUiController,
+} from './modules/upload-choice-ui.js';
+import {
+    createCollapsedExportConfirmController,
+} from './modules/export-collapsed-confirm.js';
+import {
+    renderCollapsedExportSummaryController,
+} from './modules/export-collapsed-summary.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -1341,14 +1354,21 @@ let exportMotionControlsEnabled = true;
 let _syncingExportMotionControls = false;
 let autoUIAssistEnabled = true;
 let exportCollapsedConfirmEnabled = true;
-let _exportCollapsedConfirmResolver = null;
 let uploadChoicePromptEnabled = true;
 let uploadDefaultAction = 'newplate'; // newplate | replace
-let _uploadChoiceResolver = null;
-let uploadChoiceSelectedFiles = [];
-let uploadChoiceShowAllFiles = false;
-const UPLOAD_CHOICE_FILE_PREVIEW_LIMIT = 5;
-let pendingUploadAction = null; // replace | newplate (set before opening file picker)
+const collapsedExportConfirmController = createCollapsedExportConfirmController({
+    overlayEl: exportCollapsedConfirmOverlayEl,
+});
+const uploadActionController = createUploadActionController();
+const uploadChoiceUiController = createUploadChoiceUiController({
+    textEl: uploadChoiceTextEl,
+    decisionEl: uploadChoiceDecisionEl,
+    actionsRightEl: uploadChoiceActionsRightEl,
+    fileListWrapEl: uploadChoiceFileListWrapEl,
+    fileListEl: uploadChoiceFileListEl,
+    showMoreBtn: btnUploadChoiceShowMore,
+    previewLimit: 5,
+});
 let rulerHoverNoHitSinceMs = 0;
 const textureTuneState = {
     light: TEXTURE_TUNE_DEFAULTS.light,
@@ -7927,7 +7947,7 @@ function readFileAsArrayBuffer(file) {
 }
 
 function openUploadFilePicker(action = null) {
-    pendingUploadAction = (action === 'replace' || action === 'newplate') ? action : null;
+    uploadActionController.setPendingAction(action);
     if (fileInput) fileInput.click();
 }
 
@@ -7943,7 +7963,7 @@ async function requestUploadFlowFromButtons() {
         return;
     }
 
-    pendingUploadAction = null;
+    uploadActionController.clearPendingAction();
     fileInput?.click();
 }
 
@@ -7959,9 +7979,7 @@ async function handlePickedUploadFiles(fileList, requestedActionOverride = null)
         return;
     }
 
-    const stlActionOverride = (requestedActionOverride === 'replace' || requestedActionOverride === 'newplate')
-        ? requestedActionOverride
-        : null;
+    const stlActionOverride = normalizeUploadAction(requestedActionOverride, null);
 
     if (stlFiles.length) {
         await handleFiles(stlFiles, stlActionOverride);
@@ -7978,9 +7996,7 @@ async function handleFiles(fileList, requestedActionOverride = null) {
     if (!files.length) return;
     validateIncomingStlFileBatch(files, 'Upload');
 
-    let requestedAction = (requestedActionOverride === 'replace' || requestedActionOverride === 'newplate')
-        ? requestedActionOverride
-        : 'newplate';
+    let requestedAction = normalizeUploadAction(requestedActionOverride, 'newplate');
 
     if (mesh && !requestedActionOverride) {
         requestedAction = await promptUploadChoice(files);
@@ -8432,8 +8448,7 @@ async function removeMultipartPart(partIdx, options = {}) {
 
 fileInput.addEventListener('change', async (e) => {
     suppressAutoDemoModelLoad();
-    const requestedAction = pendingUploadAction;
-    pendingUploadAction = null;
+    const requestedAction = uploadActionController.consumePendingAction();
     try {
         await handlePickedUploadFiles(e.target.files, requestedAction);
     } catch (err) {
@@ -9497,260 +9512,60 @@ btnToggleExportPanel?.addEventListener('click', () => {
     try { localStorage.setItem('rotater_exportPanelCollapsed', collapsed ? '1' : '0'); } catch (_) { }
 });
 
-function getExportFormatDisplay(fmt) {
-    return ({ gif: 'Animated GIF', mp4: 'MP4 Video', png: 'PNG Image', jpg: 'JPEG Image' })[fmt] || 'Export';
-}
-
 function renderCollapsedExportSummary(fmt) {
-    if (!exportCollapsedConfirmSummaryEl) return;
-    const format = ({ gif: 'gif', mp4: 'mp4', png: 'png', jpg: 'jpg' })[fmt] || 'gif';
-    const qualityValue = document.getElementById('exportQuality')?.value || 'std';
-    const speedValue = String(Math.max(0, Math.min(
-        SPEED_SECONDS_PER_REV.length - 1,
-        parseInt(speedSlider?.value || String(SPEED_DEFAULT), 10) || SPEED_DEFAULT
-    )));
-    const gridChecked = !!exportGridEl?.checked;
-    const buildPlateChecked = !!(exportBuildPlateEl ? exportBuildPlateEl.checked : buildPlateEnabled);
-    const bgChecked = !!exportBgColorEl?.checked;
-    const gifLoopChecked = !!document.getElementById('gifLoop')?.checked;
-    const gifDitherChecked = !!document.getElementById('gifDither')?.checked;
-    const jpegQualityValue = document.getElementById('jpegQuality')?.value || '90';
-
-    const formatOptions = ['gif', 'mp4', 'png', 'jpg']
-        .map((key) => `<option value="${key}"${key === format ? ' selected' : ''}>${getExportFormatDisplay(key)}</option>`)
-        .join('');
-
-    const qualityOptions = EXPORT_QUALITY_ORDER
-        .map((key) => `<option value="${key}"${key === qualityValue ? ' selected' : ''}>${EXPORT_QUALITY_LABELS[key] || key}</option>`)
-        .join('');
-
-    const speedFormat = getExportFormatForDurationLabels(format);
-    const speedOptions = SPEED_SECONDS_PER_REV
-        .map((_seconds, idx) => {
-            const value = String(idx);
-            const label = formatRotationTimeOptionLabel(idx, speedFormat);
-            return `<option value="${value}"${value === speedValue ? ' selected' : ''}>${label}</option>`;
-        })
-        .join('');
-
-    const gifExtras = format === 'gif'
-        ? `<label class="export-collapsed-confirm-row export-collapsed-confirm-row--check"><span>Loop</span><input type="checkbox" data-export-review="gif-loop"${gifLoopChecked ? ' checked' : ''}></label><label class="export-collapsed-confirm-row export-collapsed-confirm-row--check"><span>Dither</span><input type="checkbox" data-export-review="gif-dither"${gifDitherChecked ? ' checked' : ''}></label>`
-        : '';
-
-    const jpgExtra = format === 'jpg'
-        ? `<label class="export-collapsed-confirm-row"><span>JPEG Compression</span><input type="range" min="50" max="100" step="5" value="${jpegQualityValue}" data-export-review="jpg-quality"></label>`
-        : '';
-
-    exportCollapsedConfirmSummaryEl.innerHTML = `
-        <label class="export-collapsed-confirm-row">
-            <span>Format</span>
-            <select class="export-select export-collapsed-confirm-control" data-export-review="format">${formatOptions}</select>
-        </label>
-        <label class="export-collapsed-confirm-row">
-            <span>Quality</span>
-            <select class="export-select export-collapsed-confirm-control" data-export-review="quality">${qualityOptions}</select>
-        </label>
-        ${(format === 'gif' || format === 'mp4') ? `<label class="export-collapsed-confirm-row"><span>Rotation Time</span><select class="export-select export-collapsed-confirm-control" data-export-review="speed">${speedOptions}</select></label>` : ''}
-        <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
-            <span>Grid</span>
-            <input type="checkbox" data-export-review="grid"${gridChecked ? ' checked' : ''}>
-        </label>
-        <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
-            <span>Background</span>
-            <input type="checkbox" data-export-review="bg"${bgChecked ? ' checked' : ''}>
-        </label>
-        <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
-            <span>Build Plate</span>
-            <input type="checkbox" data-export-review="build-plate"${buildPlateChecked ? ' checked' : ''}>
-        </label>
-        ${gifExtras}
-        ${jpgExtra}
-    `;
-
-    const formatSelect = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="format"]');
-    formatSelect?.addEventListener('change', () => {
-        const nextFormat = formatSelect.value;
-        applyExportFormat(nextFormat);
-        renderCollapsedExportSummary(nextFormat);
-        saveSettings();
-    });
-
-    const qualitySelect = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="quality"]');
-    qualitySelect?.addEventListener('change', () => {
-        setExportQualityValue(qualitySelect.value);
-        updateEstimate();
-        refreshExportPreviewNow();
-        saveSettings();
-    });
-
-    const speedSelect = (format === 'gif' || format === 'mp4')
-        ? exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="speed"]')
-        : null;
-    speedSelect?.addEventListener('change', () => {
-        if (!speedSlider) return;
-        speedSlider.value = speedSelect.value;
-        speedSlider.dispatchEvent(new Event('change'));
-    });
-
-    const gridCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="grid"]');
-    gridCheck?.addEventListener('change', () => {
-        if (!exportGridEl) return;
-        exportGridEl.checked = !!gridCheck.checked;
-        exportGridEl.dispatchEvent(new Event('change'));
-    });
-
-    const bgCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="bg"]');
-    bgCheck?.addEventListener('change', () => {
-        if (!exportBgColorEl) return;
-        exportBgColorEl.checked = !!bgCheck.checked;
-        exportBgColorEl.dispatchEvent(new Event('change'));
-    });
-
-    const buildPlateCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="build-plate"]');
-    buildPlateCheck?.addEventListener('change', () => {
-        if (!exportBuildPlateEl) return;
-        exportBuildPlateEl.checked = !!buildPlateCheck.checked;
-        exportBuildPlateEl.dispatchEvent(new Event('change'));
-    });
-
-    const gifLoopCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="gif-loop"]');
-    gifLoopCheck?.addEventListener('change', () => {
-        const loopEl = document.getElementById('gifLoop');
-        if (!loopEl) return;
-        loopEl.checked = !!gifLoopCheck.checked;
-        loopEl.dispatchEvent(new Event('change'));
-        refreshExportPreviewNow();
-    });
-
-    const gifDitherCheck = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="gif-dither"]');
-    gifDitherCheck?.addEventListener('change', () => {
-        const ditherEl = document.getElementById('gifDither');
-        if (!ditherEl) return;
-        ditherEl.checked = !!gifDitherCheck.checked;
-        ditherEl.dispatchEvent(new Event('change'));
-        refreshExportPreviewNow();
-    });
-
-    const jpgQualitySlider = exportCollapsedConfirmSummaryEl.querySelector('[data-export-review="jpg-quality"]');
-    jpgQualitySlider?.addEventListener('input', () => {
-        const qualitySlider = document.getElementById('jpegQuality');
-        if (!qualitySlider) return;
-        qualitySlider.value = jpgQualitySlider.value;
-        qualitySlider.dispatchEvent(new Event('input'));
+    renderCollapsedExportSummaryController(fmt, {
+        summaryEl: exportCollapsedConfirmSummaryEl,
+        exportQualityOrder: EXPORT_QUALITY_ORDER,
+        exportQualityLabels: EXPORT_QUALITY_LABELS,
+        speedSecondsPerRev: SPEED_SECONDS_PER_REV,
+        speedDefault: SPEED_DEFAULT,
+        speedSlider,
+        exportGridEl,
+        exportBuildPlateEl,
+        exportBgColorEl,
+        buildPlateEnabled,
+        applyExportFormat,
+        saveSettings,
+        setExportQualityValue,
+        updateEstimate,
+        refreshExportPreviewNow,
+        getExportFormatForDurationLabels,
+        formatRotationTimeOptionLabel,
     });
 }
 
 function closeCollapsedExportConfirm(shouldContinue) {
-    if (exportCollapsedConfirmOverlayEl) {
-        exportCollapsedConfirmOverlayEl.hidden = true;
-    }
-    if (_exportCollapsedConfirmResolver) {
-        const resolve = _exportCollapsedConfirmResolver;
-        _exportCollapsedConfirmResolver = null;
-        resolve(!!shouldContinue);
-    }
+    collapsedExportConfirmController.close(shouldContinue);
 }
 
 function promptCollapsedExportConfirm(fmt) {
     if (!exportCollapsedConfirmOverlayEl || !exportCollapsedConfirmEnabled) return Promise.resolve(true);
     renderCollapsedExportSummary(fmt);
     if (exportCollapsedDontShowEl) exportCollapsedDontShowEl.checked = false;
-    exportCollapsedConfirmOverlayEl.hidden = false;
-    return new Promise((resolve) => {
-        _exportCollapsedConfirmResolver = resolve;
-    });
-}
-
-function getUploadIncomingLabel(files) {
-    const arr = Array.from(files || []).filter(Boolean);
-    if (!arr.length) return 'your STL or ZIP files';
-    return arr.length > 1 ? `${arr.length} files` : `"${arr[0]?.name || 'file'}"`;
+    return collapsedExportConfirmController.open();
 }
 
 function setUploadChoiceStepState(hasFiles) {
-    if (uploadChoiceDecisionEl) uploadChoiceDecisionEl.hidden = !hasFiles;
-    if (uploadChoiceActionsRightEl) uploadChoiceActionsRightEl.hidden = !hasFiles;
+    uploadChoiceUiController.setStepState(hasFiles);
 }
 
 function syncUploadChoicePromptText() {
-    if (!uploadChoiceTextEl) return;
-    if (uploadChoiceSelectedFiles.length > 0) {
-        const incomingLabel = getUploadIncomingLabel(uploadChoiceSelectedFiles);
-        uploadChoiceTextEl.textContent = `Choose how to load ${incomingLabel}.`;
-    } else {
-        uploadChoiceTextEl.textContent = 'Drop STL or ZIP files here, or click Browse.';
-    }
+    uploadChoiceUiController.syncPromptText();
 }
 
 function renderUploadChoiceFileList() {
-    if (!uploadChoiceFileListWrapEl || !uploadChoiceFileListEl) return;
-
-    uploadChoiceFileListEl.textContent = '';
-    const total = uploadChoiceSelectedFiles.length;
-    if (!total) {
-        uploadChoiceFileListWrapEl.hidden = true;
-        if (btnUploadChoiceShowMore) btnUploadChoiceShowMore.hidden = true;
-        return;
-    }
-
-    uploadChoiceFileListWrapEl.hidden = false;
-    const showAll = uploadChoiceShowAllFiles || total <= UPLOAD_CHOICE_FILE_PREVIEW_LIMIT;
-    const visibleFiles = showAll ? uploadChoiceSelectedFiles : uploadChoiceSelectedFiles.slice(0, UPLOAD_CHOICE_FILE_PREVIEW_LIMIT);
-
-    visibleFiles.forEach((file, index) => {
-        const item = document.createElement('li');
-        item.className = 'upload-choice-file-item';
-
-        const idx = document.createElement('span');
-        idx.className = 'upload-choice-file-index';
-        idx.textContent = String(index + 1).padStart(2, '0');
-
-        const name = document.createElement('span');
-        name.className = 'upload-choice-file-name';
-        name.textContent = file?.name || 'Unnamed file';
-
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'upload-choice-file-remove';
-        removeBtn.setAttribute('aria-label', `Remove ${file?.name || 'file'}`);
-        removeBtn.title = `Remove ${file?.name || 'file'}`;
-        removeBtn.dataset.removeFileIndex = String(index);
-        removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
-
-        item.append(idx, name, removeBtn);
-        uploadChoiceFileListEl.appendChild(item);
-    });
-
-    if (!btnUploadChoiceShowMore) return;
-    if (total > UPLOAD_CHOICE_FILE_PREVIEW_LIMIT) {
-        btnUploadChoiceShowMore.hidden = false;
-        btnUploadChoiceShowMore.textContent = showAll ? 'Show less' : `Show ${total - UPLOAD_CHOICE_FILE_PREVIEW_LIMIT} more`;
-        btnUploadChoiceShowMore.setAttribute('aria-expanded', showAll ? 'true' : 'false');
-    } else {
-        btnUploadChoiceShowMore.hidden = true;
-    }
+    uploadChoiceUiController.renderFileList();
 }
 
 function setUploadChoiceFiles(fileList) {
-    uploadChoiceSelectedFiles = Array.from(fileList || []).filter((file) => {
-        const name = String(file?.name || '');
-        return /\.(stl|zip)$/i.test(name);
-    });
-    uploadChoiceShowAllFiles = false;
-    syncUploadChoicePromptText();
-    renderUploadChoiceFileList();
-    setUploadChoiceStepState(uploadChoiceSelectedFiles.length > 0);
+    uploadChoiceUiController.setFiles(fileList);
 }
 
 function closeUploadChoicePrompt(action = 'cancel') {
     if (uploadChoiceOverlayEl) uploadChoiceOverlayEl.hidden = true;
     uploadChoiceDropZoneEl?.classList.remove('is-dragover');
     setUploadChoiceFiles([]);
-    if (_uploadChoiceResolver) {
-        const resolve = _uploadChoiceResolver;
-        _uploadChoiceResolver = null;
-        resolve(action);
-    }
+    uploadActionController.resolvePrompt(action);
 }
 
 function promptUploadChoice(files) {
@@ -9762,9 +9577,7 @@ function promptUploadChoice(files) {
     uploadChoiceDropZoneEl?.classList.remove('is-dragover');
     uploadChoiceOverlayEl.hidden = false;
 
-    return new Promise((resolve) => {
-        _uploadChoiceResolver = resolve;
-    });
+    return uploadActionController.beginPrompt();
 }
 
 function resetAllWarnings() {
@@ -11058,25 +10871,19 @@ btnUploadChoiceCancel?.addEventListener('click', () => closeUploadChoicePrompt('
 btnUploadChoiceReplace?.addEventListener('click', () => closeUploadChoicePrompt('replace'));
 btnUploadChoiceNewPlate?.addEventListener('click', () => closeUploadChoicePrompt('newplate'));
 btnUploadChoiceShowMore?.addEventListener('click', () => {
-    uploadChoiceShowAllFiles = !uploadChoiceShowAllFiles;
-    renderUploadChoiceFileList();
+    uploadChoiceUiController.toggleShowAll();
 });
 
 uploadChoiceFileListEl?.addEventListener('click', (ev) => {
     const btn = ev.target?.closest?.('[data-remove-file-index]');
     if (!btn) return;
     const idx = parseInt(btn.dataset.removeFileIndex, 10);
-    if (!Number.isInteger(idx) || idx < 0 || idx >= uploadChoiceSelectedFiles.length) return;
-    uploadChoiceSelectedFiles.splice(idx, 1);
-    uploadChoiceShowAllFiles = false;
-    syncUploadChoicePromptText();
-    renderUploadChoiceFileList();
-    setUploadChoiceStepState(uploadChoiceSelectedFiles.length > 0);
+    uploadChoiceUiController.removeFileAtIndex(idx);
 });
 
 async function handleUploadChoiceDroppedFiles(fileList) {
     closeUploadChoicePrompt('cancel');
-    pendingUploadAction = null;
+    uploadActionController.clearPendingAction();
     try {
         await handlePickedUploadFiles(fileList, null);
     } catch (err) {
@@ -11094,7 +10901,7 @@ if (uploadChoiceDropZoneEl) {
 
     uploadChoiceDropZoneEl.addEventListener('click', () => {
         closeUploadChoicePrompt('cancel');
-        pendingUploadAction = null;
+        uploadActionController.clearPendingAction();
         openUploadFilePicker(null);
     });
 
