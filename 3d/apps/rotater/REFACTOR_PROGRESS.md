@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 60
+- Completed slices: 61
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -372,6 +372,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates MP4 codec configure behavior through a thin wrapper
 - Shipped in commit: pending
 
+61. MP4 scene prep extraction
+- Module: [modules/export-mp4-scene-prep.js](modules/export-mp4-scene-prep.js)
+- Scope: MP4 scene prep helper orchestration for output canvas/context and scene restore wiring
+- script.js now delegates MP4 scene prep behavior through a thin wrapper
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -435,6 +441,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-mp4-preflight.js](modules/export-mp4-preflight.js) | MP4 preflight/workload guard and unsupported-WebCodecs handling | Active | pending |
 | [modules/export-mp4-encoder-queue.js](modules/export-mp4-encoder-queue.js) | MP4 encoder queue wait and busy-status notice helper orchestration | Active | pending |
 | [modules/export-mp4-codec-config.js](modules/export-mp4-codec-config.js) | MP4 AVC level selection and encoder configure helper orchestration | Active | pending |
+| [modules/export-mp4-scene-prep.js](modules/export-mp4-scene-prep.js) | MP4 scene prep helper orchestration for output canvas/context and scene restore wiring | Active | pending |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active | pending |
 
 ## Recent Milestone Commits
@@ -448,9 +455,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. MP4 scene prep extraction
-- Target: MP4 export scene prep (out canvas/context and transparent scene restore setup)
-- Candidate module: modules/export-mp4-scene-prep.js
+1. MP4 runtime extraction
+- Target: MP4 click-handler orchestration wrapper with delegated sub-helpers
+- Candidate module: modules/export-mp4-runtime.js
 
 ## Guardrails
 

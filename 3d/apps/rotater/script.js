@@ -148,6 +148,9 @@ import {
     createExportMp4CodecConfigController,
 } from './modules/export-mp4-codec-config.js';
 import {
+    createExportMp4ScenePrepController,
+} from './modules/export-mp4-scene-prep.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11697,6 +11700,10 @@ const exportMp4EncoderQueueController = createExportMp4EncoderQueueController({
     maybePaintExportProgress,
 });
 const exportMp4CodecConfigController = createExportMp4CodecConfigController();
+const exportMp4ScenePrepController = createExportMp4ScenePrepController({
+    createCanvas: () => document.createElement('canvas'),
+    applyExportSceneForRender,
+});
 
 // ── Floyd-Steinberg dithering ────────────────────────────────────────────────
 function applyPaletteDithered(data, palette, width, height) {
@@ -11819,14 +11826,18 @@ btnVideo.addEventListener('click', async () => {
         const spinSign = spinDir > 0 ? -1 : 1;
         const MAX_EL = Math.PI / 2 - 0.05;
         const savedMeshRx = mesh ? mesh.rotation.x : 0;
-        const out = document.createElement('canvas');
-        out.width = W;
-        out.height = H;
-        const outCtx = out.getContext('2d', { willReadFrequently: true });
-        outCtx.imageSmoothingEnabled = true;
-        outCtx.imageSmoothingQuality = 'high';
-        const transparentVideo = !(exportBgColorEl?.checked ?? true);
-        const restoreExportScene = applyExportSceneForRender({ forceTransparent: transparentVideo });
+        const {
+            out,
+            outCtx,
+            restoreExportScene,
+        } = exportMp4ScenePrepController.prepareMp4Scene({
+            width: W,
+            height: H,
+            exportBgColorChecked: exportBgColorEl?.checked ?? true,
+        });
+        if (!out || !outCtx) {
+            throw new Error('Could not prepare MP4 export canvas.');
+        }
 
         try {
             for (let f = 0; f < totalFrames; f++) {
