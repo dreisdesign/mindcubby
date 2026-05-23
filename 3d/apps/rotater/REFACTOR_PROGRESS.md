@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 29
+- Completed slices: 30
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -186,6 +186,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview pixel readback and imageData row-flip through thin wrappers
 - Shipped in commit: pending
 
+30. Export preview crop overlay extraction
+- Module: [modules/export-preview-crop-overlay.js](modules/export-preview-crop-overlay.js)
+- Scope: crop matte and corner-mark overlay drawing helpers for preview canvas
+- script.js now delegates preview crop overlay drawing through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -219,6 +225,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-camera.js](modules/export-preview-camera.js) | Export preview camera setup and orbit-state application helpers | Active | pending |
 | [modules/export-preview-render-target.js](modules/export-preview-render-target.js) | Export preview render-target allocation/reuse and color-space setup helpers | Active | pending |
 | [modules/export-preview-readback.js](modules/export-preview-readback.js) | Export preview render-target pixel readback and row-flip imageData helpers | Active | pending |
+| [modules/export-preview-crop-overlay.js](modules/export-preview-crop-overlay.js) | Export preview crop matte and corner-mark overlay drawing helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -231,9 +238,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview crop overlay extraction
-- Target: crop matte + corner-mark drawing helpers for preview canvas
-- Candidate module: modules/export-preview-crop-overlay.js
+1. Export preview refresh extraction
+- Target: immediate/RAF double-refresh helper orchestration
+- Candidate module: modules/export-preview-refresh.js
 
 ## Guardrails
 

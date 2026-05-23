@@ -123,6 +123,9 @@ import {
 import {
     readExportPreviewImageDataController,
 } from './modules/export-preview-readback.js';
+import {
+    drawExportPreviewCropOverlayController,
+} from './modules/export-preview-crop-overlay.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5479,29 +5482,13 @@ function updateExportPreview(force = false) {
     ctx2d.putImageData(imgData, 0, 0);
 
     if (exportFrameEnabled) {
-        const { sx, sy, sw, sh } = getCropFrameRect(cw, ch);
-        const scaleX = pxW / cw;
-        const scaleY = pxH / ch;
-        ctx2d.fillStyle = 'rgba(0, 0, 0, 0.58)';
-        ctx2d.fillRect(0, 0, pxW, sy * scaleY);
-        ctx2d.fillRect(0, (sy + sh) * scaleY, pxW, pxH - (sy + sh) * scaleY);
-        ctx2d.fillRect(0, sy * scaleY, sx * scaleX, sh * scaleY);
-        ctx2d.fillRect((sx + sw) * scaleX, sy * scaleY, pxW - (sx + sw) * scaleX, sh * scaleY);
-
-        const cm = Math.max(2, Math.round(Math.min(sw * scaleX, sh * scaleY) * 0.07));
-        ctx2d.strokeStyle = 'rgba(255, 255, 255, 0.65)';
-        ctx2d.lineWidth = 1.5;
-        ctx2d.beginPath();
-        const minX = sx * scaleX;
-        const minY = sy * scaleY;
-        const maxX = (sx + sw) * scaleX;
-        const maxY = (sy + sh) * scaleY;
-
-        ctx2d.moveTo(minX, minY + cm); ctx2d.lineTo(minX, minY); ctx2d.lineTo(minX + cm, minY);
-        ctx2d.moveTo(maxX - cm, minY); ctx2d.lineTo(maxX, minY); ctx2d.lineTo(maxX, minY + cm);
-        ctx2d.moveTo(minX, maxY - cm); ctx2d.lineTo(minX, maxY); ctx2d.lineTo(minX + cm, maxY);
-        ctx2d.moveTo(maxX - cm, maxY); ctx2d.lineTo(maxX, maxY); ctx2d.lineTo(maxX, maxY - cm);
-        ctx2d.stroke();
+        drawExportPreviewCropOverlayController(ctx2d, {
+            pxW,
+            pxH,
+            cw,
+            ch,
+            getCropFrameRect,
+        });
     }
     drawRulerOverlay(ctx2d, pxW, pxH, _previewCam);
 }
