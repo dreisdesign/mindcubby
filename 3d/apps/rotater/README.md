@@ -74,6 +74,7 @@ Current extracted modules:
 | [modules/export-download.js](modules/export-download.js) | Export blob download and URL revoke controller | Active |
 | [modules/export-filename.js](modules/export-filename.js) | Export quality/modifier tags and filename composition controller | Active |
 | [modules/export-gif-runtime.js](modules/export-gif-runtime.js) | GIF export runtime orchestration controller (preflight/capture/encode/finalize) | Active |
+| [modules/export-mp4-preflight.js](modules/export-mp4-preflight.js) | MP4 preflight and unsupported-WebCodecs guard controller | Active |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active |
 
 ---

@@ -139,6 +139,9 @@ import {
     createExportGifRuntimeController,
 } from './modules/export-gif-runtime.js';
 import {
+    createExportMp4PreflightController,
+} from './modules/export-mp4-preflight.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11665,6 +11668,23 @@ const exportGifRuntimeController = createExportGifRuntimeController({
     },
 });
 
+const exportMp4PreflightController = createExportMp4PreflightController({
+    getExportFrameEnabled: () => exportFrameEnabled,
+    syncExportCameraFromViewport,
+    getMp4Config: () => EXPORT.mp4,
+    getImageExportSize,
+    exportFrames,
+    validateExportWorkload,
+    setStatus,
+    setAnimStatus,
+    scheduleClearStatus: (delayMs) => {
+        setTimeout(() => {
+            setStatus('');
+            setAnimStatus('');
+        }, delayMs);
+    },
+});
+
 // ── Floyd-Steinberg dithering ────────────────────────────────────────────────
 function applyPaletteDithered(data, palette, width, height) {
     // Build a 5-bit-per-channel LUT (32³ = 32768 slots) for fast nearest-color lookup.
@@ -11714,35 +11734,12 @@ btnGif.addEventListener('click', async () => {
 btnVideo.addEventListener('click', async () => {
     if (!mesh) return;
     if (typeof VideoEncoder === 'undefined') {
-        const unsupportedMessage = 'Error: WebCodecs not supported in this browser (use Chrome/Edge/Safari 16.4+).';
-        setStatus(unsupportedMessage);
-        setAnimStatus(unsupportedMessage);
-        setTimeout(() => {
-            setStatus('');
-            setAnimStatus('');
-        }, 6000);
+        exportMp4PreflightController.showUnsupportedWebCodecs();
         return;
     }
 
-    let mp4Preflight = null;
-    try {
-        if (exportFrameEnabled) syncExportCameraFromViewport();
-        const { fps, bitrate, loops } = EXPORT.mp4;
-        const { width: W, height: H } = getImageExportSize();
-        const n = exportFrames(fps);
-        const totalFrames = n * (loops + 1);
-        validateExportWorkload({ format: 'mp4', width: W, height: H, fps, frames: totalFrames });
-        mp4Preflight = { fps, bitrate, W, H, n, totalFrames };
-    } catch (err) {
-        const message = 'Error: ' + (err?.message || 'MP4 export preflight failed.');
-        setStatus(message);
-        setAnimStatus(message);
-        setTimeout(() => {
-            setStatus('');
-            setAnimStatus('');
-        }, 6500);
-        return;
-    }
+    const mp4Preflight = exportMp4PreflightController.runMp4Preflight();
+    if (!mp4Preflight) return;
 
     setExporting(true);
     // Yield one frame so the browser paints the freeze overlay before export
@@ -11751,10 +11748,7 @@ btnVideo.addEventListener('click', async () => {
     controls.autoRotate = false;
 
     try {
-        const { fps, bitrate, W, H, n, totalFrames } = mp4Preflight || {};
-        if (!fps || !bitrate || !W || !H || !n || !totalFrames) {
-            throw new Error('MP4 export preflight is unavailable. Please try again.');
-        }
+        const { fps, bitrate, W, H, n, totalFrames } = exportMp4PreflightController.assertMp4Preflight(mp4Preflight);
 
         // Render directly to the main canvas at 2x resolution for SSAA
         const SSAA = 2;

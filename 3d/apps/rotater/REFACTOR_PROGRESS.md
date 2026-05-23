@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 57
+- Completed slices: 58
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -354,6 +354,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates GIF export runtime flow through a thin wrapper
 - Shipped in commit: pending
 
+58. MP4 preflight extraction
+- Module: [modules/export-mp4-preflight.js](modules/export-mp4-preflight.js)
+- Scope: MP4 preflight validation/workload guard and unsupported-WebCodecs handling
+- script.js now delegates MP4 preflight and unsupported handling through a thin wrapper
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -414,6 +420,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-download.js](modules/export-download.js) | Export blob download and URL revoke helper orchestration | Active | pending |
 | [modules/export-filename.js](modules/export-filename.js) | Export quality/modifier tags and filename composition helper orchestration | Active | pending |
 | [modules/export-gif-runtime.js](modules/export-gif-runtime.js) | GIF export runtime orchestration (preflight/capture/encode/finalize) | Active | pending |
+| [modules/export-mp4-preflight.js](modules/export-mp4-preflight.js) | MP4 preflight/workload guard and unsupported-WebCodecs handling | Active | pending |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active | pending |
 
 ## Recent Milestone Commits
@@ -427,9 +434,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. MP4 preflight extraction
-- Target: MP4 preflight validation and workload guard helper orchestration
-- Candidate module: modules/export-mp4-preflight.js
+1. MP4 encoder queue wait extraction
+- Target: MP4 encoder queue wait + busy-status notice helper orchestration
+- Candidate module: modules/export-mp4-encoder-queue.js
 
 ## Guardrails
 
