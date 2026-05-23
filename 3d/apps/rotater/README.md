@@ -28,6 +28,12 @@ Current extracted modules:
 
 ## Web App
 
+### Security Hardening
+
+- A baseline CSP is enabled in report-only mode via `Content-Security-Policy-Report-Only` in `index.html`.
+- Current policy allows local app assets plus jsDelivr module dependencies while restricting high-risk directives (`object-src 'none'`, `frame-ancestors 'none'`, strict `base-uri`/`form-action`).
+- Recommended rollout path: keep report-only while validating browser console violations, then move to enforced `Content-Security-Policy` once stable.
+
 Open `index.html` via a local server (ES modules require `http://`, not `file://`):
 
 ```bash
