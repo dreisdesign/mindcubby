@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 42
+- Completed slices: 43
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -264,6 +264,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates updateExportPreview orchestration setup through thin wrappers
 - Shipped in commit: pending
 
+43. Export preview state-commit extraction
+- Module: [modules/export-preview-state-commit.js](modules/export-preview-state-commit.js)
+- Scope: export preview pipeline-result state commit helpers
+- script.js now delegates preview state commit through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -310,6 +316,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-canvas-prep.js](modules/export-preview-canvas-prep.js) | Export preview dimensions and target-size prep orchestration helpers | Active | pending |
 | [modules/export-preview-pipeline.js](modules/export-preview-pipeline.js) | Export preview end-to-end pipeline orchestration coordinator | Active | pending |
 | [modules/export-preview-update.js](modules/export-preview-update.js) | Export preview update entrypoint controller and dependency wiring | Active | pending |
+| [modules/export-preview-state-commit.js](modules/export-preview-state-commit.js) | Export preview pipeline-result state commit helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -322,9 +329,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview state-commit extraction
-- Target: consolidate pipeline result -> local state assignments into dedicated helper
-- Candidate module: modules/export-preview-state-commit.js
+1. Export preview update context extraction
+- Target: consolidate updateExportPreview argument-wiring into dedicated helper
+- Candidate module: modules/export-preview-update-context.js
 
 ## Guardrails
 

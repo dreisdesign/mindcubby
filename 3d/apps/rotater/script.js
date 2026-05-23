@@ -113,6 +113,9 @@ import {
 import {
     updateExportPreviewController,
 } from './modules/export-preview-update.js';
+import {
+    commitExportPreviewStateController,
+} from './modules/export-preview-state-commit.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5398,16 +5401,23 @@ function updateExportPreview(force = false) {
         devicePixelRatio: window.devicePixelRatio,
     });
 
-    _lastExportPreviewUpdateMs = pipelineResult.nextLastUpdateMs;
-    if (!pipelineResult.shouldRender) return;
-
-    exportCamDist = pipelineResult.exportCamDist;
-    exportCamElev = pipelineResult.exportCamElev;
-    exportCamZoom = pipelineResult.exportCamZoom;
-    _previewRt = pipelineResult.previewRt;
-    _previewRtWidth = pipelineResult.previewRtWidth;
-    _previewRtHeight = pipelineResult.previewRtHeight;
-    _previewCam = pipelineResult.previewCam;
+    const shouldContinue = commitExportPreviewStateController(pipelineResult, {
+        setLastUpdateMs: (nextLastUpdateMs) => {
+            _lastExportPreviewUpdateMs = nextLastUpdateMs;
+        },
+        setExportCameraState: (nextCameraState) => {
+            exportCamDist = nextCameraState.exportCamDist;
+            exportCamElev = nextCameraState.exportCamElev;
+            exportCamZoom = nextCameraState.exportCamZoom;
+        },
+        setPreviewResources: (nextPreviewResources) => {
+            _previewRt = nextPreviewResources.previewRt;
+            _previewRtWidth = nextPreviewResources.previewRtWidth;
+            _previewRtHeight = nextPreviewResources.previewRtHeight;
+            _previewCam = nextPreviewResources.previewCam;
+        },
+    });
+    if (!shouldContinue) return;
 }
 
 function refreshExportPreviewNow() {
