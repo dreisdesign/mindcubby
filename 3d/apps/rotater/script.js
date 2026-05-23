@@ -120,6 +120,9 @@ import {
 import {
     ensureExportPreviewRenderTargetController,
 } from './modules/export-preview-render-target.js';
+import {
+    readExportPreviewImageDataController,
+} from './modules/export-preview-readback.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5463,15 +5466,16 @@ function updateExportPreview(force = false) {
         restoreExportScene();
     }
 
-    const buf = new Uint8Array(pxW * pxH * 4);
-    renderer.readRenderTargetPixels(_previewRt, 0, 0, pxW, pxH, buf);
-    const imgData = pv.getContext('2d').createImageData(pxW, pxH);
-    for (let row = 0; row < pxH; row++) {
-        const srcRow = (pxH - 1 - row) * pxW * 4;
-        imgData.data.set(buf.subarray(srcRow, srcRow + pxW * 4), row * pxW * 4);
-    }
-
     const ctx2d = pv.getContext('2d');
+    if (!ctx2d) return;
+    const imgData = readExportPreviewImageDataController({
+        renderer,
+        previewRt: _previewRt,
+        pxW,
+        pxH,
+        createImageData: (w, h) => ctx2d.createImageData(w, h),
+    });
+    if (!imgData) return;
     ctx2d.putImageData(imgData, 0, 0);
 
     if (exportFrameEnabled) {
