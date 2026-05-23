@@ -7825,12 +7825,23 @@ async function handleFiles(fileList, requestedActionOverride = null) {
 
     if (mesh && !requestedActionOverride) {
         requestedAction = await promptUploadChoice(files);
-        if (requestedAction !== 'replace' && requestedAction !== 'newplate') {
+        if (requestedAction !== 'replace' && requestedAction !== 'append' && requestedAction !== 'newplate') {
             return;
         }
     }
 
     if (!mesh) requestedAction = 'newplate';
+
+    if (mesh && requestedAction === 'append') {
+        try {
+            await appendSTLPartsToCurrentModel(files);
+        } catch (err) {
+            setStatus('Error: ' + (err?.message || 'Failed to add model(s) to plate.'));
+            console.error(err);
+            setTimeout(() => setStatus(''), 5000);
+        }
+        return;
+    }
 
     if (mesh && requestedAction === 'replace') {
         if (isMultipartModel()) {
@@ -10639,7 +10650,7 @@ exportCollapsedConfirmOverlayEl?.addEventListener('click', (e) => {
 
 btnUploadChoiceClose?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
 btnUploadChoiceCancel?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
-btnUploadChoiceReplace?.addEventListener('click', () => closeUploadChoicePrompt('replace'));
+btnUploadChoiceReplace?.addEventListener('click', () => closeUploadChoicePrompt('append'));
 btnUploadChoiceNewPlate?.addEventListener('click', () => closeUploadChoicePrompt('newplate'));
 btnUploadChoiceShowMore?.addEventListener('click', () => {
     uploadChoiceUiController.toggleShowAll();

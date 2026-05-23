@@ -1,5 +1,5 @@
-const VALID_ACTIONS = new Set(['replace', 'newplate']);
-const VALID_PROMPT_RESULTS = new Set(['replace', 'newplate', 'cancel']);
+const VALID_ACTIONS = new Set(['replace', 'append', 'newplate']);
+const VALID_PROMPT_RESULTS = new Set(['replace', 'append', 'newplate', 'cancel']);
 
 export function normalizeUploadAction(action, fallback = null) {
     return VALID_ACTIONS.has(action) ? action : fallback;
