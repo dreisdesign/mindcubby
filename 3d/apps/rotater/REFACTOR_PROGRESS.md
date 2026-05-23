@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 31
+- Completed slices: 32
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -198,6 +198,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview refresh orchestration through thin wrappers
 - Shipped in commit: pending
 
+32. Export preview render pass extraction
+- Module: [modules/export-preview-render-pass.js](modules/export-preview-render-pass.js)
+- Scope: preview render pass bind/render/unbind and scene-restore orchestration helpers
+- script.js now delegates preview render pass orchestration through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -233,6 +239,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-readback.js](modules/export-preview-readback.js) | Export preview render-target pixel readback and row-flip imageData helpers | Active | pending |
 | [modules/export-preview-crop-overlay.js](modules/export-preview-crop-overlay.js) | Export preview crop matte and corner-mark overlay drawing helpers | Active | pending |
 | [modules/export-preview-refresh.js](modules/export-preview-refresh.js) | Export preview immediate + RAF refresh orchestration helpers | Active | pending |
+| [modules/export-preview-render-pass.js](modules/export-preview-render-pass.js) | Export preview render pass bind/render/unbind and scene-restore helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -245,9 +252,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview render pass extraction
-- Target: preview render target bind/render/unbind with scene-restore orchestration
-- Candidate module: modules/export-preview-render-pass.js
+1. Export preview canvas commit extraction
+- Target: putImageData and 2D context preparation helper orchestration
+- Candidate module: modules/export-preview-canvas-commit.js
 
 ## Guardrails
 

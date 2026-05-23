@@ -129,6 +129,9 @@ import {
 import {
     refreshExportPreviewNowController,
 } from './modules/export-preview-refresh.js';
+import {
+    executeExportPreviewRenderPassController,
+} from './modules/export-preview-render-pass.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5463,14 +5466,14 @@ function updateExportPreview(force = false) {
         setCameraFromOrbitState,
     });
 
-    const restoreExportScene = applyExportSceneForRender({ forceTransparent: isTransparentPreview });
-    try {
-        renderer.setRenderTarget(_previewRt);
-        renderer.render(scene, _previewCam);
-        renderer.setRenderTarget(null);
-    } finally {
-        restoreExportScene();
-    }
+    executeExportPreviewRenderPassController({
+        renderer,
+        previewRt: _previewRt,
+        scene,
+        previewCam: _previewCam,
+        applyExportSceneForRender,
+        isTransparentPreview,
+    });
 
     const ctx2d = pv.getContext('2d');
     if (!ctx2d) return;
