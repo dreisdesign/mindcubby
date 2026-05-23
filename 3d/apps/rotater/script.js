@@ -95,6 +95,9 @@ import {
 import {
     bindExportPreviewDetailsToggleController,
 } from './modules/export-preview-details.js';
+import {
+    createDesktopV2RailLayoutController,
+} from './modules/desktop-v2-rail-layout.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -10392,59 +10395,23 @@ function isTabletTabsLayout() {
     return window.matchMedia('(min-width: 900px) and (max-width: 1199px)').matches;
 }
 
-let desktopV2RailObserver = null;
-let desktopV2RailRafId = 0;
+const desktopV2RailLayoutController = createDesktopV2RailLayoutController();
 let desktopV2DockDefaultApplied = false;
 
 function syncDesktopV2RailLayout() {
-    const root = document.documentElement;
-    if (!root.classList.contains('layout-v2-desktop')) {
-        root.style.removeProperty('--desktop-v2-effects-top');
-        root.style.removeProperty('--desktop-v2-effects-max-height');
-        return;
-    }
-
-    const appDock = document.getElementById('appSettingsDock');
-    if (!appDock) return;
-
-    const railTop = 16;
-    const railBottom = 16;
-    const railGap = 12;
-
-    const appDockHeight = Math.ceil(appDock.getBoundingClientRect().height || 0);
-    const effectsTop = railTop;
-    const effectsMaxHeight = Math.max(150, Math.floor(window.innerHeight - effectsTop - railGap - appDockHeight - railBottom));
-
-    root.style.setProperty('--desktop-v2-effects-top', `${effectsTop}px`);
-    root.style.setProperty('--desktop-v2-effects-max-height', `${effectsMaxHeight}px`);
+    desktopV2RailLayoutController.sync();
 }
 
 function queueDesktopV2RailLayoutSync() {
-    if (desktopV2RailRafId) cancelAnimationFrame(desktopV2RailRafId);
-    desktopV2RailRafId = requestAnimationFrame(() => {
-        desktopV2RailRafId = 0;
-        syncDesktopV2RailLayout();
-    });
+    desktopV2RailLayoutController.queue();
 }
 
 function disconnectDesktopV2RailObserver() {
-    if (desktopV2RailObserver) {
-        desktopV2RailObserver.disconnect();
-        desktopV2RailObserver = null;
-    }
+    desktopV2RailLayoutController.disconnectObserver();
 }
 
 function ensureDesktopV2RailObserver() {
-    if (!window.ResizeObserver || desktopV2RailObserver) return;
-
-    desktopV2RailObserver = new ResizeObserver(() => {
-        queueDesktopV2RailLayoutSync();
-    });
-
-    const exportPanel = document.querySelector('.export-modal-panel');
-    const appDock = document.getElementById('appSettingsDock');
-    if (exportPanel) desktopV2RailObserver.observe(exportPanel);
-    if (appDock) desktopV2RailObserver.observe(appDock);
+    desktopV2RailLayoutController.ensureObserver();
 }
 
 function applyMobileAccordionState(panelName) {

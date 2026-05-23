@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 20
+- Completed slices: 21
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -132,6 +132,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview-details toggle wiring through thin wrappers
 - Shipped in commit: pending
 
+21. Desktop V2 rail layout extraction
+- Module: [modules/desktop-v2-rail-layout.js](modules/desktop-v2-rail-layout.js)
+- Scope: desktop V2 effects rail sizing, RAF queueing, and resize observer lifecycle helpers
+- script.js now delegates rail layout sync/queue/observer helpers through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -156,6 +162,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-estimate.js](modules/export-estimate.js) | Export estimate button/title/text update orchestration helpers | Active | pending |
 | [modules/export-format-sync.js](modules/export-format-sync.js) | Export format tab/select synchronization and format-application orchestration helpers | Active | pending |
 | [modules/export-preview-details.js](modules/export-preview-details.js) | Export preview details toggle binding helpers for preview refresh and rail layout sync | Active | pending |
+| [modules/desktop-v2-rail-layout.js](modules/desktop-v2-rail-layout.js) | Desktop V2 effects rail sizing, RAF queueing, and resize observer lifecycle helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -168,9 +175,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Desktop V2 rail layout extraction
-- Target: queue/sync/observer helpers for desktop V2 effects rail layout sizing
-- Candidate module: modules/desktop-v2-rail-layout.js
+1. Export preview activity guard extraction
+- Target: export preview active-state checks and visibility guards
+- Candidate module: modules/export-preview-activity.js
 
 ## Guardrails
 
