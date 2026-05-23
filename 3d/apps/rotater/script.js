@@ -136,6 +136,9 @@ import {
     createExportFilenameController,
 } from './modules/export-filename.js';
 import {
+    createExportGifRuntimeController,
+} from './modules/export-gif-runtime.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11633,6 +11636,35 @@ async function captureFrames(n, dims = null, transparent = false) {
     return frames;
 }
 
+const exportGifRuntimeController = createExportGifRuntimeController({
+    getHasMesh: () => !!mesh,
+    setExporting,
+    requestAnimationFrameFn: requestAnimationFrame,
+    getControls: () => controls,
+    getExportGifConfig: () => EXPORT.gif,
+    getImageExportSize,
+    exportFrames,
+    validateExportWorkload,
+    getTransparentEnabled: () => document.getElementById('exportTransparent')?.checked ?? false,
+    captureFrames,
+    setAnimStatus,
+    scheduleYield: () => new Promise((resolve) => setTimeout(resolve, 0)),
+    createGifEncoder: () => GIFEncoder(),
+    quantize,
+    applyPalette,
+    applyPaletteDithered,
+    maybePaintExportProgress,
+    download,
+    buildExportFilename,
+    getAutoRotateRestoreState: () => !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360)),
+    setControlsAutoRotate: (enabled) => {
+        if (controls) controls.autoRotate = !!enabled;
+    },
+    scheduleClearAnimStatus: () => {
+        setTimeout(() => setAnimStatus(''), 5000);
+    },
+});
+
 // ── Floyd-Steinberg dithering ────────────────────────────────────────────────
 function applyPaletteDithered(data, palette, width, height) {
     // Build a 5-bit-per-channel LUT (32³ = 32768 slots) for fast nearest-color lookup.
@@ -11675,64 +11707,7 @@ function applyPaletteDithered(data, palette, width, height) {
 
 // ── GIF export ────────────────────────────────────────────────────────────────
 btnGif.addEventListener('click', async () => {
-    if (!mesh) return;
-    setExporting(true);
-    // Yield one frame so the browser paints the freeze overlay before export
-    // rendering begins — prevents the distorted canvas from ever being visible.
-    await new Promise(r => requestAnimationFrame(r));
-    controls.autoRotate = false;
-
-    try {
-        const { fps, loop, dither } = EXPORT.gif;
-        const { width: W, height: H } = getImageExportSize();
-        const frameCount = exportFrames(fps);
-        validateExportWorkload({ format: 'gif', width: W, height: H, fps, frames: frameCount });
-        const isTransparent = document.getElementById('exportTransparent')?.checked ?? false;
-        const frames = await captureFrames(frameCount, { width: W, height: H }, isTransparent);
-        const delay = Math.round(1000 / fps);
-
-        setAnimStatus('Encoding GIF…');
-        await new Promise(r => setTimeout(r, 0));
-
-        const repeat = loop ? 0 : -1;
-        const gif = GIFEncoder();
-        for (let i = 0; i < frames.length; i++) {
-            let index, palette;
-            if (isTransparent) {
-                // Reserve palette index 255 as transparent; quantize using 255 colors
-                const pal = quantize(frames[i], 255);
-                // gifenc writeFrame needs a 2D [[r,g,b],...] palette — pad to 256 entries so index 255 is the transparent slot
-                const fullPal = pal.slice();
-                while (fullPal.length < 256) fullPal.push([0, 0, 0]);
-                // applyPalette uses an internal rgb565 hash LUT — O(1) per pixel after warm-up.
-                // Then stamp 255 over transparent pixels in a single cheap pass.
-                const indices = applyPalette(frames[i], pal);
-                for (let px = 0; px < W * H; px++) {
-                    if (frames[i][px * 4 + 3] < 128) indices[px] = 255;
-                }
-                gif.writeFrame(indices, W, H, { palette: fullPal, delay, transparent: true, transparentIndex: 255, ...(i === 0 && { repeat }) });
-            } else {
-                palette = quantize(frames[i], 256);
-                index = dither
-                    ? applyPaletteDithered(frames[i], palette, W, H)
-                    : applyPalette(frames[i], palette);
-                gif.writeFrame(index, W, H, { palette, delay, ...(i === 0 && { repeat }) });
-            }
-
-            await maybePaintExportProgress(`Encoding… ${i + 1} / ${frames.length}`, i + 1, frames.length);
-        }
-
-        gif.finish();
-        download(gif.bytes(), buildExportFilename('gif'), 'image/gif');
-        setAnimStatus('GIF saved ✓');
-    } catch (err) {
-        setAnimStatus('Error: ' + err.message);
-        console.error(err);
-    } finally {
-        setExporting(false);
-        controls.autoRotate = !isPaused && (rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360));
-        setTimeout(() => setAnimStatus(''), 5000);
-    }
+    await exportGifRuntimeController.runGifExport();
 });
 
 // ── Video export (H.264 MP4 via WebCodecs + mp4-muxer) ───────────────────────

@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 56
+- Completed slices: 57
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -348,6 +348,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates export filename helper behavior through thin wrappers
 - Shipped in commit: pending
 
+57. GIF export runtime extraction
+- Module: [modules/export-gif-runtime.js](modules/export-gif-runtime.js)
+- Scope: GIF export click-handler orchestration (preflight, capture, encode, finalize)
+- script.js now delegates GIF export runtime flow through a thin wrapper
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -407,6 +413,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-progress-timing.js](modules/export-progress-timing.js) | Export progress paint timing/throttle helper orchestration | Active | pending |
 | [modules/export-download.js](modules/export-download.js) | Export blob download and URL revoke helper orchestration | Active | pending |
 | [modules/export-filename.js](modules/export-filename.js) | Export quality/modifier tags and filename composition helper orchestration | Active | pending |
+| [modules/export-gif-runtime.js](modules/export-gif-runtime.js) | GIF export runtime orchestration (preflight/capture/encode/finalize) | Active | pending |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active | pending |
 
 ## Recent Milestone Commits
@@ -420,9 +427,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. GIF export runtime extraction
-- Target: GIF export click-handler orchestration (preflight, capture, encode, status/finally path)
-- Candidate module: modules/export-gif-runtime.js
+1. MP4 preflight extraction
+- Target: MP4 preflight validation and workload guard helper orchestration
+- Candidate module: modules/export-mp4-preflight.js
 
 ## Guardrails
 
