@@ -118,6 +118,9 @@ import {
     createCropDimensionsDockController,
 } from './modules/crop-dimensions-dock.js';
 import {
+    createExportProgressOverlayController,
+} from './modules/export-progress-overlay.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11346,30 +11349,22 @@ async function maybePaintExportProgress(msg, done, total, force = false) {
     _lastExportUiPaintAt = now;
     await new Promise((resolve) => requestAnimationFrame(resolve));
 }
-const _exportProgressOverlay = () => document.getElementById('exportProgressOverlay');
-const _exportProgressLabel = () => document.getElementById('exportProgressOverlayLabel');
-const _exportProgressFill = () => document.getElementById('exportProgressOverlayFill');
+const exportProgressOverlayController = createExportProgressOverlayController({
+    getOverlayEl: () => document.getElementById('exportProgressOverlay'),
+    getLabelEl: () => document.getElementById('exportProgressOverlayLabel'),
+    getFillEl: () => document.getElementById('exportProgressOverlayFill'),
+});
 
 function showExportProgressOverlay(msg) {
-    const el = _exportProgressOverlay();
-    if (!el) return;
-    const lbl = _exportProgressLabel();
-    const fill = _exportProgressFill();
-    if (lbl) lbl.textContent = msg || 'Preparing…';
-    if (fill) fill.style.width = '0%';
-    el.hidden = false;
+    exportProgressOverlayController.showExportProgressOverlay(msg);
 }
 
 function updateExportProgressOverlay(msg, done, total) {
-    const lbl = _exportProgressLabel();
-    const fill = _exportProgressFill();
-    if (lbl && msg) lbl.textContent = msg;
-    if (fill && done != null && total > 0) fill.style.width = `${Math.round(done / total * 100)}%`;
+    exportProgressOverlayController.updateExportProgressOverlay(msg, done, total);
 }
 
 function hideExportProgressOverlay() {
-    const el = _exportProgressOverlay();
-    if (el) el.hidden = true;
+    exportProgressOverlayController.hideExportProgressOverlay();
 }
 
 const setExporting = v => {
