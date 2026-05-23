@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 47
+- Completed slices: 48
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -294,6 +294,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates workspace runtime wrappers through thin wrappers
 - Shipped in commit: pending
 
+48. Export crop UI extraction
+- Module: [modules/export-crop-ui.js](modules/export-crop-ui.js)
+- Scope: export crop/frame button and orbit-hint UI controller
+- script.js now delegates crop/frame hint UI updates through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -345,6 +351,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-runtime.js](modules/export-preview-runtime.js) | Export preview runtime wrappers for update and refresh flows | Active | pending |
 | [modules/export-panel-drag.js](modules/export-panel-drag.js) | Export panel drag and persisted positioning controller | Active | pending |
 | [modules/export-workspace-runtime.js](modules/export-workspace-runtime.js) | Export workspace runtime wrappers for active-state/open-close flows | Active | pending |
+| [modules/export-crop-ui.js](modules/export-crop-ui.js) | Export crop/frame button and orbit-hint UI controller | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -357,9 +364,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export workspace entrypoint extraction
-- Target: consolidate set/open/close workspace wrappers into a single runtime entrypoint call
-- Candidate module: modules/export-workspace-runtime.js
+1. Right-pan interaction extraction
+- Target: begin/enforce/end vertical-lock and shift-pan interaction helpers
+- Candidate module: modules/right-pan-lock.js
 
 ## Guardrails
 

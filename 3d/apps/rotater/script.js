@@ -111,6 +111,9 @@ import {
 import {
     createExportWorkspaceRuntimeController,
 } from './modules/export-workspace-runtime.js';
+import {
+    createExportCropUiController,
+} from './modules/export-crop-ui.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5425,7 +5428,6 @@ function refreshExportPreviewNow() {
 
 // ── Export frame overlay ──────────────────────────────────────────────────
 let exportFrameEnabled = false;
-let _hintVisibleBeforeCrop = null;
 let exportWorkspaceActive = false;
 let _cropAppliedCameraZoomScale = false;
 let _modelPartMenuDragState = null;
@@ -5459,6 +5461,11 @@ const exportWorkspaceRuntimeController = createExportWorkspaceRuntimeController(
     enterCropMode,
     confirmCropMode,
     getExportFrameEnabled: () => exportFrameEnabled,
+});
+const exportCropUiController = createExportCropUiController({
+    frameOverlayBtn,
+    orbitHintTextEl,
+    orbitHintBarEl,
 });
 
 function setExportWorkspaceActive(active) {
@@ -5494,35 +5501,11 @@ function closeExportWorkspace() {
 }
 
 function updateFrameOverlayButtonUI() {
-    if (!frameOverlayBtn) return;
-    frameOverlayBtn.setAttribute('aria-pressed', String(exportFrameEnabled));
-    if (exportFrameEnabled) {
-        frameOverlayBtn.classList.add('is-crop-confirm');
-        frameOverlayBtn.title = 'Apply crop (Enter)';
-        frameOverlayBtn.setAttribute('aria-label', 'Apply crop');
-        return;
-    }
-    frameOverlayBtn.classList.remove('is-crop-confirm');
-    frameOverlayBtn.title = 'Show export frame';
-    frameOverlayBtn.setAttribute('aria-label', 'Show export frame');
+    exportCropUiController.updateFrameOverlayButtonUI(exportFrameEnabled);
 }
 
 function updateCropHintUI() {
-    if (orbitHintTextEl) {
-        orbitHintTextEl.textContent = exportFrameEnabled
-            ? 'Drag to orbit · Scroll to zoom · Hold Shift + drag to pan'
-            : 'Drag to orbit · Scroll to zoom · Right-drag up/down · Hold Shift + drag to pan';
-    }
-    if (!orbitHintBarEl) return;
-    if (exportFrameEnabled) {
-        if (_hintVisibleBeforeCrop === null) {
-            _hintVisibleBeforeCrop = orbitHintBarEl.classList.contains('visible');
-        }
-        orbitHintBarEl.classList.add('visible');
-        return;
-    }
-    if (_hintVisibleBeforeCrop === false) orbitHintBarEl.classList.remove('visible');
-    _hintVisibleBeforeCrop = null;
+    exportCropUiController.updateCropHintUI(exportFrameEnabled);
 }
 
 function beginRightPanVerticalLock() {

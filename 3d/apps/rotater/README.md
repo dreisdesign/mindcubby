@@ -65,6 +65,7 @@ Current extracted modules:
 | [modules/export-preview-runtime.js](modules/export-preview-runtime.js) | Export preview runtime wrappers for update and refresh flows | Active |
 | [modules/export-panel-drag.js](modules/export-panel-drag.js) | Export panel drag and persisted positioning controller | Active |
 | [modules/export-workspace-runtime.js](modules/export-workspace-runtime.js) | Export workspace runtime wrappers for active-state/open-close flows | Active |
+| [modules/export-crop-ui.js](modules/export-crop-ui.js) | Export crop/frame button and orbit-hint UI controller | Active |
 
 ---
 
