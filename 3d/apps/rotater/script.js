@@ -3990,8 +3990,7 @@ modelPartSingleMenuBtn?.addEventListener('click', (ev) => {
     const menu = modelPartSingleActions;
     if (!menu) return;
     const willOpen = !!menu.hidden;
-    closeThumbSelectMenus();
-    closeModelPartActionMenus();
+    closeThumbSelectMenusByMode({ includeModelSelector: false });
     if (!willOpen) return;
     menu.hidden = false;
     positionModelPartActionMenu(menu, ev.currentTarget);
