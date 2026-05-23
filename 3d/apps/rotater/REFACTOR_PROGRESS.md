@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 43
+- Completed slices: 44
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -270,6 +270,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview state commit through thin wrappers
 - Shipped in commit: pending
 
+44. Export preview update-context extraction
+- Module: [modules/export-preview-update-context.js](modules/export-preview-update-context.js)
+- Scope: export preview update-context builder helpers
+- script.js now delegates update-context construction through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -317,6 +323,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-pipeline.js](modules/export-preview-pipeline.js) | Export preview end-to-end pipeline orchestration coordinator | Active | pending |
 | [modules/export-preview-update.js](modules/export-preview-update.js) | Export preview update entrypoint controller and dependency wiring | Active | pending |
 | [modules/export-preview-state-commit.js](modules/export-preview-state-commit.js) | Export preview pipeline-result state commit helpers | Active | pending |
+| [modules/export-preview-update-context.js](modules/export-preview-update-context.js) | Export preview update-context builder helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -329,9 +336,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview update context extraction
-- Target: consolidate updateExportPreview argument-wiring into dedicated helper
-- Candidate module: modules/export-preview-update-context.js
+1. Export preview runtime extraction
+- Target: move updateExportPreview + refreshExportPreviewNow wrappers into dedicated runtime module
+- Candidate module: modules/export-preview-runtime.js
 
 ## Guardrails
 

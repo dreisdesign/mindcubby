@@ -61,6 +61,7 @@ Current extracted modules:
 | [modules/export-preview-pipeline.js](modules/export-preview-pipeline.js) | Export preview end-to-end pipeline orchestration coordinator | Active |
 | [modules/export-preview-update.js](modules/export-preview-update.js) | Export preview update entrypoint controller and dependency wiring | Active |
 | [modules/export-preview-state-commit.js](modules/export-preview-state-commit.js) | Export preview pipeline-result state commit helpers | Active |
+| [modules/export-preview-update-context.js](modules/export-preview-update-context.js) | Export preview update-context builder helpers | Active |
 
 ---
 
