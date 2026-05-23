@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 24
+- Completed slices: 25
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -156,6 +156,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview update throttle gate through thin wrappers
 - Shipped in commit: pending
 
+25. Export preview transparency extraction
+- Module: [modules/export-preview-transparency.js](modules/export-preview-transparency.js)
+- Scope: transparent-preview derivation and preview-wrap class synchronization helpers
+- script.js now delegates preview transparency derivation/wrap sync through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -184,6 +190,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-activity.js](modules/export-preview-activity.js) | Export preview active-state visibility guard helpers | Active | pending |
 | [modules/export-preview-scene-state.js](modules/export-preview-scene-state.js) | Export preview scene include/exclude and render-state restore orchestration helpers | Active | pending |
 | [modules/export-preview-timing.js](modules/export-preview-timing.js) | Export preview update timing and throttle gate helpers | Active | pending |
+| [modules/export-preview-transparency.js](modules/export-preview-transparency.js) | Export preview transparency derivation and preview-wrap class sync helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -196,9 +203,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview transparency extraction
-- Target: transparent-preview derivation and preview wrap class update helpers
-- Candidate module: modules/export-preview-transparency.js
+1. Export preview dimensions extraction
+- Target: preview size/scaling computation helpers (previewW/H, box scaling, pxW/pxH)
+- Candidate module: modules/export-preview-dimensions.js
 
 ## Guardrails
 
