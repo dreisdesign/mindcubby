@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 45
+- Completed slices: 46
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -282,6 +282,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview runtime wrappers through thin wrappers
 - Shipped in commit: pending
 
+46. Export panel drag extraction
+- Module: [modules/export-panel-drag.js](modules/export-panel-drag.js)
+- Scope: export panel drag and persisted positioning controller
+- script.js now delegates export panel drag/position orchestration through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -331,6 +337,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-state-commit.js](modules/export-preview-state-commit.js) | Export preview pipeline-result state commit helpers | Active | pending |
 | [modules/export-preview-update-context.js](modules/export-preview-update-context.js) | Export preview update-context builder helpers | Active | pending |
 | [modules/export-preview-runtime.js](modules/export-preview-runtime.js) | Export preview runtime wrappers for update and refresh flows | Active | pending |
+| [modules/export-panel-drag.js](modules/export-panel-drag.js) | Export panel drag and persisted positioning controller | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -343,9 +350,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview wrapper removal extraction
-- Target: remove remaining updateExportPreview/refreshExportPreviewNow wrapper bodies in script.js
-- Candidate module: modules/export-preview-runtime.js
+1. Export panel workspace-state extraction
+- Target: export workspace active-state wrapper and persistence handoff
+- Candidate module: modules/export-workspace-runtime.js
 
 ## Guardrails
 

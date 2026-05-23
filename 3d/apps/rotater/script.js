@@ -111,6 +111,9 @@ import {
     runUpdateExportPreviewRuntimeController,
     refreshExportPreviewNowRuntimeController,
 } from './modules/export-preview-runtime.js';
+import {
+    createExportPanelDragController,
+} from './modules/export-panel-drag.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5428,90 +5431,19 @@ let exportFrameEnabled = false;
 let _hintVisibleBeforeCrop = null;
 let exportWorkspaceActive = false;
 let _cropAppliedCameraZoomScale = false;
-let _exportPanelDragState = null;
 let _modelPartMenuDragState = null;
 
 const MODEL_PART_MENU_POS_STORAGE_KEY = 'rotater_modelPartMenuPos';
-
-function clampExportPanelPosition(left, top) {
-    if (!exportPanelEl) return { left, top };
-    const rect = exportPanelEl.getBoundingClientRect();
-    const maxLeft = Math.max(8, window.innerWidth - rect.width - 8);
-    const maxTop = Math.max(8, window.innerHeight - rect.height - 8);
-    return {
-        left: Math.max(8, Math.min(maxLeft, left)),
-        top: Math.max(8, Math.min(maxTop, top)),
-    };
-}
-
-function setExportPanelPosition(left, top, persist = true) {
-    if (!exportPanelEl) return;
-    const clamped = clampExportPanelPosition(left, top);
-    exportPanelEl.style.left = `${Math.round(clamped.left)}px`;
-    exportPanelEl.style.top = `${Math.round(clamped.top)}px`;
-    exportPanelEl.style.transform = 'none';
-    exportPanelEl.style.right = 'auto';
-    exportPanelEl.style.bottom = 'auto';
-    if (!persist) return;
-    try {
-        localStorage.setItem('rotater_exportPanelPos', JSON.stringify({ left: Math.round(clamped.left), top: Math.round(clamped.top) }));
-    } catch (_) { }
-}
-
+const exportPanelDragController = createExportPanelDragController({
+    exportPanelEl,
+    exportPanelHeaderEl,
+    isDesktopV2Layout,
+    isWorkspaceActive: () => exportWorkspaceActive,
+});
+exportPanelDragController.initializeExportPanelDrag();
 function restoreExportPanelPosition() {
-    if (!exportPanelEl || !isDesktopV2Layout()) return;
-    try {
-        const raw = localStorage.getItem('rotater_exportPanelPos');
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (!parsed || !Number.isFinite(parsed.left) || !Number.isFinite(parsed.top)) return;
-        setExportPanelPosition(parsed.left, parsed.top, false);
-    } catch (_) { }
+    exportPanelDragController.restoreExportPanelPosition();
 }
-
-function initializeExportPanelDrag() {
-    if (!exportPanelEl || !exportPanelHeaderEl) return;
-    const onPointerMove = (ev) => {
-        if (!_exportPanelDragState) return;
-        const nextLeft = _exportPanelDragState.startLeft + (ev.clientX - _exportPanelDragState.startX);
-        const nextTop = _exportPanelDragState.startTop + (ev.clientY - _exportPanelDragState.startY);
-        setExportPanelPosition(nextLeft, nextTop, false);
-    };
-
-    const onPointerUp = () => {
-        if (!_exportPanelDragState) return;
-        const rect = exportPanelEl.getBoundingClientRect();
-        setExportPanelPosition(rect.left, rect.top, true);
-        exportPanelHeaderEl.classList.remove('is-dragging');
-        _exportPanelDragState = null;
-    };
-
-    exportPanelHeaderEl.addEventListener('pointerdown', (ev) => {
-        if (!isDesktopV2Layout() || !exportWorkspaceActive) return;
-        if (ev.button !== 0) return;
-        if (ev.target instanceof Element && ev.target.closest('button,a,input,select,label,textarea')) return;
-        const rect = exportPanelEl.getBoundingClientRect();
-        _exportPanelDragState = {
-            startX: ev.clientX,
-            startY: ev.clientY,
-            startLeft: rect.left,
-            startTop: rect.top,
-        };
-        exportPanelHeaderEl.classList.add('is-dragging');
-        exportPanelHeaderEl.setPointerCapture?.(ev.pointerId);
-        ev.preventDefault();
-    });
-
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('resize', () => {
-        if (!isDesktopV2Layout() || !exportWorkspaceActive) return;
-        const rect = exportPanelEl.getBoundingClientRect();
-        setExportPanelPosition(rect.left, rect.top, false);
-    });
-}
-
-initializeExportPanelDrag();
 
 function setExportWorkspaceActive(active) {
     const exportOverlayEl = document.getElementById('exportOverlay');
