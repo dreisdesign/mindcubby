@@ -142,6 +142,9 @@ import {
     createExportMp4PreflightController,
 } from './modules/export-mp4-preflight.js';
 import {
+    createExportMp4EncoderQueueController,
+} from './modules/export-mp4-encoder-queue.js';
+import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 
@@ -11684,6 +11687,12 @@ const exportMp4PreflightController = createExportMp4PreflightController({
         }, delayMs);
     },
 });
+const exportMp4EncoderQueueController = createExportMp4EncoderQueueController({
+    nowMs: () => performance.now(),
+    setTimeoutFn: (fn, delayMs) => setTimeout(fn, delayMs),
+    clearTimeoutFn: (id) => clearTimeout(id),
+    maybePaintExportProgress,
+});
 
 // ── Floyd-Steinberg dithering ────────────────────────────────────────────────
 function applyPaletteDithered(data, palette, width, height) {
@@ -11774,46 +11783,6 @@ btnVideo.addEventListener('click', async () => {
             output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
             error: e => { encoderError = e; },
         });
-
-        const waitForEncoderQueue = async (maxQueue = 24, frameIndex = 0, total = 0) => {
-            if (!encoder || encoder.state === 'closed') return;
-            if (typeof encoder.encodeQueueSize !== 'number') return;
-            let stallStartedAt = 0;
-            let lastBusyNoticeAt = 0;
-            while (encoder.encodeQueueSize > maxQueue) {
-                if (!stallStartedAt) stallStartedAt = performance.now();
-                await new Promise((resolve) => {
-                    let done = false;
-                    let timeoutId = null;
-                    const finish = () => {
-                        if (done) return;
-                        done = true;
-                        if (timeoutId !== null) clearTimeout(timeoutId);
-                        try { encoder.removeEventListener?.('dequeue', onDequeue); } catch (_) { }
-                        resolve();
-                    };
-                    const onDequeue = () => {
-                        if (encoder.encodeQueueSize <= maxQueue || encoder.state === 'closed') finish();
-                    };
-                    try { encoder.addEventListener?.('dequeue', onDequeue); } catch (_) { }
-                    timeoutId = setTimeout(finish, 50);
-                });
-                if (encoderError) throw encoderError;
-                if (encoder.state === 'closed') throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.');
-
-                const now = performance.now();
-                if (total > 0 && (now - stallStartedAt) > 900 && (now - lastBusyNoticeAt) > 800) {
-                    lastBusyNoticeAt = now;
-                    const queueDepth = Math.round(encoder.encodeQueueSize || 0);
-                    await maybePaintExportProgress(
-                        `Encoding… ${frameIndex + 1} / ${total} (encoder busy: q=${queueDepth}, screen recording can slow export)`,
-                        frameIndex + 1,
-                        total,
-                        true
-                    );
-                }
-            }
-        };
         // avc1.4200XX — Baseline profile
         // level 3.1 (0x1f) up to 720p, level 4.0 (0x28) up to 1080p, level 5.1 (0x33) up to 4K/2048x2048
         const totalPixels = W * H;
@@ -11892,7 +11861,13 @@ btnVideo.addEventListener('click', async () => {
                 const frame = new VideoFrame(out, { timestamp });
                 if (encoderError) { frame.close(); throw encoderError; }
                 if (encoder.state === 'closed') { frame.close(); throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.'); }
-                await waitForEncoderQueue(24, f, totalFrames);
+                await exportMp4EncoderQueueController.waitForEncoderQueue({
+                    encoder,
+                    getEncoderError: () => encoderError,
+                    maxQueue: 24,
+                    frameIndex: f,
+                    total: totalFrames,
+                });
                 encoder.encode(frame, { keyFrame: f % 30 === 0 });
                 frame.close();
 
