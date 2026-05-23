@@ -99,6 +99,7 @@ assertFile('modules/export-preview-scene-state.js');
 assertFile('modules/export-preview-timing.js');
 assertFile('modules/export-preview-transparency.js');
 assertFile('modules/export-preview-dimensions.js');
+assertFile('modules/export-preview-camera.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
@@ -127,6 +128,7 @@ checkNodeSyntax('modules/export-preview-scene-state.js');
 checkNodeSyntax('modules/export-preview-timing.js');
 checkNodeSyntax('modules/export-preview-transparency.js');
 checkNodeSyntax('modules/export-preview-dimensions.js');
+checkNodeSyntax('modules/export-preview-camera.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');
@@ -151,6 +153,7 @@ checkCompileSyntax('modules/export-preview-scene-state.js');
 checkCompileSyntax('modules/export-preview-timing.js');
 checkCompileSyntax('modules/export-preview-transparency.js');
 checkCompileSyntax('modules/export-preview-dimensions.js');
+checkCompileSyntax('modules/export-preview-camera.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');
 expectSubstring('index.html', 'id="btnClearBuildPlate"');

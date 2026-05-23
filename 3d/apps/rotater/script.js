@@ -114,6 +114,9 @@ import {
 import {
     computeExportPreviewDimensionsController,
 } from './modules/export-preview-dimensions.js';
+import {
+    ensureAndConfigureExportPreviewCameraController,
+} from './modules/export-preview-camera.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -5431,31 +5434,16 @@ function updateExportPreview(force = false) {
         _previewRt.texture.colorSpace = THREE.SRGBColorSpace;
     }
 
-    if (!_previewCam) {
-        _previewCam = new THREE.PerspectiveCamera(45, 1, 0.01, 1e6);
-    }
-
-    // We want the transparent render to geometrically match the mini preview canvas layout.
-    // In crop mode, pxW/pxH has the main viewport's aspect ratio.
-    // In non-crop mode, pxW/pxH has the specific export format's aspect ratio.
-    _previewCam.fov = camera.fov;
-    _previewCam.near = camera.near;
-    _previewCam.far = camera.far;
-    _previewCam.up.copy(camera.up);
-    _previewCam.aspect = pxW / pxH;
-    _previewCam.updateProjectionMatrix();
-
-    if (exportFrameEnabled) {
-        const { target, dist, elev, az } = getOrbitFrameState();
-        setCameraFromOrbitState(_previewCam, target, dist, elev, az);
-        _previewCam.zoom = camera.zoom || 1; // Uncropped zoom!
-        _previewCam.updateProjectionMatrix();
-    } else {
-        const { target, dist: liveDist, elev: liveElev, az } = getOrbitFrameState();
-        setCameraFromOrbitState(_previewCam, target, liveDist, liveElev, az);
-        _previewCam.zoom = camera.zoom || 1;
-        _previewCam.updateProjectionMatrix();
-    }
+    _previewCam = ensureAndConfigureExportPreviewCameraController({
+        previewCam: _previewCam,
+        createPerspectiveCamera: () => new THREE.PerspectiveCamera(45, 1, 0.01, 1e6),
+        sourceCamera: camera,
+        pxW,
+        pxH,
+        exportFrameEnabled,
+        getOrbitFrameState,
+        setCameraFromOrbitState,
+    });
 
     const restoreExportScene = applyExportSceneForRender({ forceTransparent: isTransparentPreview });
     try {

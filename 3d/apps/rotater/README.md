@@ -44,6 +44,7 @@ Current extracted modules:
 | [modules/export-preview-timing.js](modules/export-preview-timing.js) | Export preview update timing and throttle gate helpers | Active |
 | [modules/export-preview-transparency.js](modules/export-preview-transparency.js) | Export preview transparency derivation and preview-wrap class sync helpers | Active |
 | [modules/export-preview-dimensions.js](modules/export-preview-dimensions.js) | Export preview size/scaling computation helpers for render target sizing | Active |
+| [modules/export-preview-camera.js](modules/export-preview-camera.js) | Export preview camera setup and orbit-state application helpers | Active |
 
 ---
 

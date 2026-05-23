@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 26
+- Completed slices: 27
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -168,6 +168,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates preview dimensions and pixel sizing calculations through thin wrappers
 - Shipped in commit: pending
 
+27. Export preview camera setup extraction
+- Module: [modules/export-preview-camera.js](modules/export-preview-camera.js)
+- Scope: preview camera setup and orbit-state application helpers
+- script.js now delegates preview camera setup/orbit application through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -198,6 +204,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-preview-timing.js](modules/export-preview-timing.js) | Export preview update timing and throttle gate helpers | Active | pending |
 | [modules/export-preview-transparency.js](modules/export-preview-transparency.js) | Export preview transparency derivation and preview-wrap class sync helpers | Active | pending |
 | [modules/export-preview-dimensions.js](modules/export-preview-dimensions.js) | Export preview size/scaling computation helpers for render target sizing | Active | pending |
+| [modules/export-preview-camera.js](modules/export-preview-camera.js) | Export preview camera setup and orbit-state application helpers | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -210,9 +217,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Export preview camera setup extraction
-- Target: preview camera aspect/fov/zoom sync and orbit-state application branches
-- Candidate module: modules/export-preview-camera.js
+1. Export preview render-target extraction
+- Target: preview render-target allocation/reuse and color space setup
+- Candidate module: modules/export-preview-render-target.js
 
 ## Guardrails
 
