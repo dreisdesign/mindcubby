@@ -35,6 +35,7 @@ Current extracted modules:
 | [modules/export-transparency-sync.js](modules/export-transparency-sync.js) | Export transparency checkbox coupling and preview-sync orchestration helpers | Active |
 | [modules/export-panel-state.js](modules/export-panel-state.js) | Export panel collapsed-state persistence/restore and toggle routing helpers | Active |
 | [modules/export-motion-labels.js](modules/export-motion-labels.js) | Export motion duration/frame label and speed-option text composition helpers | Active |
+| [modules/export-estimate.js](modules/export-estimate.js) | Export estimate button/title/text update orchestration helpers | Active |
 
 ---
 

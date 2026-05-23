@@ -82,6 +82,9 @@ import {
     formatRotationTimeOptionLabelController,
     refreshExportMotionSpeedOptionLabelsController,
 } from './modules/export-motion-labels.js';
+import {
+    updateExportEstimateController,
+} from './modules/export-estimate.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -689,35 +692,20 @@ function refreshExportMotionSpeedOptionLabels(format = exportFormatEl?.value || 
 }
 
 function updateEstimate() {
-    if (!btnGif) return;
-    refreshExportMotionSpeedOptionLabels();
-    const { fps: gFps } = EXPORT.gif;
-    const { fps: mFps } = EXPORT.mp4;
-
-    // GIF — frames + duration only (file size estimate removed; too variable to be reliable)
-    const gN = exportFrames(gFps);
-    const gSecs = (gN / gFps).toFixed(1);
-    btnGif.title = `Save animated GIF`;
-    const gifEstEl = document.getElementById('gifEst');
-    if (gifEstEl) gifEstEl.innerHTML = `${gN} frames &middot; <b class="export-info-time">${gSecs}s</b>`;
-
-    // MP4 — frames + duration
-    const mN = exportFrames(mFps);
-    const mSecs = (mN / mFps).toFixed(1);
-    btnVideo.title = `Save MP4 video`;
-    const mp4EstEl = document.getElementById('mp4Est');
-    if (mp4EstEl) mp4EstEl.innerHTML = `${mN} frames &middot; <b class="export-info-time">${mSecs}s</b>`;
-
-    // Image — based on selected export dimensions
-    const imgEstPng = document.getElementById('imgEstPng');
-    const imgEstJpg = document.getElementById('imgEstJpg');
-    if (imgEstPng || imgEstJpg) {
-        const { width: pw, height: ph } = getImageExportSize();
-        const pngMB = (pw * ph * 3 * 0.25 / (1024 * 1024)).toFixed(2);
-        const jpegMB = (pw * ph * EXPORT.image.quality * 0.21 / (1024 * 1024)).toFixed(2);
-        if (imgEstPng) imgEstPng.textContent = `~${pngMB} MB · ${pw}×${ph}px`;
-        if (imgEstJpg) imgEstJpg.textContent = `~${jpegMB} MB · ${pw}×${ph}px`;
-    }
+    updateExportEstimateController({
+        refreshExportMotionSpeedOptionLabels,
+        btnGif,
+        btnVideo,
+        getExportFrames: exportFrames,
+        exportGifFps: EXPORT.gif.fps,
+        exportMp4Fps: EXPORT.mp4.fps,
+        getImageExportSize,
+        exportImageQuality: EXPORT.image.quality,
+        gifEstEl: document.getElementById('gifEst'),
+        mp4EstEl: document.getElementById('mp4Est'),
+        imgEstPngEl: document.getElementById('imgEstPng'),
+        imgEstJpgEl: document.getElementById('imgEstJpg'),
+    });
 }
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
