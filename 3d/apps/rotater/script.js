@@ -45,6 +45,23 @@ const QUALITY_PRESETS = {
     high: { size: 2048, fps: 30, bitrate: 16_000_000 },
 };
 
+const IMPORT_STL_LIMITS = {
+    maxFileCount: 120,
+    maxSingleFileBytes: 96 * 1024 * 1024,
+    maxTotalBytes: 220 * 1024 * 1024,
+    maxTrianglesPerFile: 2_500_000,
+    maxTrianglesTotal: 8_000_000,
+};
+
+const EXPORT_GUARD_LIMITS = {
+    maxFps: 60,
+    maxWidth: 4096,
+    maxHeight: 4096,
+    maxPixelsPerFrame: 8_500_000,
+    maxFramesPerJob: 1800,
+    maxPixelFramesPerJob: 1_000_000_000,
+};
+
 const IMAGE_DIMENSION_PRESETS = {
     square: { w: 1, h: 1, tag: '1x1' },
     portrait12: { w: 1, h: 2, tag: '1x2' },
@@ -107,6 +124,94 @@ function getImageExportSize() {
     return { width, height, presetId: preset.id, presetTag: preset.tag };
 }
 
+function getGeometryTriangleCount(geo) {
+    if (!geo) return 0;
+    if (geo.index?.count) return Math.floor(geo.index.count / 3);
+    const posCount = geo.attributes?.position?.count || 0;
+    return Math.floor(posCount / 3);
+}
+
+function estimateBinaryStlTriangleCount(buffer) {
+    if (!(buffer instanceof ArrayBuffer) || buffer.byteLength < 84) return null;
+    try {
+        const dv = new DataView(buffer);
+        const declaredTriangles = dv.getUint32(80, true);
+        const expectedBytes = 84 + (declaredTriangles * 50);
+        if (expectedBytes === buffer.byteLength) return declaredTriangles;
+    } catch (_) { }
+    return null;
+}
+
+function validateIncomingStlFileBatch(files, contextLabel = 'Upload') {
+    const list = Array.from(files || []).filter((f) => /\.stl$/i.test(f?.name || ''));
+    if (!list.length) return;
+    if (list.length > IMPORT_STL_LIMITS.maxFileCount) {
+        throw new Error(`${contextLabel}: too many STL files. Max ${IMPORT_STL_LIMITS.maxFileCount}.`);
+    }
+
+    let totalBytes = 0;
+    for (const file of list) {
+        const size = Number(file?.size) || 0;
+        if (size > IMPORT_STL_LIMITS.maxSingleFileBytes) {
+            throw new Error(`${contextLabel}: "${file.name}" is too large. Max 96 MB per STL.`);
+        }
+        totalBytes += size;
+    }
+
+    if (totalBytes > IMPORT_STL_LIMITS.maxTotalBytes) {
+        throw new Error(`${contextLabel}: total STL upload size is too large. Max 220 MB.`);
+    }
+}
+
+function validateStlBufferFast(name, buffer) {
+    const size = Number(buffer?.byteLength) || 0;
+    if (size <= 0) throw new Error(`"${name}" is empty or invalid.`);
+    if (size > IMPORT_STL_LIMITS.maxSingleFileBytes) {
+        throw new Error(`"${name}" is too large. Max 96 MB per STL.`);
+    }
+
+    const estimatedTriangles = estimateBinaryStlTriangleCount(buffer);
+    if (Number.isFinite(estimatedTriangles) && estimatedTriangles > IMPORT_STL_LIMITS.maxTrianglesPerFile) {
+        throw new Error(`"${name}" exceeds triangle limit (${IMPORT_STL_LIMITS.maxTrianglesPerFile.toLocaleString()}).`);
+    }
+}
+
+function validateGeometryTriangleBudget(geo, label = 'STL') {
+    const triCount = getGeometryTriangleCount(geo);
+    if (!Number.isFinite(triCount) || triCount < 1) {
+        throw new Error(`"${label}" has invalid geometry.`);
+    }
+    if (triCount > IMPORT_STL_LIMITS.maxTrianglesPerFile) {
+        throw new Error(`"${label}" exceeds triangle limit (${IMPORT_STL_LIMITS.maxTrianglesPerFile.toLocaleString()}).`);
+    }
+    return triCount;
+}
+
+function validateExportWorkload({ format = 'export', width = 0, height = 0, fps = 1, frames = 1 } = {}) {
+    const safeW = Math.max(1, Math.floor(width));
+    const safeH = Math.max(1, Math.floor(height));
+    const safeFps = Math.max(1, Math.floor(fps));
+    const safeFrames = Math.max(1, Math.floor(frames));
+    const pixelsPerFrame = safeW * safeH;
+    const pixelFrames = pixelsPerFrame * safeFrames;
+
+    if (safeW > EXPORT_GUARD_LIMITS.maxWidth || safeH > EXPORT_GUARD_LIMITS.maxHeight) {
+        throw new Error(`${format.toUpperCase()} export is too large. Max ${EXPORT_GUARD_LIMITS.maxWidth}x${EXPORT_GUARD_LIMITS.maxHeight}.`);
+    }
+    if (pixelsPerFrame > EXPORT_GUARD_LIMITS.maxPixelsPerFrame) {
+        throw new Error(`${format.toUpperCase()} frame resolution is too high.`);
+    }
+    if (safeFps > EXPORT_GUARD_LIMITS.maxFps) {
+        throw new Error(`${format.toUpperCase()} FPS is too high.`);
+    }
+    if (safeFrames > EXPORT_GUARD_LIMITS.maxFramesPerJob) {
+        throw new Error(`${format.toUpperCase()} frame count is too high.`);
+    }
+    if (pixelFrames > EXPORT_GUARD_LIMITS.maxPixelFramesPerJob) {
+        throw new Error(`${format.toUpperCase()} workload is too high for safe in-browser export.`);
+    }
+}
+
 function getPreviewExportSize(_fmt) {
     // All formats now support aspect presets — always delegate to getImageExportSize().
     return getImageExportSize();
@@ -156,14 +261,14 @@ function getEffectiveExportFps(baseFps) {
     const secs = Math.max(1, getSecondsPerRevolution());
     const targetMaxDegreesPerFrame = 2.4;
     const minSmoothFps = Math.ceil(360 / (targetMaxDegreesPerFrame * secs));
-    return Math.max(baseFps, Math.min(60, minSmoothFps));
+    return Math.max(baseFps, Math.min(EXPORT_GUARD_LIMITS.maxFps, minSmoothFps));
 }
 
 function getEffectiveExportFpsForSeconds(baseFps, secondsPerRev) {
     const secs = Math.max(1, Number(secondsPerRev) || 1);
     const targetMaxDegreesPerFrame = 2.4;
     const minSmoothFps = Math.ceil(360 / (targetMaxDegreesPerFrame * secs));
-    return Math.max(baseFps, Math.min(60, minSmoothFps));
+    return Math.max(baseFps, Math.min(EXPORT_GUARD_LIMITS.maxFps, minSmoothFps));
 }
 
 function getSpeed() { return 60 / getSecondsPerRevolution(); }
@@ -4737,6 +4842,7 @@ function loadPreparedGeometry(geo, name) {
 // ── STL Loading ───────────────────────────────────────────────────────────────
 function loadSTLBuffer(buffer, name) {
     const geo = new STLLoader().parse(buffer);
+    validateGeometryTriangleBudget(geo, name);
 
     // Preserve camera distance when replacing a model (maintain user's zoom level)
     // Center and orient (STL files from slicers are Z-up; Three.js is Y-up)
@@ -4795,8 +4901,17 @@ function loadMultipartSTLBuffers(buffers, names, partColors = null, partSettings
     const parsed = [];
     const unionBox = new THREE.Box3();
     const loader = new STLLoader();
+    let totalTriangles = 0;
     for (const buffer of buffers) {
         const geo = loader.parse(buffer);
+        const label = names?.[parsed.length] || `Part ${parsed.length + 1}`;
+        const partTriangles = validateGeometryTriangleBudget(geo, label);
+        totalTriangles += partTriangles;
+        if (totalTriangles > IMPORT_STL_LIMITS.maxTrianglesTotal) {
+            geo.dispose?.();
+            parsed.forEach((g) => g?.dispose?.());
+            throw new Error(`Multipart triangle budget exceeded (${IMPORT_STL_LIMITS.maxTrianglesTotal.toLocaleString()}).`);
+        }
         geo.computeBoundingBox();
         if (geo.boundingBox) unionBox.union(geo.boundingBox);
         parsed.push(geo);
@@ -7579,20 +7694,27 @@ async function restoreSession() {
     if (!renderer) initThree();
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
     if (DEV_LOG) console.log(`[rotater] restoreSession: calling loadSTLBuffer for user file at ${Date.now()}`);
-    if (isMultipart) {
-        modelPartFiles = saved.parts.map(p => ({ name: p.name, buffer: p.buffer }));
-        // URL model appearance params represent selected-part state; when restoring
-        // a saved multipart session, preserve each part's persisted appearance.
-        pendingUrlModelAppearanceOverride = null;
-        loadMultipartSTLBuffers(
-            saved.parts.map(p => p.buffer),
-            saved.parts.map(p => p.name),
-            saved.parts.map(p => p.color || colorPick.value),
-            saved.parts.map(p => p.settings || null),
-        );
-    } else {
-        modelPartFiles = null;
-        loadSTLBuffer(saved.buffer, saved.name);
+    try {
+        if (isMultipart) {
+            modelPartFiles = saved.parts.map(p => ({ name: p.name, buffer: p.buffer }));
+            // URL model appearance params represent selected-part state; when restoring
+            // a saved multipart session, preserve each part's persisted appearance.
+            pendingUrlModelAppearanceOverride = null;
+            loadMultipartSTLBuffers(
+                saved.parts.map(p => p.buffer),
+                saved.parts.map(p => p.name),
+                saved.parts.map(p => p.color || colorPick.value),
+                saved.parts.map(p => p.settings || null),
+            );
+        } else {
+            modelPartFiles = null;
+            loadSTLBuffer(saved.buffer, saved.name);
+        }
+    } catch (err) {
+        setStatus('Saved model could not be restored: ' + (err?.message || 'validation failed.'));
+        console.error(err);
+        setTimeout(() => setStatus(''), 5200);
+        scheduleAutoDemoModelLoad();
     }
 }
 
@@ -7702,6 +7824,7 @@ async function handleFiles(fileList, requestedActionOverride = null) {
     dismissStartupSplash();
     const files = Array.from(fileList || []).filter(f => f?.name?.toLowerCase?.().endsWith('.stl'));
     if (!files.length) return;
+    validateIncomingStlFileBatch(files, 'Upload');
 
     let requestedAction = (requestedActionOverride === 'replace' || requestedActionOverride === 'newplate')
         ? requestedActionOverride
@@ -7746,12 +7869,16 @@ async function handleFiles(fileList, requestedActionOverride = null) {
 
     if (isMultipart) {
         try {
-            const parts = await Promise.all(files.map(async (file) => ({
+            const parts = await Promise.all(files.map(async (file) => {
+                const buffer = await readFileAsArrayBuffer(file);
+                validateStlBufferFast(file.name, buffer);
+                return {
                 name: file.name,
-                buffer: await readFileAsArrayBuffer(file),
+                buffer,
                 color: colorPick.value,
                 settings: createPartSettings(colorPick.value),
-            })));
+                };
+            }));
             await saveFilesToIDB(parts, displayName);
             saveSettings();
             modelPartFiles = parts.map(p => ({ name: p.name, buffer: p.buffer }));
@@ -7767,6 +7894,7 @@ async function handleFiles(fileList, requestedActionOverride = null) {
     try {
         const file = files[0];
         const buffer = await readFileAsArrayBuffer(file);
+        validateStlBufferFast(file.name, buffer);
         await saveFileToIDB(file.name, buffer);
         modelPartFiles = null;
         saveSettings();
@@ -7781,6 +7909,7 @@ async function handleFiles(fileList, requestedActionOverride = null) {
 async function appendSTLPartsToCurrentModel(fileList) {
     const files = Array.from(fileList || []).filter((f) => f?.name?.toLowerCase?.().endsWith('.stl'));
     if (!files.length) return;
+    validateIncomingStlFileBatch(files, 'Append');
     if (!mesh) {
         await handleFiles(files);
         return;
@@ -7788,9 +7917,11 @@ async function appendSTLPartsToCurrentModel(fileList) {
 
     const incoming = await Promise.all(files.map(async (file) => {
         const color = colorPick.value;
+        const buffer = await readFileAsArrayBuffer(file);
+        validateStlBufferFast(file.name, buffer);
         return {
             name: file.name,
-            buffer: await readFileAsArrayBuffer(file),
+            buffer,
             color,
             settings: createPartSettings(color),
         };
@@ -7870,6 +8001,7 @@ const IMPORT_ZIP_LIMITS = {
     maxStlCount: 120,
     maxSingleEntryBytes: 96 * 1024 * 1024,
     maxTotalExtractedBytes: 220 * 1024 * 1024,
+    maxCompressionRatio: 160,
     maxPackageJsonChars: 1_000_000,
 };
 
@@ -7921,8 +8053,18 @@ async function importRotaterPackage(zipFile) {
         }
 
         const expectedSize = Number(entry?._data?.uncompressedSize);
+        const compressedSize = Number(entry?._data?.compressedSize);
         if (Number.isFinite(expectedSize) && expectedSize > IMPORT_ZIP_LIMITS.maxSingleEntryBytes) {
             throw new Error(`File is too large in package: ${safePath}`);
+        }
+        if (Number.isFinite(expectedSize) && Number.isFinite(compressedSize) && expectedSize > 0) {
+            if (compressedSize <= 0) {
+                throw new Error(`Package entry has suspicious compression data: ${safePath}`);
+            }
+            const ratio = expectedSize / compressedSize;
+            if (ratio > IMPORT_ZIP_LIMITS.maxCompressionRatio) {
+                throw new Error(`Package entry has suspicious compression ratio: ${safePath}`);
+            }
         }
 
         if (isPackageJson) {
@@ -7961,6 +8103,7 @@ async function importRotaterPackage(zipFile) {
 
     const parts = [];
     let totalExtractedBytes = 0;
+    let totalEstimatedTriangles = 0;
     for (let idx = 0; idx < packageEntries.length; idx++) {
         const item = packageEntries[idx];
         const buffer = await item.entry.async('arraybuffer');
@@ -7968,9 +8111,17 @@ async function importRotaterPackage(zipFile) {
         if (size > IMPORT_ZIP_LIMITS.maxSingleEntryBytes) {
             throw new Error(`File is too large in package: ${item.safePath}`);
         }
+        validateStlBufferFast(item.safePath, buffer);
         totalExtractedBytes += size;
         if (totalExtractedBytes > IMPORT_ZIP_LIMITS.maxTotalExtractedBytes) {
             throw new Error('Package extract size is too large.');
+        }
+        const estTriangles = estimateBinaryStlTriangleCount(buffer);
+        if (Number.isFinite(estTriangles)) {
+            totalEstimatedTriangles += estTriangles;
+            if (totalEstimatedTriangles > IMPORT_STL_LIMITS.maxTrianglesTotal) {
+                throw new Error('Package triangle budget is too large.');
+            }
         }
         parts.push({
             idx,
@@ -8049,8 +8200,10 @@ async function importRotaterPackage(zipFile) {
 
 async function replaceMultipartPart(partIdx, file) {
     if (!file || !isMultipartModel() || !modelPartFiles || modelPartFiles.length !== modelPartNames.length) return;
+    validateIncomingStlFileBatch([file], 'Replace');
     const index = Math.max(0, Math.min(partIdx, modelPartFiles.length - 1));
     const buffer = await readFileAsArrayBuffer(file);
+    validateStlBufferFast(file.name, buffer);
 
     const nextFiles = modelPartFiles.map((part) => ({ ...part }));
     nextFiles[index] = { name: file.name, buffer };
@@ -11602,6 +11755,8 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     if (exportFrameEnabled) syncExportCameraFromViewport();
 
     const { width: W, height: H } = getImageExportSize();
+    const format = type === 'image/jpeg' ? 'jpg' : 'png';
+    validateExportWorkload({ format, width: W, height: H, fps: 1, frames: 1 });
 
     const savedAspect = camera.aspect;
     const savedZoom = camera.zoom;
@@ -11682,6 +11837,7 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
 // Capture N frames by orbiting the camera, return array of Uint8ClampedArrays
 async function captureFrames(n, dims = null, transparent = false) {
     const { width: W, height: H } = dims ?? getImageExportSize();
+    validateExportWorkload({ format: 'capture', width: W, height: H, fps: EXPORT.gif.fps, frames: n });
     const frames = [];
 
     // Ensure export framing reflects the latest zoom/orbit right before capture.
@@ -11838,8 +11994,10 @@ btnGif.addEventListener('click', async () => {
     try {
         const { fps, loop, dither } = EXPORT.gif;
         const { width: W, height: H } = getImageExportSize();
+        const frameCount = exportFrames(fps);
+        validateExportWorkload({ format: 'gif', width: W, height: H, fps, frames: frameCount });
         const isTransparent = document.getElementById('exportTransparent')?.checked ?? false;
-        const frames = await captureFrames(exportFrames(fps), { width: W, height: H }, isTransparent);
+        const frames = await captureFrames(frameCount, { width: W, height: H }, isTransparent);
         const delay = Math.round(1000 / fps);
 
         setAnimStatus('Encoding GIF…');
@@ -11905,6 +12063,7 @@ btnVideo.addEventListener('click', async () => {
         const { width: W, height: H } = getImageExportSize();
         const n = exportFrames(fps);
         const totalFrames = n * (loops + 1);
+        validateExportWorkload({ format: 'mp4', width: W, height: H, fps, frames: totalFrames });
 
         // Render directly to the main canvas at 2x resolution for SSAA
         const SSAA = 2;

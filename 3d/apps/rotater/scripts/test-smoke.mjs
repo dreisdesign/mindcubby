@@ -97,5 +97,9 @@ expectSubstring('script.js', 'function resetEverything()');
 expectSubstring('script.js', 'async function clearBuildPlateModels()');
 expectSubstring('script.js', 'function restoreSettings()');
 expectSubstring('script.js', 'function saveSettings()');
+expectSubstring('script.js', 'const IMPORT_STL_LIMITS = {');
+expectSubstring('script.js', 'const EXPORT_GUARD_LIMITS = {');
+expectSubstring('script.js', 'maxCompressionRatio');
+expectSubstring('script.js', 'function validateExportWorkload(');
 
 console.log('All smoke checks passed.');
