@@ -79,6 +79,8 @@ assertFile('modules/shade-system.js');
 assertFile('style.css');
 assertFile('modules/stl-parse-worker.js');
 assertFile('modules/model-picker-floating.js');
+assertFile('modules/model-edit-commit.js');
+assertFile('modules/settings-url-sync.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
@@ -87,10 +89,14 @@ checkNodeSyntax('script.js');
 checkNodeSyntax('modules/shade-system.js');
 checkNodeSyntax('modules/stl-parse-worker.js');
 checkNodeSyntax('modules/model-picker-floating.js');
+checkNodeSyntax('modules/model-edit-commit.js');
+checkNodeSyntax('modules/settings-url-sync.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');
 checkCompileSyntax('modules/shade-system.js');
+checkCompileSyntax('modules/model-edit-commit.js');
+checkCompileSyntax('modules/settings-url-sync.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');
 expectSubstring('index.html', 'id="btnClearBuildPlate"');

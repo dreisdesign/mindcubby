@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 6
+- Completed slices: 8
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -48,6 +48,18 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates through thin wrappers
 - Shipped in commit: a3f92b3
 
+7. Slider commit/debounce orchestration extraction
+- Module: [modules/model-edit-commit.js](modules/model-edit-commit.js)
+- Scope: deferred model-edit commit queues, multipart persist scheduling, and RAF preview scheduling primitives
+- script.js now delegates timer orchestration through thin wrappers
+- Shipped in commit: pending
+
+8. Settings URL sync debounce extraction
+- Module: [modules/settings-url-sync.js](modules/settings-url-sync.js)
+- Scope: save-flow URL sync debounce/flush scheduling primitives
+- script.js now delegates timer orchestration through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -58,6 +70,8 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/viewport-performance.js](modules/viewport-performance.js) | Adaptive viewport quality and pixel-ratio helpers | Active | 14ed52b |
 | [modules/model-picker-controller.js](modules/model-picker-controller.js) | Controller helpers for selector/sync menu open-close behavior | Active | 816338d |
 | [modules/model-picker-floating.js](modules/model-picker-floating.js) | Floating picker card positioning, persisted placement restore, and drag lifecycle helpers | Active | a3f92b3 |
+| [modules/model-edit-commit.js](modules/model-edit-commit.js) | Deferred commit queues and RAF preview scheduling helpers for model edit flows | Active | pending |
+| [modules/settings-url-sync.js](modules/settings-url-sync.js) | Debounced URL settings sync controller for save/flush timing behavior | Active | pending |
 
 ## Recent Milestone Commits
 
@@ -70,9 +84,9 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 
 ## Next Planned Extractions
 
-1. Slider commit/debounce orchestration
-- Target: tone/color commit timers and deferred persistence hooks
-- Candidate module: modules/model-edit-commit.js
+1. Upload/import action orchestration extraction
+- Target: upload choice action resolver flow and pending upload action routing
+- Candidate module: modules/upload-action-controller.js
 
 ## Guardrails
 

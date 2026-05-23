@@ -24,6 +24,8 @@ Current extracted modules:
 | [modules/viewport-performance.js](modules/viewport-performance.js) | Adaptive viewport quality and pixel-ratio helpers | Active |
 | [modules/model-picker-controller.js](modules/model-picker-controller.js) | Controller helpers for selector/sync menu open-close behavior | Active |
 | [modules/model-picker-floating.js](modules/model-picker-floating.js) | Floating model picker card positioning, persistence, and drag lifecycle helpers | Active |
+| [modules/model-edit-commit.js](modules/model-edit-commit.js) | Deferred commit queues and requestAnimationFrame preview scheduling for model edit flows | Active |
+| [modules/settings-url-sync.js](modules/settings-url-sync.js) | Debounced URL settings sync controller for save/flush timing behavior | Active |
 
 ---
 

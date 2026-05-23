@@ -40,6 +40,14 @@ import {
     positionFloatingModelPartSelectorMenuController,
     initializeModelPartSelectorMenuDragController,
 } from './modules/model-picker-floating.js';
+import {
+    createMultipartPersistScheduler,
+    createDeferredCommitQueue,
+    createRafPreviewScheduler,
+} from './modules/model-edit-commit.js';
+import {
+    createSettingsUrlSyncController,
+} from './modules/settings-url-sync.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -930,7 +938,6 @@ let pendingReplacePartIndex = -1;
 let currentModelBuffer = null;
 let bulkSelectedPartIndices = new Set();
 let modelPartSelectorViewMode = 'card';
-let multipartPersistTimer = 0;
 let modelUndoToastTimer = 0;
 let modelUndoToastLastShownAt = 0;
 
@@ -7094,22 +7101,17 @@ async function clearIDB() {
 }
 
 const SETTINGS_KEY = 'rotater_settings';
-let settingsToURLTimer = 0;
+
+const settingsUrlSyncController = createSettingsUrlSyncController({
+    onSync: () => settingsToURL(),
+});
 
 function flushSettingsToURL() {
-    if (settingsToURLTimer) {
-        clearTimeout(settingsToURLTimer);
-        settingsToURLTimer = 0;
-    }
-    settingsToURL();
+    settingsUrlSyncController.flush();
 }
 
 function scheduleSettingsToURL(delayMs = 120) {
-    if (settingsToURLTimer) clearTimeout(settingsToURLTimer);
-    settingsToURLTimer = setTimeout(() => {
-        settingsToURLTimer = 0;
-        settingsToURL();
-    }, delayMs);
+    settingsUrlSyncController.schedule(delayMs);
 }
 
 function saveSettings() {
@@ -8939,8 +8941,12 @@ function updateRangeSliderForMode(mode) {
 
 function persistCurrentMultipartParts({ immediate = false } = {}) {
     if (!isMultipartModel() || !modelPartFiles || modelPartFiles.length !== modelPartNames.length) return;
-    const commit = () => {
-        multipartPersistTimer = 0;
+    _multipartPersistScheduler.schedule({ immediate });
+}
+
+const _multipartPersistScheduler = createMultipartPersistScheduler({
+    delayMs: 140,
+    onCommit: () => {
         const displayName = getMultipartDisplayName(modelPartNames);
         saveFilesToIDB(modelPartFiles.map((part, idx) => ({
             name: part.name,
@@ -8948,24 +8954,38 @@ function persistCurrentMultipartParts({ immediate = false } = {}) {
             color: modelPartBaseColors[idx] || colorPick.value,
             settings: modelPartSettings[idx] ? { ...modelPartSettings[idx] } : createPartSettings(modelPartBaseColors[idx] || colorPick.value),
         })), displayName);
-    };
-    if (immediate) {
-        if (multipartPersistTimer) {
-            clearTimeout(multipartPersistTimer);
-            multipartPersistTimer = 0;
-        }
-        commit();
-        return;
-    }
-    if (multipartPersistTimer) clearTimeout(multipartPersistTimer);
-    multipartPersistTimer = setTimeout(commit, 140);
-}
+    },
+});
 
-let colorCommitTimer = 0;
-let pendingColorThumbTargets = null;
-let colorPickPreviewFrame = 0;
-let modelToneCommitTimer = 0;
-let pendingModelToneThumbTargets = null;
+const colorPickPreviewScheduler = createRafPreviewScheduler({
+    onFrame: () => {
+        applyColorPickPreview();
+    },
+});
+
+const colorCommitQueue = createDeferredCommitQueue({
+    delayMs: 100,
+    onFlush: (thumbTargets) => {
+        persistCurrentMultipartParts({ immediate: true });
+        saveSettings();
+        if (thumbTargets !== null) queueModelPartThumbsRender(thumbTargets);
+    },
+});
+
+const modelToneCommitQueue = createDeferredCommitQueue({
+    delayMs: 120,
+    onFlush: (thumbTargets) => {
+        if (activeBuildPlatePreset === 'modelcolor') {
+            updateBuildPlateMaterial();
+            refreshExportPreviewNow();
+        }
+        updateShadingThumbs();
+        updateColorSwatches();
+        persistCurrentMultipartParts({ immediate: true });
+        saveSettings();
+        if (thumbTargets !== null) queueModelPartThumbsRender(thumbTargets);
+    },
+});
 
 function applyColorPickPreview() {
     if (isMultipartModel()) {
@@ -8993,61 +9013,27 @@ function applyColorPickPreview() {
 }
 
 function flushColorPickPreview() {
-    if (colorPickPreviewFrame) {
-        cancelAnimationFrame(colorPickPreviewFrame);
-        colorPickPreviewFrame = 0;
-    }
-    applyColorPickPreview();
+    colorPickPreviewScheduler.flush();
 }
 
 function scheduleColorPickPreview() {
-    if (colorPickPreviewFrame) return;
-    colorPickPreviewFrame = requestAnimationFrame(() => {
-        colorPickPreviewFrame = 0;
-        applyColorPickPreview();
-    });
+    colorPickPreviewScheduler.schedule();
 }
 
 function flushColorCommit() {
-    if (colorCommitTimer) {
-        clearTimeout(colorCommitTimer);
-        colorCommitTimer = 0;
-    }
-    const thumbTargets = pendingColorThumbTargets;
-    pendingColorThumbTargets = null;
-    persistCurrentMultipartParts({ immediate: true });
-    saveSettings();
-    if (thumbTargets !== null) queueModelPartThumbsRender(thumbTargets);
+    colorCommitQueue.flush();
 }
 
 function scheduleColorCommit(thumbTargets = null) {
-    pendingColorThumbTargets = thumbTargets;
-    if (colorCommitTimer) clearTimeout(colorCommitTimer);
-    colorCommitTimer = setTimeout(flushColorCommit, 100);
+    colorCommitQueue.schedule(thumbTargets);
 }
 
 function flushModelToneCommit() {
-    if (modelToneCommitTimer) {
-        clearTimeout(modelToneCommitTimer);
-        modelToneCommitTimer = 0;
-    }
-    const thumbTargets = pendingModelToneThumbTargets;
-    pendingModelToneThumbTargets = null;
-    if (activeBuildPlatePreset === 'modelcolor') {
-        updateBuildPlateMaterial();
-        refreshExportPreviewNow();
-    }
-    updateShadingThumbs();
-    updateColorSwatches();
-    persistCurrentMultipartParts({ immediate: true });
-    saveSettings();
-    if (thumbTargets !== null) queueModelPartThumbsRender(thumbTargets);
+    modelToneCommitQueue.flush();
 }
 
 function scheduleModelToneCommit(thumbTargets = null) {
-    pendingModelToneThumbTargets = thumbTargets;
-    if (modelToneCommitTimer) clearTimeout(modelToneCommitTimer);
-    modelToneCommitTimer = setTimeout(flushModelToneCommit, 120);
+    modelToneCommitQueue.schedule(thumbTargets);
 }
 
 colorPick.addEventListener('input', (ev) => {
