@@ -48,6 +48,7 @@ Current extracted modules:
 | [modules/export-preview-render-target.js](modules/export-preview-render-target.js) | Export preview render-target allocation/reuse and color-space setup helpers | Active |
 | [modules/export-preview-readback.js](modules/export-preview-readback.js) | Export preview render-target pixel readback and row-flip imageData helpers | Active |
 | [modules/export-preview-crop-overlay.js](modules/export-preview-crop-overlay.js) | Export preview crop matte and corner-mark overlay drawing helpers | Active |
+| [modules/export-preview-refresh.js](modules/export-preview-refresh.js) | Export preview immediate + RAF refresh orchestration helpers | Active |
 
 ---
 

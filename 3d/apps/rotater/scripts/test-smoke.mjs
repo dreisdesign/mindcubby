@@ -103,6 +103,7 @@ assertFile('modules/export-preview-camera.js');
 assertFile('modules/export-preview-render-target.js');
 assertFile('modules/export-preview-readback.js');
 assertFile('modules/export-preview-crop-overlay.js');
+assertFile('modules/export-preview-refresh.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
@@ -135,6 +136,7 @@ checkNodeSyntax('modules/export-preview-camera.js');
 checkNodeSyntax('modules/export-preview-render-target.js');
 checkNodeSyntax('modules/export-preview-readback.js');
 checkNodeSyntax('modules/export-preview-crop-overlay.js');
+checkNodeSyntax('modules/export-preview-refresh.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');
@@ -163,6 +165,7 @@ checkCompileSyntax('modules/export-preview-camera.js');
 checkCompileSyntax('modules/export-preview-render-target.js');
 checkCompileSyntax('modules/export-preview-readback.js');
 checkCompileSyntax('modules/export-preview-crop-overlay.js');
+checkCompileSyntax('modules/export-preview-refresh.js');
 
 expectSubstring('index.html', 'id="btnResetEverything"');
 expectSubstring('index.html', 'id="btnClearBuildPlate"');
