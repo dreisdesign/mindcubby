@@ -78,6 +78,7 @@ assertFile('script.js');
 assertFile('shade-system.js');
 assertFile('style.css');
 assertFile('modules/stl-parse-worker.js');
+assertFile('modules/model-picker-floating.js');
 
 checkJson('color-rules.json');
 checkJson('presets.json');
@@ -85,6 +86,7 @@ checkJson('presets.json');
 checkNodeSyntax('script.js');
 checkNodeSyntax('shade-system.js');
 checkNodeSyntax('modules/stl-parse-worker.js');
+checkNodeSyntax('modules/model-picker-floating.js');
 checkNodeSyntax('scripts/bump-build.mjs');
 checkNodeSyntax('scripts/setup-precommit-smoke.mjs');
 checkCompileSyntax('script.js');

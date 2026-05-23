@@ -23,6 +23,7 @@ Current extracted modules:
 | [modules/orbit-frame-state.js](modules/orbit-frame-state.js) | Orbit frame-state helpers and camera orbit transform math | Active |
 | [modules/viewport-performance.js](modules/viewport-performance.js) | Adaptive viewport quality and pixel-ratio helpers | Active |
 | [modules/model-picker-controller.js](modules/model-picker-controller.js) | Controller helpers for selector/sync menu open-close behavior | Active |
+| [modules/model-picker-floating.js](modules/model-picker-floating.js) | Floating model picker card positioning, persistence, and drag lifecycle helpers | Active |
 
 ---
 

@@ -30,6 +30,16 @@ import {
     openSyncSourceMenuController,
     closeThumbSelectMenusByModeController,
 } from './modules/model-picker-controller.js';
+import {
+    isModelPartFloatingCardOpenController,
+    shouldUseFloatingModelPartSelectorController,
+    ensureModelPartFloatingHeaderController,
+    clampModelPartSelectorMenuPositionController,
+    setModelPartSelectorMenuPositionController,
+    restoreModelPartSelectorMenuPositionController,
+    positionFloatingModelPartSelectorMenuController,
+    initializeModelPartSelectorMenuDragController,
+} from './modules/model-picker-floating.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -3596,14 +3606,15 @@ function closeThumbSelectMenus() {
 }
 
 function isModelPartFloatingCardOpen() {
-    return !!(modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorMenu.classList.contains('thumb-select-menu--floating-card'));
+    return isModelPartFloatingCardOpenController({ modelPartSelectorMenu });
 }
 
 function shouldUseFloatingModelPartSelector() {
-    return isMultipartModel()
-        && !!window.matchMedia
-        && window.matchMedia('(pointer:fine)').matches
-        && window.innerWidth >= 900;
+    return shouldUseFloatingModelPartSelectorController({
+        isMultipartModel,
+        windowRef: window,
+        minDesktopWidth: 900,
+    });
 }
 
 function closeModelPartSelectorMenu(force = false) {
@@ -3738,111 +3749,67 @@ function openBuildPlateModelSyncMenu(anchorEl = null) {
 }
 
 function ensureModelPartFloatingHeader() {
-    if (!modelPartSelectorMenu) return null;
-    let headerEl = modelPartSelectorMenu.querySelector('.model-selector-floating-header');
-    if (headerEl) return headerEl;
-    headerEl = document.createElement('div');
-    headerEl.className = 'model-selector-floating-header';
-    headerEl.innerHTML = `<span class="model-selector-floating-drag-indicator" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.05078 16C9.63381 16.0001 10.1212 16.1955 10.5127 16.5869C10.9044 16.9786 11.1006 17.4665 11.1006 18.0498C11.1006 18.5998 10.9044 19.079 10.5127 19.4873C10.1211 19.8955 9.63392 20.0995 9.05078 20.0996C8.46745 20.0996 7.97956 19.8956 7.58789 19.4873C7.19626 19.079 7 18.5998 7 18.0498C7 17.4665 7.19623 16.9786 7.58789 16.5869C7.97953 16.1953 8.46752 16 9.05078 16Z"/><path d="M15.251 16C15.834 16.0001 16.3214 16.1955 16.7129 16.5869C17.1046 16.9786 17.3008 17.4665 17.3008 18.0498C17.3008 18.5998 17.1046 19.079 16.7129 19.4873C16.3213 19.8955 15.8341 20.0995 15.251 20.0996C14.6677 20.0996 14.1797 19.8956 13.7881 19.4873C13.3964 19.079 13.2002 18.5998 13.2002 18.0498C13.2002 17.4665 13.3964 16.9786 13.7881 16.5869C14.1797 16.1954 14.6678 16 15.251 16Z"/><path d="M9.05078 10C9.63381 10.0001 10.1212 10.1955 10.5127 10.5869C10.9044 10.9786 11.1006 11.4665 11.1006 12.0498C11.1006 12.6331 10.9044 13.121 10.5127 13.5127C10.1212 13.9041 9.63382 14.0995 9.05078 14.0996C8.46752 14.0996 7.97953 13.9043 7.58789 13.5127C7.19622 13.121 7 12.6331 7 12.0498C7 11.4665 7.19623 10.9786 7.58789 10.5869C7.97953 10.1953 8.46752 10 9.05078 10Z"/><path d="M15.251 10C15.834 10.0001 16.3214 10.1955 16.7129 10.5869C17.1046 10.9786 17.3008 11.4665 17.3008 12.0498C17.3008 12.6331 17.1046 13.121 16.7129 13.5127C16.3214 13.9041 15.834 14.0995 15.251 14.0996C14.6678 14.0996 14.1797 13.9042 13.7881 13.5127C13.3964 13.121 13.2002 12.6331 13.2002 12.0498C13.2002 11.4665 13.3964 10.9786 13.7881 10.5869C14.1797 10.1954 14.6678 10 15.251 10Z"/><path d="M9.05078 4C9.63381 4.00007 10.1212 4.19554 10.5127 4.58691C10.9044 4.97858 11.1006 5.46648 11.1006 6.0498C11.1006 6.63314 10.9044 7.12103 10.5127 7.5127C10.1212 7.90407 9.63382 8.09954 9.05078 8.09961C8.46752 8.09961 7.97953 7.90427 7.58789 7.5127C7.19626 7.12103 7 6.63314 7 6.0498C7 5.46648 7.19623 4.97858 7.58789 4.58691C7.97953 4.19535 8.46752 4 9.05078 4Z"/><path d="M15.251 4C15.834 4.00011 16.3214 4.19552 16.7129 4.58691C17.1046 4.97858 17.3008 5.46648 17.3008 6.0498C17.3008 6.63314 17.1046 7.12103 16.7129 7.5127C16.3214 7.90409 15.834 8.0995 15.251 8.09961C14.6678 8.09961 14.1797 7.9042 13.7881 7.5127C13.3964 7.12103 13.2002 6.63314 13.2002 6.0498C13.2002 5.46648 13.3964 4.97858 13.7881 4.58691C14.1797 4.19541 14.6678 4 15.251 4Z"/></svg></span><span class="model-selector-floating-title">3D Models</span><button type="button" class="model-selector-floating-minimize" aria-label="Close model picker" title="Close model picker">${getCloseIconSVG(18)}</button>`;
-    headerEl.querySelector('.model-selector-floating-minimize')?.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        closeModelPartSelectorMenu(true);
+    return ensureModelPartFloatingHeaderController({
+        modelPartSelectorMenu,
+        getCloseIconSVG,
+        closeModelPartSelectorMenu,
+        shouldUseFloatingModelPartSelector,
+        setModelPartMenuDragState: (value) => { _modelPartMenuDragState = value; },
     });
-    headerEl.addEventListener('pointerdown', (ev) => {
-        const floatingDesktopMenu = shouldUseFloatingModelPartSelector();
-        if (!floatingDesktopMenu || !modelPartSelectorMenu || modelPartSelectorMenu.hidden) return;
-        if (ev.button !== 0) return;
-        if (ev.target instanceof Element && ev.target.closest('button,a,input,select,label,textarea')) return;
-        const rect = modelPartSelectorMenu.getBoundingClientRect();
-        _modelPartMenuDragState = {
-            startX: ev.clientX,
-            startY: ev.clientY,
-            startLeft: rect.left,
-            startTop: rect.top,
-        };
-        headerEl.classList.add('is-dragging');
-        headerEl.setPointerCapture?.(ev.pointerId);
-        ev.preventDefault();
-        ev.stopPropagation();
-    });
-    modelPartSelectorMenu.prepend(headerEl);
-    return headerEl;
 }
 
 function clampModelPartSelectorMenuPosition(left, top) {
-    if (!modelPartSelectorMenu) return { left, top };
-    const rect = modelPartSelectorMenu.getBoundingClientRect();
-    const pad = 8;
-    const minVisibleHeight = 220;
-    const maxLeft = Math.max(pad, window.innerWidth - rect.width - pad);
-    const maxTop = Math.max(pad, window.innerHeight - minVisibleHeight);
-    return {
-        left: Math.max(pad, Math.min(maxLeft, left)),
-        top: Math.max(pad, Math.min(maxTop, top)),
-    };
+    return clampModelPartSelectorMenuPositionController({
+        modelPartSelectorMenu,
+        left,
+        top,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        pad: 8,
+        minVisibleHeight: 220,
+    });
 }
 
 function setModelPartSelectorMenuPosition(left, top, persist = true) {
-    if (!modelPartSelectorMenu) return;
-    const clamped = clampModelPartSelectorMenuPosition(left, top);
-    modelPartSelectorMenu.style.left = `${Math.round(clamped.left)}px`;
-    modelPartSelectorMenu.style.top = `${Math.round(clamped.top)}px`;
-    modelPartSelectorMenu.style.right = 'auto';
-    modelPartSelectorMenu.style.bottom = 'auto';
-    const maxH = Math.max(220, Math.floor(window.innerHeight - clamped.top - 8));
-    modelPartSelectorMenu.style.maxHeight = `${maxH}px`;
-    if (!persist) return;
-    try {
-        localStorage.setItem(MODEL_PART_MENU_POS_STORAGE_KEY, JSON.stringify({ left: Math.round(clamped.left), top: Math.round(clamped.top) }));
-    } catch (_) { }
+    setModelPartSelectorMenuPositionController({
+        modelPartSelectorMenu,
+        left,
+        top,
+        persist,
+        clampModelPartSelectorMenuPosition,
+        storage: localStorage,
+        storageKey: MODEL_PART_MENU_POS_STORAGE_KEY,
+        viewportHeight: window.innerHeight,
+    });
 }
 
 function restoreModelPartSelectorMenuPosition() {
-    if (!modelPartSelectorMenu) return false;
-    try {
-        const raw = localStorage.getItem(MODEL_PART_MENU_POS_STORAGE_KEY);
-        if (!raw) return false;
-        const parsed = JSON.parse(raw);
-        if (!parsed || !Number.isFinite(parsed.left) || !Number.isFinite(parsed.top)) return false;
-        setModelPartSelectorMenuPosition(parsed.left, parsed.top, false);
-        return true;
-    } catch (_) {
-        return false;
-    }
+    return restoreModelPartSelectorMenuPositionController({
+        modelPartSelectorMenu,
+        storage: localStorage,
+        storageKey: MODEL_PART_MENU_POS_STORAGE_KEY,
+        setModelPartSelectorMenuPosition,
+    });
 }
 
 function positionFloatingModelPartSelectorMenu(anchorBtn) {
-    if (!modelPartSelectorMenu || !anchorBtn) return;
-    modelPartSelectorMenu.classList.add('thumb-select-menu--floating-card');
-    modelPartSelectorMenu.classList.remove('thumb-select-menu--above');
-    ensureModelPartFloatingHeader();
-    const restoredPos = restoreModelPartSelectorMenuPosition();
-    if (!restoredPos) {
-        const anchorRect = anchorBtn.getBoundingClientRect();
-        setModelPartSelectorMenuPosition(anchorRect.left, anchorRect.bottom + 10, false);
-    }
+    positionFloatingModelPartSelectorMenuController({
+        modelPartSelectorMenu,
+        anchorBtn,
+        ensureModelPartFloatingHeader,
+        restoreModelPartSelectorMenuPosition,
+        setModelPartSelectorMenuPosition,
+    });
 }
 
 function initializeModelPartSelectorMenuDrag() {
-    const onPointerMove = (ev) => {
-        if (!_modelPartMenuDragState) return;
-        const nextLeft = _modelPartMenuDragState.startLeft + (ev.clientX - _modelPartMenuDragState.startX);
-        const nextTop = _modelPartMenuDragState.startTop + (ev.clientY - _modelPartMenuDragState.startY);
-        setModelPartSelectorMenuPosition(nextLeft, nextTop, false);
-    };
-
-    const onPointerUp = () => {
-        if (!_modelPartMenuDragState || !modelPartSelectorMenu) return;
-        const headerEl = modelPartSelectorMenu.querySelector('.model-selector-floating-header');
-        if (headerEl) headerEl.classList.remove('is-dragging');
-        const rect = modelPartSelectorMenu.getBoundingClientRect();
-        setModelPartSelectorMenuPosition(rect.left, rect.top, true);
-        _modelPartMenuDragState = null;
-    };
-
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
+    initializeModelPartSelectorMenuDragController({
+        windowRef: window,
+        getModelPartMenuDragState: () => _modelPartMenuDragState,
+        setModelPartMenuDragState: (value) => { _modelPartMenuDragState = value; },
+        modelPartSelectorMenu,
+        setModelPartSelectorMenuPosition,
+    });
 }
 
 initializeModelPartSelectorMenuDrag();
