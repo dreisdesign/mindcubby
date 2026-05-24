@@ -346,7 +346,7 @@ function getExportCapabilityMultiplier() {
     return Math.max(0.7, Math.min(1.45, mul));
 }
 
-function validateExportWorkload({ format = 'export', width = 0, height = 0, fps = 1, frames = 1 } = {}) {
+function validateExportWorkload({ format = 'export', width = 0, height = 0, fps = 1, frames = 1, allowUnsafeWorkload = false } = {}) {
     const safeW = Math.max(1, Math.floor(width));
     const safeH = Math.max(1, Math.floor(height));
     const safeFps = Math.max(1, Math.floor(fps));
@@ -374,8 +374,17 @@ function validateExportWorkload({ format = 'export', width = 0, height = 0, fps 
     }
     if (pixelFrames > adaptiveLimit) {
         const maxMegaPixels = Math.round(adaptiveLimit / 1_000_000);
-        throw new Error(`${format.toUpperCase()} workload is too high for safe in-browser export. Try Medium quality or a less tall aspect ratio. (Limit: ~${maxMegaPixels} MPx-frames)`);
+        const warning = `${format.toUpperCase()} workload is too high for safe in-browser export. Try Medium quality or a less tall aspect ratio. (Limit: ~${maxMegaPixels} MPx-frames)`;
+        if (allowUnsafeWorkload) {
+            return {
+                warning,
+                adaptiveLimit,
+                pixelFrames,
+            };
+        }
+        throw new Error(warning);
     }
+    return null;
 }
 
 function getStlParseTimeoutMs(items) {

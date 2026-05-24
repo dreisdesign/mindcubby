@@ -24,8 +24,20 @@ export function createExportMp4PreflightController({
             const { width: W, height: H } = getImageExportSize?.() || {};
             const n = exportFrames?.(fps);
             const totalFrames = n * (loops + 1);
-            validateExportWorkload?.({ format: 'mp4', width: W, height: H, fps, frames: totalFrames });
-            return { fps, bitrate, W, H, n, totalFrames };
+            const workloadResult = validateExportWorkload?.({
+                format: 'mp4',
+                width: W,
+                height: H,
+                fps,
+                frames: totalFrames,
+                allowUnsafeWorkload: true,
+            });
+            if (workloadResult?.warning) {
+                const warningMessage = 'Warning: ' + workloadResult.warning;
+                setStatus?.(warningMessage);
+                setAnimStatus?.(warningMessage);
+            }
+            return { fps, bitrate, W, H, n, totalFrames, workloadWarning: workloadResult?.warning || '' };
         } catch (err) {
             return reportPreflightError(err);
         }
