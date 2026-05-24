@@ -11157,10 +11157,13 @@ window.addEventListener('pointermove', (e) => {
 
 canvas?.addEventListener('click', (e) => {
     closeModelPartActionMenus();
-    if (exportWorkspaceActive && exportFrameEnabled) {
-        if (isCanvasPointInsideCropFrame(e.clientX, e.clientY)) return;
-        closeExportWorkspace();
-        return;
+    if (exportWorkspaceActive) {
+        // In Share workspace, a single non-drag canvas click should close.
+        // Exception: when crop framing is active, keep inside-frame clicks interactive.
+        if (!exportFrameEnabled || !isCanvasPointInsideCropFrame(e.clientX, e.clientY)) {
+            closeExportWorkspace();
+            return;
+        }
     }
 
     if (!hasModelParts()) return;

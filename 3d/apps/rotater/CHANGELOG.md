@@ -1,3 +1,10 @@
+## [2.2.27] - 2026-05-24
+
+### Fixed
+- **Share workspace click-close consistency**: single non-drag canvas clicks now close Share workspace consistently; when crop framing is active, clicks inside the crop frame remain interactive while outside clicks close.
+
+---
+
 ## [2.2.26] - 2026-05-24
 
 ### Fixed
