@@ -1726,6 +1726,8 @@ function initThree() {
     controls.autoRotate = true;
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
     controls.enableZoom = true;
+    // Match About panel behavior: right-drag performs dolly (push/pull), not pan.
+    controls.mouseButtons.RIGHT = THREE.MOUSE.DOLLY;
     updateOrbitDistanceLimits(false);
     rightPanLockController.setDefaults({
         mouseButtons: controls.mouseButtons,
@@ -11207,10 +11209,7 @@ document.addEventListener('keydown', e => {
 });
 
 canvas?.addEventListener('pointerdown', (e) => {
-    if (e.button === 2) {
-        beginRightPanVerticalLock();
-        return;
-    }
+    if (e.button === 2) return;
     if (e.button !== 0) return;
     if (e.shiftKey) {
         _shiftPanActive = true;
@@ -11231,7 +11230,6 @@ window.addEventListener('pointerup', (e) => {
         }
         _pendingCanvasOrbitDrag = null;
     }
-    if (e.button === 2) endRightPanVerticalLock();
 }, true);
 
 window.addEventListener('pointercancel', () => {
@@ -11241,7 +11239,6 @@ window.addEventListener('pointercancel', () => {
         }
         _pendingCanvasOrbitDrag = null;
     }
-    endRightPanVerticalLock();
 }, true);
 
 canvas?.addEventListener('contextmenu', (e) => {

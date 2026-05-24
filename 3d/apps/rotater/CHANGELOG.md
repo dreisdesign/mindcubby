@@ -1,3 +1,11 @@
+## [2.2.24] - 2026-05-24
+
+### Fixed
+- **Right-drag camera interaction parity**: right mouse drag now uses true dolly behavior (push/pull camera) instead of pan-lock emulation, matching About panel guidance.
+- **Animation pivot drift via right-drag**: removed right-drag pan-lock hooks that could leave off-center orbit pivots in Spin/Tilt transitions.
+
+---
+
 ## [2.2.23] - 2026-05-24
 
 ### Fixed
