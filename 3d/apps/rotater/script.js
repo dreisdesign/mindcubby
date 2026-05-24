@@ -5782,9 +5782,9 @@ function ensureRulerHoveredPartVisual() {
     if (!rulerHoveredPartBoxWire) {
         const boxEdges = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1));
         const boxMat = new THREE.LineDashedMaterial({
-            color: PALETTE.preset.modelShadeFallback || '#2e2b74',
+            color: '#f4f3ff',
             transparent: true,
-            opacity: 0.92,
+            opacity: 1,
             dashSize: 0.08,
             gapSize: 0.05,
             depthTest: false,
@@ -5827,6 +5827,13 @@ function updateRulerHoveredPartVisual() {
 
     const hoverBox = ensureRulerHoveredPartVisual();
     if (!hoverBox) return;
+
+    const contrastTheme = getRulerContrastTheme();
+    const hoverMat = hoverBox.material;
+    if (hoverMat?.color && contrastTheme?.labelText) {
+        hoverMat.color.set(contrastTheme.labelText);
+        hoverMat.opacity = 1;
+    }
 
     const box = modelPartBoundsBoxes[rulerHoveredPartIndex];
     const size = box.getSize(rulerHoveredPartBoxSizeTmp);
