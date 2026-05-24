@@ -12,6 +12,7 @@
 - **Model sync click disambiguation**: first click on Model Sync background/surface preset now only selects the preset; sync-source chooser opens only when clicking the already-active Model Sync preset or selector controls.
 - **Grid clipping across plate shapes**: ruler grid span now respects circular/rounded build plate geometry and uses a stronger plate lift to avoid edge clipping/z-fight artifacts.
 - **Dynamic ruler contrast**: grid, measurement labels, and increment ticks now adapt contrast against active background/build-plate brightness for better legibility.
+- **Clear/Ceramic material fidelity**: clear now renders with physical transmission/IOR tuning and ceramic uses a dedicated physical clearcoat response for closer preset-to-render parity.
 
 ---
 

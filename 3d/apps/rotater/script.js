@@ -2205,14 +2205,31 @@ function applyCurrentTextureTuning() {
         if (!mat || !mat.isMeshStandardMaterial) return;
         const s = getPartSettings(idx);
         const mode = (s.shading === 'flat' || s.shading === 'toon') ? 'matte' : (s.shading || getActiveShadingMode());
+        const materialFamily = normalizeMaterialFamily(s?.materialFamily, getMaterialFamilyFromShading(mode));
         if (mode === 'metallic') {
             mat.metalness = s.metallicMetalness / 100;
             mat.roughness = (100 - s.metallicRoughness) / 100;
             mat.envMapIntensity = (s.metallicReflection / 100) * (textureTuneState.highlights / 100);
+        } else if (mode === 'clear' || mode === 'glass') {
+            mat.metalness = 0;
+            mat.roughness = Math.max(0.03, Math.min(0.35, (100 - s.phongRoughness) / 100));
+            mat.envMapIntensity = Math.max(0.6, (s.phongReflection / 100) * (textureTuneState.highlights / 100));
+            if ('transmission' in mat) mat.transmission = 0.88;
+            if ('ior' in mat) mat.ior = 1.45;
+            if ('thickness' in mat) mat.thickness = 0.65;
+            mat.opacity = 0.92;
+            mat.transparent = true;
+            mat.depthWrite = false;
         } else if (mode === 'phong') {
             mat.metalness = 0;
             mat.roughness = (100 - s.phongRoughness) / 100;
             mat.envMapIntensity = (s.phongReflection / 100) * (textureTuneState.highlights / 100);
+            if (materialFamily === 'ceramic') {
+                if ('clearcoat' in mat) mat.clearcoat = 0.26;
+                if ('clearcoatRoughness' in mat) mat.clearcoatRoughness = 0.34;
+                mat.roughness = Math.max(0.18, Math.min(0.72, mat.roughness));
+                mat.envMapIntensity *= 0.9;
+            }
         } else {
             // Clay: matte non-metal baseline with faint environment response.
             mat.metalness = 0;
@@ -2240,8 +2257,10 @@ function getMaterial(shading, baseColor, partSettings) {
     const metallicMetalness  = ps != null && ps.metallicMetalness  != null ? ps.metallicMetalness  : (textureTuneState.metallicMetalness || 65);
     const metallicReflection = ps != null && ps.metallicReflection != null ? ps.metallicReflection : (textureTuneState.metallicReflection || 100);
 
-    const isClear = (shading === "clear" || shading === "glass");
-    const finalAlpha = isClear ? 0.35 : 1.0;
+    const materialFamily = normalizeMaterialFamily(ps?.materialFamily, getMaterialFamilyFromShading(shading));
+    const isClear = materialFamily === 'clear' || shading === "clear" || shading === "glass";
+    const isCeramicLike = materialFamily === 'ceramic' && shading === 'phong';
+    const finalAlpha = isClear ? 0.92 : 1.0;
 
     const base = {
         color: baseC, side: THREE.DoubleSide, shadowSide: THREE.FrontSide,
@@ -2250,6 +2269,21 @@ function getMaterial(shading, baseColor, partSettings) {
         depthWrite: !isClear
     };
 
+    if (isClear) {
+        return new THREE.MeshPhysicalMaterial({
+            ...base,
+            metalness: 0,
+            roughness: Math.max(0.03, Math.min(0.35, (100 - phongRoughness) / 100)),
+            envMapIntensity: Math.max(0.6, (phongReflection / 100) * (textureTuneState.highlights / 100)),
+            transmission: 0.88,
+            ior: 1.45,
+            thickness: 0.65,
+            attenuationColor: baseC.clone().lerp(new THREE.Color(0xffffff), 0.45),
+            attenuationDistance: 1.6,
+            clearcoat: 0.22,
+            clearcoatRoughness: 0.18,
+        });
+    }
     if (shading === "matte") {
         return new THREE.MeshStandardMaterial({
             ...base,
@@ -2259,6 +2293,16 @@ function getMaterial(shading, baseColor, partSettings) {
         });
     }
     if (shading === "phong" || shading === "clear" || shading === "glass") {
+        if (isCeramicLike) {
+            return new THREE.MeshPhysicalMaterial({
+                ...base,
+                metalness: 0,
+                roughness: Math.max(0.18, Math.min(0.72, (100 - phongRoughness) / 100)),
+                envMapIntensity: (phongReflection / 100) * (textureTuneState.highlights / 100) * 0.9,
+                clearcoat: 0.26,
+                clearcoatRoughness: 0.34,
+            });
+        }
         return new THREE.MeshStandardMaterial({
             ...base,
             metalness: 0,
@@ -2862,6 +2906,7 @@ function createPartSettings(colorHex = colorPick.value) {
         color: colorHex,
         tone: parseInt(opacitySlider ? opacitySlider.value : 0, 10) || 0,
         shading: shadingEl?.value || 'phong',
+        materialFamily: getMaterialFamilyFromShading(shadingEl?.value || 'phong'),
         hidden: false,
         metallicRoughness: textureTuneState.metallicRoughness,
         metallicMetalness: textureTuneState.metallicMetalness,
@@ -4185,10 +4230,19 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings, presetId =
         clearStoredFinishState(partSettings);
     }
     if (presetUrlSettings.materialFamily != null) {
-        partSettings.shading = getShadingForMaterialFamily(presetUrlSettings.materialFamily, partSettings.shading || shadingEl?.value || 'phong');
+        partSettings.materialFamily = normalizeMaterialFamily(presetUrlSettings.materialFamily, 'standard');
+        partSettings.shading = getShadingForMaterialFamily(partSettings.materialFamily, partSettings.shading || shadingEl?.value || 'phong');
     } else if (presetUrlSettings.shading) {
         const sh = presetUrlSettings.shading;
         partSettings.shading = (sh === 'flat' || sh === 'toon') ? 'matte' : sh;
+        partSettings.materialFamily = getMaterialFamilyFromShading(partSettings.shading || 'phong');
+    }
+    if (presetId === 'ceramic' && partSettings.shading === 'phong') {
+        partSettings.materialFamily = 'ceramic';
+    } else if (presetId === 'glass' || presetId === 'clear') {
+        partSettings.materialFamily = 'clear';
+    } else if (!partSettings.materialFamily) {
+        partSettings.materialFamily = getMaterialFamilyFromShading(partSettings.shading || shadingEl?.value || 'phong');
     }
     {
         const explicitTone = presetUrlSettings.tone != null ? parseInt(presetUrlSettings.tone, 10) : NaN;
@@ -4216,7 +4270,10 @@ function applyPresetIntoPartSettings(partSettings, presetUrlSettings, presetId =
     if (presetUrlSettings.textureTunePhongReflection != null) partSettings.phongReflection = Number(presetUrlSettings.textureTunePhongReflection);
     if (presetUrlSettings.textureTuneMatteRoughness != null) partSettings.matteRoughness = Number(presetUrlSettings.textureTuneMatteRoughness);
     if (presetUrlSettings.textureTuneMatteReflection != null) partSettings.matteReflection = Number(presetUrlSettings.textureTuneMatteReflection);
-    const partMaterialFamily = getMaterialFamilyFromShading(partSettings.shading || shadingEl?.value || 'phong');
+    const partMaterialFamily = normalizeMaterialFamily(
+        partSettings.materialFamily,
+        getMaterialFamilyFromShading(partSettings.shading || shadingEl?.value || 'phong')
+    );
     if (partMaterialFamily !== 'standard') {
         clearStoredFinishState(partSettings);
     }
@@ -9205,6 +9262,7 @@ shadingEl.addEventListener('change', () => {
     const targets = applyToModelPartEditTargets((partSettings) => {
         clearStoredFinishState(partSettings);
         partSettings.shading = shadingEl.value;
+        partSettings.materialFamily = getMaterialFamilyFromShading(shadingEl.value);
     });
     updateTextureTuneUI();
     if (mesh) rebuildMeshMaterialsForCurrentShading();
