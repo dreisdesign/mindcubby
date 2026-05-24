@@ -1,3 +1,10 @@
+## [2.2.25] - 2026-05-24
+
+### Fixed
+- **Preset-apply FPS regression mitigation**: model preset applies now avoid full mesh material dispose/rebuild when clear/opaque mode is unchanged, using in-place color/tuning updates instead to reduce runtime hitching and post-change FPS drops.
+
+---
+
 ## [2.2.24] - 2026-05-24
 
 ### Fixed

@@ -12299,13 +12299,33 @@ function applyModelPresetOnly(preset) {
     const p = getURLSettings(preset.url);
     if (!p) return;
 
+    const targetIndices = getModelPartEditTargetIndices();
+    const prevClearLikeByTarget = new Map();
+    targetIndices.forEach((idx) => {
+        const prevShading = getPartSettings(idx)?.shading;
+        prevClearLikeByTarget.set(idx, prevShading === 'clear' || prevShading === 'glass');
+    });
+
     const targets = applyToModelPartEditTargets((partSettings, idx) => {
         applyPresetIntoPartSettings(partSettings, p, preset.id);
         modelPartBaseColors[idx] = partSettings.color;
     });
     syncUIFromSelectedPart();
 
-    if (mesh) rebuildMeshMaterialsForCurrentShading();
+    if (mesh) {
+        const needsRebuild = targets.some((idx) => {
+            const prevClearLike = !!prevClearLikeByTarget.get(idx);
+            const nextShading = getPartSettings(idx)?.shading;
+            const nextClearLike = nextShading === 'clear' || nextShading === 'glass';
+            return prevClearLike !== nextClearLike;
+        });
+        if (needsRebuild) {
+            rebuildMeshMaterialsForCurrentShading();
+        } else {
+            applyPartColorsToMesh();
+            applyCurrentTextureTuning();
+        }
+    }
     persistCurrentMultipartParts({ immediate: true });
 
     // Keep each part's custom baseline aligned to its latest preset-applied state.
