@@ -4731,7 +4731,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                         targetPartIndices.forEach((targetIdx) => {
                             getPartSettings(targetIdx).hidden = nextHidden;
                         });
-                        applyPartColorsToMesh();
+                        rebuildMeshMaterialsForCurrentShading();
                         syncModelPartSelectorUI(true);
                         saveSettings();
                         closeModelPartActionMenus();
@@ -4803,7 +4803,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 if (action === 'visibility-toggle') {
                     pushModelUndoState();
                     getPartSettings(0).hidden = !getPartSettings(0).hidden;
-                    applyPartColorsToMesh();
+                    rebuildMeshMaterialsForCurrentShading();
                     syncModelPartSelectorUI(true);
                     saveSettings();
                     closeModelPartActionMenus();
