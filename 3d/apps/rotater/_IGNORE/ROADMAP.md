@@ -74,6 +74,7 @@ Goal: tighten reliability and interaction parity in existing flows before major 
 | A9 | Info panel keyboard shortcuts | UX / Docs | S | None | Add keyboard shortcuts list to the Info panel under "Navigate the 3d..." (minimum: `Esc` to close, `Space` to pause/play). |
 | A10 | Model picker default positioning | UX | S | None | On desktop, prefer positioning the model picker modal anchored over the preview area (right side), not overlapping the left sidebar; support draggable/resizable floating behavior but default to preview-aligned placement. |
 | A11 | Slider precise text entry mode | Controls UX | M | A1 | Add optional text-based numeric entry for slider-backed controls (shade/finish/etc.) with validation, keyboard support, and parity with existing slider snapping. |
+| A12 | Benchy load camera reset parity | Viewer UX | S | None | Loading 3D Benchy should always trigger level and reframe to a stable default camera view. |
 
 ## Phase B: Export and Workspace Foundation
 
@@ -88,6 +89,7 @@ Goal: complete one-surface export workflow and prepare for richer export/preset 
 | B5 | Watermark redesign and reintroduction | Branding/Export | M | B1 | Reintroduce watermark with consistent output behavior across GIF/MP4/PNG/JPEG. |
 | B6 | Batch export presets | Export Workflow | M | B1 | Save and reapply reusable export settings for repetitive listing workflows. |
 | B7 | Export time estimation & encoding performance | Export UX / Perf | M | B1 | Improve pre-export time estimates by adding a short preflight benchmark (sample frame render + encode timings), show live progress, and explore faster encoding paths (WebCodecs, WASM encoders, workerized dithering); investigate dithering cost and options for palette reuse to reduce per-frame work. |
+| B8 | Export variation matrix (BG/Plate toggles) | Export Workflow | M | B1 | Add one-click multi-export variations for core visibility states: Background ON/OFF and Build Plate ON/OFF (including combined permutations) with deterministic filenames. |
 
 ## Phase C: Interaction and Architecture Expansion
 
