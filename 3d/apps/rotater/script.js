@@ -13091,13 +13091,6 @@ function renderBgPresets() {
             }
             if (isDynamicBg) updateDynamicBg();
             updateBgSelection();
-            if (preset.id === 'modelcolor' && bgModelSyncSelectorMenu && bgModelSyncSelectorBtn) {
-                requestAnimationFrame(() => {
-                    syncBgModelSyncSourceUI();
-                    openBgModelSyncMenu(document.getElementById('bg-preset-modelcolor') || actionArea);
-                });
-                ev.stopPropagation();
-            }
         });
         bar.appendChild(wrap);
     });
@@ -13232,13 +13225,6 @@ function renderBuildPlatePresets() {
             updateBuildPlateSelection();
             refreshExportPreviewNow();
             saveSettings();
-            if (preset.id === 'modelcolor' && buildPlateModelSyncSelectorMenu && buildPlateModelSyncSelectorBtn) {
-                requestAnimationFrame(() => {
-                    syncBuildPlateModelSyncSourceUI();
-                    openBuildPlateModelSyncMenu(document.getElementById('build-plate-preset-modelcolor') || actionArea);
-                });
-                ev.stopPropagation();
-            }
         });
         bar.appendChild(wrap);
     });
