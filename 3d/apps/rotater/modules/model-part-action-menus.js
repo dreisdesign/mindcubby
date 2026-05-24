@@ -33,6 +33,9 @@ export function positionModelPartActionMenu({
     const menuH = Math.max(120, menuRect.height || 138);
 
     const floatingPanelEl = anchorEl.closest('#modelPartSelectorMenu.thumb-select-menu--floating-card');
+    const selectorBoundaryEl = (modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorMenu.contains(anchorEl))
+        ? modelPartSelectorMenu
+        : null;
     const placement = computeActionMenuPlacement({
         anchorRect,
         menuWidth: menuW,
@@ -40,7 +43,7 @@ export function positionModelPartActionMenu({
         viewportWidth,
         viewportHeight,
         sideGap,
-        boundaryRect: floatingPanelEl?.getBoundingClientRect?.() || modelPartSelectorMenu?.getBoundingClientRect?.() || null,
+        boundaryRect: floatingPanelEl?.getBoundingClientRect?.() || selectorBoundaryEl?.getBoundingClientRect?.() || null,
         // Always use fixed positioning so the menu is not clipped by scrollers.
         containerRect: null,
     });
