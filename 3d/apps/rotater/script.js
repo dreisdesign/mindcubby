@@ -4013,7 +4013,6 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
     modelPartSelectorClosedByUser = false;
     closeThumbSelectMenus();
     if (modelPartSelectorMenu && !open) {
-        setRulerPartSelectMultiEnabled(false, false);
         modelPartSelectorMenu.hidden = false;
         positionThumbSelectMenu(modelPartSelectorMenu, modelPartSelectorBtn);
         modelPartSelectorMenu.scrollTop = 0;
@@ -4674,12 +4673,20 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 saveSettings();
             });
 
-            opt.querySelector('[data-part-select]')?.addEventListener('click', () => {
+            const applyPartCardSelectionClick = () => {
                 clearPresetHoverPreview();
-                // Main row click is single-select: switch active part and replace bulk set.
-                modelPartSelected = idx;
-                bulkSelectedPartIndices.clear();
-                setBulkPartSelected(idx, true);
+                const multiActive = isModelPartPreviewMultiSelectActive();
+                if (multiActive) {
+                    const isSelected = getUiSelectedPartIndices().includes(idx);
+                    setBulkPartSelected(idx, !isSelected);
+                    // Keep the last clicked part as the active fallback target.
+                    modelPartSelected = idx;
+                } else {
+                    // Single-select row click: switch active part and replace bulk set.
+                    modelPartSelected = idx;
+                    bulkSelectedPartIndices.clear();
+                    setBulkPartSelected(idx, true);
+                }
                 syncUIFromSelectedPart();
                 applyPartColorsToMesh();
                 applyCurrentTextureTuning();
@@ -4688,24 +4695,15 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 syncModelPartBulkUIState();
                 queueModelPartThumbsRender();
                 saveSettings();
-            });
+            };
+
+            opt.querySelector('[data-part-select]')?.addEventListener('click', applyPartCardSelectionClick);
 
             opt.addEventListener('click', (ev) => {
                 if (!(ev.target instanceof Element)) return;
                 if (ev.target.closest('button,input,label,a,.part-option-actions')) return;
                 clearPresetHoverPreview();
-                // Main row click is single-select: switch active part and replace bulk set.
-                modelPartSelected = idx;
-                bulkSelectedPartIndices.clear();
-                setBulkPartSelected(idx, true);
-                syncUIFromSelectedPart();
-                applyPartColorsToMesh();
-                applyCurrentTextureTuning();
-                if (!isModelPartFloatingCardOpen()) closeThumbSelectMenus();
-                syncModelPartCheckboxStates();
-                syncModelPartBulkUIState();
-                queueModelPartThumbsRender();
-                saveSettings();
+                applyPartCardSelectionClick();
             });
 
             opt.querySelector('[data-part-more]')?.addEventListener('click', (ev) => {
@@ -5794,7 +5792,8 @@ function setRulerHoveredPartIndex(partIndex) {
 }
 
 function ensurePausedForInteractionMode() {
-    if (!getRulerInteractionMode()) {
+    const shouldForcePause = !!(hasModelParts() && rulerPartHoverEnabled);
+    if (!shouldForcePause) {
         updatePauseControlAvailability();
         return;
     }
@@ -5820,9 +5819,17 @@ function setRulerPartHoverEnabled(enabled, persist = true) {
 }
 
 function setRulerPartSelectMultiEnabled(enabled, persist = true) {
-    const next = !!enabled && isModelPartSelectorMenuOpen() && isMultipartModel();
+    const next = !!enabled && isMultipartModel();
     if (next && rulerPartHoverEnabled) {
         rulerPartHoverEnabled = false;
+    }
+    if (!next && isMultipartModel()) {
+        pruneBulkPartSelection();
+        if (bulkSelectedPartIndices.size > 1) {
+            const fallback = Math.max(0, Math.min(modelPartSelected, Math.max(0, modelPartNames.length - 1)));
+            bulkSelectedPartIndices = new Set([fallback]);
+            modelPartSelected = fallback;
+        }
     }
     if (rulerPartSelectMultiEnabled === next) {
         updateRulerHUD();
@@ -7428,7 +7435,12 @@ function restoreSettings() {
         if (s.rulerPartHover != null) {
             rulerPartHoverEnabled = (s.rulerPartHover === '1' || s.rulerPartHover === true || s.rulerPartHover === 1);
         }
-        rulerPartSelectMultiEnabled = false;
+        if (s.rulerPartSelectMulti != null) {
+            rulerPartSelectMultiEnabled = (s.rulerPartSelectMulti === '1' || s.rulerPartSelectMulti === true || s.rulerPartSelectMulti === 1);
+        } else {
+            rulerPartSelectMultiEnabled = false;
+        }
+        rulerPartSelectMultiEnabled = rulerPartSelectMultiEnabled && isMultipartModel();
         if (rulerPartSelectMultiEnabled && rulerPartHoverEnabled) {
             rulerPartHoverEnabled = false;
         }

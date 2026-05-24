@@ -17,9 +17,6 @@ export function closeModelPartSelectorMenuController({
     if (modelPartSelectorMenu && !modelPartSelectorMenu.hidden) {
         modelPartSelectorMenu.hidden = true;
         changedModelSelectorMenuState = true;
-        if (rulerPartSelectMultiEnabled && typeof setRulerPartSelectMultiEnabled === 'function') {
-            setRulerPartSelectMultiEnabled(false, false);
-        }
         if (force && typeof setModelPartSelectorClosedByUser === 'function') {
             setModelPartSelectorClosedByUser(true);
         }

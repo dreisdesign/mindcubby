@@ -1,3 +1,15 @@
+## [2.2.23] - 2026-05-24
+
+### Fixed
+- **Multi-select state persistence parity**: opening the 3D Models picker no longer forces multi-select OFF, and saved `rulerPartSelectMulti` state now restores correctly on load for multipart models.
+- **Multi-select pause regression**: toggling multi-select no longer pauses animation; pause is now only force-applied for hover/inspect interaction mode.
+- **Selection state contradiction cleanup**: turning multi-select OFF while multiple parts are selected now collapses selection to a single active part, preventing contradictory UI states like `OFF` with `N/N selected`.
+
+### Changed
+- **Roadmap triage intake update**: `_IGNORE/ROADMAP.md` now includes a strict P0/P1 VQA execution order with owner lanes and effort tags for immediate bug sequencing.
+
+---
+
 ## [2.2.22] - 2026-05-19
 
 ### Fixed

@@ -1,15 +1,55 @@
 # Rotater Roadmap
 
-Updated: 2026-05-23
-Toggle: unsync BG shade slider so that model sync can be active and you can set the shade, but it doesnt change the shade of the model.
-
-Recent Bugs:
-- Grid gets 
-
-
-Updated: 2026-05-22
+Updated: 2026-05-24
 
 This roadmap contains only incomplete work. Completed items belong in `CHANGELOG.md`.
+
+## VQA Intake: 2026-05-24 (Screenshots + Filename Notes)
+
+This section captures new VQA findings from `_IGNORE/VQA-May-24-2026` and folds them into the active backlog. Items already shipped in `CHANGELOG.md` remain listed here only when they need regression validation.
+
+### Immediate Bug Queue (Address First)
+
+- [ ] FPS drops after color/preset changes (`FPS-cuts-in-half-after-color-change-via-preset.png`).
+- [ ] Multi-select header switch can show `OFF` while all parts are selected (`bug-multi-select-toggle-says-off-when-all-selected.png`).
+- [ ] Turning multi-select ON/OFF pauses animation unexpectedly (`turning-on-multi-select-is-pausing-animation.png`, `turning-off-multi-select-is-pausing-anoimation.png`).
+- [ ] Closing the model picker can disable multi-select unexpectedly (`closing-mult-select-model-picker-is-turning-off-multi-select-checkbox.png`).
+- [ ] Tilt/Spin mode interaction conflict: switching modes + right-drag can break animation state (`bug-switching-from-tilt-to-spin-and-dragging-right-click-breaks-animation.png`).
+- [ ] Right-drag can leave animation orbit off-center (`right-click-drag-allows-for-off-center-position-animation.png`).
+- [ ] Hover previews are inconsistent: tilt hover not animating, spin hover direction appears reversed (`tilt-animation-hover-not-animating.png`, `spin-animation-hover-rotates-wrong-way.png`).
+- [ ] Grid clipping is inconsistent across build plate shapes (`grid-should-get-cut-off-on-all-build-plate-shapes.png`).
+- [ ] Grid color and model bounding-box outline need dynamic contrast on varied plate/background colors (`grid-should-needs-to-dynamically-adjust-color-for-contrast-over-different-build-plate-surface-color.png`, `model-bounding-box-needs-to-dynamically-adjust-color-for-contrast-over-different-backgrounds.png`).
+- [ ] `Clear` material appears blue-tinted and `Ceramic Gloss` appears too matte (`clear-shouldnt-be-blue.png`, `ceramic-glossy-looks-matte.png`).
+- [ ] Export workspace close interactions are inconsistent (single non-drag click close behavior vs crop-only outside click behavior) (`single-non-drag-click-in-export-should-close.png`).
+- [ ] Model Sync thumbnail click in Background likely has two actions bound (changes preset + opens picker) and should be disambiguated (`clicking-model-sync-in-bg-changes-it-and-opens-menu-maybe-dont.png`).
+
+### P0/P1 Execution Order (Strict)
+
+| Priority | Issue | Suggested Owner Lane | Effort | Status |
+|---|---|---|---|---|
+| P0-1 | Multi-select state parity (`OFF` label mismatch, close/open persistence, toggle semantics) | Model Picker / Selection State | S | In progress |
+| P0-2 | Multi-select toggles should not pause animation | Animation State / Interaction Modes | S | In progress |
+| P0-3 | Tilt/Spin + right-drag can break animation/orbit center | Camera Controls / Animation Runtime | M | Todo |
+| P0-4 | FPS drop after preset/color changes | Runtime Perf / Material Update Path | M | Todo |
+| P0-5 | Export close behavior inconsistency (inside/outside/non-drag click) | Export Workspace UX | M | Todo |
+| P1-1 | Grid clipping across plate shapes | Grid/Surface Rendering | M | Todo |
+| P1-2 | Grid + bounding-box dynamic contrast | Visual Contrast / Accessibility | M | Todo |
+| P1-3 | Clear/Ceramic material fidelity regressions | Material Shading / Preset Tuning | M | Todo |
+| P1-4 | Hover previews wrong (tilt no-preview, spin direction mismatch) | Animation Card UX / Preview State | S | Todo |
+| P1-5 | Background Model Sync click action ambiguity | Preset Interaction UX | S | Todo |
+
+### High-Value UX Follow-Ups (Post-Bugfix)
+
+- [ ] Keep animation continuity after import and after image export (validate per format) (`continue-animation-after-import.png`, `consideration--after-png-export-resume-animation.png`, `advanced-option-pause-when-switching-to-image-share.png`).
+- [ ] Reframe/level action should not alter user zoom unexpectedly (`level-and-reframe-maybe-shouldnt-change-the-zoom.png`).
+- [ ] Export controls should be available outside crop mode or have a clearer mode switch (`export-should-be-accessible-outside-of-crop-view.png`).
+- [ ] Add explicit rotation direction control (CW/CCW) and optional tilt pivot mode (top/bottom) (`missing-option-to-set-rotation-direction-CC-CCW.png`, `idea-toggle-to-tilt-animation-pivot-point-top-or-bottom.png`).
+- [ ] Add keyboard shortcut hints where actions are primary (`pause-button-missing-tooltip-AND-could-use-keyboard-shortcut-hint-for-space.png`, `missing-keyboard-shorctus-in-about-menu.png`).
+- [ ] Add explicit export duration control coverage for all relevant formats and state combinations (`missing-option-to-change-duration-in-export-menu.png`).
+- [ ] Improve reorder UX sensitivity/discoverability in model manager (drag threshold + clear handle affordance) (`model-re-order-drag-too-sensitive-and-missing-drag-handles-ui.png`).
+- [ ] Reassess export footer CTA density (`close-button-in-export-footer-unnecessary.png`).
+- [ ] Export project package scope definition: ZIP should preserve settings, naming, and color state deterministically (`export-zip-project-settings-filename-capture-colors-etc.png`).
+- [ ] Align HUD vertical rhythm for FPS badge and bottom-right control cluster (`vertically-center-FPS-with-d-pad-and-inspect-button.png`).
 
 ## Planning Principles
 
