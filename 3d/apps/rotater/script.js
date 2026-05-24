@@ -1037,6 +1037,8 @@ let bulkSelectedPartIndices = new Set();
 let modelPartSelectorViewMode = 'card';
 let modelUndoToastTimer = 0;
 let modelUndoToastLastShownAt = 0;
+let activeModelPartActionMenuEl = null;
+let activeModelPartActionAnchorEl = null;
 
 const BULK_SELECT_ICON_PATHS = {
     none: 'M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z',
@@ -3759,9 +3761,39 @@ function closeThumbSelectMenusByMode(options = {}) {
 
 function closeModelPartActionMenus() {
     closeModelPartActionMenusModule({ modelPartSingleMenuBtn });
+    activeModelPartActionMenuEl = null;
+    activeModelPartActionAnchorEl = null;
 }
 
 function positionModelPartActionMenu(menuEl, anchorEl) {
+    activeModelPartActionMenuEl = menuEl || null;
+    activeModelPartActionAnchorEl = anchorEl || null;
+    positionModelPartActionMenuModule({
+        menuEl,
+        anchorEl,
+        modelPartSelectorMenu,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+    });
+}
+
+function refreshModelPartActionMenuPosition() {
+    const menuEl = activeModelPartActionMenuEl;
+    const anchorEl = activeModelPartActionAnchorEl;
+    if (!menuEl || !anchorEl) return;
+    if (menuEl.hidden) {
+        activeModelPartActionMenuEl = null;
+        activeModelPartActionAnchorEl = null;
+        return;
+    }
+    if (!menuEl.isConnected || !anchorEl.isConnected) {
+        closeModelPartActionMenus();
+        return;
+    }
+    if (modelPartSelectorMenu?.hidden && modelPartSelectorMenu?.contains(anchorEl)) {
+        closeModelPartActionMenus();
+        return;
+    }
     positionModelPartActionMenuModule({
         menuEl,
         anchorEl,
@@ -3892,6 +3924,7 @@ function setModelPartSelectorMenuPosition(left, top, persist = true) {
         storageKey: MODEL_PART_MENU_POS_STORAGE_KEY,
         viewportHeight: window.innerHeight,
     });
+    refreshModelPartActionMenuPosition();
 }
 
 function restoreModelPartSelectorMenuPosition() {
@@ -4026,6 +4059,10 @@ buildPlateModelSyncSelectorThumb?.addEventListener('click', (ev) => {
     trapMenuWheelScroll(menuEl?.querySelector?.('.model-selector-items') || menuEl);
 });
 
+modelPartSelectorMenu?.addEventListener('scroll', () => {
+    refreshModelPartActionMenuPosition();
+}, true);
+
 window.addEventListener('resize', () => {
     if (modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorBtn) {
         positionThumbSelectMenu(modelPartSelectorMenu, modelPartSelectorBtn);
@@ -4105,6 +4142,7 @@ document.addEventListener('click', (ev) => {
 });
 
 window.addEventListener('resize', () => {
+    refreshModelPartActionMenuPosition();
     closeModelPartActionMenus();
 });
 
