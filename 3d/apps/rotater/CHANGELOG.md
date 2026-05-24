@@ -1,3 +1,14 @@
+## [2.2.26] - 2026-05-24
+
+### Fixed
+- **Right-drag interaction correction**: restored right-drag to vertical-only movement (up/down lock) instead of zoom-style dolly.
+- **Benchy load framing parity**: loading `3dbenchy.stl` now triggers level and reframe so startup camera is deterministic.
+
+### Changed
+- **Upload CTA copy simplification**: renamed `Upload STL` button text to `Upload` across empty state and compact/canvas/sidebar upload actions.
+
+---
+
 ## [2.2.25] - 2026-05-24
 
 ### Fixed

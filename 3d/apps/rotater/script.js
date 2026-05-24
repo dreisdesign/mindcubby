@@ -1726,8 +1726,8 @@ function initThree() {
     controls.autoRotate = true;
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
     controls.enableZoom = true;
-    // Match About panel behavior: right-drag performs dolly (push/pull), not pan.
-    controls.mouseButtons.RIGHT = THREE.MOUSE.DOLLY;
+    // Right-drag should move only along vertical (up/down) using pan + axis lock.
+    controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
     updateOrbitDistanceLimits(false);
     rightPanLockController.setDefaults({
         mouseButtons: controls.mouseButtons,
@@ -5142,7 +5142,7 @@ function loadPreparedGeometry(geo, name) {
     document.documentElement.classList.add('loaded');
     dismissStartupSplash();
     try { localStorage.setItem('rotater_hasSession', '1'); } catch (e) { }
-    document.getElementById('compactBtnLabel').textContent = 'Upload STL';
+    document.getElementById('compactBtnLabel').textContent = 'Upload';
     // Preserve pause state on model replace; only resume if not already paused.
     if (!isPaused) {
         controls.autoRotate = rotateModeEl.value === 'spin' || (rotateModeEl.value === 'wobble' && parseFloat(wobbleSpinRangeSlider.value) >= 360);
@@ -7727,7 +7727,7 @@ async function restoreSession() {
     document.getElementById('emptyState')?.classList.add('hidden');
     document.getElementById('controlsBar')?.classList.remove('hidden');
     const compactBtnLabel = document.getElementById('compactBtnLabel');
-    if (compactBtnLabel) compactBtnLabel.textContent = 'Upload STL';
+    if (compactBtnLabel) compactBtnLabel.textContent = 'Upload';
     updateCropHintUI();
 
     if (DEV_LOG) console.log(`[rotater] restoreSession: calling restoreSettings at ${Date.now()}`);
@@ -10158,7 +10158,7 @@ async function clearBuildPlateModels() {
     updateLiveRulerOverlay();
 
     const compactBtnLabel = document.getElementById('compactBtnLabel');
-    if (compactBtnLabel) compactBtnLabel.textContent = 'Upload STL';
+    if (compactBtnLabel) compactBtnLabel.textContent = 'Upload';
 
     setStatus('Build plate cleared.');
     setTimeout(() => setStatus(''), 1800);
@@ -10189,6 +10189,8 @@ async function loadBenchyModel({ clearStoredModel = true } = {}) {
         if (!renderer) initThree();
         controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
         await loadSTLBuffer(buffer, '3dbenchy.stl');
+        // Benchy should always load into a predictable level + reframed camera state.
+        document.getElementById('btnCamReset')?.click();
         return true;
     } catch (e) {
         return false;
@@ -11209,7 +11211,10 @@ document.addEventListener('keydown', e => {
 });
 
 canvas?.addEventListener('pointerdown', (e) => {
-    if (e.button === 2) return;
+    if (e.button === 2) {
+        beginRightPanVerticalLock();
+        return;
+    }
     if (e.button !== 0) return;
     if (e.shiftKey) {
         _shiftPanActive = true;
@@ -11230,6 +11235,7 @@ window.addEventListener('pointerup', (e) => {
         }
         _pendingCanvasOrbitDrag = null;
     }
+    if (e.button === 2) endRightPanVerticalLock();
 }, true);
 
 window.addEventListener('pointercancel', () => {
@@ -11239,6 +11245,7 @@ window.addEventListener('pointercancel', () => {
         }
         _pendingCanvasOrbitDrag = null;
     }
+    endRightPanVerticalLock();
 }, true);
 
 canvas?.addEventListener('contextmenu', (e) => {
