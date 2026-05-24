@@ -5,6 +5,13 @@
 
 ---
 
+## [2.2.28] - 2026-05-24
+
+### Fixed
+- **Spin hover direction parity**: animation card hover preview for Spin now follows the active runtime direction (CW/CCW) instead of previewing the opposite direction.
+
+---
+
 ## [2.2.26] - 2026-05-24
 
 ### Fixed

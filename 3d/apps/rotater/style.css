@@ -6661,12 +6661,12 @@ html.none-mode .rotation-group {
     animation: rot-spin 2.4s linear 3;
 }
 
-/* When Spin is active (checked), hovering previews switching to the opposite direction */
-html:not(.spin-ccw) .rotation-option:has(input[value="spin"]:checked):hover .rotation-thumb--spin .rot-icon {
+/* Keep hover preview direction aligned with runtime spin direction. */
+html.spin-ccw .rotation-option:hover .rotation-thumb--spin .rot-icon {
     animation: rot-spin-ccw 2.4s linear 3;
 }
 
-html.spin-ccw .rotation-option:has(input[value="spin"]:checked):hover .rotation-thumb--spin .rot-icon {
+html:not(.spin-ccw) .rotation-option:hover .rotation-thumb--spin .rot-icon {
     animation: rot-spin 2.4s linear 3;
 }
 
