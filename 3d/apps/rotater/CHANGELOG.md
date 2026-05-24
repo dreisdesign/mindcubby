@@ -11,6 +11,7 @@
 - **Spin hover direction parity**: animation card hover preview for Spin now follows the active runtime direction (CW/CCW) instead of previewing the opposite direction.
 - **Model sync click disambiguation**: first click on Model Sync background/surface preset now only selects the preset; sync-source chooser opens only when clicking the already-active Model Sync preset or selector controls.
 - **Grid clipping across plate shapes**: ruler grid span now respects circular/rounded build plate geometry and uses a stronger plate lift to avoid edge clipping/z-fight artifacts.
+- **Dynamic ruler contrast**: grid, measurement labels, and increment ticks now adapt contrast against active background/build-plate brightness for better legibility.
 
 ---
 

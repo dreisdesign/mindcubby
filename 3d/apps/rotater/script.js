@@ -6051,6 +6051,7 @@ function drawRoundedRectPath(ctx, x, y, width, height, radius) {
 }
 
 function drawMeasurementLabel(ctx, text, position, align = 'center') {
+    const contrastTheme = getRulerContrastTheme();
     ctx.save();
     const transform = typeof ctx.getTransform === 'function' ? ctx.getTransform() : null;
     const scaleX = transform?.a || 1;
@@ -6083,19 +6084,20 @@ function drawMeasurementLabel(ctx, text, position, align = 'center') {
     const y = Math.max(edgePad + boxH / 2, Math.min(logicalHeight - edgePad - boxH / 2, position.y));
     const boxY = y - boxH / 2;
     const baselineY = y + (ascent - descent) * 0.5;
-    ctx.fillStyle = 'rgba(255,255,255,0.96)';
-    ctx.strokeStyle = 'rgba(20,20,28,0.12)';
+    ctx.fillStyle = contrastTheme.labelFill;
+    ctx.strokeStyle = contrastTheme.labelStroke;
     ctx.lineWidth = 1;
     drawRoundedRectPath(ctx, boxX, boxY, boxW, boxH, radius);
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = PALETTE.text.measurement;
+    ctx.fillStyle = contrastTheme.labelText || PALETTE.text.measurement;
     ctx.textAlign = 'center';
     ctx.fillText(text, boxCenterX, baselineY);
     ctx.restore();
 }
 
 function drawMeasurement(ctx, start, end, text, center, options = {}) {
+    const contrastTheme = getRulerContrastTheme();
     const {
         offset = 24,
         labelOffset = 22,
@@ -6117,7 +6119,7 @@ function drawMeasurement(ctx, start, end, text, center, options = {}) {
     const a = start.clone().add(offsetVec);
     const b = end.clone().add(offsetVec);
 
-    ctx.strokeStyle = 'rgba(35, 35, 42, 0.78)';
+    ctx.strokeStyle = contrastTheme.lineStroke;
     ctx.lineWidth = 2;
     ctx.setLineDash(dashed ? [7, 5] : []);
     ctx.beginPath();
@@ -6145,12 +6147,13 @@ function drawRulerOverlay(ctx, width, height, cam, options = {}) {
     if (!RULER_DYNAMIC_LINES_ENABLED) return;
     if (!rulerEnabled || !rulerLinesVisible || !modelDims) return;
     try {
+        const contrastTheme = getRulerContrastTheme();
         const layout = options.layout || getRulerScreenLayout(width, height, cam, options.safeArea);
         if (!layout) return;
         ctx.save();
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.strokeStyle = 'rgba(20, 20, 28, 0.82)';
+        ctx.strokeStyle = contrastTheme.lineStroke;
         ctx.lineWidth = layout.lineWidth;
         ctx.beginPath();
         ctx.moveTo(layout.widthLine.x1, layout.widthLine.y1);
@@ -6181,6 +6184,7 @@ function formatRulerIncrementLabel(mm, includeUnit = false) {
 
 function drawRulerHoverGridIncrements(ctx, width, height, cam) {
     if (!rulerEnabled || !getRulerInteractionMode() || !rulerLinesVisible || !mesh || !cam) return;
+    const contrastTheme = getRulerContrastTheme();
 
     const spanX = Math.max(20, rulerGridSpanX || clampBuildPlateSize(buildPlateWidth, BUILD_PLATE_DEFAULTS.width));
     const spanZ = Math.max(20, rulerGridSpanZ || clampBuildPlateSize(buildPlateDepth, BUILD_PLATE_DEFAULTS.depth));
@@ -6220,8 +6224,8 @@ function drawRulerHoverGridIncrements(ctx, width, height, cam) {
         : (compact
             ? '600 10px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
             : '600 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif');
-    ctx.fillStyle = 'rgba(35, 31, 80, 0.86)';
-    ctx.strokeStyle = 'rgba(58, 52, 122, 0.52)';
+    ctx.fillStyle = contrastTheme.tickText;
+    ctx.strokeStyle = contrastTheme.tickStroke;
     ctx.lineWidth = 1;
     ctx.textBaseline = 'middle';
 
@@ -6818,6 +6822,65 @@ function getRulerGridIncrementStepMm(spanMm) {
     return 100;
 }
 
+function getColorRelativeLuminance(color) {
+    const toLinear = (channel) => {
+        if (channel <= 0.04045) return channel / 12.92;
+        return Math.pow((channel + 0.055) / 1.055, 2.4);
+    };
+    const r = toLinear(color.r);
+    const g = toLinear(color.g);
+    const b = toLinear(color.b);
+    return (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+}
+
+function getActiveRulerSurfaceColor() {
+    if (buildPlateEnabled && buildPlateMesh?.visible) {
+        const baseHex = getActiveBuildPlateBaseColor();
+        if (buildPlateAutoBrightnessEnabled) return computeBuildPlateAutoBrightnessColor(baseHex);
+        return computeBuildPlateShadeColor(baseHex, Number(buildPlateShade) || 0);
+    }
+
+    const baseHex = activeBgPreset === 'modelcolor'
+        ? getModelSyncSourceColor()
+        : (bgPick?.value || PALETTE.fallback);
+    if (isDynamicBg) return computeAutoBrightnessColor(baseHex);
+    const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
+    return computeTonedColor(baseHex, tone);
+}
+
+function getRulerContrastTheme() {
+    const surfaceColor = getActiveRulerSurfaceColor();
+    const lum = getColorRelativeLuminance(surfaceColor);
+    const whiteContrast = 1.05 / Math.max(0.0001, lum + 0.05);
+    const blackContrast = (lum + 0.05) / 0.05;
+
+    if (whiteContrast >= blackContrast) {
+        return {
+            gridCenter: 0xf7f7fb,
+            gridLines: 0xe2e2ed,
+            gridOpacity: 0.62,
+            lineStroke: 'rgba(246, 245, 255, 0.86)',
+            labelFill: 'rgba(20, 19, 30, 0.88)',
+            labelStroke: 'rgba(255, 255, 255, 0.18)',
+            labelText: '#f4f3ff',
+            tickText: 'rgba(246, 245, 255, 0.9)',
+            tickStroke: 'rgba(230, 227, 255, 0.58)',
+        };
+    }
+
+    return {
+        gridCenter: 0x17171f,
+        gridLines: 0x2a2a36,
+        gridOpacity: 0.64,
+        lineStroke: 'rgba(20, 20, 28, 0.82)',
+        labelFill: 'rgba(255, 255, 255, 0.96)',
+        labelStroke: 'rgba(20, 20, 28, 0.12)',
+        labelText: '#15122b',
+        tickText: 'rgba(35, 31, 80, 0.86)',
+        tickStroke: 'rgba(58, 52, 122, 0.52)',
+    };
+}
+
 function updateRulerGrid() {
     if (!scene) return;
     const shouldShow = !!(rulerEnabled && rulerLinesVisible && mesh && modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
@@ -6858,53 +6921,15 @@ function updateRulerGrid() {
     const stepMm = getRulerGridIncrementStepMm(targetSize);
     const divisions = Math.max(4, Math.min(200, Math.round(targetSize / Math.max(1, stepMm))));
 
-    const getColorRelativeLuminance = (color) => {
-        const toLinear = (channel) => {
-            if (channel <= 0.04045) return channel / 12.92;
-            return Math.pow((channel + 0.055) / 1.055, 2.4);
-        };
-        const r = toLinear(color.r);
-        const g = toLinear(color.g);
-        const b = toLinear(color.b);
-        return (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
-    };
-
-    const getActiveGridSurfaceColor = () => {
-        if (buildPlateEnabled && buildPlateMesh?.visible) {
-            const baseHex = getActiveBuildPlateBaseColor();
-            if (buildPlateAutoBrightnessEnabled) return computeBuildPlateAutoBrightnessColor(baseHex);
-            return computeBuildPlateShadeColor(baseHex, Number(buildPlateShade) || 0);
-        }
-
-        const baseHex = activeBgPreset === 'modelcolor'
-            ? getModelSyncSourceColor()
-            : (bgPick?.value || PALETTE.fallback);
-        if (isDynamicBg) return computeAutoBrightnessColor(baseHex);
-        const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
-        return computeTonedColor(baseHex, tone);
-    };
-
-    const getGridContrastPalette = () => {
-        const surfaceColor = getActiveGridSurfaceColor();
-        const lum = getColorRelativeLuminance(surfaceColor);
-
-        const whiteContrast = 1.05 / Math.max(0.0001, lum + 0.05);
-        const blackContrast = (lum + 0.05) / 0.05;
-        if (whiteContrast >= blackContrast) {
-            return { center: 0xf7f7fb, lines: 0xe2e2ed, opacity: 0.62 };
-        }
-        return { center: 0x17171f, lines: 0x2a2a36, opacity: 0.64 };
-    };
-
-    const palette = getGridContrastPalette();
+    const contrastTheme = getRulerContrastTheme();
 
     if (!rulerGridHelper || Math.abs(rulerGridSize - targetSize) > 0.5 || divisions !== rulerGridDivisions) {
         if (rulerGridHelper) scene.remove(rulerGridHelper);
-        rulerGridHelper = new THREE.GridHelper(targetSize, divisions, palette.center, palette.lines);
+        rulerGridHelper = new THREE.GridHelper(targetSize, divisions, contrastTheme.gridCenter, contrastTheme.gridLines);
         const mats = Array.isArray(rulerGridHelper.material) ? rulerGridHelper.material : [rulerGridHelper.material];
         mats.forEach((mat) => {
             mat.transparent = true;
-            mat.opacity = palette.opacity;
+            mat.opacity = contrastTheme.gridOpacity;
             mat.depthWrite = false;
             mat.depthTest = true;
         });
@@ -6914,11 +6939,11 @@ function updateRulerGrid() {
         rulerGridDivisions = divisions;
     } else {
         if (typeof rulerGridHelper.setColors === 'function') {
-            rulerGridHelper.setColors(palette.center, palette.lines);
+            rulerGridHelper.setColors(contrastTheme.gridCenter, contrastTheme.gridLines);
         }
         const mats = Array.isArray(rulerGridHelper.material) ? rulerGridHelper.material : [rulerGridHelper.material];
         mats.forEach((mat) => {
-            mat.opacity = palette.opacity;
+            mat.opacity = contrastTheme.gridOpacity;
             mat.needsUpdate = true;
         });
     }
