@@ -6842,8 +6842,18 @@ function updateRulerGrid() {
 
     const plateSpanX = clampBuildPlateSize(buildPlateWidth, BUILD_PLATE_DEFAULTS.width);
     const plateSpanZ = clampBuildPlateSize(buildPlateDepth, BUILD_PLATE_DEFAULTS.depth);
-    const targetSpanX = Math.max(40, plateSpanX);
-    const targetSpanZ = Math.max(40, plateSpanZ);
+    const plateShape = normalizeBuildPlateShape(buildPlateShape);
+    let targetSpanX = Math.max(40, plateSpanX);
+    let targetSpanZ = Math.max(40, plateSpanZ);
+    if (buildPlateMesh?.visible && plateShape === 'circle') {
+        const plateDiameter = Math.max(40, Math.min(plateSpanX, plateSpanZ));
+        const inscribedSquareSpan = plateDiameter * Math.SQRT1_2;
+        targetSpanX = inscribedSquareSpan;
+        targetSpanZ = inscribedSquareSpan;
+    } else if (buildPlateMesh?.visible && plateShape === 'rounded') {
+        targetSpanX *= 0.96;
+        targetSpanZ *= 0.96;
+    }
     const targetSize = Math.max(targetSpanX, targetSpanZ);
     const stepMm = getRulerGridIncrementStepMm(targetSize);
     const divisions = Math.max(4, Math.min(200, Math.round(targetSize / Math.max(1, stepMm))));
@@ -6920,7 +6930,8 @@ function updateRulerGrid() {
     let gridCenterX = worldCenter.x;
     let gridCenterZ = worldCenter.z;
     if (buildPlateMesh?.visible) {
-        gridY = buildPlateMesh.position.y + Math.max(0.03, modelRadius * 0.0012);
+        const plateLift = Math.max(0.08, targetSize * 0.00035, modelRadius * 0.0018);
+        gridY = buildPlateMesh.position.y + plateLift;
         gridCenterX = buildPlateMesh.position.x;
         gridCenterZ = buildPlateMesh.position.z;
     }
