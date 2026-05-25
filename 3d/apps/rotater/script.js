@@ -8759,6 +8759,12 @@ function normalizeTiltRangeValue(value) {
     return Math.max(10, Math.min(50, 10 * Math.round(clamped / 10)));
 }
 
+function forceSpinRangeDefault() {
+    tiltRangeSlider.value = String(SPIN_RANGE_DEFAULT);
+    tiltRangeVal.textContent = `${SPIN_RANGE_DEFAULT}°`;
+    syncSliderTooltip(tiltRangeSlider);
+}
+
 btnPause.addEventListener('click', togglePause);
 document.getElementById('btnExportPause')?.addEventListener('click', togglePause);
 updateExportPauseButtonUI();
@@ -9075,7 +9081,7 @@ function updateRangeSliderForMode(mode) {
         tiltRangeSlider.min = '45';
         tiltRangeSlider.max = '360';
         tiltRangeSlider.step = '45';
-        if (parseFloat(tiltRangeSlider.value) > 360 || parseFloat(tiltRangeSlider.value) < 45) tiltRangeSlider.value = String(SPIN_RANGE_DEFAULT);
+        forceSpinRangeDefault();
         const tiltTicksEl = document.getElementById('tiltRangeTicks');
         if (tiltTicksEl) tiltTicksEl.innerHTML = '<span>45°</span><span>360°</span>';
     } else {  // tilt or wobble: tilt-amplitude range
@@ -9864,7 +9870,7 @@ rotateModeEl.addEventListener('change', () => {
     if (previousMode === 'tilt') rememberedTiltRange = normalizeTiltRangeValue(tiltRangeSlider.value);
 
     if (m === 'spin') {
-        tiltRangeSlider.value = String(SPIN_RANGE_DEFAULT);
+        forceSpinRangeDefault();
     } else if (m === 'tilt') {
         tiltRangeSlider.value = String(rememberedTiltRange);
     }
@@ -9893,6 +9899,7 @@ rotateModeEl.addEventListener('change', () => {
     document.documentElement.classList.toggle('tilt-mode', m === 'tilt' || m === 'spin' || m === 'wobble');
     document.documentElement.classList.toggle('wobble-mode', m === 'wobble');
     if (m === 'tilt' || m === 'spin' || m === 'wobble') updateRangeSliderForMode(m);
+    if (m === 'spin') forceSpinRangeDefault();
     ensurePausedForInteractionMode();
     syncExportMotionControlsFromMain();
     saveSettings();
