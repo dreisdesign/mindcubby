@@ -4491,6 +4491,8 @@ html.none-mode .gif-loop-label {
 
 .slider-tooltip[role="button"] {
     cursor: text;
+    text-decoration: underline dotted;
+    text-underline-offset: 2px;
 }
 
 .slider-tooltip[role="button"]:focus-visible {

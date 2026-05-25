@@ -1128,12 +1128,13 @@ function bindPreciseSliderTextEntry(slider, triggerEl, label, unit = '') {
     };
 
     const existingTitle = triggerEl.getAttribute('title') || '';
-    const hint = 'Double-click to type exact value';
+    const hint = 'Click to type exact value';
     triggerEl.setAttribute('title', existingTitle ? `${existingTitle} • ${hint}` : hint);
     triggerEl.setAttribute('role', 'button');
     triggerEl.setAttribute('tabindex', '0');
+    triggerEl.setAttribute('aria-label', `${label}: click to type exact value`);
 
-    triggerEl.addEventListener('dblclick', (ev) => {
+    triggerEl.addEventListener('click', (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
         openPrompt();
@@ -1147,11 +1148,15 @@ function bindPreciseSliderTextEntry(slider, triggerEl, label, unit = '') {
 }
 
 function initPreciseSliderTextEntry() {
-    bindPreciseSliderTextEntry(opacitySlider, opacityVal, 'Model shade');
-    bindPreciseSliderTextEntry(bgOpacitySlider, document.getElementById('bgOpacityVal'), 'Background shade');
-    bindPreciseSliderTextEntry(buildPlateShadeSliderEl, buildPlateShadeValEl, 'Build plate shade');
-    bindPreciseSliderTextEntry(tiltRangeSlider, tiltRangeVal, 'Rotation range', 'deg');
-    bindPreciseSliderTextEntry(wobbleSpinRangeSlider, wobbleSpinRangeVal, 'Wobble spin range', 'deg');
+    document.querySelectorAll('.control-label.range-label').forEach((labelEl) => {
+        const slider = labelEl.querySelector('input[type="range"]');
+        const tip = labelEl.querySelector('.slider-tooltip');
+        if (!slider || !tip) return;
+
+        const titleText = (labelEl.querySelector('span')?.childNodes?.[0]?.textContent || slider.id || 'Value').trim();
+        const unit = tip.textContent.includes('°') ? 'deg' : (tip.textContent.includes('%') ? '%' : '');
+        bindPreciseSliderTextEntry(slider, tip, titleText, unit);
+    });
 }
 
 initPreciseSliderTextEntry();
@@ -1479,6 +1484,9 @@ let tiltPhase = 0;
 let swingBaseAz = 0, swingLastAz = 0;
 let tiltBaseMeshRx = -Math.PI / 2;
 let spinDir = 1; // 1 = clockwise, -1 = counter-clockwise
+let rememberedSpinRange = SPIN_RANGE_DEFAULT;
+let rememberedTiltRange = TILT_RANGE_DEFAULT;
+let lastRotateMode = rotateModeEl.value;
 const renderDeltaClock = new THREE.Clock();
 const rulerPartHoverRaycaster = new THREE.Raycaster();
 const rulerPartHoverPointerNdc = new THREE.Vector2();
@@ -7403,6 +7411,9 @@ function restoreSettings() {
             const m = rotateModeEl.value;
             if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
             if (s.wobbleSpinRange) wobbleSpinRangeSlider.value = s.wobbleSpinRange;
+            if (m === 'spin') rememberedSpinRange = normalizeSpinRangeValue(tiltRangeSlider.value);
+            if (m === 'tilt') rememberedTiltRange = normalizeTiltRangeValue(tiltRangeSlider.value);
+            lastRotateMode = m;
             if (s.spinDir != null) spinDir = parseFloat(s.spinDir) < 0 ? -1 : 1;
             if (s.paused != null) {
                 isPaused = (s.paused === true || s.paused === '1' || s.paused === 1);
@@ -8718,22 +8729,43 @@ function updateTiltRangeReset() {
     tiltRangeResetBtn.classList.toggle('is-changed', parseFloat(tiltRangeSlider.value) !== def);
 }
 
+function normalizeSpinRangeValue(value) {
+    const v = Number.isFinite(Number(value)) ? Number(value) : SPIN_RANGE_DEFAULT;
+    const clamped = Math.max(45, Math.min(360, v));
+    return Math.max(45, Math.min(360, 45 * Math.round(clamped / 45)));
+}
+
+function normalizeTiltRangeValue(value) {
+    const v = Number.isFinite(Number(value)) ? Number(value) : TILT_RANGE_DEFAULT;
+    const clamped = Math.max(10, Math.min(50, v));
+    return Math.max(10, Math.min(50, 10 * Math.round(clamped / 10)));
+}
+
 btnPause.addEventListener('click', togglePause);
 document.getElementById('btnExportPause')?.addEventListener('click', togglePause);
 updateExportPauseButtonUI();
 applyDpadVisibility();
 
-// Re-clicking active Spin card toggles CW/CCW; other active cards toggle pause
-document.querySelectorAll('input[name="rotateMode"]').forEach(input => {
-    const label = input.closest('label');
+// Re-clicking active Spin card toggles CC/CCW; other active cards toggle pause.
+// Use delegated handlers so clicks on any nested element in the card behave consistently.
+const rotateOptionWasChecked = new WeakMap();
+document.addEventListener('pointerdown', (ev) => {
+    const label = ev.target?.closest?.('.rotation-option');
     if (!label) return;
-    let wasChecked = false;
-    label.addEventListener('mousedown', () => { wasChecked = input.checked; });
-    label.addEventListener('click', () => {
-        if (!wasChecked) return;
-        if (input.value === 'spin') toggleSpinDir();
-        else togglePause();
-    });
+    const input = label.querySelector('input[name="rotateMode"]');
+    if (!input) return;
+    rotateOptionWasChecked.set(input, !!input.checked);
+});
+document.addEventListener('click', (ev) => {
+    const label = ev.target?.closest?.('.rotation-option');
+    if (!label) return;
+    const input = label.querySelector('input[name="rotateMode"]');
+    if (!input) return;
+    const wasChecked = rotateOptionWasChecked.get(input) === true;
+    rotateOptionWasChecked.delete(input);
+    if (!wasChecked) return;
+    if (input.value === 'spin') toggleSpinDir();
+    else togglePause();
 });
 document.addEventListener('keydown', e => {
     const target = e.target;
@@ -9809,6 +9841,19 @@ if (exportMotionRangeEl) {
 
 rotateModeEl.addEventListener('change', () => {
     const m = rotateModeEl.value;
+    const previousMode = lastRotateMode;
+
+    if (previousMode === 'spin') rememberedSpinRange = normalizeSpinRangeValue(tiltRangeSlider.value);
+    if (previousMode === 'tilt') rememberedTiltRange = normalizeTiltRangeValue(tiltRangeSlider.value);
+
+    if (m === 'spin') {
+        tiltRangeSlider.value = String(rememberedSpinRange);
+    } else if (m === 'tilt') {
+        tiltRangeSlider.value = String(rememberedTiltRange);
+    }
+
+    lastRotateMode = m;
+
     // switching mode resumes rotation unless inspect/select mode is locking pause
     if (isPaused) {
         setPauseState(false, false, false);
@@ -9839,6 +9884,8 @@ rotateModeEl.addEventListener('change', () => {
 tiltRangeSlider.addEventListener('input', () => {
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
     syncSliderTooltip(tiltRangeSlider);
+    if (rotateModeEl.value === 'spin') rememberedSpinRange = normalizeSpinRangeValue(tiltRangeSlider.value);
+    if (rotateModeEl.value === 'tilt') rememberedTiltRange = normalizeTiltRangeValue(tiltRangeSlider.value);
     updateTiltRangeReset();
     syncExportMotionControlsFromMain();
     saveSettings();
