@@ -1114,6 +1114,7 @@ function bindPreciseSliderTextEntry(slider, triggerEl, label, unit = '') {
     triggerEl.dataset.preciseEntryBound = '1';
 
     const openPrompt = () => {
+        if (!fineTuningMode) return;
         const rawMin = parseFloat(slider.min);
         const rawMax = parseFloat(slider.max);
         const min = Number.isFinite(rawMin) ? rawMin : 0;
@@ -1127,9 +1128,7 @@ function bindPreciseSliderTextEntry(slider, triggerEl, label, unit = '') {
         setSliderValueAndDispatch(slider, parsed);
     };
 
-    const existingTitle = triggerEl.getAttribute('title') || '';
-    const hint = 'Click to type exact value';
-    triggerEl.setAttribute('title', existingTitle ? `${existingTitle} • ${hint}` : hint);
+    triggerEl.setAttribute('data-precise-label', label);
     triggerEl.setAttribute('role', 'button');
     triggerEl.setAttribute('tabindex', '0');
     triggerEl.setAttribute('aria-label', `${label}: click to type exact value`);
@@ -1141,9 +1140,30 @@ function bindPreciseSliderTextEntry(slider, triggerEl, label, unit = '') {
     });
 
     triggerEl.addEventListener('keydown', (ev) => {
+        if (!fineTuningMode) return;
         if (ev.key !== 'Enter' && ev.key !== ' ') return;
         ev.preventDefault();
         openPrompt();
+    });
+}
+
+function refreshPreciseSliderTextEntryState() {
+    const enabled = !!fineTuningMode;
+    document.querySelectorAll('.slider-tooltip[data-precise-entry-bound="1"]').forEach((el) => {
+        const label = el.getAttribute('data-precise-label') || 'Value';
+        if (enabled) {
+            el.setAttribute('title', 'Click to type exact value');
+            el.setAttribute('aria-label', `${label}: click to type exact value`);
+            el.setAttribute('aria-disabled', 'false');
+            el.setAttribute('tabindex', '0');
+            el.dataset.preciseEntryEnabled = '1';
+        } else {
+            el.setAttribute('title', 'Enable Fine tuning to type exact values');
+            el.setAttribute('aria-label', `${label}: enable Fine tuning to type exact values`);
+            el.setAttribute('aria-disabled', 'true');
+            el.setAttribute('tabindex', '-1');
+            el.dataset.preciseEntryEnabled = '0';
+        }
     });
 }
 
@@ -1484,7 +1504,6 @@ let tiltPhase = 0;
 let swingBaseAz = 0, swingLastAz = 0;
 let tiltBaseMeshRx = -Math.PI / 2;
 let spinDir = 1; // 1 = clockwise, -1 = counter-clockwise
-let rememberedSpinRange = SPIN_RANGE_DEFAULT;
 let rememberedTiltRange = TILT_RANGE_DEFAULT;
 let lastRotateMode = rotateModeEl.value;
 const renderDeltaClock = new THREE.Clock();
@@ -7411,7 +7430,6 @@ function restoreSettings() {
             const m = rotateModeEl.value;
             if (s.tiltRange) tiltRangeSlider.value = s.tiltRange;
             if (s.wobbleSpinRange) wobbleSpinRangeSlider.value = s.wobbleSpinRange;
-            if (m === 'spin') rememberedSpinRange = normalizeSpinRangeValue(tiltRangeSlider.value);
             if (m === 'tilt') rememberedTiltRange = normalizeTiltRangeValue(tiltRangeSlider.value);
             lastRotateMode = m;
             if (s.spinDir != null) spinDir = parseFloat(s.spinDir) < 0 ? -1 : 1;
@@ -9843,11 +9861,10 @@ rotateModeEl.addEventListener('change', () => {
     const m = rotateModeEl.value;
     const previousMode = lastRotateMode;
 
-    if (previousMode === 'spin') rememberedSpinRange = normalizeSpinRangeValue(tiltRangeSlider.value);
     if (previousMode === 'tilt') rememberedTiltRange = normalizeTiltRangeValue(tiltRangeSlider.value);
 
     if (m === 'spin') {
-        tiltRangeSlider.value = String(rememberedSpinRange);
+        tiltRangeSlider.value = String(SPIN_RANGE_DEFAULT);
     } else if (m === 'tilt') {
         tiltRangeSlider.value = String(rememberedTiltRange);
     }
@@ -9884,7 +9901,6 @@ rotateModeEl.addEventListener('change', () => {
 tiltRangeSlider.addEventListener('input', () => {
     tiltRangeVal.textContent = tiltRangeSlider.value + '°';
     syncSliderTooltip(tiltRangeSlider);
-    if (rotateModeEl.value === 'spin') rememberedSpinRange = normalizeSpinRangeValue(tiltRangeSlider.value);
     if (rotateModeEl.value === 'tilt') rememberedTiltRange = normalizeTiltRangeValue(tiltRangeSlider.value);
     updateTiltRangeReset();
     syncExportMotionControlsFromMain();
@@ -10812,6 +10828,8 @@ function applyFineTuningUIState(enabled) {
         el.style.opacity = fineTuningMode ? '0.35' : '';
         el.style.pointerEvents = fineTuningMode ? 'none' : '';
     });
+
+    refreshPreciseSliderTextEntryState();
 }
 
 // Fine Tuning toggle

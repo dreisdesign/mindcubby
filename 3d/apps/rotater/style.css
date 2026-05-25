@@ -4489,13 +4489,13 @@ html.none-mode .gif-loop-label {
     display: inline;
 }
 
-.slider-tooltip[role="button"] {
+html.fine-tuning-enabled .slider-tooltip[role="button"][data-precise-entry-enabled="1"] {
     cursor: text;
     text-decoration: underline dotted;
     text-underline-offset: 2px;
 }
 
-.slider-tooltip[role="button"]:focus-visible {
+html.fine-tuning-enabled .slider-tooltip[role="button"][data-precise-entry-enabled="1"]:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--color-on-surface) 38%, transparent);
     outline-offset: 2px;
     border-radius: 4px;

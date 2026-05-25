@@ -5,7 +5,7 @@
 - **Navigation wording parity**: updated About panel right-drag description to match current vertical-lock interaction behavior.
 
 ### Added
-- **Precise slider text entry**: click slider value badges (or focus + Enter/Space) to type exact values for core shade/range controls.
+- **Precise slider text entry**: with Fine tuning enabled, click slider value badges (or focus + Enter/Space) to type exact values for core shade/range controls.
 
 ### Fixed
 - **Spin direction tooltip clarity**: Spin card label now reflects active direction and clearly indicates re-click toggles between CC and CCW.
