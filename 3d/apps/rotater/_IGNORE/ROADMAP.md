@@ -1,6 +1,6 @@
 # Rotater Roadmap
 
-Updated: 2026-05-24
+Updated: 2026-05-25
 
 This roadmap tracks incomplete work only. Completed work is recorded in CHANGELOG.md.
 
@@ -16,11 +16,11 @@ This roadmap tracks incomplete work only. Completed work is recorded in CHANGELO
 
 | Rank | Item | Why It Matters | Effort | Status |
 |---|---|---|---|---|
-| P0-1 | Export close behavior consistency (inside/outside/non-drag click) | Prevents accidental modal loss and interaction confusion in Share flow | M | In progress |
+| P0-1 | Export close behavior consistency (inside/outside/non-drag click) | Prevents accidental modal loss and interaction confusion in Share flow | M | Done |
 | P1-1 | Hover preview correctness (tilt preview + spin direction parity) | Animation affordance must match actual runtime behavior | S | Done |
-| P1-2 | Grid clipping across build plate shapes | Visual correctness issue in core workspace context | M | Next |
-| P1-3 | Grid + model bounding-box dynamic contrast | Legibility/accessibility across light/dark and colored surfaces | M | Next |
-| P1-4 | Clear/Ceramic material fidelity | Product quality and confidence in material preset output | M | Next |
+| P1-2 | Grid clipping across build plate shapes | Visual correctness issue in core workspace context | M | Done |
+| P1-3 | Grid + model bounding-box dynamic contrast | Legibility/accessibility across light/dark and colored surfaces | M | Done |
+| P1-4 | Clear/Ceramic material fidelity | Product quality and confidence in material preset output | M | Done |
 | P1-5 | Background Model Sync click action disambiguation | Prevent accidental state changes from ambiguous click targets | S | Done |
 
 ### Stabilization Watchlist (Recently Shipped, Validate)
@@ -36,8 +36,7 @@ This roadmap tracks incomplete work only. Completed work is recorded in CHANGELO
 - Animation continuity after import and after still export.
 - Reframe/level action should avoid unexpected zoom changes.
 - Export controls available outside crop mode, or a clearer mode model.
-- Rotation direction option (CW/CCW) and optional tilt pivot (top/bottom).
-- Keyboard shortcut hints in high-frequency controls and About panel.
+- Optional tilt pivot choice (top/bottom) for alternate motion style.
 - Export duration controls parity across all relevant formats/states.
 - Model reorder UX threshold and drag-handle discoverability.
 - Export footer CTA density and hierarchy cleanup.
@@ -48,10 +47,10 @@ This roadmap tracks incomplete work only. Completed work is recorded in CHANGELO
 
 | Train | Target Build Window | Scope | Exit Criteria |
 |---|---|---|---|
-| T1 | 2.2.27 (next patch) | P0-1 export close behavior consistency | Single non-drag click close is deterministic; crop inside-frame exception preserved |
-| T2 | 2.2.28 | P1-1 hover preview correctness + P1-5 sync-click disambiguation | Hover previews match runtime direction/motion; sync click does one clear action |
-| T3 | 2.2.29 | P1-2 grid clipping + P1-3 dynamic contrast | Grid renders correctly across plate shapes and remains legible across themes/colors |
-| T4 | 2.2.30 | P1-4 clear/ceramic fidelity + stabilization watchlist sweep | Material output passes visual QA and recently shipped regressions remain closed |
+| T1 | 2.2.27 (shipped) | P0-1 export close behavior consistency | Single non-drag click close is deterministic; crop inside-frame exception preserved |
+| T2 | 2.2.28 (shipped) | P1-1 hover preview correctness + P1-5 sync-click disambiguation | Hover previews match runtime direction/motion; sync click does one clear action |
+| T3 | 2.2.29 (shipped) | P1-2 grid clipping + P1-3 dynamic contrast | Grid renders correctly across plate shapes and remains legible across themes/colors |
+| T4 | 2.2.30 (shipped) | P1-4 clear/ceramic fidelity + stabilization watchlist sweep | Material output passes visual QA and recently shipped regressions remain closed |
 
 Release policy:
 - Do not pull new UX expansion from follow-ups until T1-T4 reliability train is complete.
@@ -73,9 +72,9 @@ Goal: close interaction regressions and remove ambiguous behavior before feature
 | A6 | Active part arrow navigation | Interaction Design | S | None | Planned |
 | A7 | New version indicator badge | Release UX | S | None | Planned |
 | A8 | Upload modal persistence during native picker | Upload Flow UX | S | A4 | Planned |
-| A9 | Info panel keyboard shortcuts | UX / Docs | S | None | Planned |
+| A9 | Info panel keyboard shortcuts | UX / Docs | S | None | Done |
 | A10 | Model picker default positioning | UX | S | None | Planned |
-| A11 | Slider precise text entry mode | Controls UX | M | A1 | Planned |
+| A11 | Slider precise text entry mode | Controls UX | M | None | Done |
 
 ### Phase B: Export and Workspace Foundation
 

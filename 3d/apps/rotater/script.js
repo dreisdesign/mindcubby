@@ -1085,6 +1085,77 @@ function syncAllRangeFillIndicators(root = document) {
     });
 }
 
+function parseNumberInput(rawValue) {
+    const cleaned = String(rawValue || '').trim().replace(/[^0-9.+\-]/g, '');
+    const parsed = Number.parseFloat(cleaned);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function setSliderValueAndDispatch(slider, value) {
+    if (!slider) return;
+    const rawMin = parseFloat(slider.min);
+    const rawMax = parseFloat(slider.max);
+    const min = Number.isFinite(rawMin) ? rawMin : 0;
+    const max = Number.isFinite(rawMax) ? rawMax : 100;
+    const bounded = Math.max(min, Math.min(max, Number(value)));
+    const rawStep = parseFloat(slider.step);
+    const shouldSnapToStep = Number.isFinite(rawStep) && rawStep > 0 && slider.step !== 'any';
+    const snapped = shouldSnapToStep
+        ? min + Math.round((bounded - min) / rawStep) * rawStep
+        : bounded;
+    const decimals = shouldSnapToStep ? Math.min((String(rawStep).split('.')[1] || '').length, 6) : 4;
+    slider.value = Number(snapped).toFixed(decimals);
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    slider.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function bindPreciseSliderTextEntry(slider, triggerEl, label, unit = '') {
+    if (!slider || !triggerEl || triggerEl.dataset.preciseEntryBound === '1') return;
+    triggerEl.dataset.preciseEntryBound = '1';
+
+    const openPrompt = () => {
+        const rawMin = parseFloat(slider.min);
+        const rawMax = parseFloat(slider.max);
+        const min = Number.isFinite(rawMin) ? rawMin : 0;
+        const max = Number.isFinite(rawMax) ? rawMax : 100;
+        const currentValue = parseFloat(slider.value);
+        const currentDisplay = Number.isFinite(currentValue) ? currentValue : min;
+        const input = window.prompt(`${label} (${min} to ${max}${unit ? ` ${unit}` : ''})`, `${currentDisplay}`);
+        if (input == null) return;
+        const parsed = parseNumberInput(input);
+        if (parsed == null) return;
+        setSliderValueAndDispatch(slider, parsed);
+    };
+
+    const existingTitle = triggerEl.getAttribute('title') || '';
+    const hint = 'Double-click to type exact value';
+    triggerEl.setAttribute('title', existingTitle ? `${existingTitle} • ${hint}` : hint);
+    triggerEl.setAttribute('role', 'button');
+    triggerEl.setAttribute('tabindex', '0');
+
+    triggerEl.addEventListener('dblclick', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        openPrompt();
+    });
+
+    triggerEl.addEventListener('keydown', (ev) => {
+        if (ev.key !== 'Enter' && ev.key !== ' ') return;
+        ev.preventDefault();
+        openPrompt();
+    });
+}
+
+function initPreciseSliderTextEntry() {
+    bindPreciseSliderTextEntry(opacitySlider, opacityVal, 'Model shade');
+    bindPreciseSliderTextEntry(bgOpacitySlider, document.getElementById('bgOpacityVal'), 'Background shade');
+    bindPreciseSliderTextEntry(buildPlateShadeSliderEl, buildPlateShadeValEl, 'Build plate shade');
+    bindPreciseSliderTextEntry(tiltRangeSlider, tiltRangeVal, 'Rotation range', 'deg');
+    bindPreciseSliderTextEntry(wobbleSpinRangeSlider, wobbleSpinRangeVal, 'Wobble spin range', 'deg');
+}
+
+initPreciseSliderTextEntry();
+
 // ── Slider snap-point dots ────────────────────────────────────────────────────
 function addSnapDots(slider) {
     const wrap = slider.closest('.range-wrap');
@@ -8631,7 +8702,13 @@ function toggleSpinDir() {
 
 function updateSpinDirUI() {
     const spinLabel = document.getElementById('spinModeLabel');
-    if (spinLabel) spinLabel.title = spinDir > 0 ? 'Switch to counter-clockwise' : 'Switch to clockwise';
+    if (spinLabel) {
+        const title = spinDir > 0
+            ? 'Rotation: CC (click Spin again for CCW)'
+            : 'Rotation: CCW (click Spin again for CC)';
+        spinLabel.title = title;
+        spinLabel.setAttribute('aria-label', title);
+    }
     document.documentElement.classList.toggle('spin-ccw', spinDir < 0);
 }
 

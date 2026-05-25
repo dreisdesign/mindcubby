@@ -1,3 +1,17 @@
+## [2.2.31] - 2026-05-25
+
+### Changed
+- **About panel shortcut guidance**: added a dedicated quick-controls list (Space pause/resume, Esc close panel, Spin re-click direction toggle, and exact-value slider entry hint).
+- **Navigation wording parity**: updated About panel right-drag description to match current vertical-lock interaction behavior.
+
+### Added
+- **Precise slider text entry**: double-click slider value badges (or focus + Enter/Space) to type exact values for core shade/range controls.
+
+### Fixed
+- **Spin direction tooltip clarity**: Spin card label now reflects active direction and clearly indicates re-click toggles between CC and CCW.
+
+---
+
 ## [2.2.27] - 2026-05-24
 
 ### Fixed
