@@ -1,3 +1,10 @@
+## [2.2.34] - 2026-05-27
+
+### Fixed
+- **Ruler part-hover on single-part models**: the ruler HUD inspect toggle now appears for single-part models as well as multipart sessions, while multi-select stays hidden until multipart selection is relevant.
+
+---
+
 ## [2.2.33] - 2026-05-27
 
 ### Changed

@@ -889,6 +889,8 @@ const exportMotionSpeedEl = document.getElementById('exportMotionSpeed');
 const exportMotionRangeEl = document.getElementById('exportMotionRange');
 const exportMotionRangeLabelEl = document.getElementById('exportMotionRangeLabel');
 const exportMotionRangeValEl = document.getElementById('exportMotionRangeVal');
+const rulerModePickerEl = document.getElementById('rulerModePicker');
+const rulerHoverToggleEl = document.getElementById('rulerHoverToggle');
 const rulerSelectToggleEl = document.getElementById('rulerSelectToggle');
 const showDpadToggleEl = document.getElementById('showDpadToggle');
 const devModeToggleEl = document.getElementById('devModeToggle');
@@ -6137,6 +6139,7 @@ function updateRulerPartHoverFromPointerEvent(ev) {
 
 function updateRulerHUD() {
     const inspectActive = !!(hasModelParts() && rulerPartHoverEnabled);
+    const hasParts = hasModelParts();
     if (btnInspectMode) {
         const label = inspectActive ? 'Measurements on' : 'Measurements off';
         btnInspectMode.classList.toggle('is-active', inspectActive);
@@ -6144,6 +6147,9 @@ function updateRulerHUD() {
         btnInspectMode.title = label;
         btnInspectMode.setAttribute('aria-label', label);
     }
+    if (rulerModePickerEl) rulerModePickerEl.hidden = !hasParts;
+    if (rulerHoverToggleEl) rulerHoverToggleEl.hidden = !hasParts;
+    if (rulerSelectToggleEl) rulerSelectToggleEl.hidden = !isMultipartModel();
 
     const hud = document.getElementById('rulerHUD');
     if (!hud) return;

@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.2.33**
+**Version (current workspace): 2.2.34**
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
@@ -181,6 +181,7 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 - **Build Plate Size**: sets the virtual build plate dimensions used by Surface/Grid context (`180x180`, `220x220`, `235x235`, `256x256`, `300x300`, or `Custom`).
 - **Custom Build Plate Width/Depth**: when `Custom` is selected, sets plate width/depth in mm.
 - **Ruler Units**: switches measurement units between metric (`mm`) and imperial (`in`).
+- **Measurements / Inspect**: the ruler HUD inspect toggle now appears for both single-part and multipart models; `Select` remains multipart-only.
 - **Load 3D Benchy**: loads the default Benchy test model.
 - **Dark mode**: toggles app theme.
 - **About Rotater**: opens version/build info and project links, now includes Etsy ahead of Printables, and keeps the panel shortcut list keyboard-only. The canvas About button shows a NEW badge after an update until the panel is opened once.

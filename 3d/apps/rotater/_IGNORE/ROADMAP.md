@@ -66,7 +66,7 @@ Goal: close interaction regressions and remove ambiguous behavior before feature
 |---|---|---|---|---|---|
 | A1 | Multipart persistence hardening | State Persistence | M | None | Planned |
 | A2 | Interactive export duration dropdown refinements | Export UX | S | None | Planned |
-| A3 | Ruler part-hover supports single-part models | Bugfix | S | None | Planned |
+| A3 | Ruler part-hover supports single-part models | Bugfix | S | None | Done |
 | A4 | Upload decision default simplification | Upload Flow UX | M | Existing upload decision modal | Planned |
 | A5 | Model list sorting controls | Model Manager UX | S | None | Planned |
 | A6 | Active part arrow navigation | Interaction Design | S | None | Planned |
