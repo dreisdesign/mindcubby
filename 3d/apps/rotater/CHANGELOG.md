@@ -2,6 +2,7 @@
 
 ### Changed
 - **About panel logo fallback behavior**: the full Rotater wordmark now remains the default in the About header and scales with min/max bounds; only narrow layouts fall back to the compact `R` logo.
+- **Roadmap normalization**: `_IGNORE/ROADMAP.md` now uses priority tables for active watchlists/follow-ups and removes completed Phase A/reliability/release-train entries so the roadmap remains open-work only.
 
 ### Fixed
 - **About Etsy logo visibility**: Etsy now uses a dedicated `etsy-logo.svg` asset in the About links list for clearer, consistent rendering.

@@ -1,6 +1,6 @@
 # Rotater Roadmap
 
-Updated: 2026-05-25
+Updated: 2026-05-27
 
 This roadmap tracks incomplete work only. Completed work is recorded in CHANGELOG.md.
 
@@ -10,51 +10,41 @@ This roadmap tracks incomplete work only. Completed work is recorded in CHANGELO
 - Improve export throughput second (speed, presets, multi-variation automation).
 - Expand architecture and advanced tooling only after reliability gates are met.
 
+## Tracking Conventions
+
+- This roadmap contains open work only (`Planned`, `Backlog`, or validation-in-progress items).
+- Completed work is moved to `CHANGELOG.md` and removed from this file.
+- Each active queue should use a priority table (avoid free-form lists for primary planning).
+
 ## Current Operating View (Single Source of Truth)
 
 ### Active Reliability Queue (Now)
 
-| Rank | Item | Why It Matters | Effort | Status |
-|---|---|---|---|---|
-| P0-1 | Export close behavior consistency (inside/outside/non-drag click) | Prevents accidental modal loss and interaction confusion in Share flow | M | Done |
-| P1-1 | Hover preview correctness (tilt preview + spin direction parity) | Animation affordance must match actual runtime behavior | S | Done |
-| P1-2 | Grid clipping across build plate shapes | Visual correctness issue in core workspace context | M | Done |
-| P1-3 | Grid + model bounding-box dynamic contrast | Legibility/accessibility across light/dark and colored surfaces | M | Done |
-| P1-4 | Clear/Ceramic material fidelity | Product quality and confidence in material preset output | M | Done |
-| P1-5 | Background Model Sync click action disambiguation | Prevent accidental state changes from ambiguous click targets | S | Done |
+No open P0/P1 reliability blockers at this time. New regressions should be added here with explicit rank and effort.
 
 ### Stabilization Watchlist (Recently Shipped, Validate)
 
-- Multi-select state parity on reopen (OFF mismatch regression).
-- Multi-select toggle behavior should not pause animation.
-- Right-drag vertical-lock behavior and pivot stability in spin/tilt flows.
-- Preset-apply FPS regression mitigation under repeated color/preset switching.
-- Benchy load should always level and reframe.
+| Priority | Item | Status |
+|---|---|---|
+| V1 | Multi-select state parity on reopen (OFF mismatch regression) | Validate |
+| V1 | Multi-select toggle behavior should not pause animation | Validate |
+| V2 | Right-drag vertical-lock behavior and pivot stability in spin/tilt flows | Validate |
+| V2 | Preset-apply FPS regression mitigation under repeated color/preset switching | Validate |
+| V2 | Benchy load should always level and reframe | Validate |
 
 ### High-Value UX Follow-Ups (After Reliability Queue)
 
-- Animation continuity after import and after still export.
-- Reframe/level action should avoid unexpected zoom changes.
-- Export controls available outside crop mode, or a clearer mode model.
-- Optional tilt pivot choice (top/bottom) for alternate motion style.
-- Export duration controls parity across all relevant formats/states.
-- Model reorder UX threshold and drag-handle discoverability.
-- Export footer CTA density and hierarchy cleanup.
-- ZIP project scope hardening (settings, naming, colors deterministic on restore).
-- HUD vertical rhythm alignment (FPS badge and action cluster).
-
-### Release Train (Target Build Windows)
-
-| Train | Target Build Window | Scope | Exit Criteria |
+| Priority | Item | Effort | Status |
 |---|---|---|---|
-| T1 | 2.2.27 (shipped) | P0-1 export close behavior consistency | Single non-drag click close is deterministic; crop inside-frame exception preserved |
-| T2 | 2.2.28 (shipped) | P1-1 hover preview correctness + P1-5 sync-click disambiguation | Hover previews match runtime direction/motion; sync click does one clear action |
-| T3 | 2.2.29 (shipped) | P1-2 grid clipping + P1-3 dynamic contrast | Grid renders correctly across plate shapes and remains legible across themes/colors |
-| T4 | 2.2.30 (shipped) | P1-4 clear/ceramic fidelity + stabilization watchlist sweep | Material output passes visual QA and recently shipped regressions remain closed |
-
-Release policy:
-- Do not pull new UX expansion from follow-ups until T1-T4 reliability train is complete.
-- Each train requires smoke checks plus targeted manual QA against the related VQA screenshot set.
+| P2 | Animation continuity after import and after still export | M | Planned |
+| P2 | Reframe/level action should avoid unexpected zoom changes | S | Planned |
+| P2 | Export controls available outside crop mode, or a clearer mode model | M | Planned |
+| P3 | Optional tilt pivot choice (top/bottom) for alternate motion style | M | Planned |
+| P3 | Export duration controls parity across all relevant formats/states | S | Planned |
+| P3 | Model reorder UX threshold and drag-handle discoverability | S | Planned |
+| P3 | Export footer CTA density and hierarchy cleanup | S | Planned |
+| P3 | ZIP project scope hardening (settings, naming, colors deterministic on restore) | M | Planned |
+| P3 | HUD vertical rhythm alignment (FPS badge and action cluster) | S | Planned |
 
 ## Program Plan
 
@@ -66,15 +56,11 @@ Goal: close interaction regressions and remove ambiguous behavior before feature
 |---|---|---|---|---|---|
 | A1 | Multipart persistence hardening | State Persistence | M | None | Planned |
 | A2 | Interactive export duration dropdown refinements | Export UX | S | None | Planned |
-| A3 | Ruler part-hover supports single-part models | Bugfix | S | None | Done |
 | A4 | Upload decision default simplification | Upload Flow UX | M | Existing upload decision modal | Planned |
 | A5 | Model list sorting controls | Model Manager UX | S | None | Planned |
 | A6 | Active part arrow navigation | Interaction Design | S | None | Planned |
-| A7 | New version indicator badge | Release UX | S | None | Done |
 | A8 | Upload modal persistence during native picker | Upload Flow UX | S | A4 | Planned |
-| A9 | Info panel keyboard shortcuts | UX / Docs | S | None | Done |
 | A10 | Model picker default positioning | UX | S | None | Planned |
-| A11 | Slider precise text entry mode | Controls UX | M | None | Done |
 
 ### Phase B: Export and Workspace Foundation
 
@@ -119,7 +105,7 @@ Goal: support short-link scene sharing with robust offline fallback.
 
 ## Critical Path and Gates
 
-- Gate 1: Complete active reliability queue before starting new Phase B features beyond B1/B2.
+- Gate 1: Maintain an empty active reliability queue before starting new Phase B features beyond B1/B2.
 - Gate 2: Land B1 before B3/B5/B6/B7/B8.
 - Gate 3: Land C1 before C2, and C3 before C4/C5/C6.
 - Gate 4: Do not begin Phase D implementation until cloud architecture decision is explicit.
