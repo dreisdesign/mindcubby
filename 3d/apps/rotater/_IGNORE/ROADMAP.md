@@ -46,62 +46,54 @@ No open P0/P1 reliability blockers at this time. New regressions should be added
 | P3 | ZIP project scope hardening (settings, naming, colors deterministic on restore) | M | Planned |
 | P3 | HUD vertical rhythm alignment (FPS badge and action cluster) | S | Planned |
 
-## Program Plan
+## Kanban Board (Single Source of Truth)
 
-### Phase A: Stability and UX Consistency
+### Ready Next
 
-Goal: close interaction regressions and remove ambiguous behavior before feature expansion.
+| ID | Project | Type | Difficulty | Dependencies |
+|---|---|---|---|---|
+| A1 | Multipart persistence hardening | State Persistence | M | None |
+| A2 | Interactive export duration dropdown refinements | Export UX | S | None |
+| A4 | Upload decision default simplification | Upload Flow UX | M | Existing upload decision modal |
+| A10 | Model picker default positioning | UX | S | None |
+| B1 | Export workspace consolidation finish pass | Rendering UX | M | A1 |
+| B2 | Ruler persistence polish | Workspace Tools | M | A1 |
 
-| ID | Project | Type | Difficulty | Dependencies | Status |
-|---|---|---|---|---|---|
-| A1 | Multipart persistence hardening | State Persistence | M | None | Planned |
-| A2 | Interactive export duration dropdown refinements | Export UX | S | None | Planned |
-| A4 | Upload decision default simplification | Upload Flow UX | M | Existing upload decision modal | Planned |
-| A5 | Model list sorting controls | Model Manager UX | S | None | Planned |
-| A6 | Active part arrow navigation | Interaction Design | S | None | Planned |
-| A8 | Upload modal persistence during native picker | Upload Flow UX | S | A4 | Planned |
-| A10 | Model picker default positioning | UX | S | None | Planned |
+### Planned Queue
 
-### Phase B: Export and Workspace Foundation
+| ID | Project | Type | Difficulty | Dependencies |
+|---|---|---|---|---|
+| A5 | Model list sorting controls | Model Manager UX | S | None |
+| A6 | Active part arrow navigation | Interaction Design | S | None |
+| A8 | Upload modal persistence during native picker | Upload Flow UX | S | A4 |
+| B3 | Optional filename label in exports | Export UX | S | B1 |
+| B4 | Single-click canvas full-screen | Viewer UX | S | B1 |
+| B5 | Watermark redesign and reintroduction | Branding/Export | M | B1 |
+| B6 | Batch export presets | Export Workflow | M | B1 |
+| B7 | Export time estimation and encoding performance | Export UX / Perf | M | B1 |
+| B8 | Export variation matrix (BG/Plate toggles) | Export Workflow | M | B1 |
 
-Goal: make export reliable, faster, and scalable for repetitive production output.
+### Later Queue
 
-| ID | Project | Type | Difficulty | Dependencies | Status |
-|---|---|---|---|---|---|
-| B1 | Export workspace consolidation finish pass | Rendering UX | M | A1 | Planned |
-| B2 | Ruler persistence polish | Workspace Tools | M | A1 | Planned |
-| B3 | Optional filename label in exports | Export UX | S | B1 | Planned |
-| B4 | Single-click canvas full-screen | Viewer UX | S | B1 | Planned |
-| B5 | Watermark redesign and reintroduction | Branding/Export | M | B1 | Planned |
-| B6 | Batch export presets | Export Workflow | M | B1 | Planned |
-| B7 | Export time estimation and encoding performance | Export UX / Perf | M | B1 | Planned |
-| B8 | Export variation matrix (BG/Plate toggles) | Export Workflow | M | B1 | Planned |
+| ID | Project | Type | Difficulty | Dependencies |
+|---|---|---|---|---|
+| C1 | JavaScript module refactor (sortable naming) | Code Architecture | L | A1 |
+| C2 | Functions index + Copilot docs map | AI-assisted Dev Workflow | M | C1 |
+| C3 | Settings-only undo stack | Interaction System | L | A1 |
+| C4 | Advanced measure mode | Geometry Tools | L | B2, C3 |
+| C5 | Drag/move models on plate | Geometry Interaction | XL | A1, C3 |
+| C6 | Pinnable cards | UI Architecture | L | C3 |
+| C7 | Full-screen model manager | Product Feature | L | A1 |
+| C8 | Preset gallery with save-as | Preset Management | M | C7 |
 
-### Phase C: Interaction and Architecture Expansion
+### Backlog / Blocked
 
-Goal: establish maintainable architecture and advanced workspace interactions.
-
-| ID | Project | Type | Difficulty | Dependencies | Status |
-|---|---|---|---|---|---|
-| C1 | JavaScript module refactor (sortable naming) | Code Architecture | L | A1 | Planned |
-| C2 | Functions index + Copilot docs map | AI-assisted Dev Workflow | M | C1 | Planned |
-| C3 | Settings-only undo stack | Interaction System | L | A1 | Planned |
-| C4 | Advanced measure mode | Geometry Tools | L | B2, C3 | Planned |
-| C5 | Drag/move models on plate | Geometry Interaction | XL | A1, C3 | Planned |
-| C6 | Pinnable cards | UI Architecture | L | C3 | Planned |
-| C7 | Full-screen model manager | Product Feature | L | A1 | Planned |
-| C8 | Preset gallery with save-as | Preset Management | M | C7 | Planned |
-
-### Phase D: Share and Cloud Strategy (Optional Program)
-
-Goal: support short-link scene sharing with robust offline fallback.
-
-| ID | Project | Type | Difficulty | Dependencies | Status |
-|---|---|---|---|---|---|
-| D1 | Short-link configuration locker | Cloud Infrastructure | XL | Backend service decision | Backlog |
-| D2 | Passkey-gated sync model | Privacy/Security | XL | D1 | Backlog |
-| D3 | Local-to-cloud STL UID rehydration | Data Mapping | XL | D1, D2 | Backlog |
-| D4 | Manual JSON fallback flow | Reliability | M | D1 | Backlog |
+| ID | Project | Type | Difficulty | Blocker |
+|---|---|---|---|---|
+| D1 | Short-link configuration locker | Cloud Infrastructure | XL | Backend service decision |
+| D2 | Passkey-gated sync model | Privacy/Security | XL | D1 |
+| D3 | Local-to-cloud STL UID rehydration | Data Mapping | XL | D1, D2 |
+| D4 | Manual JSON fallback flow | Reliability | M | D1 |
 
 ## Critical Path and Gates
 
