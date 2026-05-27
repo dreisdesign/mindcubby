@@ -4764,9 +4764,14 @@ html.loaded .menu-btn {
 }
 
 .info-panel-logo {
-    width: min(180px, 100%);
+    width: clamp(118px, 46vw, 208px);
     height: auto;
     display: block;
+}
+
+.info-panel-logo--icon {
+    width: 30px;
+    display: none;
 }
 
 .info-panel-body {
@@ -4803,6 +4808,18 @@ html.loaded .menu-btn {
     flex: 0 0 auto;
 }
 
+.brand-link-logo {
+    flex: 0 0 auto;
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.brand-link-logo--etsy {
+    width: 30px;
+    height: 15px;
+}
+
 .help-controls-list {
     margin: 0;
     padding: 0 0 0 14px;
@@ -4826,7 +4843,17 @@ html.loaded .menu-btn {
     }
 
     .info-panel-logo {
-        width: min(210px, 100%);
+        width: clamp(140px, 18vw, 228px);
+    }
+}
+
+@media (max-width: 430px) {
+    .info-panel-logo--wordmark {
+        display: none;
+    }
+
+    .info-panel-logo--icon {
+        display: block;
     }
 }
 
