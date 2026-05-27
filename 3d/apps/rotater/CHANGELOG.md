@@ -1,3 +1,14 @@
+## [2.2.33] - 2026-05-27
+
+### Changed
+- **About panel keyboard cleanup**: removed mouse/click interactions from the keyboard shortcuts section and kept only Space, Esc, and Arrow key shortcuts.
+- **About panel branding layout**: the About header now shows the Rotater wordmark when space allows, with a wider desktop panel to keep the logo readable.
+
+### Added
+- **Etsy link in About panel**: added Mind Cubby's Etsy link above Printables in the About panel links list.
+
+---
+
 ## [2.2.31] - 2026-05-25
 
 ### Changed

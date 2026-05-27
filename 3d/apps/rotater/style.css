@@ -4751,6 +4751,24 @@ html.loaded .menu-btn {
     width: 300px;
 }
 
+.settings-panel-header--about {
+    align-items: flex-start;
+}
+
+.info-panel-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.info-panel-logo {
+    width: min(180px, 100%);
+    height: auto;
+    display: block;
+}
+
 .info-panel-body {
     padding: 14px 16px 16px !important;
     gap: 8px !important;
@@ -4781,6 +4799,10 @@ html.loaded .menu-btn {
     gap: 10px;
 }
 
+.info-link-btn svg {
+    flex: 0 0 auto;
+}
+
 .help-controls-list {
     margin: 0;
     padding: 0 0 0 14px;
@@ -4796,6 +4818,16 @@ html.loaded .menu-btn {
 
 .help-controls-list strong {
     color: var(--palette-blueberry-600);
+}
+
+@media (min-width: 900px) {
+    .info-panel {
+        width: 340px;
+    }
+
+    .info-panel-logo {
+        width: min(210px, 100%);
+    }
 }
 
 /* ── Settings overlay panel ── */
