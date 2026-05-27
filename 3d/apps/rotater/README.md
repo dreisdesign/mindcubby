@@ -183,7 +183,7 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 - **Ruler Units**: switches measurement units between metric (`mm`) and imperial (`in`).
 - **Load 3D Benchy**: loads the default Benchy test model.
 - **Dark mode**: toggles app theme.
-- **About Rotater**: opens version/build info and project links.
+- **About Rotater**: opens version/build info and project links. The canvas About button shows a NEW badge after an update until the panel is opened once.
 - **Reset Everything**: clears all saved Rotater state (including lighting, animation, UI preferences, dismissed warnings, and stored model/project data) and reloads.
 
 ### Viewer controls

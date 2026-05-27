@@ -11220,6 +11220,31 @@ btnDownloadPackage?.addEventListener('click', async () => {
 const helpOverlayEl = document.getElementById('helpOverlay');
 const helpPanelEl = helpOverlayEl?.querySelector('.help-panel') || null;
 const btnHelpCanvasEl = document.getElementById('btnHelpCanvas');
+const buildUpdateBadgeEl = document.getElementById('buildUpdateBadge');
+const BUILD_SEEN_KEY = 'rotater_build_seen';
+
+function getCurrentBuildVersion() {
+    return typeof ROTATER_BUILD !== 'undefined' ? ROTATER_BUILD : (window.ROTATER_BUILD || 'dev');
+}
+
+function isBuildUpdateSeen() {
+    try {
+        return localStorage.getItem(BUILD_SEEN_KEY) === getCurrentBuildVersion();
+    } catch (e) {
+        return true;
+    }
+}
+
+function markBuildUpdateSeen() {
+    try {
+        localStorage.setItem(BUILD_SEEN_KEY, getCurrentBuildVersion());
+    } catch (e) { }
+}
+
+function syncBuildUpdateBadge() {
+    if (!buildUpdateBadgeEl) return;
+    buildUpdateBadgeEl.hidden = isBuildUpdateSeen();
+}
 
 function positionHelpOverlay() {
     if (!helpOverlayEl || !helpPanelEl || !btnHelpCanvasEl) return;
@@ -11235,6 +11260,8 @@ function positionHelpOverlay() {
 
 btnHelpCanvasEl?.addEventListener('click', () => {
     if (!helpOverlayEl) return;
+    markBuildUpdateSeen();
+    syncBuildUpdateBadge();
     helpOverlayEl.hidden = false;
     positionHelpOverlay();
 });
@@ -11247,6 +11274,8 @@ document.getElementById('helpOverlay')?.addEventListener('click', (e) => {
 window.addEventListener('resize', () => {
     if (helpOverlayEl && !helpOverlayEl.hidden) positionHelpOverlay();
 });
+
+syncBuildUpdateBadge();
 
 // ── App Settings overlay ──────────────────────────────────────────────────────
 const appSettingsOverlayEl = document.getElementById('appSettingsOverlay');

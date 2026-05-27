@@ -70,7 +70,7 @@ Goal: close interaction regressions and remove ambiguous behavior before feature
 | A4 | Upload decision default simplification | Upload Flow UX | M | Existing upload decision modal | Planned |
 | A5 | Model list sorting controls | Model Manager UX | S | None | Planned |
 | A6 | Active part arrow navigation | Interaction Design | S | None | Planned |
-| A7 | New version indicator badge | Release UX | S | None | Planned |
+| A7 | New version indicator badge | Release UX | S | None | Done |
 | A8 | Upload modal persistence during native picker | Upload Flow UX | S | A4 | Planned |
 | A9 | Info panel keyboard shortcuts | UX / Docs | S | None | Done |
 | A10 | Model picker default positioning | UX | S | None | Planned |

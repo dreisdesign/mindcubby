@@ -132,6 +132,7 @@
 
 ## [Unreleased]
 ### Added
+- **About button build badge**: the canvas About Rotater button now shows a small NEW badge after an app update until the help panel is opened for the current build.
 - **Share: Copy Image to clipboard** — added a new `Copy Image` action in the Share panel that copies the current still render directly to clipboard as PNG (or JPEG when JPG format is selected).
 - **Dev Mode FPS overlay** — added `Dev mode (show FPS)` in App Settings (dock + modal) with an in-viewer FPS readout for runtime diagnostics; default state is OFF and persisted with other settings.
 - **Interaction mode picker (Inspect / Multi-Select)** — replaced separate `Inspect`/`Select` HUD toggles with a single grouped picker; `Select` renamed to `Multi-Select`; picker modes are mutually-exclusive and auto-pause rotation while active.
