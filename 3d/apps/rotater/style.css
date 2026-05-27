@@ -4816,8 +4816,8 @@ html.loaded .menu-btn {
 }
 
 .brand-link-logo--etsy {
-    width: 30px;
-    height: 15px;
+    width: 42px;
+    height: 21px;
 }
 
 .help-controls-list {
@@ -8097,16 +8097,16 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
     }
 
     html.loaded.layout-v2-desktop .sidebar-logo--wordmark {
-        display: none;
+        display: block;
+        height: clamp(34px, 2.8vw, 46px);
+        width: auto;
+        max-width: min(180px, 48%);
+        object-fit: contain;
+        flex: 0 1 auto;
     }
 
     html.loaded.layout-v2-desktop .sidebar-logo--icon {
-        display: block;
-        width: 40px;
-        min-width: 40px;
-        height: 40px;
-        object-fit: contain;
-        flex: 0 0 40px;
+        display: none;
     }
 
     html.loaded.layout-v2-desktop .sidebar-upload-btn {
@@ -8125,6 +8125,21 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
         flex: 1 1 auto;
         min-width: 0;
         padding: 0.5em 0.8em;
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1320px) {
+    html.loaded.layout-v2-desktop .sidebar-logo--wordmark {
+        display: none;
+    }
+
+    html.loaded.layout-v2-desktop .sidebar-logo--icon {
+        display: block;
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        object-fit: contain;
+        flex: 0 0 40px;
     }
 }
 

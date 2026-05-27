@@ -1,3 +1,11 @@
+## [2.2.36] - 2026-05-27
+
+### Changed
+- **Main header logo fallback behavior**: the top-left app header now keeps the full Rotater wordmark across standard desktop widths and falls back to the compact `R` mark only at tighter desktop breakpoints.
+- **About Etsy link legibility**: increased Etsy logo size in the About links list for clearer at-a-glance visibility.
+
+---
+
 ## [2.2.35] - 2026-05-27
 
 ### Changed

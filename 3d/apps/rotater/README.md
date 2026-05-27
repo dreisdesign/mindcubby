@@ -2,7 +2,7 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.2.35**
+**Version (current workspace): 2.2.36**
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
@@ -184,7 +184,7 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 - **Measurements / Inspect**: the ruler HUD inspect toggle now appears for both single-part and multipart models; `Select` remains multipart-only.
 - **Load 3D Benchy**: loads the default Benchy test model.
 - **Dark mode**: toggles app theme.
-- **About Rotater**: opens version/build info and project links, includes Etsy ahead of Printables with a dedicated Etsy logo asset, and keeps the panel shortcut list keyboard-only. The header now keeps the full wordmark by default and only falls back to the compact `R` mark on very narrow panel widths. The canvas About button shows a NEW badge after an update until the panel is opened once.
+- **About Rotater**: opens version/build info and project links, includes Etsy ahead of Printables with a dedicated Etsy logo asset, and keeps the panel shortcut list keyboard-only. Both the About header and the main app header now prefer the full wordmark and only fall back to the compact `R` mark at tighter width thresholds. The canvas About button shows a NEW badge after an update until the panel is opened once.
 - **Reset Everything**: clears all saved Rotater state (including lighting, animation, UI preferences, dismissed warnings, and stored model/project data) and reloads.
 
 ### Viewer controls
