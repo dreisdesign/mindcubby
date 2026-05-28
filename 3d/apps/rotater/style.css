@@ -4811,13 +4811,21 @@ html.loaded .menu-btn {
 .brand-link-logo {
     flex: 0 0 auto;
     display: block;
-    width: 18px;
-    height: 18px;
+    width: auto;
+    height: 14px;
+    max-width: 66px;
 }
 
 .brand-link-logo--etsy {
-    width: 42px;
-    height: 21px;
+    height: 13px;
+    max-width: 32px;
+}
+
+.brand-link-logo--printables,
+.brand-link-logo--youtube,
+.brand-link-logo--github {
+    height: 14px;
+    max-width: 64px;
 }
 
 .help-controls-list {

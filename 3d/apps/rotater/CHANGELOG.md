@@ -1,3 +1,13 @@
+## [2.2.37] - 2026-05-28
+
+### Changed
+- **About panel brand logos**: replaced inline/icon mix with the provided full brand logo assets for Etsy, Printables, YouTube, and GitHub (`logos_Etsy.svg`, `Logos_Printables.svg`, `logos_YouTube.svg`, `logos_GitHub.svg`).
+- **Build metadata bump**: updated in-app build/version card to `2.2.37` with date `May 28, 2026`.
+- **Roadmap Kanban consolidation**: moved all active planning items into Kanban queues, including prior stabilization watchlist, high-value UX follow-ups, and triage intake.
+- **Roadmap planning metadata**: added `Design Status` tracking (`Needs design`, `Details`, `Ready`) and a ranked Ready Next execution sequence with impact/risk ordering.
+
+---
+
 ## [2.2.36] - 2026-05-27
 
 ### Changed
