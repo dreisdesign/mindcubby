@@ -2322,7 +2322,14 @@ function applyTextureLighting() {
         // Keep projected shadows visible regardless of build plate toggle.
         shadowCatcher.visible = shadowsOn;
         if (shadowCatcher.material && shadowCatcher.material.isShadowMaterial) {
-            shadowCatcher.material.opacity = shadowsOn ? (0.02 + shadowsAmt * 0.16) : 0.02;
+            const surfaceColor = getActiveRulerSurfaceColor();
+            const lum = getColorRelativeLuminance(surfaceColor);
+            const tintedShadow = surfaceColor.clone().lerp(new THREE.Color(0x000000), 0.78);
+            shadowCatcher.material.color.copy(tintedShadow);
+            const lumScale = THREE.MathUtils.lerp(0.72, 1.18, lum);
+            shadowCatcher.material.opacity = shadowsOn
+                ? (0.02 + shadowsAmt * 0.14 * lumScale)
+                : 0.02;
             shadowCatcher.material.needsUpdate = true;
         }
     }
