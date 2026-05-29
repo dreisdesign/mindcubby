@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-05-29
+## [2.2.42] - 2026-05-29
 
 ### Performance
 - **Reset-state recompute coalescing**: card reset dirty-state checks are now coalesced to one `requestAnimationFrame` pass during high-frequency slider/input interactions, reducing repeated DOM and per-part comparisons while scrubbing.
@@ -11,6 +11,8 @@
 - **Repeated refresh zoom drift after level/reframe**: restore now avoids persisting pre-restore viewport camera values before pending orbit restore is applied, preventing second-refresh zoom-in regressions.
 - **Zoom refresh persistence reliability**: viewport zoom/orbit persistence now commits on debounced OrbitControls change events with end-event flush, so trackpad/mouse zoom changes are reliably saved before refresh.
 - **Refresh-exit zoom persistence hardening**: app now persists settings on page-exit lifecycle events (`pagehide`/`beforeunload`) to retain the latest zoom/orbit state even when a debounced interaction save has not flushed yet.
+- **Grid toggle state parity**: legacy ruler visibility restore now migrates into current grid visibility state so checked Grid cannot render as hidden.
+- **Add-to-plate framing parity**: appending models to an existing build plate now automatically applies level + reframe after load for deterministic camera framing.
 
 ### Changed
 - **GIF workload UX follow-through**: high-workload GIF exports now show a visible warning lane and continue export, instead of failing with a console-only hard stop.
@@ -196,7 +198,7 @@
 
 ---
 
-## [Unreleased]
+## [2.2.18] - 2026-05-19
 ### Documentation
 - **Docs sync timestamp**: 2026-05-29 10:50 -0400 (captured from current `main` history).
 - **Recent pushes now documented**:

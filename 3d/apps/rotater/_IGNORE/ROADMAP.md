@@ -80,6 +80,7 @@ Design status key:
 | U7 | ZIP project scope hardening (settings/naming/colors deterministic on restore) | Reliability | M | Details | A1 |
 | U8 | HUD vertical rhythm alignment (FPS badge and action cluster) | Viewer UX | S | Ready | None |
 | U9 | Cross-sync source parity: BG Sync from Surface selector + Surface Sync from BG selector | Sync UX | M | Needs design | A1 |
+| U10 | Floating model window multi-select 3-dots bulk menu (phase 1: Delete Models) | Model Manager UX | S | Details | A5 |
 
 ### Later Queue
 

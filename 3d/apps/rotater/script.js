@@ -2381,12 +2381,16 @@ function applyTextureLighting() {
     }
 }
 
-function applyCurrentTextureTuning() {
+function applyCurrentTextureTuning(targetIndices = null) {
     applyTextureLighting();
     const mats = getMeshMaterials();
     if (!mats.length) return;
+    const targetSet = Array.isArray(targetIndices)
+        ? new Set(targetIndices.filter((idx) => Number.isInteger(idx) && idx >= 0))
+        : null;
     mats.forEach((mat, idx) => {
         if (!mat || !mat.isMeshStandardMaterial) return;
+        if (targetSet && !targetSet.has(idx)) return;
         const s = getPartSettings(idx);
         const mode = (s.shading === 'flat' || s.shading === 'toon') ? 'matte' : (s.shading || getActiveShadingMode());
         const materialFamily = normalizeMaterialFamily(s?.materialFamily, getMaterialFamilyFromShading(mode));
@@ -4515,6 +4519,10 @@ function applyPendingUrlModelAppearanceOverride() {
     });
 
     if (override.activeModelPreset) activeModelPreset = override.activeModelPreset;
+
+    // URL appearance overrides are load-time only. Clear after first apply so
+    // append/replace flows do not repaint all parts back to URL values.
+    pendingUrlModelAppearanceOverride = null;
 }
 
 function getMeshMaterials() {
@@ -4605,7 +4613,7 @@ function isModelPartPreviewMultiSelectActive() {
 }
 
 function isModelPartPreviewHoverSelectionActive() {
-    return isModelPartSelectorMenuOpen() || rulerPartHoverEnabled || isMultipartModel();
+    return isModelPartSelectorMenuOpen() || rulerPartHoverEnabled || hasModelParts();
 }
 
 function updateModelCardSelectionVisibility() {
@@ -4941,6 +4949,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             });
 
             const applyPartCardSelectionClick = () => {
+                const prevSelected = modelPartSelected;
                 clearPresetHoverPreview();
                 const multiActive = isModelPartPreviewMultiSelectActive();
                 if (multiActive) {
@@ -4959,6 +4968,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 if (!isModelPartFloatingCardOpen()) closeThumbSelectMenus();
                 syncModelPartCheckboxStates();
                 syncModelPartBulkUIState();
+                queueModelPartThumbsRender([prevSelected, modelPartSelected]);
                 saveSettings();
             };
 
@@ -7149,7 +7159,7 @@ function getRulerContrastTheme() {
 
 function updateRulerGrid() {
     if (!scene) return;
-    const shouldShow = !!(rulerEnabled && rulerLinesVisible && mesh && modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
+    const shouldShow = !!(rulerLinesVisible && mesh && modelDims && viewerSec && !viewerSec.classList.contains('hidden'));
     if (!shouldShow) {
         if (rulerGridHelper) rulerGridHelper.visible = false;
         if (rulerFootprintHelper) rulerFootprintHelper.visible = false;
@@ -7662,8 +7672,14 @@ function restoreSettings() {
         if (s.rulerVisible != null) {
             const on = (s.rulerVisible === '1' || s.rulerVisible === true || s.rulerVisible === 1);
             const el = document.getElementById('rulerToggle');
-            if (el) el.checked = on;
-            rulerEnabled = on;
+            // Legacy migration: old "rulerVisible" represented the single grid
+            // toggle. New builds keep ruler internals enabled and rely on
+            // rulerGridVisible/rulerLinesVisible for actual grid visibility.
+            if (s.rulerGridVisible == null && s.rulerLinesVisible == null) {
+                if (el) el.checked = on;
+                rulerLinesVisible = on;
+            }
+            rulerEnabled = true;
         }
         if (s.rulerGridVisible != null) {
             rulerLinesVisible = (s.rulerGridVisible === '1' || s.rulerGridVisible === true || s.rulerGridVisible === 1);
@@ -8407,6 +8423,13 @@ async function appendSTLPartsToCurrentModel(fileList) {
     setDisplayedFileName(displayName);
     currentFileName = buildMultipartFileBase(nextNames);
     await loadMultipartSTLBuffers(nextFiles.map((part) => part.buffer), nextNames, nextColors, nextSettings);
+    // Adding to the build plate should always land in a predictable level view.
+    await new Promise((resolve) => {
+        requestAnimationFrame(() => {
+            applyLevelAndReframeToCamera();
+            resolve();
+        });
+    });
     rebuildFileChipPartsMenu();
     syncFileChipMultipartUI();
     saveSettings();
@@ -9032,7 +9055,8 @@ document.getElementById('btnCamLeft').addEventListener('click', () => snapOrbit(
 document.getElementById('btnCamRight').addEventListener('click', () => snapOrbit(1, 0));
 document.getElementById('btnCamUp').addEventListener('click', () => snapOrbit(0, -1));
 document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(0, 1));
-document.getElementById('btnCamReset').addEventListener('click', () => {
+
+function applyLevelAndReframeToCamera() {
     if (!camera) return;
     // Level to 0° elevation, preserve azimuth, fit to full viewport with breathing room.
     // Use getOrbitFrameState() so azimuth is relative to controls.target (correct even after pan).
@@ -9060,6 +9084,10 @@ document.getElementById('btnCamReset').addEventListener('click', () => {
     // persist immediately to keep refresh aligned with the reframed view.
     saveSettings({ immediateUrlSync: true });
     renderer.render(scene, camera);
+}
+
+document.getElementById('btnCamReset').addEventListener('click', () => {
+    applyLevelAndReframeToCamera();
 });
 
 document.getElementById('btnExportPng').addEventListener('click', async () => {
@@ -9700,6 +9728,7 @@ exportGridEl?.addEventListener('change', () => {
     const on = !!exportGridEl.checked;
     rulerLinesVisible = on;
     if (rulerToggleEl) rulerToggleEl.checked = on;
+    updateRulerGrid();
     updateRulerHUD();
     updateLiveRulerOverlay();
     refreshExportPreviewNow();
@@ -12843,13 +12872,6 @@ function applyModelPresetOnly(preset) {
     const p = getURLSettings(preset.url);
     if (!p) return;
 
-    const targetIndices = getModelPartEditTargetIndices();
-    const prevClearLikeByTarget = new Map();
-    targetIndices.forEach((idx) => {
-        const prevShading = getPartSettings(idx)?.shading;
-        prevClearLikeByTarget.set(idx, prevShading === 'clear' || prevShading === 'glass');
-    });
-
     const targets = applyToModelPartEditTargets((partSettings, idx) => {
         applyPresetIntoPartSettings(partSettings, p, preset.id);
         modelPartBaseColors[idx] = partSettings.color;
@@ -12857,18 +12879,8 @@ function applyModelPresetOnly(preset) {
     syncUIFromSelectedPart();
 
     if (mesh) {
-        const needsRebuild = targets.some((idx) => {
-            const prevClearLike = !!prevClearLikeByTarget.get(idx);
-            const nextShading = getPartSettings(idx)?.shading;
-            const nextClearLike = nextShading === 'clear' || nextShading === 'glass';
-            return prevClearLike !== nextClearLike;
-        });
-        if (needsRebuild) {
-            rebuildMeshMaterialsForCurrentShading();
-        } else {
-            applyPartColorsToMesh();
-            applyCurrentTextureTuning();
-        }
+        applyPartColorsToMesh();
+        applyCurrentTextureTuning(targets);
     }
     // Keep each part's custom baseline aligned to its latest preset-applied state.
     targets.forEach((idx) => {
@@ -12926,6 +12938,7 @@ function renderModelPresets() {
         const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
             clearPresetHoverPreview();
+            if (activeModelPreset === preset.id) return;
             if (activeModelPreset === 'custom') storeCustomSettings();
 
             if (preset.url) {
@@ -13320,6 +13333,7 @@ if (rulerToggleEl) {
         rulerLinesVisible = rulerToggleEl.checked;
         if (!rulerLinesVisible && !rulerPartHoverEnabled) setRulerHoveredPartIndex(-1);
         if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
+        updateRulerGrid();
         updateRulerHUD();
         updateLiveRulerOverlay();
         refreshExportPreviewNow();
@@ -13333,6 +13347,7 @@ if (buildPlateToggleEl) {
         buildPlateEnabled = !!buildPlateToggleEl.checked;
         if (exportBuildPlateEl) exportBuildPlateEl.checked = buildPlateEnabled;
         updateBuildPlateMaterial();
+        updateRulerGrid();
         applyTextureLighting();
         updateShadowCatcherPlacement();
         refreshExportPreviewNow();
