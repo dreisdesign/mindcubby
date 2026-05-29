@@ -1520,6 +1520,7 @@ let _shiftPanActive = false;
 let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, updated each frame
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
+let pendingViewportOrbitRestore = null;
 let autoDemoLoadSuppressed = false;
 let autoDemoLoadScheduled = false;
 let _pausedBeforeStillExport = null;
@@ -1635,6 +1636,29 @@ function syncExportCameraFromViewport() {
     exportCamElev = elev;
     const cropScale = exportFrameEnabled ? getCropFrameVerticalScale() : 1;
     exportCamZoom = (camera.zoom || 1) / cropScale;
+}
+
+function tryApplyPendingViewportOrbitRestore() {
+    if (!pendingViewportOrbitRestore || !camera || !controls) return false;
+    try {
+        const restore = pendingViewportOrbitRestore;
+        const target = new THREE.Vector3(restore.tx, restore.ty, restore.tz);
+        const dist = Math.max(0.01, Number(restore.dist) || 0.01);
+        const maxEl = Math.PI / 2 - 0.01;
+        const elev = THREE.MathUtils.clamp(Number(restore.elev) || 0, -maxEl, maxEl);
+        const az = Number(restore.az) || 0;
+
+        setCameraFromOrbitState(camera, target, dist, elev, az);
+        controls.target.copy(target);
+        updateOrbitDistanceLimits(true);
+        controls.update();
+        updateCameraClipPlanes(true);
+        pendingViewportOrbitRestore = null;
+        return true;
+    } catch (_) {
+        pendingViewportOrbitRestore = null;
+        return false;
+    }
 }
 
 function isCanvasPointInsideCropFrame(clientX, clientY) {
@@ -1837,6 +1861,9 @@ function initThree() {
             rightPanLockController.enforceVerticalLock({ controls, camera });
         }
     });
+    controls.addEventListener('end', () => {
+        saveSettings();
+    });
 
     syncCanvasSize();
     window.addEventListener('resize', syncCanvasSize);
@@ -2029,15 +2056,15 @@ function openAnchoredColorPicker(inputEl, anchorEl) {
     const prevInlineStyles = inputEl.style.cssText;
     if (rect) {
         Object.assign(inputEl.style, {
-            position: 'absolute',
-            left: `${rect.left + window.scrollX}px`,
-            top: `${rect.top + window.scrollY}px`,
+            position: 'fixed',
+            left: `${rect.left}px`,
+            top: `${rect.top}px`,
             width: `${Math.max(1, Math.floor(rect.width))}px`,
             height: `${Math.max(1, Math.floor(rect.height))}px`,
             clip: 'auto',
             pointerEvents: 'auto',
             opacity: '0',
-            zIndex: '200',
+            zIndex: '9999',
         });
     } else {
         Object.assign(inputEl.style, {
@@ -3847,19 +3874,7 @@ function renderModelPartSelectorSummary() {
     const countEl = document.createElement('span');
     countEl.className = 'thumb-select-summary-count';
     countEl.textContent = summaryText;
-
-    const selectedActionsBtn = document.createElement('button');
-    selectedActionsBtn.type = 'button';
-    selectedActionsBtn.className = 'part-option-more part-option-more--summary';
-    selectedActionsBtn.setAttribute('aria-label', 'Selected model actions');
-    selectedActionsBtn.innerHTML = getPartOptionMoreIconSVG();
-    selectedActionsBtn.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        openSelectedPartsActionMenu(selectedActionsBtn);
-    });
-
     metaEl.append(countEl);
-    metaEl.append(selectedActionsBtn);
     modelPartSelectorText.append(titleEl, metaEl);
     modelPartSelectorBtn.title = `${titleText} - ${summaryText}`;
 }
@@ -5277,6 +5292,7 @@ function loadPreparedGeometry(geo, name) {
         if (renderer) renderer.setClearColor(c, 1);
     }
     if (isDynamicBg) updateDynamicBg();
+    updateRulerGrid();
     updateRulerHUD();
     updateLiveRulerOverlay();
 
@@ -5316,7 +5332,12 @@ function loadPreparedGeometry(geo, name) {
     updateEstimate();
     requestAnimationFrame(() => {
         syncCanvasSize();
-        if (!savedCamPos) { placeCamera(); syncLightRig(); renderer.render(scene, camera); }
+        if (!savedCamPos) {
+            placeCamera();
+            tryApplyPendingViewportOrbitRestore();
+            syncLightRig();
+            renderer.render(scene, camera);
+        }
         // Keep the live viewer on the real viewport fit/restore state.
         // Export framing should follow the live camera, not overwrite it on load.
         _hasRestoredExportFrame = false;
@@ -7215,6 +7236,8 @@ function saveSettings() {
         if (DEV_LOG) console.log(`[rotater] saveSettings suppressed at ${Date.now()}`);
         return;
     }
+    const orbitState = (camera && controls) ? getOrbitFrameStateFast() : null;
+    const orbitTarget = orbitState?.target;
     try {
         localStorage.setItem(SETTINGS_KEY, JSON.stringify({
             color: colorPick.value,
@@ -7258,6 +7281,12 @@ function saveSettings() {
             exportCamDist: exportCamDist,
             exportCamElev: exportCamElev,
             exportCamZoom: exportCamZoom,
+            viewportCamDist: orbitState?.dist,
+            viewportCamElev: orbitState?.elev,
+            viewportCamAz: orbitState?.az,
+            viewportCamTargetX: orbitTarget?.x,
+            viewportCamTargetY: orbitTarget?.y,
+            viewportCamTargetZ: orbitTarget?.z,
             autoBgAdjust: document.getElementById('autoBgCheck')?.checked ? '1' : '0',
             rulerVisible: rulerEnabled ? '1' : '0',
             rulerUnit: rulerUnit,
@@ -7306,6 +7335,7 @@ function saveSettings() {
 
 function restoreSettings() {
     suppressSave = true;
+    pendingViewportOrbitRestore = null;
     if (DEV_LOG) console.log(`[rotater] restoreSettings start at ${Date.now()}`);
     try {
         const urlS = getURLSettings(location.search);
@@ -7504,6 +7534,24 @@ function restoreSettings() {
             if (s.exportCamZoom != null) {
                 const z = parseFloat(s.exportCamZoom);
                 if (Number.isFinite(z) && z > 0) exportCamZoom = z;
+            }
+
+            {
+                const dist = parseFloat(s.viewportCamDist);
+                const elev = parseFloat(s.viewportCamElev);
+                const az = parseFloat(s.viewportCamAz);
+                const tx = parseFloat(s.viewportCamTargetX);
+                const ty = parseFloat(s.viewportCamTargetY);
+                const tz = parseFloat(s.viewportCamTargetZ);
+                const hasRestoreState = Number.isFinite(dist) && dist > 0
+                    && Number.isFinite(elev)
+                    && Number.isFinite(az)
+                    && Number.isFinite(tx)
+                    && Number.isFinite(ty)
+                    && Number.isFinite(tz);
+                if (hasRestoreState) {
+                    pendingViewportOrbitRestore = { dist, elev, az, tx, ty, tz };
+                }
             }
         }
         // Restore auto BG adjust and preset selections
@@ -9296,6 +9344,12 @@ bgPick.addEventListener('input', () => {
         const c = computeSurfaceShadeColor(baseHex, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
+    updateBuildPlateMaterial({ skipTextureRefresh: true });
+    updateBgShadeSliderVisual();
+    if (isDynamicBg) updateDynamicBg();
+});
+
+bgPick.addEventListener('change', () => {
     updateBuildPlateMaterial();
     updateBgShadeSliderVisual();
     if (isDynamicBg) updateDynamicBg();
@@ -13425,22 +13479,7 @@ function renderBgPresets() {
             updateBgSelection();
             const input = document.getElementById('bgPicker');
             if (!input) return;
-            if (typeof input.showPicker === 'function') {
-                try { input.showPicker(); } catch (e) { input.click(); }
-                return;
-            }
-            const thumb = customWrap.querySelector('.shading-thumb');
-            if (thumb) {
-                const rect = thumb.getBoundingClientRect();
-                const prev = { position: input.style.position, left: input.style.left, top: input.style.top, width: input.style.width, height: input.style.height, clip: input.style.clip, pointerEvents: input.style.pointerEvents };
-                Object.assign(input.style, { position: 'absolute', left: `${rect.left + window.scrollX}px`, top: `${rect.top + window.scrollY}px`, width: `${rect.width}px`, height: `${rect.height}px`, clip: 'auto', pointerEvents: 'auto' });
-                input.click();
-                setTimeout(() => {
-                    Object.assign(input.style, { position: prev.position || 'absolute', left: prev.left || '', top: prev.top || '', width: prev.width || '0px', height: prev.height || '0px', clip: prev.clip || 'rect(0,0,0,0)', pointerEvents: prev.pointerEvents || 'none' });
-                }, 800);
-            } else {
-                input.click();
-            }
+            openAnchoredColorPicker(input, labelEl);
         });
     }
 
