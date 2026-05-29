@@ -2,10 +2,10 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.2.37**
+**Version (current workspace): 2.2.38**
 
-Documentation sync: 2026-05-29 14:40 -0400
-- Latest updates documented in `CHANGELOG.md` `Unreleased` include selector/performance stabilization, GIF high-workload warning UX, and reset-state RAF coalescing for smoother slider interactions.
+Documentation sync: 2026-05-29
+- Latest updates documented in `CHANGELOG.md` `Unreleased` include floating model editor single-click canvas close behavior plus additional color/finish drag performance smoothing.
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 

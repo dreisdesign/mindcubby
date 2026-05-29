@@ -142,3 +142,19 @@ export function closeThumbSelectMenusByModeController({
 
     if (typeof closeModelPartActionMenus === 'function') closeModelPartActionMenus();
 }
+
+export function shouldCloseFloatingModelSelectorOnSingleClickController({
+    target = null,
+    clickedModelSelector = false,
+    isModelPartFloatingCardOpen = null,
+} = {}) {
+    if (clickedModelSelector) return false;
+    if (typeof isModelPartFloatingCardOpen !== 'function' || !isModelPartFloatingCardOpen()) return false;
+
+    if (!(target instanceof Element)) return true;
+
+    const clickedInteractive = !!target.closest(
+        'button,a,input,select,label,textarea,summary,[role="button"],[role="menuitem"],[role="option"],[contenteditable="true"]'
+    );
+    return !clickedInteractive;
+}

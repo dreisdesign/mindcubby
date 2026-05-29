@@ -29,6 +29,7 @@ import {
     resolveModelSyncAnchorController,
     openSyncSourceMenuController,
     closeThumbSelectMenusByModeController,
+    shouldCloseFloatingModelSelectorOnSingleClickController,
 } from './modules/model-picker-controller.js';
 import {
     isModelPartFloatingCardOpenController,
@@ -4333,6 +4334,14 @@ document.addEventListener('click', (ev) => {
         || buildPlateModelSyncSelectorBtn?.contains(target)
         || buildPlateModelSyncSelectorThumb?.contains(target)
     );
+
+    if (shouldCloseFloatingModelSelectorOnSingleClickController({
+        target: target instanceof Element ? target : null,
+        clickedModelSelector,
+        isModelPartFloatingCardOpen,
+    })) {
+        closeModelPartSelectorMenu(true);
+    }
 
     if (!clickedBgSync && bgModelSyncSelectorMenu) {
         bgModelSyncSelectorMenu.hidden = true;
@@ -9270,6 +9279,15 @@ const modelToneCommitQueue = createDeferredCommitQueue({
     },
 });
 
+const finishCommitQueue = createDeferredCommitQueue({
+    delayMs: 120,
+    onFlush: (thumbTargets) => {
+        persistCurrentMultipartParts({ immediate: true });
+        if (thumbTargets !== null) queueModelPartThumbsRender(thumbTargets);
+        saveSettings();
+    },
+});
+
 function applyColorPickPreview() {
     if (isMultipartModel()) {
         const targets = applyToModelPartEditTargets((partSettings, idx) => {
@@ -9283,7 +9301,7 @@ function applyColorPickPreview() {
         scheduleColorCommit(0);
     }
 
-    if (mesh) applyPartColorsToMesh();
+    if (mesh) applyPartColorsToMesh({ buildPlatePreview: activeBuildPlatePreset === 'modelcolor' });
     updateShadeSliderVisual();
     if (activeBgPreset === 'modelcolor') {
         bgPick.value = getModelSyncSourceColor();
@@ -9323,6 +9341,14 @@ function flushModelToneCommit() {
 
 function scheduleModelToneCommit(thumbTargets = null) {
     modelToneCommitQueue.schedule(thumbTargets);
+}
+
+function flushFinishCommit() {
+    finishCommitQueue.flush();
+}
+
+function scheduleFinishCommit(thumbTargets = null) {
+    finishCommitQueue.schedule(thumbTargets);
 }
 
 colorPick.addEventListener('input', (ev) => {
@@ -9465,21 +9491,16 @@ textureTuneRoughnessSlider?.addEventListener('input', () => {
     syncSliderTooltip(textureTuneRoughnessSlider);
     updateFinishSliderVisual();
     const { targets } = applyFinishControlsToSelectedPart();
-    if (mesh) rebuildMeshMaterialsForCurrentShading();
     applyCurrentTextureTuning();
-    persistCurrentMultipartParts();
-    queueModelPartThumbsRender(targets);
-    saveSettings();
+    scheduleFinishCommit(targets);
 });
 
 textureTuneRoughnessSlider?.addEventListener('change', () => {
     updateFinishSliderVisual();
     const { targets } = applyFinishControlsToSelectedPart(true);
-    if (mesh) rebuildMeshMaterialsForCurrentShading();
     applyCurrentTextureTuning();
-    persistCurrentMultipartParts({ immediate: true });
-    queueModelPartThumbsRender(targets);
-    saveSettings();
+    scheduleFinishCommit(targets);
+    flushFinishCommit();
 });
 
 finishModeButtons.forEach((btn) => btn.addEventListener('click', () => {
@@ -9490,11 +9511,9 @@ finishModeButtons.forEach((btn) => btn.addEventListener('click', () => {
     syncSliderTooltip(textureTuneRoughnessSlider);
     updateFinishSliderVisual();
     const { targets } = applyFinishControlsToSelectedPart(true);
-    if (mesh) rebuildMeshMaterialsForCurrentShading();
     applyCurrentTextureTuning();
-    persistCurrentMultipartParts({ immediate: true });
-    queueModelPartThumbsRender(targets);
-    saveSettings();
+    scheduleFinishCommit(targets);
+    flushFinishCommit();
 }));
 
 textureTuneMetalnessSlider?.addEventListener('input', () => {
@@ -11570,6 +11589,11 @@ canvas?.addEventListener('click', (e) => {
             closeExportWorkspace();
             return;
         }
+    }
+
+    if (isModelPartFloatingCardOpen()) {
+        closeModelPartSelectorMenu(true);
+        return;
     }
 
     if (!hasModelParts()) return;

@@ -1,6 +1,6 @@
 # C1 Refactor Progress
 
-Last updated: 2026-05-23
+Last updated: 2026-05-29
 Roadmap reference: C1 in [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 
 Goal: split large runtime logic in script.js into stable modules with clear boundaries and sortable naming.
@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 62
+- Completed slices: 63
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -238,6 +238,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - Module: [modules/export-preview-resources.js](modules/export-preview-resources.js)
 - Scope: preview render-target and preview-camera setup orchestration helpers
 - script.js now delegates preview resource setup through thin wrappers
+- Shipped in commit: pending
+
+39. Floating model selector outside-click decision extraction
+- Module: [modules/model-picker-controller.js](modules/model-picker-controller.js)
+- Scope: single-click floating selector outside-close decision helper (non-interactive target guard + open-state gate)
+- script.js now delegates outside-click close decision through a thin wrapper call
 - Shipped in commit: pending
 
 39. Export preview context preflight extraction
