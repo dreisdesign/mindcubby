@@ -1894,9 +1894,10 @@ function initThree() {
         if (rightPanLockController.isVerticalLockActive()) {
             rightPanLockController.enforceVerticalLock({ controls, camera });
         }
+        scheduleOrbitInteractionCommit();
     });
     controls.addEventListener('end', () => {
-        saveSettings();
+        flushOrbitInteractionCommit();
     });
 
     syncCanvasSize();
@@ -9320,6 +9321,13 @@ const textureTuneCommitQueue = createDeferredCommitQueue({
     },
 });
 
+const orbitInteractionCommitQueue = createDeferredCommitQueue({
+    delayMs: 140,
+    onFlush: () => {
+        saveSettings();
+    },
+});
+
 function applyColorPickPreview() {
     if (isMultipartModel()) {
         const targets = applyToModelPartEditTargets((partSettings, idx) => {
@@ -9389,6 +9397,14 @@ function flushTextureTuneCommit() {
 
 function scheduleTextureTuneCommit(payload = null) {
     textureTuneCommitQueue.schedule(payload);
+}
+
+function flushOrbitInteractionCommit() {
+    orbitInteractionCommitQueue.flush();
+}
+
+function scheduleOrbitInteractionCommit() {
+    orbitInteractionCommitQueue.schedule();
 }
 
 colorPick.addEventListener('input', (ev) => {

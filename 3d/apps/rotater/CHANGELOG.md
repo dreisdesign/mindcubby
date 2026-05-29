@@ -9,6 +9,7 @@
 ### Fixed
 - **Floating model editor single-click close**: a single non-drag click in the preview canvas now closes the floating 3D Models editor reliably.
 - **Repeated refresh zoom drift after level/reframe**: restore now avoids persisting pre-restore viewport camera values before pending orbit restore is applied, preventing second-refresh zoom-in regressions.
+- **Zoom refresh persistence reliability**: viewport zoom/orbit persistence now commits on debounced OrbitControls change events with end-event flush, so trackpad/mouse zoom changes are reliably saved before refresh.
 
 ### Changed
 - **GIF workload UX follow-through**: high-workload GIF exports now show a visible warning lane and continue export, instead of failing with a console-only hard stop.
