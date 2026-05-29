@@ -32,10 +32,6 @@ export function positionModelPartActionMenu({
     const menuW = Math.max(160, Math.min(maxMenuW, menuRect.width || maxMenuW));
     const menuH = Math.max(120, menuRect.height || 138);
 
-    const floatingPanelEl = anchorEl.closest('#modelPartSelectorMenu.thumb-select-menu--floating-card');
-    const selectorBoundaryEl = (modelPartSelectorMenu && !modelPartSelectorMenu.hidden && modelPartSelectorMenu.contains(anchorEl))
-        ? modelPartSelectorMenu
-        : null;
     const placement = computeActionMenuPlacement({
         anchorRect,
         menuWidth: menuW,
@@ -43,8 +39,8 @@ export function positionModelPartActionMenu({
         viewportWidth,
         viewportHeight,
         sideGap,
-        boundaryRect: floatingPanelEl?.getBoundingClientRect?.() || selectorBoundaryEl?.getBoundingClientRect?.() || null,
-        // Always use fixed positioning so the menu is not clipped by scrollers.
+        // Menu is portaled to document.body, so viewport bounds are always correct.
+        boundaryRect: null,
         containerRect: null,
     });
 

@@ -1050,6 +1050,7 @@ let modelUndoToastTimer = 0;
 let modelUndoToastLastShownAt = 0;
 let activeModelPartActionMenuEl = null;
 let activeModelPartActionAnchorEl = null;
+let _modelPartActionMenuOriginalParent = null;
 
 const BULK_SELECT_ICON_PATHS = {
     none: 'M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z',
@@ -3916,6 +3917,12 @@ function closeThumbSelectMenusByMode(options = {}) {
 }
 
 function closeModelPartActionMenus() {
+    if (activeModelPartActionMenuEl
+        && _modelPartActionMenuOriginalParent
+        && activeModelPartActionMenuEl.parentElement === document.body) {
+        _modelPartActionMenuOriginalParent.appendChild(activeModelPartActionMenuEl);
+    }
+    _modelPartActionMenuOriginalParent = null;
     closeModelPartActionMenusModule({ modelPartSingleMenuBtn });
     activeModelPartActionMenuEl = null;
     activeModelPartActionAnchorEl = null;
@@ -3924,6 +3931,11 @@ function closeModelPartActionMenus() {
 function positionModelPartActionMenu(menuEl, anchorEl) {
     activeModelPartActionMenuEl = menuEl || null;
     activeModelPartActionAnchorEl = anchorEl || null;
+    // Portal to body to escape any backdrop-filter/transform containing block on the floating panel.
+    if (menuEl && menuEl.parentElement !== document.body) {
+        _modelPartActionMenuOriginalParent = menuEl.parentElement || null;
+        document.body.appendChild(menuEl);
+    }
     positionModelPartActionMenuModule({
         menuEl,
         anchorEl,
