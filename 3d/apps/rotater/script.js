@@ -1542,6 +1542,7 @@ let autoUIAssistEnabled = true;
 let exportCollapsedConfirmEnabled = true;
 let uploadChoicePromptEnabled = true;
 let uploadDefaultAction = 'newplate'; // newplate | replace
+let autoLoadedDefaultBenchy = false;
 const collapsedExportConfirmController = createCollapsedExportConfirmController({
     overlayEl: exportCollapsedConfirmOverlayEl,
 });
@@ -2323,7 +2324,8 @@ function applyTextureLighting() {
         const mats = getMeshMaterials();
         const allTransmissive = mats.length > 0 && mats.every(m => m && 'transmission' in m && m.transmission > 0);
         mesh.castShadow = shadowsOn && !allTransmissive;
-        mesh.receiveShadow = shadowsOn && !allTransmissive;
+        // Avoid shadow acne/banding artifacts on broad flat STL faces.
+        mesh.receiveShadow = false;
     }
     if (shadowCatcher) {
         // Keep projected shadows visible regardless of build plate toggle.
@@ -2469,6 +2471,18 @@ function getMaterial(shading, baseColor, partSettings) {
 
 function stemFromFileName(name) {
     return String(name || 'model').replace(/\.stl$/i, '').trim() || 'model';
+}
+
+function isDefaultBenchyOnlyPlate() {
+    return !!(
+        autoLoadedDefaultBenchy
+        && mesh
+        && !isMultipartModel()
+        && String(currentFileName || '').toLowerCase() === '3dbenchy'
+        && Array.isArray(modelPartNames)
+        && modelPartNames.length === 1
+        && /3dbenchy\.stl$/i.test(String(modelPartNames[0] || ''))
+    );
 }
 
 function getViewportOrbitModelKey() {
@@ -8077,7 +8091,7 @@ function scheduleAutoDemoModelLoad() {
             return;
         }
         try {
-            const loaded = await loadBenchyModel({ clearStoredModel: false });
+            const loaded = await loadBenchyModel({ clearStoredModel: false, markAsDefaultAuto: true });
             if (!loaded) {
                 dismissStartupSplash();
                 return;
@@ -8117,6 +8131,12 @@ function openUploadFilePicker(action = null) {
 async function requestUploadFlowFromButtons() {
     suppressAutoDemoModelLoad();
     dismissStartupSplash();
+
+    if (isDefaultBenchyOnlyPlate()) {
+        uploadActionController.setPendingAction('newplate');
+        fileInput?.click();
+        return;
+    }
 
     if (mesh && uploadChoiceOverlayEl) {
         setUploadChoiceFiles([]);
@@ -8159,14 +8179,22 @@ async function handleFiles(fileList, requestedActionOverride = null) {
     if (!files.length) return;
     validateIncomingStlFileBatch(files, 'Upload');
 
+    const skipPromptForDefaultBenchy = isDefaultBenchyOnlyPlate();
+
     let requestedAction = normalizeUploadAction(requestedActionOverride, 'newplate');
 
     if (mesh && !requestedActionOverride) {
-        requestedAction = await promptUploadChoice(files);
-        if (requestedAction !== 'replace' && requestedAction !== 'append' && requestedAction !== 'newplate') {
-            return;
+        if (skipPromptForDefaultBenchy) {
+            requestedAction = 'newplate';
+        } else {
+            requestedAction = await promptUploadChoice(files);
+            if (requestedAction !== 'replace' && requestedAction !== 'append' && requestedAction !== 'newplate') {
+                return;
+            }
         }
     }
+
+    autoLoadedDefaultBenchy = false;
 
     if (!mesh) requestedAction = 'newplate';
 
@@ -8484,6 +8512,7 @@ async function importRotaterPackage(zipFile) {
 
     const incomingLabel = parts.length > 1 ? `${parts.length} STL files` : `"${parts[0].name}"`;
     if (mesh && !confirm(`Replace current model with ${incomingLabel}?`)) return;
+    autoLoadedDefaultBenchy = false;
 
     if (packageJson?.settings && typeof packageJson.settings === 'object' && !Array.isArray(packageJson.settings)) {
         try {
@@ -10517,7 +10546,7 @@ const clearBuildPlateHandler = async () => {
 btnClearBuildPlateEl?.addEventListener('click', clearBuildPlateHandler);
 document.getElementById('btnClearBuildPlate-modal')?.addEventListener('click', clearBuildPlateHandler);
 
-async function loadBenchyModel({ clearStoredModel = true } = {}) {
+async function loadBenchyModel({ clearStoredModel = true, markAsDefaultAuto = false } = {}) {
     try {
         const resp = await fetch('./benchy.stl');
         if (!resp.ok) return false;
@@ -10536,6 +10565,7 @@ async function loadBenchyModel({ clearStoredModel = true } = {}) {
                 resolve();
             });
         });
+        autoLoadedDefaultBenchy = !!markAsDefaultAuto;
         return true;
     } catch (e) {
         return false;
