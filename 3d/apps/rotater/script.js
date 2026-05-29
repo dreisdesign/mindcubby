@@ -7799,6 +7799,8 @@ function restoreSettings() {
             uploadDefaultAction = 'replace';
         }
         if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
+        const rulerToggleRestoreEl = document.getElementById('rulerToggle');
+        if (rulerToggleRestoreEl) rulerToggleRestoreEl.checked = rulerLinesVisible;
         if (exportBuildPlateEl && s.exportBuildPlate == null) exportBuildPlateEl.checked = buildPlateEnabled;
         if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';

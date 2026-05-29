@@ -12,6 +12,8 @@
 - **Zoom refresh persistence reliability**: viewport zoom/orbit persistence now commits on debounced OrbitControls change events with end-event flush, so trackpad/mouse zoom changes are reliably saved before refresh.
 - **Refresh-exit zoom persistence hardening**: app now persists settings on page-exit lifecycle events (`pagehide`/`beforeunload`) to retain the latest zoom/orbit state even when a debounced interaction save has not flushed yet.
 - **Grid toggle state parity**: legacy ruler visibility restore now migrates into current grid visibility state so checked Grid cannot render as hidden.
+- **ZIP restore grid checkbox parity**: restore now also syncs the Surface grid toggle control from canonical ruler-line state, preventing checked-on UI from drifting out of sync after loading saved project ZIP settings.
+- **Export preview grid restore parity**: export preview scene cleanup now reapplies canonical ruler/grid recompute instead of restoring helper visibility directly, preventing hidden-grid desync after preview passes.
 - **Add-to-plate framing parity**: appending models to an existing build plate now automatically applies level + reframe after load for deterministic camera framing.
 - **Inspect overlay measurement jitter**: contextual inspect measurements now use stable label-side orientation hysteresis, preventing rapid top/bottom flips while hovering parts.
 

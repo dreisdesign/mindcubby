@@ -67,12 +67,18 @@ export function applyExportSceneForRenderController(
         if (currentBuildPlateMesh && typeof savedBuildPlateVisible === 'boolean') {
             currentBuildPlateMesh.visible = savedBuildPlateVisible;
         }
-        // If grid helpers were created on demand for export, hide them after restore.
-        if (currentRulerGridHelper) {
-            currentRulerGridHelper.visible = typeof savedRulerGridVisible === 'boolean' ? savedRulerGridVisible : false;
-        }
-        if (currentRulerFootprintHelper) {
-            currentRulerFootprintHelper.visible = typeof savedRulerFootprintVisible === 'boolean' ? savedRulerFootprintVisible : false;
+        // Recompute canonical grid visibility after preview pass restore.
+        // This avoids helper-visible desync when transient preview state differs
+        // from main viewport state.
+        if (typeof updateRulerGrid === 'function') {
+            updateRulerGrid();
+        } else {
+            if (currentRulerGridHelper) {
+                currentRulerGridHelper.visible = typeof savedRulerGridVisible === 'boolean' ? savedRulerGridVisible : false;
+            }
+            if (currentRulerFootprintHelper) {
+                currentRulerFootprintHelper.visible = typeof savedRulerFootprintVisible === 'boolean' ? savedRulerFootprintVisible : false;
+            }
         }
     };
 }
