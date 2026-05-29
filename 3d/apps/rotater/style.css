@@ -4635,7 +4635,7 @@ html.loaded .menu-btn {
     font-size: var(--text-md);
     font-weight: 700;
     color: var(--color-on-surface);
-    padding: 2px 14px 4px;
+    padding: 0 14px 2px;
 }
 
 /* ── Info button row ── */
@@ -4709,31 +4709,32 @@ html.loaded .menu-btn {
 }
 
 .settings-panel-header--about {
-    align-items: flex-start;
+    align-items: center;
+    flex-wrap: nowrap;
 }
 
-.info-panel-title-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 0;
-    flex: 1;
-}
-
-.info-panel-logo {
-    width: clamp(118px, 46vw, 208px);
-    height: auto;
+.help-panel-title-logo {
     display: block;
-}
-
-.info-panel-logo--icon {
-    width: 30px;
-    display: none;
+    width: auto;
+    max-width: min(54vw, 170px);
+    height: 18px;
 }
 
 .info-panel-body {
     padding: 14px 16px 16px !important;
     gap: 8px !important;
+}
+
+.info-section-title {
+    margin: 0;
+    padding-left: 14px;
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--color-on-surface);
+}
+
+.settings-panel-header--about .info-section-title {
+    padding-left: 0;
 }
 
 .info-description {
@@ -4745,13 +4746,39 @@ html.loaded .menu-btn {
 }
 
 .info-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: block;
     padding-left: 14px;
     font-size: var(--text-xs);
     color: var(--color-label);
     opacity: 0.75;
+}
+
+.info-meta-line {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    column-gap: 6px;
+}
+
+.info-meta-separator {
+    opacity: 0.7;
+}
+
+.info-whats-new-text {
+    padding-left: 0;
+}
+
+.info-text-link {
+    font-size: var(--text-sm);
+    color: var(--palette-blueberry-600);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+}
+
+.info-text-link:hover {
+    color: var(--palette-blueberry-800);
 }
 
 .info-link-btn {
@@ -4785,6 +4812,36 @@ html.loaded .menu-btn {
     max-width: 64px;
 }
 
+.info-brand-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0 14px;
+}
+
+.info-brand-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 10px;
+    text-decoration: none;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.info-brand-link:hover {
+    background: var(--palette-blueberry-100);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 70%, transparent);
+}
+
+.info-brand-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
+}
+
 .help-controls-list {
     margin: 0;
     padding: 0 0 0 14px;
@@ -4805,20 +4862,6 @@ html.loaded .menu-btn {
 @media (min-width: 900px) {
     .info-panel {
         width: 340px;
-    }
-
-    .info-panel-logo {
-        width: clamp(140px, 18vw, 228px);
-    }
-}
-
-@media (max-width: 430px) {
-    .info-panel-logo--wordmark {
-        display: none;
-    }
-
-    .info-panel-logo--icon {
-        display: block;
     }
 }
 
@@ -8315,7 +8358,8 @@ html.loaded.export-workspace-active .canvas-wrap {
     overflow-y: auto;
     overflow-x: hidden;
     max-width: none;
-    margin: 0;
+    align-items: center;
+    flex-wrap: nowrap;
     padding: 10px;
     display: grid;
     grid-template-columns: minmax(320px, 390px) minmax(360px, 1fr);
@@ -8749,9 +8793,7 @@ html.theme-dark .export-format-tab.is-active {
     text-decoration: underline;
     cursor: pointer;
 }
-
-.show-all-link:hover {
-    color: var(--color-text);
+    display: block;
 }
 
 /* Fine Tuning row at bottom of Theme panel */
@@ -8799,7 +8841,6 @@ html.theme-dark .export-format-tab.is-active {
 .adv-section-check input[type="checkbox"] {
     width: 20px;
     height: 20px;
-    margin: 0;
     -webkit-appearance: none;
     appearance: none;
     border: 2px solid color-mix(in srgb, var(--color-on-surface) 46%, transparent);

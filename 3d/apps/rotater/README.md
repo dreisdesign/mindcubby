@@ -5,7 +5,7 @@ View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapsh
 **Version (current workspace): 2.2.41**
 
 Documentation sync: 2026-05-29
-- Latest updates documented in `CHANGELOG.md` include repeated-refresh camera restore stabilization, zoom refresh persistence hardening on page-exit lifecycle events, add-to-plate level/reframe auto-framing, and additional texture tuning drag performance smoothing.
+- Latest updates documented in `CHANGELOG.md` include repeated-refresh camera restore stabilization, zoom refresh persistence hardening on page-exit lifecycle events, add-to-plate level/reframe auto-framing, inspect overlay measurement stability improvements, and About panel content/link polish.
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 

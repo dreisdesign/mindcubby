@@ -13,9 +13,11 @@
 - **Refresh-exit zoom persistence hardening**: app now persists settings on page-exit lifecycle events (`pagehide`/`beforeunload`) to retain the latest zoom/orbit state even when a debounced interaction save has not flushed yet.
 - **Grid toggle state parity**: legacy ruler visibility restore now migrates into current grid visibility state so checked Grid cannot render as hidden.
 - **Add-to-plate framing parity**: appending models to an existing build plate now automatically applies level + reframe after load for deterministic camera framing.
+- **Inspect overlay measurement jitter**: contextual inspect measurements now use stable label-side orientation hysteresis, preventing rapid top/bottom flips while hovering parts.
 
 ### Changed
 - **GIF workload UX follow-through**: high-workload GIF exports now show a visible warning lane and continue export, instead of failing with a console-only hard stop.
+- **About panel final polish**: replaced header text with the Rotater wordmark (height-aligned to close control), switched `View changelog` to a standard inline text link, and simplified the maker line to `Made by MindCubby`.
 
 ---
 

@@ -1076,11 +1076,7 @@
         <div id="helpOverlay" class="settings-overlay help-overlay" hidden>
             <div class="settings-panel info-panel help-panel" role="dialog" aria-modal="true" aria-labelledby="helpPanelTitle">
                 <div class="settings-panel-header settings-panel-header--about">
-                    <div class="info-panel-title-group">
-                        <h3 id="helpPanelTitle">About Rotater</h3>
-                        <img src="rotater.svg" alt="Rotater" class="info-panel-logo info-panel-logo--wordmark" loading="lazy">
-                        <img src="favicon.svg" alt="Rotater" class="info-panel-logo info-panel-logo--icon" loading="lazy">
-                    </div>
+                    <h3 id="helpPanelTitle" class="info-section-title"><img src="rotater.svg" alt="Rotater" class="help-panel-title-logo" loading="lazy"></h3>
                     <button class="settings-close-btn" id="btnHelpClose" aria-label="Close">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M17.7256 5.00038C18.0922 5.00873 18.4091 5.14585 18.6758 5.41249C18.9257 5.67905 19.0463 5.98747 19.0381 6.33729C19.0298 6.68729 18.9004 6.99641 18.6504 7.26307L13.9004 12.0873L18.6504 16.8627C18.9003 17.1126 19.0297 17.4166 19.0381 17.7748C19.0464 18.133 18.9256 18.4457 18.6758 18.7123C18.4091 18.9789 18.0922 19.117 17.7256 19.1254C17.3589 19.1337 17.0421 19.0043 16.7754 18.7377L12.0508 13.9379L7.27539 18.7377C7.00874 19.0043 6.69184 19.1337 6.3252 19.1254C5.95868 19.117 5.64256 18.9789 5.37598 18.7123C5.12598 18.4456 5.00436 18.1375 5.0127 17.7875C5.02107 17.4376 5.15047 17.1293 5.40039 16.8627L10.1504 12.0873L5.37598 7.26307C5.12598 6.99641 5 6.68729 5 6.33729C5.00009 5.98745 5.12607 5.67906 5.37598 5.41249C5.6425 5.14611 5.95881 5.00878 6.3252 5.00038C6.69186 4.99204 7.00872 5.12141 7.27539 5.38807L12.0508 10.1879L16.7754 5.38807C17.0421 5.12141 17.3589 4.99204 17.7256 5.00038Z" />
@@ -1088,13 +1084,19 @@
                     </button>
                 </div>
                 <div class="settings-panel-body info-panel-body">
+                    <p class="info-section-title">About</p>
                     <p class="info-description">View and export rotating 3D STL models as animated GIF, MP4, or PNG -
                         entirely in your browser. Your files never leave your device.</p>
-                    <div class="info-meta">
-                        <span id="infoBuildVersion">Build 2.2.37</span>
-                        <span id="infoBuildDate">Updated May 28, 2026</span>
-                    </div>
                     <div class="settings-divider"></div>
+                    <p class="info-section-title">What's New</p>
+                    <div class="info-meta">
+                        <p class="info-meta-line"><span id="infoBuildVersion">Build 2.2.37</span> <span class="info-meta-separator">•</span> <span
+                                id="infoBuildDate">Updated May 28, 2026</span></p>
+                    </div>
+                        <p class="info-description info-whats-new-text"><a href="https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/rotater/CHANGELOG.md"
+                            target="_blank" rel="noopener noreferrer" class="info-text-link">View changelog</a></p>
+                    <div class="settings-divider"></div>
+                    <p class="info-section-title">Navigation</p>
                     <p class="info-description">Navigate the 3D view with mouse or touch.</p>
                     <ul class="help-controls-list">
                         <li><strong>Drag</strong> — Orbit the model</li>
@@ -1103,34 +1105,31 @@
                         <li><strong>Shift + drag</strong> — Pan</li>
                     </ul>
                     <div class="settings-divider"></div>
-                    <p class="info-description">Keyboard shortcuts.</p>
+                    <p class="info-section-title">Keyboard Shortcuts</p>
                     <ul class="help-controls-list">
                         <li><strong>Space</strong> — Pause / resume animation</li>
                         <li><strong>Esc</strong> — Close open panel</li>
                         <li><strong>Arrow keys</strong> — Orbit the camera in D-pad steps</li>
                     </ul>
                     <div class="settings-divider"></div>
-                    <span class="info-made-by">Made by @mindcubby</span>
-                    <a href="https://mindcubby.etsy.com" target="_blank" rel="noopener noreferrer"
-                        class="settings-action-btn info-link-btn">
-                        <img src="logos_Etsy.svg" alt="" class="brand-link-logo brand-link-logo--etsy" loading="lazy">
-                        Etsy
-                    </a>
-                    <a href="https://www.printables.com/@MindCubby_3731028/models" target="_blank" rel="noopener noreferrer"
-                        class="settings-action-btn info-link-btn">
-                        <img src="Logos_Printables.svg" alt="" class="brand-link-logo brand-link-logo--printables" loading="lazy">
-                        Printables
-                    </a>
-                    <a href="https://www.youtube.com/@MindCubby" target="_blank" rel="noopener noreferrer"
-                        class="settings-action-btn info-link-btn">
-                        <img src="logos_YouTube.svg" alt="" class="brand-link-logo brand-link-logo--youtube" loading="lazy">
-                        YouTube
-                    </a>
-                    <a href="https://github.com/dreisdesign/mindcubby/tree/main/3d/apps/rotater#readme" target="_blank"
-                        rel="noopener noreferrer" class="settings-action-btn info-link-btn">
-                        <img src="logos_GitHub.svg" alt="" class="brand-link-logo brand-link-logo--github" loading="lazy">
-                        GitHub
-                    </a>
+                    <span class="info-made-by">Made by MindCubby</span>
+                    <div class="info-brand-grid">
+                        <a href="https://mindcubby.etsy.com" target="_blank" rel="noopener noreferrer" class="info-brand-link" aria-label="Etsy">
+                            <img src="logos_Etsy.svg" alt="Etsy" class="brand-link-logo brand-link-logo--etsy" loading="lazy">
+                        </a>
+                        <a href="https://www.printables.com/@MindCubby_3731028/models" target="_blank" rel="noopener noreferrer"
+                            class="info-brand-link" aria-label="Printables">
+                            <img src="Logos_Printables.svg" alt="Printables" class="brand-link-logo brand-link-logo--printables" loading="lazy">
+                        </a>
+                        <a href="https://www.youtube.com/@MindCubby" target="_blank" rel="noopener noreferrer" class="info-brand-link"
+                            aria-label="YouTube">
+                            <img src="logos_YouTube.svg" alt="YouTube" class="brand-link-logo brand-link-logo--youtube" loading="lazy">
+                        </a>
+                        <a href="https://github.com/dreisdesign/mindcubby/tree/main/3d/apps/rotater#readme" target="_blank"
+                            rel="noopener noreferrer" class="info-brand-link" aria-label="GitHub">
+                            <img src="logos_GitHub.svg" alt="GitHub" class="brand-link-logo brand-link-logo--github" loading="lazy">
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

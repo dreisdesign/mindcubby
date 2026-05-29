@@ -1005,6 +1005,7 @@ let rulerGridSpanZ = 0;
 let rulerGridStepMm = 0;
 let rulerFootprintHelper = null;
 let rulerFootprintSignature = '';
+const rulerMeasurementNormalSignCache = new Map();
 const RULER_DYNAMIC_LINES_ENABLED = false;
 const RULER_FOOTPRINT_ENABLED = false;
 let fpsSampleAccumMs = 0;
@@ -6382,6 +6383,7 @@ function drawMeasurement(ctx, start, end, text, center, options = {}) {
         dashed = false,
         showConnectors = true,
         showArrows = true,
+        normalKey = '',
     } = options;
     const edge = end.clone().sub(start);
     const edgeLen = edge.length();
@@ -6390,7 +6392,16 @@ function drawMeasurement(ctx, start, end, text, center, options = {}) {
     let normal = new THREE.Vector2(-dir.y, dir.x);
     const mid = start.clone().add(end).multiplyScalar(0.5);
     const outward = mid.clone().sub(center);
-    if (outward.dot(normal) < 0) normal.multiplyScalar(-1);
+    const normalDot = outward.dot(normal);
+    const hasCacheKey = !!normalKey;
+    const previousSign = hasCacheKey ? rulerMeasurementNormalSignCache.get(normalKey) : 1;
+    let normalSign = normalDot < 0 ? -1 : 1;
+    // Keep edge-label orientation stable when camera jitter places the edge midpoint near the center.
+    if (Math.abs(normalDot) < 8) {
+        normalSign = previousSign === -1 ? -1 : 1;
+    }
+    if (hasCacheKey) rulerMeasurementNormalSignCache.set(normalKey, normalSign);
+    if (normalSign < 0) normal.multiplyScalar(-1);
     const offsetVec = normal.clone().multiplyScalar(offset);
     const a = start.clone().add(offsetVec);
     const b = end.clone().add(offsetVec);
@@ -6622,6 +6633,10 @@ function drawRulerHoverPartContextualDims(ctx, width, height, cam) {
         { axisBit: 4, label: 'H', value: hoveredDims.h, offset: 16, labelOffset: 14 },
     ];
 
+    const normalCachePrefix = useGroupedSelection
+        ? `inspect-group-${getUiSelectedPartIndices().join('-')}`
+        : `inspect-part-${rulerHoveredPartIndex}`;
+
     axisSpecs.forEach((spec) => {
         const edge = findBestAxisEdge(spec.axisBit);
         if (!edge || edge.len < 18 || !Number.isFinite(spec.value)) return;
@@ -6632,6 +6647,7 @@ function drawRulerHoverPartContextualDims(ctx, width, height, cam) {
             dashed: true,
             showConnectors: false,
             showArrows: true,
+            normalKey: `${normalCachePrefix}-${spec.label}`,
         });
     });
 }
