@@ -1522,6 +1522,7 @@ let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, 
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
 let pendingViewportOrbitRestore = null;
+let _deferPostRestoreSaveUntilViewportOrbitApplied = false;
 let autoDemoLoadSuppressed = false;
 let autoDemoLoadScheduled = false;
 let _pausedBeforeStillExport = null;
@@ -1647,6 +1648,10 @@ function tryApplyPendingViewportOrbitRestore() {
         const currentModelKey = getViewportOrbitModelKey();
         if (!restore.modelKey || restore.modelKey !== currentModelKey) {
             pendingViewportOrbitRestore = null;
+            if (_deferPostRestoreSaveUntilViewportOrbitApplied) {
+                _deferPostRestoreSaveUntilViewportOrbitApplied = false;
+                saveSettings();
+            }
             return false;
         }
         // Always restore around model center to avoid stale/off-model pan targets
@@ -1675,9 +1680,17 @@ function tryApplyPendingViewportOrbitRestore() {
         controls.update();
         updateCameraClipPlanes(true);
         pendingViewportOrbitRestore = null;
+        if (_deferPostRestoreSaveUntilViewportOrbitApplied) {
+            _deferPostRestoreSaveUntilViewportOrbitApplied = false;
+            saveSettings();
+        }
         return true;
     } catch (_) {
         pendingViewportOrbitRestore = null;
+        if (_deferPostRestoreSaveUntilViewportOrbitApplied) {
+            _deferPostRestoreSaveUntilViewportOrbitApplied = false;
+            saveSettings();
+        }
         return false;
     }
 }
@@ -7393,6 +7406,7 @@ function saveSettings() {
 function restoreSettings() {
     suppressSave = true;
     pendingViewportOrbitRestore = null;
+    _deferPostRestoreSaveUntilViewportOrbitApplied = false;
     if (DEV_LOG) console.log(`[rotater] restoreSettings start at ${Date.now()}`);
     try {
         const urlS = getURLSettings(location.search);
@@ -7610,6 +7624,7 @@ function restoreSettings() {
                     && modelKey.length > 0;
                 if (hasRestoreState) {
                     pendingViewportOrbitRestore = { dist, elev, az, tx, ty, tz, modelKey };
+                    _deferPostRestoreSaveUntilViewportOrbitApplied = true;
                 }
             }
         }
@@ -7849,7 +7864,11 @@ function restoreSettings() {
                 url: location.search,
                 localStorage: localStorage.getItem(SETTINGS_KEY)
             });
-        saveSettings();
+        if (_deferPostRestoreSaveUntilViewportOrbitApplied && pendingViewportOrbitRestore) {
+            // Avoid persisting a pre-restore camera state; save after orbit restore runs.
+        } else {
+            saveSettings();
+        }
     } catch (e) { /* non-fatal */ }
 }
 
@@ -9288,6 +9307,19 @@ const finishCommitQueue = createDeferredCommitQueue({
     },
 });
 
+const textureTuneCommitQueue = createDeferredCommitQueue({
+    delayMs: 120,
+    onFlush: (payload) => {
+        if (payload?.persistMultipart) {
+            persistCurrentMultipartParts({ immediate: true });
+        }
+        if (payload?.thumbTargets !== undefined && payload?.thumbTargets !== null) {
+            queueModelPartThumbsRender(payload.thumbTargets);
+        }
+        saveSettings();
+    },
+});
+
 function applyColorPickPreview() {
     if (isMultipartModel()) {
         const targets = applyToModelPartEditTargets((partSettings, idx) => {
@@ -9349,6 +9381,14 @@ function flushFinishCommit() {
 
 function scheduleFinishCommit(thumbTargets = null) {
     finishCommitQueue.schedule(thumbTargets);
+}
+
+function flushTextureTuneCommit() {
+    textureTuneCommitQueue.flush();
+}
+
+function scheduleTextureTuneCommit(payload = null) {
+    textureTuneCommitQueue.schedule(payload);
 }
 
 colorPick.addEventListener('input', (ev) => {
@@ -9439,28 +9479,44 @@ textureTuneLightSlider?.addEventListener('input', () => {
     textureTuneState.light = parseFloat(textureTuneLightSlider.value);
     updateTextureTuneUI();
     applyCurrentTextureTuning();
-    saveSettings();
+    scheduleTextureTuneCommit();
+});
+
+textureTuneLightSlider?.addEventListener('change', () => {
+    flushTextureTuneCommit();
 });
 
 textureTuneContrastSlider?.addEventListener('input', () => {
     textureTuneState.contrast = parseFloat(textureTuneContrastSlider.value);
     updateTextureTuneUI();
     applyCurrentTextureTuning();
-    saveSettings();
+    scheduleTextureTuneCommit();
+});
+
+textureTuneContrastSlider?.addEventListener('change', () => {
+    flushTextureTuneCommit();
 });
 
 textureTuneHighlightsSlider?.addEventListener('input', () => {
     textureTuneState.highlights = parseFloat(textureTuneHighlightsSlider.value);
     updateTextureTuneUI();
     applyCurrentTextureTuning();
-    saveSettings();
+    scheduleTextureTuneCommit();
+});
+
+textureTuneHighlightsSlider?.addEventListener('change', () => {
+    flushTextureTuneCommit();
 });
 
 textureTuneShadowsSlider?.addEventListener('input', () => {
     textureTuneState.shadows = parseFloat(textureTuneShadowsSlider.value);
     updateTextureTuneUI();
     applyCurrentTextureTuning();
-    saveSettings();
+    scheduleTextureTuneCommit();
+});
+
+textureTuneShadowsSlider?.addEventListener('change', () => {
+    flushTextureTuneCommit();
 });
 
 textureTuneLightSourceSlider?.addEventListener('input', () => {
@@ -9468,7 +9524,11 @@ textureTuneLightSourceSlider?.addEventListener('input', () => {
     updateTextureTuneUI();
     if (mesh) updateShadowCatcherPlacement();
     applyCurrentTextureTuning();
-    saveSettings();
+    scheduleTextureTuneCommit();
+});
+
+textureTuneLightSourceSlider?.addEventListener('change', () => {
+    flushTextureTuneCommit();
 });
 
 textureTuneLightLockBox?.addEventListener('change', () => {
@@ -9484,7 +9544,11 @@ textureTuneLightHeightSlider?.addEventListener('input', () => {
     updateTextureTuneUI();
     if (mesh) updateShadowCatcherPlacement();
     applyCurrentTextureTuning();
-    saveSettings();
+    scheduleTextureTuneCommit();
+});
+
+textureTuneLightHeightSlider?.addEventListener('change', () => {
+    flushTextureTuneCommit();
 });
 
 textureTuneRoughnessSlider?.addEventListener('input', () => {
@@ -9523,9 +9587,11 @@ textureTuneMetalnessSlider?.addEventListener('input', () => {
     syncUIFromSelectedPart();
     updateTextureTuneUI();
     applyCurrentTextureTuning();
-    persistCurrentMultipartParts();
-    queueModelPartThumbsRender(targets);
-    saveSettings();
+    scheduleTextureTuneCommit({ persistMultipart: true, thumbTargets: targets });
+});
+
+textureTuneMetalnessSlider?.addEventListener('change', () => {
+    flushTextureTuneCommit();
 });
 
 shadingEl.addEventListener('change', () => {

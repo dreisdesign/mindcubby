@@ -4,9 +4,11 @@
 - **Reset-state recompute coalescing**: card reset dirty-state checks are now coalesced to one `requestAnimationFrame` pass during high-frequency slider/input interactions, reducing repeated DOM and per-part comparisons while scrubbing.
 - **Finish slider drag smoothing**: Surface finish roughness input now uses deferred commit scheduling, avoiding per-input multipart persistence, thumbnail regeneration, and settings URL/local saves during active drag.
 - **Model-sync color drag smoothing**: live model color preview now uses build-plate preview updates (skip texture rebuild/dispose on each input), reducing animation stalls during color drags.
+- **Texture tuning drag smoothing**: Lighting and metallic tuning sliders now defer persistence/sync work to commit timing, reducing per-input save churn during active drags.
 
 ### Fixed
 - **Floating model editor single-click close**: a single non-drag click in the preview canvas now closes the floating 3D Models editor reliably.
+- **Repeated refresh zoom drift after level/reframe**: restore now avoids persisting pre-restore viewport camera values before pending orbit restore is applied, preventing second-refresh zoom-in regressions.
 
 ### Changed
 - **GIF workload UX follow-through**: high-workload GIF exports now show a visible warning lane and continue export, instead of failing with a console-only hard stop.
