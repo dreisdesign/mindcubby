@@ -8082,7 +8082,6 @@ function scheduleAutoDemoModelLoad() {
                 dismissStartupSplash();
                 return;
             }
-            saveSettings();
             dismissStartupSplash();
         } catch (e) {
             dismissStartupSplash();
@@ -8981,6 +8980,9 @@ document.getElementById('btnCamReset').addEventListener('click', () => {
     if ((m === 'tilt' || m === 'wobble') && !isPaused) {
         setPauseState(true, false, true);
     }
+    // This camera move is programmatic (no OrbitControls end event), so
+    // persist immediately to keep refresh aligned with the reframed view.
+    saveSettings({ immediateUrlSync: true });
     renderer.render(scene, camera);
 });
 
@@ -10526,8 +10528,14 @@ async function loadBenchyModel({ clearStoredModel = true } = {}) {
         if (!renderer) initThree();
         controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
         await loadSTLBuffer(buffer, '3dbenchy.stl');
-        // Benchy should always load into a predictable level + reframed camera state.
-        document.getElementById('btnCamReset')?.click();
+        // Benchy should always load into a predictable level + reframed camera
+        // state, but only after the first load frame has applied fit/restore.
+        await new Promise((resolve) => {
+            requestAnimationFrame(() => {
+                document.getElementById('btnCamReset')?.click();
+                resolve();
+            });
+        });
         return true;
     } catch (e) {
         return false;
