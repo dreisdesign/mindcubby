@@ -2365,13 +2365,17 @@ function applyTextureLighting() {
         // Keep projected shadows visible regardless of build plate toggle.
         shadowCatcher.visible = shadowsOn;
         if (shadowCatcher.material && shadowCatcher.material.isShadowMaterial) {
-            const surfaceColor = getActiveRulerSurfaceColor();
+            const usingBuildPlateSurface = !!(buildPlateEnabled && buildPlateMesh?.visible);
+            const surfaceColor = usingBuildPlateSurface
+                ? getActiveRulerSurfaceColor()
+                : (renderer ? renderer.getClearColor(new THREE.Color()) : getActiveRulerSurfaceColor());
             const lum = getColorRelativeLuminance(surfaceColor);
-            const tintedShadow = surfaceColor.clone().lerp(new THREE.Color(0x000000), 0.78);
-            shadowCatcher.material.color.copy(tintedShadow);
-            const lumScale = THREE.MathUtils.lerp(0.72, 1.18, lum);
+            // Keep receiver visually invisible (no third band), and only render
+            // neutral shadow darkening that adapts to surface brightness.
+            shadowCatcher.material.color.set(0x000000);
+            const lumScale = THREE.MathUtils.lerp(0.45, 1.05, lum);
             shadowCatcher.material.opacity = shadowsOn
-                ? (0.02 + shadowsAmt * 0.14 * lumScale)
+                ? (0.02 + shadowsAmt * 0.16 * lumScale)
                 : 0.02;
             shadowCatcher.material.needsUpdate = true;
         }
@@ -12562,7 +12566,9 @@ btnVideo.addEventListener('click', async () => {
                 await exportMp4EncoderQueueController.waitForEncoderQueue({
                     encoder,
                     getEncoderError: () => encoderError,
-                    maxQueue: 24,
+                    // Higher queue tolerance avoids over-throttling when browser
+                    // screen capture/recording is active during export.
+                    maxQueue: 48,
                     frameIndex: f,
                     total: totalFrames,
                 });

@@ -48,7 +48,7 @@ export function createExportMp4EncoderQueueController({
                 lastBusyNoticeAt = now;
                 const queueDepth = Math.round(encoder.encodeQueueSize || 0);
                 await maybePaintExportProgress?.(
-                    `Encoding… ${frameIndex + 1} / ${total} (encoder busy: q=${queueDepth}, screen recording can slow export)`,
+                    `Encoding… ${frameIndex + 1} / ${total} (encoder busy: q=${queueDepth}, screen recording can slow export; continuing)`,
                     frameIndex + 1,
                     total,
                     true

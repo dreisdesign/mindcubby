@@ -16,6 +16,8 @@
 - **Export preview grid restore parity**: export preview scene cleanup now reapplies canonical ruler/grid recompute instead of restoring helper visibility directly, preventing hidden-grid desync after preview passes.
 - **Add-to-plate framing parity**: appending models to an existing build plate now automatically applies level + reframe after load for deterministic camera framing.
 - **Inspect overlay measurement jitter**: contextual inspect measurements now use stable label-side orientation hysteresis, preventing rapid top/bottom flips while hovering parts.
+- **Shadow banding parity (no third surface band)**: shadow receiving now returns to neutral shadow-only blending, avoiding a visible third surface band while preserving natural background/build-plate shadow blending.
+- **MP4 export continuity under screen capture load**: MP4 progress paint and encoder queue handling now tolerate browser/recording throttling more gracefully so warning/busy conditions continue exporting instead of appearing stalled.
 
 ### Changed
 - **GIF workload UX follow-through**: high-workload GIF exports now show a visible warning lane and continue export, instead of failing with a console-only hard stop.

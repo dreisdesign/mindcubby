@@ -12,7 +12,24 @@ export function createExportProgressTimingController({
 
         onPaintStatus?.(msg, done, total);
         lastExportUiPaintAt = now;
-        await new Promise((resolve) => requestAnimationFrameFn?.(resolve));
+        await new Promise((resolve) => {
+            let settled = false;
+            const finish = () => {
+                if (settled) return;
+                settled = true;
+                resolve();
+            };
+
+            // RAF can be heavily throttled while browser capture warnings/modals
+            // are active; timeout fallback keeps export loops moving.
+            const timeoutId = setTimeout(finish, 34);
+            if (typeof requestAnimationFrameFn === 'function') {
+                requestAnimationFrameFn(() => {
+                    clearTimeout(timeoutId);
+                    finish();
+                });
+            }
+        });
     }
 
     return {
