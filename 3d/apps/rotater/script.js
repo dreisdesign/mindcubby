@@ -4498,7 +4498,7 @@ function isModelPartPreviewMultiSelectActive() {
 }
 
 function isModelPartPreviewHoverSelectionActive() {
-    return isModelPartSelectorMenuOpen() || rulerPartHoverEnabled;
+    return isModelPartSelectorMenuOpen() || rulerPartHoverEnabled || isMultipartModel();
 }
 
 function updateModelCardSelectionVisibility() {
