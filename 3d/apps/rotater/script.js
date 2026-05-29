@@ -1523,6 +1523,7 @@ let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera d
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
 let pendingViewportOrbitRestore = null;
 let _deferPostRestoreSaveUntilViewportOrbitApplied = false;
+let _lifecyclePersistBound = false;
 let autoDemoLoadSuppressed = false;
 let autoDemoLoadScheduled = false;
 let _pausedBeforeStillExport = null;
@@ -1639,6 +1640,21 @@ function syncExportCameraFromViewport() {
     exportCamElev = elev;
     const cropScale = exportFrameEnabled ? getCropFrameVerticalScale() : 1;
     exportCamZoom = (camera.zoom || 1) / cropScale;
+}
+
+function bindLifecyclePersistGuards() {
+    if (_lifecyclePersistBound) return;
+    _lifecyclePersistBound = true;
+
+    const persistBeforeExit = () => {
+        if (suppressSave) return;
+        try {
+            saveSettings({ immediateUrlSync: true });
+        } catch (_) { }
+    };
+
+    window.addEventListener('pagehide', persistBeforeExit);
+    window.addEventListener('beforeunload', persistBeforeExit);
 }
 
 function tryApplyPendingViewportOrbitRestore() {
@@ -1899,6 +1915,8 @@ function initThree() {
     controls.addEventListener('end', () => {
         flushOrbitInteractionCommit();
     });
+
+    bindLifecyclePersistGuards();
 
     syncCanvasSize();
     window.addEventListener('resize', syncCanvasSize);
