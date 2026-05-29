@@ -79,6 +79,7 @@ Design status key:
 | U6 | Export footer CTA density and hierarchy cleanup | UI UX | S | Ready | B1 |
 | U7 | ZIP project scope hardening (settings/naming/colors deterministic on restore) | Reliability | M | Details | A1 |
 | U8 | HUD vertical rhythm alignment (FPS badge and action cluster) | Viewer UX | S | Ready | None |
+| U9 | Cross-sync source parity: BG Sync from Surface selector + Surface Sync from BG selector | Sync UX | M | Needs design | A1 |
 
 ### Later Queue
 

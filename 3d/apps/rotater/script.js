@@ -1642,11 +1642,23 @@ function tryApplyPendingViewportOrbitRestore() {
     if (!pendingViewportOrbitRestore || !camera || !controls) return false;
     try {
         const restore = pendingViewportOrbitRestore;
+        const currentModelKey = getViewportOrbitModelKey();
+        if (!restore.modelKey || restore.modelKey !== currentModelKey) {
+            pendingViewportOrbitRestore = null;
+            return false;
+        }
         const target = new THREE.Vector3(restore.tx, restore.ty, restore.tz);
-        const dist = Math.max(0.01, Number(restore.dist) || 0.01);
+        const fitDist = Math.max(0.02, getViewportFitDistance());
+        const minDist = Math.max(0.01, fitDist * ORBIT_MIN_DISTANCE_FACTOR);
+        const maxDist = Math.max(minDist + 0.01, fitDist * ORBIT_MAX_DISTANCE_FACTOR);
+        const dist = THREE.MathUtils.clamp(Number(restore.dist) || fitDist, minDist, maxDist);
         const maxEl = Math.PI / 2 - 0.01;
         const elev = THREE.MathUtils.clamp(Number(restore.elev) || 0, -maxEl, maxEl);
         const az = Number(restore.az) || 0;
+        const maxTargetOffset = Math.max(1.5, modelRadius * 3);
+        if (target.length() > maxTargetOffset) {
+            target.set(0, 0, 0);
+        }
 
         setCameraFromOrbitState(camera, target, dist, elev, az);
         controls.target.copy(target);
@@ -2304,7 +2316,7 @@ function applyTextureLighting() {
         const mats = getMeshMaterials();
         const allTransmissive = mats.length > 0 && mats.every(m => m && 'transmission' in m && m.transmission > 0);
         mesh.castShadow = shadowsOn && !allTransmissive;
-        mesh.receiveShadow = false;
+        mesh.receiveShadow = shadowsOn && !allTransmissive;
     }
     if (shadowCatcher) {
         // Keep projected shadows visible regardless of build plate toggle.
@@ -2443,6 +2455,13 @@ function getMaterial(shading, baseColor, partSettings) {
 
 function stemFromFileName(name) {
     return String(name || 'model').replace(/\.stl$/i, '').trim() || 'model';
+}
+
+function getViewportOrbitModelKey() {
+    const fileKey = String(currentFileName || 'model').trim().toLowerCase();
+    if (!Array.isArray(modelPartNames) || !modelPartNames.length) return `${fileKey}::0`;
+    const namesKey = modelPartNames.map((name) => String(name || '').trim().toLowerCase()).join('|');
+    return `${fileKey}::${modelPartNames.length}::${namesKey}`;
 }
 
 function inferMultipartBaseName(names) {
@@ -7287,6 +7306,7 @@ function saveSettings() {
             viewportCamTargetX: orbitTarget?.x,
             viewportCamTargetY: orbitTarget?.y,
             viewportCamTargetZ: orbitTarget?.z,
+            viewportCamModelKey: getViewportOrbitModelKey(),
             autoBgAdjust: document.getElementById('autoBgCheck')?.checked ? '1' : '0',
             rulerVisible: rulerEnabled ? '1' : '0',
             rulerUnit: rulerUnit,
@@ -7543,14 +7563,16 @@ function restoreSettings() {
                 const tx = parseFloat(s.viewportCamTargetX);
                 const ty = parseFloat(s.viewportCamTargetY);
                 const tz = parseFloat(s.viewportCamTargetZ);
+                const modelKey = typeof s.viewportCamModelKey === 'string' ? s.viewportCamModelKey : '';
                 const hasRestoreState = Number.isFinite(dist) && dist > 0
                     && Number.isFinite(elev)
                     && Number.isFinite(az)
                     && Number.isFinite(tx)
                     && Number.isFinite(ty)
-                    && Number.isFinite(tz);
+                    && Number.isFinite(tz)
+                    && modelKey.length > 0;
                 if (hasRestoreState) {
-                    pendingViewportOrbitRestore = { dist, elev, az, tx, ty, tz };
+                    pendingViewportOrbitRestore = { dist, elev, az, tx, ty, tz, modelKey };
                 }
             }
         }
