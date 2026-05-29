@@ -17,7 +17,7 @@
 
 ### Changed
 - **GIF workload UX follow-through**: high-workload GIF exports now show a visible warning lane and continue export, instead of failing with a console-only hard stop.
-- **About panel final polish**: replaced header text with the Rotater wordmark (height-aligned to close control), switched `View changelog` to a standard inline text link, and simplified the maker line to `Made by MindCubby`.
+- **About panel final polish**: replaced header text with the Rotater wordmark (larger while height-aligned to the close control), switched `View changelog` to a standard inline text link with normalized text styling/alignment, and simplified the maker line to `Made by MindCubby`.
 
 ---
 

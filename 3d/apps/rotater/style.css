@@ -4716,8 +4716,8 @@ html.loaded .menu-btn {
 .help-panel-title-logo {
     display: block;
     width: auto;
-    max-width: min(54vw, 170px);
-    height: 18px;
+    max-width: min(68vw, 260px);
+    height: 36px;
 }
 
 .info-panel-body {
@@ -4766,19 +4766,19 @@ html.loaded .menu-btn {
 }
 
 .info-whats-new-text {
-    padding-left: 0;
+    padding-left: 14px;
 }
 
 .info-text-link {
     font-size: var(--text-sm);
-    color: var(--palette-blueberry-600);
+    color: var(--color-label);
     text-decoration: underline;
     text-underline-offset: 2px;
-    font-weight: 600;
+    font-weight: 400;
 }
 
 .info-text-link:hover {
-    color: var(--palette-blueberry-800);
+    color: var(--color-on-surface);
 }
 
 .info-link-btn {
