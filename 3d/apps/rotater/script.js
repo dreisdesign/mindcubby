@@ -1653,13 +1653,22 @@ function tryApplyPendingViewportOrbitRestore() {
         const fitDist = Math.max(0.02, getViewportFitDistance());
         const minDist = Math.max(0.01, fitDist * ORBIT_MIN_DISTANCE_FACTOR);
         const maxDist = Math.max(minDist + 0.01, fitDist * ORBIT_MAX_DISTANCE_FACTOR);
-        const dist = THREE.MathUtils.clamp(Number(restore.dist) || fitDist, minDist, maxDist);
+        const visibilitySafeMinDist = Math.max(minDist, modelRadius * 1.05);
+        const dist = THREE.MathUtils.clamp(Number(restore.dist) || fitDist, visibilitySafeMinDist, maxDist);
         const maxEl = THREE.MathUtils.degToRad(75);
         const elev = THREE.MathUtils.clamp(Number(restore.elev) || 0, -maxEl, maxEl);
         const az = Number(restore.az) || 0;
 
         setCameraFromOrbitState(camera, target, dist, elev, az);
         controls.target.copy(target);
+
+        const restoredDist = camera.position.distanceTo(target);
+        const isRestoreInvalid = !Number.isFinite(restoredDist)
+            || restoredDist < Math.max(0.01, modelRadius * 1.02);
+        if (isRestoreInvalid) {
+            placeCamera();
+        }
+
         updateOrbitDistanceLimits(true);
         controls.update();
         updateCameraClipPlanes(true);
