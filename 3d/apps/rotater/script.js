@@ -1647,18 +1647,16 @@ function tryApplyPendingViewportOrbitRestore() {
             pendingViewportOrbitRestore = null;
             return false;
         }
-        const target = new THREE.Vector3(restore.tx, restore.ty, restore.tz);
+        // Always restore around model center to avoid stale/off-model pan targets
+        // that can place the camera on empty space after refresh.
+        const target = new THREE.Vector3(0, 0, 0);
         const fitDist = Math.max(0.02, getViewportFitDistance());
         const minDist = Math.max(0.01, fitDist * ORBIT_MIN_DISTANCE_FACTOR);
         const maxDist = Math.max(minDist + 0.01, fitDist * ORBIT_MAX_DISTANCE_FACTOR);
         const dist = THREE.MathUtils.clamp(Number(restore.dist) || fitDist, minDist, maxDist);
-        const maxEl = Math.PI / 2 - 0.01;
+        const maxEl = THREE.MathUtils.degToRad(75);
         const elev = THREE.MathUtils.clamp(Number(restore.elev) || 0, -maxEl, maxEl);
         const az = Number(restore.az) || 0;
-        const maxTargetOffset = Math.max(1.5, modelRadius * 3);
-        if (target.length() > maxTargetOffset) {
-            target.set(0, 0, 0);
-        }
 
         setCameraFromOrbitState(camera, target, dist, elev, az);
         controls.target.copy(target);
@@ -9328,25 +9326,6 @@ if (bgOpacitySlider) {
         syncSliderTooltip(bgOpacitySlider);
         updateBgShadeSliderVisual();
 
-        if (activeBgPreset === 'modelcolor' && !isDynamicBg) {
-            const partCount = Math.max(1, modelPartNames.length, modelPartBaseColors.length, modelPartSettings.length);
-            const idx = Math.max(0, Math.min(parseInt(String(bgSyncPartIndex), 10) || 0, partCount - 1));
-            const settings = getPartSettings(idx);
-            settings.tone = bgTone;
-            if (idx === modelPartSelected && opacitySlider) {
-                opacitySlider.value = String(bgTone);
-                opacityVal.textContent = (bgTone >= 0 ? '+' : '') + bgTone;
-                syncSliderTooltip(opacitySlider);
-                updateShadeSliderVisual();
-            }
-            if (mesh) applyPartColorsToMesh({ buildPlatePreview: activeBuildPlatePreset === 'modelcolor' });
-            const syncColor = getModelSyncSourceColor();
-            bgPick.value = syncColor;
-            applyBackgroundFromBaseColor(syncColor);
-            scheduleModelToneCommit([idx]);
-            return;
-        }
-
         const baseHex = getActiveBackgroundBaseColor();
         const c = computeSurfaceShadeColor(baseHex, bgTone);
         if (renderer) renderer.setClearColor(c, 1);
@@ -9355,10 +9334,6 @@ if (bgOpacitySlider) {
         saveSettings();
     });
     bgOpacitySlider.addEventListener('change', () => {
-        if (activeBgPreset === 'modelcolor' && !isDynamicBg) {
-            flushModelToneCommit();
-            return;
-        }
         saveSettings();
     });
 }
