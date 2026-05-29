@@ -1,3 +1,13 @@
+## [Unreleased] - 2026-05-29
+
+### Performance
+- **Reset-state recompute coalescing**: card reset dirty-state checks are now coalesced to one `requestAnimationFrame` pass during high-frequency slider/input interactions, reducing repeated DOM and per-part comparisons while scrubbing.
+
+### Changed
+- **GIF workload UX follow-through**: high-workload GIF exports now show a visible warning lane and continue export, instead of failing with a console-only hard stop.
+
+---
+
 ## [2.2.37] - 2026-05-28
 
 ### Changed
@@ -178,6 +188,13 @@
 ---
 
 ## [Unreleased]
+### Documentation
+- **Docs sync timestamp**: 2026-05-29 10:50 -0400 (captured from current `main` history).
+- **Recent pushes now documented**:
+  - `14db073` — 2026-05-28 20:38 -0400 — fixed Hide/Show model wording to always display `Show model` with ON/OFF state indicating visibility.
+  - `a631a3a` — 2026-05-28 20:33 -0400 — updated 3-dot menu direction preference to open downward by default and flip upward only when viewport space requires it.
+  - `0ea254a` — 2026-05-28 20:21 -0400 — kept multipart hover bounding-box active regardless of floating model-window open/closed state.
+
 ### Added
 - **About button build badge**: the canvas About Rotater button now shows a small NEW badge after an app update until the help panel is opened for the current build.
 - **Share: Copy Image to clipboard** — added a new `Copy Image` action in the Share panel that copies the current still render directly to clipboard as PNG (or JPEG when JPG format is selected).

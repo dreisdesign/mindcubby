@@ -7,6 +7,7 @@ export function createExportGifRuntimeController({
     getImageExportSize,
     exportFrames,
     validateExportWorkload,
+    setStatus,
     getTransparentEnabled,
     captureFrames,
     setAnimStatus,
@@ -33,7 +34,19 @@ export function createExportGifRuntimeController({
             const { fps, loop, dither } = getExportGifConfig?.() || {};
             const { width: W, height: H } = getImageExportSize?.() || {};
             const frameCount = exportFrames?.(fps);
-            validateExportWorkload?.({ format: 'gif', width: W, height: H, fps, frames: frameCount });
+            const workloadCheck = validateExportWorkload?.({
+                format: 'gif',
+                width: W,
+                height: H,
+                fps,
+                frames: frameCount,
+                allowUnsafeWorkload: true,
+            });
+            if (workloadCheck?.warning) {
+                setStatus?.('Large GIF export: this may take a while. For faster results, use Medium quality or a wider aspect ratio.');
+                setAnimStatus?.('Large GIF workload detected. Continuing export...');
+                await scheduleYield?.();
+            }
 
             const isTransparent = !!getTransparentEnabled?.();
             const frames = await captureFrames?.(frameCount, { width: W, height: H }, isTransparent);

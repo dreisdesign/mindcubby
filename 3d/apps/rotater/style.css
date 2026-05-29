@@ -1540,6 +1540,12 @@ html.loaded .controls-bar.hidden {
     line-height: 1;
 }
 
+.part-option-more--summary {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+}
+
 .thumb-select-summary-check {
     width: 16px;
     height: 16px;
@@ -1665,11 +1671,6 @@ html.loaded .controls-bar.hidden {
     color: var(--color-on-surface);
     letter-spacing: 0.01em;
     white-space: nowrap;
-}
-
-#modelPartSelectorMenu:not(.is-multi-select-mode) .model-bulk-toggle-all,
-#modelPartSelectorMenu:not(.is-multi-select-mode) .model-bulk-selection-count {
-    display: none !important;
 }
 
 .model-bulk-icon-btn,
@@ -2687,50 +2688,6 @@ html.loaded .controls-bar.hidden {
 
 .option-switch.is-on::after {
     transform: translateX(12px);
-}
-
-.app-undo-toast {
-    position: fixed;
-    left: 50%;
-    bottom: max(16px, env(safe-area-inset-bottom));
-    transform: translateX(-50%);
-    z-index: 160;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 260px;
-    max-width: min(92vw, 520px);
-    padding: 12px 14px;
-    border-radius: 14px;
-    border: 1px solid color-mix(in srgb, var(--palette-blueberry-500) 74%, white 26%);
-    background: linear-gradient(180deg, color-mix(in srgb, #fff 90%, var(--palette-blueberry-100) 10%), color-mix(in srgb, #fff 84%, var(--palette-blueberry-100) 16%));
-    box-shadow: 0 22px 44px rgba(20, 18, 43, 0.24), 0 6px 18px rgba(20, 18, 43, 0.14);
-}
-
-.app-undo-toast[hidden] {
-    display: none !important;
-}
-
-.app-undo-toast-text {
-    color: var(--color-on-surface);
-    font-size: 14px;
-    font-weight: 700;
-    flex: 1 1 auto;
-}
-
-.app-undo-toast-btn {
-    border: 1px solid color-mix(in srgb, var(--palette-blueberry-400) 70%, white 30%);
-    border-radius: 999px;
-    background: #fff;
-    color: var(--color-on-surface);
-    font-size: 13px;
-    font-weight: 700;
-    padding: 6px 12px;
-    cursor: pointer;
-}
-
-.app-undo-toast-btn:hover {
-    border-color: var(--palette-blueberry-600);
 }
 
 .part-option-action:hover {
