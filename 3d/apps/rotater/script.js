@@ -4780,7 +4780,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             opt.draggable = !!window.matchMedia && window.matchMedia('(pointer:fine)').matches;
             opt.setAttribute('role', 'option');
             const settings = getPartSettings(idx);
-            const visibilityLabel = settings.hidden ? 'Show model' : 'Hide model';
+            const visibilityLabel = 'Show model';
             const mutateDisabledAttr = canMutateFiles ? '' : ' disabled title="Part source files are unavailable for editing"';
             const bulkLabel = `Select part ${idx + 1} for bulk edit`;
             const syncOn = activeBgPreset === 'modelcolor' && idx === bgSyncPartIndex;
@@ -4966,7 +4966,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
         });
     } else if (modelPartSingleActions) {
         const syncOn = activeBgPreset === 'modelcolor';
-        const visibilityLabel = getPartSettings(0).hidden ? 'Show model' : 'Hide model';
+        const visibilityLabel = 'Show model';
         modelPartSingleActions.innerHTML = `<button type="button" class="part-option-action" data-single-action="replace">Replace STL</button><button type="button" class="part-option-action part-option-action--toggle" data-single-action="visibility-toggle"><span>${visibilityLabel}</span><span class="option-switch${getPartSettings(0).hidden ? '' : ' is-on'}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--toggle" data-single-action="bg-sync-toggle"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button>`;
 
         modelPartSingleActions.querySelectorAll('.part-option-action').forEach((actionBtn) => {
