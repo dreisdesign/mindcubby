@@ -820,14 +820,43 @@
                     </button>
                 </div>
                 <div id="exportPanelBody" class="settings-panel-body export-modal-body">
-                    <div id="exportFormatTabs" class="export-format-tabs" role="tablist" aria-label="Export format tabs">
-                        <button type="button" class="export-format-tab is-active" data-export-format-tab="gif" role="tab" aria-selected="true">Gif</button>
-                        <button type="button" class="export-format-tab" data-export-format-tab="mp4" role="tab" aria-selected="false">MP4</button>
-                        <button type="button" class="export-format-tab" data-export-format-tab="png" role="tab" aria-selected="false">PNG</button>
-                        <button type="button" class="export-format-tab" data-export-format-tab="jpg" role="tab" aria-selected="false">JPEG</button>
+                    <div class="export-section">
+                        <span id="exportFormatTabsLabel" class="export-select-label">Format</span>
+                        <div id="exportFormatTabs" class="export-format-tabs" role="tablist" aria-labelledby="exportFormatTabsLabel">
+                            <button type="button" class="export-format-tab is-active" data-export-format-tab="gif" role="tab" aria-selected="true">Gif</button>
+                            <button type="button" class="export-format-tab" data-export-format-tab="mp4" role="tab" aria-selected="false">MP4</button>
+                            <button type="button" class="export-format-tab" data-export-format-tab="png" role="tab" aria-selected="false">PNG</button>
+                            <button type="button" class="export-format-tab" data-export-format-tab="jpg" role="tab" aria-selected="false">JPEG</button>
+                        </div>
                     </div>
 
-                    <div class="export-selects-row">
+                    <div id="cropDimensionsDock" class="crop-dimensions-dock export-section" hidden aria-hidden="true">
+                        <div class="export-motion-controls-title">Crop</div>
+                        <div class="export-format-tabs export-crop-segmented" role="radiogroup" aria-label="Crop aspect ratio">
+                            <label class="export-format-tab export-crop-tab" title="Square 1:1">
+                                <input type="radio" name="exportDimensions" value="square" checked>
+                                <span class="export-crop-tab__shape export-crop-tab__shape--square"></span>
+                                <span class="export-crop-tab__ratio">1:1</span>
+                            </label>
+                            <label class="export-format-tab export-crop-tab" title="Portrait 1:2">
+                                <input type="radio" name="exportDimensions" value="portrait12">
+                                <span class="export-crop-tab__shape export-crop-tab__shape--portrait12"></span>
+                                <span class="export-crop-tab__ratio">1:2</span>
+                            </label>
+                            <label class="export-format-tab export-crop-tab" title="Landscape 2:1">
+                                <input type="radio" name="exportDimensions" value="landscape21">
+                                <span class="export-crop-tab__shape export-crop-tab__shape--landscape21"></span>
+                                <span class="export-crop-tab__ratio">2:1</span>
+                            </label>
+                            <label class="export-format-tab export-crop-tab" title="Landscape 4:3">
+                                <input type="radio" name="exportDimensions" value="landscape43">
+                                <span class="export-crop-tab__shape export-crop-tab__shape--landscape43"></span>
+                                <span class="export-crop-tab__ratio">4:3</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="export-selects-row export-section">
                         <div class="export-select-group export-select-group--format">
                             <select id="exportFormat" class="export-select">
                                 <option value="gif" selected>Animated Gif</option>
@@ -836,71 +865,60 @@
                                 <option value="jpg">JPEG Image</option>
                             </select>
                         </div>
+                        <div class="export-select-group export-select-group--size">
+                            <span id="exportSizeLabel" class="export-select-label">Size</span>
+                            <input type="hidden" id="exportSize" value="1080">
+                            <div id="exportSizeSegmented" class="export-format-tabs" role="radiogroup" aria-labelledby="exportSizeLabel"></div>
+                        </div>
                         <!-- Hidden backing select kept for URL/save compatibility -->
                         <div class="export-select-group export-select-group--quality">
-                            <label class="export-select-label" for="exportQuality">Quality</label>
-                            <select id="exportQuality" class="export-select">
-                                <option value="web">Low</option>
-                                <option value="std" selected>Medium</option>
-                                <option value="high">High</option>
+                            <span id="exportQualityLabel" class="export-select-label">Quality</span>
+                            <select id="exportQuality" class="export-select" hidden>
+                                <option value="web">15fps</option>
+                                <option value="std" selected>24fps</option>
+                                <option value="high">30fps</option>
+                                <option value="vhigh">45fps</option>
+                                <option value="ultra">60fps</option>
+                            </select>
+                            <div id="exportQualitySegmented" class="export-format-tabs" role="radiogroup" aria-labelledby="exportQualityLabel"></div>
+                            <label class="control-label range-label" id="exportCompressionRow" hidden>
+                                <span class="export-select-label">Quality<span class="slider-tooltip" id="jpegQualityVal">90%</span></span>
+                                <div class="range-wrap">
+                                    <input type="range" id="jpegQuality" min="50" max="100" step="5" value="90">
+                                </div>
+                            </label>
+                            <div id="exportQualityMeta" class="export-quality-meta-row">
+                                <div id="exportAnimatedQualityOptions" class="export-quality-inline-options">
+                                    <label id="gifLoopRow" class="gif-option-check export-dither-inline"><input type="checkbox" id="gifLoop" checked>Loop</label>
+                                    <label id="gifDitherRow" class="gif-option-check export-dither-inline"><input type="checkbox" id="gifDither">Dithering</label>
+                                </div>
+                                <span id="exportQualityMiniSummary" class="export-select-help" aria-live="polite"></span>
+                            </div>
+                        </div>
+                        <div class="export-select-group export-select-group--duration">
+                            <span class="export-select-label">Duration</span>
+                            <select id="exportDuration" class="export-select">
+                                <option value="0">5 seconds</option>
+                                <option value="1">10 seconds</option>
+                                <option value="2" selected>15 seconds</option>
+                                <option value="3">20 seconds</option>
+                                <option value="4">25 seconds</option>
+                                <option value="5">30 seconds</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="gif-options-row export-quick-options">
-                        <label class="gif-option-check"><input type="checkbox" id="gifLoop" checked>
-                            Loop</label>
-                        <label class="gif-option-check"><input type="checkbox" id="gifDither">
-                            Dither</label>
+                    <div class="gif-options-row export-quick-options export-section">
                         <label class="gif-option-check"><input type="checkbox" id="exportBgColor" checked>
                             Background</label>
                         <input type="checkbox" id="exportTransparent" hidden>
                         <label class="gif-option-check"><input type="checkbox" id="exportGrid" checked>
                             Grid</label>
                         <label class="gif-option-check"><input type="checkbox" id="exportBuildPlate" checked>
-                            Build Plate</label>
+                            Surface</label>
                     </div>
 
-                    <div id="cropDimensionsDock" class="crop-dimensions-dock" hidden aria-hidden="true">
-                        <div class="export-motion-controls-title">Crop</div>
-                        <div class="dimension-group dimension-group--overlay" role="radiogroup"
-                            aria-label="Crop aspect ratio">
-                            <div class="thumb-card-wrap">
-                                <label class="dimension-option" title="Square 1:1">
-                                    <input type="radio" name="exportDimensions" value="square" checked>
-                                    <span class="dimension-thumb dimension-thumb--square"><span
-                                            class="dimension-shape"></span></span>
-                                </label>
-                                <span class="thumb-label">1:1</span>
-                            </div>
-                            <div class="thumb-card-wrap">
-                                <label class="dimension-option" title="Portrait 1:2">
-                                    <input type="radio" name="exportDimensions" value="portrait12">
-                                    <span class="dimension-thumb dimension-thumb--portrait12"><span
-                                            class="dimension-shape"></span></span>
-                                </label>
-                                <span class="thumb-label">1:2</span>
-                            </div>
-                            <div class="thumb-card-wrap">
-                                <label class="dimension-option" title="Landscape 2:1">
-                                    <input type="radio" name="exportDimensions" value="landscape21">
-                                    <span class="dimension-thumb dimension-thumb--landscape21"><span
-                                            class="dimension-shape"></span></span>
-                                </label>
-                                <span class="thumb-label">2:1</span>
-                            </div>
-                            <div class="thumb-card-wrap">
-                                <label class="dimension-option" title="Landscape 4:3">
-                                    <input type="radio" name="exportDimensions" value="landscape43">
-                                    <span class="dimension-thumb dimension-thumb--landscape43"><span
-                                            class="dimension-shape"></span></span>
-                                </label>
-                                <span class="thumb-label">4:3</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="exportMotionControls" class="export-motion-controls">
+                    <div id="exportMotionControls" class="export-motion-controls export-section">
                         <div class="export-motion-controls-title">Motion Controls</div>
                         <div class="export-motion-controls-grid">
                             <label class="control-label range-label export-motion-field">
@@ -935,27 +953,15 @@
                         </label>
                     </div>
 
-                    <div id="exportOpts-gif" class="export-format-opts">
-                        <div class="export-size-est-row"><span id="gifEst"></span></div>
-                    </div>
+                    <div id="exportOpts-gif" class="export-format-opts" hidden></div>
 
-                    <div id="exportOpts-mp4" class="export-format-opts" hidden>
-                        <div class="export-size-est-row"><span id="mp4Est"></span></div>
-                    </div>
+                    <div id="exportOpts-mp4" class="export-format-opts" hidden></div>
 
                     <div id="exportOpts-png" class="export-format-opts" hidden>
                         <input type="checkbox" id="exportTransparentPng" hidden>
-                        <div class="export-size-est-row"><span id="imgEstPng"></span></div>
                     </div>
 
                     <div id="exportOpts-jpg" class="export-format-opts" hidden>
-                        <label class="control-label range-label" id="jpegQualityRow">
-                            <span>JPEG Compression<span class="slider-tooltip" id="jpegQualityVal">90%</span></span>
-                            <div class="range-wrap">
-                                <input type="range" id="jpegQuality" min="50" max="100" step="5" value="90">
-                            </div>
-                        </label>
-                        <div class="export-size-est-row"><span id="imgEstJpg"></span></div>
                     </div>
 
                     <div id="exportPreviewDetails" class="export-preview-details export-preview-details--legacy" hidden aria-hidden="true">
@@ -977,7 +983,7 @@
                     </div>
                     <span id="exportStatus" class="export-status"></span>
 
-                    <div class="export-primary-row">
+                    <div class="export-primary-row export-section">
                         <button id="btnExportWorkspaceClose" class="copy-link-btn copy-link-btn--secondary export-close-inline" type="button">Close</button>
                         <button id="btnCopyLink" class="copy-link-btn copy-link-btn--secondary export-copy-inline" type="button"
                             title="Copy shareable link to clipboard" aria-label="Copy link">

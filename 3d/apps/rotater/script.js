@@ -164,12 +164,46 @@ const SKIP_DEFAULT_PRESET_ONCE_KEY = 'rotater_skipDefaultPresetOnce';
 const CANVAS_ORBIT_CLICK_DRAG_THRESHOLD_PX = 6;
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
-// Export quality presets — base short-edge size + fps + bitrate.
-// GIF/MP4 remain square; still images can use common aspect presets.
+// Export quality presets — animated motion/detail settings.
 const QUALITY_PRESETS = {
-    web: { size: 480, fps: 15, bitrate: 4_000_000 },
-    std: { size: 1080, fps: 24, bitrate: 8_000_000 },
-    high: { size: 2048, fps: 30, bitrate: 16_000_000 },
+    web: { fps: 15, bitrate: 4_000_000 },
+    std: { fps: 24, bitrate: 8_000_000 },
+    high: { fps: 30, bitrate: 16_000_000 },
+    vhigh: { fps: 45, bitrate: 24_000_000 },
+    ultra: { fps: 60, bitrate: 32_000_000 },
+};
+
+const EXPORT_SIZE_PRESETS = {
+    gif: {
+        '512': { shortEdge: 512, label: '512 px' },
+        '1080': { shortEdge: 1080, label: '1080 px' },
+        '1440': { shortEdge: 1440, label: '1440 px' },
+        '2048': { shortEdge: 2048, label: '2048 px' },
+    },
+    mp4: {
+        '512': { shortEdge: 512, label: '512 px' },
+        '1080': { shortEdge: 1080, label: '1080 px' },
+        '1440': { shortEdge: 1440, label: '1440 px' },
+        '2048': { shortEdge: 2048, label: '2048 px' },
+    },
+    image: {
+        '512': { shortEdge: 512, label: '512 px' },
+        '1080': { shortEdge: 1080, label: '1080 px' },
+        '1440': { shortEdge: 1440, label: '1440 px' },
+        '2048': { shortEdge: 2048, label: '2048 px' },
+    },
+};
+
+const DEFAULT_EXPORT_SIZE_KEYS = {
+    gif: '1080',
+    mp4: '1080',
+    image: '1080',
+};
+
+const exportSizeSelections = {
+    gif: DEFAULT_EXPORT_SIZE_KEYS.gif,
+    mp4: DEFAULT_EXPORT_SIZE_KEYS.mp4,
+    image: DEFAULT_EXPORT_SIZE_KEYS.image,
 };
 
 const IMPORT_STL_LIMITS = {
@@ -205,6 +239,77 @@ const IMAGE_DIMENSION_PRESETS = {
     landscape21: { w: 2, h: 1, tag: '2x1' },
 };
 
+function normalizeExportSizeProfile(format = 'gif') {
+    return (format === 'png' || format === 'jpg') ? 'image' : (format === 'mp4' ? 'mp4' : 'gif');
+}
+
+function getExportSizePresetMap(format = 'gif') {
+    return EXPORT_SIZE_PRESETS[normalizeExportSizeProfile(format)] ?? EXPORT_SIZE_PRESETS.gif;
+}
+
+function normalizeExportSizeKey(format = 'gif', key = null) {
+    const profile = normalizeExportSizeProfile(format);
+    const presets = getExportSizePresetMap(profile);
+    const stringKey = String(key ?? '');
+    if (presets[stringKey]) return stringKey;
+    return DEFAULT_EXPORT_SIZE_KEYS[profile] ?? Object.keys(presets)[0];
+}
+
+function getExportSizeSelectionForFormat(format = document.getElementById('exportFormat')?.value ?? 'gif') {
+    const profile = normalizeExportSizeProfile(format);
+    const selectedKey = exportSizeSelections[profile];
+    return normalizeExportSizeKey(profile, selectedKey);
+}
+
+function setExportSizeSelectionForFormat(format = document.getElementById('exportFormat')?.value ?? 'gif', key = null) {
+    const profile = normalizeExportSizeProfile(format);
+    exportSizeSelections[profile] = normalizeExportSizeKey(profile, key);
+    return exportSizeSelections[profile];
+}
+
+function getExportSizeOptionsForFormat(format = document.getElementById('exportFormat')?.value ?? 'gif') {
+    return Object.entries(getExportSizePresetMap(format)).map(([value, preset]) => ({ value, label: preset.label }));
+}
+
+function getExportLongEdgeForFormat(format = document.getElementById('exportFormat')?.value ?? 'gif') {
+    const presets = getExportSizePresetMap(format);
+    const key = getExportSizeSelectionForFormat(format);
+    return presets[key]?.shortEdge ?? presets[Object.keys(presets)[0]]?.shortEdge ?? 1080;
+}
+
+function getExportDimensionsForLongEdge(longEdge, preset = getImageDimensionPreset()) {
+    const safeLongEdge = Math.max(2, Number(longEdge) || 1080);
+    const safeW = Math.max(1, Number(preset?.w) || 1);
+    const safeH = Math.max(1, Number(preset?.h) || 1);
+
+    let width = safeLongEdge;
+    let height = safeLongEdge;
+    if (safeW >= safeH) {
+        width = safeLongEdge;
+        height = Math.round((safeLongEdge * safeH) / safeW);
+    } else {
+        height = safeLongEdge;
+        width = Math.round((safeLongEdge * safeW) / safeH);
+    }
+
+    // Prefer even dimensions for codec and pixel-grid consistency.
+    if (width % 2 !== 0) width += 1;
+    if (height % 2 !== 0) height += 1;
+
+    return { width, height };
+}
+
+function getLegacyExportSizeKeyForQuality(format = 'gif', quality = 'std') {
+    const profile = normalizeExportSizeProfile(format);
+    if (profile === 'gif') {
+        return ({ web: '512', std: '1080', high: '2048' }[quality]) || DEFAULT_EXPORT_SIZE_KEYS.gif;
+    }
+    if (profile === 'mp4') {
+        return ({ web: '480', std: '1080', high: '2048' }[quality]) || DEFAULT_EXPORT_SIZE_KEYS.mp4;
+    }
+    return ({ web: '512', std: '1080', high: '2048' }[quality]) || DEFAULT_EXPORT_SIZE_KEYS.image;
+}
+
 function getSelectedExportDimensionsId() {
     return document.querySelector('input[name="exportDimensions"]:checked')?.value ?? 'square';
 }
@@ -237,25 +342,10 @@ function nearestDimensionPreset(aspect) {
     return bestId;
 }
 
-function getImageExportSize() {
-    const v = document.getElementById('exportQuality')?.value ?? 'std';
-    const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
-    const shortEdge = p.size;
+function getImageExportSize(format = document.getElementById('exportFormat')?.value ?? 'gif') {
+    const longEdge = getExportLongEdgeForFormat(format);
     const preset = getImageDimensionPreset();
-
-    let width = shortEdge;
-    let height = shortEdge;
-    if (preset.w >= preset.h) {
-        height = shortEdge;
-        width = Math.round((shortEdge * preset.w) / preset.h);
-    } else {
-        width = shortEdge;
-        height = Math.round((shortEdge * preset.h) / preset.w);
-    }
-
-    // Prefer even dimensions for codec and pixel-grid consistency.
-    if (width % 2 !== 0) width += 1;
-    if (height % 2 !== 0) height += 1;
+    const { width, height } = getExportDimensionsForLongEdge(longEdge, preset);
 
     return { width, height, presetId: preset.id, presetTag: preset.tag };
 }
@@ -583,7 +673,7 @@ const EXPORT = {
         const v = document.getElementById('exportQuality')?.value ?? 'std';
         const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
         return {
-            size: p.size,
+            size: getExportLongEdgeForFormat('gif'),
             fps: getEffectiveExportFps(p.fps),
             loop: document.getElementById('gifLoop')?.checked ?? true,
             dither: document.getElementById('gifDither')?.checked ?? false,
@@ -593,7 +683,7 @@ const EXPORT = {
         const v = document.getElementById('exportQuality')?.value ?? 'std';
         const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
         return {
-            size: p.size,
+            size: getExportLongEdgeForFormat('mp4'),
             fps: getEffectiveExportFps(p.fps),
             bitrate: p.bitrate,
             loops: 0, // single play
@@ -782,10 +872,12 @@ function updateEstimate() {
         exportMp4Fps: EXPORT.mp4.fps,
         getImageExportSize,
         exportImageQuality: EXPORT.image.quality,
-        gifEstEl: document.getElementById('gifEst'),
-        mp4EstEl: document.getElementById('mp4Est'),
+        gifEstEl: document.getElementById('exportQualityMiniSummary'),
+        mp4EstEl: document.getElementById('exportQualityMiniSummary'),
         imgEstPngEl: document.getElementById('imgEstPng'),
         imgEstJpgEl: document.getElementById('imgEstJpg'),
+        getCurrentExportFormat: () => exportFormatEl?.value ?? 'gif',
+        getExportMp4Bitrate: () => EXPORT.mp4.bitrate,
     });
 }
 
@@ -847,6 +939,15 @@ const exportFormatEl = document.getElementById('exportFormat');
 const exportMiniFormatEl = document.getElementById('exportMiniFormat');
 const exportFormatCollapsedEl = document.getElementById('exportFormatCollapsed');
 const exportFormatTabEls = Array.from(document.querySelectorAll('[data-export-format-tab]'));
+const exportSizeEl = document.getElementById('exportSize');
+const exportSizeSegmentedEl = document.getElementById('exportSizeSegmented');
+const exportQualitySegmentedEl = document.getElementById('exportQualitySegmented');
+const exportDurationEl = document.getElementById('exportDuration');
+const exportCompressionRowEl = document.getElementById('exportCompressionRow');
+const exportQualityLabelEl = document.getElementById('exportQualityLabel');
+const exportQualityMiniSummaryEl = document.getElementById('exportQualityMiniSummary');
+const gifLoopRowEl = document.getElementById('gifLoopRow');
+const gifDitherRowEl = document.getElementById('gifDitherRow');
 const exportPanelEl = document.querySelector('.export-modal-panel');
 const exportPanelHeaderEl = exportPanelEl?.querySelector('.settings-panel-header') || null;
 const exportPanelBodyEl = document.getElementById('exportPanelBody');
@@ -2239,6 +2340,7 @@ function syncExportMotionControlsFromMain() {
         if (exportMotionModeEl) exportMotionModeEl.value = mode;
         if (exportMotionSpeedEl) exportMotionSpeedEl.value = speedSlider.value;
         refreshExportMotionSpeedOptionLabels();
+        syncExportDurationFromMain();
 
         if (exportMotionRangeEl && exportMotionRangeValEl && exportMotionRangeLabelEl) {
             const useWobbleRange = mode === 'wobble';
@@ -7374,6 +7476,9 @@ function saveSettings() {
             gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
 
             exportQuality: document.getElementById('exportQuality')?.value ?? 'std',
+            exportGifSize: getExportSizeSelectionForFormat('gif'),
+            exportMp4Size: getExportSizeSelectionForFormat('mp4'),
+            exportImageSize: getExportSizeSelectionForFormat('png'),
             exportFormat: exportFormatEl?.value ?? 'gif',
             exportDimensions: getSelectedExportDimensionsId(),
             exportTransparent: document.getElementById('exportTransparent')?.checked ? '1' : '0',
@@ -7597,6 +7702,9 @@ function restoreSettings() {
             const legacyQ = s.exportQuality ?? (s.exportRes === '1080' ? 'high' : s.exportRes === '480' ? 'web' : null) ?? 'std';
             const eq = s.exportQuality ?? s.gifQuality ?? s.videoQuality ?? legacyQ;
             setExportQualityValue(eq);
+            setExportSizeSelectionForFormat('gif', s.exportGifSize ?? getLegacyExportSizeKeyForQuality('gif', eq));
+            setExportSizeSelectionForFormat('mp4', s.exportMp4Size ?? getLegacyExportSizeKeyForQuality('mp4', eq));
+            setExportSizeSelectionForFormat('png', s.exportImageSize ?? getLegacyExportSizeKeyForQuality('png', eq));
             if (s.exportDimensions) setSelectedExportDimensionsId(s.exportDimensions);
             // Restore export format
             if (s.exportFormat && exportFormatEl) {
@@ -7628,11 +7736,6 @@ function restoreSettings() {
                 const on = (s.exportTransparentBg === true || s.exportTransparentBg === '1' || s.exportTransparentBg === 1);
                 const a = document.getElementById('exportTransparent'); if (a) a.checked = on;
                 const b = document.getElementById('exportTransparentPng'); if (b) b.checked = on;
-            }
-            if (s.gifDither != null) {
-                const isOn = (s.gifDither === true || s.gifDither === '1' || s.gifDither === 1);
-                const el = document.getElementById('gifDither');
-                if (el) el.checked = isOn;
             }
             if (s.exportBuildPlate != null) {
                 const isOn = (s.exportBuildPlate === true || s.exportBuildPlate === '1' || s.exportBuildPlate === 1);
@@ -7957,6 +8060,9 @@ function getURLSettings(searchStr = location.search) {
         // Export
         exportFormat: g('ef'),
         exportQuality: g('eq'),
+        exportGifSize: g('egs'),
+        exportMp4Size: g('ems'),
+        exportImageSize: g('eis'),
         exportDimensions: g('ed'),
         exportTransparent: p.has('et') ? p.get('et') : null,
         gifDither: p.has('gd') ? p.get('gd') : null,
@@ -8032,6 +8138,9 @@ function settingsToURL() {
     const fmt = exportFormatEl?.value ?? 'gif';
     p.set('ef', fmt);
     p.set('eq', document.getElementById('exportQuality')?.value ?? 'std');
+    p.set('egs', getExportSizeSelectionForFormat('gif'));
+    p.set('ems', getExportSizeSelectionForFormat('mp4'));
+    p.set('eis', getExportSizeSelectionForFormat('png'));
     const dim = getSelectedExportDimensionsId();
     if (dim) p.set('ed', dim);
     p.set('et', document.getElementById('exportTransparent')?.checked ? '1' : '0');
@@ -9112,12 +9221,15 @@ document.getElementById('btnCamReset').addEventListener('click', () => {
     applyLevelAndReframeToCamera();
 });
 
+async function ensurePausedForStillExport() {
+    if (isPaused) return;
+    setPauseState(true, false, true);
+    await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
+
 document.getElementById('btnExportPng').addEventListener('click', async () => {
     if (!mesh) return;
-    // Pause if not already
-    if (!isPaused) {
-        setPauseState(true, false, true);
-    }
+    await ensurePausedForStillExport();
     const isTransparent = document.getElementById('exportTransparentPng')?.checked ?? false;
 
     try {
@@ -9132,9 +9244,7 @@ document.getElementById('btnExportPng').addEventListener('click', async () => {
 
 document.getElementById('btnExportJpeg').addEventListener('click', async () => {
     if (!mesh) return;
-    if (!isPaused) {
-        setPauseState(true, false, true);
-    }
+    await ensurePausedForStillExport();
     const { quality } = EXPORT.image;
     try {
         const blob = await renderStillImageBlob('image/jpeg', { quality, transparent: false });
@@ -9696,12 +9806,77 @@ document.querySelectorAll('#gifLoop, #gifDither').forEach(el =>
     el.addEventListener('change', saveSettings)
 );
 
-const EXPORT_QUALITY_ORDER = ['web', 'std', 'high'];
+const EXPORT_QUALITY_ORDER = ['web', 'std', 'high', 'vhigh', 'ultra'];
 const EXPORT_QUALITY_LABELS = {
-    web: 'Low',
-    std: 'Medium',
-    high: 'High',
+    web: '15fps',
+    std: '24fps',
+    high: '30fps',
+    vhigh: '45fps',
+    ultra: '60fps',
 };
+
+function buildExportSelectOptions(options = [], selectedValue = '') {
+    return options
+        .map(({ value, label }) => `<option value="${value}"${value === selectedValue ? ' selected' : ''}>${label}</option>`)
+        .join('');
+}
+
+function buildExportSizeSegmentedButtons(options = [], selectedValue = '') {
+    const preset = getImageDimensionPreset();
+    if (exportSizeSegmentedEl) exportSizeSegmentedEl.style.setProperty('--export-tab-columns', String(Math.max(1, options.length)));
+    return options
+        .map(({ value, label }) => {
+            const compactLabel = label
+                .replace(/\s*\(.*\)$/, '')
+                .replace(/\s+px$/i, 'px');
+            const { width, height } = getExportDimensionsForLongEdge(Number(value) || 1080, preset);
+            return `<button type="button" class="export-format-tab${value === selectedValue ? ' is-active' : ''}" data-export-size="${value}" role="radio" aria-checked="${value === selectedValue ? 'true' : 'false'}" title="${width}px by ${height}px">${compactLabel}</button>`;
+        })
+        .join('');
+}
+
+function buildExportQualitySegmentedButtons(selectedValue = 'std') {
+    if (exportQualitySegmentedEl) exportQualitySegmentedEl.style.setProperty('--export-tab-columns', String(EXPORT_QUALITY_ORDER.length));
+    return EXPORT_QUALITY_ORDER
+        .map((value) => {
+            const label = EXPORT_QUALITY_LABELS[value] || '24fps';
+            return `<button type="button" class="export-format-tab${value === selectedValue ? ' is-active' : ''}" data-export-quality="${value}" role="radio" aria-checked="${value === selectedValue ? 'true' : 'false'}">${label}</button>`;
+        })
+        .join('');
+}
+
+function syncExportDurationFromMain() {
+    if (!exportDurationEl) return;
+    exportDurationEl.value = String(speedSlider?.value ?? SPEED_DEFAULT);
+    if (exportMotionSpeedEl && exportMotionSpeedEl.options.length === exportDurationEl.options.length) {
+        Array.from(exportDurationEl.options).forEach((option, idx) => {
+            option.textContent = exportMotionSpeedEl.options[idx]?.textContent || option.textContent;
+        });
+    }
+}
+
+function syncExportSizeSelectForFormat(format = exportFormatEl?.value ?? 'gif') {
+    if (!exportSizeEl || !exportSizeSegmentedEl) return;
+    const selectedValue = getExportSizeSelectionForFormat(format);
+    exportSizeEl.value = selectedValue;
+    exportSizeSegmentedEl.innerHTML = buildExportSizeSegmentedButtons(getExportSizeOptionsForFormat(format), selectedValue);
+}
+
+function syncExportQualityUiForFormat(format = exportFormatEl?.value ?? 'gif') {
+    const qualityGroupEl = document.querySelector('.export-select-group--quality');
+    const durationGroupEl = document.querySelector('.export-select-group--duration');
+    const isAnimated = format === 'gif' || format === 'mp4';
+    const isStill = format === 'png' || format === 'jpg';
+    if (qualityGroupEl) qualityGroupEl.hidden = false;
+    if (durationGroupEl) durationGroupEl.hidden = !isAnimated;
+    if (exportQualityLabelEl) exportQualityLabelEl.textContent = 'Quality';
+    if (exportQualityLabelEl) exportQualityLabelEl.hidden = isStill;
+    if (exportQualitySegmentedEl) exportQualitySegmentedEl.hidden = !isAnimated;
+    if (exportCompressionRowEl) exportCompressionRowEl.hidden = !isStill;
+    if (gifLoopRowEl) gifLoopRowEl.hidden = format !== 'gif';
+    if (gifDitherRowEl) gifDitherRowEl.hidden = format !== 'gif';
+    if (exportQualityMiniSummaryEl) exportQualityMiniSummaryEl.hidden = false;
+}
 
 function syncExportQualitySliderFromSelect() {
     const q = document.getElementById('exportQuality');
@@ -9712,7 +9887,9 @@ function syncExportQualitySliderFromSelect() {
         exportQualitySliderEl.value = String(idx);
         syncSliderTooltip(exportQualitySliderEl);
     }
-    if (exportQualityValEl) exportQualityValEl.textContent = EXPORT_QUALITY_LABELS[value] || 'Medium';
+    if (exportQualityValEl) exportQualityValEl.textContent = EXPORT_QUALITY_LABELS[value] || '24fps';
+    if (exportQualitySegmentedEl) exportQualitySegmentedEl.innerHTML = buildExportQualitySegmentedButtons(value);
+    syncExportQualityUiForFormat(exportFormatEl?.value ?? 'gif');
 }
 
 function setExportQualityValue(value) {
@@ -9723,6 +9900,9 @@ function setExportQualityValue(value) {
 }
 
 syncExportQualitySliderFromSelect();
+syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
+syncExportQualityUiForFormat(exportFormatEl?.value ?? 'gif');
+syncExportDurationFromMain();
 
 if (exportGridEl) {
     exportGridEl.checked = rulerLinesVisible;
@@ -9736,14 +9916,49 @@ document.getElementById('exportQuality')?.addEventListener('change', () => {
     updateEstimate();
     refreshExportPreviewNow();
     saveSettings();
+    updateCardResetButtonStates();
+});
+
+exportSizeSegmentedEl?.addEventListener('click', (event) => {
+    const target = event.target instanceof HTMLElement ? event.target.closest('[data-export-size]') : null;
+    if (!target) return;
+    const selectedValue = target.getAttribute('data-export-size');
+    if (!selectedValue) return;
+
+    setExportSizeSelectionForFormat(exportFormatEl?.value ?? 'gif', selectedValue);
+    syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
+    updateEstimate();
+    refreshExportPreviewNow();
+    saveSettings();
+    updateCardResetButtonStates();
+});
+
+exportQualitySegmentedEl?.addEventListener('click', (event) => {
+    const target = event.target instanceof HTMLElement ? event.target.closest('[data-export-quality]') : null;
+    if (!target) return;
+    const selectedValue = target.getAttribute('data-export-quality');
+    if (!selectedValue) return;
+
+    setExportQualityValue(selectedValue);
+    updateEstimate();
+    refreshExportPreviewNow();
+    saveSettings();
+    updateCardResetButtonStates();
 });
 
 exportQualitySliderEl?.addEventListener('input', () => {
-    const idx = Math.max(0, Math.min(2, Math.round(parseFloat(exportQualitySliderEl.value) || 1)));
+    const maxIndex = Math.max(0, EXPORT_QUALITY_ORDER.length - 1);
+    const idx = Math.max(0, Math.min(maxIndex, Math.round(parseFloat(exportQualitySliderEl.value) || 1)));
     setExportQualityValue(EXPORT_QUALITY_ORDER[idx]);
     updateEstimate();
     refreshExportPreviewNow();
     saveSettings();
+});
+
+exportDurationEl?.addEventListener('change', () => {
+    if (!speedSlider) return;
+    speedSlider.value = exportDurationEl.value;
+    speedSlider.dispatchEvent(new Event('change'));
 });
 
 exportGridEl?.addEventListener('change', () => {
@@ -9890,6 +10105,8 @@ function applyExportFormat(fmt) {
         refreshExportPreviewNow,
         queueDesktopV2RailLayoutSync,
     });
+    syncExportSizeSelectForFormat(fmt);
+    syncExportQualityUiForFormat(fmt);
 }
 
 bindExportFormatTabHandlersController({
@@ -9942,6 +10159,9 @@ btnToggleExportPanel?.addEventListener('click', () => {
 function renderCollapsedExportSummary(fmt) {
     renderCollapsedExportSummaryController(fmt, {
         summaryEl: exportCollapsedConfirmSummaryEl,
+        getExportSizeOptionsForFormat,
+        getExportSizeValueForFormat: getExportSizeSelectionForFormat,
+        setExportSizeValueForFormat: setExportSizeSelectionForFormat,
         exportQualityOrder: EXPORT_QUALITY_ORDER,
         exportQualityLabels: EXPORT_QUALITY_LABELS,
         speedSecondsPerRev: SPEED_SECONDS_PER_REV,
@@ -10129,6 +10349,7 @@ if (exportMotionSpeedEl) {
     exportMotionSpeedEl.addEventListener('change', () => {
         speedSlider.value = exportMotionSpeedEl.value;
         speedSlider.dispatchEvent(new Event('change'));
+        syncExportDurationFromMain();
     });
 }
 
@@ -10393,8 +10614,10 @@ function updateCardResetButtonStates() {
 
     const exportDirty = (exportFormatEl?.value || 'gif') !== 'gif'
         || (document.getElementById('exportQuality')?.value || 'std') !== 'std'
+        || getExportSizeSelectionForFormat('gif') !== DEFAULT_EXPORT_SIZE_KEYS.gif
+        || getExportSizeSelectionForFormat('mp4') !== DEFAULT_EXPORT_SIZE_KEYS.mp4
+        || getExportSizeSelectionForFormat('png') !== DEFAULT_EXPORT_SIZE_KEYS.image
         || !!(document.getElementById('gifLoop') && !document.getElementById('gifLoop').checked)
-        || !!document.getElementById('gifDither')?.checked
         || !!(exportBgColorEl && !exportBgColorEl.checked)
         || !!(exportGridEl && !exportGridEl.checked)
         || !!(exportBuildPlateEl && !exportBuildPlateEl.checked)
@@ -10554,10 +10777,12 @@ btnResetAnimationCard?.addEventListener('click', () => {
 
 btnResetExportCard?.addEventListener('click', () => {
     exportFormatEl && (exportFormatEl.value = 'gif');
+    setExportSizeSelectionForFormat('gif', DEFAULT_EXPORT_SIZE_KEYS.gif);
+    setExportSizeSelectionForFormat('mp4', DEFAULT_EXPORT_SIZE_KEYS.mp4);
+    setExportSizeSelectionForFormat('png', DEFAULT_EXPORT_SIZE_KEYS.image);
     exportFormatEl?.dispatchEvent(new Event('change'));
     setExportQualityValue('std');
     document.getElementById('gifLoop') && (document.getElementById('gifLoop').checked = true);
-    document.getElementById('gifDither') && (document.getElementById('gifDither').checked = false);
     exportBgColorEl && (exportBgColorEl.checked = true);
     exportBgColorEl?.dispatchEvent(new Event('change'));
     exportGridEl && (exportGridEl.checked = true);
@@ -11440,7 +11665,7 @@ document.getElementById('btnCopyImageClipboard')?.addEventListener('click', asyn
     }
 
     try {
-        if (!isPaused) setPauseState(true, false, true);
+        await ensurePausedForStillExport();
         const blob = await renderStillImageBlob(mime, { quality, transparent: false });
         await navigator.clipboard.write([new ClipboardItem({ [mime]: blob })]);
         labelEl.textContent = 'Image copied';

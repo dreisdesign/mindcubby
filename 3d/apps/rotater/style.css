@@ -3371,16 +3371,20 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 .export-selects-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
+    gap: 10px;
     margin: 0;
 }
 
 .export-select-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     flex: 1;
     min-width: 0;
+}
+
+.export-select-group[hidden] {
+    display: none !important;
 }
 
 .export-select-group--format {
@@ -3391,6 +3395,53 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     display: flex;
 }
 
+.export-select-group--duration {
+    display: flex;
+}
+
+.export-quality-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.export-quality-inline-options {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
+.export-quality-meta-row .export-select-help {
+    min-height: 0;
+    margin: 0;
+    margin-left: auto;
+    text-align: right;
+}
+
+.export-dither-inline {
+    flex-shrink: 0;
+    font-weight: 600;
+}
+
+.export-section + .export-section {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.export-select-help {
+    min-height: 30px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: color-mix(in srgb, var(--color-label, #666) 92%, #fff 8%);
+}
+
+.export-select-help.is-warning {
+    color: color-mix(in srgb, #a34d00 78%, var(--color-label, #666) 22%);
+}
+
 .export-btn--inline {
     width: 100%;
     margin: 0;
@@ -3399,26 +3450,32 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 }
 
 .export-quick-options {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px 12px;
     margin: 0;
 }
 
 .export-quick-options .gif-option-check {
-    width: 100%;
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
     padding: 2px 0;
+    justify-content: flex-start;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .gif-options-row.export-quick-options {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px 12px;
     align-items: stretch;
 }
 
 .gif-options-row.export-quick-options .gif-option-check {
-    width: 100%;
+    flex: 1 1 0;
+    width: auto;
 }
 
 .export-modal-body {
@@ -3429,8 +3486,16 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 .export-format-opts {
     border: 1px solid color-mix(in srgb, var(--border-color) 84%, transparent 16%);
     border-radius: 12px;
-    background: color-mix(in srgb, var(--color-surface-raised) 88%, #fff 12%);
+    background: transparent;
     padding: 10px;
+}
+
+.export-format-opts {
+    display: none !important;
+}
+
+.export-quick-options .gif-option-check input[type="checkbox"] {
+    background: transparent;
 }
 
 .export-format-opts .export-size-est-row {
@@ -3457,7 +3522,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 
 .export-motion-controls-title {
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--color-on-surface);
     letter-spacing: 0.01em;
 }
@@ -3598,11 +3663,18 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 }
 
 .export-select-label {
-    font-size: var(--text-xs);
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--color-label);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--color-on-surface);
+}
+
+#exportQualitySegmented[hidden],
+#exportCompressionRow[hidden],
+#gifLoopRow[hidden],
+#gifDitherRow[hidden] {
+    display: none !important;
 }
 
 .export-select {
@@ -3626,6 +3698,12 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 .export-select:focus {
     outline: 2px solid var(--color-primary);
     outline-offset: 1px;
+}
+
+#exportCompressionRow > .export-select-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 /* Format-specific options panel */
@@ -5542,14 +5620,81 @@ html.theme-dark .settings-close-btn:hover {
     z-index: 1;
     pointer-events: auto;
     width: 100%;
-    border-radius: 14px;
-    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 44%, transparent);
-    background: color-mix(in srgb, var(--surface-elev) 88%, #fff 12%);
-    padding: 10px;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
 }
 
 .crop-dimensions-dock[hidden] {
     display: none !important;
+}
+
+.export-crop-segmented {
+    --export-tab-columns: 4;
+}
+
+.export-crop-tab {
+    min-height: 74px;
+    display: grid;
+    grid-template-rows: auto auto;
+    align-content: center;
+    justify-items: center;
+    gap: 6px;
+    padding: 8px 8px 7px;
+    position: relative;
+}
+
+.export-crop-tab input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.export-crop-tab__shape {
+    display: block;
+    border: 2px solid currentColor;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--palette-blueberry-200) 42%, #fff 58%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--palette-blueberry-700) 20%, transparent);
+}
+
+.export-crop-tab__shape--square {
+    width: 22px;
+    height: 22px;
+}
+
+.export-crop-tab__shape--portrait12 {
+    width: 12px;
+    height: 25px;
+}
+
+.export-crop-tab__shape--landscape21 {
+    width: 26px;
+    height: 13px;
+}
+
+.export-crop-tab__shape--landscape43 {
+    width: 24px;
+    height: 18px;
+}
+
+.export-crop-tab__ratio {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: inherit;
+    line-height: 1;
+}
+
+.export-crop-tab:has(input:checked) {
+    background: #fff;
+    color: var(--color-on-surface);
+    box-shadow: 0 1px 2px rgba(20, 18, 43, 0.12);
+}
+
+.export-crop-tab:has(input:checked) .export-crop-tab__shape {
+    background: color-mix(in srgb, var(--color-primary) 30%, #fff 70%);
+    border-color: color-mix(in srgb, var(--color-primary) 72%, transparent);
 }
 
 .crop-dimensions-dock .export-dimensions-row {
@@ -5564,60 +5709,9 @@ html.theme-dark .settings-close-btn:hover {
 .crop-dimensions-dock .dimension-group {
     flex-direction: row;
     gap: 8px;
-    justify-content: space-between;
+    justify-content: flex-start;
 }
 
-.crop-dimensions-dock .thumb-card-wrap {
-    gap: 4px;
-}
-
-.crop-dimensions-dock .thumb-label {
-    color: color-mix(in srgb, var(--palette-blueberry-700) 78%, var(--color-on-surface) 22%);
-    text-shadow: none;
-}
-
-.crop-dimensions-dock .dimension-option {
-    padding: 5px;
-    border-width: 1.5px;
-    border-color: color-mix(in srgb, var(--palette-blueberry-300) 60%, transparent);
-    background: color-mix(in srgb, var(--surface-elev) 86%, #fff 14%);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
-
-.crop-dimensions-dock .dimension-option:hover {
-    border-color: color-mix(in srgb, var(--palette-blueberry-500) 68%, transparent);
-    transform: none;
-    box-shadow: 0 4px 12px rgba(20, 18, 43, 0.18);
-}
-
-.crop-dimensions-dock .dimension-option:has(input:checked) {
-    border-color: color-mix(in srgb, var(--color-primary) 74%, #fff);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 60%, transparent);
-    background: color-mix(in srgb, var(--color-primary) 14%, #fff);
-}
-
-.crop-dimensions-dock .dimension-option:has(input:checked) .dimension-shape {
-    background: color-mix(in srgb, var(--color-primary) 65%, #fff);
-    box-shadow: none;
-}
-
-.crop-dimensions-dock .dimension-option:has(input:checked):hover {
-    border-color: color-mix(in srgb, var(--color-primary) 74%, #fff);
-    transform: none;
-}
-
-.crop-dimensions-dock .dimension-thumb {
-    width: 30px;
-    height: 30px;
-    color: color-mix(in srgb, var(--palette-blueberry-800) 80%, #fff);
-}
-
-.crop-dimensions-dock .dimension-shape {
-    border-width: 1.5px;
-    background: color-mix(in srgb, var(--palette-blueberry-300) 24%, #fff);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--palette-blueberry-500) 25%, transparent);
-}
 
 html.crop-mode #btnFrameOverlay,
 html.crop-mode .canvas-overlay-br,
@@ -5638,11 +5732,9 @@ html.crop-mode.export-workspace-active .canvas-overlay-bl {
     display: flex;
 }
 
-/* Export workspace now exposes the pause control beside the D-pad,
-   so hide the legacy floating pause button to avoid duplication. */
 html.export-workspace-active .canvas-overlay-br,
 html.crop-mode.export-workspace-active .canvas-overlay-br {
-    display: none !important;
+    display: flex !important;
 }
 
 html.dpad-hidden.export-workspace-active .canvas-overlay-br,
@@ -7337,9 +7429,44 @@ html.loaded .sidebar-tabs {
 }
 
 .export-collapsed-confirm-summary {
+    display: grid;
+    gap: 8px;
+}
+
+.export-collapsed-confirm-card {
     border: 1px solid color-mix(in srgb, var(--border-color) 85%, transparent 15%);
     border-radius: 10px;
     background: color-mix(in srgb, var(--color-surface-raised) 88%, #fff 12%);
+    padding: 0;
+    overflow: hidden;
+}
+
+.export-collapsed-confirm-card-summary {
+    list-style: none;
+    cursor: pointer;
+    display: grid;
+    gap: 4px;
+    padding: 10px 12px;
+}
+
+.export-collapsed-confirm-card-summary::-webkit-details-marker {
+    display: none;
+}
+
+.export-collapsed-confirm-card-title {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--color-on-surface);
+}
+
+.export-collapsed-confirm-card-meta {
+    font-size: 12px;
+    color: color-mix(in srgb, var(--color-label) 88%, transparent 12%);
+    line-height: 1.35;
+}
+
+.export-collapsed-confirm-list {
+    border-top: 1px solid color-mix(in srgb, var(--border-color) 86%, transparent 14%);
     padding: 10px 12px;
     display: grid;
     gap: 8px;
@@ -8059,9 +8186,12 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
 
     html.loaded.layout-v2-desktop.export-workspace-active .canvas-top-right,
     html.loaded.layout-v2-desktop.export-workspace-active .canvas-overlay-bl,
-    html.loaded.layout-v2-desktop.export-workspace-active .canvas-overlay-br,
     html.loaded.layout-v2-desktop.export-workspace-active .orbit-hint-bar {
         display: none !important;
+    }
+
+    html.loaded.layout-v2-desktop.export-workspace-active .canvas-overlay-br {
+        display: flex !important;
     }
 
     html.loaded.layout-v2-desktop.export-workspace-active .canvas-bottom-center {
@@ -8462,7 +8592,8 @@ html.loaded.export-workspace-active .canvas-wrap {
 }
 
 .export-workspace-active .gif-options-row.export-quick-options {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: nowrap;
     column-gap: 12px;
     row-gap: 6px;
 }
@@ -8493,7 +8624,8 @@ html.loaded.export-workspace-active .canvas-wrap {
 
 @media (max-width: 520px) {
     .export-workspace-active .gif-options-row.export-quick-options {
-        grid-template-columns: minmax(0, 1fr);
+        display: flex;
+        flex-wrap: nowrap;
     }
 }
 
@@ -8525,7 +8657,7 @@ html.loaded.export-workspace-active .canvas-wrap {
 
 .export-format-tabs {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--export-tab-columns, 4), minmax(0, 1fr));
     gap: 4px;
     border-radius: 999px;
     padding: 3px;
@@ -8564,6 +8696,30 @@ html.theme-dark .export-format-tab.is-active {
     background: rgba(242, 240, 255, 0.96);
     color: var(--palette-blueberry-900);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+.export-format-tab:hover:not(.is-active) {
+    background: color-mix(in srgb, var(--palette-blueberry-100) 58%, transparent);
+    color: var(--color-on-surface);
+}
+
+.export-select:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 48%, var(--color-border));
+    background-color: color-mix(in srgb, var(--color-surface-raised) 92%, #fff 8%);
+}
+
+.gif-options-row.export-quick-options .gif-option-check:hover,
+.export-quality-inline-options .gif-option-check:hover {
+    color: var(--color-on-surface);
+}
+
+.gif-options-row.export-quick-options .gif-option-check:hover input[type="checkbox"],
+.export-quality-inline-options .gif-option-check:hover input[type="checkbox"] {
+    border-color: color-mix(in srgb, var(--color-primary) 58%, var(--color-on-surface));
+}
+
+#exportCompressionRow:hover .range-wrap {
+    filter: saturate(1.02);
 }
 
 .export-format-tab:focus-visible {

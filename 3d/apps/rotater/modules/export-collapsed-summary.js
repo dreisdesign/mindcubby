@@ -1,4 +1,5 @@
 import {
+    getExportFormatDisplay,
     buildExportFormatOptions,
     buildExportQualityOptions,
     buildExportSpeedOptions,
@@ -6,6 +7,9 @@ import {
 
 export function renderCollapsedExportSummaryController(fmt, {
     summaryEl,
+    getExportSizeOptionsForFormat,
+    getExportSizeValueForFormat,
+    setExportSizeValueForFormat,
     exportQualityOrder,
     exportQualityLabels,
     speedSecondsPerRev,
@@ -27,6 +31,7 @@ export function renderCollapsedExportSummaryController(fmt, {
 
     const format = ({ gif: 'gif', mp4: 'mp4', png: 'png', jpg: 'jpg' })[fmt] || 'gif';
     const qualityValue = document.getElementById('exportQuality')?.value || 'std';
+    const sizeValue = getExportSizeValueForFormat?.(format) || '1080';
     const speedValue = String(Math.max(0, Math.min(
         speedSecondsPerRev.length - 1,
         parseInt(speedSlider?.value || String(speedDefault), 10) || speedDefault
@@ -35,12 +40,19 @@ export function renderCollapsedExportSummaryController(fmt, {
     const buildPlateChecked = !!(exportBuildPlateEl ? exportBuildPlateEl.checked : buildPlateEnabled);
     const bgChecked = !!exportBgColorEl?.checked;
     const gifLoopChecked = !!document.getElementById('gifLoop')?.checked;
-    const gifDitherChecked = !!document.getElementById('gifDither')?.checked;
     const jpegQualityValue = document.getElementById('jpegQuality')?.value || '90';
+    const cropValue = document.querySelector('input[name="exportDimensions"]:checked')?.value || 'square';
+    const cropLabel = ({ square: '1:1', portrait12: '1:2', landscape21: '2:1', landscape43: '4:3' })[cropValue] || '1:1';
 
     const formatOptions = buildExportFormatOptions({
         selectedFormat: format,
     });
+
+    const sizeOptionList = getExportSizeOptionsForFormat?.(format) || [];
+    const sizeOptions = sizeOptionList
+        .map(({ value, label }) => `<option value="${value}"${value === sizeValue ? ' selected' : ''}>${label}</option>`)
+        .join('');
+    const selectedSizeLabel = sizeOptionList.find((opt) => opt.value === sizeValue)?.label || `${sizeValue} px`;
 
     const qualityOptions = buildExportQualityOptions({
         qualityOrder: exportQualityOrder,
@@ -55,39 +67,66 @@ export function renderCollapsedExportSummaryController(fmt, {
         speedFormat,
         formatRotationTimeOptionLabel,
     });
+    const speedSummaryLabel = formatRotationTimeOptionLabel(parseInt(speedValue, 10) || 0, speedFormat);
+
+    const summaryPieces = [
+        getExportFormatDisplay(format),
+        selectedSizeLabel,
+        `Crop ${cropLabel}`,
+    ];
+    if (format === 'gif' || format === 'mp4') {
+        summaryPieces.push(exportQualityLabels[qualityValue] || qualityValue);
+        summaryPieces.push(speedSummaryLabel);
+    }
 
     const gifExtras = format === 'gif'
-        ? `<label class="export-collapsed-confirm-row export-collapsed-confirm-row--check"><span>Loop</span><input type="checkbox" data-export-review="gif-loop"${gifLoopChecked ? ' checked' : ''}></label><label class="export-collapsed-confirm-row export-collapsed-confirm-row--check"><span>Dither</span><input type="checkbox" data-export-review="gif-dither"${gifDitherChecked ? ' checked' : ''}></label>`
+        ? `<label class="export-collapsed-confirm-row export-collapsed-confirm-row--check"><span>Loop</span><input type="checkbox" data-export-review="gif-loop"${gifLoopChecked ? ' checked' : ''}></label>`
         : '';
 
     const jpgExtra = format === 'jpg'
-        ? `<label class="export-collapsed-confirm-row"><span>JPEG Compression</span><input type="range" min="50" max="100" step="5" value="${jpegQualityValue}" data-export-review="jpg-quality"></label>`
+        ? `<label class="export-collapsed-confirm-row"><span>JPEG Quality</span><input type="range" min="50" max="100" step="5" value="${jpegQualityValue}" data-export-review="jpg-quality"></label>`
         : '';
 
     summaryEl.innerHTML = `
-        <label class="export-collapsed-confirm-row">
-            <span>Format</span>
-            <select class="export-select export-collapsed-confirm-control" data-export-review="format">${formatOptions}</select>
-        </label>
-        <label class="export-collapsed-confirm-row">
-            <span>Quality</span>
-            <select class="export-select export-collapsed-confirm-control" data-export-review="quality">${qualityOptions}</select>
-        </label>
-        ${(format === 'gif' || format === 'mp4') ? `<label class="export-collapsed-confirm-row"><span>Rotation Time</span><select class="export-select export-collapsed-confirm-control" data-export-review="speed">${speedOptions}</select></label>` : ''}
-        <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
-            <span>Grid</span>
-            <input type="checkbox" data-export-review="grid"${gridChecked ? ' checked' : ''}>
-        </label>
-        <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
-            <span>Background</span>
-            <input type="checkbox" data-export-review="bg"${bgChecked ? ' checked' : ''}>
-        </label>
-        <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
-            <span>Build Plate</span>
-            <input type="checkbox" data-export-review="build-plate"${buildPlateChecked ? ' checked' : ''}>
-        </label>
-        ${gifExtras}
-        ${jpgExtra}
+        <details class="export-collapsed-confirm-card" open>
+            <summary class="export-collapsed-confirm-card-summary">
+                <span class="export-collapsed-confirm-card-title">Current export</span>
+                <span class="export-collapsed-confirm-card-meta">${summaryPieces.join(' | ')}</span>
+            </summary>
+            <div class="export-collapsed-confirm-list">
+                <label class="export-collapsed-confirm-row">
+                    <span>Format</span>
+                    <select class="export-select export-collapsed-confirm-control" data-export-review="format">${formatOptions}</select>
+                </label>
+                <label class="export-collapsed-confirm-row">
+                    <span>Crop</span>
+                    <span>${cropLabel}</span>
+                </label>
+                <label class="export-collapsed-confirm-row">
+                    <span>Size</span>
+                    <select class="export-select export-collapsed-confirm-control" data-export-review="size">${sizeOptions}</select>
+                </label>
+                ${(format === 'gif' || format === 'mp4') ? `<label class="export-collapsed-confirm-row">
+                    <span>Quality</span>
+                    <select class="export-select export-collapsed-confirm-control" data-export-review="quality">${qualityOptions}</select>
+                </label>` : ''}
+                ${(format === 'gif' || format === 'mp4') ? `<label class="export-collapsed-confirm-row"><span>Duration</span><select class="export-select export-collapsed-confirm-control" data-export-review="speed">${speedOptions}</select></label>` : ''}
+                <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
+                    <span>Grid</span>
+                    <input type="checkbox" data-export-review="grid"${gridChecked ? ' checked' : ''}>
+                </label>
+                <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
+                    <span>Background</span>
+                    <input type="checkbox" data-export-review="bg"${bgChecked ? ' checked' : ''}>
+                </label>
+                <label class="export-collapsed-confirm-row export-collapsed-confirm-row--check">
+                    <span>Surface</span>
+                    <input type="checkbox" data-export-review="build-plate"${buildPlateChecked ? ' checked' : ''}>
+                </label>
+                ${gifExtras}
+                ${jpgExtra}
+            </div>
+        </details>
     `;
 
     const formatSelect = summaryEl.querySelector('[data-export-review="format"]');
@@ -96,6 +135,9 @@ export function renderCollapsedExportSummaryController(fmt, {
         applyExportFormat(nextFormat);
         renderCollapsedExportSummaryController(nextFormat, {
             summaryEl,
+            getExportSizeOptionsForFormat,
+            getExportSizeValueForFormat,
+            setExportSizeValueForFormat,
             exportQualityOrder,
             exportQualityLabels,
             speedSecondsPerRev,
@@ -116,7 +158,17 @@ export function renderCollapsedExportSummaryController(fmt, {
         saveSettings();
     });
 
-    const qualitySelect = summaryEl.querySelector('[data-export-review="quality"]');
+    const sizeSelect = summaryEl.querySelector('[data-export-review="size"]');
+    sizeSelect?.addEventListener('change', () => {
+        setExportSizeValueForFormat?.(format, sizeSelect.value);
+        updateEstimate();
+        refreshExportPreviewNow();
+        saveSettings();
+    });
+
+    const qualitySelect = (format === 'gif' || format === 'mp4')
+        ? summaryEl.querySelector('[data-export-review="quality"]')
+        : null;
     qualitySelect?.addEventListener('change', () => {
         setExportQualityValue(qualitySelect.value);
         updateEstimate();
@@ -160,15 +212,6 @@ export function renderCollapsedExportSummaryController(fmt, {
         if (!loopEl) return;
         loopEl.checked = !!gifLoopCheck.checked;
         loopEl.dispatchEvent(new Event('change'));
-        refreshExportPreviewNow();
-    });
-
-    const gifDitherCheck = summaryEl.querySelector('[data-export-review="gif-dither"]');
-    gifDitherCheck?.addEventListener('change', () => {
-        const ditherEl = document.getElementById('gifDither');
-        if (!ditherEl) return;
-        ditherEl.checked = !!gifDitherCheck.checked;
-        ditherEl.dispatchEvent(new Event('change'));
         refreshExportPreviewNow();
     });
 

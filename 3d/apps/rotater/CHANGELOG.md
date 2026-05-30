@@ -1,3 +1,16 @@
+## [2.2.43] - 2026-05-30
+
+### Fixed
+- **Export panel still-format label duplication**: PNG/JPEG no longer render duplicate `Quality` headers in the still-image quality area.
+- **Export quick-option typography parity**: Background/Grid/Surface checkbox labels now match section hierarchy sizing/weight, and Crop title weight now aligns with other section labels.
+- **Export section divider cleanup**: removed inter-section divider lines and normalized spacing rhythm between sections across formats.
+- **Still capture pause timing**: still-image actions now enforce a pause-and-settle frame before PNG/JPEG export or Copy Image capture when animation is running.
+
+### Changed
+- **Still-image quality label language**: PNG/JPEG slider row now uses `Quality` terminology with consistent label styling.
+
+---
+
 ## [2.2.42] - 2026-05-29
 
 ### Performance
