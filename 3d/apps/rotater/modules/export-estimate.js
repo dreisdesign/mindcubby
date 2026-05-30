@@ -13,14 +13,23 @@ export function updateExportEstimateController({
     imgEstJpgEl,
     getCurrentExportFormat,
     getExportMp4Bitrate,
+    getGifDitherEnabled,
 } = {}) {
     if (!btnGif) return;
     refreshExportMotionSpeedOptionLabels?.();
 
+    const formatEstimatedMb = (value) => {
+        const numeric = Math.max(0, Number(value) || 0);
+        if (numeric < 1) return '<1';
+        return String(Math.round(numeric));
+    };
+
     const gN = getExportFrames(exportGifFps);
     const gSecs = Math.max(0.1, (gN / Math.max(1, exportGifFps)));
     const { width: gifW, height: gifH } = getImageExportSize('gif');
-    const gifMB = ((gifW * gifH * gN * 0.055) / (1024 * 1024)).toFixed(2);
+    const gifDitherMultiplier = getGifDitherEnabled?.() ? 1.18 : 1;
+    const gifMBValue = (gifW * gifH * gN * 0.028 * gifDitherMultiplier) / (1024 * 1024);
+    const gifMB = formatEstimatedMb(gifMBValue);
     btnGif.title = 'Save animated GIF';
     if (gifEstEl) gifEstEl.textContent = `~${gifMB} MB · ${gifW}×${gifH}px`;
 
@@ -28,13 +37,13 @@ export function updateExportEstimateController({
     const mSecs = Math.max(0.1, (mN / Math.max(1, exportMp4Fps)));
     const { width: mp4W, height: mp4H } = getImageExportSize('mp4');
     const mp4Bitrate = Math.max(1, Number(getExportMp4Bitrate?.() || 8_000_000));
-    const mp4MB = ((mp4Bitrate * mSecs) / 8 / (1024 * 1024)).toFixed(2);
+    const mp4MB = formatEstimatedMb((mp4Bitrate * mSecs) / 8 / (1024 * 1024));
     if (btnVideo) btnVideo.title = 'Save MP4 video';
     if (mp4EstEl) mp4EstEl.textContent = `~${mp4MB} MB · ${mp4W}×${mp4H}px`;
 
     const { width: pw, height: ph } = getImageExportSize('png');
-    const pngMB = (pw * ph * (0.08 + exportImageQuality * 0.32) / (1024 * 1024)).toFixed(2);
-    const jpegMB = (pw * ph * (0.03 + exportImageQuality * 0.22) / (1024 * 1024)).toFixed(2);
+    const pngMB = formatEstimatedMb(pw * ph * (0.08 + exportImageQuality * 0.32) / (1024 * 1024));
+    const jpegMB = formatEstimatedMb(pw * ph * (0.03 + exportImageQuality * 0.22) / (1024 * 1024));
     if (imgEstPngEl) imgEstPngEl.textContent = `~${pngMB} MB · ${pw}×${ph}px`;
     if (imgEstJpgEl) imgEstJpgEl.textContent = `~${jpegMB} MB · ${pw}×${ph}px`;
 

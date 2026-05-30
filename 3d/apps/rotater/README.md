@@ -329,7 +329,7 @@ The Preview thumbnail and estimate label update immediately when you change form
 | Control | Description |
 |---|---|
 | Loop | GIF loops forever (default: on) |
-| Dither | Floyd-Steinberg dithering for smoother gradients |
+| Dither | Floyd-Steinberg dithering for smoother gradients (default: on) |
 | Transparent | Controlled by the shared Background toggle |
 
 #### PNG options
@@ -340,24 +340,30 @@ The Preview thumbnail and estimate label update immediately when you change form
 
 #### Export quality settings
 
-| Level | Resolution | FPS | Notes |
-|---|---|---|---|
-| Low | 480 px short edge | 15 fps | Smallest file |
-| Medium | 1080 px short edge | 24 fps | Default |
-| High | 2048 px short edge | 30 fps | Largest file |
+| FPS | Notes |
+|---|---|
+| 30 | Default animated export tier |
+| 60 | Smoother motion with larger files |
+| 90 | High-motion detail tier |
+| 120 | Very high frame rate tier |
+| 240 | Extreme tier for specialty use cases |
 
 What the Quality dropdown changes:
 
-- GIF: square capture size (`480x480`, `1080x1080`, `2048x2048`) plus base FPS (`15`, `24`, `30`). Runtime may raise FPS slightly for very fast rotations to keep motion smooth.
-- MP4: the same square capture size and base FPS, plus target bitrate (`4 Mbps`, `8 Mbps`, `16 Mbps`).
+- GIF: selected export size plus base FPS (`30`, `60`, `90`, `120`, `240`). URLs/settings now store the raw FPS value (for example `eq=120`) instead of preset labels. Runtime may raise FPS further for very fast rotations to keep motion smooth.
+- MP4: the same export size and base FPS values, plus target bitrate scaling per FPS tier.
 - PNG / JPEG: the Quality dropdown does not directly set output dimensions; still-image dimensions come from the selected crop/aspect preset and export dimensions.
+
+Export estimate notes:
+
+- Animated estimate text is rounded for readability (`2.06 MB` displays as `2 MB`; very small outputs display as `<1 MB`).
+- GIF estimates now respond to Dithering, since dithering increases encoded size.
 
 GIF sizing guidance:
 
-- `480x480` is the safest size for lightweight sharing, chats, and quick previews.
 - `1080x1080` is a good "quality-first but still reasonable" ceiling for most GIF uses.
 - `2048x2048` is very large for GIF and is best treated as an edge-case/high-detail option, not the default recommendation.
-- For 1:2, 2:1, or 4:3 crops, it is usually better to expose explicit export dimensions such as `512`, `768`, `1024`, and `1440` on the constrained edge rather than relying on a generic quality label alone.
+- For 1:2, 2:1, or 4:3 crops, it is usually better to expose explicit export dimensions such as `512`, `1080`, `1440`, and `2048` on the constrained edge rather than relying on frame rate alone.
 - Practical rule: reserve very large dimensions for MP4/PNG, and keep GIF optimized for playback and file size first.
 
 Export progress overlay behavior:

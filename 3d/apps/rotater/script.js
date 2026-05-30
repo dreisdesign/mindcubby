@@ -159,19 +159,42 @@ import {
 } from './modules/right-pan-lock.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
-const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
+const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=30&ed=square&et=0&gd=1&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
 const SKIP_DEFAULT_PRESET_ONCE_KEY = 'rotater_skipDefaultPresetOnce';
 const CANVAS_ORBIT_CLICK_DRAG_THRESHOLD_PX = 6;
 
 // ── Defaults ─────────────────────────────────────────────────────────────────
 // Export quality presets — animated motion/detail settings.
 const QUALITY_PRESETS = {
-    web: { fps: 15, bitrate: 4_000_000 },
-    std: { fps: 24, bitrate: 8_000_000 },
-    high: { fps: 30, bitrate: 16_000_000 },
-    vhigh: { fps: 45, bitrate: 24_000_000 },
-    ultra: { fps: 60, bitrate: 32_000_000 },
+    // Keep legacy key for old URLs/settings; map it to standard quality.
+    web: { fps: 30, bitrate: 12_000_000 },
+    std: { fps: 30, bitrate: 12_000_000 },
+    high: { fps: 60, bitrate: 24_000_000 },
+    vhigh: { fps: 90, bitrate: 36_000_000 },
+    ultra: { fps: 120, bitrate: 48_000_000 },
+    extreme: { fps: 240, bitrate: 64_000_000 },
+    '30': { fps: 30, bitrate: 12_000_000 },
+    '60': { fps: 60, bitrate: 24_000_000 },
+    '90': { fps: 90, bitrate: 36_000_000 },
+    '120': { fps: 120, bitrate: 48_000_000 },
+    '240': { fps: 240, bitrate: 64_000_000 },
 };
+
+const EXPORT_QUALITY_DEFAULT = '30';
+const EXPORT_QUALITY_FPS_VALUES = ['30', '60', '90', '120', '240'];
+
+function normalizeExportQualityValue(value = EXPORT_QUALITY_DEFAULT) {
+    const raw = String(value ?? '').trim().toLowerCase();
+    const mapped = ({
+        web: '30',
+        std: '30',
+        high: '60',
+        vhigh: '90',
+        ultra: '120',
+        extreme: '240',
+    })[raw] || raw;
+    return EXPORT_QUALITY_FPS_VALUES.includes(mapped) ? mapped : EXPORT_QUALITY_DEFAULT;
+}
 
 const EXPORT_SIZE_PRESETS = {
     gif: {
@@ -215,7 +238,7 @@ const IMPORT_STL_LIMITS = {
 };
 
 const EXPORT_GUARD_LIMITS = {
-    maxFps: 60,
+    maxFps: 240,
     maxWidth: 4096,
     maxHeight: 4096,
     maxPixelsPerFrame: 8_500_000,
@@ -299,15 +322,16 @@ function getExportDimensionsForLongEdge(longEdge, preset = getImageDimensionPres
     return { width, height };
 }
 
-function getLegacyExportSizeKeyForQuality(format = 'gif', quality = 'std') {
+function getLegacyExportSizeKeyForQuality(format = 'gif', quality = EXPORT_QUALITY_DEFAULT) {
     const profile = normalizeExportSizeProfile(format);
+    const q = normalizeExportQualityValue(quality);
     if (profile === 'gif') {
-        return ({ web: '512', std: '1080', high: '2048' }[quality]) || DEFAULT_EXPORT_SIZE_KEYS.gif;
+        return ({ '30': '1080', '60': '1080', '90': '1440', '120': '2048', '240': '2048' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.gif;
     }
     if (profile === 'mp4') {
-        return ({ web: '480', std: '1080', high: '2048' }[quality]) || DEFAULT_EXPORT_SIZE_KEYS.mp4;
+        return ({ '30': '1080', '60': '1080', '90': '1440', '120': '2048', '240': '2048' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.mp4;
     }
-    return ({ web: '512', std: '1080', high: '2048' }[quality]) || DEFAULT_EXPORT_SIZE_KEYS.image;
+    return ({ '30': '1080', '60': '1080', '90': '1440', '120': '2048', '240': '2048' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.image;
 }
 
 function getSelectedExportDimensionsId() {
@@ -670,8 +694,8 @@ function getPreviewExportSize(_fmt) {
 
 const EXPORT = {
     get gif() {
-        const v = document.getElementById('exportQuality')?.value ?? 'std';
-        const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
+        const v = normalizeExportQualityValue(document.getElementById('exportQuality')?.value ?? EXPORT_QUALITY_DEFAULT);
+        const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS[EXPORT_QUALITY_DEFAULT];
         return {
             size: getExportLongEdgeForFormat('gif'),
             fps: getEffectiveExportFps(p.fps),
@@ -680,8 +704,8 @@ const EXPORT = {
         };
     },
     get mp4() {
-        const v = document.getElementById('exportQuality')?.value ?? 'std';
-        const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS.std;
+        const v = normalizeExportQualityValue(document.getElementById('exportQuality')?.value ?? EXPORT_QUALITY_DEFAULT);
+        const p = QUALITY_PRESETS[v] ?? QUALITY_PRESETS[EXPORT_QUALITY_DEFAULT];
         return {
             size: getExportLongEdgeForFormat('mp4'),
             fps: getEffectiveExportFps(p.fps),
@@ -841,7 +865,7 @@ function getExportFormatForDurationLabels(format = exportFormatEl?.value || 'gif
 
 function getRotationFrameCountForSeconds(seconds, format = 'gif') {
     return getRotationFrameCountForSecondsController(seconds, format, {
-        getExportQualityValue: () => document.getElementById('exportQuality')?.value ?? 'std',
+        getExportQualityValue: () => normalizeExportQualityValue(document.getElementById('exportQuality')?.value ?? EXPORT_QUALITY_DEFAULT),
         qualityPresets: QUALITY_PRESETS,
         getEffectiveExportFpsForSeconds: (baseFps, secs) => getEffectiveExportFpsForSeconds(baseFps, secs),
     });
@@ -878,6 +902,7 @@ function updateEstimate() {
         imgEstJpgEl: document.getElementById('imgEstJpg'),
         getCurrentExportFormat: () => exportFormatEl?.value ?? 'gif',
         getExportMp4Bitrate: () => EXPORT.mp4.bitrate,
+        getGifDitherEnabled: () => document.getElementById('gifDither')?.checked ?? false,
     });
 }
 
@@ -7475,7 +7500,7 @@ function saveSettings() {
             paused: isPaused ? '1' : '0',
             gifLoop: document.getElementById('gifLoop')?.checked ? '1' : '0',
 
-            exportQuality: document.getElementById('exportQuality')?.value ?? 'std',
+            exportQuality: normalizeExportQualityValue(document.getElementById('exportQuality')?.value ?? EXPORT_QUALITY_DEFAULT),
             exportGifSize: getExportSizeSelectionForFormat('gif'),
             exportMp4Size: getExportSizeSelectionForFormat('mp4'),
             exportImageSize: getExportSizeSelectionForFormat('png'),
@@ -7699,7 +7724,7 @@ function restoreSettings() {
             }
 
             // Restore quality selects (legacy: exportQuality/exportRes → both gif and video)
-            const legacyQ = s.exportQuality ?? (s.exportRes === '1080' ? 'high' : s.exportRes === '480' ? 'web' : null) ?? 'std';
+            const legacyQ = s.exportQuality ?? (s.exportRes === '1080' ? '60' : s.exportRes === '480' ? '30' : null) ?? EXPORT_QUALITY_DEFAULT;
             const eq = s.exportQuality ?? s.gifQuality ?? s.videoQuality ?? legacyQ;
             setExportQualityValue(eq);
             setExportSizeSelectionForFormat('gif', s.exportGifSize ?? getLegacyExportSizeKeyForQuality('gif', eq));
@@ -8137,7 +8162,7 @@ function settingsToURL() {
     // Export format/quality/options
     const fmt = exportFormatEl?.value ?? 'gif';
     p.set('ef', fmt);
-    p.set('eq', document.getElementById('exportQuality')?.value ?? 'std');
+    p.set('eq', normalizeExportQualityValue(document.getElementById('exportQuality')?.value ?? EXPORT_QUALITY_DEFAULT));
     p.set('egs', getExportSizeSelectionForFormat('gif'));
     p.set('ems', getExportSizeSelectionForFormat('mp4'));
     p.set('eis', getExportSizeSelectionForFormat('png'));
@@ -9802,17 +9827,22 @@ shadingEl.addEventListener('change', () => {
     saveSettings();
 });
 
-document.querySelectorAll('#gifLoop, #gifDither').forEach(el =>
-    el.addEventListener('change', saveSettings)
-);
+document.querySelectorAll('#gifLoop, #gifDither').forEach((el) => {
+    el.addEventListener('change', () => {
+        updateEstimate();
+        refreshExportPreviewNow();
+        saveSettings();
+        updateCardResetButtonStates();
+    });
+});
 
-const EXPORT_QUALITY_ORDER = ['web', 'std', 'high', 'vhigh', 'ultra'];
+const EXPORT_QUALITY_ORDER = [...EXPORT_QUALITY_FPS_VALUES];
 const EXPORT_QUALITY_LABELS = {
-    web: '15fps',
-    std: '24fps',
-    high: '30fps',
-    vhigh: '45fps',
-    ultra: '60fps',
+    '30': '30fps',
+    '60': '60fps',
+    '90': '90fps',
+    '120': '120fps',
+    '240': '240fps',
 };
 
 function buildExportSelectOptions(options = [], selectedValue = '') {
@@ -9835,11 +9865,11 @@ function buildExportSizeSegmentedButtons(options = [], selectedValue = '') {
         .join('');
 }
 
-function buildExportQualitySegmentedButtons(selectedValue = 'std') {
+function buildExportQualitySegmentedButtons(selectedValue = EXPORT_QUALITY_DEFAULT) {
     if (exportQualitySegmentedEl) exportQualitySegmentedEl.style.setProperty('--export-tab-columns', String(EXPORT_QUALITY_ORDER.length));
     return EXPORT_QUALITY_ORDER
         .map((value) => {
-            const label = EXPORT_QUALITY_LABELS[value] || '24fps';
+            const label = EXPORT_QUALITY_LABELS[value] || `${EXPORT_QUALITY_DEFAULT}fps`;
             return `<button type="button" class="export-format-tab${value === selectedValue ? ' is-active' : ''}" data-export-quality="${value}" role="radio" aria-checked="${value === selectedValue ? 'true' : 'false'}">${label}</button>`;
         })
         .join('');
@@ -9881,13 +9911,14 @@ function syncExportQualityUiForFormat(format = exportFormatEl?.value ?? 'gif') {
 function syncExportQualitySliderFromSelect() {
     const q = document.getElementById('exportQuality');
     if (!q) return;
-    const value = EXPORT_QUALITY_ORDER.includes(q.value) ? q.value : 'std';
+    const value = normalizeExportQualityValue(q.value);
+    q.value = value;
     const idx = Math.max(0, EXPORT_QUALITY_ORDER.indexOf(value));
     if (exportQualitySliderEl) {
         exportQualitySliderEl.value = String(idx);
         syncSliderTooltip(exportQualitySliderEl);
     }
-    if (exportQualityValEl) exportQualityValEl.textContent = EXPORT_QUALITY_LABELS[value] || '24fps';
+    if (exportQualityValEl) exportQualityValEl.textContent = EXPORT_QUALITY_LABELS[value] || `${EXPORT_QUALITY_DEFAULT}fps`;
     if (exportQualitySegmentedEl) exportQualitySegmentedEl.innerHTML = buildExportQualitySegmentedButtons(value);
     syncExportQualityUiForFormat(exportFormatEl?.value ?? 'gif');
 }
@@ -9895,7 +9926,7 @@ function syncExportQualitySliderFromSelect() {
 function setExportQualityValue(value) {
     const q = document.getElementById('exportQuality');
     if (!q) return;
-    q.value = EXPORT_QUALITY_ORDER.includes(value) ? value : 'std';
+    q.value = normalizeExportQualityValue(value);
     syncExportQualitySliderFromSelect();
 }
 
@@ -10613,7 +10644,7 @@ function updateCardResetButtonStates() {
         || !animationSlidersMatchDefaults();
 
     const exportDirty = (exportFormatEl?.value || 'gif') !== 'gif'
-        || (document.getElementById('exportQuality')?.value || 'std') !== 'std'
+        || normalizeExportQualityValue(document.getElementById('exportQuality')?.value || EXPORT_QUALITY_DEFAULT) !== EXPORT_QUALITY_DEFAULT
         || getExportSizeSelectionForFormat('gif') !== DEFAULT_EXPORT_SIZE_KEYS.gif
         || getExportSizeSelectionForFormat('mp4') !== DEFAULT_EXPORT_SIZE_KEYS.mp4
         || getExportSizeSelectionForFormat('png') !== DEFAULT_EXPORT_SIZE_KEYS.image
@@ -10781,8 +10812,9 @@ btnResetExportCard?.addEventListener('click', () => {
     setExportSizeSelectionForFormat('mp4', DEFAULT_EXPORT_SIZE_KEYS.mp4);
     setExportSizeSelectionForFormat('png', DEFAULT_EXPORT_SIZE_KEYS.image);
     exportFormatEl?.dispatchEvent(new Event('change'));
-    setExportQualityValue('std');
+    setExportQualityValue(EXPORT_QUALITY_DEFAULT);
     document.getElementById('gifLoop') && (document.getElementById('gifLoop').checked = true);
+    document.getElementById('gifDither') && (document.getElementById('gifDither').checked = true);
     exportBgColorEl && (exportBgColorEl.checked = true);
     exportBgColorEl?.dispatchEvent(new Event('change'));
     exportGridEl && (exportGridEl.checked = true);
@@ -12365,7 +12397,7 @@ function download(data, filename, type) {
 }
 
 const exportFilenameController = createExportFilenameController({
-    getExportQuality: () => document.getElementById('exportQuality')?.value ?? 'std',
+    getExportQuality: () => normalizeExportQualityValue(document.getElementById('exportQuality')?.value ?? EXPORT_QUALITY_DEFAULT),
     getGifLoopEnabled: () => document.getElementById('gifLoop')?.checked ?? true,
     getGifDitherEnabled: () => document.getElementById('gifDither')?.checked ?? false,
     getTransparentEnabled: () => document.getElementById('exportTransparent')?.checked ?? false,

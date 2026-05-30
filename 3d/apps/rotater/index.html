@@ -54,8 +54,8 @@
             animation: none !important;
         }
     </style>
-    <script>const ROTATER_BUILD = '2.2.41';
-        const ROTATER_BUILD_DATE = 'May 29, 2026';
+    <script>const ROTATER_BUILD = '2.2.44';
+        const ROTATER_BUILD_DATE = 'May 30, 2026';
         window.ROTATER_BUILD = ROTATER_BUILD;
         const styleLinkEl = document.getElementById('rotaterStyleLink');
         if (styleLinkEl) styleLinkEl.href = `style.css?v=${encodeURIComponent(ROTATER_BUILD)}`;
@@ -70,7 +70,7 @@
         } else {
             syncBuildInfoMeta();
         }
-        const ROTATER_DEFAULT_QUERY = 'c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1';
+        const ROTATER_DEFAULT_QUERY = 'c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=30&ed=square&et=0&gd=1&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1';
         try {
             document.documentElement.classList.add('booting');
             const _desktopV2 = window.matchMedia('(min-width: 1200px)').matches;
@@ -874,11 +874,11 @@
                         <div class="export-select-group export-select-group--quality">
                             <span id="exportQualityLabel" class="export-select-label">Quality</span>
                             <select id="exportQuality" class="export-select" hidden>
-                                <option value="web">15fps</option>
-                                <option value="std" selected>24fps</option>
-                                <option value="high">30fps</option>
-                                <option value="vhigh">45fps</option>
-                                <option value="ultra">60fps</option>
+                                <option value="30" selected>30fps</option>
+                                <option value="60">60fps</option>
+                                <option value="90">90fps</option>
+                                <option value="120">120fps</option>
+                                <option value="240">240fps</option>
                             </select>
                             <div id="exportQualitySegmented" class="export-format-tabs" role="radiogroup" aria-labelledby="exportQualityLabel"></div>
                             <label class="control-label range-label" id="exportCompressionRow" hidden>
@@ -890,7 +890,7 @@
                             <div id="exportQualityMeta" class="export-quality-meta-row">
                                 <div id="exportAnimatedQualityOptions" class="export-quality-inline-options">
                                     <label id="gifLoopRow" class="gif-option-check export-dither-inline"><input type="checkbox" id="gifLoop" checked>Loop</label>
-                                    <label id="gifDitherRow" class="gif-option-check export-dither-inline"><input type="checkbox" id="gifDither">Dithering</label>
+                                    <label id="gifDitherRow" class="gif-option-check export-dither-inline"><input type="checkbox" id="gifDither" checked>Dithering</label>
                                 </div>
                                 <span id="exportQualityMiniSummary" class="export-select-help" aria-live="polite"></span>
                             </div>

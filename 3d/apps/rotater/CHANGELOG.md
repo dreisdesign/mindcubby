@@ -1,3 +1,17 @@
+## [2.2.44] - 2026-05-30
+
+### Fixed
+- **GIF estimate calibration and responsiveness**: animated export estimate text now rounds to cleaner MB values, responds to Dithering state changes, and better reflects observed GIF output sizes.
+- **Export panel micro typography/layout polish**: export meta/help text, crop ratio labels, and section spacing were tightened for a more consistent hierarchy in the Share panel.
+
+### Changed
+- **Animated export FPS tiers**: export quality tiers now use direct FPS values (`30`, `60`, `90`, `120`, `240`) in the UI and internal state.
+- **Export URL/state quality serialization**: share URLs and saved settings now store animated export quality as raw FPS values (for example `eq=120`) instead of preset labels, while still restoring older preset-based URLs.
+- **GIF dithering default**: Dithering now defaults to ON for GIF export.
+- **Build metadata bump**: updated in-app build/version card to `2.2.44` with date `May 30, 2026`.
+
+---
+
 ## [2.2.43] - 2026-05-30
 
 ### Fixed

@@ -3403,13 +3403,13 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
 }
 
 .export-quality-inline-options {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: nowrap;
 }
 
@@ -3432,9 +3432,9 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 }
 
 .export-select-help {
-    min-height: 30px;
-    font-size: 11px;
-    line-height: 1.35;
+    min-height: 22px;
+    font-size: 12px;
+    line-height: 1.3;
     color: color-mix(in srgb, var(--color-label, #666) 92%, #fff 8%);
 }
 
@@ -3509,7 +3509,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     margin: 0;
     background: color-mix(in srgb, var(--color-surface-raised) 86%, #fff 14%);
     display: grid;
-    gap: 10px;
+    gap: 12px;
 }
 
 .export-motion-controls[hidden] {
@@ -3525,6 +3525,10 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     font-weight: 600;
     color: var(--color-on-surface);
     letter-spacing: 0.01em;
+}
+
+.crop-dimensions-dock .export-motion-controls-title {
+    margin-bottom: 2px;
 }
 
 .export-motion-controls-grid {
@@ -5681,7 +5685,7 @@ html.theme-dark .settings-close-btn:hover {
 
 .export-crop-tab__ratio {
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 600;
     color: inherit;
     line-height: 1;
 }
