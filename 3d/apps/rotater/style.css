@@ -573,15 +573,54 @@ html.export-workspace-active .canvas-wrap.is-export-transparent {
     position: absolute;
     inset: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 14px;
-    background: var(--color-background-darkest, #1a1a2e);
+    padding: 20px;
+    background: color-mix(in srgb, var(--color-background-darkest, #1a1a2e) 38%, transparent);
+    backdrop-filter: blur(8px) saturate(110%);
+    -webkit-backdrop-filter: blur(8px) saturate(110%);
+    overflow: hidden;
+    isolation: isolate;
     z-index: 9999;
 }
 
 .export-progress-overlay[hidden] { display: none; }
+
+.export-progress-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    background-image: var(--export-progress-snapshot, none);
+    background-size: cover;
+    background-position: center;
+    filter: blur(8px) saturate(105%);
+    transform: scale(1.02);
+    z-index: 0;
+}
+
+.export-progress-overlay.has-snapshot::before {
+    opacity: 0.7;
+}
+
+.export-progress-overlay__dialog {
+    position: relative;
+    z-index: 1;
+    width: min(360px, calc(100% - 28px));
+    min-height: 168px;
+    border-radius: 20px;
+    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300, #b8b6ca) 72%, #fff 28%);
+    background: color-mix(in srgb, var(--color-surface, #fff) 92%, #eef0ff 8%);
+    box-shadow: 0 26px 48px rgba(18, 20, 56, 0.32);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 20px 18px 18px;
+}
 
 @keyframes _export-spin {
     to { transform: rotate(360deg); }
@@ -591,32 +630,38 @@ html.export-workspace-active .canvas-wrap.is-export-transparent {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    border: 3.5px solid rgba(255,255,255,0.15);
-    border-top-color: rgba(255,255,255,0.75);
+    border: 3.5px solid rgba(51, 49, 132, 0.16);
+    border-top-color: color-mix(in srgb, var(--palette-blueberry-700, #3e3a93) 72%, #fff 28%);
     animation: _export-spin 0.8s linear infinite;
 }
 
 .export-progress-overlay__label {
     font-size: 13px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+    color: color-mix(in srgb, var(--palette-blueberry-900, #1f1a47) 78%, #000 22%);
     letter-spacing: 0.01em;
+    text-align: center;
 }
 
 .export-progress-overlay__bar-wrap {
-    width: min(220px, 60%);
-    height: 3px;
+    width: min(240px, 90%);
+    height: 4px;
     border-radius: 2px;
-    background: rgba(255,255,255,0.12);
+    background: rgba(62, 58, 147, 0.15);
     overflow: hidden;
 }
 
 .export-progress-overlay__bar-fill {
     height: 100%;
     width: 0%;
-    background: rgba(255,255,255,0.6);
+    background: linear-gradient(90deg, #4f4aa8 0%, #322f83 100%);
     border-radius: 2px;
     transition: width 0.1s linear;
+}
+
+.canvas-wrap.export-progress-freeze #canvas,
+.canvas-wrap.export-progress-freeze #exportFrameCanvas {
+    opacity: 0;
 }
 
 .file-chip {

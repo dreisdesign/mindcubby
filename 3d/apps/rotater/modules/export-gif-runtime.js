@@ -23,6 +23,41 @@ export function createExportGifRuntimeController({
     setControlsAutoRotate,
     scheduleClearAnimStatus,
 } = {}) {
+    function getGifTimingFromRequestedFps(requestedFps) {
+        const safeRequestedFps = Math.max(1, Number(requestedFps) || 1);
+        // GIF frame delays are centiseconds; use fixed delay for stable playback.
+        const minDelayCs = 2;
+        // Use ceil so effective FPS never exceeds requested FPS.
+        const delayCs = Math.max(minDelayCs, Math.ceil(100 / safeRequestedFps));
+        const delayMs = delayCs * 10;
+        const effectiveFps = 100 / delayCs;
+        return { delayMs, effectiveFps };
+    }
+
+    function buildSampledGlobalPalette(frames, maxColors = 256) {
+        if (!frames?.length) return [];
+
+        const maxSampleFrames = 24;
+        const maxSamplePixels = 320000;
+        const frameStep = Math.max(1, Math.ceil(frames.length / maxSampleFrames));
+        const sampledFrameCount = Math.max(1, Math.ceil(frames.length / frameStep));
+        const perFrameBudget = Math.max(1, Math.floor(maxSamplePixels / sampledFrameCount));
+        const sample = [];
+
+        for (let fi = 0; fi < frames.length; fi += frameStep) {
+            const frame = frames[fi];
+            const totalPixels = Math.floor(frame.length / 4);
+            const pxStep = Math.max(1, Math.ceil(totalPixels / perFrameBudget));
+            for (let px = 0; px < totalPixels; px += pxStep) {
+                const o = px * 4;
+                sample.push(frame[o], frame[o + 1], frame[o + 2], frame[o + 3]);
+            }
+        }
+
+        const sampledRgba = new Uint8Array(sample);
+        return quantize?.(sampledRgba, maxColors) || [];
+    }
+
     async function runGifExport() {
         if (!getHasMesh?.()) return;
 
@@ -33,24 +68,53 @@ export function createExportGifRuntimeController({
         try {
             const { fps, loop, dither } = getExportGifConfig?.() || {};
             const { width: W, height: H } = getImageExportSize?.() || {};
-            const frameCount = exportFrames?.(fps);
-            const workloadCheck = validateExportWorkload?.({
+            let { delayMs, effectiveFps } = getGifTimingFromRequestedFps(fps);
+            let frameCount = exportFrames?.(effectiveFps);
+            let workloadCheck = validateExportWorkload?.({
                 format: 'gif',
                 width: W,
                 height: H,
-                fps,
+                fps: effectiveFps,
                 frames: frameCount,
                 allowUnsafeWorkload: true,
             });
             if (workloadCheck?.warning) {
+                // Reduce one cadence tier (e.g. 40ms -> 50ms) to ease decode stutter on huge GIFs.
+                const saferDelayMs = delayMs + 10;
+                const saferFps = 1000 / saferDelayMs;
+                const saferFrameCount = exportFrames?.(saferFps);
+                const saferWorkloadCheck = validateExportWorkload?.({
+                    format: 'gif',
+                    width: W,
+                    height: H,
+                    fps: saferFps,
+                    frames: saferFrameCount,
+                    allowUnsafeWorkload: true,
+                });
+                delayMs = saferDelayMs;
+                effectiveFps = saferFps;
+                frameCount = saferFrameCount;
+                workloadCheck = saferWorkloadCheck;
                 setStatus?.('Large GIF export: this may take a while. For faster results, use Medium quality or a wider aspect ratio.');
-                setAnimStatus?.('Large GIF workload detected. Continuing export...');
+                setAnimStatus?.('Large GIF workload detected. Using safer GIF cadence for smoother playback...');
                 await scheduleYield?.();
             }
 
             const isTransparent = !!getTransparentEnabled?.();
-            const frames = await captureFrames?.(frameCount, { width: W, height: H }, isTransparent);
-            const delay = Math.round(1000 / fps);
+            const frames = await captureFrames?.(
+                frameCount,
+                { width: W, height: H },
+                isTransparent,
+                { fpsForValidation: effectiveFps, allowUnsafeWorkload: true }
+            );
+            const delay = delayMs;
+
+            setAnimStatus?.('Building GIF palette…');
+            await scheduleYield?.();
+
+            const sharedPalette = isTransparent
+                ? buildSampledGlobalPalette(frames, 255)
+                : buildSampledGlobalPalette(frames, 256);
 
             setAnimStatus?.('Encoding GIF…');
             await scheduleYield?.();
@@ -59,7 +123,7 @@ export function createExportGifRuntimeController({
             const gif = createGifEncoder?.();
             for (let i = 0; i < frames.length; i++) {
                 if (isTransparent) {
-                    const pal = quantize?.(frames[i], 255) || [];
+                    const pal = sharedPalette.length ? sharedPalette : (quantize?.(frames[i], 255) || []);
                     const fullPal = pal.slice();
                     while (fullPal.length < 256) fullPal.push([0, 0, 0]);
 
@@ -76,7 +140,7 @@ export function createExportGifRuntimeController({
                         ...(i === 0 && { repeat }),
                     });
                 } else {
-                    const palette = quantize?.(frames[i], 256) || [];
+                    const palette = sharedPalette.length ? sharedPalette : (quantize?.(frames[i], 256) || []);
                     const index = dither
                         ? applyPaletteDithered?.(frames[i], palette, W, H)
                         : applyPalette?.(frames[i], palette);

@@ -7,6 +7,7 @@
 - **Texture tuning drag smoothing**: Lighting and metallic tuning sliders now defer persistence/sync work to commit timing, reducing per-input save churn during active drags.
 
 ### Fixed
+- **Export progress visual skew during GIF/MP4 capture**: the visible viewer now freezes behind the export progress modal using a pre-capture snapshot, so temporary export canvas resizing no longer appears as live on-screen distortion while capture/encoding runs.
 - **Floating model editor single-click close**: a single non-drag click in the preview canvas now closes the floating 3D Models editor reliably.
 - **Repeated refresh zoom drift after level/reframe**: restore now avoids persisting pre-restore viewport camera values before pending orbit restore is applied, preventing second-refresh zoom-in regressions.
 - **Zoom refresh persistence reliability**: viewport zoom/orbit persistence now commits on debounced OrbitControls change events with end-event flush, so trackpad/mouse zoom changes are reliably saved before refresh.
@@ -21,7 +22,11 @@
 
 ### Changed
 - **GIF workload UX follow-through**: high-workload GIF exports now show a visible warning lane and continue export, instead of failing with a console-only hard stop.
+- **Export progress presentation**: capture/encode status now appears as a centered modal card over a blurred backdrop instead of a flat full-screen dark splash.
 - **About panel final polish**: replaced header text with the Rotater wordmark (larger while height-aligned to the close control), switched `View changelog` to a standard inline text link with normalized text styling/alignment, and simplified the maker line to `Made by MindCubby`.
+
+### Documentation
+- Clarified that the Quality dropdown controls GIF/MP4 square capture size and motion settings (`480`, `1080`, `2048` short edge), and documented practical guidance that `2048x2048` is typically too large for everyday GIF use.
 
 ---
 

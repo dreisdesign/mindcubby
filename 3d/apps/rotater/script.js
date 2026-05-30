@@ -12045,6 +12045,24 @@ const exportProgressOverlayController = createExportProgressOverlayController({
 });
 
 function showExportProgressOverlay(msg) {
+    const overlayEl = document.getElementById('exportProgressOverlay');
+    const wrap = canvas?.closest('.canvas-wrap');
+    if (wrap) wrap.classList.add('export-progress-freeze');
+
+    if (overlayEl) {
+        try {
+            const snapshot = canvas?.toDataURL?.('image/png');
+            if (snapshot) {
+                overlayEl.style.setProperty('--export-progress-snapshot', `url("${snapshot}")`);
+                overlayEl.classList.add('has-snapshot');
+            } else {
+                overlayEl.classList.remove('has-snapshot');
+            }
+        } catch {
+            overlayEl.classList.remove('has-snapshot');
+        }
+    }
+
     exportProgressOverlayController.showExportProgressOverlay(msg);
 }
 
@@ -12053,6 +12071,14 @@ function updateExportProgressOverlay(msg, done, total) {
 }
 
 function hideExportProgressOverlay() {
+    const overlayEl = document.getElementById('exportProgressOverlay');
+    const wrap = canvas?.closest('.canvas-wrap');
+    if (wrap) wrap.classList.remove('export-progress-freeze');
+    if (overlayEl) {
+        overlayEl.classList.remove('has-snapshot');
+        overlayEl.style.removeProperty('--export-progress-snapshot');
+    }
+
     exportProgressOverlayController.hideExportProgressOverlay();
 }
 
@@ -12222,9 +12248,17 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
 }
 
 // Capture N frames by orbiting the camera, return array of Uint8ClampedArrays
-async function captureFrames(n, dims = null, transparent = false) {
+async function captureFrames(n, dims = null, transparent = false, options = {}) {
     const { width: W, height: H } = dims ?? getImageExportSize();
-    validateExportWorkload({ format: 'capture', width: W, height: H, fps: EXPORT.gif.fps, frames: n });
+    const fpsForValidation = Math.max(1, Number(options?.fpsForValidation) || EXPORT.gif.fps);
+    validateExportWorkload({
+        format: 'capture',
+        width: W,
+        height: H,
+        fps: fpsForValidation,
+        frames: n,
+        allowUnsafeWorkload: !!options?.allowUnsafeWorkload,
+    });
     const frames = [];
 
     // Ensure export framing reflects the latest zoom/orbit right before capture.

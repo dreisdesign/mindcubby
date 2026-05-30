@@ -4,7 +4,7 @@ View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapsh
 
 **Version (current workspace): 2.2.41**
 
-Documentation sync: 2026-05-29
+Documentation sync: 2026-05-30
 - Latest updates documented in `CHANGELOG.md` include repeated-refresh camera restore stabilization, zoom refresh persistence hardening on page-exit lifecycle events, ZIP/import grid parity hardening, shadow band removal/no-third-surface blending parity, MP4 export continuity under screen-capture load, add-to-plate level/reframe auto-framing, inspect overlay measurement stability improvements, and About panel header/link visual polish.
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
@@ -345,6 +345,25 @@ The Preview thumbnail and estimate label update immediately when you change form
 | Low | 480 px short edge | 15 fps | Smallest file |
 | Medium | 1080 px short edge | 24 fps | Default |
 | High | 2048 px short edge | 30 fps | Largest file |
+
+What the Quality dropdown changes:
+
+- GIF: square capture size (`480x480`, `1080x1080`, `2048x2048`) plus base FPS (`15`, `24`, `30`). Runtime may raise FPS slightly for very fast rotations to keep motion smooth.
+- MP4: the same square capture size and base FPS, plus target bitrate (`4 Mbps`, `8 Mbps`, `16 Mbps`).
+- PNG / JPEG: the Quality dropdown does not directly set output dimensions; still-image dimensions come from the selected crop/aspect preset and export dimensions.
+
+GIF sizing guidance:
+
+- `480x480` is the safest size for lightweight sharing, chats, and quick previews.
+- `1080x1080` is a good "quality-first but still reasonable" ceiling for most GIF uses.
+- `2048x2048` is very large for GIF and is best treated as an edge-case/high-detail option, not the default recommendation.
+- For 1:2, 2:1, or 4:3 crops, it is usually better to expose explicit export dimensions such as `512`, `768`, `1024`, and `1440` on the constrained edge rather than relying on a generic quality label alone.
+- Practical rule: reserve very large dimensions for MP4/PNG, and keep GIF optimized for playback and file size first.
+
+Export progress overlay behavior:
+
+- During GIF/MP4 export, Rotater shows a centered modal progress card over a blurred backdrop.
+- The visible viewer is frozen from a pre-export snapshot while capture/encode runs, so temporary export-canvas resizing does not appear as on-screen skew/distortion.
 
 All export is completely client-side — your STL file never leaves your machine.
 
