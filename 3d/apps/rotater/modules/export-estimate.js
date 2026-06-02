@@ -29,6 +29,25 @@ export function updateExportEstimateController({
         return '<10 KB';
     };
 
+    const estimateMp4SizeMb = ({ bitrate = 8_000_000, seconds = 1, width = 1080, height = 1080, fps = 30 } = {}) => {
+        const safeBitrate = Math.max(1, Number(bitrate) || 8_000_000);
+        const safeSeconds = Math.max(0.1, Number(seconds) || 1);
+        const safeW = Math.max(1, Math.floor(Number(width) || 1080));
+        const safeH = Math.max(1, Math.floor(Number(height) || 1080));
+        const safeFps = Math.max(1, Number(fps) || 30);
+
+        const baselineMb = (safeBitrate * safeSeconds) / 8 / (1024 * 1024);
+        const megapixelsPerSecond = (safeW * safeH * safeFps) / 1_000_000;
+
+        // Browsers can exceed target bitrate at very high pixel rates (e.g. Ultra + 240fps).
+        // Apply a conservative pressure factor so estimates stay closer to real outputs.
+        const pressure = Math.max(0, (megapixelsPerSecond - 220) / 1200);
+        const vbrSafetyFactor = 1 + Math.min(1.2, pressure);
+        const containerOverheadFactor = 1.05;
+
+        return baselineMb * vbrSafetyFactor * containerOverheadFactor;
+    };
+
     const gN = getExportFrames(exportGifFps);
     const gSecs = Math.max(0.1, (gN / Math.max(1, exportGifFps)));
     const { width: gifW, height: gifH } = getImageExportSize('gif');
@@ -42,7 +61,13 @@ export function updateExportEstimateController({
     const mSecs = Math.max(0.1, (mN / Math.max(1, exportMp4Fps)));
     const { width: mp4W, height: mp4H } = getImageExportSize('mp4');
     const mp4Bitrate = Math.max(1, Number(getExportMp4Bitrate?.() || 8_000_000));
-    const mp4Size = formatEstimatedSize((mp4Bitrate * mSecs) / 8 / (1024 * 1024));
+    const mp4Size = formatEstimatedSize(estimateMp4SizeMb({
+        bitrate: mp4Bitrate,
+        seconds: mSecs,
+        width: mp4W,
+        height: mp4H,
+        fps: exportMp4Fps,
+    }));
     if (btnVideo) btnVideo.title = 'Save MP4 video';
     if (mp4EstEl) mp4EstEl.textContent = `~${mp4Size}`;
 

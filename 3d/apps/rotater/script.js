@@ -241,7 +241,7 @@ const EXPORT_GUARD_LIMITS = {
     maxFps: 240,
     maxWidth: 4096,
     maxHeight: 4096,
-    maxPixelsPerFrame: 8_500_000,
+    maxPixelsPerFrame: 16_800_000,
     maxFramesPerJob: 1800,
     maxPixelFramesPerJob: {
         default: 1_000_000_000,
