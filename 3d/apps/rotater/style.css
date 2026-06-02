@@ -3371,14 +3371,23 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 .export-selects-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
+    gap: 12px;
     margin: 0;
+}
+
+.export-modal-panel {
+    --export-type-label-size: 13px;
+    --export-type-body-size: 13px;
+    --export-type-meta-size: 12px;
+    --export-gap-sm: 6px;
+    --export-gap-md: 10px;
+    --export-gap-lg: 14px;
 }
 
 .export-select-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--export-gap-sm);
     flex: 1;
     min-width: 0;
 }
@@ -3393,6 +3402,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 
 .export-select-group--quality {
     display: flex;
+    gap: var(--export-gap-md);
 }
 
 .export-select-group--duration {
@@ -3404,6 +3414,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+    margin-bottom: 6px;
 }
 
 .export-quality-inline-options {
@@ -3433,7 +3444,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 
 .export-select-help {
     min-height: 22px;
-    font-size: 12px;
+    font-size: var(--export-type-meta-size);
     line-height: 1.3;
     color: color-mix(in srgb, var(--color-label, #666) 92%, #fff 8%);
 }
@@ -3457,13 +3468,13 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 }
 
 .export-quick-options .gif-option-check {
-    flex: 1 1 0;
-    width: auto;
+    flex: 0 0 auto;
+    width: fit-content;
     min-width: 0;
     padding: 2px 0;
     justify-content: flex-start;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--export-type-body-size);
+    font-weight: 500;
 }
 
 .gif-options-row.export-quick-options {
@@ -3474,8 +3485,8 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 }
 
 .gif-options-row.export-quick-options .gif-option-check {
-    flex: 1 1 0;
-    width: auto;
+    flex: 0 0 auto;
+    width: fit-content;
 }
 
 .export-modal-body {
@@ -3485,9 +3496,9 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 .export-quick-options,
 .export-format-opts {
     border: 1px solid color-mix(in srgb, var(--border-color) 84%, transparent 16%);
-    border-radius: 12px;
+    border-radius: var(--radius-card);
     background: transparent;
-    padding: 10px;
+    padding: 12px;
 }
 
 .export-format-opts {
@@ -3498,18 +3509,25 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     background: transparent;
 }
 
+.gif-options-row.export-quick-options {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+}
+
 .export-format-opts .export-size-est-row {
     margin: 0;
 }
 
 .export-motion-controls {
     border: 1px solid color-mix(in srgb, var(--border-color) 84%, transparent 16%);
-    border-radius: 12px;
-    padding: 10px;
+    border-radius: var(--radius-card);
+    padding: 12px;
     margin: 0;
-    background: color-mix(in srgb, var(--color-surface-raised) 86%, #fff 14%);
+    background: var(--color-surface-raised);
     display: grid;
-    gap: 12px;
+    gap: var(--export-gap-md);
 }
 
 .export-motion-controls[hidden] {
@@ -3521,9 +3539,10 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 }
 
 .export-motion-controls-title {
-    font-size: var(--text-sm);
+    font-size: var(--export-type-label-size);
     font-weight: 600;
     color: var(--color-on-surface);
+    line-height: 1.2;
     letter-spacing: 0.01em;
 }
 
@@ -3667,8 +3686,9 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 }
 
 .export-select-label {
-    font-size: var(--text-sm);
+    font-size: var(--export-type-label-size);
     font-weight: 600;
+    line-height: 1.2;
     letter-spacing: 0.01em;
     text-transform: none;
     color: var(--color-on-surface);
@@ -3688,7 +3708,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     border: 1.5px solid var(--color-border, rgba(0, 0, 0, 0.12));
     background: var(--color-surface-raised);
     color: var(--color-on-surface);
-    font-size: var(--text-sm);
+    font-size: var(--export-type-body-size);
     font-family: inherit;
     cursor: pointer;
     appearance: none;
@@ -5641,8 +5661,8 @@ html.theme-dark .settings-close-btn:hover {
 .export-crop-tab {
     min-height: 74px;
     display: grid;
-    grid-template-rows: auto auto;
-    align-content: center;
+    grid-template-rows: 38px auto;
+    align-content: end;
     justify-items: center;
     gap: 6px;
     padding: 8px 8px 7px;
@@ -5657,6 +5677,7 @@ html.theme-dark .settings-close-btn:hover {
 
 .export-crop-tab__shape {
     display: block;
+    align-self: end;
     border: 2px solid currentColor;
     border-radius: 4px;
     background: color-mix(in srgb, var(--palette-blueberry-200) 42%, #fff 58%);
@@ -5684,10 +5705,11 @@ html.theme-dark .settings-close-btn:hover {
 }
 
 .export-crop-tab__ratio {
-    font-size: var(--text-sm);
+    font-size: var(--export-type-body-size);
     font-weight: 600;
     color: inherit;
     line-height: 1;
+    align-self: end;
 }
 
 .export-crop-tab:has(input:checked) {
@@ -7410,6 +7432,10 @@ html.loaded .sidebar-tabs {
     flex-shrink: 0;
 }
 
+.export-primary-row .copy-link-btn--secondary {
+    color: var(--color-primary);
+}
+
 .export-collapsed-confirm-overlay {
     align-items: center;
     justify-content: center;
@@ -8592,7 +8618,7 @@ html.loaded.export-workspace-active .canvas-wrap {
 .export-workspace-active .export-format-opts,
 .export-workspace-active .export-motion-controls {
     padding: 12px;
-    border-radius: 14px;
+    border-radius: var(--radius-card);
 }
 
 .export-workspace-active .gif-options-row.export-quick-options {
@@ -8600,6 +8626,9 @@ html.loaded.export-workspace-active .canvas-wrap {
     flex-wrap: nowrap;
     column-gap: 12px;
     row-gap: 6px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .export-workspace-active .gif-options-row.export-quick-options .gif-option-check {
@@ -8663,33 +8692,77 @@ html.loaded.export-workspace-active .canvas-wrap {
     display: grid;
     grid-template-columns: repeat(var(--export-tab-columns, 4), minmax(0, 1fr));
     gap: 4px;
-    border-radius: 999px;
-    padding: 3px;
-    border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent 18%);
-    background: color-mix(in srgb, var(--surface-elev) 88%, #fff 12%);
+    border-radius: 22px;
+    padding: 4px;
+    border: none;
+    background: color-mix(in srgb, var(--color-surface-raised) 74%, #d7d6e6 26%);
+    overflow: visible;
 }
 
 .export-format-tab {
     border: none;
-    border-radius: 999px;
+    border-radius: 22px;
     min-height: 30px;
     padding: 0 12px;
-    font-size: var(--text-sm);
+    font-size: var(--export-type-body-size);
     font-weight: 700;
     color: color-mix(in srgb, var(--color-on-surface) 76%, transparent 24%);
     background: transparent;
     cursor: pointer;
+    transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.export-format-tab--size {
+    min-height: 54px;
+    padding: 6px 10px;
+    display: grid;
+    grid-template-rows: auto auto;
+    justify-items: center;
+    align-content: center;
+    gap: 2px;
+    line-height: 1.15;
+    text-align: center;
+}
+
+.export-size-tier {
+    display: block;
+    width: 100%;
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+.export-size-dimensions {
+    display: block;
+    width: 100%;
+    font-size: var(--export-type-meta-size);
+    font-weight: 400;
+    color: color-mix(in srgb, var(--color-on-surface) 76%, transparent 24%);
+}
+
+.export-workspace-active .export-format-tab--size {
+    min-height: 54px;
+    padding: 6px 8px;
+}
+
+.export-format-tab--size.is-active .export-size-dimensions {
+    color: color-mix(in srgb, var(--color-on-surface) 86%, transparent 14%);
 }
 
 .export-format-tab.is-active {
     background: #fff;
     color: var(--color-on-surface);
-    box-shadow: 0 1px 2px rgba(20, 18, 43, 0.12);
+    box-shadow: 0 4px 10px rgba(20, 18, 43, 0.14);
+}
+
+/* Keep crop segmented tabs on the same active-chip treatment as other segmented controls. */
+.export-crop-tab:has(input:checked) {
+    background: #fff;
+    color: var(--color-on-surface);
+    box-shadow: 0 4px 10px rgba(20, 18, 43, 0.14);
 }
 
 html.theme-dark .export-format-tabs {
-    border-color: rgba(179, 168, 247, 0.36);
-    background: rgba(42, 36, 82, 0.88);
+    background: rgba(77, 72, 126, 0.5);
 }
 
 html.theme-dark .export-format-tab {
@@ -8697,6 +8770,12 @@ html.theme-dark .export-format-tab {
 }
 
 html.theme-dark .export-format-tab.is-active {
+    background: rgba(242, 240, 255, 0.96);
+    color: var(--palette-blueberry-900);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+html.theme-dark .export-crop-tab:has(input:checked) {
     background: rgba(242, 240, 255, 0.96);
     color: var(--palette-blueberry-900);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
@@ -8967,7 +9046,7 @@ html.theme-dark .export-format-tab.is-active {
 }
 
 .gif-option-check {
-    font-size: 13px;
+    font-size: var(--export-type-body-size);
     font-weight: 500;
     color: var(--color-on-surface);
 }

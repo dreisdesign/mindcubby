@@ -2,16 +2,16 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.2.41**
+**Version (current workspace): 2.2.45**
 
-Documentation sync: 2026-05-30
-- Latest updates documented in `CHANGELOG.md` include repeated-refresh camera restore stabilization, zoom refresh persistence hardening on page-exit lifecycle events, ZIP/import grid parity hardening, shadow band removal/no-third-surface blending parity, MP4 export continuity under screen-capture load, add-to-plate level/reframe auto-framing, inspect overlay measurement stability improvements, and About panel header/link visual polish.
+Documentation sync: 2026-06-02
+- Latest updates documented in `CHANGELOG.md` include export panel spacing/segmented-control normalization, PNG/JPEG quality slider fill synchronization fixes, and export action-row visual consistency polish.
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
 Note: `_IGNORE/ROADMAP.md` is now an open-items-only roadmap; completed work has been moved to `CHANGELOG.md`.
 
-Note: UI label update — The in-app `Export` panel label and quick-action buttons were renamed to `Share` on 2026-05-14 to better reflect link/copy semantics. The underlying export/share functionality (Copy Link, Save Project ZIP, format options) is unchanged.
+Note: UI label update — The in-app panel label and quick-action buttons now read `Export` again. The underlying export/share functionality (Copy Link, Save Project ZIP, format options) is unchanged.
 
 ## Refactor Progress (C1)
 
@@ -363,7 +363,7 @@ GIF sizing guidance:
 
 - `1080x1080` is a good "quality-first but still reasonable" ceiling for most GIF uses.
 - `2048x2048` is very large for GIF and is best treated as an edge-case/high-detail option, not the default recommendation.
-- For 1:2, 2:1, or 4:3 crops, it is usually better to expose explicit export dimensions such as `512`, `1080`, `1440`, and `2048` on the constrained edge rather than relying on frame rate alone.
+- For 1:2, 2:1, or 4:3 crops, it is usually better to expose explicit export dimensions such as `720`, `1080`, and `2160` (`4K`) on the constrained edge rather than relying on frame rate alone.
 - Practical rule: reserve very large dimensions for MP4/PNG, and keep GIF optimized for playback and file size first.
 
 Export progress overlay behavior:

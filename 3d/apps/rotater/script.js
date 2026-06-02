@@ -198,22 +198,22 @@ function normalizeExportQualityValue(value = EXPORT_QUALITY_DEFAULT) {
 
 const EXPORT_SIZE_PRESETS = {
     gif: {
-        '512': { shortEdge: 512, label: '512 px' },
+        '720': { shortEdge: 720, label: '720 px' },
         '1080': { shortEdge: 1080, label: '1080 px' },
-        '1440': { shortEdge: 1440, label: '1440 px' },
-        '2048': { shortEdge: 2048, label: '2048 px' },
+        '2160': { shortEdge: 2160, label: '4K' },
+        '3840': { shortEdge: 3840, label: 'Ultra' },
     },
     mp4: {
-        '512': { shortEdge: 512, label: '512 px' },
+        '720': { shortEdge: 720, label: '720 px' },
         '1080': { shortEdge: 1080, label: '1080 px' },
-        '1440': { shortEdge: 1440, label: '1440 px' },
-        '2048': { shortEdge: 2048, label: '2048 px' },
+        '2160': { shortEdge: 2160, label: '4K' },
+        '3840': { shortEdge: 3840, label: 'Ultra' },
     },
     image: {
-        '512': { shortEdge: 512, label: '512 px' },
+        '720': { shortEdge: 720, label: '720 px' },
         '1080': { shortEdge: 1080, label: '1080 px' },
-        '1440': { shortEdge: 1440, label: '1440 px' },
-        '2048': { shortEdge: 2048, label: '2048 px' },
+        '2160': { shortEdge: 2160, label: '4K' },
+        '3840': { shortEdge: 3840, label: 'Ultra' },
     },
 };
 
@@ -326,12 +326,12 @@ function getLegacyExportSizeKeyForQuality(format = 'gif', quality = EXPORT_QUALI
     const profile = normalizeExportSizeProfile(format);
     const q = normalizeExportQualityValue(quality);
     if (profile === 'gif') {
-        return ({ '30': '1080', '60': '1080', '90': '1440', '120': '2048', '240': '2048' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.gif;
+        return ({ '30': '1080', '60': '1080', '90': '1080', '120': '2160', '240': '3840' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.gif;
     }
     if (profile === 'mp4') {
-        return ({ '30': '1080', '60': '1080', '90': '1440', '120': '2048', '240': '2048' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.mp4;
+        return ({ '30': '1080', '60': '1080', '90': '1080', '120': '2160', '240': '3840' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.mp4;
     }
-    return ({ '30': '1080', '60': '1080', '90': '1440', '120': '2048', '240': '2048' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.image;
+    return ({ '30': '1080', '60': '1080', '90': '1080', '120': '2160', '240': '3840' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.image;
 }
 
 function getSelectedExportDimensionsId() {
@@ -7739,7 +7739,11 @@ function restoreSettings() {
             // (exportAdvanced no longer used in new UI)
             if (s.jpegQuality) {
                 const qEl = document.getElementById('jpegQuality');
-                if (qEl) { qEl.value = s.jpegQuality; document.getElementById('jpegQualityVal').textContent = s.jpegQuality + '%'; }
+                if (qEl) {
+                    qEl.value = s.jpegQuality;
+                    document.getElementById('jpegQualityVal').textContent = s.jpegQuality + '%';
+                    syncSliderTooltip(qEl);
+                }
             }
             // mp4 repeat removed — no restore needed
             // Restore transparent background checkbox (unified for GIF + PNG)
@@ -9853,14 +9857,21 @@ function buildExportSelectOptions(options = [], selectedValue = '') {
 
 function buildExportSizeSegmentedButtons(options = [], selectedValue = '') {
     const preset = getImageDimensionPreset();
+    const tierNameByLongEdge = {
+        720: 'Low',
+        1080: 'Medium',
+        2160: 'High',
+        3840: 'Ultra',
+    };
     if (exportSizeSegmentedEl) exportSizeSegmentedEl.style.setProperty('--export-tab-columns', String(Math.max(1, options.length)));
+
     return options
-        .map(({ value, label }) => {
-            const compactLabel = label
-                .replace(/\s*\(.*\)$/, '')
-                .replace(/\s+px$/i, 'px');
-            const { width, height } = getExportDimensionsForLongEdge(Number(value) || 1080, preset);
-            return `<button type="button" class="export-format-tab${value === selectedValue ? ' is-active' : ''}" data-export-size="${value}" role="radio" aria-checked="${value === selectedValue ? 'true' : 'false'}" title="${width}px by ${height}px">${compactLabel}</button>`;
+        .map(({ value }) => {
+            const longEdge = Number(value) || 1080;
+            const { width, height } = getExportDimensionsForLongEdge(longEdge, preset);
+            const dimensionLabel = `${width}×${height}`;
+            const tierLabel = tierNameByLongEdge[longEdge] || `${longEdge}px`;
+            return `<button type="button" class="export-format-tab export-format-tab--size${value === selectedValue ? ' is-active' : ''}" data-export-size="${value}" role="radio" aria-checked="${value === selectedValue ? 'true' : 'false'}" aria-label="${tierLabel}, ${dimensionLabel}" title="${tierLabel} (${dimensionLabel})"><span class="export-size-tier">${tierLabel}</span><span class="export-size-dimensions">${dimensionLabel}</span></button>`;
         })
         .join('');
 }
@@ -10016,6 +10027,7 @@ exportDimensionInputs.forEach(input => {
     input.addEventListener('change', () => {
         if (!input.checked) return;
         if (exportFrameEnabled) syncExportCameraFromViewport();
+        syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
         updateCropDimensionsDock();
         updateEstimate();
         refreshExportPreviewNow();
@@ -10364,6 +10376,7 @@ document.getElementById('exportTransparent')?.addEventListener('change', () => s
 document.getElementById('exportTransparentPng')?.addEventListener('change', () => syncTransparentCheckboxes('exportTransparentPng'));
 document.getElementById('jpegQuality').addEventListener('input', function () {
     document.getElementById('jpegQualityVal').textContent = this.value + '%';
+    syncSliderTooltip(this);
     updateEstimate();
     refreshExportPreviewNow();
     saveSettings();
@@ -12280,6 +12293,7 @@ function _applyCropCornerDrag(clientX, clientY) {
     if (best !== getSelectedExportDimensionsId()) {
         setSelectedExportDimensionsId(best);
         if (exportFrameEnabled) syncExportCameraFromViewport();
+        syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
         updateCropDimensionsDock();
         updateEstimate();
         refreshExportPreviewNow();

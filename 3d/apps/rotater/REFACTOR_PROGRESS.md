@@ -472,6 +472,17 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - Target: MP4 encode flush/finalize and completion status helper orchestration
 - Candidate module: modules/export-mp4-finalize.js
 
+2. MP4 frame-loop extraction
+- Target: per-frame camera/orbit application, render, VideoFrame creation, queue wait, and progress paint orchestration
+- Candidate module: modules/export-mp4-frame-loop.js
+
+3. MP4 viewport restore extraction
+- Target: post-export camera/renderer restore and visible-canvas refresh orchestration
+- Candidate module: modules/export-mp4-restore.js
+
+Planning note:
+- The remaining largest unextracted MP4 slice in `script.js` is now the inline encode flow: setup -> frame loop -> finalize -> restore. The lowest-risk continuation is to peel those three sub-slices in that order while keeping the existing runtime wrapper stable.
+
 ## Guardrails
 
 - Preserve runtime behavior before structural cleanup.

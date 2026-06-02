@@ -1,3 +1,17 @@
+## [Unreleased]
+
+### Fixed
+- **PNG/JPEG quality slider fill sync**: still-image quality slider now updates its filled track segment correctly while dragging and after restoring saved settings.
+- **Export segmented picker visual parity**: Format, Crop, Resolution, and Quality segmented controls now share the same active-chip treatment and avoid active-shadow clipping.
+
+### Changed
+- **Export action row button polish**: Close, Copy Link, and Copy Image secondary actions now use purple text/icon styling for clearer visual consistency with the rest of the export UI.
+
+### Changed
+- **Export naming and resolution options**: restored the primary panel/button label to `Export`, renamed the `Size` control to `Resolution`, replaced `512` with `720`, removed the `1440` step, and added a `4K` export option.
+
+---
+
 ## [2.2.44] - 2026-05-30
 
 ### Fixed

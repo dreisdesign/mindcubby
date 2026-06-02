@@ -66,12 +66,12 @@ Buttons floating over the 3D canvas use a translucent dark blueberry background 
 
 ## Share / Export Buttons (`.export-btn`)
 
-Note: The UI label for the export panel now reads `Share` (May 14, 2026). CSS classes and tokens still use `export` naming (`.export-btn`, `--color-export`) to preserve existing code and styles.
+Note: The UI label for the export panel now reads `Export`. CSS classes and tokens still use `export` naming (`.export-btn`, `--color-export`) to preserve existing code and styles.
 
 | Token | Hex | Usage |
 |---|---|---|
-| `--color-export` | `#2E2B74` (blueberry-500) | Export / Share button background |
-| `--color-on-export` | `#fff` | Export / Share button text/icon |
+| `--color-export` | `#2E2B74` (blueberry-500) | Export button background |
+| `--color-on-export` | `#fff` | Export button text/icon |
 
 ## Export Workspace Transparency Indicator
 
