@@ -904,6 +904,14 @@ function updateEstimate() {
         getExportMp4Bitrate: () => EXPORT.mp4.bitrate,
         getGifDitherEnabled: () => document.getElementById('gifDither')?.checked ?? false,
     });
+    // Ensure the Duration select labels reflect the currently-selected quality/FPS
+    // (refreshExportMotionSpeedOptionLabels updates the motion options; copy them into
+    // the Duration select so the parenthetical frame counts stay in sync).
+    try {
+        syncExportDurationFromMain();
+    } catch (e) {
+        // defensive noop if sync function isn't available in some contexts
+    }
 }
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
