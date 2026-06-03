@@ -11,6 +11,7 @@
 - **Export action row button polish**: Close, Copy Link, and Copy Image secondary actions now use purple text/icon styling for clearer visual consistency with the rest of the export UI.
 - **High-resolution export guard limit**: per-frame export guard now allows Ultra 4K-square workloads (while retaining existing width/height, FPS, frame-count, and total-workload safeguards).
 - **Roadmap addition (preset management)**: added “Save my filament swatches (hex save/reuse palette)” to the roadmap planning queue.
+- **About card What's New emphasis**: moved the orange `NEW` badge into the About card What's New heading and styled the heading text in orange for clearer release visibility.
 
 ### Changed
 - **Export naming and resolution options**: restored the primary panel/button label to `Export`, renamed the `Size` control to `Resolution`, replaced `512` with `720`, removed the `1440` step, and added a `4K` export option.

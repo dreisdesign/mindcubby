@@ -4880,6 +4880,20 @@ html.loaded .menu-btn {
     color: var(--color-on-surface);
 }
 
+.info-whats-new-title {
+    color: #f2791a;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.build-update-badge--inline {
+    position: static;
+    min-width: 22px;
+    height: 14px;
+    line-height: 12px;
+}
+
 .settings-panel-header--about .info-section-title {
     padding-left: 0;
 }

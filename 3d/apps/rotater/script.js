@@ -11788,7 +11788,7 @@ btnDownloadPackage?.addEventListener('click', async () => {
 const helpOverlayEl = document.getElementById('helpOverlay');
 const helpPanelEl = helpOverlayEl?.querySelector('.help-panel') || null;
 const btnHelpCanvasEl = document.getElementById('btnHelpCanvas');
-const buildUpdateBadgeEl = document.getElementById('buildUpdateBadge');
+const buildUpdateBadgeEls = Array.from(document.querySelectorAll('[data-build-update-badge]'));
 const BUILD_SEEN_KEY = 'rotater_build_seen';
 
 function getCurrentBuildVersion() {
@@ -11810,8 +11810,11 @@ function markBuildUpdateSeen() {
 }
 
 function syncBuildUpdateBadge() {
-    if (!buildUpdateBadgeEl) return;
-    buildUpdateBadgeEl.hidden = isBuildUpdateSeen();
+    if (!buildUpdateBadgeEls.length) return;
+    const seen = isBuildUpdateSeen();
+    buildUpdateBadgeEls.forEach((badgeEl) => {
+        badgeEl.hidden = seen;
+    });
 }
 
 function positionHelpOverlay() {

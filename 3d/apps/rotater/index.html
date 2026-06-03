@@ -54,7 +54,7 @@
             animation: none !important;
         }
     </style>
-    <script>const ROTATER_BUILD = '2.2.47';
+    <script>const ROTATER_BUILD = '2.2.48';
         const ROTATER_BUILD_DATE = 'June 2, 2026';
         window.ROTATER_BUILD = ROTATER_BUILD;
         const styleLinkEl = document.getElementById('rotaterStyleLink');
@@ -226,7 +226,7 @@
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="color: inherit;">
                                         <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
                                     </svg>
-                                    <span id="buildUpdateBadge" class="build-update-badge" hidden aria-hidden="true">NEW</span>
+                                    <span id="buildUpdateBadge" class="build-update-badge" data-build-update-badge hidden aria-hidden="true">NEW</span>
                                 </button>
                             </div>
                         </div>
@@ -1096,7 +1096,7 @@
                     <p class="info-description">View and export rotating 3D STL models as animated GIF, MP4, or PNG -
                         entirely in your browser. Your files never leave your device.</p>
                     <div class="settings-divider"></div>
-                    <p class="info-section-title">What's New</p>
+                    <p class="info-section-title info-whats-new-title">What's New <span id="buildUpdateBadgeAbout" class="build-update-badge build-update-badge--inline" data-build-update-badge hidden aria-hidden="true">NEW</span></p>
                     <div class="info-meta">
                         <p class="info-meta-line"><span id="infoBuildVersion">Build 2.2.37</span> <span class="info-meta-separator">•</span> <span
                                 id="infoBuildDate">Updated May 28, 2026</span></p>
