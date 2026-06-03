@@ -4,7 +4,7 @@
         "name": "Ceramic",
         "url": "?c=cacdd3&b=cacdd3&op=0&mf=standard&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=std&ed=square&et=0&gd=0&jq=90&tto=1&tl=75&tc=200&thi=250&ts=100&tsa=0&tll=1&tsh=115&tmr=100&tmm=65&tme=150&tpr=100&tpe=125&tcr=25&tce=200&tfm=matte&tfv=2&ecd=176.0373&ece=0.0000&aba=0&rv=1&bp=0&bpr=black&bpab=1&bpc=e26969&bps=0&bpf=satin&bpsh=circle&abp=modelcolor&amp=ceramic",
         "thumb": {
-            "bg": "#fef8f0",
+            "bg": "#ffffff",
             "overlay": "radial-gradient(circle at 38% 30%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.35) 22%, rgba(230,210,190,0.25) 50%, rgba(190,165,140,0.45) 100%)"
         }
     },

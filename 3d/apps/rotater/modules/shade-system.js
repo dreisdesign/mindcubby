@@ -16,6 +16,7 @@
 import * as THREE from 'three';
 
 let colorRuleGetter = null;
+let shadeBlendMode = 'hsl';
 
 /**
  * Set the color rule getter function that script.js provides.
@@ -24,6 +25,14 @@ let colorRuleGetter = null;
  */
 export function setColorRuleGetter(getter) {
     colorRuleGetter = getter;
+}
+
+export function setShadeBlendMode(mode) {
+    shadeBlendMode = mode === 'hsb' ? 'hsb' : 'hsl';
+}
+
+export function getShadeBlendMode() {
+    return shadeBlendMode;
 }
 
 /**
@@ -54,22 +63,92 @@ export function blendShadeColor(baseHex, shadeVal, maxDeltaPercent) {
     const baseDelta = Math.max(0, Math.min(1, (Math.abs(shade) / 100) * (Math.max(0, maxDeltaPercent) / 100)));
     const lightenScale = Math.max(0, getColorRuleNumber('shadeResponse.lightenScale', 1.0));
     const darkenScale = Math.max(0, getColorRuleNumber('shadeResponse.darkenScale', 1.0));
+    const lightenSaturationDampen = Math.max(0, getColorRuleNumber('shadeResponse.lightenSaturationDampen', 1.6));
+    const darkenSaturationBoost = Math.max(0, getColorRuleNumber('shadeResponse.darkenSaturationBoost', 0.8));
+
+    if (shadeBlendMode === 'hsb') {
+        const c = new THREE.Color(baseHex);
+        const hsv = rgbToHsv(c.r, c.g, c.b);
+        const isNeutral = hsv.s <= 0.0001;
+
+        if (shade < 0) {
+            const delta = Math.max(0, Math.min(1, baseDelta * lightenScale));
+            hsv.v = Math.max(0, Math.min(1, hsv.v + ((1 - hsv.v) * delta)));
+            if (!isNeutral) {
+                const satMix = Math.max(0, Math.min(1, delta * lightenSaturationDampen));
+                hsv.s = Math.max(0, Math.min(1, hsv.s * (1 - satMix)));
+            }
+        } else {
+            const delta = Math.max(0, Math.min(1, baseDelta * darkenScale));
+            hsv.v = Math.max(0, Math.min(1, hsv.v * (1 - delta)));
+            if (!isNeutral) {
+                const satMix = Math.max(0, Math.min(1, delta * darkenSaturationBoost));
+                hsv.s = Math.max(0, Math.min(1, hsv.s + ((1 - hsv.s) * satMix)));
+            }
+        }
+
+        const { r, g, b } = hsvToRgb(hsv.h, hsv.s, hsv.v);
+        return new THREE.Color(r, g, b);
+    }
 
     const c = new THREE.Color(baseHex);
     const hsl = { h: 0, s: 0, l: 0 };
     c.getHSL(hsl);
+    const isNeutral = hsl.s <= 0.0001;
 
     if (shade < 0) {
         const delta = Math.max(0, Math.min(1, baseDelta * lightenScale));
         hsl.l = Math.max(0, Math.min(1, hsl.l + ((1 - hsl.l) * delta)));
-        // Lighter-side shade intentionally reduces saturation by 50%.
-        hsl.s = Math.max(0, Math.min(1, hsl.s * 0.5));
+        if (!isNeutral) {
+            // Lightening naturally washes color; reduce saturation proportionally.
+            const satMix = Math.max(0, Math.min(1, delta * lightenSaturationDampen));
+            hsl.s = Math.max(0, Math.min(1, hsl.s * (1 - satMix)));
+        }
     } else {
         const delta = Math.max(0, Math.min(1, baseDelta * darkenScale));
         hsl.l = Math.max(0, Math.min(1, hsl.l * (1 - delta)));
+        if (!isNeutral) {
+            // Darkening often increases perceived color intensity; boost saturation proportionally.
+            const satMix = Math.max(0, Math.min(1, delta * darkenSaturationBoost));
+            hsl.s = Math.max(0, Math.min(1, hsl.s + ((1 - hsl.s) * satMix)));
+        }
     }
 
     return new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l);
+}
+
+function rgbToHsv(r, g, b) {
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const d = max - min;
+    let h = 0;
+    const s = max === 0 ? 0 : d / max;
+    const v = max;
+
+    if (d !== 0) {
+        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0));
+        else if (max === g) h = ((b - r) / d + 2);
+        else h = ((r - g) / d + 4);
+        h /= 6;
+    }
+
+    return { h, s, v };
+}
+
+function hsvToRgb(h, s, v) {
+    const i = Math.floor((h % 1) * 6);
+    const f = (h * 6) - i;
+    const p = v * (1 - s);
+    const q = v * (1 - f * s);
+    const t = v * (1 - (1 - f) * s);
+    const mod = ((i % 6) + 6) % 6;
+
+    if (mod === 0) return { r: v, g: t, b: p };
+    if (mod === 1) return { r: q, g: v, b: p };
+    if (mod === 2) return { r: p, g: v, b: t };
+    if (mod === 3) return { r: p, g: q, b: v };
+    if (mod === 4) return { r: t, g: p, b: v };
+    return { r: v, g: p, b: q };
 }
 
 /**
@@ -149,6 +228,8 @@ export function getAutoShade(target) {
 
 export default {
     setColorRuleGetter,
+    setShadeBlendMode,
+    getShadeBlendMode,
     blendShadeColor,
     computeBuildPlateShadeColor,
     computeBuildPlateAutoBrightnessColor,

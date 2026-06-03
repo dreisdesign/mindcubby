@@ -2961,6 +2961,11 @@ html.theme-dark .build-plate-shape-btn.is-active {
     background: transparent;
 }
 
+.model-sliders > .finish-control-group {
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
 .finish-control-group #textureTuneRoughnessRow {
     margin-top: 12px;
     padding-top: 0;
@@ -3026,6 +3031,20 @@ html.theme-dark .finish-mode-btn.is-active {
     background: rgba(242, 240, 255, 0.95);
     color: var(--palette-blueberry-900);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+html.theme-dark .app-settings-segmented {
+    background: rgba(77, 72, 126, 0.5);
+}
+
+html.theme-dark .app-settings-segmented-btn {
+    color: var(--palette-blueberry-200);
+}
+
+html.theme-dark .app-settings-segmented-btn.is-active {
+    border-color: rgba(179, 168, 247, 0.6);
+    background: rgba(242, 240, 255, 0.95);
+    color: var(--palette-blueberry-900);
 }
 
 @media (max-width: 560px) {
@@ -3414,7 +3433,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    margin-bottom: 6px;
+    margin-bottom: 0;
 }
 
 .export-quality-inline-options {
@@ -3795,7 +3814,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     background: var(--color-export);
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 22px;
     cursor: pointer;
     text-align: center;
     transition: background 0.12s;
@@ -4914,6 +4933,12 @@ html.loaded .menu-btn {
     opacity: 0.75;
 }
 
+.info-whats-new-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
 .info-meta-line {
     margin: 0;
     display: flex;
@@ -4928,6 +4953,7 @@ html.loaded .menu-btn {
 
 .info-whats-new-text {
     padding-left: 14px;
+    margin-top: 0;
 }
 
 .info-text-link {
@@ -5676,7 +5702,7 @@ html.theme-dark .settings-close-btn:hover {
     min-height: 74px;
     display: grid;
     grid-template-rows: 38px auto;
-    align-content: end;
+    align-content: center;
     justify-items: center;
     gap: 6px;
     padding: 8px 8px 7px;
@@ -5691,7 +5717,7 @@ html.theme-dark .settings-close-btn:hover {
 
 .export-crop-tab__shape {
     display: block;
-    align-self: end;
+    align-self: center;
     border: 2px solid currentColor;
     border-radius: 4px;
     background: color-mix(in srgb, var(--palette-blueberry-200) 42%, #fff 58%);
@@ -5723,7 +5749,7 @@ html.theme-dark .settings-close-btn:hover {
     font-weight: 600;
     color: inherit;
     line-height: 1;
-    align-self: end;
+    align-self: center;
 }
 
 .export-crop-tab:has(input:checked) {
@@ -7351,17 +7377,48 @@ html.loaded .sidebar-tabs {
 }
 
 .app-settings-unit-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    column-gap: 0;
 }
 
-.app-settings-unit-row .ruler-unit-toggle {
-    min-width: 52px;
-    height: 32px;
-    padding: 0 12px;
-    border-radius: 10px;
-    justify-self: end;
+.app-settings-segmented {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-surface-raised) 74%, #d7d6e6 26%);
+}
+
+.app-settings-segmented-btn {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    min-height: 42px;
+    background: transparent;
+    color: var(--color-label);
+    font-size: var(--text-md);
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.app-settings-segmented-btn:hover {
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
+}
+
+.app-settings-segmented-btn.is-active {
+    border-color: color-mix(in srgb, var(--border-color) 76%, #fff 24%);
+    background: #ffffff;
+    color: var(--color-on-surface);
+}
+
+.app-settings-inline-help {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--color-label);
 }
 
 .app-settings-inline-label {
@@ -7448,6 +7505,16 @@ html.loaded .sidebar-tabs {
 
 .export-primary-row .copy-link-btn--secondary {
     color: var(--color-primary);
+}
+
+.export-primary-row .copy-link-btn {
+    box-shadow: none;
+}
+
+.export-environment-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .export-collapsed-confirm-overlay {

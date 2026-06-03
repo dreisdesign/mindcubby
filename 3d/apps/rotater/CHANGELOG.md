@@ -1,6 +1,11 @@
 ## [Unreleased]
 
 ### Fixed
+- **Model color neutrality at shade extremes (HSL/HSB)**: neutral model colors (white/gray/black) now stay neutral while shade/tone is adjusted; darkening no longer injects red/pink tint in custom white workflows.
+- **Model card scope isolation for shade edits**: model shade/tone updates no longer mutate background/surface color state through legacy model-sync paths.
+- **Custom/Gold toggle stability**: switching between named presets and `Custom` no longer restores stale per-part custom snapshots or unexpectedly changes visible model color.
+- **Multipart active-part selection reliability**: with Multi-select OFF, clicking a model row in the picker now consistently switches the active part and updates controls/material edits to that selected row.
+- **Export workspace click-close reliability**: floating preview close now uses pointerup click detection with drag threshold and crop-frame guard so single-click close is consistent.
 - **PNG/JPEG quality slider fill sync**: still-image quality slider now updates its filled track segment correctly while dragging and after restoring saved settings.
 - **Export segmented picker visual parity**: Format, Crop, Resolution, and Quality segmented controls now share the same active-chip treatment and avoid active-shadow clipping.
 - **MP4 size estimate calibration at Ultra workloads**: MP4 estimate math now applies a high-pixel-rate safety factor so Ultra/high-FPS jobs no longer significantly under-report expected file size.

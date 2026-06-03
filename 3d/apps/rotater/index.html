@@ -54,8 +54,8 @@
             animation: none !important;
         }
     </style>
-    <script>const ROTATER_BUILD = '2.2.48';
-        const ROTATER_BUILD_DATE = 'June 2, 2026';
+    <script>const ROTATER_BUILD = '2.2.49';
+        const ROTATER_BUILD_DATE = 'Jun 03, 2026';
         window.ROTATER_BUILD = ROTATER_BUILD;
         const styleLinkEl = document.getElementById('rotaterStyleLink');
         if (styleLinkEl) styleLinkEl.href = `style.css?v=${encodeURIComponent(ROTATER_BUILD)}`;
@@ -394,8 +394,6 @@
                         <div class="controls-section-box" id="modelBox">
                             <div class="box-heading-row">
                                 <div class="box-heading">3D Models</div>
-                                <button id="btnResetModelCard" class="copy-link-btn copy-link-btn--secondary copy-link-btn--compact"
-                                    type="button" title="Reset visual model controls in this card" aria-label="Reset visual model controls"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4a8 8 0 1 1-7.75 10h2.3A5.9 5.9 0 1 0 8.4 7.45L11 10H4V3l2.02 2.02A7.93 7.93 0 0 1 12 4Z"/></svg>Reset</button>
                             </div>
                             <div id="modelPartThumbsWrap" class="thumb-select-wrap" hidden aria-hidden="true">
                                 <div id="modelPartSelector" class="thumb-select" aria-haspopup="listbox">
@@ -430,7 +428,7 @@
                                         <div class="range-wrap">
                                             <input type="range" id="textureTuneRoughness" min="1" max="9" step="1"
                                                 data-snap-count="9" data-fine-step="1" value="5" data-group="object"
-                                                aria-label="Finish strength">
+                                                data-native-drag="1" aria-label="Finish strength">
                                         </div>
                                     </label>
                                     <div class="finish-mode-wrap" id="finishModeWrap" role="group" aria-label="Sheen">
@@ -755,11 +753,19 @@
                                 </div>
                             </div>
                             <div class="app-settings-inline-group app-settings-unit-row">
-                                <label class="control-label app-settings-inline-label" for="rulerUnitSelect">Ruler Units</label>
-                                <select id="rulerUnitSelect" class="export-select" aria-label="Ruler units">
-                                    <option value="metric">Millimeters (MM)</option>
-                                    <option value="imperial">Inches (IN)</option>
-                                </select>
+                                <label class="control-label app-settings-inline-label" for="rulerUnitControl">Ruler Units</label>
+                                <div id="rulerUnitControl" class="app-settings-segmented" role="radiogroup" aria-label="Ruler units">
+                                    <button type="button" class="app-settings-segmented-btn" data-ruler-unit="metric" role="radio" aria-checked="false">Millimeters</button>
+                                    <button type="button" class="app-settings-segmented-btn" data-ruler-unit="imperial" role="radio" aria-checked="false">Inches</button>
+                                </div>
+                            </div>
+                            <div class="app-settings-inline-group app-settings-shade-row">
+                                <label class="control-label app-settings-inline-label" for="shadeModeControl">Shade Processing</label>
+                                <div id="shadeModeControl" class="app-settings-segmented" role="radiogroup" aria-label="Shade processing mode">
+                                    <button type="button" class="app-settings-segmented-btn" data-shade-mode="hsl" role="radio" aria-checked="false">HSL</button>
+                                    <button type="button" class="app-settings-segmented-btn" data-shade-mode="hsb" role="radio" aria-checked="false">HSB</button>
+                                </div>
+                                <p id="shadeModeDescription" class="app-settings-inline-help" aria-live="polite"></p>
                             </div>
                             <div class="sidebar-footer-actions">
                                 <button id="btnClearBuildPlate" class="copy-link-btn copy-link-btn--secondary"
@@ -908,14 +914,17 @@
                         </div>
                     </div>
 
-                    <div class="gif-options-row export-quick-options export-section">
-                        <label class="gif-option-check"><input type="checkbox" id="exportBgColor" checked>
-                            Background</label>
-                        <input type="checkbox" id="exportTransparent" hidden>
-                        <label class="gif-option-check"><input type="checkbox" id="exportGrid" checked>
-                            Grid</label>
-                        <label class="gif-option-check"><input type="checkbox" id="exportBuildPlate" checked>
-                            Surface</label>
+                    <div class="export-section export-environment-section">
+                        <span class="export-select-label">Environment</span>
+                        <div class="gif-options-row export-quick-options">
+                            <label class="gif-option-check"><input type="checkbox" id="exportBgColor" checked>
+                                Background</label>
+                            <input type="checkbox" id="exportTransparent" hidden>
+                            <label class="gif-option-check"><input type="checkbox" id="exportGrid" checked>
+                                Grid</label>
+                            <label class="gif-option-check"><input type="checkbox" id="exportBuildPlate" checked>
+                                Surface</label>
+                        </div>
                     </div>
 
                     <div id="exportMotionControls" class="export-motion-controls export-section">
@@ -1097,12 +1106,14 @@
                         entirely in your browser. Your files never leave your device.</p>
                     <div class="settings-divider"></div>
                     <p class="info-section-title info-whats-new-title">What's New <span id="buildUpdateBadgeAbout" class="build-update-badge build-update-badge--inline" data-build-update-badge hidden aria-hidden="true">NEW</span></p>
-                    <div class="info-meta">
-                        <p class="info-meta-line"><span id="infoBuildVersion">Build 2.2.37</span> <span class="info-meta-separator">•</span> <span
-                                id="infoBuildDate">Updated May 28, 2026</span></p>
-                    </div>
+                    <div class="info-whats-new-group">
+                        <div class="info-meta">
+                            <p class="info-meta-line"><span id="infoBuildVersion">Build 2.2.49</span> <span class="info-meta-separator">•</span> <span
+                                    id="infoBuildDate">Updated May 28, 2026</span></p>
+                        </div>
                         <p class="info-description info-whats-new-text"><a href="https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/rotater/CHANGELOG.md"
-                            target="_blank" rel="noopener noreferrer" class="info-text-link">View changelog</a></p>
+                                target="_blank" rel="noopener noreferrer" class="info-text-link">View changelog</a></p>
+                    </div>
                     <div class="settings-divider"></div>
                     <p class="info-section-title">Navigation</p>
                     <p class="info-description">Navigate the 3D view with mouse or touch.</p>
@@ -1184,11 +1195,19 @@
                         </div>
                     </div>
                     <div class="app-settings-inline-group app-settings-unit-row">
-                        <label class="control-label app-settings-inline-label" for="rulerUnitSelect-modal">Ruler Units</label>
-                        <select id="rulerUnitSelect-modal" class="export-select" aria-label="Ruler units">
-                            <option value="metric">Millimeters (MM)</option>
-                            <option value="imperial">Inches (IN)</option>
-                        </select>
+                        <label class="control-label app-settings-inline-label" for="rulerUnitControl-modal">Ruler Units</label>
+                        <div id="rulerUnitControl-modal" class="app-settings-segmented" role="radiogroup" aria-label="Ruler units">
+                            <button type="button" class="app-settings-segmented-btn" data-ruler-unit="metric" role="radio" aria-checked="false">Millimeters</button>
+                            <button type="button" class="app-settings-segmented-btn" data-ruler-unit="imperial" role="radio" aria-checked="false">Inches</button>
+                        </div>
+                    </div>
+                    <div class="app-settings-inline-group app-settings-shade-row">
+                        <label class="control-label app-settings-inline-label" for="shadeModeControl-modal">Shade Processing</label>
+                        <div id="shadeModeControl-modal" class="app-settings-segmented" role="radiogroup" aria-label="Shade processing mode">
+                            <button type="button" class="app-settings-segmented-btn" data-shade-mode="hsl" role="radio" aria-checked="false">HSL</button>
+                            <button type="button" class="app-settings-segmented-btn" data-shade-mode="hsb" role="radio" aria-checked="false">HSB</button>
+                        </div>
+                        <p id="shadeModeDescription-modal" class="app-settings-inline-help" aria-live="polite"></p>
                     </div>
                     <div class="sidebar-footer-actions">
                         <button id="btnClearBuildPlate-modal" class="copy-link-btn copy-link-btn--secondary"

@@ -72,6 +72,7 @@ Design status key:
 | B7 | Export time estimation and encoding performance | Export UX / Perf | M | Details | B1 |
 | B8 | Export variation matrix (BG/Plate toggles) | Export Workflow | M | Details | B1 |
 | B9 | Save my filament swatches (hex save/reuse palette) | Preset Management | M | Needs design | C8 |
+| B10 | Background image support | Viewer UX | M | Needs design | B1 |
 | U1 | Animation continuity after import and after still export | Motion UX | M | Details | A1 |
 | U2 | Reframe/level action should avoid unexpected zoom changes | Camera UX | S | Ready | A1 |
 | U3 | Export controls outside crop mode or clearer mode model | Export UX | M | Needs design | B1 |

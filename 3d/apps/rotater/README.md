@@ -2,10 +2,10 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 2.2.48**
+**Version (current workspace): 2.2.49**
 
-Documentation sync: 2026-06-02
-- Latest updates documented in `CHANGELOG.md` include About card What's New emphasis (orange heading plus inline NEW badge), active-preset reclick opening the color picker, surface-finish gradient sync for custom model colors, high-resolution export guard expansion (Ultra support), and calibrated MP4 estimate behavior for Ultra/high-FPS jobs.
+Documentation sync: 2026-06-03
+- Latest updates documented in `CHANGELOG.md` include neutral-color shade fixes for HSL/HSB (no red/pink tint on custom white), stable custom-preset switching, model-card shade/surface scope isolation, reliable single-select part activation when Multi-select is off, and improved export workspace click-close reliability.
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 

@@ -1039,6 +1039,12 @@ const buildPlateCustomSizeRowModalEl = document.getElementById('buildPlateCustom
 const buildPlateCustomWidthModalEl = document.getElementById('buildPlateCustomWidth-modal');
 const buildPlateCustomDepthModalEl = document.getElementById('buildPlateCustomDepth-modal');
 const rulerUnitSelectModalEl = document.getElementById('rulerUnitSelect-modal');
+const rulerUnitControlEl = document.getElementById('rulerUnitControl');
+const rulerUnitControlModalEl = document.getElementById('rulerUnitControl-modal');
+const shadeModeControlEl = document.getElementById('shadeModeControl');
+const shadeModeControlModalEl = document.getElementById('shadeModeControl-modal');
+const shadeModeDescriptionEl = document.getElementById('shadeModeDescription');
+const shadeModeDescriptionModalEl = document.getElementById('shadeModeDescription-modal');
 const devModeToggleModalEl = document.getElementById('devModeToggle-modal');
 const fineTuningCheckModalEl = document.getElementById('fineTuningCheck-modal');
 const btnThemeToggleRailModalEl = document.getElementById('btnThemeToggleRail-modal');
@@ -1113,6 +1119,7 @@ let suppressSave = false;
 let activeModelPreset = 'custom';
 let activeBgPreset = 'modelcolor';
 let activeBuildPlatePreset = 'modelcolor';
+let shadeBlendMode = 'hsl';
 let isDynamicBg = true;
 let buildPlateAutoBrightnessEnabled = true;
 let rulerEnabled = true;
@@ -1379,6 +1386,7 @@ function setSliderValueFromClientX(slider, clientX) {
 
 function enableImmediateRangeDrag(slider) {
     if (!slider || slider.dataset.immediateDragBound === '1') return;
+    if (slider.dataset.nativeDrag === '1') return;
     slider.dataset.immediateDragBound = '1';
 
     let draggingPointerId = null;
@@ -1441,7 +1449,9 @@ const DEFAULT_COLOR_RULES = {
     },
     shadeResponse: {
         lightenScale: 0.6,
-        darkenScale: 1.0,
+        darkenScale: 0.6,
+        lightenSaturationDampen: 1.6,
+        darkenSaturationBoost: 1.6,
     },
     autoBrightness: {
         background: {
@@ -1539,6 +1549,7 @@ function getColorRuleNumber(path, fallback) {
 
 // Bind shade-system to live color rules as soon as the getter exists.
 ShadeSystem.setColorRuleGetter(getColorRuleNumber);
+ShadeSystem.setShadeBlendMode(shadeBlendMode);
 
 async function loadColorRules() {
     try {
@@ -2269,7 +2280,7 @@ function updateBuildPlateMaterial(options = {}) {
     const baseHex = getActiveBuildPlateBaseColor();
     const toned = buildPlateAutoBrightnessEnabled
         ? computeBuildPlateAutoBrightnessColor(baseHex)
-        : (activeBuildPlatePreset === 'modelcolor' ? baseHex : computeBuildPlateShadeColor(baseHex, shade));
+        : computeBuildPlateShadeColor(baseHex, shade);
     buildPlateShape = normalizeBuildPlateShape(buildPlateShape);
     buildPlateFinish = (buildPlateFinish === 'matte' || buildPlateFinish === 'gloss') ? buildPlateFinish : 'satin';
 
@@ -2743,7 +2754,12 @@ function getEffectiveSelectedPartIndices() {
 function getUiSelectedPartIndices() {
     if (!hasModelParts()) return [];
     if (!isMultipartModel()) return [Math.max(0, modelPartSelected)];
-    return getBulkSelectedPartIndices();
+    const selected = getBulkSelectedPartIndices();
+    if (selected.length) return selected;
+    const fallback = Math.max(0, Math.min(modelPartSelected, Math.max(0, modelPartNames.length - 1)));
+    bulkSelectedPartIndices = new Set([fallback]);
+    modelPartSelected = fallback;
+    return [fallback];
 }
 
 function syncActivePartFromUiSelection() {
@@ -2758,7 +2774,9 @@ function setBulkPartSelectionForAll(selected) {
         return;
     }
     if (!selected) {
-        bulkSelectedPartIndices.clear();
+        const fallback = Math.max(0, Math.min(modelPartSelected, Math.max(0, modelPartNames.length - 1)));
+        bulkSelectedPartIndices = new Set([fallback]);
+        modelPartSelected = fallback;
         return;
     }
     const next = new Set();
@@ -2920,12 +2938,9 @@ function animateShadeSliderValue(slider, fromValue, toValue, onStep, onDone, dur
 
 function updateAutoBgShadeControlVisibility() {
     const autoBgEnabled = !!document.getElementById('autoBgCheck')?.checked;
-    const syncToModel = !autoBgEnabled && activeBgPreset === 'modelcolor';
     if (bgOpacitySlider) {
-        const bgTone = syncToModel
-            ? getComputedModelSyncTone(bgSyncPartIndex)
-            : Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.background.shade), 10) || 0));
-        if (syncToModel || autoBgEnabled) bgOpacitySlider.value = String(bgTone);
+        const bgTone = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.background.shade), 10) || 0));
+        if (autoBgEnabled) bgOpacitySlider.value = String(bgTone);
         syncBgShadeReadout();
         bgOpacitySlider.disabled = autoBgEnabled;
     }
@@ -2936,12 +2951,9 @@ function updateBuildPlateShadeControlVisibility() {
     const autoOn = buildPlateAutoBrightnessEl
         ? !!buildPlateAutoBrightnessEl.checked
         : !!buildPlateAutoBrightnessEnabled;
-    const syncToModel = !autoOn && activeBuildPlatePreset === 'modelcolor';
     buildPlateAutoBrightnessEnabled = autoOn;
-    if (autoOn || syncToModel) {
-        const autoShade = syncToModel
-            ? getComputedModelSyncTone(buildPlateSyncPartIndex)
-            : Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
+    if (autoOn) {
+        const autoShade = Math.max(-100, Math.min(100, parseInt(String(AUTO_BRIGHTNESS_RULES.buildPlate.shade), 10) || 0));
         buildPlateShade = autoShade;
         if (buildPlateShadeSliderEl) buildPlateShadeSliderEl.value = String(autoShade);
         syncBuildPlateShadeReadout();
@@ -2974,6 +2986,14 @@ function maybeConfirmBgSyncChange(nextIdx) {
 }
 
 function getModelPartEditTargetIndices() {
+    if (isMultipartModel() && !rulerPartSelectMultiEnabled && modelPartSelectorMenu && !modelPartSelectorMenu.hidden) {
+        const selectedRow = modelPartSelectorMenu?.querySelector('.thumb-select-option.is-selected');
+        const selectedIdx = parseInt(selectedRow?.dataset?.partIndex ?? '', 10);
+        if (Number.isInteger(selectedIdx) && selectedIdx >= 0 && selectedIdx < modelPartNames.length) {
+            modelPartSelected = selectedIdx;
+            return [selectedIdx];
+        }
+    }
     if (isMultipartModel()) {
         return getEffectiveSelectedPartIndices();
     }
@@ -3254,6 +3274,13 @@ function getPartSettings(index) {
 }
 
 function getSelectedPartSettings() {
+    if (isMultipartModel() && !rulerPartSelectMultiEnabled && modelPartSelectorMenu && !modelPartSelectorMenu.hidden) {
+        const selectedRow = modelPartSelectorMenu?.querySelector('.thumb-select-option.is-selected');
+        const selectedIdx = parseInt(selectedRow?.dataset?.partIndex ?? '', 10);
+        if (Number.isInteger(selectedIdx) && selectedIdx >= 0 && selectedIdx < modelPartNames.length) {
+            modelPartSelected = selectedIdx;
+        }
+    }
     return getPartSettings(modelPartSelected);
 }
 
@@ -3995,6 +4022,8 @@ function renderModelPartThumbnails() {
     if (modelPartSelectorThumb && isMultipartModel()) {
         renderMultipartSummaryThumbnail(modelPartSelectorThumb);
     }
+
+    syncModelSyncPreviewThumbTargets();
 
     const dirty = dirtyPartThumbs; // snapshot; null = all
     dirtyPartThumbs = new Set(); // reset to empty (nothing newly dirty)
@@ -4992,6 +5021,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             applyPartInteractionVisualsToMeshMaterials();
             syncModelPartCheckboxStates();
             syncModelPartBulkUIState();
+            queueModelPartThumbsRender();
             saveSettings();
         });
         bulkBar.querySelector('[data-bulk-action="toggle-multi"]')?.addEventListener('click', (ev) => {
@@ -4999,6 +5029,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             const enable = !rulerPartSelectMultiEnabled;
             setRulerPartSelectMultiEnabled(enable, true);
             syncModelPartBulkUIState();
+            queueModelPartThumbsRender();
         });
         modelPartSelectorMenu.appendChild(bulkBar);
         const modelSelectorItems = document.createElement('div');
@@ -5043,6 +5074,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     // Re-sync all states to ensure consistency
                     syncModelPartCheckboxStates();
                     syncModelPartBulkUIState();
+                    queueModelPartThumbsRender();
                     saveSettings();
                 }, false);
             }
@@ -5095,10 +5127,11 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     bulkSelectedPartIndices.clear();
                     setBulkPartSelected(idx, true);
                 }
+                syncActivePartFromUiSelection();
+                syncModelPartCheckboxStates();
                 syncUIFromSelectedPart();
                 applyPartColorsToMesh();
                 if (!isModelPartFloatingCardOpen()) closeThumbSelectMenus();
-                syncModelPartCheckboxStates();
                 syncModelPartBulkUIState();
                 queueModelPartThumbsRender([prevSelected, modelPartSelected]);
                 saveSettings();
@@ -5277,6 +5310,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     syncBgModelSyncSourceUI();
     syncBuildPlateModelSyncSourceUI();
     syncRulerHoverSelectorState();
+    syncModelSyncPreviewThumbTargets();
     queueModelPartThumbsRender();
 }
 
@@ -5290,8 +5324,8 @@ function getComputedModelSyncColor(syncPartIndex = 0) {
     const idx = Math.max(0, Math.min(Number.isFinite(rawIndex) ? rawIndex : 0, partCount - 1));
     const settings = (Array.isArray(modelPartSettings) && modelPartSettings[idx]) ? modelPartSettings[idx] : null;
     const baseHex = settings?.color || modelPartBaseColors[idx] || colorPick.value;
-    const toneVal = Number.isFinite(Number(settings?.tone)) ? Number(settings.tone) : 0;
-    return `#${computeTonedColor(baseHex, toneVal).getHexString()}`;
+    const c = new THREE.Color(baseHex);
+    return `#${c.getHexString()}`;
 }
 
 function getComputedModelSyncTone(syncPartIndex = 0) {
@@ -5312,6 +5346,44 @@ function getActiveBackgroundBaseColor() {
 
 function getBuildPlateSyncSourceColor() {
     return getComputedModelSyncColor(buildPlateSyncPartIndex);
+}
+
+function getModelSyncPreviewPartIndex() {
+    if (!hasModelParts()) return 0;
+    const selected = getEffectiveSelectedPartIndices();
+    if (selected.length > 0) return selected[0];
+    return Math.max(0, Math.min(modelPartSelected, modelPartNames.length - 1));
+}
+
+function syncModelSyncPreviewThumbTargets() {
+    if (!hasModelParts()) return;
+    const previewPartIdx = getModelSyncPreviewPartIndex();
+
+    const bgPresetThumbCanvas = document.getElementById('bg-preset-modelcolor-canvas');
+    if (bgPresetThumbCanvas instanceof HTMLCanvasElement) {
+        bgPresetThumbCanvas.classList.add('js-part-thumb-preview');
+        bgPresetThumbCanvas.dataset.partIndex = String(previewPartIdx);
+        paintThumbFallback(bgPresetThumbCanvas, previewPartIdx);
+    }
+
+    if (bgModelSyncSelectorThumb instanceof HTMLCanvasElement) {
+        bgModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
+        bgModelSyncSelectorThumb.dataset.partIndex = String(previewPartIdx);
+        paintThumbFallback(bgModelSyncSelectorThumb, previewPartIdx);
+    }
+
+    const buildPresetThumbCanvas = document.getElementById('build-plate-preset-modelcolor-canvas');
+    if (buildPresetThumbCanvas instanceof HTMLCanvasElement) {
+        buildPresetThumbCanvas.classList.add('js-part-thumb-preview');
+        buildPresetThumbCanvas.dataset.partIndex = String(previewPartIdx);
+        paintThumbFallback(buildPresetThumbCanvas, previewPartIdx);
+    }
+
+    if (buildPlateModelSyncSelectorThumb instanceof HTMLCanvasElement) {
+        buildPlateModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
+        buildPlateModelSyncSelectorThumb.dataset.partIndex = String(previewPartIdx);
+        paintThumbFallback(buildPlateModelSyncSelectorThumb, previewPartIdx);
+    }
 }
 
 function getActiveBuildPlateBaseColor() {
@@ -5412,19 +5484,7 @@ function syncBgModelSyncSourceUI() {
         bgModelSyncSelectorMenu.appendChild(opt);
     });
 
-    if (bgModelSyncSelectorThumb) {
-        bgModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
-        bgModelSyncSelectorThumb.dataset.partIndex = String(bgSyncPartIndex);
-        paintThumbFallback(bgModelSyncSelectorThumb, bgSyncPartIndex);
-        renderSinglePartThumbnail(bgModelSyncSelectorThumb, bgSyncPartIndex);
-    }
-    const bgPresetThumbCanvas = document.getElementById('bg-preset-modelcolor-canvas');
-    if (bgPresetThumbCanvas instanceof HTMLCanvasElement) {
-        bgPresetThumbCanvas.classList.add('js-part-thumb-preview');
-        bgPresetThumbCanvas.dataset.partIndex = String(bgSyncPartIndex);
-        paintThumbFallback(bgPresetThumbCanvas, bgSyncPartIndex);
-        renderSinglePartThumbnail(bgPresetThumbCanvas, bgSyncPartIndex);
-    }
+    syncModelSyncPreviewThumbTargets();
     if (bgModelSyncSelectorText) {
         const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
         bgModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
@@ -6240,6 +6300,7 @@ function setRulerPartSelectMultiEnabled(enabled, persist = true) {
     if (rulerPartSelectMultiEnabled === next) {
         syncModelPartCheckboxStates();
         syncModelPartBulkUIState();
+        queueModelPartThumbsRender();
         updateRulerHUD();
         return;
     }
@@ -6252,6 +6313,7 @@ function setRulerPartSelectMultiEnabled(enabled, persist = true) {
     ensurePausedForInteractionMode();
     syncModelPartCheckboxStates();
     syncModelPartBulkUIState();
+    queueModelPartThumbsRender();
     updateRulerHUD();
     if (persist) saveSettings();
 }
@@ -6399,9 +6461,7 @@ function updateRulerHUD() {
 
     const dims = getRulerDisplayedDims();
     hud.classList.toggle('is-dims-hidden', !dims || !rulerEnabled);
-    const rulerUnitSelect = document.getElementById('rulerUnitSelect');
-    if (rulerUnitSelect) rulerUnitSelect.value = rulerUnit;
-    if (rulerUnitSelectModalEl) rulerUnitSelectModalEl.value = rulerUnit;
+    syncRulerUnitControls();
     document.getElementById('rulerL').textContent = dims ? formatRulerValue(dims.d) : '—';
     document.getElementById('rulerW').textContent = dims ? formatRulerValue(dims.w) : '—';
     document.getElementById('rulerH').textContent = dims ? formatRulerValue(dims.h) : '—';
@@ -7560,6 +7620,7 @@ function saveSettings() {
             devMode: devModeEnabled ? '1' : '0',
             activeBgPreset: activeBgPreset,
             activeModelPreset: activeModelPreset,
+            shadeBlendMode: shadeBlendMode,
             modelPartSelected: String(modelPartSelected || 0),
             modelPartBulkSelected: getBulkSelectedPartIndices().join(','),
             bgSyncPartIndex: String(bgSyncPartIndex || 0),
@@ -7955,6 +8016,9 @@ function restoreSettings() {
         if (!rulerPartHoverEnabled && !rulerPartSelectMultiEnabled) rulerHoveredPartIndex = -1;
         if (s.activeBgPreset) activeBgPreset = s.activeBgPreset;
         if (s.activeModelPreset) activeModelPreset = s.activeModelPreset;
+        if (s.shadeBlendMode) shadeBlendMode = normalizeShadeBlendMode(s.shadeBlendMode);
+        ShadeSystem.setShadeBlendMode(shadeBlendMode);
+        syncShadeModeControls();
         if ((activeBgPreset === 'white' || activeBgPreset === 'black') && bgOpacitySlider) {
             bgOpacitySlider.value = String(getBgPresetDefaultTone(activeBgPreset));
         }
@@ -8141,6 +8205,7 @@ function getURLSettings(searchStr = location.search) {
         rulerLinesVisible: g('rl'),
         activeBgPreset: g('abp'),
         activeModelPreset: g('amp'),
+        shadeBlendMode: g('sbm'),
         modelSyncPart: g('bsp'),
         uploadChoicePrompt: g('uap'),
         uploadDefaultAction: p.has('uam') ? (p.get('uam') === 'r' ? 'replace' : 'newplate') : null,
@@ -8226,6 +8291,7 @@ function settingsToURL() {
     if (buildPlateDepth !== 220) p.set('bpd', String(buildPlateDepth));
     p.set('abp', activeBgPreset || 'modelcolor');
     p.set('amp', activeModelPreset || 'custom');
+    if (shadeBlendMode && shadeBlendMode !== 'hsl') p.set('sbm', shadeBlendMode);
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
     if (!uploadChoicePromptEnabled) p.set('uap', '0');
     if (uploadDefaultAction === 'replace') p.set('uam', 'r');
@@ -9494,10 +9560,6 @@ const modelPresetCommitQueue = createDeferredCommitQueue({
 const modelToneCommitQueue = createDeferredCommitQueue({
     delayMs: 120,
     onFlush: (thumbTargets) => {
-        if (activeBuildPlatePreset === 'modelcolor') {
-            updateBuildPlateMaterial();
-            refreshExportPreviewNow();
-        }
         updateShadingThumbs();
         updateColorSwatches();
         persistCurrentMultipartParts({ immediate: true });
@@ -9615,8 +9677,8 @@ function scheduleOrbitInteractionCommit() {
     orbitInteractionCommitQueue.schedule();
 }
 
-colorPick.addEventListener('input', (ev) => {
-    scheduleColorPickPreview();
+colorPick.addEventListener('input', () => {
+    applyColorPickPreview();
 });
 colorPick.addEventListener('change', () => {
     flushColorPickPreview();
@@ -9632,14 +9694,6 @@ if (opacitySlider) {
             partSettings.tone = toneVal;
         });
         if (mesh) applyPartColorsToMesh({ buildPlatePreview: activeBuildPlatePreset === 'modelcolor' });
-        if (activeBgPreset === 'modelcolor') {
-            const syncColor = getModelSyncSourceColor();
-            bgPick.value = syncColor;
-            updateAutoBgShadeControlVisibility();
-            if (isDynamicBg) updateDynamicBg();
-            else applyBackgroundFromBaseColor(syncColor);
-            updateBgShadeSliderVisual();
-        }
         updateShadeSliderVisual();
         scheduleModelToneCommit(targets);
     });
@@ -9775,7 +9829,8 @@ textureTuneLightHeightSlider?.addEventListener('change', () => {
     flushTextureTuneCommit();
 });
 
-textureTuneRoughnessSlider?.addEventListener('input', () => {
+textureTuneRoughnessSlider?.addEventListener('input', (ev) => {
+    setModelPresetCustomFromManualEdit(ev);
     syncSliderTooltip(textureTuneRoughnessSlider);
     updateFinishSliderVisual();
     const { targets } = applyFinishControlsToSelectedPart();
@@ -9783,7 +9838,8 @@ textureTuneRoughnessSlider?.addEventListener('input', () => {
     scheduleFinishCommit(targets);
 });
 
-textureTuneRoughnessSlider?.addEventListener('change', () => {
+textureTuneRoughnessSlider?.addEventListener('change', (ev) => {
+    setModelPresetCustomFromManualEdit(ev);
     updateFinishSliderVisual();
     const { targets } = applyFinishControlsToSelectedPart(true);
     applyCurrentTextureTuning();
@@ -9791,7 +9847,8 @@ textureTuneRoughnessSlider?.addEventListener('change', () => {
     flushFinishCommit();
 });
 
-finishModeButtons.forEach((btn) => btn.addEventListener('click', () => {
+finishModeButtons.forEach((btn) => btn.addEventListener('click', (ev) => {
+    setModelPresetCustomFromManualEdit(ev);
     const mode = btn.dataset.finishMode || 'satin';
     if (textureTuneRoughnessSlider) {
         textureTuneRoughnessSlider.value = String(modeStrengthToFinishSliderValue(mode, 2));
@@ -12128,6 +12185,7 @@ canvas?.addEventListener('pointercancel', () => {
 const exportPreviewCanvas = document.getElementById('exportPreview');
 const exportPreviewWrap = exportPreviewCanvas?.closest('.export-preview-wrap');
 const exportPreviewForwardHost = exportPreviewWrap || exportPreviewCanvas;
+let _previewForwardPointer = null;
 
 function forwardPreviewPointerToMainCanvas(e) {
     if (!canvas || !controls) return;
@@ -12219,6 +12277,29 @@ if (exportPreviewForwardHost) {
     ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((eventName) => {
         exportPreviewForwardHost.addEventListener(eventName, (e) => {
             if (!canvas || !controls) return;
+            if (eventName === 'pointerdown' && e.button === 0 && e.isTrusted) {
+                _previewForwardPointer = {
+                    pointerId: e.pointerId,
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    moved: false,
+                };
+            } else if (eventName === 'pointermove' && _previewForwardPointer && e.pointerId === _previewForwardPointer.pointerId) {
+                const dx = e.clientX - _previewForwardPointer.startX;
+                const dy = e.clientY - _previewForwardPointer.startY;
+                if ((dx * dx) + (dy * dy) > (CANVAS_ORBIT_CLICK_DRAG_THRESHOLD_PX * CANVAS_ORBIT_CLICK_DRAG_THRESHOLD_PX)) {
+                    _previewForwardPointer.moved = true;
+                }
+            } else if ((eventName === 'pointerup' || eventName === 'pointercancel') && _previewForwardPointer && e.pointerId === _previewForwardPointer.pointerId) {
+                const shouldClose = eventName === 'pointerup'
+                    && !_previewForwardPointer.moved
+                    && exportWorkspaceActive
+                    && (!exportFrameEnabled || !isCanvasPointInsideCropFrame(e.clientX, e.clientY));
+                _previewForwardPointer = null;
+                if (shouldClose) {
+                    closeExportWorkspace();
+                }
+            }
             e.preventDefault();
             e.stopPropagation();
             forwardPreviewPointerToMainCanvas(e);
@@ -12256,6 +12337,7 @@ if (exportPreviewForwardHost) {
             cancelable: true,
         }));
     });
+
 }
 
 // ── Crop corner drag to snap aspect ratio ─────────────────────────────────────
@@ -13073,10 +13155,6 @@ function applyBackgroundFromBaseColor(baseHex) {
         renderer.setClearColor(computeAutoBrightnessColor(baseHex), 1);
         return;
     }
-    if (activeBgPreset === 'modelcolor') {
-        renderer.setClearColor(baseHex, 1);
-        return;
-    }
     renderer.setClearColor(computeSurfaceShadeColor(baseHex, getManualBgTone()), 1);
 }
 
@@ -13174,30 +13252,22 @@ function updateModelSelection() {
             }
         }
     }
+
+}
+
+function setModelPresetCustomFromManualEdit(ev) {
+    if (!ev?.isTrusted) return;
+    activeModelPreset = 'custom';
+    updateModelSelection();
 }
 
 // Hook all manual changes to revert to custom mode (trusted user events only)
 [colorPick, shadingEl].forEach(el => {
-    if (el) el.addEventListener('input', (ev) => {
-        if (!ev.isTrusted) return;
-        activeModelPreset = 'custom';
-        storeCustomSettings();
-        updateModelSelection();
-    });
-    if (el) el.addEventListener('change', (ev) => {
-        if (!ev.isTrusted) return;
-        activeModelPreset = 'custom';
-        storeCustomSettings();
-        updateModelSelection();
-    });
+    if (el) el.addEventListener('input', setModelPresetCustomFromManualEdit);
+    if (el) el.addEventListener('change', setModelPresetCustomFromManualEdit);
 });
 if (opacitySlider) {
-    opacitySlider.addEventListener('input', (ev) => {
-        if (!ev.isTrusted) return;
-        activeModelPreset = 'custom';
-        storeCustomSettings();
-        updateModelSelection();
-    });
+    opacitySlider.addEventListener('input', setModelPresetCustomFromManualEdit);
 }
 
 function applyModelPresetOnly(preset) {
@@ -13318,34 +13388,10 @@ function renderModelPresets() {
         }
         const idx = Math.max(0, modelPartSelected || 0);
         const currentSettings = { ...getSelectedPartSettings() };
-        const preservedFinishMode = getFinishModeFromPartSettings(currentSettings);
-        const preservedFinishValue = finishSliderValueFromPartSettings(currentSettings);
-        const customModelSettings = customModelSettingsByPart[idx] || { ...currentSettings };
-
-        // Restore the part's custom profile but preserve the current finish state
-        // so clicking Custom never forces Gloss/Satin/Matte changes.
-        // If coming from Clear/Glass, reset to phong so custom color is solid.
-        const resolvedShading = (currentSettings.shading === 'clear' || currentSettings.shading === 'glass')
-            ? 'phong' : currentSettings.shading;
-        modelPartSettings[idx] = {
-            ...customModelSettings,
-            shading: resolvedShading,
-            metallicRoughness: currentSettings.metallicRoughness,
-            metallicMetalness: currentSettings.metallicMetalness,
-            metallicReflection: currentSettings.metallicReflection,
-            phongRoughness: currentSettings.phongRoughness,
-            phongReflection: currentSettings.phongReflection,
-            matteRoughness: currentSettings.matteRoughness,
-            matteReflection: currentSettings.matteReflection,
-            finishMode: preservedFinishMode,
-            finishValue: preservedFinishValue,
-        };
-        // Keep stored finish metadata and material tuning in lockstep.
-        applyFinishModeValueToPartSettings(modelPartSettings[idx], preservedFinishMode, preservedFinishValue);
-        modelPartBaseColors[idx] = modelPartSettings[idx].color || modelPartBaseColors[idx] || colorPick.value;
+        // Switching to Custom should not mutate color/finish by itself.
+        customModelSettingsByPart[idx] = { ...currentSettings };
         activeModelPreset = 'custom';
         syncUIFromSelectedPart();
-        if (mesh) rebuildMeshMaterialsForCurrentShading();
         persistCurrentMultipartParts();
         queueModelPartThumbsRender();
         updateModelSelection();
@@ -13360,7 +13406,6 @@ function renderModelPresets() {
     // Initial call
     requestAnimationFrame(updateModelSelection);
 }
-
 
 function updateBgSelection() {
     document.querySelectorAll('#bgPresetsBar .shading-option').forEach(el => el.classList.remove('is-selected'));
@@ -13468,19 +13513,7 @@ function syncBuildPlateModelSyncSourceUI() {
         buildPlateModelSyncSelectorMenu.appendChild(opt);
     });
 
-    if (buildPlateModelSyncSelectorThumb) {
-        buildPlateModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
-        buildPlateModelSyncSelectorThumb.dataset.partIndex = String(buildPlateSyncPartIndex);
-        paintThumbFallback(buildPlateModelSyncSelectorThumb, buildPlateSyncPartIndex);
-        renderSinglePartThumbnail(buildPlateModelSyncSelectorThumb, buildPlateSyncPartIndex);
-    }
-    const buildPresetThumbCanvas = document.getElementById('build-plate-preset-modelcolor-canvas');
-    if (buildPresetThumbCanvas instanceof HTMLCanvasElement) {
-        buildPresetThumbCanvas.classList.add('js-part-thumb-preview');
-        buildPresetThumbCanvas.dataset.partIndex = String(buildPlateSyncPartIndex);
-        paintThumbFallback(buildPresetThumbCanvas, buildPlateSyncPartIndex);
-        renderSinglePartThumbnail(buildPresetThumbCanvas, buildPlateSyncPartIndex);
-    }
+    syncModelSyncPreviewThumbTargets();
     if (buildPlateModelSyncSelectorText) {
         const selectedName = modelPartNames[buildPlateSyncPartIndex] || `Part ${buildPlateSyncPartIndex + 1}`;
         buildPlateModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
@@ -13784,29 +13817,6 @@ if (buildPlateShadeSliderEl) {
     buildPlateShadeSliderEl.addEventListener('input', () => {
         buildPlateShade = Math.max(-100, Math.min(100, Math.round(getSliderEffectiveValue(buildPlateShadeSliderEl)) || 0));
 
-        if (!buildPlateAutoBrightnessEnabled && activeBuildPlatePreset === 'modelcolor') {
-            const partCount = Math.max(1, modelPartNames.length, modelPartBaseColors.length, modelPartSettings.length);
-            const idx = Math.max(0, Math.min(parseInt(String(buildPlateSyncPartIndex), 10) || 0, partCount - 1));
-            const settings = getPartSettings(idx);
-            settings.tone = buildPlateShade;
-            if (idx === modelPartSelected && opacitySlider) {
-                opacitySlider.value = String(buildPlateShade);
-                opacityVal.textContent = (buildPlateShade >= 0 ? '+' : '') + buildPlateShade;
-                syncSliderTooltip(opacitySlider);
-                updateShadeSliderVisual();
-            }
-            if (mesh) applyPartColorsToMesh({ buildPlatePreview: true });
-            if (activeBgPreset === 'modelcolor' && !isDynamicBg && idx === bgSyncPartIndex) {
-                const syncColor = getModelSyncSourceColor();
-                bgPick.value = syncColor;
-                applyBackgroundFromBaseColor(syncColor);
-                updateAutoBgShadeControlVisibility();
-                updateBgShadeSliderVisual();
-            }
-            scheduleModelToneCommit([idx]);
-            return;
-        }
-
         if (!buildPlateAutoBrightnessEnabled) {
             lastManualBuildPlateShade = buildPlateShade;
             manualBuildPlateShadeBeforeAuto = buildPlateShade;
@@ -13816,10 +13826,6 @@ if (buildPlateShadeSliderEl) {
         saveSettings();
     });
     buildPlateShadeSliderEl.addEventListener('change', () => {
-        if (!buildPlateAutoBrightnessEnabled && activeBuildPlatePreset === 'modelcolor') {
-            flushModelToneCommit();
-            return;
-        }
         refreshExportPreviewNow();
         saveSettings();
     });
@@ -13853,15 +13859,82 @@ if (buildPlateShapeWrapEl) {
 }
 
 const rulerUnitSelectEl = document.getElementById('rulerUnitSelect');
-const _updateRulerUnitFromSelect = (sourceEl) => {
-    rulerUnit = sourceEl?.value === 'imperial' ? 'imperial' : 'metric';
-    if (rulerUnitSelectEl && rulerUnitSelectEl !== sourceEl) rulerUnitSelectEl.value = rulerUnit;
-    if (rulerUnitSelectModalEl && rulerUnitSelectModalEl !== sourceEl) rulerUnitSelectModalEl.value = rulerUnit;
+const SHADE_MODE_DESCRIPTIONS = {
+    hsl: 'Lightness-based color shifts.',
+    hsb: 'Brightness-based color shifts.',
+};
+
+function normalizeShadeBlendMode(mode) {
+    return mode === 'hsb' ? 'hsb' : 'hsl';
+}
+
+function syncRulerUnitControls() {
+    const normalized = rulerUnit === 'imperial' ? 'imperial' : 'metric';
+    if (rulerUnitSelectEl) rulerUnitSelectEl.value = normalized;
+    if (rulerUnitSelectModalEl) rulerUnitSelectModalEl.value = normalized;
+
+    [rulerUnitControlEl, rulerUnitControlModalEl].forEach((controlEl) => {
+        if (!(controlEl instanceof HTMLElement)) return;
+        controlEl.querySelectorAll('[data-ruler-unit]').forEach((btn) => {
+            const value = btn.getAttribute('data-ruler-unit') === 'imperial' ? 'imperial' : 'metric';
+            const active = value === normalized;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-checked', active ? 'true' : 'false');
+        });
+    });
+}
+
+function syncShadeModeControls() {
+    shadeBlendMode = normalizeShadeBlendMode(shadeBlendMode);
+    const description = SHADE_MODE_DESCRIPTIONS[shadeBlendMode] || SHADE_MODE_DESCRIPTIONS.hsl;
+    if (shadeModeDescriptionEl) shadeModeDescriptionEl.textContent = description;
+    if (shadeModeDescriptionModalEl) shadeModeDescriptionModalEl.textContent = description;
+
+    [shadeModeControlEl, shadeModeControlModalEl].forEach((controlEl) => {
+        if (!(controlEl instanceof HTMLElement)) return;
+        controlEl.querySelectorAll('[data-shade-mode]').forEach((btn) => {
+            const value = normalizeShadeBlendMode(btn.getAttribute('data-shade-mode'));
+            const active = value === shadeBlendMode;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-checked', active ? 'true' : 'false');
+        });
+    });
+}
+
+function setShadeBlendMode(mode, persist = true) {
+    const nextMode = normalizeShadeBlendMode(mode);
+    if (shadeBlendMode === nextMode) {
+        syncShadeModeControls();
+        return;
+    }
+    shadeBlendMode = nextMode;
+    ShadeSystem.setShadeBlendMode(shadeBlendMode);
+    syncShadeModeControls();
+    if (mesh) applyPartColorsToMesh({ buildPlatePreview: activeBuildPlatePreset === 'modelcolor' });
+    updateShadeSliderVisual();
+    updateBgShadeSliderVisual();
+    updateBuildPlateShadeSliderVisual();
+    updateBuildPlateMaterial();
+    const baseHex = getActiveBackgroundBaseColor();
+    applyBackgroundFromBaseColor(baseHex);
+    if (isDynamicBg) updateDynamicBg();
+    queueModelPartThumbsRender();
+    if (persist) saveSettings();
+}
+
+const _updateRulerUnit = (nextUnit, persist = true) => {
+    rulerUnit = nextUnit === 'imperial' ? 'imperial' : 'metric';
+    syncRulerUnitControls();
     updateRulerHUD();
     updateLiveRulerOverlay();
     refreshExportPreviewNow();
-    saveSettings();
+    if (persist) saveSettings();
 };
+
+const _updateRulerUnitFromSelect = (sourceEl) => {
+    _updateRulerUnit(sourceEl?.value === 'imperial' ? 'imperial' : 'metric', true);
+};
+
 if (rulerUnitSelectEl) {
     rulerUnitSelectEl.value = rulerUnit;
     rulerUnitSelectEl.addEventListener('change', () => _updateRulerUnitFromSelect(rulerUnitSelectEl));
@@ -13870,6 +13943,28 @@ if (rulerUnitSelectModalEl) {
     rulerUnitSelectModalEl.value = rulerUnit;
     rulerUnitSelectModalEl.addEventListener('change', () => _updateRulerUnitFromSelect(rulerUnitSelectModalEl));
 }
+
+[rulerUnitControlEl, rulerUnitControlModalEl].forEach((controlEl) => {
+    if (!(controlEl instanceof HTMLElement)) return;
+    controlEl.addEventListener('click', (ev) => {
+        const btn = ev.target?.closest?.('[data-ruler-unit]');
+        if (!btn) return;
+        const value = btn.getAttribute('data-ruler-unit');
+        _updateRulerUnit(value === 'imperial' ? 'imperial' : 'metric', true);
+    });
+});
+
+[shadeModeControlEl, shadeModeControlModalEl].forEach((controlEl) => {
+    if (!(controlEl instanceof HTMLElement)) return;
+    controlEl.addEventListener('click', (ev) => {
+        const btn = ev.target?.closest?.('[data-shade-mode]');
+        if (!btn) return;
+        setShadeBlendMode(btn.getAttribute('data-shade-mode'), true);
+    });
+});
+
+syncRulerUnitControls();
+syncShadeModeControls();
 
 if (btnInspectMode) {
     btnInspectMode.addEventListener('click', () => {
@@ -13885,6 +13980,7 @@ function renderBgPresets() {
     bar.style.display = 'grid';
     bar.style.gridTemplateColumns = 'repeat(4, 1fr)';
     bar.style.gap = '6px';
+    const previewPartIdx = getModelSyncPreviewPartIndex();
 
     BG_PRESETS.forEach((preset) => {
         const wrap = document.createElement('div');
@@ -13894,7 +13990,7 @@ function renderBgPresets() {
         wrap.style.alignItems = 'center';
 
         const swatchInner = preset.id === 'modelcolor'
-            ? `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:#f6f5ff;border:1.5px solid color-mix(in srgb, var(--palette-blueberry-300) 64%, white 36%);display:flex;align-items:center;justify-content:center;"><canvas id="bg-preset-modelcolor-canvas" class="js-part-thumb-preview" data-part-index="${bgSyncPartIndex}" width="56" height="56" aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:block;"></canvas></span>`
+            ? `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:#f6f5ff;border:1.5px solid color-mix(in srgb, var(--palette-blueberry-300) 64%, white 36%);display:flex;align-items:center;justify-content:center;"><canvas id="bg-preset-modelcolor-canvas" class="js-part-thumb-preview" data-part-index="${previewPartIdx}" width="56" height="56" aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:block;"></canvas></span>`
             : `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? PALETTE.preset.bgBorderLight : (preset.id === 'black' ? PALETTE.preset.bgBorderDark : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
@@ -13991,6 +14087,7 @@ function renderBuildPlatePresets() {
     bar.style.display = 'grid';
     bar.style.gridTemplateColumns = 'repeat(4, 1fr)';
     bar.style.gap = '6px';
+    const previewPartIdx = getModelSyncPreviewPartIndex();
 
     BUILD_PLATE_PRESETS.forEach((preset) => {
         const wrap = document.createElement('div');
@@ -14000,7 +14097,7 @@ function renderBuildPlatePresets() {
         wrap.style.alignItems = 'center';
 
         const swatchInner = preset.id === 'modelcolor'
-            ? `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:#f6f5ff;border:1.5px solid color-mix(in srgb, var(--palette-blueberry-300) 64%, white 36%);display:flex;align-items:center;justify-content:center;"><canvas id="build-plate-preset-modelcolor-canvas" class="js-part-thumb-preview" data-part-index="${buildPlateSyncPartIndex}" width="56" height="56" aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:block;"></canvas></span>`
+            ? `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:#f6f5ff;border:1.5px solid color-mix(in srgb, var(--palette-blueberry-300) 64%, white 36%);display:flex;align-items:center;justify-content:center;"><canvas id="build-plate-preset-modelcolor-canvas" class="js-part-thumb-preview" data-part-index="${previewPartIdx}" width="56" height="56" aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:block;"></canvas></span>`
             : `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? PALETTE.preset.bgBorderLight : (preset.id === 'black' ? PALETTE.preset.bgBorderDark : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
