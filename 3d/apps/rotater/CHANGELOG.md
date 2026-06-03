@@ -1,4 +1,4 @@
-## [Unreleased]
+## [2.2.49] - 2026-06-03
 
 ### Fixed
 - **Model color neutrality at shade extremes (HSL/HSB)**: neutral model colors (white/gray/black) now stay neutral while shade/tone is adjusted; darkening no longer injects red/pink tint in custom white workflows.
