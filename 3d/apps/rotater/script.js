@@ -9550,6 +9550,7 @@ function applyColorPickPreview() {
 
     if (mesh) applyPartColorsToMesh({ buildPlatePreview: activeBuildPlatePreset === 'modelcolor' });
     updateShadeSliderVisual();
+    updateFinishSliderVisual();
     if (activeBgPreset === 'modelcolor') {
         bgPick.value = getModelSyncSourceColor();
         if (isDynamicBg) updateDynamicBg();
@@ -13267,7 +13268,10 @@ function renderModelPresets() {
         const actionArea = wrap.querySelector('.shading-option');
         actionArea.addEventListener('click', () => {
             clearPresetHoverPreview();
-            if (activeModelPreset === preset.id) return;
+            if (activeModelPreset === preset.id) {
+                openAnchoredColorPicker(colorPick, actionArea);
+                return;
+            }
             if (activeModelPreset === 'custom') storeCustomSettings();
 
             if (preset.url) {
@@ -13344,46 +13348,7 @@ function renderModelPresets() {
         updateModelSelection();
         // Open picker near the clicked swatch so browser anchoring is stable.
         const swatch = customWrap.querySelector('.shading-option');
-        const rect = swatch?.getBoundingClientRect?.();
-        const prev = {
-            position: colorPick.style.position,
-            left: colorPick.style.left,
-            top: colorPick.style.top,
-            width: colorPick.style.width,
-            height: colorPick.style.height,
-            clip: colorPick.style.clip,
-            pointerEvents: colorPick.style.pointerEvents,
-            opacity: colorPick.style.opacity,
-        };
-        if (rect) {
-            Object.assign(colorPick.style, {
-                position: 'absolute',
-                left: `${rect.left + window.scrollX}px`,
-                top: `${rect.top + window.scrollY}px`,
-                width: `${Math.max(1, Math.floor(rect.width))}px`,
-                height: `${Math.max(1, Math.floor(rect.height))}px`,
-                clip: 'auto',
-                pointerEvents: 'auto',
-                opacity: '0',
-            });
-        } else {
-            colorPick.style.width = '1px';
-            colorPick.style.height = '1px';
-            colorPick.style.pointerEvents = 'auto';
-        }
-        try { colorPick.showPicker(); } catch (e) { colorPick.click(); }
-        setTimeout(() => {
-            Object.assign(colorPick.style, {
-                position: prev.position || 'absolute',
-                left: prev.left || '',
-                top: prev.top || '',
-                width: prev.width || '0px',
-                height: prev.height || '0px',
-                clip: prev.clip || 'rect(0,0,0,0)',
-                pointerEvents: prev.pointerEvents || 'none',
-                opacity: prev.opacity || '0',
-            });
-        }, 240);
+        openAnchoredColorPicker(colorPick, swatch);
     });
     customWrap.querySelector('.shading-option').addEventListener('mouseenter', clearPresetHoverPreview);
     customWrap.querySelector('.shading-option').addEventListener('focus', clearPresetHoverPreview);

@@ -4,10 +4,13 @@
 - **PNG/JPEG quality slider fill sync**: still-image quality slider now updates its filled track segment correctly while dragging and after restoring saved settings.
 - **Export segmented picker visual parity**: Format, Crop, Resolution, and Quality segmented controls now share the same active-chip treatment and avoid active-shadow clipping.
 - **MP4 size estimate calibration at Ultra workloads**: MP4 estimate math now applies a high-pixel-rate safety factor so Ultra/high-FPS jobs no longer significantly under-report expected file size.
+- **Surface finish slider color sync for custom colors**: finish gradient preview now updates immediately when model custom color changes.
+- **Active preset reclick behavior**: clicking an already-selected model preset now opens the model color picker and follows existing custom-mode handoff when color changes.
 
 ### Changed
 - **Export action row button polish**: Close, Copy Link, and Copy Image secondary actions now use purple text/icon styling for clearer visual consistency with the rest of the export UI.
 - **High-resolution export guard limit**: per-frame export guard now allows Ultra 4K-square workloads (while retaining existing width/height, FPS, frame-count, and total-workload safeguards).
+- **Roadmap addition (preset management)**: added “Save my filament swatches (hex save/reuse palette)” to the roadmap planning queue.
 
 ### Changed
 - **Export naming and resolution options**: restored the primary panel/button label to `Export`, renamed the `Size` control to `Resolution`, replaced `512` with `720`, removed the `1440` step, and added a `4K` export option.
