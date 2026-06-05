@@ -13067,7 +13067,7 @@ btnVideo.addEventListener('click', async () => {
                 await maybePaintExportProgress(`Encoding… ${f + 1} / ${totalFrames}`, f + 1, totalFrames);
             }
 
-            setAnimStatus('Finalizing video…', totalFrames, totalFrames);
+            setAnimStatus('Finishing video... preparing your download.', totalFrames, totalFrames);
             await new Promise(r => setTimeout(r, 0));
             await exportMp4EncoderQueueController.waitForEncoderFlush({
                 encoder,

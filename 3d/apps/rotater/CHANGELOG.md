@@ -6,6 +6,7 @@
 
 ### Fixed
 - **Export progress warning noise**: removed in-progress `encoder under load` warning copy from the visible status line so export UX remains calm and focused on steady progress.
+- **MP4 finalization messaging clarity**: end-of-export status now uses plain-language progress cues ("Finishing video... writing final frames") instead of technical encoder jargon ("draining encoder"), and the progress bar creeps forward during final frame packaging so completion feels continuous rather than stalled.
 - **App Settings label association warnings**: replaced invalid `label[for]` headings targeting custom segmented radiogroup containers with semantic heading text, clearing DevTools `Incorrect use of <label for=FORM_ELEMENT>` issues in dock and modal settings panels.
 
 ---

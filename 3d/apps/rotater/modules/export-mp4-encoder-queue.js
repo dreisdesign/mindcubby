@@ -103,7 +103,7 @@ export function createExportMp4EncoderQueueController({
         encoder,
         getEncoderError,
         total = 0,
-        timeoutMs = 45000,
+        timeoutMs = 90000,
     } = {}) {
         if (!encoder || encoder.state === 'closed') return;
 
@@ -132,9 +132,21 @@ export function createExportMp4EncoderQueueController({
             if (total > 0 && (now - lastNoticeAt) > 1000) {
                 lastNoticeAt = now;
                 const queueDepth = Math.round(encoder.encodeQueueSize || 0);
+                const elapsedSec = Math.max(0, Math.round((now - startAt) / 1000));
+                let flushMsg = 'Finishing video... writing final frames.';
+                if (elapsedSec >= 8 && elapsedSec < 18) {
+                    flushMsg = 'Finishing video... packaging file for download.';
+                } else if (elapsedSec >= 18) {
+                    flushMsg = 'Still finishing your video... high-resolution exports can take a little longer.';
+                }
+
+                // Keep the bar near-complete and let it creep forward as queued
+                // work drains so users can see that progress is still happening.
+                const trailingFrames = Math.max(1, Math.min(18, Math.round(queueDepth / 20)));
+                const flushDone = Math.max(0, total - trailingFrames);
                 await maybePaintExportProgress?.(
-                    `Finalizing video… draining encoder (q=${queueDepth})`,
-                    total,
+                    flushMsg,
+                    flushDone,
                     total,
                     true
                 );
