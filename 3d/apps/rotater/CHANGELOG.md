@@ -7,11 +7,13 @@
 ### Changed
 - **Standardized export resolution tiers across crop presets**: Low/Medium/High/Ultra now map to 480p/720p/1080p/4K-equivalent output dimensions across square, portrait, and landscape crop modes (including portrait 9:16 and landscape 16:9 presets).
 - **Export size preset modularization (C1)**: moved export resolution preset and normalization logic from `script.js` into `modules/export-size-presets.js` with behavior-preserving wrapper delegation.
+- **Default export naming context**: export files and project ZIP packages now use a contextual prefix based on active model/background/surface choices (for example `model-bg--Rotater_model_spin_60.mp4`) so saved files are easier to identify without manual renaming.
 
 ### Fixed
 - **Export progress warning noise**: removed in-progress `encoder under load` warning copy from the visible status line so export UX remains calm and focused on steady progress.
 - **MP4 finalization messaging clarity**: end-of-export status now uses plain-language progress cues ("Finishing video... writing final frames") instead of technical encoder jargon ("draining encoder"), and the progress bar creeps forward during final frame packaging so completion feels continuous rather than stalled.
 - **App Settings label association warnings**: replaced invalid `label[for]` headings targeting custom segmented radiogroup containers with semantic heading text, clearing DevTools `Incorrect use of <label for=FORM_ELEMENT>` issues in dock and modal settings panels.
+- **3D Models click-to-color editing**: clicking a model row in the floating 3D Models window now opens the model color picker for the selected part, streamlining per-part color edits.
 
 ---
 

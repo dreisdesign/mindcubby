@@ -7,6 +7,7 @@ export function createExportFilenameController({
     getImagePresetTag,
     getCurrentFileName,
     getRotateMode,
+    getNamePrefix,
 } = {}) {
     function getQualityTag() {
         const q = getExportQuality?.() ?? 'std';
@@ -40,7 +41,9 @@ export function createExportFilenameController({
         const mode = getRotateMode?.() || 'spin';
         const quality = getQualityTag();
         const modifiers = getExportModifierTags(format);
-        return [base, mode, quality, ...modifiers].join('_') + '.' + ext;
+        const stem = [base, mode, quality, ...modifiers].join('_');
+        const prefix = String(getNamePrefix?.() || '').trim();
+        return (prefix ? `${prefix}--${stem}` : stem) + '.' + ext;
     }
 
     return {

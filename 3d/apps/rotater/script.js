@@ -5134,7 +5134,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 saveSettings();
             });
 
-            const applyPartCardSelectionClick = () => {
+            const applyPartCardSelectionClick = ({ openColorPicker = false, pickerAnchorEl = null } = {}) => {
                 const prevSelected = modelPartSelected;
                 clearPresetHoverPreview();
                 const multiActive = isModelPartPreviewMultiSelectActive();
@@ -5157,15 +5157,23 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 syncModelPartBulkUIState();
                 queueModelPartThumbsRender([prevSelected, modelPartSelected]);
                 saveSettings();
+
+                // In the floating 3D Models window, clicking a model row should
+                // immediately expose color editing for the selected part.
+                if (openColorPicker && !multiActive && isModelPartFloatingCardOpen()) {
+                    openAnchoredColorPicker(colorPick, pickerAnchorEl || opt.querySelector('[data-part-select]') || modelPartSelectorBtn);
+                }
             };
 
-            opt.querySelector('[data-part-select]')?.addEventListener('click', applyPartCardSelectionClick);
+            opt.querySelector('[data-part-select]')?.addEventListener('click', (ev) => {
+                applyPartCardSelectionClick({ openColorPicker: true, pickerAnchorEl: ev.currentTarget });
+            });
 
             opt.addEventListener('click', (ev) => {
                 if (!(ev.target instanceof Element)) return;
                 if (ev.target.closest('button,input,label,a,.part-option-actions')) return;
                 clearPresetHoverPreview();
-                applyPartCardSelectionClick();
+                applyPartCardSelectionClick({ openColorPicker: true });
             });
 
             opt.querySelector('[data-part-more]')?.addEventListener('click', (ev) => {
@@ -9364,6 +9372,18 @@ async function ensurePausedForStillExport() {
     await new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
+function schedulePostExportViewportResync() {
+    // Some export flows temporarily resize render buffers; do a delayed
+    // resync after exporting fully settles so the visible canvas aspect
+    // always snaps back to the live viewport.
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            if (isExporting) return;
+            syncCanvasSize(true);
+        });
+    });
+}
+
 document.getElementById('btnExportPng').addEventListener('click', async () => {
     if (!mesh) return;
     await ensurePausedForStillExport();
@@ -9376,6 +9396,8 @@ document.getElementById('btnExportPng').addEventListener('click', async () => {
         setStatus('Error: ' + err.message);
         console.error(err);
         setTimeout(() => setStatus(''), 5000);
+    } finally {
+        schedulePostExportViewportResync();
     }
 });
 
@@ -9390,6 +9412,8 @@ document.getElementById('btnExportJpeg').addEventListener('click', async () => {
         setStatus('Error: ' + err.message);
         console.error(err);
         setTimeout(() => setStatus(''), 5000);
+    } finally {
+        schedulePostExportViewportResync();
     }
 });
 
@@ -11839,7 +11863,7 @@ btnDownloadPackage?.addEventListener('click', async () => {
             try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); }
             catch (_) { return {}; }
         })();
-        const base = safeDownloadFileName(currentFileName || stemFromFileName(modelPartNames[0] || 'model'));
+        const base = buildPackageBaseName();
         const zip = new JSZip();
         const packageJson = {
             app: 'rotater',
@@ -12538,6 +12562,56 @@ function download(data, filename, type) {
     exportDownloadController.download(data, filename, type);
 }
 
+function sanitizeExportNameToken(value, fallback = 'custom') {
+    const raw = String(value || '').trim().toLowerCase();
+    const cleaned = raw
+        .replace(/\.[a-z0-9]+$/i, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    return cleaned || fallback;
+}
+
+function getPresetLabelById(presetList, presetId, fallback = 'custom') {
+    if (!Array.isArray(presetList)) return fallback;
+    const found = presetList.find((preset) => preset?.id === presetId);
+    return sanitizeExportNameToken(found?.name || presetId, fallback);
+}
+
+function getModelExportNameToken() {
+    if (activeModelPreset === 'custom') return 'custom-model';
+    if (String(activeModelPreset || '').startsWith('custom-slot-')) return 'custom-model';
+    return getPresetLabelById(QUICK_PRESETS, activeModelPreset, sanitizeExportNameToken(activeModelPreset || 'model', 'model'));
+}
+
+function getBackgroundExportNameToken() {
+    const base = getPresetLabelById(BG_PRESETS, activeBgPreset, sanitizeExportNameToken(activeBgPreset || 'bg', 'bg'));
+    return `${base}-bg`;
+}
+
+function getSurfaceExportNameToken() {
+    const base = getPresetLabelById(BUILD_PLATE_PRESETS, activeBuildPlatePreset, sanitizeExportNameToken(activeBuildPlatePreset || 'surface', 'surface'));
+    return `${base}-surface`;
+}
+
+function getDefaultExportNamePrefix() {
+    const parts = [
+        getModelExportNameToken(),
+        getBackgroundExportNameToken(),
+    ];
+    if (activeBuildPlatePreset && activeBuildPlatePreset !== activeBgPreset) {
+        parts.push(getSurfaceExportNameToken());
+    }
+    return parts.filter(Boolean).join('-');
+}
+
+function buildPackageBaseName() {
+    const modelStem = safeDownloadFileName(currentFileName || stemFromFileName(modelPartNames[0] || 'model'), 'model')
+        .replace(/\s+/g, '-');
+    const exportStem = `Rotater_${modelStem}`;
+    const prefix = getDefaultExportNamePrefix();
+    return prefix ? `${prefix}--${exportStem}` : exportStem;
+}
+
 const exportFilenameController = createExportFilenameController({
     getExportQuality: () => normalizeExportQualityValue(document.getElementById('exportQuality')?.value ?? EXPORT_QUALITY_DEFAULT),
     getGifLoopEnabled: () => document.getElementById('gifLoop')?.checked ?? true,
@@ -12547,6 +12621,7 @@ const exportFilenameController = createExportFilenameController({
     getImagePresetTag: () => EXPORT.image.presetTag,
     getCurrentFileName: () => currentFileName,
     getRotateMode: () => rotateModeEl.value || 'spin',
+    getNamePrefix: () => getDefaultExportNamePrefix(),
 });
 
 function getQualityTag() {
@@ -12885,6 +12960,7 @@ function applyPaletteDithered(data, palette, width, height) {
 // ── GIF export ────────────────────────────────────────────────────────────────
 btnGif.addEventListener('click', async () => {
     await exportGifRuntimeController.runGifExport();
+    schedulePostExportViewportResync();
 });
 
 // ── Video export (H.264 MP4 via WebCodecs + mp4-muxer) ───────────────────────
@@ -13036,9 +13112,11 @@ btnVideo.addEventListener('click', async () => {
         camera.zoom = savedZoom;
         camera.updateProjectionMatrix();
 
+        const finalViewW = Math.max(1, wrap.clientWidth || savedViewW);
+        const finalViewH = Math.max(1, wrap.clientHeight || savedViewH);
         renderer.setPixelRatio(savedPR);
-        renderer.setSize(savedViewW, savedViewH, false);
-        camera.aspect = savedViewW / savedViewH;
+        renderer.setSize(finalViewW, finalViewH, false);
+        camera.aspect = finalViewW / finalViewH;
         camera.updateProjectionMatrix();
 
         controls.update();
@@ -13048,6 +13126,7 @@ btnVideo.addEventListener('click', async () => {
         setAnimStatus('MP4 saved ✓');
         },
     });
+    schedulePostExportViewportResync();
 });
 
 // ── Restore on load ───────────────────────────────────────────────────────────
