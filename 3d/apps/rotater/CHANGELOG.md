@@ -4,6 +4,10 @@
 - **MP4 encoder pacing smoothing for high-workload exports**: queue backpressure now uses adaptive soft/hard thresholds with resume-level draining to reduce visible sprint/pause cadence and keep high-FPS/high-resolution exports moving more steadily.
 - **High-throughput queue tuning**: raised MP4 queue thresholds to better utilize encoder capacity under heavy workloads while preserving backpressure safety checks.
 
+### Changed
+- **Standardized export resolution tiers across crop presets**: Low/Medium/High/Ultra now map to 480p/720p/1080p/4K-equivalent output dimensions across square, portrait, and landscape crop modes (including portrait 9:16 and landscape 16:9 presets).
+- **Export size preset modularization (C1)**: moved export resolution preset and normalization logic from `script.js` into `modules/export-size-presets.js` with behavior-preserving wrapper delegation.
+
 ### Fixed
 - **Export progress warning noise**: removed in-progress `encoder under load` warning copy from the visible status line so export UX remains calm and focused on steady progress.
 - **MP4 finalization messaging clarity**: end-of-export status now uses plain-language progress cues ("Finishing video... writing final frames") instead of technical encoder jargon ("draining encoder"), and the progress bar creeps forward during final frame packaging so completion feels continuous rather than stalled.

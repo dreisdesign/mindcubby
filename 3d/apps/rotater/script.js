@@ -137,6 +137,17 @@ import {
     createExportFilenameController,
 } from './modules/export-filename.js';
 import {
+    createDefaultExportSizeSelections as createDefaultExportSizeSelectionsModule,
+    DEFAULT_EXPORT_SIZE_KEYS,
+    normalizeExportSizeProfile as normalizeExportSizeProfileModule,
+    getExportSizePresetMap as getExportSizePresetMapModule,
+    normalizeExportSizeKey as normalizeExportSizeKeyModule,
+    getExportSizeOptionsForFormat as getExportSizeOptionsForFormatModule,
+    getExportLongEdgeForKey as getExportLongEdgeForKeyModule,
+    getLegacyExportSizeKeyForNormalizedQuality as getLegacyExportSizeKeyForNormalizedQualityModule,
+    getExportDimensionsForLongEdge as getExportDimensionsForLongEdgeModule,
+} from './modules/export-size-presets.js';
+import {
     createExportGifRuntimeController,
 } from './modules/export-gif-runtime.js';
 import {
@@ -196,38 +207,7 @@ function normalizeExportQualityValue(value = EXPORT_QUALITY_DEFAULT) {
     return EXPORT_QUALITY_FPS_VALUES.includes(mapped) ? mapped : EXPORT_QUALITY_DEFAULT;
 }
 
-const EXPORT_SIZE_PRESETS = {
-    gif: {
-        '720': { shortEdge: 720, label: '720 px' },
-        '1080': { shortEdge: 1080, label: '1080 px' },
-        '2160': { shortEdge: 2160, label: '4K' },
-        '3840': { shortEdge: 3840, label: 'Ultra' },
-    },
-    mp4: {
-        '720': { shortEdge: 720, label: '720 px' },
-        '1080': { shortEdge: 1080, label: '1080 px' },
-        '2160': { shortEdge: 2160, label: '4K' },
-        '3840': { shortEdge: 3840, label: 'Ultra' },
-    },
-    image: {
-        '720': { shortEdge: 720, label: '720 px' },
-        '1080': { shortEdge: 1080, label: '1080 px' },
-        '2160': { shortEdge: 2160, label: '4K' },
-        '3840': { shortEdge: 3840, label: 'Ultra' },
-    },
-};
-
-const DEFAULT_EXPORT_SIZE_KEYS = {
-    gif: '1080',
-    mp4: '1080',
-    image: '1080',
-};
-
-const exportSizeSelections = {
-    gif: DEFAULT_EXPORT_SIZE_KEYS.gif,
-    mp4: DEFAULT_EXPORT_SIZE_KEYS.mp4,
-    image: DEFAULT_EXPORT_SIZE_KEYS.image,
-};
+const exportSizeSelections = createDefaultExportSizeSelectionsModule();
 
 const IMPORT_STL_LIMITS = {
     maxFileCount: 120,
@@ -257,25 +237,21 @@ const STL_PARSE_WORKER_TIMEOUT_MAX_MS = 90_000;
 
 const IMAGE_DIMENSION_PRESETS = {
     square: { w: 1, h: 1, tag: '1x1' },
-    portrait12: { w: 1, h: 2, tag: '1x2' },
+    portrait12: { w: 9, h: 16, tag: '9x16' },
     landscape43: { w: 4, h: 3, tag: '4x3' },
-    landscape21: { w: 2, h: 1, tag: '2x1' },
+    landscape21: { w: 16, h: 9, tag: '16x9' },
 };
 
 function normalizeExportSizeProfile(format = 'gif') {
-    return (format === 'png' || format === 'jpg') ? 'image' : (format === 'mp4' ? 'mp4' : 'gif');
+    return normalizeExportSizeProfileModule(format);
 }
 
 function getExportSizePresetMap(format = 'gif') {
-    return EXPORT_SIZE_PRESETS[normalizeExportSizeProfile(format)] ?? EXPORT_SIZE_PRESETS.gif;
+    return getExportSizePresetMapModule(format);
 }
 
 function normalizeExportSizeKey(format = 'gif', key = null) {
-    const profile = normalizeExportSizeProfile(format);
-    const presets = getExportSizePresetMap(profile);
-    const stringKey = String(key ?? '');
-    if (presets[stringKey]) return stringKey;
-    return DEFAULT_EXPORT_SIZE_KEYS[profile] ?? Object.keys(presets)[0];
+    return normalizeExportSizeKeyModule(format, key);
 }
 
 function getExportSizeSelectionForFormat(format = document.getElementById('exportFormat')?.value ?? 'gif') {
@@ -291,47 +267,20 @@ function setExportSizeSelectionForFormat(format = document.getElementById('expor
 }
 
 function getExportSizeOptionsForFormat(format = document.getElementById('exportFormat')?.value ?? 'gif') {
-    return Object.entries(getExportSizePresetMap(format)).map(([value, preset]) => ({ value, label: preset.label }));
+    return getExportSizeOptionsForFormatModule(format);
 }
 
 function getExportLongEdgeForFormat(format = document.getElementById('exportFormat')?.value ?? 'gif') {
-    const presets = getExportSizePresetMap(format);
-    const key = getExportSizeSelectionForFormat(format);
-    return presets[key]?.shortEdge ?? presets[Object.keys(presets)[0]]?.shortEdge ?? 1080;
+    return getExportLongEdgeForKeyModule(format, getExportSizeSelectionForFormat(format));
 }
 
 function getExportDimensionsForLongEdge(longEdge, preset = getImageDimensionPreset()) {
-    const safeLongEdge = Math.max(2, Number(longEdge) || 1080);
-    const safeW = Math.max(1, Number(preset?.w) || 1);
-    const safeH = Math.max(1, Number(preset?.h) || 1);
-
-    let width = safeLongEdge;
-    let height = safeLongEdge;
-    if (safeW >= safeH) {
-        width = safeLongEdge;
-        height = Math.round((safeLongEdge * safeH) / safeW);
-    } else {
-        height = safeLongEdge;
-        width = Math.round((safeLongEdge * safeW) / safeH);
-    }
-
-    // Prefer even dimensions for codec and pixel-grid consistency.
-    if (width % 2 !== 0) width += 1;
-    if (height % 2 !== 0) height += 1;
-
-    return { width, height };
+    return getExportDimensionsForLongEdgeModule(longEdge, preset);
 }
 
 function getLegacyExportSizeKeyForQuality(format = 'gif', quality = EXPORT_QUALITY_DEFAULT) {
-    const profile = normalizeExportSizeProfile(format);
     const q = normalizeExportQualityValue(quality);
-    if (profile === 'gif') {
-        return ({ '30': '1080', '60': '1080', '90': '1080', '120': '2160', '240': '3840' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.gif;
-    }
-    if (profile === 'mp4') {
-        return ({ '30': '1080', '60': '1080', '90': '1080', '120': '2160', '240': '3840' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.mp4;
-    }
-    return ({ '30': '1080', '60': '1080', '90': '1080', '120': '2160', '240': '3840' }[q]) || DEFAULT_EXPORT_SIZE_KEYS.image;
+    return getLegacyExportSizeKeyForNormalizedQualityModule(format, q);
 }
 
 function getSelectedExportDimensionsId() {
@@ -10009,9 +9958,9 @@ function buildExportSelectOptions(options = [], selectedValue = '') {
 function buildExportSizeSegmentedButtons(options = [], selectedValue = '') {
     const preset = getImageDimensionPreset();
     const tierNameByLongEdge = {
-        720: 'Low',
-        1080: 'Medium',
-        2160: 'High',
+        854: 'Low',
+        1280: 'Medium',
+        1920: 'High',
         3840: 'Ultra',
     };
     if (exportSizeSegmentedEl) exportSizeSegmentedEl.style.setProperty('--export-tab-columns', String(Math.max(1, options.length)));

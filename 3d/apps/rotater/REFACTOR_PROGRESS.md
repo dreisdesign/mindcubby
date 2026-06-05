@@ -1,6 +1,6 @@
 # C1 Refactor Progress
 
-Last updated: 2026-05-29
+Last updated: 2026-06-05
 Roadmap reference: C1 in [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 
 Goal: split large runtime logic in script.js into stable modules with clear boundaries and sortable naming.
@@ -8,7 +8,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 ## Current Status
 
 - Status: in progress
-- Completed slices: 63
+- Completed slices: 64
 - Current strategy: behavior-preserving extraction first, then internal cleanup in each module
 
 ## Completed Slices
@@ -390,6 +390,12 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 - script.js now delegates MP4 runtime top-level flow through a thin wrapper
 - Shipped in commit: pending
 
+63. Export size presets extraction
+- Module: [modules/export-size-presets.js](modules/export-size-presets.js)
+- Scope: canonical export resolution presets, legacy size-key normalization, long-edge lookup, and long-edge to dimensions helpers
+- script.js now delegates export-size preset selection/mapping logic through thin wrappers
+- Shipped in commit: pending
+
 ## Module Index (C1 Workstream)
 
 | Module | Responsibility | Status | Introduced |
@@ -449,6 +455,7 @@ Goal: split large runtime logic in script.js into stable modules with clear boun
 | [modules/export-progress-timing.js](modules/export-progress-timing.js) | Export progress paint timing/throttle helper orchestration | Active | pending |
 | [modules/export-download.js](modules/export-download.js) | Export blob download and URL revoke helper orchestration | Active | pending |
 | [modules/export-filename.js](modules/export-filename.js) | Export quality/modifier tags and filename composition helper orchestration | Active | pending |
+| [modules/export-size-presets.js](modules/export-size-presets.js) | Export resolution presets, legacy key normalization, and long-edge dimension helpers | Active | pending |
 | [modules/export-gif-runtime.js](modules/export-gif-runtime.js) | GIF export runtime orchestration (preflight/capture/encode/finalize) | Active | pending |
 | [modules/export-mp4-preflight.js](modules/export-mp4-preflight.js) | MP4 preflight/workload guard and unsupported-WebCodecs handling | Active | pending |
 | [modules/export-mp4-encoder-queue.js](modules/export-mp4-encoder-queue.js) | MP4 encoder queue wait and busy-status notice helper orchestration | Active | pending |
