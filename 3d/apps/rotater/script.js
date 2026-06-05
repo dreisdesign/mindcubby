@@ -1163,6 +1163,7 @@ let modelPartSelected = 0;
 let pendingModelPartSelected = 0;
 let pendingBulkSelectedPartIndices = null;
 let bgSyncPartIndex = 0;
+let bgSyncFollowSelected = true;
 let lastNonModelBgPreset = 'white';
 let buildPlateSyncPartIndex = 0;
 let lastNonModelBuildPlatePreset = 'custom';
@@ -2585,7 +2586,7 @@ function getMaterial(shading, baseColor, partSettings) {
     // Use per-part tone if available, otherwise fall back to the UI slider.
     const ps = partSettings || null;
     const toneVal = ps != null && ps.tone != null ? ps.tone : parseInt(opacitySlider ? opacitySlider.value : 0, 10);
-    const baseC = computeTonedColor(baseColor, toneVal);
+    const baseC = computeModelDisplayColor(baseColor, toneVal, ps);
 
     // Per-part roughness/metalness when available; fall back to global textureTuneState.
     const matteRoughness  = ps != null && ps.matteRoughness  != null ? ps.matteRoughness  : textureTuneState.matteRoughness;
@@ -2773,7 +2774,34 @@ function getUiSelectedPartIndices() {
 function syncActivePartFromUiSelection() {
     if (!isMultipartModel()) return;
     const selected = getUiSelectedPartIndices();
-    if (selected.length === 1) modelPartSelected = selected[0];
+    if (selected.length === 1) {
+        modelPartSelected = selected[0];
+        syncBgSyncSourceWithActiveSelection();
+    }
+}
+
+function syncBgSyncSourceWithActiveSelection({ persist = false } = {}) {
+    if (!isMultipartModel() || !bgSyncFollowSelected || !hasModelParts()) return false;
+    const selected = getUiSelectedPartIndices();
+    if (selected.length !== 1) return false;
+    const nextIdx = Math.max(0, Math.min(selected[0], modelPartNames.length - 1));
+    if (bgSyncPartIndex === nextIdx) return false;
+
+    const prevIdx = bgSyncPartIndex;
+    bgSyncPartIndex = nextIdx;
+    syncModelSyncPreviewThumbTargets();
+    queueModelPartThumbsRender([prevIdx, nextIdx]);
+
+    if (activeBgPreset === 'modelcolor') {
+        const syncColor = getModelSyncSourceColor();
+        bgPick.value = syncColor;
+        updateAutoBgShadeControlVisibility();
+        if (isDynamicBg) updateDynamicBg();
+        else applyBackgroundFromBaseColor(syncColor);
+    }
+    syncBgModelSyncSourceUI();
+    if (persist) saveSettings();
+    return true;
 }
 
 function setBulkPartSelectionForAll(selected) {
@@ -4732,6 +4760,30 @@ function computeBuildPlateAutoBrightnessColor(baseHex) {
     return ShadeSystem.computeBuildPlateAutoBrightnessColor(baseHex);
 }
 
+function computeModelDisplayColor(baseHex, toneVal, partSettings = null) {
+    const toned = computeTonedColor(baseHex, toneVal);
+    if ((Number(toneVal) || 0) !== 0) return toned;
+
+    const family = normalizeMaterialFamily(
+        partSettings?.materialFamily,
+        getMaterialFamilyFromShading(partSettings?.shading || shadingEl?.value || 'phong')
+    );
+    // Keep specialty material looks untouched; only tune standard/ceramic so
+    // vivid custom picks at Shade +0 stay closer to picker/swatches.
+    if (family !== 'standard' && family !== 'ceramic') return toned;
+
+    const hsl = { h: 0, s: 0, l: 0 };
+    toned.getHSL(hsl);
+    const satWeight = THREE.MathUtils.clamp((hsl.s - 0.45) / 0.55, 0, 1);
+    const lightWeight = THREE.MathUtils.clamp((hsl.l - 0.42) / 0.58, 0, 1);
+    const vividWeight = satWeight * lightWeight;
+    if (vividWeight <= 0) return toned;
+
+    const nextS = THREE.MathUtils.clamp(hsl.s + ((1 - hsl.s) * 0.32 * vividWeight), 0, 1);
+    const nextL = THREE.MathUtils.clamp(hsl.l * (1 - (0.22 * vividWeight)), 0, 1);
+    return toned.clone().setHSL(hsl.h, nextS, nextL);
+}
+
 function syncDevModeToggleUI() {
     document.documentElement.classList.toggle('dev-mode', !!devModeEnabled);
     if (devModeToggleEl) devModeToggleEl.checked = !!devModeEnabled;
@@ -4903,7 +4955,7 @@ function applyPartColorsToMesh(options = {}) {
         const s = getPartSettings(idx);
         const baseHex = s.color || modelPartBaseColors[idx] || colorPick.value;
         if (mat.color) {
-            const toned = computeTonedColor(baseHex, s.tone ?? 0);
+            const toned = computeModelDisplayColor(baseHex, s.tone ?? 0, s);
             mat.userData.partVisualBaseColorHex = toned.getHex();
             mat.color.setHex(mat.userData.partVisualBaseColorHex);
         }
@@ -5209,6 +5261,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                         }
                         if (!maybeConfirmBgSyncChange(partIdx)) return;
                         activeBgPreset = 'modelcolor';
+                        bgSyncFollowSelected = false;
                         bgSyncPartIndex = partIdx;
                         const syncColor = getModelSyncSourceColor();
                         bgPick.value = syncColor;
@@ -5279,6 +5332,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     }
                     if (!maybeConfirmBgSyncChange(partIdx)) return;
                     activeBgPreset = 'modelcolor';
+                    bgSyncFollowSelected = false;
                     bgSyncPartIndex = partIdx;
                     const syncColor = getModelSyncSourceColor();
                     bgPick.value = syncColor;
@@ -5365,33 +5419,43 @@ function getModelSyncPreviewPartIndex() {
 
 function syncModelSyncPreviewThumbTargets() {
     if (!hasModelParts()) return;
-    const previewPartIdx = getModelSyncPreviewPartIndex();
+    const clampedBgIdx = Math.max(0, Math.min(bgSyncPartIndex, modelPartNames.length - 1));
+    const clampedBpIdx = Math.max(0, Math.min(buildPlateSyncPartIndex, modelPartNames.length - 1));
+
+    const shouldUseSummaryGrid = (scope) => {
+        if (!isMultipartModel()) return false;
+        if (scope === 'background') return activeBgPreset !== 'modelcolor';
+        if (scope === 'buildPlate') return activeBuildPlatePreset !== 'modelcolor';
+        return false;
+    };
+
+    const applySyncThumbMode = (canvasEl, scope, partIdx) => {
+        if (!(canvasEl instanceof HTMLCanvasElement)) return;
+        if (shouldUseSummaryGrid(scope)) {
+            canvasEl.classList.remove('js-part-thumb-preview');
+            delete canvasEl.dataset.partIndex;
+            renderMultipartSummaryThumbnail(canvasEl);
+            return;
+        }
+        canvasEl.classList.add('js-part-thumb-preview');
+        canvasEl.dataset.partIndex = String(partIdx);
+        paintThumbFallback(canvasEl, partIdx);
+        // Render immediately when possible so active Model Sync thumbs do not
+        // remain on fallback art until another interaction triggers a repaint.
+        if (mesh && renderer && camera && shouldRenderThumbCanvas(canvasEl)) {
+            renderSinglePartThumbnail(canvasEl, partIdx);
+        }
+    };
 
     const bgPresetThumbCanvas = document.getElementById('bg-preset-modelcolor-canvas');
-    if (bgPresetThumbCanvas instanceof HTMLCanvasElement) {
-        bgPresetThumbCanvas.classList.add('js-part-thumb-preview');
-        bgPresetThumbCanvas.dataset.partIndex = String(previewPartIdx);
-        paintThumbFallback(bgPresetThumbCanvas, previewPartIdx);
-    }
+    applySyncThumbMode(bgPresetThumbCanvas, 'background', clampedBgIdx);
 
-    if (bgModelSyncSelectorThumb instanceof HTMLCanvasElement) {
-        bgModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
-        bgModelSyncSelectorThumb.dataset.partIndex = String(previewPartIdx);
-        paintThumbFallback(bgModelSyncSelectorThumb, previewPartIdx);
-    }
+    applySyncThumbMode(bgModelSyncSelectorThumb, 'background', clampedBgIdx);
 
     const buildPresetThumbCanvas = document.getElementById('build-plate-preset-modelcolor-canvas');
-    if (buildPresetThumbCanvas instanceof HTMLCanvasElement) {
-        buildPresetThumbCanvas.classList.add('js-part-thumb-preview');
-        buildPresetThumbCanvas.dataset.partIndex = String(previewPartIdx);
-        paintThumbFallback(buildPresetThumbCanvas, previewPartIdx);
-    }
+    applySyncThumbMode(buildPresetThumbCanvas, 'buildPlate', clampedBpIdx);
 
-    if (buildPlateModelSyncSelectorThumb instanceof HTMLCanvasElement) {
-        buildPlateModelSyncSelectorThumb.classList.add('js-part-thumb-preview');
-        buildPlateModelSyncSelectorThumb.dataset.partIndex = String(previewPartIdx);
-        paintThumbFallback(buildPlateModelSyncSelectorThumb, previewPartIdx);
-    }
+    applySyncThumbMode(buildPlateModelSyncSelectorThumb, 'buildPlate', clampedBpIdx);
 }
 
 function getActiveBuildPlateBaseColor() {
@@ -5475,6 +5539,7 @@ function syncBgModelSyncSourceUI() {
         paintThumbFallback(optCanvas, idx);
         opt.addEventListener('click', () => {
             if (!maybeConfirmBgSyncChange(idx)) return;
+            bgSyncFollowSelected = false;
             bgSyncPartIndex = idx;
             activeBgPreset = 'modelcolor';
             if (activeBgPreset === 'modelcolor') {
@@ -7632,6 +7697,7 @@ function saveSettings() {
             modelPartSelected: String(modelPartSelected || 0),
             modelPartBulkSelected: getBulkSelectedPartIndices().join(','),
             bgSyncPartIndex: String(bgSyncPartIndex || 0),
+            bgSyncFollowSelected: bgSyncFollowSelected ? '1' : '0',
         }));
     } catch (e) { }
     if (DEV_LOG) {
@@ -8048,6 +8114,10 @@ function restoreSettings() {
         } else {
             pendingBulkSelectedPartIndices = null;
         }
+        if (s.bgSyncFollowSelected != null || s.modelSyncFollow != null) {
+            const followRaw = s.bgSyncFollowSelected ?? s.modelSyncFollow;
+            bgSyncFollowSelected = !(followRaw === false || followRaw === 0 || followRaw === '0');
+        }
         if (s.bgSyncPartIndex != null || s.modelSyncPart != null) {
             const idx = parseInt(s.bgSyncPartIndex ?? s.modelSyncPart, 10);
             bgSyncPartIndex = Number.isFinite(idx) ? Math.max(0, idx) : 0;
@@ -8215,6 +8285,7 @@ function getURLSettings(searchStr = location.search) {
         activeModelPreset: g('amp'),
         shadeBlendMode: g('sbm'),
         modelSyncPart: g('bsp'),
+        modelSyncFollow: g('bsf'),
         uploadChoicePrompt: g('uap'),
         uploadDefaultAction: p.has('uam') ? (p.get('uam') === 'r' ? 'replace' : 'newplate') : null,
         devMode: g('dv'),
@@ -8301,6 +8372,7 @@ function settingsToURL() {
     p.set('amp', activeModelPreset || 'custom');
     if (shadeBlendMode && shadeBlendMode !== 'hsl') p.set('sbm', shadeBlendMode);
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
+    if (!bgSyncFollowSelected) p.set('bsf', '0');
     if (!uploadChoicePromptEnabled) p.set('uap', '0');
     if (uploadDefaultAction === 'replace') p.set('uam', 'r');
     if (devModeEnabled) p.set('dv', '1');
@@ -10167,8 +10239,10 @@ function handleExportFormatAutoPause(fmt) {
     const isAnimated = fmt === 'gif' || fmt === 'mp4';
 
     if (isStill) {
-        if (_pausedBeforeStillExport === null) _pausedBeforeStillExport = isPaused;
-        if (!isPaused) togglePause();
+        if (_pausedBeforeStillExport === null) {
+            _pausedBeforeStillExport = isPaused;
+            if (!isPaused) togglePause();
+        }
         return;
     }
 
@@ -10801,6 +10875,7 @@ btnResetModelCard?.addEventListener('click', () => {
 btnResetBackgroundCard?.addEventListener('click', () => {
     activeBgPreset = 'modelcolor';
     lastNonModelBgPreset = 'custom';
+    bgSyncFollowSelected = true;
     bgSyncPartIndex = 0;
     isDynamicBg = true;
     const autoBgCheck = document.getElementById('autoBgCheck');
@@ -11013,6 +11088,7 @@ async function clearBuildPlateModels() {
     modelPartBoundsBoxes = [];
     modelPartSelected = 0;
     bulkSelectedPartIndices.clear();
+    bgSyncFollowSelected = true;
     bgSyncPartIndex = 0;
     buildPlateSyncPartIndex = 0;
     modelDims = null;
@@ -12073,12 +12149,11 @@ window.addEventListener('pointermove', (e) => {
 canvas?.addEventListener('click', (e) => {
     closeModelPartActionMenus();
     if (exportWorkspaceActive) {
-        // In Share workspace, a single non-drag canvas click should close.
-        // Exception: when crop framing is active, keep inside-frame clicks interactive.
-        if (!exportFrameEnabled || !isCanvasPointInsideCropFrame(e.clientX, e.clientY)) {
-            closeExportWorkspace();
-            return;
-        }
+        // A single non-drag click anywhere on the canvas closes export workspace.
+        // Drags (orbit/pan) never reach here — the orbit click guard prevents click
+        // from firing for pointer movements that exceed the drag threshold.
+        closeExportWorkspace();
+        return;
     }
 
     if (isModelPartFloatingCardOpen()) {
@@ -12299,10 +12374,7 @@ if (exportPreviewForwardHost) {
                     _previewForwardPointer.moved = true;
                 }
             } else if ((eventName === 'pointerup' || eventName === 'pointercancel') && _previewForwardPointer && e.pointerId === _previewForwardPointer.pointerId) {
-                const shouldClose = eventName === 'pointerup'
-                    && !_previewForwardPointer.moved
-                    && exportWorkspaceActive
-                    && (!exportFrameEnabled || !isCanvasPointInsideCropFrame(e.clientX, e.clientY));
+                const shouldClose = false; // preview clicks orbit the model; close via canvas or close button
                 _previewForwardPointer = null;
                 if (shouldClose) {
                     closeExportWorkspace();
@@ -13988,7 +14060,7 @@ function renderBgPresets() {
     bar.style.display = 'grid';
     bar.style.gridTemplateColumns = 'repeat(4, 1fr)';
     bar.style.gap = '6px';
-    const previewPartIdx = getModelSyncPreviewPartIndex();
+    const previewPartIdx = Math.max(0, Math.min(bgSyncPartIndex, modelPartNames.length - 1));
 
     BG_PRESETS.forEach((preset) => {
         const wrap = document.createElement('div');
@@ -14095,7 +14167,7 @@ function renderBuildPlatePresets() {
     bar.style.display = 'grid';
     bar.style.gridTemplateColumns = 'repeat(4, 1fr)';
     bar.style.gap = '6px';
-    const previewPartIdx = getModelSyncPreviewPartIndex();
+    const previewPartIdx = Math.max(0, Math.min(buildPlateSyncPartIndex, modelPartNames.length - 1));
 
     BUILD_PLATE_PRESETS.forEach((preset) => {
         const wrap = document.createElement('div');

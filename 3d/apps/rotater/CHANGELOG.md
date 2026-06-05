@@ -5,6 +5,8 @@
 - **Model card scope isolation for shade edits**: model shade/tone updates no longer mutate background/surface color state through legacy model-sync paths.
 - **Custom/Gold toggle stability**: switching between named presets and `Custom` no longer restores stale per-part custom snapshots or unexpectedly changes visible model color.
 - **Multipart active-part selection reliability**: with Multi-select OFF, clicking a model row in the picker now consistently switches the active part and updates controls/material edits to that selected row.
+- **Model Sync thumb parity (Background + Surface)**: model-sync thumbs now match model-picker behavior across multipart states: summary grid when sync preset is inactive, synced model when active.
+- **Surface Model Sync immediate thumb render**: enabling Surface Model Sync now renders the selected synced model thumbnail immediately instead of waiting for a later selection interaction.
 - **Export workspace click-close reliability**: floating preview close now uses pointerup click detection with drag threshold and crop-frame guard so single-click close is consistent.
 - **PNG/JPEG quality slider fill sync**: still-image quality slider now updates its filled track segment correctly while dragging and after restoring saved settings.
 - **Export segmented picker visual parity**: Format, Crop, Resolution, and Quality segmented controls now share the same active-chip treatment and avoid active-shadow clipping.
