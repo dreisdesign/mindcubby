@@ -2066,7 +2066,7 @@ function initThree() {
     bindLifecyclePersistGuards();
 
     syncCanvasSize();
-    window.addEventListener('resize', syncCanvasSize);
+    window.addEventListener('resize', () => syncCanvasSize(true));
     // ResizeObserver keeps canvas in sync during sidebar transitions.
     // Throttled to one sync per animation frame so the WebGL resolution
     // tracks every step of the CSS transition without redundant calls.
@@ -2075,14 +2075,16 @@ function initThree() {
         new ResizeObserver(() => {
             if (!roPending) {
                 roPending = true;
-                requestAnimationFrame(() => { syncCanvasSize(); roPending = false; });
+                requestAnimationFrame(() => { syncCanvasSize(true); roPending = false; });
             }
         }).observe(canvas.parentElement);
     }
     requestAnimationFrame(loop);
 }
 
-function syncCanvasSize() {
+let _syncCanvasSizeDeferredWorkTimer = null;
+
+function syncCanvasSize(lightweight = false) {
     const wrap = canvas.parentElement;
     const w = wrap.clientWidth;
     const h = wrap.clientHeight;
@@ -2097,8 +2099,17 @@ function syncCanvasSize() {
         camera.updateProjectionMatrix();
     }
     updateOrbitDistanceLimits();
-    updateEstimate();
-    updateLiveRulerOverlay();
+    if (!lightweight) {
+        updateEstimate();
+        updateLiveRulerOverlay();
+    } else {
+        if (_syncCanvasSizeDeferredWorkTimer) clearTimeout(_syncCanvasSizeDeferredWorkTimer);
+        _syncCanvasSizeDeferredWorkTimer = setTimeout(() => {
+            _syncCanvasSizeDeferredWorkTimer = null;
+            updateEstimate();
+            updateLiveRulerOverlay();
+        }, 120);
+    }
     // Re-render immediately after setSize clears the buffer so the browser
     // never composites a blank canvas (prevents the dark-flash during resize).
     if (scene && camera && !isExporting) renderer.render(scene, camera);
@@ -3652,13 +3663,15 @@ function shouldRenderThumbCanvas(canvasEl) {
 }
 
 function ensurePartThumbRenderResources() {
-    const size = 512;
+    // 256 keeps thumb quality visually crisp while significantly reducing the
+    // per-frame GPU+readback cost that can trip long rAF handlers.
+    const size = 256;
     if (!partThumbRenderTarget || partThumbRenderTarget.width !== size || partThumbRenderTarget.height !== size) {
         if (partThumbRenderTarget) partThumbRenderTarget.dispose();
         partThumbRenderTarget = new THREE.WebGLRenderTarget(size, size, {
             depthBuffer: true,
             stencilBuffer: false,
-            samples: renderer?.capabilities?.isWebGL2 ? 4 : 0,
+            samples: 0,
         });
         partThumbRenderTarget.texture.colorSpace = THREE.SRGBColorSpace;
         partThumbRenderTarget.texture.minFilter = THREE.LinearFilter;
@@ -13030,28 +13043,37 @@ btnVideo.addEventListener('click', async () => {
                 outCtx.drawImage(canvas, 0, 0, W, H);
                 drawRulerOverlay(outCtx, W, H, camera);
 
-                const timestamp = Math.round(f * (1_000_000 / fps));
-                const frame = new VideoFrame(out, { timestamp });
-                if (encoderError) { frame.close(); throw encoderError; }
-                if (encoder.state === 'closed') { frame.close(); throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.'); }
                 await exportMp4EncoderQueueController.waitForEncoderQueue({
                     encoder,
                     getEncoderError: () => encoderError,
-                    // Higher queue tolerance avoids over-throttling when browser
-                    // screen capture/recording is active during export.
-                    maxQueue: 48,
+                    // Soft/hard queue thresholds smooth pacing and avoid
+                    // abrupt mid-export stop/start behavior under load.
+                    maxQueue: 160,
+                    hardQueue: 320,
                     frameIndex: f,
                     total: totalFrames,
                 });
-                encoder.encode(frame, { keyFrame: f % 30 === 0 });
-                frame.close();
+                const timestamp = Math.round(f * (1_000_000 / fps));
+                let frame = null;
+                try {
+                    frame = new VideoFrame(out, { timestamp });
+                    if (encoderError) throw encoderError;
+                    if (encoder.state === 'closed') throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.');
+                    encoder.encode(frame, { keyFrame: f % 30 === 0 });
+                } finally {
+                    try { frame?.close(); } catch (_) { }
+                }
 
                 await maybePaintExportProgress(`Encoding… ${f + 1} / ${totalFrames}`, f + 1, totalFrames);
             }
 
             setAnimStatus('Finalizing video…', totalFrames, totalFrames);
             await new Promise(r => setTimeout(r, 0));
-            await encoder.flush();
+            await exportMp4EncoderQueueController.waitForEncoderFlush({
+                encoder,
+                getEncoderError: () => encoderError,
+                total: totalFrames,
+            });
             if (encoderError) throw encoderError;
             muxer.finalize();
         } finally {
@@ -13411,11 +13433,11 @@ function renderModelPresets() {
             extra: '',
         };
         wrap.innerHTML = `
-            <label class="shading-option preset-option" title="Apply ${preset.name}">
+            <button type="button" class="shading-option preset-option" title="Apply ${preset.name}">
                 <span class="shading-thumb" id="model-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;background-color:${ts.bg};position:relative;overflow:hidden;background-clip:padding-box;${ts.extra || ''}">
                     <span style="position:absolute;inset:0;background:${ts.overlay};"></span>
                 </span>
-            </label>
+            </button>
             <span class="thumb-label">${preset.name}</span>
         `;
         const actionArea = wrap.querySelector('.shading-option');
@@ -13447,10 +13469,10 @@ function renderModelPresets() {
 
     // Always render with transparent fill; updateModelSelection will fill when active
     customWrap.innerHTML = `
-        <label class="shading-option custom-color-option" title="Custom color — click to pick" style="cursor:pointer;position:relative;">
+        <button type="button" class="shading-option custom-color-option" title="Custom color — click to pick" style="cursor:pointer;position:relative;">
             ${rainbowRingSvg('customModelThumb', 'transparent')}
             <span id="customModelSphereOverlay" style="position:absolute;inset:3px;border-radius:50%;pointer-events:none;display:none;"></span>
-        </label>
+        </button>
         <span class="thumb-label">Custom</span>
     `;
 
@@ -14074,9 +14096,9 @@ function renderBgPresets() {
             : `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? PALETTE.preset.bgBorderLight : (preset.id === 'black' ? PALETTE.preset.bgBorderDark : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
-            <label class="shading-option preset-option" title="${preset.name} background">
+            <button type="button" class="shading-option preset-option" title="${preset.name} background">
                 ${swatchInner}
-            </label>
+            </button>
             <span class="thumb-label">${preset.name}</span>
         `;
 
@@ -14122,10 +14144,10 @@ function renderBgPresets() {
     customWrap.style.alignItems = 'center';
 
     customWrap.innerHTML = `
-        <label class="shading-option custom-color-option" title="Custom background — click to pick" style="cursor:pointer;position:relative;">
+        <button type="button" class="shading-option custom-color-option" title="Custom background — click to pick" style="cursor:pointer;position:relative;">
             ${rainbowRingSvg('customBgThumb', 'transparent')}
             <span id="customBgSphereOverlay" style="position:absolute;inset:3px;border-radius:50%;pointer-events:none;display:none;"></span>
-        </label>
+        </button>
         <span class="thumb-label">Custom</span>
     `;
     bar.appendChild(customWrap);
@@ -14181,9 +14203,9 @@ function renderBuildPlatePresets() {
             : `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? PALETTE.preset.bgBorderLight : (preset.id === 'black' ? PALETTE.preset.bgBorderDark : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
-            <label class="shading-option preset-option" title="${preset.name} surface color">
+            <button type="button" class="shading-option preset-option" title="${preset.name} surface color">
                 ${swatchInner}
-            </label>
+            </button>
             <span class="thumb-label">${preset.name}</span>
         `;
 
@@ -14241,10 +14263,10 @@ function renderBuildPlatePresets() {
     customWrap.style.alignItems = 'center';
 
     customWrap.innerHTML = `
-        <label class="shading-option custom-color-option" title="Custom surface color" style="cursor:pointer;position:relative;">
+        <button type="button" class="shading-option custom-color-option" title="Custom surface color" style="cursor:pointer;position:relative;">
             ${rainbowRingSvg('customBuildPlateThumb', 'transparent')}
             <span id="customBuildPlateSphereOverlay" style="position:absolute;inset:3px;border-radius:50%;pointer-events:none;display:none;"></span>
-        </label>
+        </button>
         <span class="thumb-label">Custom</span>
     `;
     bar.appendChild(customWrap);

@@ -1,3 +1,15 @@
+## [2.2.50] - 2026-06-05
+
+### Performance
+- **MP4 encoder pacing smoothing for high-workload exports**: queue backpressure now uses adaptive soft/hard thresholds with resume-level draining to reduce visible sprint/pause cadence and keep high-FPS/high-resolution exports moving more steadily.
+- **High-throughput queue tuning**: raised MP4 queue thresholds to better utilize encoder capacity under heavy workloads while preserving backpressure safety checks.
+
+### Fixed
+- **Export progress warning noise**: removed in-progress `encoder under load` warning copy from the visible status line so export UX remains calm and focused on steady progress.
+- **App Settings label association warnings**: replaced invalid `label[for]` headings targeting custom segmented radiogroup containers with semantic heading text, clearing DevTools `Incorrect use of <label for=FORM_ELEMENT>` issues in dock and modal settings panels.
+
+---
+
 ## [2.2.49] - 2026-06-03
 
 ### Fixed
