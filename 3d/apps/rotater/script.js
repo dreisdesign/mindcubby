@@ -974,6 +974,7 @@ const rulerModePickerEl = document.getElementById('rulerModePicker');
 const rulerHoverToggleEl = document.getElementById('rulerHoverToggle');
 const rulerSelectToggleEl = document.getElementById('rulerSelectToggle');
 const showDpadToggleEl = document.getElementById('showDpadToggle');
+const reverseDpadHorizontalToggleEl = document.getElementById('reverseDpadHorizontalToggle');
 const devModeToggleEl = document.getElementById('devModeToggle');
 const resetWarningsToggleEl = document.getElementById('resetWarningsToggle');
 const btnResetEverythingEl = document.getElementById('btnResetEverything');
@@ -991,6 +992,7 @@ const buildPlateCustomSizeRowEl = document.getElementById('buildPlateCustomSizeR
 const buildPlateCustomWidthEl = document.getElementById('buildPlateCustomWidth');
 const buildPlateCustomDepthEl = document.getElementById('buildPlateCustomDepth');
 const showDpadToggleModalEl = document.getElementById('showDpadToggle-modal');
+const reverseDpadHorizontalToggleModalEl = document.getElementById('reverseDpadHorizontalToggle-modal');
 const buildPlateSizePresetModalEl = document.getElementById('buildPlateSizePreset-modal');
 const buildPlateCustomSizeRowModalEl = document.getElementById('buildPlateCustomSizeRow-modal');
 const buildPlateCustomWidthModalEl = document.getElementById('buildPlateCustomWidth-modal');
@@ -1635,6 +1637,7 @@ let buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
 let buildPlateWidth = BUILD_PLATE_DEFAULTS.width;
 let buildPlateDepth = BUILD_PLATE_DEFAULTS.depth;
 let dpadVisible = true;
+let dpadHorizontalReversed = true;
 let exportMotionControlsEnabled = true;
 let _syncingExportMotionControls = false;
 let autoUIAssistEnabled = true;
@@ -7658,6 +7661,7 @@ function saveSettings() {
             buildPlateWidth: String(buildPlateWidth),
             buildPlateDepth: String(buildPlateDepth),
             showDpad: dpadVisible ? '1' : '0',
+            dpadHorizontalReverse: dpadHorizontalReversed ? '1' : '0',
             uploadChoicePrompt: uploadChoicePromptEnabled ? '1' : '0',
             uploadDefaultAction: uploadDefaultAction,
             devMode: devModeEnabled ? '1' : '0',
@@ -8023,6 +8027,9 @@ function restoreSettings() {
         if (s.showDpad != null) {
             dpadVisible = (s.showDpad === '1' || s.showDpad === true || s.showDpad === 1);
         }
+        if (s.dpadHorizontalReverse != null) {
+            dpadHorizontalReversed = (s.dpadHorizontalReverse === '1' || s.dpadHorizontalReverse === true || s.dpadHorizontalReverse === 1);
+        }
         if (s.devMode != null) {
             devModeEnabled = (s.devMode === '1' || s.devMode === true || s.devMode === 1);
         } else {
@@ -8125,6 +8132,7 @@ function restoreSettings() {
         exportMotionControlsEnabled = true;
         if (exportMotionControlsEl) exportMotionControlsEl.hidden = false;
         if (showDpadToggleEl) showDpadToggleEl.checked = dpadVisible;
+        if (reverseDpadHorizontalToggleEl) reverseDpadHorizontalToggleEl.checked = dpadHorizontalReversed;
         syncDevModeToggleUI();
         applyDpadVisibility();
         updateBuildPlateMaterial();
@@ -8256,6 +8264,7 @@ function getURLSettings(searchStr = location.search) {
         shadeBlendMode: g('sbm'),
         modelSyncPart: g('bsp'),
         modelSyncFollow: g('bsf'),
+        dpadHorizontalReverse: g('dr'),
         uploadChoicePrompt: g('uap'),
         uploadDefaultAction: p.has('uam') ? (p.get('uam') === 'r' ? 'replace' : 'newplate') : null,
         devMode: g('dv'),
@@ -8343,6 +8352,7 @@ function settingsToURL() {
     if (shadeBlendMode && shadeBlendMode !== 'hsl') p.set('sbm', shadeBlendMode);
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
     if (!bgSyncFollowSelected) p.set('bsf', '0');
+    p.set('dr', dpadHorizontalReversed ? '1' : '0');
     if (!uploadChoicePromptEnabled) p.set('uap', '0');
     if (uploadDefaultAction === 'replace') p.set('uam', 'r');
     if (devModeEnabled) p.set('dv', '1');
@@ -9223,6 +9233,11 @@ document.getElementById('btnExportPause')?.addEventListener('click', togglePause
 updateExportPauseButtonUI();
 applyDpadVisibility();
 
+function mapDpadHorizontalDirection(dir) {
+    const normalized = dir < 0 ? -1 : 1;
+    return dpadHorizontalReversed ? -normalized : normalized;
+}
+
 // Re-clicking active Spin card toggles CC/CCW; other active cards toggle pause.
 // Use delegated handlers so clicks on any nested element in the card behave consistently.
 const rotateOptionWasChecked = new WeakMap();
@@ -9277,8 +9292,8 @@ document.addEventListener('keydown', e => {
     // Arrow keys: D-pad orbit snap (only when not typing in an input)
     const tag = document.activeElement?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-    if (e.code === 'ArrowLeft') { e.preventDefault(); snapOrbit(-1, 0); }
-    if (e.code === 'ArrowRight') { e.preventDefault(); snapOrbit(1, 0); }
+    if (e.code === 'ArrowLeft') { e.preventDefault(); snapOrbit(mapDpadHorizontalDirection(-1), 0); }
+    if (e.code === 'ArrowRight') { e.preventDefault(); snapOrbit(mapDpadHorizontalDirection(1), 0); }
     if (e.code === 'ArrowUp') { e.preventDefault(); snapOrbit(0, -1); }
     if (e.code === 'ArrowDown') { e.preventDefault(); snapOrbit(0, 1); }
 });
@@ -9327,8 +9342,8 @@ function snapOrbit(azDir, elDir) {
     snapCamera(az, el);
 }
 
-document.getElementById('btnCamLeft').addEventListener('click', () => snapOrbit(-1, 0));
-document.getElementById('btnCamRight').addEventListener('click', () => snapOrbit(1, 0));
+document.getElementById('btnCamLeft').addEventListener('click', () => snapOrbit(mapDpadHorizontalDirection(-1), 0));
+document.getElementById('btnCamRight').addEventListener('click', () => snapOrbit(mapDpadHorizontalDirection(1), 0));
 document.getElementById('btnCamUp').addEventListener('click', () => snapOrbit(0, -1));
 document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(0, 1));
 
@@ -11583,6 +11598,22 @@ if (showDpadToggleEl) {
         showDpadToggleModalEl.addEventListener('change', () => {
             showDpadToggleEl.checked = showDpadToggleModalEl.checked;
             dpadHandler();
+        });
+    }
+}
+
+if (reverseDpadHorizontalToggleEl) {
+    reverseDpadHorizontalToggleEl.checked = dpadHorizontalReversed;
+    const reverseDpadHandler = () => {
+        dpadHorizontalReversed = !!reverseDpadHorizontalToggleEl.checked;
+        saveSettings();
+    };
+    reverseDpadHorizontalToggleEl.addEventListener('change', reverseDpadHandler);
+    if (reverseDpadHorizontalToggleModalEl) {
+        reverseDpadHorizontalToggleModalEl.checked = dpadHorizontalReversed;
+        reverseDpadHorizontalToggleModalEl.addEventListener('change', () => {
+            reverseDpadHorizontalToggleEl.checked = reverseDpadHorizontalToggleModalEl.checked;
+            reverseDpadHandler();
         });
     }
 }

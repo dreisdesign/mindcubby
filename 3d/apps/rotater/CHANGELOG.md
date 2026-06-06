@@ -1,4 +1,4 @@
-## [2.2.50] - 2026-06-05
+## [1.0.0] - 2026-06-05
 
 ### Performance
 - **MP4 encoder pacing smoothing for high-workload exports**: queue backpressure now uses adaptive soft/hard thresholds with resume-level draining to reduce visible sprint/pause cadence and keep high-FPS/high-resolution exports moving more steadily.
@@ -14,6 +14,7 @@
 - **MP4 finalization messaging clarity**: end-of-export status now uses plain-language progress cues ("Finishing video... writing final frames") instead of technical encoder jargon ("draining encoder"), and the progress bar creeps forward during final frame packaging so completion feels continuous rather than stalled.
 - **App Settings label association warnings**: replaced invalid `label[for]` headings targeting custom segmented radiogroup containers with semantic heading text, clearing DevTools `Incorrect use of <label for=FORM_ELEMENT>` issues in dock and modal settings panels.
 - **3D Models click-to-color editing**: clicking a model row in the floating 3D Models window now opens the model color picker for the selected part, streamlining per-part color edits.
+- **D-pad horizontal direction toggle**: added a reversible setting for left/right D-pad camera snapping so users can swap the direction back from App Settings.
 
 ---
 
