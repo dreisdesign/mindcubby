@@ -12,6 +12,7 @@
 ### Fixed
 - **Export progress warning noise**: removed in-progress `encoder under load` warning copy from the visible status line so export UX remains calm and focused on steady progress.
 - **MP4 finalization messaging clarity**: end-of-export status now uses plain-language progress cues ("Finishing video... writing final frames") instead of technical encoder jargon ("draining encoder"), and the progress bar creeps forward during final frame packaging so completion feels continuous rather than stalled.
+- **MP4 export error feedback**: encoder timeout and other export errors now display prominently for 15 seconds (instead of 5) so users can read the failure message, and the export stops gracefully without attempting a partial download.
 - **App Settings label association warnings**: replaced invalid `label[for]` headings targeting custom segmented radiogroup containers with semantic heading text, clearing DevTools `Incorrect use of <label for=FORM_ELEMENT>` issues in dock and modal settings panels.
 - **3D Models click-to-color editing**: clicking a model row in the floating 3D Models window now opens the model color picker for the selected part, streamlining per-part color edits.
 - **D-pad horizontal direction toggle**: added a reversible setting for left/right D-pad camera snapping so users can swap the direction back from App Settings.

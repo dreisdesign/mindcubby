@@ -25,10 +25,12 @@ export function createExportMp4RuntimeController({
         await new Promise((resolve) => requestAnimationFrameFn?.(resolve));
         setControlsAutoRotate?.(false);
 
+        let hasError = false;
         try {
             const parsedPreflight = preflightController?.assertMp4Preflight?.(mp4Preflight) || mp4Preflight;
             await runEncodeFlow?.(parsedPreflight);
         } catch (err) {
+            hasError = true;
             const message = 'Error: ' + (err?.message || 'MP4 export failed.');
             setStatus?.(message);
             setAnimStatus?.(message);
@@ -36,7 +38,8 @@ export function createExportMp4RuntimeController({
         } finally {
             setExporting?.(false);
             setControlsAutoRotate?.(!!getAutoRotateRestoreState?.());
-            scheduleClearStatus?.(5000);
+            // Keep error messages visible longer so users can read them
+            scheduleClearStatus?.(hasError ? 15000 : 5000);
         }
     }
 

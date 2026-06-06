@@ -13068,6 +13068,7 @@ btnVideo.addEventListener('click', async () => {
             throw new Error('Could not prepare MP4 export canvas.');
         }
 
+        let exportSucceeded = false;
         try {
             for (let f = 0; f < totalFrames; f++) {
                 if (isTilt) {
@@ -13132,6 +13133,7 @@ btnVideo.addEventListener('click', async () => {
             });
             if (encoderError) throw encoderError;
             muxer.finalize();
+            exportSucceeded = true;
         } finally {
             restoreExportScene();
         }
@@ -13153,8 +13155,10 @@ btnVideo.addEventListener('click', async () => {
         controls.update();
         renderer.render(scene, camera); // Refresh visible canvas before download
 
-        download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
-        setAnimStatus('MP4 saved ✓');
+        if (exportSucceeded) {
+            download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
+            setAnimStatus('MP4 saved ✓');
+        }
         },
     });
     schedulePostExportViewportResync();
