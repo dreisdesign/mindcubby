@@ -5,6 +5,7 @@ export function createExportMp4PreflightController({
     getImageExportSize,
     exportFrames,
     validateExportWorkload,
+    validateResolutionForEncoding,
     setStatus,
     setAnimStatus,
     scheduleClearStatus,
@@ -20,8 +21,24 @@ export function createExportMp4PreflightController({
     function runMp4Preflight() {
         try {
             if (getExportFrameEnabled?.()) syncExportCameraFromViewport?.();
-            const { fps, bitrate, loops } = getMp4Config?.() || {};
+            const config = getMp4Config?.() || {};
+            const fps = Number(config.fps) || 60; // Default to 60fps if missing
+            const bitrate = config.bitrate || 24_000_000;
+            const loops = config.loops ?? 0;
             const { width: W, height: H } = getImageExportSize?.() || {};
+            
+            // Validate resolution compatibility with H.264 encoder constraints
+            if (validateResolutionForEncoding) {
+                const resValidation = validateResolutionForEncoding({ width: W, height: H });
+                if (!resValidation.valid) {
+                    return reportPreflightError(
+                        new Error(resValidation.reason),
+                        'MP4 export resolution not supported by H.264 encoder.',
+                        6500
+                    );
+                }
+            }
+            
             const n = exportFrames?.(fps);
             const totalFrames = n * (loops + 1);
             const workloadResult = validateExportWorkload?.({

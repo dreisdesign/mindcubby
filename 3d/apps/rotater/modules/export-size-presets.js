@@ -100,6 +100,17 @@ export function getExportDimensionsForLongEdge(longEdge, preset = { w: 1, h: 1 }
         width = Math.round((safeLongEdge * safeW) / safeH);
     }
 
+    // H.264 browser limit: level 5.1 supports max 9.4MP (9,437,184 pixels)
+    // For square 1:1 crops at Ultra (3840px), this exceeds the limit (3840×3840 = 14.7MP)
+    // Cap square/near-square crops at 2160 for reliable H.264 encoding
+    const isSquareAspect = Math.abs(safeW - safeH) < Math.max(safeW, safeH) * 0.05;
+    if (isSquareAspect && safeLongEdge > 2160) {
+        // For square crops, cap at 2160 to stay within H.264 level 5.1 limits
+        const cappedLongEdge = 2160;
+        width = cappedLongEdge;
+        height = cappedLongEdge;
+    }
+
     // Prefer even dimensions for codec and pixel-grid consistency.
     if (width % 2 !== 0) width += 1;
     if (height % 2 !== 0) height += 1;

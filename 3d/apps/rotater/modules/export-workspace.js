@@ -11,7 +11,6 @@ export function updateExportWorkspaceTransparencyPatternController({
 
 export function setExportWorkspaceActiveController(active, {
     setExportWorkspaceActive,
-    rootEl,
     exportOverlayEl,
     exportGridEl,
     rulerLinesVisible,
@@ -26,7 +25,6 @@ export function setExportWorkspaceActiveController(active, {
 
     const nextActive = !!active;
     setExportWorkspaceActive(nextActive);
-    rootEl?.classList.toggle('export-workspace-active', nextActive);
     if (exportOverlayEl) exportOverlayEl.hidden = !nextActive;
     if (nextActive) {
         if (exportGridEl) exportGridEl.checked = !!rulerLinesVisible;

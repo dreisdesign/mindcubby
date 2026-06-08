@@ -108,7 +108,7 @@ import {
 } from './modules/export-preview-runtime.js';
 import {
     createExportPanelDragController,
-} from './modules/export-panel-drag.js';
+} from './modules/export-panel-drag.js?v=1.0.2';
 import {
     createExportWorkspaceRuntimeController,
 } from './modules/export-workspace-runtime.js';
@@ -943,6 +943,10 @@ const exportBuildPlateEl = document.getElementById('exportBuildPlate');
 const exportBgColorEl = document.getElementById('exportBgColor');
 const exportDimensionInputs = Array.from(document.querySelectorAll('input[name="exportDimensions"]'));
 const cropDimensionsDock = document.getElementById('cropDimensionsDock');
+const btnCropToggleEl = document.getElementById('btnCropToggle');
+const btnCropCancelEl = document.getElementById('btnCropCancel');
+const cropPillRatiosEl = document.getElementById('cropPillRatios');
+const footerCropControlsEl = document.getElementById('footerCropControls');
 const statusEl = document.getElementById('exportStatus');
 const animStatusEl = document.getElementById('exportStatusAnim');
 const fileNameEl = document.getElementById('fileName');
@@ -6034,6 +6038,8 @@ const MODEL_PART_MENU_POS_STORAGE_KEY = 'rotater_modelPartMenuPos';
 const exportPanelDragController = createExportPanelDragController({
     exportPanelEl,
     exportPanelHeaderEl,
+    getExportPanelEl: () => document.querySelector('.export-modal-panel'),
+    getExportPanelHeaderEl: () => document.querySelector('.export-modal-panel .settings-panel-header'),
     isDesktopV2Layout,
     isWorkspaceActive: () => exportWorkspaceActive,
 });
@@ -6091,11 +6097,14 @@ function enterCropMode() {
     _cropAppliedCameraZoomScale = false;
     if (camera) _cropBackupCameraZoom = camera.zoom || 1;
     _cropLiveSyncArmed = true;
-    syncExportCameraFromViewport();
+    applyLevelAndReframeToCamera();
+    if (btnCropCancelEl) btnCropCancelEl.hidden = false;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
     updateRulerHUD();
     refreshExportPreviewNow();
+    // Force immediate crop frame rendering to ensure overlay appears on first load
+    drawExportFrame();
 }
 
 function openExportWorkspace() {
@@ -9121,12 +9130,12 @@ function syncPlayPauseIcon(svgEl, iconName) {
 function updateExportPauseButtonUI() {
     const btn = document.getElementById('btnExportPause');
     if (btn) {
-        btn.hidden = !exportWorkspaceActive;
-        btn.style.display = exportWorkspaceActive ? 'flex' : 'none';
+        btn.hidden = true;
+        btn.style.display = 'none';
     }
     if (btnPause) {
-        btnPause.hidden = !!exportWorkspaceActive;
-        btnPause.style.display = exportWorkspaceActive ? 'none' : '';
+        btnPause.hidden = false;
+        btnPause.style.display = '';
     }
     if (btn) btn.classList.toggle('is-paused', isPaused);
     btnPause?.classList.toggle('is-playing', !isPaused);
@@ -9349,11 +9358,22 @@ document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(
 
 function applyLevelAndReframeToCamera() {
     if (!camera) return;
-    // Level to 0° elevation, preserve azimuth, fit to full viewport with breathing room.
+    // Level to 0° elevation, preserve azimuth, fit to full viewport (or crop frame if in export mode).
+    // When in export/crop mode, use the crop frame's aspect ratio so framing stays consistent.
     // Use getOrbitFrameState() so azimuth is relative to controls.target (correct even after pan).
     const { az } = getOrbitFrameState();
     const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    const aspect = camera.aspect > 0 ? camera.aspect : 1;
+    
+    // Determine aspect ratio: if in export crop mode, use export dimensions; otherwise use viewport
+    let aspect = camera.aspect > 0 ? camera.aspect : 1;
+    if (exportFrameEnabled) {
+        // In crop mode: use the export dimensions' aspect ratio for consistent framing
+        const exportSize = getPreviewExportSize();
+        if (exportSize?.width && exportSize?.height) {
+            aspect = Math.max(0.1, exportSize.width / Math.max(0.1, exportSize.height));
+        }
+    }
+    
     const newDist = modelRadius * Math.max(1, 1 / aspect) / tanHalfFov * VIEWPORT_FIT_SCALE;
     camera.up.set(0, 1, 0);
     camera.position.set(newDist * Math.sin(az), 0, newDist * Math.cos(az));
@@ -9380,6 +9400,14 @@ function applyLevelAndReframeToCamera() {
 document.getElementById('btnCamReset').addEventListener('click', () => {
     applyLevelAndReframeToCamera();
 });
+
+{
+    const camResetIconEl = document.querySelector('#btnCamReset svg');
+    if (camResetIconEl) {
+        camResetIconEl.setAttribute('viewBox', '0 0 24 24');
+        camResetIconEl.innerHTML = '<path d="M7.47461 14.7002C7.84128 14.7002 8.15378 14.8296 8.41211 15.0879C8.67044 15.3462 8.7998 15.6587 8.7998 16.0254V20.0752C8.79976 20.4418 8.6704 20.7544 8.41211 21.0127C8.15383 21.2708 7.84114 21.4004 7.47461 21.4004C7.10811 21.4003 6.79535 21.2709 6.53711 21.0127C6.27889 20.7544 6.15044 20.4417 6.15039 20.0752V19.2002L4.22461 21.125C3.97464 21.3749 3.66638 21.5 3.2998 21.5C2.93322 21.5 2.62496 21.375 2.375 21.125C2.12504 20.875 2.00004 20.5668 2 20.2002C2 19.8336 2.12513 19.5254 2.375 19.2754L4.2998 17.3496H3.4248C3.05827 17.3496 2.74557 17.2211 2.4873 16.9629C2.22906 16.7046 2.0997 16.3919 2.09961 16.0254C2.09961 15.6589 2.22917 15.3462 2.4873 15.0879C2.74559 14.8296 3.05822 14.7002 3.4248 14.7002H7.47461Z"/><path d="M20.0752 14.7002C20.4418 14.7002 20.7544 14.8296 21.0127 15.0879C21.2708 15.3462 21.4004 15.6589 21.4004 16.0254C21.4003 16.3919 21.2709 16.7046 21.0127 16.9629C20.7544 17.2211 20.4417 17.3496 20.0752 17.3496H19.2002L21.125 19.2754C21.3749 19.5254 21.5 19.8336 21.5 20.2002C21.5 20.5668 21.375 20.875 21.125 21.125C20.875 21.375 20.5668 21.5 20.2002 21.5C19.8336 21.5 19.5254 21.3749 19.2754 21.125L17.3496 19.2002V20.0752C17.3496 20.4417 17.2211 20.7544 16.9629 21.0127C16.7046 21.2709 16.3919 21.4003 16.0254 21.4004C15.6589 21.4004 15.3462 21.2708 15.0879 21.0127C14.8296 20.7544 14.7002 20.4418 14.7002 20.0752V16.0254C14.7002 15.6587 14.8296 15.3462 15.0879 15.0879C15.3462 14.8296 15.6587 14.7002 16.0254 14.7002H20.0752Z"/><path d="M11.75 9.27539C12.4333 9.27539 13.0167 9.51667 13.5 10C13.9833 10.4833 14.2246 11.0667 14.2246 11.75C14.2246 12.4333 13.9833 13.0167 13.5 13.5C13.0167 13.9833 12.4333 14.2246 11.75 14.2246C11.0667 14.2246 10.4833 13.9833 10 13.5C9.51667 13.0167 9.27539 12.4333 9.27539 11.75C9.27539 11.0667 9.51667 10.4833 10 10C10.4833 9.51667 11.0667 9.27539 11.75 9.27539Z"/><path d="M3.2998 2C3.66638 2 3.97464 2.12513 4.22461 2.375L6.15039 4.2998V3.4248C6.15044 3.05827 6.27889 2.74557 6.53711 2.4873C6.79535 2.22906 7.10811 2.0997 7.47461 2.09961C7.84114 2.09961 8.15383 2.22917 8.41211 2.4873C8.6704 2.74559 8.79976 3.05822 8.7998 3.4248V7.47461C8.7998 7.84128 8.67044 8.15378 8.41211 8.41211C8.15378 8.67044 7.84128 8.7998 7.47461 8.7998H3.4248C3.05822 8.79976 2.74559 8.6704 2.4873 8.41211C2.22917 8.15383 2.09961 7.84114 2.09961 7.47461C2.0997 7.10811 2.22906 6.79535 2.4873 6.53711C2.74557 6.27889 3.05827 6.15044 3.4248 6.15039H4.2998L2.375 4.22461C2.12513 3.97464 2 3.66638 2 3.2998C2.00004 2.93322 2.12504 2.62496 2.375 2.375C2.62496 2.12504 2.93322 2.00004 3.2998 2Z"/><path d="M20.2002 2C20.5668 2.00004 20.875 2.12504 21.125 2.375C21.375 2.62496 21.5 2.93322 21.5 3.2998C21.5 3.66638 21.3749 3.97464 21.125 4.22461L19.2002 6.15039H20.0752C20.4417 6.15044 20.7544 6.27889 21.0127 6.53711C21.2709 6.79535 21.4003 7.10811 21.4004 7.47461C21.4004 7.84114 21.2708 8.15383 21.0127 8.41211C20.7544 8.6704 20.4418 8.79976 20.0752 8.7998H16.0254C15.6587 8.7998 15.3462 8.67044 15.0879 8.41211C14.8296 8.15378 14.7002 7.84128 14.7002 7.47461V3.4248C14.7002 3.05822 14.8296 2.74559 15.0879 2.4873C15.3462 2.22917 15.6589 2.09961 16.0254 2.09961C16.3919 2.0997 16.7046 2.22906 16.9629 2.4873C17.2211 2.74557 17.3496 3.05827 17.3496 3.4248V4.2998L19.2754 2.375C19.5254 2.12513 19.8336 2 20.2002 2Z"/>';
+    }
+}
 
 async function ensurePausedForStillExport() {
     if (isPaused) return;
@@ -10165,13 +10193,95 @@ exportBuildPlateEl?.addEventListener('change', () => {
 exportDimensionInputs.forEach(input => {
     input.addEventListener('change', () => {
         if (!input.checked) return;
-        if (exportFrameEnabled) syncExportCameraFromViewport();
+        // Enter crop mode if not already active (when selecting from footer)
+        if (!exportFrameEnabled) {
+            enterCropMode();
+        } else {
+            applyLevelAndReframeToCamera();
+            // Ensure crop frame updates immediately when ratio changes
+            drawExportFrame();
+        }
+        // Mobile: auto-collapse pill after selecting a ratio
+        if (window.innerWidth < 900) {
+            footerCropControlsEl?.classList.add('is-collapsed');
+            if (btnCropToggleEl) btnCropToggleEl.setAttribute('aria-expanded', 'false');
+            syncCropPillChevron(false);
+        }
         syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
         updateCropDimensionsDock();
         updateEstimate();
         refreshExportPreviewNow();
         saveSettings();
     });
+});
+
+// ── Footer crop controls ──────────────────────────────────────────────────────
+function syncCropPillChevron(expanded) {
+    const path = document.getElementById('cropChevronPath');
+    if (!path) return;
+    path.setAttribute('d', expanded
+    ? 'M13.9502 6C14.3169 6 14.626 6.125 14.876 6.375C15.1257 6.62492 15.251 6.93335 15.251 7.2998C15.2509 7.66627 15.1258 7.9747 14.876 8.22461L11.1504 11.9492L14.876 15.6748C15.1257 15.9247 15.251 16.2331 15.251 16.5996C15.251 16.9661 15.1257 17.2745 14.876 17.5244C14.626 17.7744 14.3169 17.8994 13.9502 17.8994C13.5837 17.8993 13.2753 17.7743 13.0254 17.5244L8.37598 12.875C8.24264 12.7417 8.14622 12.5992 8.08789 12.4492C8.02965 12.2993 8 12.1324 8 11.9492C8.00004 11.766 8.0296 11.5991 8.08789 11.4492C8.14624 11.2993 8.24273 11.1577 8.37598 11.0244L13.0254 6.375C13.2753 6.12507 13.5837 6.00007 13.9502 6Z'
+    : 'M9.30078 6C9.66732 6.00007 9.97565 6.12507 10.2256 6.375L14.876 11.0244C15.0091 11.1576 15.1048 11.2994 15.1631 11.4492C15.2214 11.5991 15.2509 11.766 15.251 11.9492C15.251 12.1324 15.2213 12.2993 15.1631 12.4492C15.1048 12.5992 15.0093 12.7417 14.876 12.875L10.2256 17.5244C9.97565 17.7743 9.66732 17.8993 9.30078 17.8994C8.93419 17.8994 8.62595 17.7743 8.37598 17.5244C8.12598 17.2744 8 16.9663 8 16.5996C8 16.2329 8.12598 15.9248 8.37598 15.6748L12.1006 11.9492L8.37598 8.22461C8.12602 7.97465 8.00004 7.66639 8 7.2998C8 6.93314 8.12598 6.625 8.37598 6.375C8.62597 6.12503 8.93414 6 9.30078 6Z');
+}
+
+function syncCropPillCancelBtn() {
+    if (btnCropCancelEl) btnCropCancelEl.hidden = !exportFrameEnabled;
+}
+
+function clearSelectedCropDimensions() {
+    exportDimensionInputs.forEach((input) => {
+        input.checked = false;
+    });
+}
+
+// Mobile: start collapsed; desktop: start expanded
+(function initCropPill() {
+    const mobile = window.innerWidth < 900;
+    if (mobile) {
+        footerCropControlsEl?.classList.add('is-collapsed');
+        if (btnCropToggleEl) btnCropToggleEl.setAttribute('aria-expanded', 'false');
+        syncCropPillChevron(false);
+    } else {
+        syncCropPillChevron(true);
+    }
+})();
+
+btnCropToggleEl?.addEventListener('click', () => {
+    const isCollapsed = footerCropControlsEl?.classList.contains('is-collapsed');
+    footerCropControlsEl?.classList.toggle('is-collapsed', !isCollapsed);
+    btnCropToggleEl.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
+    syncCropPillChevron(isCollapsed); // was collapsed, now expanding = show left chevron
+});
+
+btnCropCancelEl?.addEventListener('click', () => {
+    clearSelectedCropDimensions();
+    syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
+    updateCropDimensionsDock();
+    updateEstimate();
+    refreshExportPreviewNow();
+    saveSettings();
+    if (!exportFrameEnabled) return;
+    cancelCropMode();
+});
+
+document.getElementById('btnAppSettingsCanvasMobile')?.addEventListener('click', () => {
+    document.getElementById('btnAppSettingsCanvas')?.click();
+});
+
+// Cycle through crop modes with C key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'c' || e.key === 'C') {
+        if (e.ctrlKey || e.metaKey) return; // Allow Ctrl+C / Cmd+C (copy)
+        const modes = ['square', 'portrait12', 'landscape21', 'landscape43'];
+        const currentMode = document.querySelector('input[name="exportDimensions"]:checked')?.value ?? 'square';
+        const currentIndex = modes.indexOf(currentMode);
+        const nextIndex = (currentIndex + 1) % modes.length;
+        const nextModeInput = document.querySelector(`input[name="exportDimensions"][value="${modes[nextIndex]}"]`);
+        if (nextModeInput) {
+            nextModeInput.checked = true;
+            nextModeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
 });
 
 // ── Export format switcher ────────────────────────────────────────────────────
@@ -11828,6 +11938,55 @@ document.getElementById('btnOpenExportModalCanvas')?.addEventListener('click', (
     openExportWorkspace();
 });
 
+if (!window.__rotaterExportDragBound) {
+    window.__rotaterExportDragBound = true;
+    let liveExportDrag = null;
+    document.addEventListener('mousedown', (ev) => {
+        if (ev.button !== 0) return;
+        if (!(ev.target instanceof Element)) return;
+        const header = ev.target.closest('.export-modal-panel .settings-panel-header');
+        if (!(header instanceof HTMLElement)) return;
+        if (ev.target.closest('button,a,input,select,label,textarea')) return;
+        const panel = header.closest('.export-modal-panel');
+        if (!(panel instanceof HTMLElement)) return;
+        if (panel.closest('#exportOverlay')?.hidden) return;
+        const rect = panel.getBoundingClientRect();
+        liveExportDrag = {
+            panel,
+            header,
+            startX: ev.clientX,
+            startY: ev.clientY,
+            startLeft: rect.left,
+            startTop: rect.top,
+        };
+        header.classList.add('is-dragging');
+        ev.preventDefault();
+    }, true);
+
+    window.addEventListener('mousemove', (ev) => {
+        if (!liveExportDrag) return;
+        const { panel, startX, startY, startLeft, startTop } = liveExportDrag;
+        const nextLeft = startLeft + (ev.clientX - startX);
+        const nextTop = startTop + (ev.clientY - startY);
+        const rect = panel.getBoundingClientRect();
+        const maxLeft = Math.max(8, window.innerWidth - rect.width - 8);
+        const maxTop = Math.max(8, window.innerHeight - rect.height - 8);
+        const left = Math.max(8, Math.min(maxLeft, nextLeft));
+        const top = Math.max(8, Math.min(maxTop, nextTop));
+        panel.style.left = `${Math.round(left)}px`;
+        panel.style.top = `${Math.round(top)}px`;
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+        panel.style.transform = 'none';
+    }, true);
+
+    window.addEventListener('mouseup', () => {
+        if (!liveExportDrag) return;
+        liveExportDrag.header.classList.remove('is-dragging');
+        liveExportDrag = null;
+    }, true);
+}
+
 document.getElementById('btnExportWorkspaceClose')?.addEventListener('click', () => {
     closeExportWorkspace();
 });
@@ -12086,7 +12245,15 @@ function cancelCropMode() {
     } else {
         exportCamDist = null;
     }
+    // Restore viewport camera zoom to pre-crop state
+    if (camera !== null && typeof _cropBackupCameraZoom === 'number') {
+        camera.zoom = _cropBackupCameraZoom;
+        camera.updateProjectionMatrix();
+    }
     exportFrameEnabled = false;
+    // Uncheck all crop dimension buttons when canceling
+    clearSelectedCropDimensions();
+    if (btnCropCancelEl) btnCropCancelEl.hidden = true;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
     _cropLiveSyncArmed = false;
@@ -12099,8 +12266,11 @@ function cancelCropMode() {
 function confirmCropMode() {
     if (!exportFrameEnabled) return;
     // Commit current live crop framing.
+    // Keep the camera zoom from the reframing operation (which set it to 1)
+    // Do NOT restore the pre-crop zoom backup when confirming.
     syncExportCameraFromViewport();
     exportFrameEnabled = false;
+    if (btnCropCancelEl) btnCropCancelEl.hidden = true;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
     _cropLiveSyncArmed = false;
@@ -12111,6 +12281,15 @@ function confirmCropMode() {
 }
 
 updateFrameOverlayButtonUI();
+
+['frameDimTop', 'frameDimBottom', 'frameDimLeft', 'frameDimRight'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('pointerdown', (e) => {
+        if (!exportFrameEnabled) return;
+        e.preventDefault();
+        e.stopPropagation();
+        cancelCropMode();
+    });
+});
 
 canvas?.addEventListener('pointerdown', (e) => {
     if (!isCanvasOrbitClickGuardEligible(e)) return;
@@ -12165,14 +12344,6 @@ window.addEventListener('pointermove', (e) => {
 
 canvas?.addEventListener('click', (e) => {
     closeModelPartActionMenus();
-    if (exportWorkspaceActive) {
-        // A single non-drag click anywhere on the canvas closes export workspace.
-        // Drags (orbit/pan) never reach here — the orbit click guard prevents click
-        // from firing for pointer movements that exceed the drag threshold.
-        closeExportWorkspace();
-        return;
-    }
-
     if (isModelPartFloatingCardOpen()) {
         closeModelPartSelectorMenu(true);
         return;
@@ -12908,6 +13079,7 @@ const exportMp4PreflightController = createExportMp4PreflightController({
     getImageExportSize,
     exportFrames,
     validateExportWorkload,
+    validateResolutionForEncoding: (res) => exportMp4CodecConfigController.validateResolutionForEncoding(res),
     setStatus,
     setAnimStatus,
     scheduleClearStatus: (delayMs) => {
