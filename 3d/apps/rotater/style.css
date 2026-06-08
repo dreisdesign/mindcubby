@@ -1407,6 +1407,15 @@ html.dpad-hidden .canvas-overlay-br {
     box-shadow: 0 0 0 2px var(--palette-blueberry-300);
 }
 
+.cam-btn svg {
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+    color: inherit;
+    fill: currentColor;
+}
+
 .cam-btn-up {
     grid-area: up;
 }

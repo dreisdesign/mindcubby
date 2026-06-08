@@ -108,7 +108,7 @@ import {
 } from './modules/export-preview-runtime.js';
 import {
     createExportPanelDragController,
-} from './modules/export-panel-drag.js?v=1.0.3';
+} from './modules/export-panel-drag.js?v=1.0.4';
 import {
     createExportWorkspaceRuntimeController,
 } from './modules/export-workspace-runtime.js';
