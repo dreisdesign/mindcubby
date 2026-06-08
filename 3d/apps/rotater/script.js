@@ -108,7 +108,7 @@ import {
 } from './modules/export-preview-runtime.js';
 import {
     createExportPanelDragController,
-} from './modules/export-panel-drag.js?v=1.0.4';
+} from './modules/export-panel-drag.js?v=1.0.5';
 import {
     createExportWorkspaceRuntimeController,
 } from './modules/export-workspace-runtime.js';
@@ -9359,22 +9359,21 @@ document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(
 function applyLevelAndReframeToCamera() {
     if (!camera) return;
     // Level to 0° elevation, preserve azimuth, fit to full viewport (or crop frame if in export mode).
-    // When in export/crop mode, use the crop frame's aspect ratio so framing stays consistent.
+    // When in export/crop mode, use the crop frame's vertical scale to fit the model within that area.
     // Use getOrbitFrameState() so azimuth is relative to controls.target (correct even after pan).
     const { az } = getOrbitFrameState();
     const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     
-    // Determine aspect ratio: if in export crop mode, use export dimensions; otherwise use viewport
-    let aspect = camera.aspect > 0 ? camera.aspect : 1;
+    // Determine distance: fit within full viewport, or constrain to crop frame if in export mode
+    let newDist = modelRadius / tanHalfFov * VIEWPORT_FIT_SCALE;
     if (exportFrameEnabled) {
-        // In crop mode: use the export dimensions' aspect ratio for consistent framing
-        const exportSize = getPreviewExportSize();
-        if (exportSize?.width && exportSize?.height) {
-            aspect = Math.max(0.1, exportSize.width / Math.max(0.1, exportSize.height));
+        // In crop mode: scale distance by the crop frame's vertical extent
+        // This ensures the model fills the crop frame area (the frame shows what will be exported)
+        const cropScale = getCropFrameVerticalScale();
+        if (cropScale > 0) {
+            newDist = newDist / cropScale;
         }
     }
-    
-    const newDist = modelRadius * Math.max(1, 1 / aspect) / tanHalfFov * VIEWPORT_FIT_SCALE;
     camera.up.set(0, 1, 0);
     camera.position.set(newDist * Math.sin(az), 0, newDist * Math.cos(az));
     camera.lookAt(0, 0, 0);

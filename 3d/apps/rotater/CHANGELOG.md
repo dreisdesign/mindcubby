@@ -1,6 +1,9 @@
 ## Unreleased
 
 ### Fixed
+- **Level and Reframe camera calculation for all crop ratios**: when clicking Level and Reframe in crop mode, the model now frames consistently for all aspect ratios (landscape 16:9, portrait 9:16, square 1:1, etc.). 
+  - **Root cause**: reframe logic was using export dimensions (arbitrary pixel sizes) instead of the crop frame's actual vertical scale on the viewport, causing landscape crops to zoom in too much (clipping model) and portrait crops to zoom out excessively.
+  - **Solution**: changed to use `getCropFrameVerticalScale()` which represents the fraction of viewport height occupied by the crop frame. Camera distance is now scaled inversely: narrower frames (portrait) require closer distance to fill, wider frames (landscape) require more distance.
 - **SVG icon visibility in crop bar and D-pad controls**: D-pad directional buttons (up/down/left/right/center reframe) and crop menu chevron/cancel icons now render correctly; applied CSS `!important` overrides for SVG sizing (width/height) to force proper 16×16 rendering instead of collapsing to 0px width.
 
 ---
