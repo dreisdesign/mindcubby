@@ -1,3 +1,10 @@
+## Unreleased
+
+### Fixed
+- **SVG icon visibility in crop bar and D-pad controls**: D-pad directional buttons (up/down/left/right/center reframe) and crop menu chevron/cancel icons now render correctly; applied CSS `!important` overrides for SVG sizing (width/height) to force proper 16×16 rendering instead of collapsing to 0px width.
+
+---
+
 ## [1.0.0] - 2026-06-05
 
 ### Performance
