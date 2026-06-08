@@ -9409,6 +9409,11 @@ document.getElementById('btnCamReset').addEventListener('click', () => {
     }
 }
 
+{
+    // SVG icons are already defined in HTML with fill="currentColor"
+    // They should render automatically based on button color styling
+}
+
 async function ensurePausedForStillExport() {
     if (isPaused) return;
     setPauseState(true, false, true);
