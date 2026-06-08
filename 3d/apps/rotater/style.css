@@ -9035,9 +9035,11 @@ html.theme-dark .export-crop-tab:has(input:checked) {
 
 .crop-pill__cancel svg,
 .crop-pill__chevron svg {
-    display: block;
-    width: 16px;
-    height: 16px;
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+    min-width: 16px !important;
 }
 
 .crop-pill__chevron {
