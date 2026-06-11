@@ -1619,6 +1619,7 @@ html.loaded .controls-bar.hidden {
     line-height: 1.08;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2313,6 +2314,7 @@ html.loaded .controls-bar.hidden {
     line-height: 1.18;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     min-height: calc(2 * 1.18em);
@@ -2363,6 +2365,7 @@ html.loaded .controls-bar.hidden {
     line-height: 1.22;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     min-height: calc(2 * 1.22em);
