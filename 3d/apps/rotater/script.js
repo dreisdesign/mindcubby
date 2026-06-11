@@ -108,7 +108,7 @@ import {
 } from './modules/export-preview-runtime.js';
 import {
     createExportPanelDragController,
-} from './modules/export-panel-drag.js?v=1.0.5';
+} from './modules/export-panel-drag.js?v=1.0.6';
 import {
     createExportWorkspaceRuntimeController,
 } from './modules/export-workspace-runtime.js';
@@ -2420,10 +2420,22 @@ function updateShadowCatcherPlacement() {
     const projectedShadowRun = modelHeight * (horizontalRun / verticalRun);
     const shadowReach = projectedShadowRun * 1.45;
 
-    const catcherHalfSpan = Math.max(
+    let catcherHalfSpan = Math.max(
         footprint * 2.2,
         footprint * 0.9 + shadowReach + modelRadius * 0.95
     );
+    
+    // If build plate is visible, clamp shadow catcher to plate dimensions
+    if (buildPlateEnabled && buildPlateMesh?.visible) {
+        const plateW = clampBuildPlateSize(buildPlateWidth, 220);
+        const plateD = clampBuildPlateSize(buildPlateDepth, 220);
+        const shape = normalizeBuildPlateShape(buildPlateShape);
+        const plateDim = shape === 'circle' 
+            ? Math.min(plateW, plateD) * 0.5  // Radius for circle
+            : Math.max(plateW, plateD) * 0.5;  // Half-diagonal for square
+        catcherHalfSpan = Math.min(catcherHalfSpan, plateDim);
+    }
+    
     const catcherSize = Math.max(1, catcherHalfSpan * 2);
     shadowCatcher.scale.set(catcherSize, catcherSize, 1);
 
@@ -4464,9 +4476,39 @@ modelPartAddNextBtn?.addEventListener('click', () => {
     partAppendInput?.click();
 });
 
+// Sync the currently active (selected) model part from the picker to background sync source
+function syncBgToCurrentlyActivePart() {
+    const selected = getUiSelectedPartIndices();
+    if (selected.length !== 1 || !hasModelParts()) return false;
+    
+    const nextIdx = Math.max(0, Math.min(selected[0], modelPartNames.length - 1));
+    if (!maybeConfirmBgSyncChange(nextIdx)) return false;
+    
+    activeBgPreset = 'modelcolor';
+    bgSyncFollowSelected = false;
+    const prevIdx = bgSyncPartIndex;
+    bgSyncPartIndex = nextIdx;
+    
+    const syncColor = getModelSyncSourceColor();
+    bgPick.value = syncColor;
+    updateAutoBgShadeControlVisibility();
+    if (isDynamicBg) updateDynamicBg();
+    else applyBackgroundFromBaseColor(syncColor);
+    
+    syncModelSyncPreviewThumbTargets();
+    queueModelPartThumbsRender([prevIdx, nextIdx]);
+    renderBgPresets();
+    updateBgSelection();
+    syncModelPartSelectorUI(true);
+    syncBgModelSyncSourceUI();
+    saveSettings();
+    return true;
+}
+
 bgModelSyncSelectorBtn?.addEventListener('click', (ev) => {
     ev.stopPropagation();
-    openBgModelSyncMenu(bgModelSyncSelectorBtn);
+    // Sync the currently active picker selection to background
+    syncBgToCurrentlyActivePart();
 });
 
 bgModelSyncSelectorThumb?.addEventListener('click', (ev) => {
@@ -4474,9 +4516,25 @@ bgModelSyncSelectorThumb?.addEventListener('click', (ev) => {
     openBgModelSyncMenu(resolveBgModelSyncAnchorEl());
 });
 
+// Sync the currently active (selected) model part from the picker to build plate sync source
+function syncBuildPlateToCurrentlyActivePart() {
+    const selected = getUiSelectedPartIndices();
+    if (selected.length !== 1 || !hasModelParts()) return false;
+    
+    const nextIdx = Math.max(0, Math.min(selected[0], modelPartNames.length - 1));
+    buildPlateSyncPartIndex = nextIdx;
+    activeBuildPlatePreset = 'modelcolor';
+    updateBuildPlateMaterial();
+    updateBuildPlateSelection();
+    refreshExportPreviewNow();
+    saveSettings();
+    return true;
+}
+
 buildPlateModelSyncSelectorBtn?.addEventListener('click', (ev) => {
     ev.stopPropagation();
-    openBuildPlateModelSyncMenu(buildPlateModelSyncSelectorBtn);
+    // Sync the currently active picker selection to build plate
+    syncBuildPlateToCurrentlyActivePart();
 });
 
 buildPlateModelSyncSelectorThumb?.addEventListener('click', (ev) => {

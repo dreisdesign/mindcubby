@@ -1,6 +1,14 @@
 ## Unreleased
 
 ### Fixed
+- **Model sync buttons now use the currently active model from the picker**: clicking the Background Model Sync or Build Plate Model Sync buttons now immediately syncs whatever model is currently selected in the picker, regardless of previous sync state. This ensures the button reflects "sync the current selection" rather than opening a menu to choose from sync history.
+  - Changed `bgModelSyncSelectorBtn` click handler to call `syncBgToCurrentlyActivePart()` instead of opening menu
+  - Changed `buildPlateModelSyncSelectorBtn` click handler to call `syncBuildPlateToCurrentlyActivePart()` instead of opening menu
+  - Both functions use `getUiSelectedPartIndices()` to get the active picker selection and apply it immediately
+- **Shadow clipped to build plate surface boundary**: when a build plate is visible, the shadow catcher plane is now clipped to the build plate dimensions instead of extending far beyond it. Shadow no longer renders outside the surface area.
+  - Modified `updateShadowCatcherPlacement()` to check `buildPlateEnabled && buildPlateMesh?.visible`
+  - When build plate is active, clamped `catcherHalfSpan` to plate dimensions
+  - For circles: uses minimum of width/depth as radius; for squares: uses half-diagonal
 - **Level and Reframe camera calculation for all crop ratios**: when clicking Level and Reframe in crop mode, the model now frames consistently for all aspect ratios (landscape 16:9, portrait 9:16, square 1:1, etc.). 
   - **Root cause**: reframe logic was using export dimensions (arbitrary pixel sizes) instead of the crop frame's actual vertical scale on the viewport, causing landscape crops to zoom in too much (clipping model) and portrait crops to zoom out excessively.
   - **Solution**: changed to use `getCropFrameVerticalScale()` which represents the fraction of viewport height occupied by the crop frame. Camera distance is now scaled inversely: narrower frames (portrait) require closer distance to fill, wider frames (landscape) require more distance.

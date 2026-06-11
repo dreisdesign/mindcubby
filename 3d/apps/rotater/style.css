@@ -9126,6 +9126,7 @@ html.theme-dark .crop-pill__cancel {
     /* Auto-add is-collapsed on mobile via CSS */
     .crop-pill:not(.is-expanded) {
         /* Mobile default: collapsed — JS sets .is-expanded when toggled */
+        display: none;
     }
 }
 
@@ -9439,8 +9440,6 @@ html.theme-dark .crop-pill__cancel {
     color: var(--color-text-muted);
     text-decoration: underline;
     cursor: pointer;
-}
-    display: block;
 }
 
 /* Fine Tuning row at bottom of Theme panel */
