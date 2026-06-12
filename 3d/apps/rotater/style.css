@@ -8052,6 +8052,16 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .copy-link-btn--export {
     flex: 0 0 auto;
     min-width: 0;
     justify-content: center;
+    font-size: var(--text-md);
+}
+
+html.loaded.layout-mobile-accordion .sidebar-brand-actions .sidebar-upload-btn svg,
+html.loaded.layout-mobile-accordion .sidebar-brand-actions .copy-link-btn--export svg,
+html.loaded.layout-tablet-tabs .sidebar-brand-actions .sidebar-upload-btn svg,
+html.loaded.layout-tablet-tabs .sidebar-brand-actions .copy-link-btn--export svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
 }
 
 html.loaded.layout-mobile-accordion .sidebar-brand-actions .sidebar-upload-btn span,
@@ -8705,18 +8715,81 @@ html.loaded.export-workspace-active .canvas-wrap {
     .export-overlay {
         align-items: flex-end;
         justify-content: center;
-        padding: 0 8px 10px;
+        padding: 0;
+    }
+
+    .settings-overlay.export-overlay {
+        background: transparent !important;
     }
 
     .export-modal-panel {
         width: min(680px, calc(100vw - 12px));
         max-height: 46svh;
-        border-radius: 18px;
+        border-radius: 0;
     }
 
     .export-modal-body {
         max-height: calc(46svh - 78px);
         overflow-y: auto;
+    }
+
+    /* ── Mobile export: overlay sheet, not a workspace takeover ── */
+    /* Restore normal layout so the export panel feels like a bottom sheet */
+    html.loaded.export-workspace-active .sidebar {
+        display: flex !important;
+    }
+
+    html.loaded.layout-mobile-accordion.export-workspace-active .sidebar-brand-row,
+    html.loaded.layout-tablet-tabs.export-workspace-active .sidebar-brand-row {
+        display: flex !important;
+    }
+
+    /* Restore normal canvas height — do not override with workspace dimensions */
+    html.loaded.export-workspace-active main {
+        flex: 0 0 48vh !important;
+        min-height: 220px !important;
+    }
+
+    html.loaded.export-workspace-active main,
+    html.loaded.export-workspace-active #viewerSection,
+    html.loaded.export-workspace-active .viewer-section,
+    html.loaded.export-workspace-active .canvas-wrap {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+
+    /* Export panel is a fixed bottom-sheet overlay */
+    .export-workspace-active .export-modal-panel {
+        position: fixed;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        bottom: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: 54svh !important;
+        border-radius: 0 !important;
+        border: none !important;
+        border-top: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 50%, transparent) !important;
+        box-shadow: 0 -4px 24px rgba(12, 10, 33, 0.18) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .export-workspace-active .export-modal-body {
+        height: auto !important;
+        max-height: calc(54svh - 86px) !important;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .export-workspace-active .settings-panel-header {
+        cursor: default;
+    }
+
+    .export-workspace-active .export-drag-indicator {
+        display: none;
     }
 }
 
@@ -9041,6 +9114,11 @@ html.theme-dark .export-crop-tab:has(input:checked) {
     transition: background 120ms;
 }
 
+/* Only show the crop cancel button when a ratio is actually selected */
+.crop-pill:not(:has(input:checked)) .crop-pill__cancel {
+    display: none !important;
+}
+
 .crop-pill__cancel:hover {
     background: rgba(217, 94, 0, 0.10);
 }
@@ -9100,9 +9178,26 @@ html.theme-dark .crop-pill__cancel {
 /* Mobile: crop pill collapsed by default, all items visible */
 @media (max-width: 899px) {
     .cam-nav-row {
-        grid-template-columns: minmax(0, 1fr) auto auto;
-        align-items: end;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
         gap: 8px;
+    }
+
+    .cam-nav-center {
+        justify-self: center;
+    }
+
+    .cam-nav-right {
+        justify-self: end;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Prevent crop pill from overflowing its grid cell */
+    .cam-nav-row .crop-pill {
+        min-width: 0;
+        overflow: hidden;
     }
 
     .crop-pill {

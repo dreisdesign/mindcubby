@@ -10,6 +10,10 @@ export function createExportPanelDragController({
 } = {}) {
     let dragState = null;
 
+    function isDraggableDesktopLayout() {
+        return !!(isDesktopV2Layout?.() && isWorkspaceActive?.());
+    }
+
     function resolveExportPanelEl() {
         if (typeof getExportPanelEl === 'function') {
             const el = getExportPanelEl();
@@ -90,6 +94,7 @@ export function createExportPanelDragController({
         };
 
         document.addEventListener('pointerdown', (ev) => {
+            if (!isDraggableDesktopLayout()) return;
             if (ev.button !== 0) return;
             if (!(ev.target instanceof Element)) return;
             const headerEl = ev.target.closest('.export-modal-panel .settings-panel-header');
@@ -115,6 +120,16 @@ export function createExportPanelDragController({
         window.addEventListener('pointermove', onPointerMove);
         window.addEventListener('pointerup', onPointerUp);
         window.addEventListener('resize', () => {
+            if (!isDesktopV2Layout?.()) {
+                const panelEl = resolveExportPanelEl();
+                if (!panelEl) return;
+                panelEl.style.removeProperty('left');
+                panelEl.style.removeProperty('top');
+                panelEl.style.removeProperty('right');
+                panelEl.style.removeProperty('bottom');
+                panelEl.style.removeProperty('transform');
+                return;
+            }
             const panelEl = resolveExportPanelEl();
             if (!panelEl || panelEl.closest('#exportOverlay')?.hidden) return;
             const rect = panelEl.getBoundingClientRect();

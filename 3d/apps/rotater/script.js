@@ -10326,10 +10326,6 @@ btnCropCancelEl?.addEventListener('click', () => {
     cancelCropMode();
 });
 
-document.getElementById('btnAppSettingsCanvasMobile')?.addEventListener('click', () => {
-    document.getElementById('btnAppSettingsCanvas')?.click();
-});
-
 // Cycle through crop modes with C key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'c' || e.key === 'C') {
@@ -12231,11 +12227,20 @@ syncBuildUpdateBadge();
 const appSettingsOverlayEl = document.getElementById('appSettingsOverlay');
 const appSettingsPanelEl = appSettingsOverlayEl?.querySelector('.app-settings-panel') || null;
 const btnAppSettingsCanvasEl = document.getElementById('btnAppSettingsCanvas');
+const btnAppSettingsCanvasMobileEl = document.getElementById('btnAppSettingsCanvasMobile');
+
+function getAppSettingsAnchorButton() {
+    if (btnAppSettingsCanvasMobileEl && window.getComputedStyle(btnAppSettingsCanvasMobileEl).display !== 'none') {
+        return btnAppSettingsCanvasMobileEl;
+    }
+    return btnAppSettingsCanvasEl;
+}
 
 function positionAppSettingsOverlay() {
-    if (!appSettingsOverlayEl || !appSettingsPanelEl || !btnAppSettingsCanvasEl) return;
-    const helpRect = document.getElementById('btnHelpCanvas')?.getBoundingClientRect() || { right: 0, bottom: 0 };
-    const settingsRect = btnAppSettingsCanvasEl.getBoundingClientRect();
+    if (!appSettingsOverlayEl || !appSettingsPanelEl) return;
+    const anchorBtn = getAppSettingsAnchorButton();
+    if (!anchorBtn) return;
+    const settingsRect = anchorBtn.getBoundingClientRect();
     const margin = 10;
     const panelWidth = appSettingsPanelEl.offsetWidth || 340;
     const maxLeft = Math.max(margin, window.innerWidth - panelWidth - margin);
@@ -12245,7 +12250,7 @@ function positionAppSettingsOverlay() {
     appSettingsPanelEl.style.top = `${top}px`;
 }
 
-btnAppSettingsCanvasEl?.addEventListener('click', () => {
+function toggleAppSettingsOverlay() {
     if (!appSettingsOverlayEl) return;
     if (!appSettingsOverlayEl.hidden) {
         appSettingsOverlayEl.hidden = true;
@@ -12253,6 +12258,16 @@ btnAppSettingsCanvasEl?.addEventListener('click', () => {
     }
     appSettingsOverlayEl.hidden = false;
     positionAppSettingsOverlay();
+}
+
+btnAppSettingsCanvasEl?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleAppSettingsOverlay();
+});
+
+btnAppSettingsCanvasMobileEl?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleAppSettingsOverlay();
 });
 document.getElementById('btnAppSettingsClose')?.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -12264,6 +12279,7 @@ document.addEventListener('click', (e) => {
     if (!(target instanceof Node)) return;
     if (appSettingsPanelEl?.contains(target)) return;
     if (btnAppSettingsCanvasEl?.contains(target)) return;
+    if (btnAppSettingsCanvasMobileEl?.contains(target)) return;
     appSettingsOverlayEl.hidden = true;
 });
 window.addEventListener('resize', () => {

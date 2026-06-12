@@ -1,6 +1,9 @@
 ## Unreleased
 
 ### Fixed
+- **Mobile App Settings quick-action reliability**: the mobile Settings button now toggles the App Settings overlay directly without being treated as an outside click, so the panel no longer opens and immediately closes on tap.
+- **Mobile Export split-workspace restoration**: export workspace state now re-applies the root `export-workspace-active` class when opening/closing export, restoring mobile split layout behavior (viewer framing + bottom export panel) and related workspace CSS hooks.
+- **CSS line-clamp compatibility cleanup**: removed remaining line-clamp compatibility warnings from current styles.
 - **Model sync buttons now use the currently active model from the picker**: clicking the Background Model Sync or Build Plate Model Sync buttons now immediately syncs whatever model is currently selected in the picker, regardless of previous sync state. This ensures the button reflects "sync the current selection" rather than opening a menu to choose from sync history.
   - Changed `bgModelSyncSelectorBtn` click handler to call `syncBgToCurrentlyActivePart()` instead of opening menu
   - Changed `buildPlateModelSyncSelectorBtn` click handler to call `syncBuildPlateToCurrentlyActivePart()` instead of opening menu
