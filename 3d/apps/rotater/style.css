@@ -1291,10 +1291,14 @@ html.none-mode #btnExportPause {
 
     .cam-nav-row #footerCropControls {
         justify-self: start;
+        width: auto;
+        max-width: min(34vw, 156px);
+        margin-right: 6px;
     }
 
     .cam-nav-center {
         justify-self: center;
+        margin-left: 2px;
     }
 
     .cam-nav-right {
@@ -9235,8 +9239,9 @@ html.theme-dark .crop-pill__cancel {
 
     .crop-pill {
         padding: 5px;
-        min-width: auto;
-        max-width: min(58vw, 260px);
+        min-width: 0;
+        width: auto;
+        max-width: min(34vw, 156px);
     }
 
     .crop-pill__ratios {
