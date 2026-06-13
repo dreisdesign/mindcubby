@@ -314,8 +314,12 @@ html.loaded .sidebar {
         display: block !important;
     }
 
-    #appSettingsOverlay {
+    #appSettingsOverlay[hidden] {
         display: none !important;
+    }
+
+    #appSettingsOverlay:not([hidden]) {
+        display: block !important;
     }
 }
 
@@ -8055,6 +8059,17 @@ html.loaded.layout-mobile-accordion .canvas-top-right .canvas-utility-btn#btnApp
     display: inline-flex;
 }
 
+html.loaded.layout-mobile-accordion.sidepanels-hidden .sidebar,
+html.loaded.layout-tablet-tabs.sidepanels-hidden .sidebar {
+    display: none !important;
+}
+
+html.loaded.layout-mobile-accordion.sidepanels-hidden main,
+html.loaded.layout-tablet-tabs.sidepanels-hidden main {
+    flex: 1 1 auto;
+    min-height: 100dvh;
+}
+
 html.loaded.layout-mobile-accordion .canvas-logo,
 html.loaded.layout-tablet-tabs .canvas-logo {
     display: none !important;
@@ -8762,8 +8777,16 @@ html.loaded.export-workspace-active .canvas-wrap {
         padding: 0;
     }
 
-    .settings-overlay.export-overlay {
-        background: transparent !important;
+    .export-workspace-active .export-overlay {
+        pointer-events: auto;
+        background: rgba(14, 12, 35, 0.28) !important;
+    }
+
+    .export-workspace-active .canvas-bottom-center,
+    .export-workspace-active .canvas-overlay-bl,
+    .export-workspace-active .canvas-overlay-br,
+    .export-workspace-active .canvas-top-right {
+        display: none !important;
     }
 
     .export-modal-panel {
@@ -9152,7 +9175,7 @@ html.theme-dark .export-crop-tab:has(input:checked) {
     border-radius: 999px;
     border: none;
     background: transparent;
-    color: #d95e00;
+    color: #a78bfa;
     cursor: pointer;
     flex-shrink: 0;
     transition: background 120ms;
@@ -9164,7 +9187,7 @@ html.theme-dark .export-crop-tab:has(input:checked) {
 }
 
 .crop-pill__cancel:hover {
-    background: rgba(217, 94, 0, 0.10);
+    background: rgba(167, 139, 250, 0.10);
 }
 
 .crop-pill__cancel svg,
