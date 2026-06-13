@@ -1282,9 +1282,23 @@ html.none-mode #btnExportPause {
 
 @media (max-width: 899px) {
     .cam-nav-row {
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
         width: 100%;
         max-width: calc(100vw - 24px);
         gap: 10px;
+    }
+
+    .cam-nav-row #footerCropControls {
+        justify-self: start;
+    }
+
+    .cam-nav-center {
+        justify-self: center;
+    }
+
+    .cam-nav-right {
+        justify-self: end;
     }
 }
 
@@ -6711,7 +6725,7 @@ html.crop-mode .crop-corner {
 
 @media (max-width: 899px) {
     .canvas-bottom-center {
-        bottom: 12px;
+        bottom: calc(18px + env(safe-area-inset-bottom, 0px));
         align-items: end;
         padding: 0 10px;
     }
@@ -6741,10 +6755,9 @@ html.crop-mode .crop-corner {
         margin-top: 12px;
     }
 
-    .cam-nav-row { gap: 12px; }
-
     .canvas-bottom-center .cam-nav-row {
-        max-width: calc(100% - 20px);
+        width: 100%;
+        max-width: calc(100vw - 24px);
     }
 }
 
@@ -8006,9 +8019,36 @@ html.loaded.layout-mobile-accordion .tab-panel {
     gap: 10px;
 }
 
-html.loaded.layout-mobile-accordion .canvas-top-right,
 html.loaded.layout-tablet-tabs .canvas-top-right {
     display: none !important;
+}
+
+html.loaded.layout-mobile-accordion .canvas-top-right {
+    display: flex !important;
+    left: auto;
+    right: 12px;
+    top: 12px;
+    max-width: none;
+    z-index: 44;
+}
+
+html.loaded.layout-mobile-accordion .canvas-top-right > :not(.canvas-utility-icons) {
+    display: none !important;
+}
+
+html.loaded.layout-mobile-accordion .canvas-top-right .canvas-utility-icons {
+    display: inline-flex !important;
+    gap: 8px;
+}
+
+html.loaded.layout-mobile-accordion .canvas-top-right .canvas-utility-btn {
+    width: 36px;
+    height: 36px;
+}
+
+html.loaded.layout-mobile-accordion .canvas-top-right .canvas-utility-btn.sidepanel-toggle-btn,
+html.loaded.layout-mobile-accordion .canvas-top-right .canvas-utility-btn#btnAppSettingsCanvas {
+    display: inline-flex;
 }
 
 html.loaded.layout-mobile-accordion .canvas-logo,
@@ -8635,22 +8675,6 @@ html.loaded.layout-v2-desktop .ruler-lines-input:checked + .ruler-lines-ui::afte
     display: none;
 }
 
-.export-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 70;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    padding: 12px;
-    background: transparent;
-    pointer-events: none;
-}
-
-.export-overlay[hidden] {
-    display: none;
-}
-
 html.loaded.export-workspace-active .sidebar {
     display: none !important;
     transition: none !important;
@@ -8679,6 +8703,22 @@ html.loaded.export-workspace-active .viewer-section,
 html.loaded.export-workspace-active .canvas-wrap {
     min-height: 100vh;
     height: 100vh;
+}
+
+.export-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 12px;
+    background: transparent;
+    pointer-events: none;
+}
+
+.export-overlay[hidden] {
+    display: none;
 }
 
 .export-modal-panel {
@@ -9130,6 +9170,16 @@ html.theme-dark .export-crop-tab:has(input:checked) {
     height: 16px !important;
     flex-shrink: 0 !important;
     min-width: 16px !important;
+    pointer-events: none;
+}
+
+/* Hide Preview UI state: hide all canvas overlays, D-pad, FPS counter, buttons */
+html.preview-ui-hidden .canvas-top-left,
+html.preview-ui-hidden .canvas-top-right,
+html.preview-ui-hidden .canvas-overlay-bl,
+html.preview-ui-hidden .canvas-overlay-br,
+html.preview-ui-hidden .canvas-bottom-center {
+    display: none !important;
 }
 
 .crop-pill__chevron {
@@ -9177,23 +9227,6 @@ html.theme-dark .crop-pill__cancel {
 
 /* Mobile: crop pill collapsed by default, all items visible */
 @media (max-width: 899px) {
-    .cam-nav-row {
-        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-        align-items: center;
-        gap: 8px;
-    }
-
-    .cam-nav-center {
-        justify-self: center;
-    }
-
-    .cam-nav-right {
-        justify-self: end;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
     /* Prevent crop pill from overflowing its grid cell */
     .cam-nav-row .crop-pill {
         min-width: 0;
@@ -9212,6 +9245,12 @@ html.theme-dark .crop-pill__cancel {
         scrollbar-width: none;
     }
 
+    .crop-pill.is-collapsed .crop-pill__ratios {
+        max-width: none;
+        overflow: visible;
+        width: auto;
+    }
+
     .crop-pill__ratios::-webkit-scrollbar {
         display: none;
     }
@@ -9221,10 +9260,9 @@ html.theme-dark .crop-pill__cancel {
         padding: 4px 7px;
     }
 
-    /* Auto-add is-collapsed on mobile via CSS */
-    .crop-pill:not(.is-expanded) {
-        /* Mobile default: collapsed — JS sets .is-expanded when toggled */
-        display: none;
+    /* Keep the crop pill visible on mobile; collapsed state is handled by option visibility rules. */
+    .crop-pill {
+        display: inline-flex;
     }
 }
 
@@ -9235,11 +9273,11 @@ html.theme-dark .crop-pill__cancel {
 
 @media (max-width: 899px) {
     #btnThemeToggle {
-        display: none;
+        display: none !important;
     }
 
     .mobile-settings-btn {
-        display: inline-flex;
+        display: none !important;
     }
 }
 
