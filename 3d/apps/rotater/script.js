@@ -901,6 +901,8 @@ const bgPick = document.getElementById('bgPicker');
 const bgOpacitySlider = document.getElementById('bgOpacitySlider');
 const bgOpacitySliderLabel = bgOpacitySlider?.closest('.control-label');
 const buildPlateToggleEl = document.getElementById('buildPlateToggle');
+const rulerSurfaceToggleEl = document.getElementById('rulerSurfaceToggle');
+const rulerSurfaceToggleWrapEl = document.getElementById('rulerSurfaceToggleWrap');
 const buildPlateControlsEl = document.getElementById('buildPlateControls');
 const buildPlateConfigBodyEl = document.getElementById('buildPlateConfigBody');
 const buildPlateColorPickerEl = document.getElementById('buildPlateColorPicker');
@@ -940,6 +942,7 @@ const exportQualitySliderEl = document.getElementById('exportQualitySlider');
 const exportQualityValEl = document.getElementById('exportQualityVal');
 const exportGridEl = document.getElementById('exportGrid');
 const exportBuildPlateEl = document.getElementById('exportBuildPlate');
+const exportRulerEl = document.getElementById('exportRuler');
 const exportBgColorEl = document.getElementById('exportBgColor');
 const exportDimensionInputs = Array.from(document.querySelectorAll('input[name="exportDimensions"]'));
 const cropDimensionsDock = document.getElementById('cropDimensionsDock');
@@ -978,6 +981,7 @@ const rulerModePickerEl = document.getElementById('rulerModePicker');
 const rulerHoverToggleEl = document.getElementById('rulerHoverToggle');
 const rulerSelectToggleEl = document.getElementById('rulerSelectToggle');
 const showDpadToggleEl = document.getElementById('showDpadToggle');
+const hideUiWhenFullscreenToggleEl = document.getElementById('hideUiWhenFullscreenToggle');
 const reverseDpadHorizontalToggleEl = document.getElementById('reverseDpadHorizontalToggle');
 const devModeToggleEl = document.getElementById('devModeToggle');
 const resetWarningsToggleEl = document.getElementById('resetWarningsToggle');
@@ -996,6 +1000,7 @@ const buildPlateCustomSizeRowEl = document.getElementById('buildPlateCustomSizeR
 const buildPlateCustomWidthEl = document.getElementById('buildPlateCustomWidth');
 const buildPlateCustomDepthEl = document.getElementById('buildPlateCustomDepth');
 const showDpadToggleModalEl = document.getElementById('showDpadToggle-modal');
+const hideUiWhenFullscreenToggleModalEl = document.getElementById('hideUiWhenFullscreenToggle-modal');
 const reverseDpadHorizontalToggleModalEl = document.getElementById('reverseDpadHorizontalToggle-modal');
 const buildPlateSizePresetModalEl = document.getElementById('buildPlateSizePreset-modal');
 const buildPlateCustomSizeRowModalEl = document.getElementById('buildPlateCustomSizeRow-modal');
@@ -1134,7 +1139,13 @@ let multipartPartBounds = null;
 let modelPartDimensions = [];
 let modelPartBoundsBoxes = [];
 let pendingUrlModelAppearanceOverride = null;
-let modelPartSelectorClosedByUser = false;
+let modelPartSelectorClosedByUser = (() => {
+    try {
+        return localStorage.getItem('rotater_modelPartSelectorClosedByUser') === 'true';
+    } catch (_) {
+        return false;
+    }
+})();
 let pendingReplacePartIndex = -1;
 let currentModelBuffer = null;
 let bulkSelectedPartIndices = new Set();
@@ -1641,6 +1652,7 @@ let buildPlateSizePreset = BUILD_PLATE_DEFAULTS.sizePreset;
 let buildPlateWidth = BUILD_PLATE_DEFAULTS.width;
 let buildPlateDepth = BUILD_PLATE_DEFAULTS.depth;
 let dpadVisible = true;
+let hideUiWhenFullscreenEnabled = true;
 let dpadHorizontalReversed = true;
 let exportMotionControlsEnabled = true;
 let _syncingExportMotionControls = false;
@@ -4165,7 +4177,12 @@ function closeModelPartSelectorMenu(force = false) {
         isModelPartFloatingCardOpen,
         rulerPartSelectMultiEnabled,
         setRulerPartSelectMultiEnabled,
-        setModelPartSelectorClosedByUser: (value) => { modelPartSelectorClosedByUser = !!value; },
+        setModelPartSelectorClosedByUser: (value) => {
+            modelPartSelectorClosedByUser = !!value;
+            try {
+                localStorage.setItem('rotater_modelPartSelectorClosedByUser', modelPartSelectorClosedByUser ? 'true' : 'false');
+            } catch (_) {}
+        },
         setModelPartMenuDragState: (value) => { _modelPartMenuDragState = value; },
         applyPartInteractionVisualsToMeshMaterials,
         syncRulerHoverSelectorState,
@@ -4444,6 +4461,9 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
         return;
     }
     modelPartSelectorClosedByUser = false;
+    try {
+        localStorage.setItem('rotater_modelPartSelectorClosedByUser', 'false');
+    } catch (_) {}
     closeThumbSelectMenus();
     if (modelPartSelectorMenu && !open) {
         modelPartSelectorMenu.hidden = false;
@@ -5034,7 +5054,6 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             modelPartAddNextBtn.disabled = true;
             modelPartAddNextBtn.title = '';
         }
-        modelPartSelectorClosedByUser = false;
         syncRulerHoverSelectorState();
         return;
     }
@@ -6149,6 +6168,7 @@ function updateExportWorkspaceTransparencyPattern() {
 function enterCropMode() {
     if (exportFrameEnabled) return;
     exportFrameEnabled = true;
+    document.documentElement.classList.add('crop-mode');
     _cropBackupDist = exportCamDist;
     _cropBackupElev = exportCamElev;
     _cropBackupZoom = exportCamZoom;
@@ -6163,6 +6183,9 @@ function enterCropMode() {
     refreshExportPreviewNow();
     // Force immediate crop frame rendering to ensure overlay appears on first load
     drawExportFrame();
+    requestAnimationFrame(() => {
+        drawExportFrame();
+    });
 }
 
 function openExportWorkspace() {
@@ -6210,6 +6233,7 @@ function updateCropDimensionsDock(frameRect = null) {
 }
 
 function drawExportFrame() {
+    document.documentElement.classList.toggle('crop-mode', !!exportFrameEnabled);
     const fc = document.getElementById('exportFrameCanvas');
     if (!fc) return;
     const wrap = fc.parentElement;
@@ -6265,12 +6289,10 @@ function drawExportFrame() {
             el.style.top = (cy - ch) + 'px';
         });
         updateCropDimensionsDock({ sx, sy, sw, sh });
-        document.documentElement.classList.add('crop-mode');
     } else {
         // Frame off: just clear — no hint brackets
         ctx.clearRect(0, 0, w, h);
         updateCropDimensionsDock();
-        document.documentElement.classList.remove('crop-mode');
     }
 }
 
@@ -7682,6 +7704,7 @@ function saveSettings() {
             exportTransparent: document.getElementById('exportTransparent')?.checked ? '1' : '0',
             gifDither: document.getElementById('gifDither')?.checked ? '1' : '0',
             exportBuildPlate: document.getElementById('exportBuildPlate')?.checked ? '1' : '0',
+            exportRuler: document.getElementById('exportRuler')?.checked ? '1' : '0',
             jpegQuality: document.getElementById('jpegQuality')?.value ?? '90',
             textureTuneOpen: textureTunePanel && !textureTunePanel.hidden ? '1' : '0',
             textureTuneLight: String(textureTuneState.light),
@@ -7728,6 +7751,7 @@ function saveSettings() {
             buildPlateWidth: String(buildPlateWidth),
             buildPlateDepth: String(buildPlateDepth),
             showDpad: dpadVisible ? '1' : '0',
+            hideUiWhenFullscreen: hideUiWhenFullscreenEnabled ? '1' : '0',
             dpadHorizontalReverse: dpadHorizontalReversed ? '1' : '0',
             uploadChoicePrompt: uploadChoicePromptEnabled ? '1' : '0',
             uploadDefaultAction: uploadDefaultAction,
@@ -7946,6 +7970,10 @@ function restoreSettings() {
                 const isOn = (s.exportBuildPlate === true || s.exportBuildPlate === '1' || s.exportBuildPlate === 1);
                 if (exportBuildPlateEl) exportBuildPlateEl.checked = isOn;
             }
+            if (s.exportRuler != null) {
+                const isOn = (s.exportRuler === true || s.exportRuler === '1' || s.exportRuler === 1);
+                if (exportRulerEl) exportRulerEl.checked = isOn;
+            }
 
             // Restore persisted export framing (used by preview/export and crop mode).
             if (s.exportCamDist != null) {
@@ -8094,6 +8122,9 @@ function restoreSettings() {
         if (s.showDpad != null) {
             dpadVisible = (s.showDpad === '1' || s.showDpad === true || s.showDpad === 1);
         }
+        if (s.hideUiWhenFullscreen != null) {
+            hideUiWhenFullscreenEnabled = (s.hideUiWhenFullscreen === '1' || s.hideUiWhenFullscreen === true || s.hideUiWhenFullscreen === 1);
+        }
         if (s.dpadHorizontalReverse != null) {
             dpadHorizontalReversed = (s.dpadHorizontalReverse === '1' || s.dpadHorizontalReverse === true || s.dpadHorizontalReverse === 1);
         }
@@ -8116,6 +8147,8 @@ function restoreSettings() {
         if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
         const rulerToggleRestoreEl = document.getElementById('rulerToggle');
         if (rulerToggleRestoreEl) rulerToggleRestoreEl.checked = rulerLinesVisible;
+        if (rulerSurfaceToggleEl) rulerSurfaceToggleEl.checked = !!rulerEnabled;
+        if (rulerSurfaceToggleWrapEl) rulerSurfaceToggleWrapEl.hidden = !rulerLinesVisible;
         if (exportBuildPlateEl && s.exportBuildPlate == null) exportBuildPlateEl.checked = buildPlateEnabled;
         if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
@@ -8199,6 +8232,8 @@ function restoreSettings() {
         exportMotionControlsEnabled = true;
         if (exportMotionControlsEl) exportMotionControlsEl.hidden = false;
         if (showDpadToggleEl) showDpadToggleEl.checked = dpadVisible;
+        if (hideUiWhenFullscreenToggleEl) hideUiWhenFullscreenToggleEl.checked = hideUiWhenFullscreenEnabled;
+        if (hideUiWhenFullscreenToggleModalEl) hideUiWhenFullscreenToggleModalEl.checked = hideUiWhenFullscreenEnabled;
         if (reverseDpadHorizontalToggleEl) reverseDpadHorizontalToggleEl.checked = dpadHorizontalReversed;
         syncDevModeToggleUI();
         applyDpadVisibility();
@@ -8225,6 +8260,7 @@ function restoreSettings() {
         if (!exportFormatEl?.value || !document.getElementById(`exportOpts-${exportFormatEl.value}`)) {
             applyExportFormat('gif');
         }
+        syncCropModeFromSelectedExportDimensions();
         updateCardResetButtonStates();
     } catch (e) { }
     // Done applying restored settings; re-enable saves and persist final state
@@ -10174,6 +10210,7 @@ syncExportQualitySliderFromSelect();
 syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
 syncExportQualityUiForFormat(exportFormatEl?.value ?? 'gif');
 syncExportDurationFromMain();
+syncCropModeFromSelectedExportDimensions();
 
 if (exportGridEl) {
     exportGridEl.checked = rulerLinesVisible;
@@ -10236,6 +10273,11 @@ exportGridEl?.addEventListener('change', () => {
     const on = !!exportGridEl.checked;
     rulerLinesVisible = on;
     if (rulerToggleEl) rulerToggleEl.checked = on;
+    if (!on) {
+        rulerEnabled = false;
+        if (rulerSurfaceToggleEl) rulerSurfaceToggleEl.checked = false;
+    }
+    syncSurfaceRulerToggleVisibility();
     updateRulerGrid();
     updateRulerHUD();
     updateLiveRulerOverlay();
@@ -10255,14 +10297,7 @@ exportBuildPlateEl?.addEventListener('change', () => {
 exportDimensionInputs.forEach(input => {
     input.addEventListener('change', () => {
         if (!input.checked) return;
-        // Enter crop mode if not already active (when selecting from footer)
-        if (!exportFrameEnabled) {
-            enterCropMode();
-        } else {
-            applyLevelAndReframeToCamera();
-            // Ensure crop frame updates immediately when ratio changes
-            drawExportFrame();
-        }
+        syncCropModeFromSelectedExportDimensions({ forceReframe: true });
         // Mobile: auto-collapse pill after selecting a ratio
         if (window.innerWidth < 900) {
             footerCropControlsEl?.classList.add('is-collapsed');
@@ -10290,10 +10325,34 @@ function syncCropPillCancelBtn() {
     if (btnCropCancelEl) btnCropCancelEl.hidden = !exportFrameEnabled;
 }
 
+function syncSurfaceRulerToggleVisibility() {
+    const gridOn = !!(rulerToggleEl?.checked);
+    if (rulerSurfaceToggleWrapEl) rulerSurfaceToggleWrapEl.hidden = !gridOn;
+    if (!gridOn) {
+        rulerEnabled = false;
+        if (rulerSurfaceToggleEl) rulerSurfaceToggleEl.checked = false;
+        return;
+    }
+    if (rulerSurfaceToggleEl) rulerSurfaceToggleEl.checked = !!rulerEnabled;
+}
+
 function clearSelectedCropDimensions() {
     exportDimensionInputs.forEach((input) => {
         input.checked = false;
     });
+}
+
+function syncCropModeFromSelectedExportDimensions({ forceReframe = false } = {}) {
+    const selected = document.querySelector('input[name="exportDimensions"]:checked');
+    if (!selected) return;
+    if (!exportFrameEnabled) {
+        enterCropMode();
+        return;
+    }
+    if (forceReframe) {
+        applyLevelAndReframeToCamera();
+    }
+    drawExportFrame();
 }
 
 // Mobile: start collapsed; desktop: start expanded
@@ -11221,6 +11280,9 @@ document.querySelector('.orbit-hint-dismiss')?.addEventListener('click', () => {
 const handleClearModelRequest = async (e) => {
     e.stopPropagation();
     e.preventDefault();
+    if (exportWorkspaceActive || exportFrameEnabled) {
+        closeExportWorkspace();
+    }
     // If currently showing benchy (no user file in IDB), X = replace (open picker)
     if (currentFileName === '3dbenchy') {
         document.getElementById('fileInput').click();
@@ -11514,6 +11576,10 @@ function applyAppSettingsDockState(collapsed) {
     queueDesktopV2RailLayoutSync();
 }
 
+function applyPreviewUIHiddenState(hidden) {
+    document.documentElement.classList.toggle('preview-ui-hidden', !!hidden);
+}
+
 function applySidepanelsHiddenState(hidden, persist = true) {
     const next = !!hidden;
     const root = document.documentElement;
@@ -11538,6 +11604,8 @@ function applySidepanelsHiddenState(hidden, persist = true) {
             localStorage.setItem('rotater_sidebarCollapsed', next ? '1' : '0');
         } catch (_) { }
     }
+
+    applyPreviewUIHiddenState(next && hideUiWhenFullscreenEnabled);
 
     syncCanvasSize();
 }
@@ -11623,8 +11691,10 @@ try {
     const shouldRestoreExportWorkspace = isDesktopV2Layout() && localStorage.getItem('rotater_exportWorkspaceActive') === '1';
     if (shouldRestoreExportWorkspace) openExportWorkspace();
 } catch (_) { }
+syncCropModeFromSelectedExportDimensions();
 window.addEventListener('resize', () => {
     applyDesktopV2Layout();
+    syncCropModeFromSelectedExportDimensions();
 });
 
 function setupCardHeaderControls() {
@@ -11766,6 +11836,27 @@ if (showDpadToggleEl) {
         showDpadToggleModalEl.addEventListener('change', () => {
             showDpadToggleEl.checked = showDpadToggleModalEl.checked;
             dpadHandler();
+        });
+    }
+}
+
+if (hideUiWhenFullscreenToggleEl) {
+    hideUiWhenFullscreenToggleEl.checked = hideUiWhenFullscreenEnabled;
+    const hideUiWhenFullscreenHandler = () => {
+        hideUiWhenFullscreenEnabled = !!hideUiWhenFullscreenToggleEl.checked;
+        if (hideUiWhenFullscreenToggleModalEl) {
+            hideUiWhenFullscreenToggleModalEl.checked = hideUiWhenFullscreenEnabled;
+        }
+        const sidepanelsHidden = document.documentElement.classList.contains('sidepanels-hidden');
+        applyPreviewUIHiddenState(sidepanelsHidden && hideUiWhenFullscreenEnabled);
+        saveSettings();
+    };
+    hideUiWhenFullscreenToggleEl.addEventListener('change', hideUiWhenFullscreenHandler);
+    if (hideUiWhenFullscreenToggleModalEl) {
+        hideUiWhenFullscreenToggleModalEl.checked = hideUiWhenFullscreenEnabled;
+        hideUiWhenFullscreenToggleModalEl.addEventListener('change', () => {
+            hideUiWhenFullscreenToggleEl.checked = hideUiWhenFullscreenToggleModalEl.checked;
+            hideUiWhenFullscreenHandler();
         });
     }
 }
@@ -12230,10 +12321,12 @@ const btnAppSettingsCanvasEl = document.getElementById('btnAppSettingsCanvas');
 const btnAppSettingsCanvasMobileEl = document.getElementById('btnAppSettingsCanvasMobile');
 
 function getAppSettingsAnchorButton() {
-    if (btnAppSettingsCanvasMobileEl && window.getComputedStyle(btnAppSettingsCanvasMobileEl).display !== 'none') {
-        return btnAppSettingsCanvasMobileEl;
+    const candidates = [btnAppSettingsCanvasEl, btnAppSettingsCanvasMobileEl].filter(Boolean);
+    for (const btn of candidates) {
+        const style = window.getComputedStyle(btn);
+        if (style.display !== 'none' && style.visibility !== 'hidden') return btn;
     }
-    return btnAppSettingsCanvasEl;
+    return btnAppSettingsCanvasEl || btnAppSettingsCanvasMobileEl || null;
 }
 
 function positionAppSettingsOverlay() {
@@ -12358,6 +12451,11 @@ function confirmCropMode() {
     saveSettings();
 }
 
+function closeCropAndExportWorkspace() {
+    if (exportFrameEnabled) cancelCropMode();
+    closeExportWorkspace();
+}
+
 updateFrameOverlayButtonUI();
 
 ['frameDimTop', 'frameDimBottom', 'frameDimLeft', 'frameDimRight'].forEach((id) => {
@@ -12365,7 +12463,7 @@ updateFrameOverlayButtonUI();
         if (!exportFrameEnabled) return;
         e.preventDefault();
         e.stopPropagation();
-        cancelCropMode();
+        closeCropAndExportWorkspace();
     });
 });
 
@@ -14074,15 +14172,35 @@ updateAutoBgShadeControlVisibility();
 const rulerToggleEl = document.getElementById('rulerToggle');
 if (rulerToggleEl) {
     rulerToggleEl.checked = !!rulerLinesVisible;
+    syncSurfaceRulerToggleVisibility();
     rulerToggleEl.addEventListener('change', () => {
         rulerLinesVisible = rulerToggleEl.checked;
+        if (!rulerLinesVisible) {
+            rulerEnabled = false;
+            if (rulerSurfaceToggleEl) rulerSurfaceToggleEl.checked = false;
+        } else if (rulerSurfaceToggleEl) {
+            rulerEnabled = !!rulerSurfaceToggleEl.checked;
+        }
         if (!rulerLinesVisible && !rulerPartHoverEnabled) setRulerHoveredPartIndex(-1);
         if (exportGridEl) exportGridEl.checked = rulerLinesVisible;
+        syncSurfaceRulerToggleVisibility();
         updateRulerGrid();
         updateRulerHUD();
         updateLiveRulerOverlay();
         refreshExportPreviewNow();
         saveSettings();
+    });
+}
+
+if (rulerSurfaceToggleEl) {
+    rulerSurfaceToggleEl.checked = !!rulerEnabled;
+    rulerSurfaceToggleEl.addEventListener('change', () => {
+        rulerEnabled = !!rulerSurfaceToggleEl.checked;
+        updateRulerHUD();
+        updateLiveRulerOverlay();
+        refreshExportPreviewNow();
+        saveSettings();
+        scheduleCardResetButtonStatesUpdate();
     });
 }
 
