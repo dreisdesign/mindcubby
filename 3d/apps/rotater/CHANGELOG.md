@@ -1,6 +1,12 @@
 ## Unreleased
 
 ### Fixed
+- **Crop mode now shows by default when a ratio is pre-selected on startup and refresh**: when the app loads or refreshes with a saved export ratio (e.g., 1:1), crop mode now activates immediately so the crop overlay is visible without requiring a manual ratio toggle. Previously the ratio was selected but the overlay remained hidden until the user clicked away and back.
+  - Added `syncCropModeFromSelectedExportDimensions()` helper called after settings restore to detect pre-selected ratios
+  - Sync runs at three checkpoints: end of `restoreSettings()`, initial export UI startup, and on window resize
+  - Unified ratio-change handler to use the same sync function for consistent behavior across manual selection and startup
+- **Crop cancel button now uses a reset icon and purple color scheme**: the crop control cancel button (which resets crop selection) now displays as a reset/refresh icon in purple (#a78bfa) instead of a red X, improving visual consistency with other reset controls in the app and better indicating its "reset" purpose.
+- **Mobile crop controls now truncate and don't stretch across the row**: crop ratio pill on mobile now uses constrained width (`max-width: min(34vw, 156px)`) instead of expanding to fill available space, preventing overlap with the D-pad navigation controls and maintaining proper button layout balance.
 - **Mobile App Settings quick-action reliability**: the mobile Settings button now toggles the App Settings overlay directly without being treated as an outside click, so the panel no longer opens and immediately closes on tap.
 - **Mobile Export split-workspace restoration**: export workspace state now re-applies the root `export-workspace-active` class when opening/closing export, restoring mobile split layout behavior (viewer framing + bottom export panel) and related workspace CSS hooks.
 - **CSS line-clamp compatibility cleanup**: removed remaining line-clamp compatibility warnings from current styles.
