@@ -10326,25 +10326,18 @@ exportBuildPlateEl?.addEventListener('change', () => {
     saveSettings();
 });
 // Toggle logic for crop radio buttons
-// Track pre-interaction state to detect toggle clicks on already-selected radios
+// Intercept at the label level to prevent browser's default radio behavior
 
-exportDimensionInputs.forEach(input => {
-    let wasCheckedBeforeInteraction = input.checked;
+const cropPillOptions = document.querySelectorAll('.crop-pill__option');
+
+cropPillOptions.forEach(label => {
+    const input = label.querySelector('input[name="exportDimensions"]');
     
-    // Track state before interaction
-    input.addEventListener('pointerdown', () => {
-        wasCheckedBeforeInteraction = input.checked;
-    });
-    
-    // Handle click - detect toggle clicks
-    input.addEventListener('click', (e) => {
-        // If this radio was already checked before the interaction AND crop is active, toggle it OFF
-        if (wasCheckedBeforeInteraction && exportFrameEnabled) {
-            // Prevent the browser's default radio behavior (which checked it)
+    label.addEventListener('click', (e) => {
+        // Check if this radio is already checked AND we're in crop mode
+        if (input.checked && exportFrameEnabled) {
+            // Prevent the browser from checking the radio
             e.preventDefault();
-            input.checked = false;
-            
-            // Prevent change event  by not letting it bubble
             e.stopImmediatePropagation();
             
             // Toggle crop mode OFF
@@ -10353,10 +10346,12 @@ exportDimensionInputs.forEach(input => {
         }
         
         // Normal selection - let the browser handle it
-        // The change event will fire and handle the sync
-    });
-    
-    // Handle selection changes
+        // The radio will be checked and change event will fire
+    }, { capture: true });
+});
+
+// Handle selection changes when crop ratio is chosen
+exportDimensionInputs.forEach(input => {
     input.addEventListener('change', () => {
         if (!input.checked) return;
         
