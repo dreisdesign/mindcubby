@@ -7734,7 +7734,6 @@ function saveSettings() {
             rulerVisible: rulerEnabled ? '1' : '0',
             rulerUnit: rulerUnit,
             rulerGridVisible: rulerLinesVisible ? '1' : '0',
-            rulerPartHover: rulerPartHoverEnabled ? '1' : '0',
             rulerPartSelectMulti: rulerPartSelectMultiEnabled ? '1' : '0',
             buildPlate: buildPlateEnabled ? '1' : '0',
             buildPlatePreset: activeBuildPlatePreset,
@@ -8150,9 +8149,8 @@ function restoreSettings() {
         if (exportBuildPlateEl && s.exportBuildPlate == null) exportBuildPlateEl.checked = buildPlateEnabled;
         if (s.rulerUnit === 'imperial' || s.rulerUnit === 'i' || s.rulerUnit === 'in') rulerUnit = 'imperial';
         else if (s.rulerUnit === 'metric' || s.rulerUnit === 'm' || s.rulerUnit === 'mm') rulerUnit = 'metric';
-        if (s.rulerPartHover != null) {
-            rulerPartHoverEnabled = (s.rulerPartHover === '1' || s.rulerPartHover === true || s.rulerPartHover === 1);
-        }
+        // Don't restore rulerPartHoverEnabled from localStorage - it's a temporary UI state
+        // that should not prevent animation on page refresh
         if (s.rulerPartSelectMulti != null) {
             rulerPartSelectMultiEnabled = (s.rulerPartSelectMulti === '1' || s.rulerPartSelectMulti === true || s.rulerPartSelectMulti === 1);
         } else {
