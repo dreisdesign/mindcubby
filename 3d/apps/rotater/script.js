@@ -10314,11 +10314,18 @@ exportDimensionInputs.forEach(input => {
         saveSettings();
     });
     
-    // Toggle crop mode off only when clicking the same ratio button again
+    // Handle same-ratio re-clicks: toggle crop mode on/off
     input.addEventListener('click', () => {
-        // Only close crop if: crop mode is active AND we're clicking the same ratio that was already selected
-        if (!exportFrameEnabled || input.value !== lastSelectedExportCropRatio) return;
-        cancelCropMode();
+        if (!input.checked) return;
+        
+        // If clicking the same ratio and crop is already active → close crop
+        if (exportFrameEnabled && input.value === lastSelectedExportCropRatio) {
+            cancelCropMode();
+        }
+        // If clicking the same ratio and crop is inactive → reopen crop without reframing camera
+        else if (!exportFrameEnabled && input.value === lastSelectedExportCropRatio) {
+            syncCropModeFromSelectedExportDimensions({ forceReframe: false });
+        }
     });
 });
 
