@@ -78,6 +78,7 @@ Rotater enables users to load STL models in-browser, style them, animate them, a
 - Pause/resume controls in viewer
 - Reset/reframe behavior for export-focused composition
 - Export framing workspace integrated into main viewer
+- Crop framing now preserves the current camera pose on entry and when switching ratios; re-clicking the same ratio toggles crop mode off/on, and clicking outside the crop frame closes it.
 
 ### 3.5 Animation System
 - Animation enable/disable master toggle
@@ -218,5 +219,7 @@ Likely missing items to define next for a complete product spec:
 
 ---
 
-## 10) Change Log for This Document- **2026-06-14**: Staged Planned Features section with ruler/measurement capture and multi-part grouping roadmap items- **2026-06-13**: Added Planned Features section: ruler/measurement capture and multi-part grouping
+## 10) Change Log for This Document
+- **2026-06-14**: Updated crop interaction notes and staged Planned Features section with ruler/measurement capture and multi-part grouping roadmap items.
+- **2026-06-13**: Added Planned Features section: ruler/measurement capture and multi-part grouping
 - **2026-05-17**: Initial working document created from README, CHANGELOG, and DESIGN-REFERENCE synthesis.

@@ -1097,7 +1097,7 @@ let rulerPartSelectMultiEnabled = false;
 let devModeEnabled = false;
 let rulerHoveredPartIndex = -1;
 let lastSelectedExportCropRatio = null;
-let previousSelectedExportCropRatio = null;
+let cropRatioPointerDownSelection = null;
 let exportCropFrameRect = null;
 let rulerOverlayEl = null;
 let rulerGridHelper = null;
@@ -6166,7 +6166,7 @@ function updateExportWorkspaceTransparencyPattern() {
     exportWorkspaceRuntimeController.updateExportWorkspaceTransparencyPattern();
 }
 
-function enterCropMode(forceReframe = true) {
+function enterCropMode(forceReframe = false) {
     if (exportFrameEnabled) return;
     exportFrameEnabled = true;
     document.documentElement.classList.add('crop-mode');
@@ -10310,13 +10310,15 @@ exportBuildPlateEl?.addEventListener('change', () => {
     saveSettings();
 });
 exportDimensionInputs.forEach(input => {
+    input.addEventListener('pointerdown', () => {
+        cropRatioPointerDownSelection = lastSelectedExportCropRatio;
+    });
+
     input.addEventListener('change', () => {
         if (!input.checked) return;
-        // Track ratio changes: save old before updating new
-        previousSelectedExportCropRatio = lastSelectedExportCropRatio;
         lastSelectedExportCropRatio = input.value;
-        // Only reframe when entering crop mode; if already active, just update overlay
-        syncCropModeFromSelectedExportDimensions({ forceReframe: !exportFrameEnabled });
+        // Crop mode should preserve the current camera pose when opening or switching ratios.
+        syncCropModeFromSelectedExportDimensions({ forceReframe: false });
         // Mobile: auto-collapse pill after selecting a ratio
         if (window.innerWidth < 900) {
             footerCropControlsEl?.classList.add('is-collapsed');
@@ -10334,8 +10336,8 @@ exportDimensionInputs.forEach(input => {
     input.addEventListener('click', () => {
         if (!input.checked) return;
         
-        // If clicking the same ratio (already selected), toggle crop mode on/off
-        if (input.value === lastSelectedExportCropRatio) {
+        // Only toggle on a true re-click of the same ratio selected before pointerdown.
+        if (input.value === cropRatioPointerDownSelection) {
             if (exportFrameEnabled) {
                 cancelCropMode();
             } else {
@@ -12482,6 +12484,14 @@ function closeCropAndExportWorkspace() {
     closeExportWorkspace();
 }
 
+function isPointInsideExportCropFrame(clientX, clientY) {
+    if (!exportFrameEnabled || !exportCropFrameRect) return false;
+    return clientX >= exportCropFrameRect.left
+        && clientX <= exportCropFrameRect.right
+        && clientY >= exportCropFrameRect.top
+        && clientY <= exportCropFrameRect.bottom;
+}
+
 updateFrameOverlayButtonUI();
 
 ['frameDimTop', 'frameDimBottom', 'frameDimLeft', 'frameDimRight'].forEach((id) => {
@@ -12546,13 +12556,9 @@ window.addEventListener('pointermove', (e) => {
 
 canvas?.addEventListener('click', (e) => {
     // Close crop mode if clicking outside the crop frame area
-    if (exportFrameEnabled && exportCropFrameRect) {
-        // Check if click is outside the crop frame boundaries
-        if (e.clientX < exportCropFrameRect.left || e.clientX > exportCropFrameRect.right ||
-            e.clientY < exportCropFrameRect.top || e.clientY > exportCropFrameRect.bottom) {
-            cancelCropMode();
-            return;
-        }
+    if (exportFrameEnabled && !isPointInsideExportCropFrame(e.clientX, e.clientY)) {
+        cancelCropMode();
+        return;
     }
     
     closeModelPartActionMenus();
@@ -12570,6 +12576,14 @@ canvas?.addEventListener('click', (e) => {
     selectModelPartFromRulerHover(partIndex, isModelPartPreviewMultiSelectActive());
     if (!isModelPartPreviewMultiSelectActive() && !isModelPartFloatingCardOpen()) closeThumbSelectMenus();
 });
+
+document.addEventListener('pointerdown', (e) => {
+    if (!exportFrameEnabled || !exportCropFrameRect) return;
+    if (!(e.target instanceof Node)) return;
+    if (footerCropControlsEl?.contains(e.target)) return;
+    if (isPointInsideExportCropFrame(e.clientX, e.clientY)) return;
+    cancelCropMode();
+}, true);
 
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && exportFrameEnabled) {

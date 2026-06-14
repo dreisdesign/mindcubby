@@ -1,6 +1,6 @@
 # Rotater Roadmap
 
-Updated: 2026-05-28
+Updated: 2026-06-14
 
 This roadmap tracks incomplete work only. Completed work is recorded in CHANGELOG.md.
 
@@ -115,6 +115,8 @@ Design status key:
 4. `A1` Multipart persistence hardening (high impact, highest risk, unlocks dependencies).
 5. `B2` Ruler persistence polish (depends on A1).
 6. `B1` Export workspace consolidation finish pass (depends on A1 and unlocks B3+).
+
+Quick-win call: `A2` remains the clearest low-risk follow-up if the next change should be small, user-visible, and unlikely to disturb persistence or camera state.
 
 ## Critical Path and Gates
 

@@ -9219,6 +9219,12 @@ html.preview-ui-hidden .canvas-bottom-center {
     justify-content: center;
     width: 30px;
     height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 0;
     border-radius: 999px;
     border: none;
     background: rgba(0, 0, 0, 0.05);
@@ -9230,6 +9236,15 @@ html.preview-ui-hidden .canvas-bottom-center {
 
 .crop-pill__chevron:hover {
     background: rgba(0, 0, 0, 0.10);
+}
+
+.crop-pill__cancel {
+    min-width: 30px;
+    min-height: 30px;
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 0;
 }
 
 /* Dark mode crop pill */
