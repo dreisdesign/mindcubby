@@ -1,3 +1,15 @@
+## [1.0.27] - 2026-06-14
+
+### Fixed
+- **Crop UI hover cursor**: Circular hotspots on crop ratio options now have consistent pointer cursor across entire button area (no finger icon flicker on nested spans)
+- **Crop mode off-state visual**: Crop mode no longer appears visually active when toggled OFF—radio buttons are unchecked and button styling returns to inactive state
+- **Export layout on desktop**: Export workspace overlay no longer takes over full screen on desktop v2 layout—maintains sidebar layout and normal viewport reflow
+- **Crop toggle on active ratio**: Implemented toggle behavior for crop ratio selection—clicking the already-selected crop ratio button now toggles crop mode ON/OFF while preserving the remembered ratio selection
+
+### Changed
+- Crop pill option styling: improved hover state with light blue background and refined circular hitspot dimensions
+- Export workspace activation now conditional on layout version (desktop v2 uses overlay mode only, mobile uses full workspace takeover)
+
 ## Unreleased
 
 ### Fixed

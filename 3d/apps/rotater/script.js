@@ -284,7 +284,10 @@ function getLegacyExportSizeKeyForQuality(format = 'gif', quality = EXPORT_QUALI
 }
 
 function getSelectedExportDimensionsId() {
-    return document.querySelector('input[name="exportDimensions"]:checked')?.value ?? 'square';
+    const checkedId = document.querySelector('input[name="exportDimensions"]:checked')?.value;
+    if (checkedId && IMAGE_DIMENSION_PRESETS[checkedId]) return checkedId;
+    if (lastSelectedExportCropRatio && IMAGE_DIMENSION_PRESETS[lastSelectedExportCropRatio]) return lastSelectedExportCropRatio;
+    return 'square';
 }
 
 function setSelectedExportDimensionsId(id) {
@@ -6190,6 +6193,10 @@ function enterCropMode(forceReframe = false) {
 }
 
 function openExportWorkspace() {
+    const selected = document.querySelector('input[name="exportDimensions"]:checked');
+    if (!selected && lastSelectedExportCropRatio && IMAGE_DIMENSION_PRESETS[lastSelectedExportCropRatio]) {
+        setSelectedExportDimensionsId(lastSelectedExportCropRatio);
+    }
     exportWorkspaceRuntimeController.openExportWorkspace();
 }
 
@@ -9385,8 +9392,17 @@ document.addEventListener('keydown', e => {
         )
     );
 
-    // Space: always pause/resume outside editable fields.
-    if (e.code === 'Space' && !isEditableTarget) {
+    const isRangeTarget = target instanceof HTMLInputElement && target.type === 'range';
+
+    if (e.code === 'Escape' && isEditableTarget) {
+        e.preventDefault();
+        e.stopPropagation();
+        target.blur?.();
+        return;
+    }
+
+    // Space: always pause/resume outside editable fields, and on focused range sliders.
+    if (e.code === 'Space' && (!isEditableTarget || isRangeTarget)) {
         e.preventDefault();
         e.stopPropagation();
         togglePause();
@@ -10309,16 +10325,34 @@ exportBuildPlateEl?.addEventListener('change', () => {
     refreshExportPreviewNow();
     saveSettings();
 });
-exportDimensionInputs.forEach(input => {
-    input.addEventListener('pointerdown', () => {
-        cropRatioPointerDownSelection = lastSelectedExportCropRatio;
-    });
+// Store the previously checked ratio to detect toggle clicks
+let lastCheckedCropRadio = null;
 
-    input.addEventListener('change', () => {
-        if (!input.checked) return;
+exportDimensionInputs.forEach(input => {
+    // Track which radio was checked before any interaction
+    if (input.checked) {
+        lastCheckedCropRadio = input.value;
+    }
+    
+    // Use mouseup to detect clicks, even on already-checked radios
+    input.addEventListener('mouseup', (e) => {
+        if (!input.checked) return; // Only process if the radio is checked
+        
+        // Check if this is a toggle click (same radio as before)
+        if (input.value === lastCheckedCropRadio && exportFrameEnabled) {
+            // User clicked the already-selected crop ratio while crop mode is active - toggle OFF
+            e.preventDefault();
+            cancelCropMode();
+            return;
+        }
+        
+        // Not a toggle - this is a new selection
+        lastCheckedCropRadio = input.value;
         lastSelectedExportCropRatio = input.value;
-        // Crop mode should preserve the current camera pose when opening or switching ratios.
+        
+        // Open crop mode for the newly selected ratio
         syncCropModeFromSelectedExportDimensions({ forceReframe: false });
+        
         // Mobile: auto-collapse pill after selecting a ratio
         if (window.innerWidth < 900) {
             footerCropControlsEl?.classList.add('is-collapsed');
@@ -10332,18 +10366,24 @@ exportDimensionInputs.forEach(input => {
         saveSettings();
     });
     
-    // Handle same-ratio re-clicks: toggle crop mode on/off
-    input.addEventListener('click', () => {
+    // Also keep the change listener for programmatic changes
+    input.addEventListener('change', () => {
         if (!input.checked) return;
-        
-        // Only toggle on a true re-click of the same ratio selected before pointerdown.
-        if (input.value === cropRatioPointerDownSelection) {
-            if (exportFrameEnabled) {
-                cancelCropMode();
-            } else {
-                syncCropModeFromSelectedExportDimensions({ forceReframe: false });
-            }
+        lastSelectedExportCropRatio = input.value;
+        lastCheckedCropRadio = input.value;
+        // Crop mode should preserve the current camera pose when opening or switching ratios.
+        syncCropModeFromSelectedExportDimensions({ forceReframe: false });
+        // Mobile: auto-collapse pill after selecting a ratio
+        if (window.innerWidth < 900) {
+            footerCropControlsEl?.classList.add('is-collapsed');
+            if (btnCropToggleEl) btnCropToggleEl.setAttribute('aria-expanded', 'false');
+            syncCropPillChevron(false);
         }
+        syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
+        updateCropDimensionsDock();
+        updateEstimate();
+        refreshExportPreviewNow();
+        saveSettings();
     });
 });
 
@@ -10410,12 +10450,6 @@ btnCropToggleEl?.addEventListener('click', () => {
 });
 
 btnCropCancelEl?.addEventListener('click', () => {
-    clearSelectedCropDimensions();
-    syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
-    updateCropDimensionsDock();
-    updateEstimate();
-    refreshExportPreviewNow();
-    saveSettings();
     if (!exportFrameEnabled) return;
     cancelCropMode();
 });
@@ -12436,6 +12470,8 @@ document.addEventListener('keydown', (e) => {
 
 function cancelCropMode() {
     if (!exportFrameEnabled) return;
+    const selected = document.querySelector('input[name="exportDimensions"]:checked');
+    if (selected) lastSelectedExportCropRatio = selected.value;
     // Restore saved export framing and pop viewport back to standard scale
     if (_cropBackupDist !== null) {
         exportCamDist = _cropBackupDist;
@@ -12449,9 +12485,10 @@ function cancelCropMode() {
         camera.zoom = _cropBackupCameraZoom;
         camera.updateProjectionMatrix();
     }
-    exportFrameEnabled = false;
-    // Uncheck all crop dimension buttons when canceling
     clearSelectedCropDimensions();
+    syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
+    updateCropDimensionsDock();
+    exportFrameEnabled = false;
     if (btnCropCancelEl) btnCropCancelEl.hidden = true;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
@@ -12557,7 +12594,8 @@ window.addEventListener('pointermove', (e) => {
 canvas?.addEventListener('click', (e) => {
     // Close crop mode if clicking outside the crop frame area
     if (exportFrameEnabled && !isPointInsideExportCropFrame(e.clientX, e.clientY)) {
-        cancelCropMode();
+        if (exportWorkspaceActive) closeCropAndExportWorkspace();
+        else cancelCropMode();
         return;
     }
     
@@ -12582,7 +12620,8 @@ document.addEventListener('pointerdown', (e) => {
     if (!(e.target instanceof Node)) return;
     if (footerCropControlsEl?.contains(e.target)) return;
     if (isPointInsideExportCropFrame(e.clientX, e.clientY)) return;
-    cancelCropMode();
+    if (exportWorkspaceActive) closeCropAndExportWorkspace();
+    else cancelCropMode();
 }, true);
 
 document.addEventListener('keydown', e => {

@@ -9133,11 +9133,21 @@ html.theme-dark .export-crop-tab:has(input:checked) {
     color: var(--palette-blueberry-600);
     transition: background 120ms;
     min-width: 42px;
+    min-height: 42px;
 }
 
 .crop-pill__option:has(input:checked) {
     background: var(--palette-blueberry-100);
     color: var(--palette-blueberry-800);
+}
+
+.crop-pill__option:hover {
+    background: var(--palette-blueberry-50);
+}
+
+.crop-pill__option,
+.crop-pill__option * {
+    cursor: pointer;
 }
 
 .crop-pill__option input[type="radio"] {
@@ -9151,7 +9161,7 @@ html.theme-dark .export-crop-tab:has(input:checked) {
     border: 2px solid currentColor;
     border-radius: 3px;
     flex-shrink: 0;
-    cursor: pointer;
+    cursor: inherit;
     pointer-events: none;
 }
 
@@ -9166,7 +9176,7 @@ html.theme-dark .export-crop-tab:has(input:checked) {
     line-height: 1;
     font-family: "Source Sans 3", system-ui, sans-serif;
     white-space: nowrap;
-    cursor: pointer;
+    cursor: inherit;
     pointer-events: none;
 }
 

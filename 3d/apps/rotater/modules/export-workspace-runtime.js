@@ -34,11 +34,13 @@ export function createExportWorkspaceRuntimeController({
 
     function setExportWorkspaceActive(active) {
         const exportOverlayEl = document.getElementById('exportOverlay');
+        const isDesktopV2Layout = !!rootEl?.classList?.contains('layout-v2-desktop');
         setExportWorkspaceActiveController(active, {
             setExportWorkspaceActive: (nextActive) => {
                 setWorkspaceActive?.(!!nextActive);
             },
             rootEl,
+            applyRootWorkspaceClass: !isDesktopV2Layout,
             exportOverlayEl,
             exportGridEl,
             rulerLinesVisible: !!getRulerLinesVisible?.(),

@@ -2,12 +2,12 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 1.0.26**
+**Version (current workspace): 1.0.27**
 
 Documentation sync: 2026-06-14
-- Latest updates documented in `CHANGELOG.md` include crop control improvements (default visibility, icon/color polish, mobile truncation), mobile UI fixes (Settings reliability, Export split-workspace restoration), and CSS line-clamp cleanup.
-- Mobile fixes validated: App Settings quick action opens reliably without immediate close, export split layout correctly restores on mobile refresh, and crop controls properly truncate to avoid D-pad overlap.
-- Crop mode now preserves the current camera position when entering or re-entering crop mode; re-clicking the same crop ratio toggles crop mode off/on, and clicking outside the crop frame closes it.
+- Latest updates documented in `CHANGELOG.md` include crop UI refinements: consistent pointer cursor on hotspots (no flicker), visual distinction between on/off crop states, desktop layout fix (export stays in overlay), and **new crop toggle behavior** (click active crop ratio to toggle mode on/off while preserving selection).
+- Crop mode now shows by default when a ratio is pre-selected on startup/refresh, and clicking the same ratio again toggles crop mode OFF, then ON again on another click.
+- Desktop export layout now correctly maintains sidebar on v2 layout instead of taking over full screen.
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
