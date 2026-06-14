@@ -12400,7 +12400,7 @@ document.addEventListener('keydown', (e) => {
 // ── Export frame overlay toggle ───────────────────────────────────────────────
 frameOverlayBtn?.addEventListener('click', () => {
     if (exportFrameEnabled) {
-        confirmCropMode();
+        cancelCropMode();
         return;
     }
     enterCropMode();

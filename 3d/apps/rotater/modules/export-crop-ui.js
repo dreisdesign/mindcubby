@@ -10,8 +10,8 @@ export function createExportCropUiController({
         frameOverlayBtn.setAttribute('aria-pressed', String(!!exportFrameEnabled));
         if (exportFrameEnabled) {
             frameOverlayBtn.classList.add('is-crop-confirm');
-            frameOverlayBtn.title = 'Apply crop (Enter)';
-            frameOverlayBtn.setAttribute('aria-label', 'Apply crop');
+            frameOverlayBtn.title = 'Reset crop (Esc)';
+            frameOverlayBtn.setAttribute('aria-label', 'Reset crop');
             return;
         }
         frameOverlayBtn.classList.remove('is-crop-confirm');
