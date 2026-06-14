@@ -1097,6 +1097,7 @@ let rulerPartSelectMultiEnabled = false;
 let devModeEnabled = false;
 let rulerHoveredPartIndex = -1;
 let lastSelectedExportCropRatio = null;
+let previousSelectedExportCropRatio = null;
 let exportCropFrameRect = null;
 let rulerOverlayEl = null;
 let rulerGridHelper = null;
@@ -6243,9 +6244,15 @@ function drawExportFrame() {
     if (fc.width !== w || fc.height !== h) { fc.width = w; fc.height = h; }
 
     const { sx, sy, sw, sh } = getCropFrameRect(w, h);
-    // Store crop frame rect for click-outside detection
+    // Store crop frame rect for click-outside detection (in viewport coordinates)
     if (exportFrameEnabled) {
-        exportCropFrameRect = { left: sx, top: sy, right: sx + sw, bottom: sy + sh };
+        const canvasRect = fc.getBoundingClientRect();
+        exportCropFrameRect = {
+            left: canvasRect.left + sx,
+            top: canvasRect.top + sy,
+            right: canvasRect.left + sx + sw,
+            bottom: canvasRect.top + sy + sh
+        };
     } else {
         exportCropFrameRect = null;
     }
@@ -10305,7 +10312,8 @@ exportBuildPlateEl?.addEventListener('change', () => {
 exportDimensionInputs.forEach(input => {
     input.addEventListener('change', () => {
         if (!input.checked) return;
-        // Track which ratio is now selected before processing change
+        // Track ratio changes: save old before updating new
+        previousSelectedExportCropRatio = lastSelectedExportCropRatio;
         lastSelectedExportCropRatio = input.value;
         // Only reframe when entering crop mode; if already active, just update overlay
         syncCropModeFromSelectedExportDimensions({ forceReframe: !exportFrameEnabled });
@@ -10326,17 +10334,10 @@ exportDimensionInputs.forEach(input => {
     input.addEventListener('click', () => {
         if (!input.checked) return;
         
-        // Update tracked ratio to the currently checked one (in case it wasn't updated on change event)
-        const currentlyChecked = Array.from(exportDimensionInputs).find(i => i.checked);
-        if (currentlyChecked) lastSelectedExportCropRatio = currentlyChecked.value;
-        
-        // If clicking the same ratio and crop is already active → close crop
-        if (exportFrameEnabled && input.value === lastSelectedExportCropRatio) {
+        // Only close crop if: crop is active AND we're clicking the previously-selected ratio
+        // (This means it's a re-click of the same button to toggle off)
+        if (exportFrameEnabled && input.value === previousSelectedExportCropRatio) {
             cancelCropMode();
-        }
-        // If clicking the same ratio and crop is inactive → reopen crop without reframing camera
-        else if (!exportFrameEnabled && input.value === lastSelectedExportCropRatio) {
-            syncCropModeFromSelectedExportDimensions({ forceReframe: false });
         }
     });
 });
@@ -12542,11 +12543,10 @@ window.addEventListener('pointermove', (e) => {
 
 canvas?.addEventListener('click', (e) => {
     // Close crop mode if clicking outside the crop frame area
-    if (exportFrameEnabled) {
-        const rect = e.target?.getBoundingClientRect?.();
-        if (rect && exportCropFrameRect && 
-            (e.clientX < exportCropFrameRect.left || e.clientX > exportCropFrameRect.right ||
-             e.clientY < exportCropFrameRect.top || e.clientY > exportCropFrameRect.bottom)) {
+    if (exportFrameEnabled && exportCropFrameRect) {
+        // Check if click is outside the crop frame boundaries
+        if (e.clientX < exportCropFrameRect.left || e.clientX > exportCropFrameRect.right ||
+            e.clientY < exportCropFrameRect.top || e.clientY > exportCropFrameRect.bottom) {
             cancelCropMode();
             return;
         }
