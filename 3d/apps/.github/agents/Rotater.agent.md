@@ -21,26 +21,34 @@ This agent is designed to assist with the development and maintenance of the Rot
 	- ROTATER_BUILD_DATE
 	- Ensure the info card reflects those values.
 
-3. Refactor-as-you-go policy (C1):
+3. Take responsive screenshots before commits affecting UI/layout (especially mobile):
+	- Quick capture: `npm run shots` (default state only, captures mobile/tablet/desktop)
+	- Full states: `npm run shots:states` (captures default, export-open, sidebar-collapsed states across all viewports)
+	- Output saved to `.screenshots/YYYY-MM-DD-HH-MM-SS/` with browser-viewable index.html for side-by-side review
+	- Optional: Setup pre-commit hook with `npm run setup:precommit-screenshots` (auto-captures on CSS/HTML/JS changes before each commit)
+	- When UI/layout changes are committed: store screenshots in branch for review during PR
+	- Tip: Screenshots are not committed; they're dev artifacts for validation. Include visual validation notes in commit message if testing multiple viewports was required.
+
+4. Refactor-as-you-go policy (C1):
 	- If touching non-trivial logic in script.js, extract at least the newly-added decision/transform logic into an appropriate module in the same change.
 	- Keep script.js focused on orchestration/event wiring; keep pure logic in modules.
 	- Prefer small behavior-preserving extractions over large risky rewrites.
 
-4. Performance workflow for interactive controls:
+5. Performance workflow for interactive controls:
 	- During input/drag paths, prefer preview-only updates.
 	- Defer expensive operations (persistence, thumbnail regeneration, URL sync/saveSettings, texture rebuilds) to commit paths (change/pointerup/debounced flush).
 	- For regressions, identify root cause and preserve UX parity while reducing main-thread/GPU stalls.
 
-5. Bug-fix quality bar:
+6. Bug-fix quality bar:
 	- Fix root cause, not only symptoms.
 	- Validate adjacent paths and interaction variants (single part, multipart, multi-select, floating panels, mobile/desktop).
 	- Add focused guards for edge cases and avoid behavior regressions.
 
-6. UI and UX consistency:
+7. UI and UX consistency:
 	- Preserve existing visual language, spacing, and interaction patterns unless the task explicitly asks for redesign.
 	- New UI elements should be intuitive, accessible, and coherent with existing controls/states.
 
-7. Implementation standards:
+8. Implementation standards:
 	- Follow established coding conventions and naming patterns.
 	- Keep changes minimal, readable, and well-scoped.
 	- Prefer thin wrappers in script.js when delegating to modules.

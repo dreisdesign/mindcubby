@@ -2,11 +2,12 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 1.0.6**
+**Version (current workspace): 1.0.25**
 
-Documentation sync: 2026-06-11
-- Latest updates documented in `CHANGELOG.md` include model-sync action parity, build-plate shadow clipping, crop reframe camera math fixes for all aspect ratios, and SVG icon rendering fixes for crop/D-pad controls.
-- Mobile fixes validated on 2026-06-11: App Settings quick action opens reliably without immediate close, and Export split workspace mode correctly re-enters with live preview framing on mobile layouts.
+Documentation sync: 2026-06-14
+- Latest updates documented in `CHANGELOG.md` include crop control improvements (default visibility, icon/color polish, mobile truncation), mobile UI fixes (Settings reliability, Export split-workspace restoration), and CSS line-clamp cleanup.
+- Mobile fixes validated: App Settings quick action opens reliably without immediate close, export split layout correctly restores on mobile refresh, and crop controls properly truncate to avoid D-pad overlap.
+- Crop mode now activates by default when an export dimension ratio is pre-selected on app startup or refresh, ensuring crop overlay visibility is always in sync with selected dimensions.
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 

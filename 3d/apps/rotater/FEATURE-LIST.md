@@ -27,7 +27,8 @@ Primary source references:
 - [6) Onboarding / Tutorial Plan (Working)](#6-onboarding--tutorial-plan-working)
 - [7) Future Consideration: Interactive Web Feature Explorer](#7-future-consideration-interactive-web-feature-explorer)
 - [8) Gap Analysis: What May Be Missing](#8-gap-analysis-what-may-be-missing)
-- [9) Change Log for This Document](#9-change-log-for-this-document)
+- [9) Planned Features and Roadmap](#9-planned-features-and-roadmap)
+- [10) Change Log for This Document](#10-change-log-for-this-document)
 
 ---
 
@@ -183,5 +184,39 @@ Likely missing items to define next for a complete product spec:
 
 ---
 
-## 9) Change Log for This Document
+## 9) Planned Features and Roadmap
+
+### Ruler & Measurement Capture
+**Status**: Planned  
+**Scope**: Automate screenshot exports with measurement overlays
+
+- **Core capability**: Measurement system already exists in viewer (ruler/grid/dimensions visible)
+- **Feature**: Capture model screenshots with ruler/measurement markers visible
+- **Implementation**:
+  - Add "Ruler" checkbox in Export panel (right of "Surface" checkbox)
+  - When enabled, include visible ruler/grid in exported images
+  - Quick win: Add ruler to existing build plate grid (visual enhancement)
+- **Export formats**: Apply to PNG and JPEG exports
+- **UI placement**: Export settings panel, measurement section
+
+### Multi-Part Selection & Grouping
+**Status**: Planned  
+**Scope**: Allow users to organize multipart models into visual groups
+
+- **Context**: Multi-select mode already exists (select multiple parts)
+- **Feature**: While multi-select is active, ability to click individual models to combine them into named groups
+- **Benefits**: 
+  - Organize complex assemblies visually
+  - Apply group-level styling/animations
+  - Simplify selection workflows
+- **Implementation approach**:
+  - Add "Create Group" action when multiple parts selected
+  - Group name input or default naming (e.g., "Assembly 1", "Subassembly")
+  - Visual indication of grouped parts
+  - Persist groups to URL state
+- **Precedence**: Lower priority; evaluate after measurement export completion
+
+---
+
+## 10) Change Log for This Document- **2026-06-14**: Staged Planned Features section with ruler/measurement capture and multi-part grouping roadmap items- **2026-06-13**: Added Planned Features section: ruler/measurement capture and multi-part grouping
 - **2026-05-17**: Initial working document created from README, CHANGELOG, and DESIGN-REFERENCE synthesis.
