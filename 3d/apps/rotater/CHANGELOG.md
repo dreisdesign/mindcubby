@@ -4,7 +4,7 @@
 - **Crop UI hover cursor**: Circular hotspots on crop ratio options now have consistent pointer cursor across entire button area (no finger icon flicker on nested spans)
 - **Crop mode off-state visual**: Crop mode no longer appears visually active when toggled OFF—radio buttons are unchecked and button styling returns to inactive state
 - **Export layout on desktop**: Export workspace overlay no longer takes over full screen on desktop v2 layout—maintains sidebar layout and normal viewport reflow
-- **Crop toggle on active ratio**: Implemented toggle behavior for crop ratio selection—clicking the already-selected crop ratio button now toggles crop mode ON/OFF while preserving the remembered ratio selection
+- **Crop toggle on active ratio**: Clicking the already-selected crop ratio button now toggles crop mode ON/OFF. Implementation intercepts label clicks in capture phase to prevent browser's default radio behavior, allowing `preventDefault()` to block the state change. When crop mode is active and user clicks the same ratio again, the click is prevented, the ratio is deselected, and crop mode closes. Re-clicking the same ratio re-opens crop mode while preserving the previously saved camera position and crop frame state.
 
 ### Changed
 - Crop pill option styling: improved hover state with light blue background and refined circular hitspot dimensions
