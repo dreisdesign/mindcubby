@@ -1097,6 +1097,7 @@ let rulerPartSelectMultiEnabled = false;
 let devModeEnabled = false;
 let rulerHoveredPartIndex = -1;
 let lastSelectedExportCropRatio = null;
+let exportCropFrameRect = null;
 let rulerOverlayEl = null;
 let rulerGridHelper = null;
 let rulerGridSize = 0;
@@ -6164,7 +6165,7 @@ function updateExportWorkspaceTransparencyPattern() {
     exportWorkspaceRuntimeController.updateExportWorkspaceTransparencyPattern();
 }
 
-function enterCropMode() {
+function enterCropMode(forceReframe = true) {
     if (exportFrameEnabled) return;
     exportFrameEnabled = true;
     document.documentElement.classList.add('crop-mode');
@@ -6174,7 +6175,7 @@ function enterCropMode() {
     _cropAppliedCameraZoomScale = false;
     if (camera) _cropBackupCameraZoom = camera.zoom || 1;
     _cropLiveSyncArmed = true;
-    applyLevelAndReframeToCamera();
+    if (forceReframe) applyLevelAndReframeToCamera();
     if (btnCropCancelEl) btnCropCancelEl.hidden = false;
     updateCropHintUI();
     updateFrameOverlayButtonUI();
@@ -6242,6 +6243,12 @@ function drawExportFrame() {
     if (fc.width !== w || fc.height !== h) { fc.width = w; fc.height = h; }
 
     const { sx, sy, sw, sh } = getCropFrameRect(w, h);
+    // Store crop frame rect for click-outside detection
+    if (exportFrameEnabled) {
+        exportCropFrameRect = { left: sx, top: sy, right: sx + sw, bottom: sy + sh };
+    } else {
+        exportCropFrameRect = null;
+    }
     const ctx = fc.getContext('2d');
 
     ctx.clearRect(0, 0, w, h);
@@ -10208,9 +10215,10 @@ syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
 syncExportQualityUiForFormat(exportFormatEl?.value ?? 'gif');
 syncExportDurationFromMain();
 syncCropModeFromSelectedExportDimensions();
-// Initialize which ratio is currently selected (for crop toggle logic)
-const checkedRatio = Array.from(exportDimensionInputs).find(i => i.checked);
-if (checkedRatio) lastSelectedExportCropRatio = checkedRatio.value;
+// Initialize which ratio is currently selected (for crop toggle logic) - update this on every restore
+    const checkedRatio = Array.from(exportDimensionInputs).find(i => i.checked);
+    if (checkedRatio) lastSelectedExportCropRatio = checkedRatio.value;
+    else lastSelectedExportCropRatio = null;
 
 if (exportGridEl) {
     exportGridEl.checked = rulerLinesVisible;
@@ -10318,6 +10326,10 @@ exportDimensionInputs.forEach(input => {
     input.addEventListener('click', () => {
         if (!input.checked) return;
         
+        // Update tracked ratio to the currently checked one (in case it wasn't updated on change event)
+        const currentlyChecked = Array.from(exportDimensionInputs).find(i => i.checked);
+        if (currentlyChecked) lastSelectedExportCropRatio = currentlyChecked.value;
+        
         // If clicking the same ratio and crop is already active → close crop
         if (exportFrameEnabled && input.value === lastSelectedExportCropRatio) {
             cancelCropMode();
@@ -10363,7 +10375,7 @@ function syncCropModeFromSelectedExportDimensions({ forceReframe = false } = {})
     const selected = document.querySelector('input[name="exportDimensions"]:checked');
     if (!selected) return;
     if (!exportFrameEnabled) {
-        enterCropMode();
+        enterCropMode(forceReframe);
         return;
     }
     if (forceReframe) {
@@ -12529,6 +12541,17 @@ window.addEventListener('pointermove', (e) => {
 }, true);
 
 canvas?.addEventListener('click', (e) => {
+    // Close crop mode if clicking outside the crop frame area
+    if (exportFrameEnabled) {
+        const rect = e.target?.getBoundingClientRect?.();
+        if (rect && exportCropFrameRect && 
+            (e.clientX < exportCropFrameRect.left || e.clientX > exportCropFrameRect.right ||
+             e.clientY < exportCropFrameRect.top || e.clientY > exportCropFrameRect.bottom)) {
+            cancelCropMode();
+            return;
+        }
+    }
+    
     closeModelPartActionMenus();
     if (isModelPartFloatingCardOpen()) {
         closeModelPartSelectorMenu(true);
