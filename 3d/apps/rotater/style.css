@@ -9152,6 +9152,7 @@ html.theme-dark .export-crop-tab:has(input:checked) {
     border-radius: 3px;
     flex-shrink: 0;
     cursor: pointer;
+    pointer-events: none;
 }
 
 .crop-pill__shape--square { width: 15px; height: 15px; }
@@ -9166,6 +9167,7 @@ html.theme-dark .export-crop-tab:has(input:checked) {
     font-family: "Source Sans 3", system-ui, sans-serif;
     white-space: nowrap;
     cursor: pointer;
+    pointer-events: none;
 }
 
 .crop-pill__cancel {

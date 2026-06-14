@@ -10334,10 +10334,13 @@ exportDimensionInputs.forEach(input => {
     input.addEventListener('click', () => {
         if (!input.checked) return;
         
-        // Only close crop if: crop is active AND we're clicking the previously-selected ratio
-        // (This means it's a re-click of the same button to toggle off)
-        if (exportFrameEnabled && input.value === previousSelectedExportCropRatio) {
-            cancelCropMode();
+        // If clicking the same ratio (already selected), toggle crop mode on/off
+        if (input.value === lastSelectedExportCropRatio) {
+            if (exportFrameEnabled) {
+                cancelCropMode();
+            } else {
+                syncCropModeFromSelectedExportDimensions({ forceReframe: false });
+            }
         }
     });
 });
