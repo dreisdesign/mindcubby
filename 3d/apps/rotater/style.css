@@ -9175,7 +9175,7 @@ html.theme-dark .export-crop-tab:has(input:checked) {
     border-radius: 999px;
     border: none;
     background: transparent;
-    color: #a78bfa;
+    color: var(--palette-blueberry-500);
     cursor: pointer;
     flex-shrink: 0;
     transition: background 120ms;
@@ -9187,7 +9187,7 @@ html.theme-dark .export-crop-tab:has(input:checked) {
 }
 
 .crop-pill__cancel:hover {
-    background: rgba(167, 139, 250, 0.10);
+    background: var(--palette-blueberry-50);
 }
 
 .crop-pill__cancel svg,

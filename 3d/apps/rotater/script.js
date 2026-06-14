@@ -1096,6 +1096,7 @@ let rulerPartHoverEnabled = false;
 let rulerPartSelectMultiEnabled = false;
 let devModeEnabled = false;
 let rulerHoveredPartIndex = -1;
+let lastSelectedExportCropRatio = null;
 let rulerOverlayEl = null;
 let rulerGridHelper = null;
 let rulerGridSize = 0;
@@ -10207,6 +10208,9 @@ syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
 syncExportQualityUiForFormat(exportFormatEl?.value ?? 'gif');
 syncExportDurationFromMain();
 syncCropModeFromSelectedExportDimensions();
+// Initialize which ratio is currently selected (for crop toggle logic)
+const checkedRatio = Array.from(exportDimensionInputs).find(i => i.checked);
+if (checkedRatio) lastSelectedExportCropRatio = checkedRatio.value;
 
 if (exportGridEl) {
     exportGridEl.checked = rulerLinesVisible;
@@ -10293,6 +10297,8 @@ exportBuildPlateEl?.addEventListener('change', () => {
 exportDimensionInputs.forEach(input => {
     input.addEventListener('change', () => {
         if (!input.checked) return;
+        // Track which ratio is now selected before processing change
+        lastSelectedExportCropRatio = input.value;
         // Only reframe when entering crop mode; if already active, just update overlay
         syncCropModeFromSelectedExportDimensions({ forceReframe: !exportFrameEnabled });
         // Mobile: auto-collapse pill after selecting a ratio
@@ -10308,9 +10314,10 @@ exportDimensionInputs.forEach(input => {
         saveSettings();
     });
     
-    // Toggle crop mode off when clicking an already-selected ratio button
+    // Toggle crop mode off only when clicking the same ratio button again
     input.addEventListener('click', () => {
-        if (!input.checked || !exportFrameEnabled) return;
+        // Only close crop if: crop mode is active AND we're clicking the same ratio that was already selected
+        if (!exportFrameEnabled || input.value !== lastSelectedExportCropRatio) return;
         cancelCropMode();
     });
 });
