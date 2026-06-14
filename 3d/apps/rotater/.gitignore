@@ -1,0 +1,23 @@
+# Screenshots - ignore responsive capture artifacts
+.screenshots/
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store

@@ -6,6 +6,13 @@
     "bump:build": "node scripts/bump-build.mjs",
     "test:smoke": "node scripts/test-smoke.mjs",
     "setup:precommit-smoke": "node scripts/setup-precommit-smoke.mjs",
-    "remove:precommit-smoke": "node scripts/setup-precommit-smoke.mjs --remove"
+    "remove:precommit-smoke": "node scripts/setup-precommit-smoke.mjs --remove",
+    "shots": "node scripts/screenshots.mjs",
+    "shots:states": "node scripts/screenshots.mjs --states",
+    "setup:precommit-screenshots": "node scripts/setup-precommit-screenshots.mjs",
+    "remove:precommit-screenshots": "node scripts/setup-precommit-screenshots.mjs --remove"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
   }
 }
