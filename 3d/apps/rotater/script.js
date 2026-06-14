@@ -10325,54 +10325,44 @@ exportBuildPlateEl?.addEventListener('change', () => {
     refreshExportPreviewNow();
     saveSettings();
 });
-// Store the previously checked ratio to detect toggle clicks
-let lastCheckedCropRadio = null;
+// Toggle logic for crop radio buttons
+// Track pre-interaction state to detect toggle clicks on already-selected radios
 
 exportDimensionInputs.forEach(input => {
-    // Track which radio was checked before any interaction
-    if (input.checked) {
-        lastCheckedCropRadio = input.value;
-    }
+    let wasCheckedBeforeInteraction = input.checked;
     
-    // Use mouseup to detect clicks, even on already-checked radios
-    input.addEventListener('mouseup', (e) => {
-        if (!input.checked) return; // Only process if the radio is checked
-        
-        // Check if this is a toggle click (same radio as before)
-        if (input.value === lastCheckedCropRadio && exportFrameEnabled) {
-            // User clicked the already-selected crop ratio while crop mode is active - toggle OFF
+    // Track state before interaction
+    input.addEventListener('pointerdown', () => {
+        wasCheckedBeforeInteraction = input.checked;
+    });
+    
+    // Handle click - detect toggle clicks
+    input.addEventListener('click', (e) => {
+        // If this radio was already checked before the interaction AND crop is active, toggle it OFF
+        if (wasCheckedBeforeInteraction && exportFrameEnabled) {
+            // Prevent the browser's default radio behavior (which checked it)
             e.preventDefault();
+            input.checked = false;
+            
+            // Prevent change event  by not letting it bubble
+            e.stopImmediatePropagation();
+            
+            // Toggle crop mode OFF
             cancelCropMode();
             return;
         }
         
-        // Not a toggle - this is a new selection
-        lastCheckedCropRadio = input.value;
-        lastSelectedExportCropRatio = input.value;
-        
-        // Open crop mode for the newly selected ratio
-        syncCropModeFromSelectedExportDimensions({ forceReframe: false });
-        
-        // Mobile: auto-collapse pill after selecting a ratio
-        if (window.innerWidth < 900) {
-            footerCropControlsEl?.classList.add('is-collapsed');
-            if (btnCropToggleEl) btnCropToggleEl.setAttribute('aria-expanded', 'false');
-            syncCropPillChevron(false);
-        }
-        syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
-        updateCropDimensionsDock();
-        updateEstimate();
-        refreshExportPreviewNow();
-        saveSettings();
+        // Normal selection - let the browser handle it
+        // The change event will fire and handle the sync
     });
     
-    // Also keep the change listener for programmatic changes
+    // Handle selection changes
     input.addEventListener('change', () => {
         if (!input.checked) return;
+        
         lastSelectedExportCropRatio = input.value;
-        lastCheckedCropRadio = input.value;
-        // Crop mode should preserve the current camera pose when opening or switching ratios.
         syncCropModeFromSelectedExportDimensions({ forceReframe: false });
+        
         // Mobile: auto-collapse pill after selecting a ratio
         if (window.innerWidth < 900) {
             footerCropControlsEl?.classList.add('is-collapsed');
