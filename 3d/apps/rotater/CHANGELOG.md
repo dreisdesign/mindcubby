@@ -1,7 +1,8 @@
 ## Unreleased
 
 ### Fixed
-- **Crop mode toggle behavior**: clicking the crop frame icon toggles crop mode on/off. First click activates crop mode; second click (while crop is active) cancels crop mode and resets the crop overlay—same behavior as clicking the reset button. This provides a simple on/off toggle for crop mode.
+- **Crop mode ratio switching no longer changes model orientation**: when changing from one crop ratio to another (e.g., 1:1 to 4:3) while already in crop mode, the model camera is no longer releveled/reframed. Previously, switching ratios would trigger a reframe that repositioned the model orientation and zoom. Now the overlay updates for the new ratio while preserving the current camera state. Reframing only happens when first entering crop mode.
+- **Crop mode toggle behavior**: clicking a crop ratio button toggles crop mode on/off. First click activates crop mode; second click (while crop is active) cancels crop mode and resets the crop overlay—same behavior as clicking the reset button. This provides a simple on/off toggle for crop mode.
 - **Crop mode now shows by default when a ratio is pre-selected on startup and refresh**: when the app loads or refreshes with a saved export ratio (e.g., 1:1), crop mode now activates immediately so the crop overlay is visible without requiring a manual ratio toggle. Previously the ratio was selected but the overlay remained hidden until the user clicked away and back.
   - Added `syncCropModeFromSelectedExportDimensions()` helper called after settings restore to detect pre-selected ratios
   - Sync runs at three checkpoints: end of `restoreSettings()`, initial export UI startup, and on window resize

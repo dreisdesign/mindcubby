@@ -1031,7 +1031,6 @@ const wobbleSpinRangeVal = document.getElementById('wobbleSpinRangeVal');
 const speedResetBtn = document.getElementById('speedResetBtn');
 const tiltRangeResetBtn = document.getElementById('tiltRangeResetBtn');
 const wobbleSpinRangeResetBtn = document.getElementById('wobbleSpinRangeResetBtn');
-const frameOverlayBtn = document.getElementById('btnFrameOverlay');
 const orbitHintBarEl = document.querySelector('.orbit-hint-bar');
 const orbitHintTextEl = orbitHintBarEl?.querySelector('.orbit-hint');
 const textureTuneBtn = document.getElementById('btnTextureTune');
@@ -6144,7 +6143,6 @@ const exportWorkspaceRuntimeController = createExportWorkspaceRuntimeController(
     getExportFrameEnabled: () => exportFrameEnabled,
 });
 const exportCropUiController = createExportCropUiController({
-    frameOverlayBtn,
     orbitHintTextEl,
     orbitHintBarEl,
 });
@@ -10297,7 +10295,8 @@ exportBuildPlateEl?.addEventListener('change', () => {
 exportDimensionInputs.forEach(input => {
     input.addEventListener('change', () => {
         if (!input.checked) return;
-        syncCropModeFromSelectedExportDimensions({ forceReframe: true });
+        // Only reframe when entering crop mode; if already active, just update overlay
+        syncCropModeFromSelectedExportDimensions({ forceReframe: !exportFrameEnabled });
         // Mobile: auto-collapse pill after selecting a ratio
         if (window.innerWidth < 900) {
             footerCropControlsEl?.classList.add('is-collapsed');
@@ -10309,6 +10308,12 @@ exportDimensionInputs.forEach(input => {
         updateEstimate();
         refreshExportPreviewNow();
         saveSettings();
+    });
+    
+    // Toggle crop mode off when clicking an already-selected ratio button
+    input.addEventListener('click', () => {
+        if (!input.checked || !exportFrameEnabled) return;
+        cancelCropMode();
     });
 });
 
@@ -12397,14 +12402,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// ── Export frame overlay toggle ───────────────────────────────────────────────
-frameOverlayBtn?.addEventListener('click', () => {
-    if (exportFrameEnabled) {
-        cancelCropMode();
-        return;
-    }
-    enterCropMode();
-});
+
 
 function cancelCropMode() {
     if (!exportFrameEnabled) return;
