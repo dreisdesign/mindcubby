@@ -1,6 +1,7 @@
 export function applyExportSceneForRenderController(
     {
         forceTransparent = false,
+        maintainBackground = false,
         renderer,
         scene,
         three,
@@ -23,7 +24,7 @@ export function applyExportSceneForRenderController(
     const includeBg = !!(exportBgColorEl?.checked ?? true);
     const includeGrid = !!(exportGridEl?.checked ?? true);
     const includeBuildPlate = !!(exportBuildPlateEl ? exportBuildPlateEl.checked : buildPlateEnabled);
-    const transparent = forceTransparent || !includeBg;
+    const transparent = !maintainBackground && (forceTransparent || !includeBg);
 
     const buildPlateMesh = getBuildPlateMesh?.();
     const savedBg = scene.background;

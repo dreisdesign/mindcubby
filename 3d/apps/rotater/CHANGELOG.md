@@ -1,3 +1,16 @@
+## [Unreleased] - 2026-06-18
+
+### Fixed
+- **Crop ratio switching while in crop mode**: clicking a different ratio (e.g. 1:1 → 9:16) while crop mode was active incorrectly cancelled the crop frame instead of switching to the new ratio. Root cause: browser radio inputs have a pre-activation behavior that marks the clicked radio as `checked` before the `click` event fires. The capture-phase click handler was reading `input.checked` — which was already `true` for the newly clicked option — and mistakenly treating it as "same option re-clicked, toggle off". Fixed by recording the previously selected radio on `pointerdown` (before any pre-activation) into `cropRatioPointerDownSelection`, and comparing against that value in the click handler instead of `input.checked`.
+- **Export panel click-to-close when dragged to top-left**: clicking any button inside the export panel (e.g. Save Project) while the panel was positioned in the top-left would close the export workspace. The `pointerdown` capture handler that closes crop mode on outside clicks was not excluding the export panel. Fixed by adding `if (e.target?.closest?.('.export-modal-panel')) return;` before the crop frame boundary check.
+- **Background appears dark in export mode**: when the export workspace was open and the Background checkbox was unchecked, the main live viewport would render with a transparent (black) background instead of showing the configured model-sync or custom color. The main render loop was passing `forceTransparent: true` to `applyExportSceneForRender`, which set `scene.background = null` for the live viewport render. Fixed by adding a `maintainBackground` flag to `applyExportSceneForRenderController` and calling with `maintainBackground: true` from the main render loop. The export preview thumbnail and actual export output continue to respect the Background checkbox.
+- **`three` module resolution in Safari**: modules in the `modules/` subdirectory that imported `'three'` via the bare specifier (relying on the import map) could fail to resolve in Safari due to an import map propagation issue with dynamically-appended module scripts and subdirectory modules. Changed `export-preview-update.js`, `orbit-frame-state.js`, and `shade-system.js` to import from the full CDN URL directly, matching the `stl-parse-worker.js` pattern. Module identity is preserved because the URL matches the import map's resolved target, so the browser reuses the same cached module instance.
+
+### Changed
+- **Social banner renamed** to `og-image.png` (from `social-banner.png`) following web standards convention. OG meta tags updated with correct absolute URL, explicit dimensions (1200×630), and Twitter card meta tags added.
+
+---
+
 ## [1.0.27] - 2026-06-14
 
 ### Fixed

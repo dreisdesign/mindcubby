@@ -13,7 +13,7 @@
  * - THREE.js must be available globally (imported by script.js)
  */
 
-import * as THREE from 'three';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
 
 let colorRuleGetter = null;
 let shadeBlendMode = 'hsl';

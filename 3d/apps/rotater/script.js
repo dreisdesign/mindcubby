@@ -5980,7 +5980,7 @@ function loop() {
         syncLightRig();
         const renderWithExportOptions = !!(exportFrameEnabled && !isExporting);
         const restoreViewportExportScene = renderWithExportOptions
-            ? applyExportSceneForRender({ forceTransparent: !(exportBgColorEl?.checked ?? true) })
+            ? applyExportSceneForRender({ maintainBackground: true })
             : null;
         try {
             renderer.render(scene, camera);
@@ -6022,9 +6022,10 @@ function isExportPreviewActive() {
     });
 }
 
-function applyExportSceneForRender({ forceTransparent = false } = {}) {
+function applyExportSceneForRender({ forceTransparent = false, maintainBackground = false } = {}) {
     return applyExportSceneForRenderController({
         forceTransparent,
+        maintainBackground,
         renderer,
         scene,
         three: THREE,
@@ -10332,19 +10333,27 @@ const cropPillOptions = document.querySelectorAll('.crop-pill__option');
 
 cropPillOptions.forEach(label => {
     const input = label.querySelector('input[name="exportDimensions"]');
-    
+
+    // Record which option was active BEFORE any click pre-activation changes radio state.
+    // Radio inputs have a "pre-activation behavior" that checks them before the click event
+    // fires, so we can't rely on input.checked inside the click handler to know if the
+    // user clicked the already-selected option or a new one.
+    label.addEventListener('pointerdown', () => {
+        cropRatioPointerDownSelection = document.querySelector('input[name="exportDimensions"]:checked')?.value ?? null;
+    });
+
     label.addEventListener('click', (e) => {
-        // Check if this radio is already checked AND we're in crop mode
-        if (input.checked && exportFrameEnabled) {
-            // Prevent the browser from checking the radio
+        const wasAlreadySelected = cropRatioPointerDownSelection === input.value;
+        cropRatioPointerDownSelection = null;
+
+        // Toggle crop mode OFF only when the user clicks the option that was already active
+        if (wasAlreadySelected && exportFrameEnabled) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            
-            // Toggle crop mode OFF
             cancelCropMode();
             return;
         }
-        
+
         // Normal selection - let the browser handle it
         // The radio will be checked and change event will fire
     }, { capture: true });
@@ -12604,6 +12613,7 @@ document.addEventListener('pointerdown', (e) => {
     if (!exportFrameEnabled || !exportCropFrameRect) return;
     if (!(e.target instanceof Node)) return;
     if (footerCropControlsEl?.contains(e.target)) return;
+    if (e.target?.closest?.('.export-modal-panel')) return;
     if (isPointInsideExportCropFrame(e.clientX, e.clientY)) return;
     if (exportWorkspaceActive) closeCropAndExportWorkspace();
     else cancelCropMode();
