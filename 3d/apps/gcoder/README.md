@@ -128,7 +128,7 @@ This is especially useful when working with **OrcaSlicer's model-specific settin
 
 G-coder processes all files **locally in your browser**. No data is sent to any server. Your G-code files never leave your computer.
 
-For detailed information about how your data is handled, see the [Privacy Policy](./PRIVACY.md).
+For detailed information about how your data is handled, see the [Privacy Policy](https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/gcoder/PRIVACY.md).
 
 ---
 

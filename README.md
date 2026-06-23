@@ -8,9 +8,9 @@ A collection of tools and utilities for 3D printing, starting with **G-coder**.
 
 - [G-coder — Live App](https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/)
 - [Rotater — Live App](https://dreisdesign.github.io/mindcubby/3d/apps/rotater/)
-- [G-coder (docs)](./3d/apps/gcoder/README.md)
-- [Rotater (docs)](./3d/apps/rotater/README.md)
-- [Roadmap](./ROADMAP.md)
+- [G-coder (docs)](https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/gcoder/README.md)
+- [Rotater (docs)](https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/rotater/README.md)
+- [Roadmap](https://github.com/dreisdesign/mindcubby/blob/main/ROADMAP.md)
 
 
 ## 🚀 G-coder
@@ -21,8 +21,8 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 
 ### Quick Links
 - **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
-- **Documentation:** [G-coder README](./3d/apps/gcoder/README.md)
-- **Privacy Policy:** [Privacy Policy](./3d/apps/gcoder/PRIVACY.md)
+- **Documentation:** [G-coder README](https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/gcoder/README.md)
+- **Privacy Policy:** [Privacy Policy](https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/gcoder/PRIVACY.md)
 
 ### Features
 ✅ **No Installation Required** – Runs entirely in your browser  
@@ -48,8 +48,8 @@ View and export rotating 3D STL models as animated GIF, MP4 video, or PNG — en
 
 ### Quick Links
 - **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/rotater/
-- **Documentation:** [Rotater README](./3d/apps/rotater/README.md)
-- **Python CLI:** [stl_rotate.py](./3d/apps/rotater/stl_rotate.py)
+- **Documentation:** [Rotater README](https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/rotater/README.md)
+- **Python CLI:** [stl_rotate.py](https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/rotater/stl_rotate.py)
 
 ### Features
 - Browser-based STL viewer with spin/tilt/wobble animation
