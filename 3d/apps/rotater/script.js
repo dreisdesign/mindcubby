@@ -2101,7 +2101,8 @@ function initThree() {
 
     {
         const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
-        const c = computeTonedColor(bgPick.value, tone);
+        const baseHex = getActiveBackgroundBaseColor();
+        const c = computeTonedColor(baseHex, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
     // restoreSettings() can run before WebGL is initialized; re-apply here so
@@ -6142,7 +6143,8 @@ function loadPreparedGeometry(geo, name) {
 
     {
         const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
-        const c = computeTonedColor(bgPick.value, tone);
+        const baseHex = getActiveBackgroundBaseColor();
+        const c = computeTonedColor(baseHex, tone);
         if (renderer) renderer.setClearColor(c, 1);
     }
     if (isDynamicBg) updateDynamicBg();
@@ -8710,8 +8712,11 @@ function restoreSettings() {
         // Try to infer a matching quick preset now that settings have been restored
         try { reconcileModelPresetFromSettings(); } catch (e) { }
         try { updateModelSelection(); } catch (e) { }
-        // If auto-bg was restored, ensure the dynamic background is applied
-        try { if (isDynamicBg) updateDynamicBg(); } catch (e) { }
+        // Ensure background matches restored settings (preserves presets vs custom vs auto-brightness)
+        try {
+            if (isDynamicBg) updateDynamicBg();
+            else applyBackgroundFromBaseColor(getActiveBackgroundBaseColor());
+        } catch (e) { }
         updateRulerHUD();
         if (buildPlateToggleEl) buildPlateToggleEl.checked = buildPlateEnabled;
         syncBuildPlateSizeUI();
@@ -14249,12 +14254,7 @@ function applyBgPresetDefaultTone(presetId) {
 
 function updateDynamicBg() {
     if (!isDynamicBg || !renderer) return;
-    let baseHex;
-    if (activeBgPreset === 'modelcolor') {
-        baseHex = getModelSyncSourceColor();
-    } else {
-        baseHex = bgPick.value;
-    }
+    const baseHex = getActiveBackgroundBaseColor();
     renderer.setClearColor(computeAutoBrightnessColor(baseHex), 1);
 }
 
