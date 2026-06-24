@@ -13099,6 +13099,13 @@ document.addEventListener('pointerdown', (e) => {
     if (e.target?.closest?.('.controls-section-box')) return;
     if (e.target?.closest?.('.range-label')) return;
     if (e.target?.closest?.('.control-label')) return;
+
+    // Viewport controls exclusions:
+    // .cam-nav (D-pad), .cam-nav-right (Playback/Inspect), .canvas-overlay-bl (Theme/Settings)
+    if (e.target?.closest?.('.cam-nav')) return;
+    if (e.target?.closest?.('.cam-nav-right')) return;
+    if (e.target?.closest?.('.canvas-overlay-bl')) return;
+
     if (isPointInsideExportCropFrame(e.clientX, e.clientY)) return;
     if (exportWorkspaceActive) closeCropAndExportWorkspace();
     else cancelCropMode();

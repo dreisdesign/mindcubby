@@ -7,6 +7,9 @@
 - **Prevented accidental crop mode exit**: Buttons and sliders in the Settings and Export panels no longer trigger an "outside click" that cancels crop mode. Added exclusion rules to the global pointer handler to ignore clicks on UI controls.
 - **Fixed "stuck" color on background after upload/refresh**: Resolved an issue where the background could show an old color even when the UI showed "White" as selected after a model upload or hard refresh. Standardized `updateDynamicBg` and `restoreSettings` to always prioritize the active preset's authoritative color (from `getActiveBackgroundBaseColor`) over stale values in the hidden color picker.
 - **Fixed slider "visual vs actual" mismatch when snapping**: Corrected a bug where sliders (Brightness/Shade) would snap visually to fixed points on `change`, but the 3D scene would preserve the intermediate "precise" value from the last `input` event. Sliders now explicitly sync their internal value to the snapped "effective" value on mouse-up, ensuring the 3D preview and slider handle position are perfectly aligned.
+- **Improved Crop Mode usability**:
+    - **Excluded viewport controls from auto-close**: Clicking D-pad arrows, Play/Pause, Inspect, or Theme/Settings buttons no longer cancels Crop Mode. These controls are now fully accessible while framing a crop.
+    - **Updated Square ratio label**: Renamed `1:1` to `4:4` in the ratio selector.
 
 ### Changed
 - **Refactored Thumbnail Engine for fluidity**: Complete overhaul of the thumbnail rendering strategy to prevent main-thread blocking frames:
