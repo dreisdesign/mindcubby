@@ -1116,6 +1116,174 @@ const RULER_DYNAMIC_LINES_ENABLED = false;
 const RULER_FOOTPRINT_ENABLED = false;
 let fpsSampleAccumMs = 0;
 let fpsSampleFrames = 0;
+
+// ── Performance Profiler ──────────────────────────────────────────────────────
+// Track detailed frame timing to identify lag spots. Enable via devConsole:
+// window.profiler.toggle() or window.profiler.setLoggingThreshold(16.67)
+class FrameProfiler {
+    constructor() {
+        this.enabled = false;
+        this.loggingThreshold = 16.67; // Log frames slower than this (ms)
+        this.marks = {};
+        this.frameSegments = [];
+        this.frameCount = 0;
+        this.slowFrameCount = 0;
+        this.lastReport = 0;
+        this.reportInterval = 5000; // Report stats every 5 seconds
+        this.segmentStats = {}; // Track segment averages
+    }
+
+    toggle() {
+        this.enabled = !this.enabled;
+        console.log(`[Profiler] ${this.enabled ? 'ENABLED' : 'DISABLED'}`);
+        if (this.enabled) console.log('[Profiler] Use profiler.setLoggingThreshold(ms) to adjust frame drop threshold');
+        return this.enabled;
+    }
+
+    setLoggingThreshold(ms) {
+        this.loggingThreshold = Math.max(1, ms);
+        console.log(`[Profiler] Logging threshold set to ${ms.toFixed(2)}ms`);
+    }
+
+    markStart(label) {
+        if (!this.enabled) return;
+        this.marks[label] = performance.now();
+    }
+
+    markEnd(label) {
+        if (!this.enabled || !this.marks[label]) return;
+        const duration = performance.now() - this.marks[label];
+        delete this.marks[label];
+        return duration;
+    }
+
+    recordSegment(label, duration) {
+        if (!this.enabled) return;
+        this.frameSegments.push({ label, duration });
+        
+        // Track segment averages
+        if (!this.segmentStats[label]) {
+            this.segmentStats[label] = { total: 0, count: 0 };
+        }
+        this.segmentStats[label].total += duration;
+        this.segmentStats[label].count += 1;
+    }
+
+    endFrame(totalFrameTimeMs) {
+        if (!this.enabled) return;
+
+        this.frameCount++;
+        const now = performance.now();
+
+        // Log slow frames
+        if (totalFrameTimeMs > this.loggingThreshold) {
+            this.slowFrameCount++;
+            const breakdown = this.frameSegments
+                .map(s => `${s.label}:${s.duration.toFixed(2)}ms`)
+                .join(' | ');
+            console.log(
+                `[Frame ${this.frameCount} SLOW ${totalFrameTimeMs.toFixed(2)}ms] ${breakdown}`
+            );
+        }
+
+        // Report periodic stats
+        if (now - this.lastReport > this.reportInterval) {
+            const slowRate = ((this.slowFrameCount / this.frameCount) * 100).toFixed(1);
+            console.log(
+                `[Profiler Report] ${this.frameCount} frames | ${this.slowFrameCount} slow (${slowRate}%) | threshold ${this.loggingThreshold.toFixed(2)}ms`
+            );
+            
+            // Show segment averages
+            console.log('[Profiler Segments - Average ms per frame]');
+            const sorted = Object.entries(this.segmentStats)
+                .map(([label, stats]) => ({
+                    label,
+                    avg: stats.total / stats.count,
+                }))
+                .sort((a, b) => b.avg - a.avg);
+            sorted.forEach(({ label, avg }) => {
+                console.log(`  ${label}: ${avg.toFixed(2)}ms`);
+            });
+            
+            this.frameCount = 0;
+            this.slowFrameCount = 0;
+            this.lastReport = now;
+            this.segmentStats = {};
+        }
+
+        this.frameSegments = [];
+    }
+
+    getStats() {
+        return {
+            enabled: this.enabled,
+            threshold: this.loggingThreshold,
+            frameCount: this.frameCount,
+            slowFrameCount: this.slowFrameCount,
+            segmentAverages: Object.fromEntries(
+                Object.entries(this.segmentStats).map(([label, stats]) => [
+                    label,
+                    (stats.total / stats.count).toFixed(2),
+                ])
+            ),
+        };
+    }
+}
+
+const profiler = new FrameProfiler();
+
+// ── Global RAF Monitor ────────────────────────────────────────────────────────
+// Intercepts ALL requestAnimationFrame calls to catch violations across the app
+class GlobalRAFMonitor {
+    constructor() {
+        this.enabled = false;
+        this.threshold = 16.67;
+        this.originalRAF = window.requestAnimationFrame.bind(window);
+        this.wrappedRAF = null;
+    }
+
+    enable() {
+        if (this.wrappedRAF) return; // Already wrapped
+        
+        const self = this;
+        this.wrappedRAF = function(callback) {
+            return self.originalRAF((timestamp) => {
+                const start = performance.now();
+                try {
+                    callback(timestamp);
+                } finally {
+                    const duration = performance.now() - start;
+                    if (self.enabled && duration > self.threshold) {
+                        console.log(
+                            `[GlobalRAF SLOW ${duration.toFixed(2)}ms] Callback exceeded ${self.threshold}ms`
+                        );
+                    }
+                }
+            });
+        };
+        
+        window.requestAnimationFrame = this.wrappedRAF;
+        this.enabled = true;
+        console.log('[GlobalRAF Monitor] ENABLED — all RAF handlers tracked');
+    }
+
+    disable() {
+        if (this.wrappedRAF) {
+            window.requestAnimationFrame = this.originalRAF;
+            this.wrappedRAF = null;
+            this.enabled = false;
+            console.log('[GlobalRAF Monitor] DISABLED');
+        }
+    }
+
+    setThreshold(ms) {
+        this.threshold = Math.max(1, ms);
+        console.log(`[GlobalRAF Monitor] Threshold set to ${ms.toFixed(2)}ms`);
+    }
+}
+
+const globalRAFMonitor = new GlobalRAFMonitor();
+
 const TEXTURE_NEWS_DISMISSED_KEY = 'rotater_textureNewsDismissed';
 const VIEWPORT_PERF_MIN_QUALITY_SCALE = 0.62;
 let modelPartNames = [];
@@ -2572,7 +2740,8 @@ function applyCurrentTextureTuning(targetIndices = null) {
             mat.roughness = (100 - s.matteRoughness) / 100;
             mat.envMapIntensity = (s.matteReflection / 100) * (textureTuneState.highlights / 100);
         }
-        mat.needsUpdate = true;
+        // Optimization: Removing mat.needsUpdate = true. 
+        // Uniforms (metalness, roughness, etc) do not require shader recompilation.
     });
 }
 
@@ -3616,9 +3785,27 @@ function syncUIFromSelectedPart() {
 
 // null = all parts dirty; a Set = only the indices in the set need re-rendering
 let dirtyPartThumbs = null;
+let modelPartThumbRenderQueue = []; // Indices to render incrementally
+let modelPartThumbRenderInProgress = false;
+let thumbRenderDebounceTimer = null; // Debounce rapid queue requests
+let thumbRenderDirtyAfterComplete = false; // Flag: changes came in while rendering
+let thumbHighResUpgradeTimer = null; // Timer to upgrade from low-res to high-res
+let thumbsNeedingHighRes = new Set(); // Parts that need high-res upgrade
+const THUMB_RENDER_DEBOUNCE_MS = 30; // Faster response
+const THUMB_HIGH_RES_DELAY_MS = 200; // Faster upgrade
+const THUMB_LOW_RES_DPR = 0.3; // Much faster initial low-res pass (blurry but model accurate)
+let THUMB_DEBUG_LOGGING = false;
 
 function queueModelPartThumbsRender(partIndices = null) {
     if (!modelPartSelectorBtn && !bgModelSyncSelectorBtn && !buildPlateModelSyncSelectorBtn) return;
+    
+    if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Queue requested:', partIndices, 'inProgress:', modelPartThumbRenderInProgress, 'queued:', modelPartThumbsQueued);
+    
+    // Clear any pending debounce timer
+    if (thumbRenderDebounceTimer) {
+        clearTimeout(thumbRenderDebounceTimer);
+    }
+
     // Accumulate dirty indices. null means "all".
     if (partIndices === null) {
         dirtyPartThumbs = null;
@@ -3631,12 +3818,166 @@ function queueModelPartThumbsRender(partIndices = null) {
             arr.forEach(i => dirtyPartThumbs.add(i));
         }
     }
-    if (modelPartThumbsQueued) return;
-    modelPartThumbsQueued = true;
-    requestAnimationFrame(() => {
-        modelPartThumbsQueued = false;
-        renderModelPartThumbnails();
+
+    // If currently rendering, mark dirty and wait for it to finish before re-queueing
+    if (modelPartThumbRenderInProgress) {
+        thumbRenderDirtyAfterComplete = true;
+        return;
+    }
+
+    // Skip if already queued — batch accumulates changes until debounce expires
+    if (modelPartThumbsQueued) {
+        return;
+    }
+
+    // Debounce: wait 80ms after last change to batch rapid updates
+    thumbRenderDebounceTimer = setTimeout(() => {
+        thumbRenderDebounceTimer = null;
+        if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Debounce timer fired, inProgress:', modelPartThumbRenderInProgress);
+        // Double-check: if rendering started or already queued, don't re-queue
+        if (!modelPartThumbRenderInProgress && !modelPartThumbsQueued) {
+            modelPartThumbsQueued = true;
+            requestAnimationFrame(() => {
+                modelPartThumbsQueued = false;
+                if (THUMB_DEBUG_LOGGING) console.log('[THUMB] RAF callback firing for incremental render');
+                renderModelPartThumbnailsIncremental();
+            });
+        }
+    }, THUMB_RENDER_DEBOUNCE_MS);
+}
+
+function renderModelPartThumbnailsIncremental() {
+    // Skip if selector panel is hidden (user not looking at thumbnails)
+    if (modelPartThumbsWrap?.hidden) {
+        modelPartThumbRenderInProgress = false;
+        modelPartThumbRenderQueue = [];
+        thumbsNeedingHighRes.clear();
+        return;
+    }
+
+    // Render thumbnail framework (summaries, menus) once
+    if (!modelPartThumbRenderInProgress) {
+        if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Starting incremental render, queue size:', modelPartThumbRenderQueue.length);
+        renderModelPartThumbnailsFramework();
+        modelPartThumbRenderInProgress = true;
+        modelPartThumbRenderQueue = buildPartThumbRenderQueue();
+        thumbsNeedingHighRes.clear();
+        if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Built queue:', modelPartThumbRenderQueue.length, 'parts');
+    }
+
+    // Render low-res 3D for each thumbnail
+    // This shows actual model data instantly while we defer high-res to after the delay
+    const thumbsPerFrame = 1;
+    for (let i = 0; i < thumbsPerFrame && modelPartThumbRenderQueue.length > 0; i++) {
+        const { canvasEl, idx } = modelPartThumbRenderQueue.shift();
+        const renderStart = performance.now();
+        renderSinglePartThumbnail(canvasEl, idx, 'low-res'); // Low-res 3D
+        const renderTime = performance.now() - renderStart;
+        thumbsNeedingHighRes.add(idx); // Mark for high-res upgrade
+        if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Low-res 3D rendered for part', idx, 'in', renderTime.toFixed(1), 'ms');
+    }
+
+    // If queue still has items, schedule next batch
+    if (modelPartThumbRenderQueue.length > 0) {
+        requestAnimationFrame(renderModelPartThumbnailsIncremental);
+    } else {
+        modelPartThumbRenderInProgress = false;
+        // Final viewport render after all thumbs done
+        if (scene && camera && !isExporting) renderer.render(scene, camera);
+        
+        // Schedule high-res (actual 3D) upgrade after delay (if anything is still visible)
+        if (thumbsNeedingHighRes.size > 0 && !modelPartThumbsWrap?.hidden) {
+            if (thumbHighResUpgradeTimer) clearTimeout(thumbHighResUpgradeTimer);
+            thumbHighResUpgradeTimer = setTimeout(() => {
+                thumbHighResUpgradeTimer = null;
+                upgradeThumbsToHighRes();
+            }, THUMB_HIGH_RES_DELAY_MS);
+        }
+        
+        // If changes came in while rendering, re-queue to render them
+        if (thumbRenderDirtyAfterComplete) {
+            thumbRenderDirtyAfterComplete = false;
+            queueModelPartThumbsRender(dirtyPartThumbs);
+        }
+    }
+}
+
+function buildPartThumbRenderQueue() {
+    const queue = [];
+    if (!modelPartThumbsWrap) return queue;
+    
+    const visible = hasModelParts() && !!mesh && !!renderer && !!camera;
+    if (!visible) return queue;
+
+    const dirty = dirtyPartThumbs; // null = all dirty
+    dirtyPartThumbs = new Set(); // reset
+    
+    document.querySelectorAll('.js-part-thumb-preview').forEach((canvasEl) => {
+        if (!shouldRenderThumbCanvas(canvasEl)) return;
+        const idx = parseInt(canvasEl.dataset.partIndex, 10);
+        if (!Number.isFinite(idx)) return;
+        if (dirty !== null && !dirty.has(idx)) return; // skip clean parts
+        queue.push({ canvasEl, idx });
     });
+
+    return queue;
+}
+
+function renderModelPartThumbnailsFramework() {
+    if (!modelPartThumbsWrap) return;
+    const visible = hasModelParts() && !!mesh && !!renderer && !!camera;
+    modelPartThumbsWrap.hidden = !visible;
+    modelPartThumbsWrap.setAttribute('aria-hidden', String(!visible));
+    
+    // Cancel high-res upgrade if selector becomes hidden
+    if (!visible) {
+        if (thumbHighResUpgradeTimer) {
+            clearTimeout(thumbHighResUpgradeTimer);
+            thumbHighResUpgradeTimer = null;
+        }
+        return;
+    }
+
+    if (modelPartSelectorThumb && isMultipartModel()) {
+        renderMultipartSummaryThumbnail(modelPartSelectorThumb);
+    }
+
+    syncModelSyncPreviewThumbTargets();
+
+    if (modelPartSelectorMenu) {
+        const uiSelectedIndices = new Set(getUiSelectedPartIndices());
+        modelPartSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
+            const idx = parseInt(opt.dataset.partIndex, 10);
+            opt.classList.toggle('is-selected', uiSelectedIndices.has(idx));
+        });
+    }
+    syncRulerHoverSelectorState();
+    if (bgModelSyncSelectorMenu && activeBgPreset === 'modelcolor') {
+        bgModelSyncSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
+            const idx = parseInt(opt.dataset.partIndex, 10);
+            opt.classList.toggle('is-selected', idx === bgSyncPartIndex);
+        });
+    }
+
+    if (modelPartSelectorText) {
+        renderModelPartSelectorSummary();
+    }
+    if (bgModelSyncSelectorText && activeBgPreset === 'modelcolor') {
+        const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
+        bgModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
+        bgModelSyncSelectorBtn.title = `Background sync: ${selectedName}`;
+    }
+    if (buildPlateModelSyncSelectorMenu && activeBuildPlatePreset === 'modelcolor') {
+        buildPlateModelSyncSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
+            const idx = parseInt(opt.dataset.partIndex, 10);
+            opt.classList.toggle('is-bg-sync-source', idx === buildPlateSyncPartIndex);
+        });
+    }
+    if (buildPlateModelSyncSelectorText && activeBuildPlatePreset === 'modelcolor') {
+        const selectedName = modelPartNames[buildPlateSyncPartIndex] || `Part ${buildPlateSyncPartIndex + 1}`;
+        buildPlateModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
+        buildPlateModelSyncSelectorBtn.title = `Surface sync: ${selectedName}`;
+    }
 }
 
 function shouldRenderThumbCanvas(canvasEl) {
@@ -3755,7 +4096,122 @@ function paintThumbFallback(canvasEl, partIdx) {
     ctx.fill();
 }
 
-function renderSinglePartThumbnail(canvasEl, partIdx) {
+function renderThumbnailSkeleton(canvasEl, partIdx) {
+    if (!canvasEl) return;
+    
+    const partIdx_int = parseInt(partIdx, 10);
+    if (!Number.isInteger(partIdx_int) || partIdx_int < 0 || partIdx_int >= modelPartNames.length) {
+        return;
+    }
+
+    // Simple 2D canvas sizing (matches expected thumbnail size)
+    const rect = canvasEl.getBoundingClientRect();
+    const cssW = Math.max(1, Math.round(rect.width || canvasEl.clientWidth || canvasEl.width || 120));
+    const cssH = Math.max(1, Math.round(rect.height || canvasEl.clientHeight || canvasEl.height || 120));
+    
+    if (canvasEl.width !== cssW || canvasEl.height !== cssH) {
+        canvasEl.width = cssW;
+        canvasEl.height = cssH;
+    }
+
+    const ctx = canvasEl.getContext('2d');
+    if (!ctx) return;
+
+    // Get the material color for this part
+    const partSettings = getPartSettings(partIdx_int);
+    const materialColor = partSettings.color || modelPartBaseColors[partIdx_int] || '#888888';
+    
+    // Parse color (hex string to RGB)
+    const hexColor = materialColor.startsWith('#') ? materialColor : '#888888';
+    const rgb = parseInt(hexColor.slice(1), 16);
+    const r = (rgb >> 16) & 255;
+    const g = (rgb >> 8) & 255;
+    const b = rgb & 255;
+    
+    // Create gradient with lighter and darker versions of the material color
+    const darkColor = `rgb(${Math.max(0, r - 40)}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)})`;
+    const lightColor = `rgb(${Math.min(255, r + 60)}, ${Math.min(255, g + 60)}, ${Math.min(255, b + 60)})`;
+    const baseColor = `rgb(${r}, ${g}, ${b})`;
+
+    // Draw skeleton: simple rounded rectangle with gradient
+    const padding = 10;
+    const w = cssW - padding * 2;
+    const h = cssH - padding * 2;
+    const cornerRadius = 8;
+
+    // Background
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, cssW, cssH);
+
+    // Rounded rectangle shape
+    ctx.beginPath();
+    ctx.moveTo(padding + cornerRadius, padding);
+    ctx.lineTo(padding + w - cornerRadius, padding);
+    ctx.quadraticCurveTo(padding + w, padding, padding + w, padding + cornerRadius);
+    ctx.lineTo(padding + w, padding + h - cornerRadius);
+    ctx.quadraticCurveTo(padding + w, padding + h, padding + w - cornerRadius, padding + h);
+    ctx.lineTo(padding + cornerRadius, padding + h);
+    ctx.quadraticCurveTo(padding, padding + h, padding, padding + h - cornerRadius);
+    ctx.lineTo(padding, padding + cornerRadius);
+    ctx.quadraticCurveTo(padding, padding, padding + cornerRadius, padding);
+    ctx.closePath();
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(padding, padding, padding + w, padding + h);
+    grad.addColorStop(0, lightColor);
+    grad.addColorStop(0.5, baseColor);
+    grad.addColorStop(1, darkColor);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Border highlight for depth
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.1)`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Center text indicator: "Loading..."
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('•••', cssW / 2, cssH / 2);
+}
+
+function upgradeThumbsToHighRes() {
+    // Skip if nothing needs upgrade
+    if (thumbsNeedingHighRes.size === 0) {
+        return;
+    }
+
+    // Re-render the low-res thumbnails at high-res quality
+    const toUpgrade = Array.from(thumbsNeedingHighRes);
+    thumbsNeedingHighRes.clear();
+    
+    if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Upgrade to high-res started, parts:', toUpgrade.length);
+
+    function upgradeNextBatch() {
+        if (toUpgrade.length === 0) return;
+        
+        const idx = toUpgrade.shift();
+        // Upgrade ALL canvases showing this part (e.g. selector + sync previews)
+        const canvases = document.querySelectorAll(`.js-part-thumb-preview[data-part-index="${idx}"]`);
+        
+        canvases.forEach(canvasEl => {
+            // Only upgrade if actually visible in DOM/layout
+            if (canvasEl.offsetParent !== null) {
+                renderSinglePartThumbnail(canvasEl, idx, 'high-res');
+            }
+        });
+        
+        if (toUpgrade.length > 0) {
+            requestAnimationFrame(upgradeNextBatch);
+        }
+    }
+
+    upgradeNextBatch();
+}
+
+function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
     if (!canvasEl || !mesh || !renderer || !camera) {
         paintThumbFallback(canvasEl, 0);
         return;
@@ -3774,7 +4230,23 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     ) {
         cssH = cssW;
     }
-    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    // Apply quality multiplier: low-res = THUMB_LOW_RES_DPR, high-res = 1.0
+    const qualityMultiplier = quality === 'low-res' ? THUMB_LOW_RES_DPR : 1.0;
+    // Limit thumbnail resolution to 1.0x DPR even on high-DPI screens
+    // This reduces GPU readback time significantly (4x smaller buffer than 2.0x)
+    const baseDpr = Math.max(1, Math.min(1.2, window.devicePixelRatio || 1));
+    const dpr = baseDpr * qualityMultiplier;
+    
+    if (quality === 'low-res') {
+        thumbsNeedingHighRes.add(resolvedPartIdx);
+        if (!thumbHighResUpgradeTimer) {
+             thumbHighResUpgradeTimer = setTimeout(() => {
+                thumbHighResUpgradeTimer = null;
+                upgradeThumbsToHighRes();
+            }, THUMB_HIGH_RES_DELAY_MS);
+        }
+    }
+
     const targetW = Math.max(1, Math.round(cssW * dpr));
     const targetH = Math.max(1, Math.round(cssH * dpr));
     if (canvasEl.width !== targetW || canvasEl.height !== targetH) {
@@ -3872,8 +4344,17 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
     renderer.setClearColor(0x000000, 0);
     renderer.setRenderTarget(partThumbRenderTarget);
     renderer.clear(true, true, true);
+    
+    const renderStart = performance.now();
     renderer.render(scene, partThumbCamera);
+    const renderTime = performance.now() - renderStart;
+    if (THUMB_DEBUG_LOGGING) console.log('[THUMB] WebGL render took', renderTime.toFixed(1), 'ms');
+    
+    const readStart = performance.now();
     renderer.readRenderTargetPixels(partThumbRenderTarget, 0, 0, rtW, rtH, pixelBuf);
+    const readTime = performance.now() - readStart;
+    if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Pixel readback took', readTime.toFixed(1), 'ms');
+    
     renderer.setRenderTarget(savedTarget);
 
     ctx.clearRect(0, 0, dstW, dstH);
@@ -3882,6 +4363,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
         ctx.fillRect(0, 0, dstW, dstH);
     }
 
+    const canvasStart = performance.now();
     try {
         if (partThumbScratchCtx) {
             const imageData = partThumbScratchCtx.createImageData(rtW, rtH);
@@ -3942,6 +4424,9 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
         ctx.fillStyle = fillHex;
         ctx.fillRect(0, 0, dstW, dstH);
     }
+    
+    const canvasTime = performance.now() - canvasStart;
+    if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Canvas drawing took', canvasTime.toFixed(1), 'ms');
 
     saved.forEach((s) => {
         if (!s?.mat) return;
@@ -3952,7 +4437,8 @@ function renderSinglePartThumbnail(canvasEl, partIdx) {
         s.mat.emissive.setHex(s.emissiveHex);
         s.mat.emissiveIntensity = s.emissiveIntensity;
         s.mat.wireframe = s.wireframe;
-        s.mat.needsUpdate = true;
+        // Optimization: Removing s.mat.needsUpdate = true;
+        // Opacity and visibility changes do not require a full shader recompilation.
     });
 
     scene.background = savedBg;
@@ -3988,7 +4474,7 @@ function renderMultipartSummaryThumbnail(canvasEl) {
 
     const selected = getUiSelectedPartIndices();
     if (selected.length === 1) {
-        renderSinglePartThumbnail(canvasEl, selected[0]);
+        renderSinglePartThumbnail(canvasEl, selected[0], 'low-res');
         return;
     }
 
@@ -4034,7 +4520,7 @@ function renderMultipartSummaryThumbnail(canvasEl) {
         const drawY = y + Math.floor((cellH - tileSide) / 2);
 
         if (typeof tile === 'number') {
-            renderSinglePartThumbnail(tempCanvas, tile);
+            renderSinglePartThumbnail(tempCanvas, tile, 'low-res');
             ctx.drawImage(tempCanvas, drawX, drawY, tileSide, tileSide);
         } else {
             ctx.fillStyle = PALETTE.text.partThumb;
@@ -4046,69 +4532,10 @@ function renderMultipartSummaryThumbnail(canvasEl) {
     });
 }
 
+// Deprecated: use renderModelPartThumbnailsFramework() or the incremental queue instead.
+// Kept for backwards compatibility.
 function renderModelPartThumbnails() {
-    if (!modelPartThumbsWrap) return;
-    const visible = hasModelParts() && !!mesh && !!renderer && !!camera;
-    modelPartThumbsWrap.hidden = !visible;
-    modelPartThumbsWrap.setAttribute('aria-hidden', String(!visible));
-    if (!visible) return;
-
-    if (modelPartSelectorThumb && isMultipartModel()) {
-        renderMultipartSummaryThumbnail(modelPartSelectorThumb);
-    }
-
-    syncModelSyncPreviewThumbTargets();
-
-    const dirty = dirtyPartThumbs; // snapshot; null = all
-    dirtyPartThumbs = new Set(); // reset to empty (nothing newly dirty)
-
-    let anyRendered = false;
-    document.querySelectorAll('.js-part-thumb-preview').forEach((canvasEl) => {
-        if (!shouldRenderThumbCanvas(canvasEl)) return;
-        const idx = parseInt(canvasEl.dataset.partIndex, 10);
-        if (!Number.isFinite(idx)) return;
-        if (dirty !== null && !dirty.has(idx)) return; // skip clean parts
-        renderSinglePartThumbnail(canvasEl, idx);
-        anyRendered = true;
-    });
-
-    // Single live-view repaint after all thumbnail renders are done.
-    if (anyRendered && scene && camera && !isExporting) renderer.render(scene, camera);
-
-    if (modelPartSelectorMenu) {
-        const uiSelectedIndices = new Set(getUiSelectedPartIndices());
-        modelPartSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
-            const idx = parseInt(opt.dataset.partIndex, 10);
-            opt.classList.toggle('is-selected', uiSelectedIndices.has(idx));
-        });
-    }
-    syncRulerHoverSelectorState();
-    if (bgModelSyncSelectorMenu && activeBgPreset === 'modelcolor') {
-        bgModelSyncSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
-            const idx = parseInt(opt.dataset.partIndex, 10);
-            opt.classList.toggle('is-selected', idx === bgSyncPartIndex);
-        });
-    }
-
-    if (modelPartSelectorText) {
-        renderModelPartSelectorSummary();
-    }
-    if (bgModelSyncSelectorText && activeBgPreset === 'modelcolor') {
-        const selectedName = modelPartNames[bgSyncPartIndex] || `Part ${bgSyncPartIndex + 1}`;
-        bgModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
-        bgModelSyncSelectorBtn.title = `Background sync: ${selectedName}`;
-    }
-    if (buildPlateModelSyncSelectorMenu && activeBuildPlatePreset === 'modelcolor') {
-        buildPlateModelSyncSelectorMenu.querySelectorAll('.thumb-select-option').forEach((opt) => {
-            const idx = parseInt(opt.dataset.partIndex, 10);
-            opt.classList.toggle('is-bg-sync-source', idx === buildPlateSyncPartIndex);
-        });
-    }
-    if (buildPlateModelSyncSelectorText && activeBuildPlatePreset === 'modelcolor') {
-        const selectedName = modelPartNames[buildPlateSyncPartIndex] || `Part ${buildPlateSyncPartIndex + 1}`;
-        buildPlateModelSyncSelectorText.textContent = `Sync: ${selectedName}`;
-        buildPlateModelSyncSelectorBtn.title = `Surface sync: ${selectedName}`;
-    }
+    renderModelPartThumbnailsFramework();
 }
 
 function renderModelPartSelectorSummary() {
@@ -5037,7 +5464,13 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     const isVisible = hasModelParts();
     modelPartThumbsWrap.hidden = !isVisible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!isVisible));
+    
+    // Cancel high-res upgrade if selector becomes hidden
     if (!isVisible) {
+        if (thumbHighResUpgradeTimer) {
+            clearTimeout(thumbHighResUpgradeTimer);
+            thumbHighResUpgradeTimer = null;
+        }
         bulkSelectedPartIndices.clear();
         if (modelPartSelectorEl) modelPartSelectorEl.hidden = true;
         modelPartSelectorMenu.innerHTML = '';
@@ -5498,11 +5931,10 @@ function syncModelSyncPreviewThumbTargets() {
         }
         canvasEl.classList.add('js-part-thumb-preview');
         canvasEl.dataset.partIndex = String(partIdx);
-        paintThumbFallback(canvasEl, partIdx);
-        // Render immediately when possible so active Model Sync thumbs do not
-        // remain on fallback art until another interaction triggers a repaint.
-        if (mesh && renderer && camera && shouldRenderThumbCanvas(canvasEl)) {
-            renderSinglePartThumbnail(canvasEl, partIdx);
+        
+        // Use low-res 3D instead of skeleton for instant model-accurate feedback
+        if (shouldRenderThumbCanvas(canvasEl)) {
+            renderSinglePartThumbnail(canvasEl, partIdx, 'low-res');
         }
     };
 
@@ -5902,17 +6334,24 @@ function storeExportCamera() {
 
 // ── Render loop ───────────────────────────────────────────────────────────────
 let _lastRulerOverlayUpdateMs = 0;
+let _frameStartMs = 0;
 
 function loop() {
     requestAnimationFrame(loop);
+    const _frameStart = performance.now();
     const deltaSec = Math.min(Math.max(renderDeltaClock.getDelta(), 0), 0.1);
     const phaseStep = (2 * Math.PI / Math.max(1e-6, getSecondsPerRevolution())) * deltaSec;
+    
     if (!isExporting) {
+        profiler.markStart('perf-quality');
         const viewportQualityChanged = updateViewportPerformanceStateModule(viewportPerformanceState, deltaSec, {
             enabled: !isExporting,
             minQualityScale: VIEWPORT_PERF_MIN_QUALITY_SCALE,
         });
         if (viewportQualityChanged) applyViewportPixelRatioIfNeeded();
+        profiler.recordSegment('perf-quality', profiler.markEnd('perf-quality'));
+
+        profiler.markStart('animation');
         if (!isPaused && rotateModeEl.value === 'tilt' && mesh) {
             // Tilt: pitch the mesh around its X axis — camera orbits freely
             controls.autoRotate = false;
@@ -5976,8 +6415,16 @@ function loop() {
                 swingLastAz = swingBaseAz;
             }
         }
+        // Update shadow placement every frame (critical for tilt/wobble modes where mesh rotates)
+        if (mesh && shadowCatcher) updateShadowCatcherPlacement();
+        profiler.recordSegment('animation', profiler.markEnd('animation'));
+
+        profiler.markStart('camera-light');
         updateCameraClipPlanes();
         syncLightRig();
+        profiler.recordSegment('camera-light', profiler.markEnd('camera-light'));
+
+        profiler.markStart('render');
         const renderWithExportOptions = !!(exportFrameEnabled && !isExporting);
         const restoreViewportExportScene = renderWithExportOptions
             ? applyExportSceneForRender({ maintainBackground: true })
@@ -5987,6 +6434,9 @@ function loop() {
         } finally {
             restoreViewportExportScene?.();
         }
+        profiler.recordSegment('render', profiler.markEnd('render'));
+
+        profiler.markStart('post-render');
         if (exportFrameEnabled) drawExportFrame();
         if (rulerEnabled || rulerPartHoverEnabled) {
             const now = performance.now();
@@ -5998,6 +6448,11 @@ function loop() {
         }
         updateFpsReadout(deltaSec);
         updateExportPreview();
+        profiler.recordSegment('post-render', profiler.markEnd('post-render'));
+
+        const _frameEnd = performance.now();
+        const _totalFrameTime = _frameEnd - _frameStart;
+        profiler.endFrame(_totalFrameTime);
     }
 }
 
@@ -6010,6 +6465,18 @@ let _lastExportPreviewUpdateMs = 0;
 
 const EXPORT_PREVIEW_DPR_MAX = 1;
 const EXPORT_PREVIEW_INTERVAL_MS = 160;
+
+// Debounce export preview updates during slider changes (avoid 60ms+ RAF violations)
+const EXPORT_PREVIEW_SLIDER_DEBOUNCE_MS = 100;
+let _exportPreviewSliderDebounceTimer = null;
+
+function scheduleExportPreviewUpdate() {
+    if (_exportPreviewSliderDebounceTimer) clearTimeout(_exportPreviewSliderDebounceTimer);
+    _exportPreviewSliderDebounceTimer = setTimeout(() => {
+        _exportPreviewSliderDebounceTimer = null;
+        updateExportPreview(true); // Force update after debounce
+    }, EXPORT_PREVIEW_SLIDER_DEBOUNCE_MS);
+}
 
 function isExportPreviewActive() {
     return isExportPreviewActiveController({
@@ -9992,6 +10459,7 @@ textureTuneLightSlider?.addEventListener('input', () => {
     textureTuneState.light = parseFloat(textureTuneLightSlider.value);
     updateTextureTuneUI();
     applyCurrentTextureTuning();
+    scheduleExportPreviewUpdate();
     scheduleTextureTuneCommit();
 });
 
@@ -10003,6 +10471,7 @@ textureTuneContrastSlider?.addEventListener('input', () => {
     textureTuneState.contrast = parseFloat(textureTuneContrastSlider.value);
     updateTextureTuneUI();
     applyCurrentTextureTuning();
+    scheduleExportPreviewUpdate();
     scheduleTextureTuneCommit();
 });
 
@@ -10014,6 +10483,7 @@ textureTuneHighlightsSlider?.addEventListener('input', () => {
     textureTuneState.highlights = parseFloat(textureTuneHighlightsSlider.value);
     updateTextureTuneUI();
     applyCurrentTextureTuning();
+    scheduleExportPreviewUpdate();
     scheduleTextureTuneCommit();
 });
 
@@ -10025,6 +10495,7 @@ textureTuneShadowsSlider?.addEventListener('input', () => {
     textureTuneState.shadows = parseFloat(textureTuneShadowsSlider.value);
     updateTextureTuneUI();
     applyCurrentTextureTuning();
+    scheduleExportPreviewUpdate();
     scheduleTextureTuneCommit();
 });
 
@@ -10037,6 +10508,7 @@ textureTuneLightSourceSlider?.addEventListener('input', () => {
     updateTextureTuneUI();
     if (mesh) updateShadowCatcherPlacement();
     applyCurrentTextureTuning();
+    scheduleExportPreviewUpdate();
     scheduleTextureTuneCommit();
 });
 
@@ -10057,6 +10529,7 @@ textureTuneLightHeightSlider?.addEventListener('input', () => {
     updateTextureTuneUI();
     if (mesh) updateShadowCatcherPlacement();
     applyCurrentTextureTuning();
+    scheduleExportPreviewUpdate();
     scheduleTextureTuneCommit();
 });
 
@@ -10070,6 +10543,7 @@ textureTuneRoughnessSlider?.addEventListener('input', (ev) => {
     updateFinishSliderVisual();
     const { targets } = applyFinishControlsToSelectedPart();
     applyCurrentTextureTuning();
+    scheduleExportPreviewUpdate();
     scheduleFinishCommit(targets);
 });
 
@@ -10103,6 +10577,7 @@ textureTuneMetalnessSlider?.addEventListener('input', () => {
     syncUIFromSelectedPart();
     updateTextureTuneUI();
     applyCurrentTextureTuning();
+    scheduleExportPreviewUpdate();
     scheduleTextureTuneCommit({ persistMultipart: true, thumbTargets: targets });
 });
 
@@ -11180,8 +11655,7 @@ btnResetBackgroundCard?.addEventListener('click', () => {
     updateBgSelection();
     syncBgModelSyncSourceUI();
     if (bgModelSyncSelectorThumb) {
-        paintThumbFallback(bgModelSyncSelectorThumb, bgSyncPartIndex);
-        renderSinglePartThumbnail(bgModelSyncSelectorThumb, bgSyncPartIndex);
+        renderSinglePartThumbnail(bgModelSyncSelectorThumb, bgSyncPartIndex, 'low-res');
     }
     queueModelPartThumbsRender([bgSyncPartIndex]);
     saveSettings();
@@ -12614,6 +13088,10 @@ document.addEventListener('pointerdown', (e) => {
     if (!(e.target instanceof Node)) return;
     if (footerCropControlsEl?.contains(e.target)) return;
     if (e.target?.closest?.('.export-modal-panel')) return;
+    // Skip if clicking inside any settings/control panel (prevents accidental crop exit)
+    if (e.target?.closest?.('.controls-section-box')) return;
+    if (e.target?.closest?.('.range-label')) return;
+    if (e.target?.closest?.('.control-label')) return;
     if (isPointInsideExportCropFrame(e.clientX, e.clientY)) return;
     if (exportWorkspaceActive) closeCropAndExportWorkspace();
     else cancelCropMode();
@@ -14000,8 +14478,8 @@ function renderModelPresets() {
     customWrap.querySelector('.shading-option').addEventListener('focus', clearPresetHoverPreview);
     bar.appendChild(customWrap);
 
-    // Initial call
-    requestAnimationFrame(updateModelSelection);
+    // Initial call (sync immediately, not every frame)
+    updateModelSelection();
 }
 
 function updateBgSelection() {
@@ -14691,7 +15169,8 @@ function renderBgPresets() {
         bgPick._presetListenerAdded = true;
     }
 
-    requestAnimationFrame(updateBgSelection);
+    // Sync immediately, not every frame
+    updateBgSelection();
 
 }
 
@@ -14853,3 +15332,9 @@ function initPresetGallery() {
     renderModelShadeSelector();
 }
 initPresetGallery();
+
+// ── Expose profiler to global scope for console debugging ──────────────────────
+// Enable: window.profiler.toggle()
+// Set threshold: window.profiler.setLoggingThreshold(16.67)
+window.profiler = profiler;
+window.globalRAFMonitor = globalRAFMonitor;

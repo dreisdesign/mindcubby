@@ -1,3 +1,18 @@
+## [Unreleased] - 2026-06-24
+
+### Fixed
+- **Resolved 2-second UI freeze during preset/slider changes**: Identified and fixed a major performance bottleneck where updating a single thumbnail or material property was forcing a full Three.js shader recompilation for every material in the scene. Removed unnecessary `needsUpdate = true` flags for simple uniform property updates (metalness, roughness, opacity, visibility) which do not require new shaders.
+- **Fixed "blank thumbnails" JS error**: Resolved a `ReferenceError: qualityMultiplier is not defined` in `renderSinglePartThumbnail` that was preventing all thumbnail rendering and stalling the application startup logic.
+- **Improved shadow stability in Tilt/Wobble mode**: Fixed a bug where shadows would disappear or clip incorrectly when the model was tilted or wobbling. Added `updateShadowCatcherPlacement()` to the main render loop to ensure the shadow plane and light frustum stay aligned with the model's dynamic box during animation.
+- **Prevented accidental crop mode exit**: Buttons and sliders in the Settings and Export panels no longer trigger an "outside click" that cancels crop mode. Added exclusion rules to the global pointer handler to ignore clicks on UI controls.
+
+### Changed
+- **Refactored Thumbnail Engine for fluidity**: Complete overhaul of the thumbnail rendering strategy to prevent main-thread blocking frames:
+  - **DPR Capping**: Thumbnail resolution is now capped at `1.0x DPR` regardless of screen density. This reduces GPU readback time (the primary pause cause) by 4x on High-DPI/Retina screens.
+  - **Dual-Pass Rendering**: Thumbnails now render a transient low-resolution (`DPR 0.3`) 3D preview almost instantly for immediate feedback, then "snap" into high-resolution 200ms after the user stops interacting.
+  - **Incremental Queue**: All thumbnail 3D rendering is now strictly one-per-frame via a `requestAnimationFrame` queue, ensuring the viewport animation maintains 60fps even while thumbnails are generating.
+  - **Multi-Instance Sync**: All instances of a part's thumbnail (e.g., in the grid selector and the "Model Sync" preview buttons) now upgrade to high-res simultaneously when the part is updated.
+
 ## [Unreleased] - 2026-06-18
 
 ### Fixed
