@@ -10405,6 +10405,7 @@ if (opacitySlider) {
         scheduleModelToneCommit(targets);
     });
     opacitySlider.addEventListener('change', () => {
+        opacitySlider.value = String(getSliderEffectiveValue(opacitySlider));
         flushModelToneCommit();
     });
 }
@@ -10425,6 +10426,7 @@ if (bgOpacitySlider) {
         saveSettings();
     });
     bgOpacitySlider.addEventListener('change', () => {
+        bgOpacitySlider.value = String(getSliderEffectiveValue(bgOpacitySlider));
         saveSettings();
     });
 }
@@ -14921,6 +14923,7 @@ if (buildPlateShadeSliderEl) {
         saveSettings();
     });
     buildPlateShadeSliderEl.addEventListener('change', () => {
+        buildPlateShadeSliderEl.value = String(getSliderEffectiveValue(buildPlateShadeSliderEl));
         refreshExportPreviewNow();
         saveSettings();
     });
