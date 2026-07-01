@@ -15390,6 +15390,9 @@ function makeRecipeCardDraggable(container) {
         // Don't drag if clicking buttons or interactive elements
         if (e.target.closest('button, input, [onclick]')) return;
         
+        e.stopPropagation();  // Prevent event from bubbling to other handlers
+        e.preventDefault();   // Prevent default behavior
+        
         isDragging = true;
         const rect = container.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
