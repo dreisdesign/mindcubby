@@ -11,6 +11,7 @@
  *   - title: Card title (default: "Recipe Card")
  *   - subtitle: Optional subtitle
  *   - includeColumns: Array of column names to include (default: all)
+ *   - includeThumbnails: Whether to show thumbnail placeholders (default: false)
  * @returns {string} HTML table markup
  */
 export function generateRecipeCardHTML(ingredients, options = {}) {
@@ -18,6 +19,7 @@ export function generateRecipeCardHTML(ingredients, options = {}) {
         title = 'Recipe Card',
         subtitle = '',
         includeColumns = ['qty', 'part', 'size', 'texture', 'form', 'color'],
+        includeThumbnails = false,
     } = options;
 
     if (!Array.isArray(ingredients) || ingredients.length === 0) {
@@ -39,22 +41,22 @@ export function generateRecipeCardHTML(ingredients, options = {}) {
 
     // Build header
     const headerCells = visibleColumns
-        .map(col => `<th style="text-align: left; padding: 8px; font-weight: 600; border-bottom: 2px solid #333;">${columnConfig[col].label}</th>`)
+        .map(col => `<th style="text-align: left; padding: 10px 12px; font-weight: 600; border-bottom: 2px solid #e0e0e0; font-size: 13px; letter-spacing: 0.3px;">${columnConfig[col].label}</th>`)
         .join('');
 
-    // Build rows
+    // Build rows with optional thumbnails
     const rows = ingredients
-        .map(ing => {
+        .map((ing, idx) => {
             const cells = visibleColumns
                 .map(col => {
                     if (col === 'color') {
                         // Color cell with swatch
-                        return `<td style="padding: 8px; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 8px;">
-                            <div style="width: 20px; height: 20px; background-color: ${ing.colorHex}; border: 1px solid #999; border-radius: 3px;"></div>
-                            <span style="font-family: monospace; font-size: 12px;">${ing.colorHex.toUpperCase()}</span>
+                        return `<td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 20px; height: 20px; background-color: ${ing.colorHex}; border: 1px solid #ccc; border-radius: 4px; flex-shrink: 0;"></div>
+                            <span style="font-family: monospace; font-size: 11px; color: #666;">${ing.colorHex.toUpperCase()}</span>
                         </td>`;
                     }
-                    return `<td style="padding: 8px; border-bottom: 1px solid #ddd;">${ing[col]}</td>`;
+                    return `<td style="padding: 10px 12px; border-bottom: 1px solid #f0f0f0;">${ing[col]}</td>`;
                 })
                 .join('');
 
@@ -64,13 +66,15 @@ export function generateRecipeCardHTML(ingredients, options = {}) {
 
     // Build complete table
     const html = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; padding: 24px; background: #fff;">
-            <h1 style="margin: 0 0 4px 0; font-size: 24px; font-weight: 700;">${escapeHtml(title)}</h1>
-            ${subtitle ? `<p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">${escapeHtml(subtitle)}</p>` : ''}
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; padding: 24px; background: #fff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08);">
+            <div style="margin-bottom: 20px;">
+                <h1 style="margin: 0 0 4px 0; font-size: 22px; font-weight: 700; color: #1a1a1a;">${escapeHtml(title)}</h1>
+                ${subtitle ? `<p style="margin: 0; color: #666; font-size: 13px;">${escapeHtml(subtitle)}</p>` : ''}
+            </div>
             
             <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
                 <thead>
-                    <tr style="background: #f5f5f5;">
+                    <tr style="background: #f9f9f9;">
                         ${headerCells}
                     </tr>
                 </thead>

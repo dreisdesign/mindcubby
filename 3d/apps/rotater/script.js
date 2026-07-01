@@ -15436,22 +15436,23 @@ function generateRecipeCardFromCurrentState() {
             left: 50%;
             transform: translate(-50%, -50%);
             background: white;
-            border: 2px solid #333;
-            border-radius: 8px;
-            padding: 16px;
-            max-height: 80vh;
+            border-radius: 16px;
+            padding: 0;
+            max-height: 85vh;
             overflow-y: auto;
             z-index: 9999;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            width: 90vw;
+            max-width: 900px;
         `;
         document.body.appendChild(container);
     }
 
     container.innerHTML = html + `
-        <div style="margin-top: 16px; text-align: center;">
+        <div style="padding: 0 24px 24px 24px; text-align: center; border-top: 1px solid #f0f0f0; margin-top: 16px; padding-top: 16px;">
             <button onclick="document.getElementById('recipe-card-preview').remove()" 
-                    style="padding: 8px 16px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    style="padding: 10px 20px; background: #f0f0f0; color: #333; border: none; border-radius: 10px; cursor: pointer; font-weight: 500; font-size: 13px; transition: background 0.2s;">
                 Close
             </button>
         </div>
