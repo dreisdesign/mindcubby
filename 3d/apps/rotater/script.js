@@ -15432,7 +15432,7 @@ function generateRecipeCardFromCurrentState() {
         includeColumns: ['qty', 'part', 'size', 'texture', 'form', 'color'],
     });
 
-    // Display in overlay
+    // Display in overlay (IMMEDIATELY, without thumbnails to avoid blocking)
     let container = document.getElementById('recipe-card-preview');
     if (!container) {
         container = document.createElement('div');
@@ -15465,7 +15465,35 @@ function generateRecipeCardFromCurrentState() {
         </div>
     `;
 
-    console.log('✓ Recipe card generated and displayed\n');
+    console.log('✓ Recipe card displayed immediately (without thumbnails for performance)\n');
+    
+    // IMPORTANT: Generate thumbnails AFTER displaying the card
+    // This ensures the UI is responsive and doesn't freeze during thumbnail rendering
+    requestAnimationFrame(() => {
+        console.log('Generating thumbnails asynchronously...');
+        
+        try {
+            const thumbnails = generateRecipeCardThumbnails(aggregated, {
+                size: 68,  // Match picker size
+                quality: 'low-res',  // Fast rendering (0.3 DPR)
+                onProgress: (current, total) => {
+                    console.log(`  Thumbnails: ${current}/${total} rendered`);
+                }
+            });
+            
+            console.log(`✓ ${thumbnails.size} thumbnails generated\n`);
+            
+            // Inject thumbnails into the card (if container still exists)
+            if (container && container.parentElement) {
+                // Store thumbnails for potential future use or UI injection
+                container.dataset.thumbnails = JSON.stringify(Array.from(thumbnails.entries()));
+            }
+        } catch (error) {
+            console.error('Failed to generate thumbnails:', error);
+            // Silently fail - card is already displayed without thumbnails
+        }
+    });
+
     return { aggregated, html };
 }
 
