@@ -12811,6 +12811,12 @@ btnDownloadPackage?.addEventListener('click', async () => {
     }
 });
 
+// ── Recipe Card button ────────────────────────────────────────────────────────
+const btnGenerateRecipe = document.getElementById('btnGenerateRecipe');
+btnGenerateRecipe?.addEventListener('click', () => {
+    generateRecipeCardFromCurrentState();
+});
+
 // ── Help overlay ──────────────────────────────────────────────────────────────
 const helpOverlayEl = document.getElementById('helpOverlay');
 const helpPanelEl = helpOverlayEl?.querySelector('.help-panel') || null;
@@ -15366,12 +15372,102 @@ initPresetGallery();
 window.profiler = profiler;
 window.globalRAFMonitor = globalRAFMonitor;
 
+// ── Recipe Card: Extract current app state and generate card ──────────────────
+function generateRecipeCardFromCurrentState() {
+    console.log('=== Generating Recipe Card from Current State ===\n');
+
+    // Get filenames and colors from app state
+    if (!modelPartNames || modelPartNames.length === 0) {
+        console.warn('No files loaded. Please upload STL files first.');
+        alert('No files loaded. Please upload STL files to generate a recipe card.');
+        return null;
+    }
+
+    console.log('Current files:', modelPartNames);
+    console.log('Current colors:', modelPartBaseColors);
+
+    // Parse filenames
+    const parsed = parseStackablesFilenames(modelPartNames);
+    console.log(`Parsed ${parsed.length} of ${modelPartNames.length} files`);
+
+    if (parsed.length === 0) {
+        console.error('Could not parse any filenames. They may not follow the Stackables format.');
+        alert('Could not parse filenames. Files should follow format:\n{part}--{form}--{size}--{texture}.stl\n\nExample: middle--flat--md--ribbed.stl');
+        return null;
+    }
+
+    // Map colors
+    const colorObjects = modelPartBaseColors.slice(0, modelPartNames.length).map(hex => {
+        // Try to find color name from palette, or use generic name
+        let colorName = 'Custom';
+        if (PALETTE?.presets) {
+            for (const [key, preset] of Object.entries(PALETTE.presets)) {
+                if (preset.color === hex || preset.color?.toLowerCase?.() === hex?.toLowerCase?.()) {
+                    colorName = key.charAt(0).toUpperCase() + key.slice(1);
+                    break;
+                }
+            }
+        }
+        return { name: colorName, hex: hex || '#808080' };
+    });
+
+    console.log('Colors:', colorObjects);
+
+    // Aggregate
+    const aggregated = aggregateRecipeIngredients(parsed, colorObjects);
+    console.log(`Aggregated into ${aggregated.length} unique ingredients`);
+    console.log('Ingredients:', aggregated);
+
+    // Generate HTML
+    const html = generateRecipeCardHTML(aggregated, {
+        title: 'Recipe Card',
+        subtitle: `${modelPartNames.length} parts`,
+        includeColumns: ['qty', 'part', 'size', 'texture', 'form', 'color'],
+    });
+
+    // Display in overlay
+    let container = document.getElementById('recipe-card-preview');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'recipe-card-preview';
+        container.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 9999;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+        document.body.appendChild(container);
+    }
+
+    container.innerHTML = html + `
+        <div style="margin-top: 16px; text-align: center;">
+            <button onclick="document.getElementById('recipe-card-preview').remove()" 
+                    style="padding: 8px 16px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Close
+            </button>
+        </div>
+    `;
+
+    console.log('✓ Recipe card generated and displayed\n');
+    return { aggregated, html };
+}
+
 // ── Expose Recipe Card POC functions to global scope ──────────────────────────
 // Test from console: window.recipeCardPOC.demo()
 window.recipeCardPOC = {
     demo: runRecipeCardDemo,
     testParser: testParserEdgeCases,
     testAggregation: testAggregationLogic,
+    generateFromCurrent: generateRecipeCardFromCurrentState,
     // Helper functions
     parse: parseStackablesFilenames,
     isValid: isValidStackablesFilename,
