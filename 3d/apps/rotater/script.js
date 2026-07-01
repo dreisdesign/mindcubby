@@ -15399,10 +15399,18 @@ function makeRecipeCardDraggable(container) {
         offsetY = e.clientY - rect.top;
         container.style.cursor = 'grabbing';
         container.style.userSelect = 'none';
+        
+        // Block overlay interactions during drag
+        const overlay = document.querySelector('.export-crop-overlay-dark');
+        if (overlay) {
+            overlay.style.pointerEvents = 'none';
+        }
     };
 
     const onMouseMove = (e) => {
         if (!isDragging) return;
+        
+        e.preventDefault();  // Prevent default drag behavior
         
         const newLeft = e.clientX - offsetX;
         const newTop = e.clientY - offsetY;
@@ -15417,6 +15425,12 @@ function makeRecipeCardDraggable(container) {
             isDragging = false;
             container.style.cursor = 'default';
             container.style.userSelect = 'auto';
+            
+            // Re-enable overlay interactions
+            const overlay = document.querySelector('.export-crop-overlay-dark');
+            if (overlay) {
+                overlay.style.pointerEvents = 'auto';
+            }
         }
     };
 
@@ -15496,7 +15510,7 @@ function generateRecipeCardFromCurrentState() {
             padding: 0;
             max-height: 85vh;
             overflow-y: auto;
-            z-index: 9999;
+            z-index: 99999;
             box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             width: 90vw;
