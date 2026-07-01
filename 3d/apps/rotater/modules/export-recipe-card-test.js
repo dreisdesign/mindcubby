@@ -14,15 +14,15 @@ import { generateRecipeCardHTML } from './export-recipe-card-renderer.js';
 export function runRecipeCardDemo() {
     console.log('=== Recipe Card POC Demo ===\n');
 
-    // Sample filenames (Macaron stack from reference)
+    // Sample filenames with Tinkercad export prefixes (1., 2., 3., etc.)
     const sampleFilenames = [
-        'topper--flat--xs--ribbed.stl',
-        'middle--flat--xs--ribbed.stl',
-        'middle--flat--xs--ribbed.stl',  // Duplicate: 2x this part
-        'middle--flat--xs--smooth.stl',
-        'middle--flat--xs--smooth.stl',  // Duplicate: 2x this part
-        'middle--flat--xs--smooth.stl',  // Actually 3x total
-        'bottom--flat--xs--ribbed.stl',
+        '1.topper--flat--xs--ribbed.stl',
+        '2.middle--flat--xs--ribbed.stl',
+        '3.middle--flat--xs--ribbed.stl',  // Duplicate: 2x this part
+        '4.middle--flat--xs--smooth.stl',
+        '5.middle--flat--xs--smooth.stl',  // Duplicate: 2x this part
+        '6.middle--flat--xs--smooth.stl',  // Actually 3x total
+        '7.bottom--flat--xs--ribbed.stl',
     ];
 
     // Sample colors (would come from app state in real integration)
@@ -107,12 +107,18 @@ export function testParserEdgeCases() {
     console.log('=== Parser Edge Case Tests ===\n');
 
     const testCases = [
-        { input: 'middle--flat--md--ribbed.stl', expected: true, desc: 'Valid file' },
-        { input: 'Middle--Flat--MD--Ribbed.stl', expected: true, desc: 'Case-insensitive' },
-        { input: 'invalid--file--name.stl', expected: false, desc: 'Invalid part name' },
+        { input: 'middle--flat--md--ribbed.stl', expected: true, desc: 'Valid file (no prefix)' },
+        { input: '1.middle--flat--md--ribbed.stl', expected: true, desc: 'Valid with Tinkercad prefix' },
+        { input: '99.middle--flat--md--ribbed.stl', expected: true, desc: 'Multi-digit prefix' },
+        { input: 'Middle--Flat--MD--Ribbed.stl', expected: true, desc: 'Case-insensitive (no prefix)' },
+        { input: '2.Middle--Flat--MD--Ribbed.stl', expected: true, desc: 'Case-insensitive with prefix' },
+        { input: 'invalid--file--name.stl', expected: false, desc: 'Invalid part name (no prefix)' },
+        { input: '1.invalid--file--name.stl', expected: false, desc: 'Invalid part name (with prefix)' },
         { input: 'middle--flat--md.stl', expected: false, desc: 'Missing texture' },
+        { input: '1.middle--flat--md.stl', expected: false, desc: 'Missing texture (with prefix)' },
         { input: 'middle--flat--md--ribbed--extra.stl', expected: false, desc: 'Extra segment' },
         { input: 'middle--flat--md--ribbed', expected: true, desc: 'No .stl extension' },
+        { input: '3.middle--flat--md--ribbed', expected: true, desc: 'No .stl extension (with prefix)' },
     ];
 
     testCases.forEach(test => {

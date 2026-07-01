@@ -1,5 +1,19 @@
 # Recipe Card POC - Testing Guide
 
+## Filename Format
+
+Export from Tinkercad with numeric prefixes:
+- `1.bottom--flat--xs--ribbed.stl`
+- `2.middle--tube--xs--smooth.stl`
+- `3.middle--tube--xs--smooth.stl` (same part as #2, different instance)
+
+**Format breakdown:**
+- `{number}.` - Tinkercad export index (1., 2., 3., etc.) — optional but recommended
+- `{part}` - Topper, Middle, or Bottom
+- `{form}` - Flat or Tube
+- `{size}` - XS, SM, MD, LG, XL, XXL
+- `{texture}` - Ribbed or Smooth
+
 ## Phase 1: Core Logic Testing
 
 The recipe card POC is now available in the browser console. To test:
@@ -29,16 +43,17 @@ window.recipeCardPOC.testAggregation()  // Aggregation logic tests
 
 **Test individual functions:**
 ```js
-// Parse filenames
+// Parse filenames (with Tinkercad prefixes)
 const parsed = window.recipeCardPOC.parse([
-    'middle--flat--md--ribbed.stl',
-    'bottom--tube--xs--smooth.stl'
+    '1.middle--flat--md--ribbed.stl',
+    '2.bottom--tube--xs--smooth.stl'
 ]);
 
 // Check if filename is valid
-window.recipeCardPOC.isValid('middle--flat--md--ribbed.stl')  // true
+window.recipeCardPOC.isValid('1.middle--flat--md--ribbed.stl')  // true
+window.recipeCardPOC.isValid('middle--flat--md--ribbed.stl')    // also true (prefix optional)
 
-// Aggregate with colors
+// Aggregate with colors (will group duplicates with different prefixes)
 const aggregated = window.recipeCardPOC.aggregate(parsed, [
     { name: 'Pink', hex: '#FFB3D9' },
     { name: 'Green', hex: '#90EE90' }
@@ -61,18 +76,21 @@ const html = window.recipeCardPOC.render(aggregated, {
 ## Validation Checklist
 
 After running the demo, verify:
-- [ ] Parser correctly extracts Part, Form, Size, Texture from each filename
-- [ ] Aggregator groups duplicates (e.g., 2 Pink + 1 Yellow = 2 rows, not 3)
+- [ ] Parser strips number prefix correctly (e.g., "1.middle--flat--md--ribbed" → validates as "middle--flat--md--ribbed")
+- [ ] Parser still works without prefix (e.g., "middle--flat--md--ribbed" → validates)
+- [ ] Aggregator groups duplicates with different prefixes (1., 2., 3.) as same part
 - [ ] HTML table renders with all columns (Qty, Part, Size, Texture, Form, Color)
 - [ ] Color swatches display correctly (colored boxes next to color names)
 - [ ] Sorting works (higher qty items first)
+- [ ] Qty counts correctly (e.g., 3 files with same base name = qty: 3)
 
 ## Next Steps (After Validation)
 
-Once core POC is validated:
-1. Add "Generate Recipe Card" checkbox to export panel UI
-2. Hook into export workflow to capture actual filenames & colors
-3. Add PNG export capability (may need html2canvas library)
-4. Test with real Stackables files
+Once core POC is validated with Tinkercad export format:
+1. Test with actual Stackables catalog files from Tinkercad
+2. Verify color extraction matches your customizations
+3. Validate aggregation with real 3-part Macaron stack
+4. Once fully validated, integrate PNG export
+5. Add to export workflow (checkbox in export modal)
 
 **Remember:** Test & validate the POC fully before expanding scope!

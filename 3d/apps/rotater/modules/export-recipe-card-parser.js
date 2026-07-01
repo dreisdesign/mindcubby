@@ -1,7 +1,11 @@
 /**
  * Recipe Card Parser
  * Parses Stackables filenames to extract part metadata
- * Format: {part}--{form}--{size}--{texture}.stl
+ * Format: [{number}.]{part}--{form}--{size}--{texture}.stl
+ * Examples:
+ *   - middle--flat--md--ribbed.stl (no prefix)
+ *   - 1.middle--flat--md--ribbed.stl (with prefix)
+ *   - 3.bottom--flat--xs--ribbed.stl (with prefix)
  */
 
 // Catalog lookup: size → dimension
@@ -22,12 +26,21 @@ const VALID_TEXTURES = ['Ribbed', 'Smooth'];
 
 /**
  * Parse a single filename into structured metadata
- * @param {string} filename - The filename (e.g., "middle--flat--md--ribbed.stl")
+ * Handles optional number prefix: 1.middle--flat--md--ribbed.stl or middle--flat--md--ribbed.stl
+ * @param {string} filename - The filename (e.g., "1.middle--flat--md--ribbed.stl" or "middle--flat--md--ribbed.stl")
  * @returns {object|null} Parsed metadata or null if invalid
  */
 export function parseStackablesFilename(filename) {
     // Remove .stl extension and normalize
-    const basename = filename.replace(/\.stl$/i, '').trim();
+    let basename = filename.replace(/\.stl$/i, '').trim();
+    
+    // Strip leading number prefix if present (e.g., "1.", "2.", "3.")
+    // Pattern: digits followed by a dot at the start
+    const prefixMatch = basename.match(/^(\d+)\./);
+    if (prefixMatch) {
+        basename = basename.substring(prefixMatch[0].length);
+    }
+    
     const parts = basename.split('--');
 
     // Should have exactly 4 parts: part, form, size, texture
@@ -62,6 +75,7 @@ export function parseStackablesFilename(filename) {
         dimension,
         texture,
         // Unique key for grouping: part--form--size--texture (normalized)
+        // This groups duplicates regardless of prefix
         key: `${part}--${form}--${size}--${texture}`.toLowerCase(),
     };
 }
