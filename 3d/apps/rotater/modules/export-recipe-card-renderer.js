@@ -51,7 +51,7 @@ export function generateRecipeCardHTML(ingredients, options = {}) {
                         // Color cell with swatch
                         return `<td style="padding: 8px; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 8px;">
                             <div style="width: 20px; height: 20px; background-color: ${ing.colorHex}; border: 1px solid #999; border-radius: 3px;"></div>
-                            <span>${ing.color}</span>
+                            <span style="font-family: monospace; font-size: 12px;">${ing.colorHex.toUpperCase()}</span>
                         </td>`;
                     }
                     return `<td style="padding: 8px; border-bottom: 1px solid #ddd;">${ing[col]}</td>`;
