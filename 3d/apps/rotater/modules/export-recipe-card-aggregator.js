@@ -11,6 +11,7 @@
  * Same filename + same color = qty++
  * @param {object[]} parsedParts - Array of parsed part metadata from parser
  * @param {object[]} colors - Array of color objects with { name, hex } for each part
+ * @param {number[]} partIndices - Array of part indices (for thumbnail generation)
  * @returns {object[]} Array of aggregated ingredients sorted by quantity
  * 
  * Example input:
@@ -24,21 +25,26 @@
  *     { name: 'Custom', hex: '#00FF00' },  // Green
  *     { name: 'Custom', hex: '#FF69B4' },  // Pink
  *   ]
+ *   partIndices: [0, 1, 2]  // For thumbnail generation
  * 
  * Example output (each color is separate):
  *   [
- *     { qty: 1, part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', color: 'Custom', colorHex: '#FFFF00' },
- *     { qty: 1, part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', color: 'Custom', colorHex: '#00FF00' },
- *     { qty: 1, part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', color: 'Custom', colorHex: '#FF69B4' },
+ *     { qty: 1, part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', color: 'Custom', colorHex: '#FFFF00', partIdx: 0 },
+ *     { qty: 1, part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', color: 'Custom', colorHex: '#00FF00', partIdx: 1 },
+ *     { qty: 1, part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', color: 'Custom', colorHex: '#FF69B4', partIdx: 2 },
  *   ]
  */
-export function aggregateRecipeIngredients(parsedParts, colors = []) {
+export function aggregateRecipeIngredients(parsedParts, colors = [], partIndices = []) {
     if (!Array.isArray(parsedParts) || parsedParts.length === 0) {
         return [];
     }
 
     if (!Array.isArray(colors)) {
         colors = [];
+    }
+
+    if (!Array.isArray(partIndices)) {
+        partIndices = [];
     }
 
     // Pad colors array to match parts length (fallback to 'Custom' if not enough colors provided)
@@ -59,6 +65,7 @@ export function aggregateRecipeIngredients(parsedParts, colors = []) {
 
     parsedParts.forEach((part, index) => {
         const color = normalizedColors[index];
+        const partIdx = partIndices[index];
         // Use hex value in key to differentiate by actual color, not just name
         const aggregateKey = `${part.key}--${color.hex}`.toLowerCase();
 
@@ -72,6 +79,7 @@ export function aggregateRecipeIngredients(parsedParts, colors = []) {
                 texture: part.texture,
                 color: color.name,
                 colorHex: color.hex,
+                partIdx: partIdx,
             });
         } else {
             aggregateMap.get(aggregateKey).qty += 1;
