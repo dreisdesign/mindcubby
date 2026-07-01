@@ -168,6 +168,23 @@ import {
 import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
+import {
+    parseStackablesFilenames,
+    isValidStackablesFilename,
+} from './modules/export-recipe-card-parser.js';
+import {
+    aggregateRecipeIngredients,
+    getIngredientLabel,
+} from './modules/export-recipe-card-aggregator.js';
+import {
+    generateRecipeCardHTML,
+    downloadRecipeCardAsPNG,
+} from './modules/export-recipe-card-renderer.js';
+import {
+    runRecipeCardDemo,
+    testParserEdgeCases,
+    testAggregationLogic,
+} from './modules/export-recipe-card-test.js';
 
 // Paste any Rotater URL here to use it as the default settings for first-time visitors
 const DEFAULT_SETTINGS_URL = 'https://dreisdesign.github.io/mindcubby/3d/apps/rotater/?c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=2&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=30&ed=square&et=0&gd=1&jq=90&tto=1&tl=120&tc=100&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1&aba=1&abp=modelcolor&bpr=modelcolor&bpab=1';
@@ -15348,3 +15365,16 @@ initPresetGallery();
 // Set threshold: window.profiler.setLoggingThreshold(16.67)
 window.profiler = profiler;
 window.globalRAFMonitor = globalRAFMonitor;
+
+// ── Expose Recipe Card POC functions to global scope ──────────────────────────
+// Test from console: window.recipeCardPOC.demo()
+window.recipeCardPOC = {
+    demo: runRecipeCardDemo,
+    testParser: testParserEdgeCases,
+    testAggregation: testAggregationLogic,
+    // Helper functions
+    parse: parseStackablesFilenames,
+    isValid: isValidStackablesFilename,
+    aggregate: aggregateRecipeIngredients,
+    render: generateRecipeCardHTML,
+};

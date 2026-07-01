@@ -1,0 +1,163 @@
+/**
+ * Recipe Card Renderer
+ * Renders aggregated ingredients to HTML table
+ * Matches the Macaron reference layout
+ */
+
+/**
+ * Generate HTML for a recipe card table
+ * @param {object[]} ingredients - Array of aggregated ingredients
+ * @param {object} options - Rendering options
+ *   - title: Card title (default: "Recipe Card")
+ *   - subtitle: Optional subtitle
+ *   - includeColumns: Array of column names to include (default: all)
+ * @returns {string} HTML table markup
+ */
+export function generateRecipeCardHTML(ingredients, options = {}) {
+    const {
+        title = 'Recipe Card',
+        subtitle = '',
+        includeColumns = ['qty', 'part', 'size', 'texture', 'form', 'color'],
+    } = options;
+
+    if (!Array.isArray(ingredients) || ingredients.length === 0) {
+        return '<p>No ingredients to display</p>';
+    }
+
+    // Column configuration
+    const columnConfig = {
+        qty: { label: 'Qty', width: '60px' },
+        part: { label: 'Part', width: '100px' },
+        size: { label: 'Size', width: '80px' },
+        texture: { label: 'Texture', width: '100px' },
+        form: { label: 'Form', width: '80px' },
+        color: { label: 'Color', width: '120px' },
+    };
+
+    // Filter to requested columns
+    const visibleColumns = includeColumns.filter(col => col in columnConfig);
+
+    // Build header
+    const headerCells = visibleColumns
+        .map(col => `<th style="text-align: left; padding: 8px; font-weight: 600; border-bottom: 2px solid #333;">${columnConfig[col].label}</th>`)
+        .join('');
+
+    // Build rows
+    const rows = ingredients
+        .map(ing => {
+            const cells = visibleColumns
+                .map(col => {
+                    if (col === 'color') {
+                        // Color cell with swatch
+                        return `<td style="padding: 8px; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 20px; height: 20px; background-color: ${ing.colorHex}; border: 1px solid #999; border-radius: 3px;"></div>
+                            <span>${ing.color}</span>
+                        </td>`;
+                    }
+                    return `<td style="padding: 8px; border-bottom: 1px solid #ddd;">${ing[col]}</td>`;
+                })
+                .join('');
+
+            return `<tr>${cells}</tr>`;
+        })
+        .join('');
+
+    // Build complete table
+    const html = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; padding: 24px; background: #fff;">
+            <h1 style="margin: 0 0 4px 0; font-size: 24px; font-weight: 700;">${escapeHtml(title)}</h1>
+            ${subtitle ? `<p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">${escapeHtml(subtitle)}</p>` : ''}
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+                <thead>
+                    <tr style="background: #f5f5f5;">
+                        ${headerCells}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    return html;
+}
+
+/**
+ * Render HTML to canvas and return as image data
+ * @param {string} html - HTML markup to render
+ * @param {object} options - Canvas options
+ *   - width: Canvas width (default: 1200)
+ *   - height: Canvas height (default: auto, calculated)
+ * @returns {Promise<HTMLCanvasElement>} Canvas element with rendered content
+ */
+export async function renderHTMLToCanvas(html, options = {}) {
+    const { width = 1200 } = options;
+
+    // Create a temporary container
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '-9999px';
+    container.style.width = width + 'px';
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    // Wait for images and fonts to load
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const height = container.offsetHeight;
+
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    // Use html2canvas if available (optional dependency)
+    // For now, return a simplified version using the container
+    // In production, consider using html2canvas or similar library
+
+    // Clean up
+    document.body.removeChild(container);
+
+    return { canvas, width, height };
+}
+
+/**
+ * Download recipe card as PNG
+ * @param {object[]} ingredients - Array of aggregated ingredients
+ * @param {object} options - Download and rendering options
+ *   - filename: Download filename (default: "recipe-card.png")
+ *   - title: Card title
+ *   - subtitle: Optional subtitle
+ */
+export async function downloadRecipeCardAsPNG(ingredients, options = {}) {
+    const { filename = 'recipe-card.png', title, subtitle } = options;
+
+    const html = generateRecipeCardHTML(ingredients, { title, subtitle });
+
+    // For now, create a simple PNG-like export by copying table to clipboard
+    // A full implementation would use html2canvas or similar
+    // This is a placeholder that logs the HTML for testing
+
+    console.log('Recipe Card HTML:', html);
+    console.warn('PNG export requires html2canvas library. For now, copy HTML to clipboard.');
+
+    // Copy HTML to clipboard for testing
+    navigator.clipboard.writeText(html).then(() => {
+        console.log('HTML copied to clipboard');
+    });
+}
+
+/**
+ * Escape HTML special characters
+ * @param {string} text
+ * @returns {string}
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
