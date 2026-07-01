@@ -6,27 +6,30 @@
 
 /**
  * Aggregate parts with colors
- * Groups identical parts by their attributes + color, counting duplicates
+ * Groups identical parts by their attributes + color hex
+ * Same filename + different colors = separate rows
+ * Same filename + same color = qty++
  * @param {object[]} parsedParts - Array of parsed part metadata from parser
  * @param {object[]} colors - Array of color objects with { name, hex } for each part
  * @returns {object[]} Array of aggregated ingredients sorted by quantity
  * 
  * Example input:
  *   parsedParts: [
- *     { part: 'Middle', form: 'Flat', size: 'MD', texture: 'Ribbed', key: '...' },
- *     { part: 'Middle', form: 'Flat', size: 'MD', texture: 'Ribbed', key: '...' },
- *     { part: 'Middle', form: 'Flat', size: 'MD', texture: 'Smooth', key: '...' },
+ *     { part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', key: '...' },
+ *     { part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', key: '...' },
+ *     { part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', key: '...' },
  *   ]
  *   colors: [
- *     { name: 'Pink', hex: '#FFB3D9' },
- *     { name: 'Pink', hex: '#FFB3D9' },
- *     { name: 'Green', hex: '#90EE90' },
+ *     { name: 'Custom', hex: '#FFFF00' },  // Yellow
+ *     { name: 'Custom', hex: '#00FF00' },  // Green
+ *     { name: 'Custom', hex: '#FF69B4' },  // Pink
  *   ]
  * 
- * Example output:
+ * Example output (each color is separate):
  *   [
- *     { qty: 2, part: 'Middle', form: 'Flat', size: 'MD', dimension: '42.8mm', texture: 'Ribbed', color: 'Pink', colorHex: '#FFB3D9' },
- *     { qty: 1, part: 'Middle', form: 'Flat', size: 'MD', dimension: '42.8mm', texture: 'Smooth', color: 'Green', colorHex: '#90EE90' },
+ *     { qty: 1, part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', color: 'Custom', colorHex: '#FFFF00' },
+ *     { qty: 1, part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', color: 'Custom', colorHex: '#00FF00' },
+ *     { qty: 1, part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', color: 'Custom', colorHex: '#FF69B4' },
  *   ]
  */
 export function aggregateRecipeIngredients(parsedParts, colors = []) {
@@ -49,13 +52,15 @@ export function aggregateRecipeIngredients(parsedParts, colors = []) {
         normalizedColors.push({ name: 'Custom', hex: '#808080' });
     }
 
-    // Create aggregation key: part--form--size--texture--color
-    // This groups identical combinations with the same color
+    // Create aggregation key: part--form--size--texture--hex
+    // This groups identical combinations ONLY if they have the SAME COLOR (hex)
+    // Different colors with same part = different rows
     const aggregateMap = new Map();
 
     parsedParts.forEach((part, index) => {
         const color = normalizedColors[index];
-        const aggregateKey = `${part.key}--${color.name}`.toLowerCase();
+        // Use hex value in key to differentiate by actual color, not just name
+        const aggregateKey = `${part.key}--${color.hex}`.toLowerCase();
 
         if (!aggregateMap.has(aggregateKey)) {
             aggregateMap.set(aggregateKey, {

@@ -137,26 +137,38 @@ export function testParserEdgeCases() {
 export function testAggregationLogic() {
     console.log('=== Aggregation Logic Tests ===\n');
 
-    // Test case: Same part, different colors
+    // Test case: Same part, different colors = separate rows
     const parts = [
-        { part: 'Middle', form: 'Flat', size: 'MD', texture: 'Ribbed', dimension: '42.8mm', key: 'middle--flat--md--ribbed' },
-        { part: 'Middle', form: 'Flat', size: 'MD', texture: 'Ribbed', dimension: '42.8mm', key: 'middle--flat--md--ribbed' },
-        { part: 'Middle', form: 'Flat', size: 'MD', texture: 'Ribbed', dimension: '42.8mm', key: 'middle--flat--md--ribbed' },
+        { part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', dimension: '18.0mm', key: 'middle--tube--xs--ribbed' },
+        { part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', dimension: '18.0mm', key: 'middle--tube--xs--ribbed' },
+        { part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', dimension: '18.0mm', key: 'middle--tube--xs--ribbed' },
+        { part: 'Middle', form: 'Tube', size: 'XS', texture: 'Ribbed', dimension: '18.0mm', key: 'middle--tube--xs--ribbed' },
     ];
 
     const colors = [
-        { name: 'Pink', hex: '#FFB3D9' },
-        { name: 'Pink', hex: '#FFB3D9' },
-        { name: 'Yellow', hex: '#FFEB3B' },
+        { name: 'Custom', hex: '#FFFF00' },  // Yellow
+        { name: 'Custom', hex: '#00FF00' },  // Green
+        { name: 'Custom', hex: '#FF69B4' },  // Pink
+        { name: 'Custom', hex: '#FFFF00' },  // Yellow again
     ];
 
     const result = aggregateRecipeIngredients(parts, colors);
 
-    console.log('Test: Same part, same color groups');
-    console.log('Input: 3 parts (2 pink, 1 yellow)');
-    console.log('Expected: 2 ingredient rows (2x pink, 1x yellow)');
+    console.log('Test: Same part, DIFFERENT colors = separate rows');
+    console.log('Input: 4 Middle XS Ribbed Tube (yellow, green, pink, yellow)');
+    console.log('Expected: 3 rows (2x yellow, 1x green, 1x pink - aggregated by hex)');
     console.log('Result:', result);
-    console.log(`Status: ${result.length === 2 ? '✓ PASS' : '✗ FAIL'}\n`);
+    console.log(`Status: ${result.length === 3 ? '✓ PASS' : '✗ FAIL'}\n`);
+
+    // Verify quantities
+    const yellowQty = result.find(r => r.colorHex === '#FFFF00')?.qty;
+    const greenQty = result.find(r => r.colorHex === '#00FF00')?.qty;
+    const pinkQty = result.find(r => r.colorHex === '#FF69B4')?.qty;
+
+    console.log('Quantity verification:');
+    console.log(`  Yellow qty: ${yellowQty} (expected 2) - ${yellowQty === 2 ? '✓' : '✗'}`);
+    console.log(`  Green qty: ${greenQty} (expected 1) - ${greenQty === 1 ? '✓' : '✗'}`);
+    console.log(`  Pink qty: ${pinkQty} (expected 1) - ${pinkQty === 1 ? '✓' : '✗'}\n`);
 }
 
 // Auto-run when module is imported with test flag
