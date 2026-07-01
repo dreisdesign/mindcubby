@@ -13095,7 +13095,9 @@ window.addEventListener('pointermove', (e) => {
 
 canvas?.addEventListener('click', (e) => {
     // Close crop mode if clicking outside the crop frame area
-    if (exportFrameEnabled && !isPointInsideExportCropFrame(e.clientX, e.clientY)) {
+    // BUT: Don't close if recipe card is open (may have been dragged to trigger this)
+    const recipeCard = document.getElementById('recipe-card-preview');
+    if (exportFrameEnabled && !isPointInsideExportCropFrame(e.clientX, e.clientY) && !recipeCard) {
         if (exportWorkspaceActive) closeCropAndExportWorkspace();
         else cancelCropMode();
         return;
