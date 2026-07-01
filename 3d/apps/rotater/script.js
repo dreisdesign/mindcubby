@@ -15376,6 +15376,52 @@ initPresetGallery();
 window.profiler = profiler;
 window.globalRAFMonitor = globalRAFMonitor;
 
+// ── Recipe Card: Make draggable helper ────────────────────────────────────────
+function makeRecipeCardDraggable(container) {
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    const onMouseDown = (e) => {
+        // Only drag from the header area or if clicking on the drag handle
+        const header = e.target.closest('[data-recipe-card-header]');
+        if (!header) return;
+        
+        // Don't drag if clicking buttons or interactive elements
+        if (e.target.closest('button, input, [onclick]')) return;
+        
+        isDragging = true;
+        const rect = container.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        container.style.cursor = 'grabbing';
+        container.style.userSelect = 'none';
+    };
+
+    const onMouseMove = (e) => {
+        if (!isDragging) return;
+        
+        const newLeft = e.clientX - offsetX;
+        const newTop = e.clientY - offsetY;
+        
+        container.style.left = newLeft + 'px';
+        container.style.top = newTop + 'px';
+        container.style.transform = 'none';  // Remove center transform when dragging
+    };
+
+    const onMouseUp = () => {
+        if (isDragging) {
+            isDragging = false;
+            container.style.cursor = 'default';
+            container.style.userSelect = 'auto';
+        }
+    };
+
+    container.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+}
+
 // ── Recipe Card: Extract current app state and generate card ──────────────────
 function generateRecipeCardFromCurrentState() {
     console.log('=== Generating Recipe Card from Current State ===\n');
@@ -15454,6 +15500,9 @@ function generateRecipeCardFromCurrentState() {
             max-width: 900px;
         `;
         document.body.appendChild(container);
+        
+        // Make draggable
+        makeRecipeCardDraggable(container);
     }
 
     container.innerHTML = html + `

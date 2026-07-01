@@ -67,7 +67,7 @@ export function generateRecipeCardHTML(ingredients, options = {}) {
     // Build complete table
     const html = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; padding: 24px; background: #fff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08);">
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; cursor: grab; user-select: none; margin: -24px -24px 20px -24px; padding: 24px;" data-recipe-card-header>
                 <h1 style="margin: 0 0 4px 0; font-size: 22px; font-weight: 700; color: #1a1a1a;">${escapeHtml(title)}</h1>
                 ${subtitle ? `<p style="margin: 0; color: #666; font-size: 13px;">${escapeHtml(subtitle)}</p>` : ''}
             </div>
