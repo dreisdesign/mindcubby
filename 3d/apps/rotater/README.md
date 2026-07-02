@@ -85,6 +85,10 @@ Current extracted modules:
 | [modules/export-mp4-scene-prep.js](modules/export-mp4-scene-prep.js) | MP4 scene prep controller for output canvas/context and scene restore wiring | Active |
 | [modules/export-mp4-runtime.js](modules/export-mp4-runtime.js) | MP4 runtime orchestration controller for guard/preflight/error/finalize flow | Active |
 | [modules/right-pan-lock.js](modules/right-pan-lock.js) | Right-pan vertical-lock and shift-pan interaction controller | Active |
+| [modules/export-recipe-card-parser.js](modules/export-recipe-card-parser.js) | Filename parser for Stackables recipe ingredient extraction | Active |
+| [modules/export-recipe-card-aggregator.js](modules/export-recipe-card-aggregator.js) | Logic to group and aggregate parts by spec and color | Active |
+| [modules/export-recipe-card-renderer.js](modules/export-recipe-card-renderer.js) | HTML/CSS generator for the draggable recipe visualizer | Active |
+| [modules/export-recipe-card-thumbnails.js](modules/export-recipe-card-thumbnails.js) | Async 3D thumbnail generator for recipe card ingredients | Active |
 
 ---
 

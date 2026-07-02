@@ -15570,15 +15570,19 @@ function generateRecipeCardFromCurrentState() {
     
     // IMPORTANT: Generate thumbnails AFTER displaying the card
     // This ensures the UI is responsive and doesn't freeze during thumbnail rendering
-    requestAnimationFrame(() => {
+    // We use async/await within the RAF to process incrementally without blocking
+    requestAnimationFrame(async () => {
         console.log('Generating thumbnails asynchronously...');
         
         try {
-            const thumbnails = generateRecipeCardThumbnails(aggregated, {
+            const thumbnails = await generateRecipeCardThumbnails(aggregated, {
                 size: 68,  // Match picker size
                 quality: 'low-res',  // Fast rendering (0.3 DPR)
+                batchSize: 1, // Render 1 per frame to be safe
                 onProgress: (current, total) => {
-                    console.log(`  Thumbnails: ${current}/${total} rendered`);
+                    if (current % 5 === 0 || current === total) {
+                        console.log(`  Thumbnails: ${current}/${total} rendered`);
+                    }
                 }
             });
             

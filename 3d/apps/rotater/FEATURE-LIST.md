@@ -91,6 +91,9 @@ Rotater enables users to load STL models in-browser, style them, animate them, a
 - Quality presets and still-image aspect presets
 - Export quick options: Background, Grid, Build Plate
 - Live export preview and framing parity with viewer workspace
+- **Recipe Card Visualizer (POC)**: Generates a draggable, visual list of 3D parts with quantities, specs (Size, Texture, Form), and colors. 
+- **Automated Aggregation**: Automatically groups identical parts by filename and color to provide a clean assembly list.
+- **Asynchronous 3D Thumbnails**: Includes low-resolution 3D previews of each part type, rendered in the background to avoid UI blocking.
 - Copy Link with scene-state URL encoding
 - Save Project ZIP with package metadata + STL source files
 - Import Package via upload flow for rapid restore/testing

@@ -59,17 +59,19 @@ export function generatePartThumbnailDataUrl(partIdx, size = 68, quality = 'low-
  * Generate thumbnail data URLs for all ingredients in a recipe
  * Groups by unique part (same part with different colors uses same thumbnail)
  * 
- * PERFORMANCE: Use low-res by default. Call this AFTER recipe card is displayed.
+ * PERFORMANCE: Use low-res by default. Process asynchronously in chunks 
+ * to avoid blocking the main thread (prevents [Violation] warnings).
  * 
  * @param {object[]} ingredients - Array of aggregated ingredients from aggregator
  * @param {object} options - Configuration options
  *   - size: thumbnail canvas size (default: 68 to match picker)
  *   - quality: 'low-res' or 'high-res' (default: 'low-res' for perf)
  *   - onProgress: callback(current, total) for tracking generation progress
- * @returns {Map} Map of {key -> dataUrl} for each unique ingredient
+ *   - batchSize: How many thumbnails to render per frame (default: 1)
+ * @returns {Promise<Map>} Map of {key -> dataUrl} for each unique ingredient
  */
-export function generateRecipeCardThumbnails(ingredients, options = {}) {
-    const { size = 68, quality = 'low-res', onProgress = null } = options;
+export async function generateRecipeCardThumbnails(ingredients, options = {}) {
+    const { size = 68, quality = 'low-res', onProgress = null, batchSize = 1 } = options;
     
     const thumbnails = new Map();
     
@@ -77,23 +79,31 @@ export function generateRecipeCardThumbnails(ingredients, options = {}) {
     const uniqueParts = new Set(ingredients.map(ing => ing.key));
     const partList = Array.from(uniqueParts);
     
-    // Generate thumbnail for each unique part
-    partList.forEach((partKey, idx) => {
-        // Find the original part data to get index
+    // Helper to render a single part and return its data
+    const renderPart = (partKey) => {
         const ingredient = ingredients.find(ing => ing.key === partKey);
-        
         if (ingredient && typeof ingredient.partIdx !== 'undefined') {
             const dataUrl = generatePartThumbnailDataUrl(ingredient.partIdx, size, quality);
             if (dataUrl) {
                 thumbnails.set(partKey, dataUrl);
             }
         }
+    };
+
+    // Process in batches
+    for (let i = 0; i < partList.length; i++) {
+        renderPart(partList[i]);
         
         // Report progress
         if (onProgress) {
-            onProgress(idx + 1, partList.length);
+            onProgress(i + 1, partList.length);
         }
-    });
+
+        // Yield to main thread after each batch (or every item if batchSize is 1)
+        if ((i + 1) % batchSize === 0 && i < partList.length - 1) {
+            await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+    }
     
     return thumbnails;
 }
