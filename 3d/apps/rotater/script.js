@@ -13094,6 +13094,9 @@ window.addEventListener('pointermove', (e) => {
 }, true);
 
 canvas?.addEventListener('click', (e) => {
+    // Don't process click if we just finished dragging the recipe card
+    if (recipeCardDragInProgress) return;
+    
     // Close crop mode if clicking outside the crop frame area
     // BUT: Don't close if recipe card is open (may have been dragged to trigger this)
     const recipeCard = document.getElementById('recipe-card-preview');
@@ -15379,6 +15382,8 @@ window.profiler = profiler;
 window.globalRAFMonitor = globalRAFMonitor;
 
 // ── Recipe Card: Make draggable helper ────────────────────────────────────────
+let recipeCardDragInProgress = false;
+
 function makeRecipeCardDraggable(container) {
     let isDragging = false;
     let offsetX = 0;
@@ -15396,6 +15401,7 @@ function makeRecipeCardDraggable(container) {
         e.preventDefault();   // Prevent default behavior
         
         isDragging = true;
+        recipeCardDragInProgress = true;  // SET FLAG to prevent canvas click from closing export
         const rect = container.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
@@ -15425,6 +15431,7 @@ function makeRecipeCardDraggable(container) {
     const onMouseUp = () => {
         if (isDragging) {
             isDragging = false;
+            recipeCardDragInProgress = false;  // CLEAR FLAG
             container.style.cursor = 'default';
             container.style.userSelect = 'auto';
             
@@ -15532,6 +15539,11 @@ function generateRecipeCardFromCurrentState() {
             </button>
         </div>
     `;
+    
+    // Ensure card is centered (reset any previous drag positioning)
+    container.style.transform = 'translate(-50%, -50%)';
+    container.style.left = '50%';
+    container.style.top = '50%';
 
     console.log('✓ Recipe card displayed immediately (without thumbnails for performance)\n');
     
