@@ -64,15 +64,15 @@ export function generateRecipeCardHTML(ingredients, options = {}) {
         })
         .join('');
 
-    // Build complete table
+    // Build complete table content
     const html = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; padding: 24px; background: #fff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08);">
-            <div style="margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; cursor: grab; user-select: none; margin: -24px -24px 20px -24px; padding: 24px;" data-recipe-card-header>
-                <h1 style="margin: 0 0 4px 0; font-size: 22px; font-weight: 700; color: #1a1a1a;">${escapeHtml(title)}</h1>
-                ${subtitle ? `<p style="margin: 0; color: #666; font-size: 13px;">${escapeHtml(subtitle)}</p>` : ''}
-            </div>
-            
-            <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+        <div style="margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; cursor: grab; user-select: none; margin: 0; padding: 24px 24px 12px 24px;" data-recipe-card-header>
+            <h1 style="margin: 0 0 4px 0; font-size: 22px; font-weight: 700; color: #1a1a1a;">${escapeHtml(title)}</h1>
+            ${subtitle ? `<p style="margin: 0; color: #666; font-size: 13px;">${escapeHtml(subtitle)}</p>` : ''}
+        </div>
+        
+        <div style="padding: 0 24px 24px 24px;">
+            <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background: #f9f9f9;">
                         ${headerCells}

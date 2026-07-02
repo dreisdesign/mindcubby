@@ -13123,6 +13123,19 @@ canvas?.addEventListener('click', (e) => {
 });
 
 document.addEventListener('pointerdown', (e) => {
+    // DO NOT close crop/export if dragging or clicking the recipe card
+    if (recipeCardDragInProgress) return;
+    
+    // If the recipe card is open, we want to allow interacting with the app 
+    // without clicking outside the crop frame closing the export workspace.
+    const recipeCard = document.getElementById('recipe-card-preview');
+    if (recipeCard && (e.target?.closest?.('#recipe-card-preview') || e.target?.closest?.('.export-modal-panel'))) {
+        return;
+    }
+    
+    // If recipe card is open, clicking elsewhere (like the canvas) shouldn't close the export either
+    if (recipeCard) return;
+
     if (!exportFrameEnabled || !exportCropFrameRect) return;
     if (!(e.target instanceof Node)) return;
     if (footerCropControlsEl?.contains(e.target)) return;
@@ -15522,8 +15535,15 @@ function generateRecipeCardFromCurrentState() {
             z-index: 99999;
             box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            width: 90vw;
-            max-width: 900px;
+            width: fit-content;
+            width: -webkit-fit-content;
+            width: -moz-fit-content;
+            min-width: 600px;
+            max-width: 95vw;
+            box-sizing: border-box;
+            border: 1px solid rgba(0,0,0,0.05);
+            margin: 0;
+            display: block;
         `;
         document.body.appendChild(container);
         
@@ -15532,9 +15552,9 @@ function generateRecipeCardFromCurrentState() {
     }
 
     container.innerHTML = html + `
-        <div style="padding: 0 24px 24px 24px; text-align: center; border-top: 1px solid #f0f0f0; margin-top: 16px; padding-top: 16px;">
+        <div style="padding: 0 24px 24px 24px; text-align: center; border-top: 1px solid #f0f0f0; margin-top: 16px; padding-top: 24px; background: #fff; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
             <button onclick="document.getElementById('recipe-card-preview').remove()" 
-                    style="padding: 10px 20px; background: #f0f0f0; color: #333; border: none; border-radius: 10px; cursor: pointer; font-weight: 500; font-size: 13px; transition: background 0.2s;">
+                    style="padding: 12px 32px; background: #f0f0f0; color: #333; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; transition: background 0.2s;">
                 Close
             </button>
         </div>
@@ -15544,6 +15564,7 @@ function generateRecipeCardFromCurrentState() {
     container.style.transform = 'translate(-50%, -50%)';
     container.style.left = '50%';
     container.style.top = '50%';
+    container.style.display = 'block'; // Ensure it's visible
 
     console.log('✓ Recipe card displayed immediately (without thumbnails for performance)\n');
     
