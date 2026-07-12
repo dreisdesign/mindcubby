@@ -537,44 +537,44 @@ async function parseStlItemsWithWorker(items, mode = 'single') {
     };
 
     return await new Promise((resolve, reject) => {
-            const cleanup = () => {
-                clearTimeout(timeoutId);
-                worker.removeEventListener('message', onMessage);
-                worker.removeEventListener('error', onError);
-                worker.terminate();
-            };
+        const cleanup = () => {
+            clearTimeout(timeoutId);
+            worker.removeEventListener('message', onMessage);
+            worker.removeEventListener('error', onError);
+            worker.terminate();
+        };
 
-            const onMessage = (event) => {
-                const data = event.data || {};
-                if (data.id !== requestId) return;
-                cleanup();
-                if (!data.ok) {
-                    reject(new Error(data.error || 'STL worker failed.'));
-                    return;
-                }
-                resolve(data.payload || null);
-            };
-
-            const onError = () => {
-                cleanup();
-                resolve(null);
-            };
-
-            const timeoutId = setTimeout(() => {
-                cleanup();
-                reject(new Error('STL parsing timed out.'));
-            }, timeoutMs);
-
-            worker.addEventListener('message', onMessage);
-            worker.addEventListener('error', onError);
-            try {
-                worker.postMessage({ id: requestId, mode, items, limits });
-            } catch (error) {
-                cleanup();
-                if (DEV_LOG) console.warn('[rotater] STL worker postMessage failed, falling back to main thread.', error);
-                resolve(null);
+        const onMessage = (event) => {
+            const data = event.data || {};
+            if (data.id !== requestId) return;
+            cleanup();
+            if (!data.ok) {
+                reject(new Error(data.error || 'STL worker failed.'));
+                return;
             }
-        });
+            resolve(data.payload || null);
+        };
+
+        const onError = () => {
+            cleanup();
+            resolve(null);
+        };
+
+        const timeoutId = setTimeout(() => {
+            cleanup();
+            reject(new Error('STL parsing timed out.'));
+        }, timeoutMs);
+
+        worker.addEventListener('message', onMessage);
+        worker.addEventListener('error', onError);
+        try {
+            worker.postMessage({ id: requestId, mode, items, limits });
+        } catch (error) {
+            cleanup();
+            if (DEV_LOG) console.warn('[rotater] STL worker postMessage failed, falling back to main thread.', error);
+            resolve(null);
+        }
+    });
 }
 
 async function parseSingleStlGeometry(buffer, name) {
@@ -689,7 +689,7 @@ const EXPORT = {
     get image() {
         const { width, height, presetId, presetTag } = getImageExportSize();
         return {
-                quality: parseInt(document.getElementById('jpegQuality')?.value ?? 90, 10) / 100,
+            quality: parseInt(document.getElementById('jpegQuality')?.value ?? 90, 10) / 100,
             width,
             height,
             presetId,
@@ -1007,6 +1007,7 @@ const rulerSelectToggleEl = document.getElementById('rulerSelectToggle');
 const showDpadToggleEl = document.getElementById('showDpadToggle');
 const hideUiWhenFullscreenToggleEl = document.getElementById('hideUiWhenFullscreenToggle');
 const reverseDpadHorizontalToggleEl = document.getElementById('reverseDpadHorizontalToggle');
+const reverseDpadVerticalToggleEl = document.getElementById('reverseDpadVerticalToggle');
 const devModeToggleEl = document.getElementById('devModeToggle');
 const resetWarningsToggleEl = document.getElementById('resetWarningsToggle');
 const btnResetEverythingEl = document.getElementById('btnResetEverything');
@@ -1026,6 +1027,7 @@ const buildPlateCustomDepthEl = document.getElementById('buildPlateCustomDepth')
 const showDpadToggleModalEl = document.getElementById('showDpadToggle-modal');
 const hideUiWhenFullscreenToggleModalEl = document.getElementById('hideUiWhenFullscreenToggle-modal');
 const reverseDpadHorizontalToggleModalEl = document.getElementById('reverseDpadHorizontalToggle-modal');
+const reverseDpadVerticalToggleModalEl = document.getElementById('reverseDpadVerticalToggle-modal');
 const buildPlateSizePresetModalEl = document.getElementById('buildPlateSizePreset-modal');
 const buildPlateCustomSizeRowModalEl = document.getElementById('buildPlateCustomSizeRow-modal');
 const buildPlateCustomWidthModalEl = document.getElementById('buildPlateCustomWidth-modal');
@@ -1181,7 +1183,7 @@ class FrameProfiler {
     recordSegment(label, duration) {
         if (!this.enabled) return;
         this.frameSegments.push({ label, duration });
-        
+
         // Track segment averages
         if (!this.segmentStats[label]) {
             this.segmentStats[label] = { total: 0, count: 0 };
@@ -1213,7 +1215,7 @@ class FrameProfiler {
             console.log(
                 `[Profiler Report] ${this.frameCount} frames | ${this.slowFrameCount} slow (${slowRate}%) | threshold ${this.loggingThreshold.toFixed(2)}ms`
             );
-            
+
             // Show segment averages
             console.log('[Profiler Segments - Average ms per frame]');
             const sorted = Object.entries(this.segmentStats)
@@ -1225,7 +1227,7 @@ class FrameProfiler {
             sorted.forEach(({ label, avg }) => {
                 console.log(`  ${label}: ${avg.toFixed(2)}ms`);
             });
-            
+
             this.frameCount = 0;
             this.slowFrameCount = 0;
             this.lastReport = now;
@@ -1265,9 +1267,9 @@ class GlobalRAFMonitor {
 
     enable() {
         if (this.wrappedRAF) return; // Already wrapped
-        
+
         const self = this;
-        this.wrappedRAF = function(callback) {
+        this.wrappedRAF = function (callback) {
             return self.originalRAF((timestamp) => {
                 const start = performance.now();
                 try {
@@ -1282,7 +1284,7 @@ class GlobalRAFMonitor {
                 }
             });
         };
-        
+
         window.requestAnimationFrame = this.wrappedRAF;
         this.enabled = true;
         console.log('[GlobalRAF Monitor] ENABLED — all RAF handlers tracked');
@@ -1848,6 +1850,7 @@ let buildPlateDepth = BUILD_PLATE_DEFAULTS.depth;
 let dpadVisible = true;
 let hideUiWhenFullscreenEnabled = true;
 let dpadHorizontalReversed = true;
+let dpadVerticalReversed = false;
 let exportMotionControlsEnabled = true;
 let _syncingExportMotionControls = false;
 let autoUIAssistEnabled = true;
@@ -2631,18 +2634,18 @@ function updateShadowCatcherPlacement() {
         footprint * 2.2,
         footprint * 0.9 + shadowReach + modelRadius * 0.95
     );
-    
+
     // If build plate is visible, clamp shadow catcher to plate dimensions
     if (buildPlateEnabled && buildPlateMesh?.visible) {
         const plateW = clampBuildPlateSize(buildPlateWidth, 220);
         const plateD = clampBuildPlateSize(buildPlateDepth, 220);
         const shape = normalizeBuildPlateShape(buildPlateShape);
-        const plateDim = shape === 'circle' 
+        const plateDim = shape === 'circle'
             ? Math.min(plateW, plateD) * 0.5  // Radius for circle
             : Math.max(plateW, plateD) * 0.5;  // Half-diagonal for square
         catcherHalfSpan = Math.min(catcherHalfSpan, plateDim);
     }
-    
+
     const catcherSize = Math.max(1, catcherHalfSpan * 2);
     shadowCatcher.scale.set(catcherSize, catcherSize, 1);
 
@@ -2776,12 +2779,12 @@ function getMaterial(shading, baseColor, partSettings) {
     const baseC = computeModelDisplayColor(baseColor, toneVal, ps);
 
     // Per-part roughness/metalness when available; fall back to global textureTuneState.
-    const matteRoughness  = ps != null && ps.matteRoughness  != null ? ps.matteRoughness  : textureTuneState.matteRoughness;
+    const matteRoughness = ps != null && ps.matteRoughness != null ? ps.matteRoughness : textureTuneState.matteRoughness;
     const matteReflection = ps != null && ps.matteReflection != null ? ps.matteReflection : textureTuneState.matteReflection;
-    const phongRoughness  = ps != null && ps.phongRoughness  != null ? ps.phongRoughness  : (textureTuneState.phongRoughness || 10);
+    const phongRoughness = ps != null && ps.phongRoughness != null ? ps.phongRoughness : (textureTuneState.phongRoughness || 10);
     const phongReflection = ps != null && ps.phongReflection != null ? ps.phongReflection : (textureTuneState.phongReflection || 80);
-    const metallicRoughness  = ps != null && ps.metallicRoughness  != null ? ps.metallicRoughness  : (textureTuneState.metallicRoughness || 30);
-    const metallicMetalness  = ps != null && ps.metallicMetalness  != null ? ps.metallicMetalness  : (textureTuneState.metallicMetalness || 65);
+    const metallicRoughness = ps != null && ps.metallicRoughness != null ? ps.metallicRoughness : (textureTuneState.metallicRoughness || 30);
+    const metallicMetalness = ps != null && ps.metallicMetalness != null ? ps.metallicMetalness : (textureTuneState.metallicMetalness || 65);
     const metallicReflection = ps != null && ps.metallicReflection != null ? ps.metallicReflection : (textureTuneState.metallicReflection || 100);
 
     const materialFamily = normalizeMaterialFamily(ps?.materialFamily, getMaterialFamilyFromShading(shading));
@@ -3113,7 +3116,7 @@ let cancelBuildPlateShadeRevealAnimation = null;
 function animateShadeSliderValue(slider, fromValue, toValue, onStep, onDone, durationMs = 260) {
     if (!slider) {
         if (typeof onDone === 'function') onDone();
-        return () => {};
+        return () => { };
     }
 
     const from = Math.max(-100, Math.min(100, Number(fromValue) || 0));
@@ -3130,7 +3133,7 @@ function animateShadeSliderValue(slider, fromValue, toValue, onStep, onDone, dur
         slider.value = String(to);
         if (typeof onStep === 'function') onStep(to);
         finish();
-        return () => {};
+        return () => { };
     }
 
     const start = performance.now();
@@ -3820,9 +3823,9 @@ let THUMB_DEBUG_LOGGING = false;
 
 function queueModelPartThumbsRender(partIndices = null) {
     if (!modelPartSelectorBtn && !bgModelSyncSelectorBtn && !buildPlateModelSyncSelectorBtn) return;
-    
+
     if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Queue requested:', partIndices, 'inProgress:', modelPartThumbRenderInProgress, 'queued:', modelPartThumbsQueued);
-    
+
     // Clear any pending debounce timer
     if (thumbRenderDebounceTimer) {
         clearTimeout(thumbRenderDebounceTimer);
@@ -3906,7 +3909,7 @@ function renderModelPartThumbnailsIncremental() {
         modelPartThumbRenderInProgress = false;
         // Final viewport render after all thumbs done
         if (scene && camera && !isExporting) renderer.render(scene, camera);
-        
+
         // Schedule high-res (actual 3D) upgrade after delay (if anything is still visible)
         if (thumbsNeedingHighRes.size > 0 && !modelPartThumbsWrap?.hidden) {
             if (thumbHighResUpgradeTimer) clearTimeout(thumbHighResUpgradeTimer);
@@ -3915,7 +3918,7 @@ function renderModelPartThumbnailsIncremental() {
                 upgradeThumbsToHighRes();
             }, THUMB_HIGH_RES_DELAY_MS);
         }
-        
+
         // If changes came in while rendering, re-queue to render them
         if (thumbRenderDirtyAfterComplete) {
             thumbRenderDirtyAfterComplete = false;
@@ -3927,13 +3930,13 @@ function renderModelPartThumbnailsIncremental() {
 function buildPartThumbRenderQueue() {
     const queue = [];
     if (!modelPartThumbsWrap) return queue;
-    
+
     const visible = hasModelParts() && !!mesh && !!renderer && !!camera;
     if (!visible) return queue;
 
     const dirty = dirtyPartThumbs; // null = all dirty
     dirtyPartThumbs = new Set(); // reset
-    
+
     document.querySelectorAll('.js-part-thumb-preview').forEach((canvasEl) => {
         if (!shouldRenderThumbCanvas(canvasEl)) return;
         const idx = parseInt(canvasEl.dataset.partIndex, 10);
@@ -3950,7 +3953,7 @@ function renderModelPartThumbnailsFramework() {
     const visible = hasModelParts() && !!mesh && !!renderer && !!camera;
     modelPartThumbsWrap.hidden = !visible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!visible));
-    
+
     // Cancel high-res upgrade if selector becomes hidden
     if (!visible) {
         if (thumbHighResUpgradeTimer) {
@@ -4120,7 +4123,7 @@ function paintThumbFallback(canvasEl, partIdx) {
 
 function renderThumbnailSkeleton(canvasEl, partIdx) {
     if (!canvasEl) return;
-    
+
     const partIdx_int = parseInt(partIdx, 10);
     if (!Number.isInteger(partIdx_int) || partIdx_int < 0 || partIdx_int >= modelPartNames.length) {
         return;
@@ -4130,7 +4133,7 @@ function renderThumbnailSkeleton(canvasEl, partIdx) {
     const rect = canvasEl.getBoundingClientRect();
     const cssW = Math.max(1, Math.round(rect.width || canvasEl.clientWidth || canvasEl.width || 120));
     const cssH = Math.max(1, Math.round(rect.height || canvasEl.clientHeight || canvasEl.height || 120));
-    
+
     if (canvasEl.width !== cssW || canvasEl.height !== cssH) {
         canvasEl.width = cssW;
         canvasEl.height = cssH;
@@ -4142,14 +4145,14 @@ function renderThumbnailSkeleton(canvasEl, partIdx) {
     // Get the material color for this part
     const partSettings = getPartSettings(partIdx_int);
     const materialColor = partSettings.color || modelPartBaseColors[partIdx_int] || '#888888';
-    
+
     // Parse color (hex string to RGB)
     const hexColor = materialColor.startsWith('#') ? materialColor : '#888888';
     const rgb = parseInt(hexColor.slice(1), 16);
     const r = (rgb >> 16) & 255;
     const g = (rgb >> 8) & 255;
     const b = rgb & 255;
-    
+
     // Create gradient with lighter and darker versions of the material color
     const darkColor = `rgb(${Math.max(0, r - 40)}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)})`;
     const lightColor = `rgb(${Math.min(255, r + 60)}, ${Math.min(255, g + 60)}, ${Math.min(255, b + 60)})`;
@@ -4208,23 +4211,23 @@ function upgradeThumbsToHighRes() {
     // Re-render the low-res thumbnails at high-res quality
     const toUpgrade = Array.from(thumbsNeedingHighRes);
     thumbsNeedingHighRes.clear();
-    
+
     if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Upgrade to high-res started, parts:', toUpgrade.length);
 
     function upgradeNextBatch() {
         if (toUpgrade.length === 0) return;
-        
+
         const idx = toUpgrade.shift();
         // Upgrade ALL canvases showing this part (e.g. selector + sync previews)
         const canvases = document.querySelectorAll(`.js-part-thumb-preview[data-part-index="${idx}"]`);
-        
+
         canvases.forEach(canvasEl => {
             // Only upgrade if actually visible in DOM/layout
             if (canvasEl.offsetParent !== null) {
                 renderSinglePartThumbnail(canvasEl, idx, 'high-res');
             }
         });
-        
+
         if (toUpgrade.length > 0) {
             requestAnimationFrame(upgradeNextBatch);
         }
@@ -4258,11 +4261,11 @@ function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
     // This reduces GPU readback time significantly (4x smaller buffer than 2.0x)
     const baseDpr = Math.max(1, Math.min(1.2, window.devicePixelRatio || 1));
     const dpr = baseDpr * qualityMultiplier;
-    
+
     if (quality === 'low-res') {
         thumbsNeedingHighRes.add(resolvedPartIdx);
         if (!thumbHighResUpgradeTimer) {
-             thumbHighResUpgradeTimer = setTimeout(() => {
+            thumbHighResUpgradeTimer = setTimeout(() => {
                 thumbHighResUpgradeTimer = null;
                 upgradeThumbsToHighRes();
             }, THUMB_HIGH_RES_DELAY_MS);
@@ -4366,17 +4369,17 @@ function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
     renderer.setClearColor(0x000000, 0);
     renderer.setRenderTarget(partThumbRenderTarget);
     renderer.clear(true, true, true);
-    
+
     const renderStart = performance.now();
     renderer.render(scene, partThumbCamera);
     const renderTime = performance.now() - renderStart;
     if (THUMB_DEBUG_LOGGING) console.log('[THUMB] WebGL render took', renderTime.toFixed(1), 'ms');
-    
+
     const readStart = performance.now();
     renderer.readRenderTargetPixels(partThumbRenderTarget, 0, 0, rtW, rtH, pixelBuf);
     const readTime = performance.now() - readStart;
     if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Pixel readback took', readTime.toFixed(1), 'ms');
-    
+
     renderer.setRenderTarget(savedTarget);
 
     ctx.clearRect(0, 0, dstW, dstH);
@@ -4446,7 +4449,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
         ctx.fillStyle = fillHex;
         ctx.fillRect(0, 0, dstW, dstH);
     }
-    
+
     const canvasTime = performance.now() - canvasStart;
     if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Canvas drawing took', canvasTime.toFixed(1), 'ms');
 
@@ -4635,7 +4638,7 @@ function closeModelPartSelectorMenu(force = false) {
             modelPartSelectorClosedByUser = !!value;
             try {
                 localStorage.setItem('rotater_modelPartSelectorClosedByUser', modelPartSelectorClosedByUser ? 'true' : 'false');
-            } catch (_) {}
+            } catch (_) { }
         },
         setModelPartMenuDragState: (value) => { _modelPartMenuDragState = value; },
         applyPartInteractionVisualsToMeshMaterials,
@@ -4917,7 +4920,7 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
     modelPartSelectorClosedByUser = false;
     try {
         localStorage.setItem('rotater_modelPartSelectorClosedByUser', 'false');
-    } catch (_) {}
+    } catch (_) { }
     closeThumbSelectMenus();
     if (modelPartSelectorMenu && !open) {
         modelPartSelectorMenu.hidden = false;
@@ -4954,21 +4957,21 @@ modelPartAddNextBtn?.addEventListener('click', () => {
 function syncBgToCurrentlyActivePart() {
     const selected = getUiSelectedPartIndices();
     if (selected.length !== 1 || !hasModelParts()) return false;
-    
+
     const nextIdx = Math.max(0, Math.min(selected[0], modelPartNames.length - 1));
     if (!maybeConfirmBgSyncChange(nextIdx)) return false;
-    
+
     activeBgPreset = 'modelcolor';
     bgSyncFollowSelected = false;
     const prevIdx = bgSyncPartIndex;
     bgSyncPartIndex = nextIdx;
-    
+
     const syncColor = getModelSyncSourceColor();
     bgPick.value = syncColor;
     updateAutoBgShadeControlVisibility();
     if (isDynamicBg) updateDynamicBg();
     else applyBackgroundFromBaseColor(syncColor);
-    
+
     syncModelSyncPreviewThumbTargets();
     queueModelPartThumbsRender([prevIdx, nextIdx]);
     renderBgPresets();
@@ -4994,7 +4997,7 @@ bgModelSyncSelectorThumb?.addEventListener('click', (ev) => {
 function syncBuildPlateToCurrentlyActivePart() {
     const selected = getUiSelectedPartIndices();
     if (selected.length !== 1 || !hasModelParts()) return false;
-    
+
     const nextIdx = Math.max(0, Math.min(selected[0], modelPartNames.length - 1));
     buildPlateSyncPartIndex = nextIdx;
     activeBuildPlatePreset = 'modelcolor';
@@ -5486,7 +5489,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     const isVisible = hasModelParts();
     modelPartThumbsWrap.hidden = !isVisible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!isVisible));
-    
+
     // Cancel high-res upgrade if selector becomes hidden
     if (!isVisible) {
         if (thumbHighResUpgradeTimer) {
@@ -5953,7 +5956,7 @@ function syncModelSyncPreviewThumbTargets() {
         }
         canvasEl.classList.add('js-part-thumb-preview');
         canvasEl.dataset.partIndex = String(partIdx);
-        
+
         // Use low-res 3D instead of skeleton for instant model-accurate feedback
         if (shouldRenderThumbCanvas(canvasEl)) {
             renderSinglePartThumbnail(canvasEl, partIdx, 'low-res');
@@ -6364,7 +6367,7 @@ function loop() {
     const _frameStart = performance.now();
     const deltaSec = Math.min(Math.max(renderDeltaClock.getDelta(), 0), 0.1);
     const phaseStep = (2 * Math.PI / Math.max(1e-6, getSecondsPerRevolution())) * deltaSec;
-    
+
     if (!isExporting) {
         profiler.markStart('perf-quality');
         const viewportQualityChanged = updateViewportPerformanceStateModule(viewportPerformanceState, deltaSec, {
@@ -8263,6 +8266,7 @@ function saveSettings() {
             showDpad: dpadVisible ? '1' : '0',
             hideUiWhenFullscreen: hideUiWhenFullscreenEnabled ? '1' : '0',
             dpadHorizontalReverse: dpadHorizontalReversed ? '1' : '0',
+            dpadVerticalReverse: dpadVerticalReversed ? '1' : '0',
             uploadChoicePrompt: uploadChoicePromptEnabled ? '1' : '0',
             uploadDefaultAction: uploadDefaultAction,
             devMode: devModeEnabled ? '1' : '0',
@@ -8638,6 +8642,9 @@ function restoreSettings() {
         if (s.dpadHorizontalReverse != null) {
             dpadHorizontalReversed = (s.dpadHorizontalReverse === '1' || s.dpadHorizontalReverse === true || s.dpadHorizontalReverse === 1);
         }
+        if (s.dpadVerticalReverse != null) {
+            dpadVerticalReversed = (s.dpadVerticalReverse === '1' || s.dpadVerticalReverse === true || s.dpadVerticalReverse === 1);
+        }
         if (s.devMode != null) {
             devModeEnabled = (s.devMode === '1' || s.devMode === true || s.devMode === 1);
         } else {
@@ -8747,6 +8754,7 @@ function restoreSettings() {
         if (hideUiWhenFullscreenToggleEl) hideUiWhenFullscreenToggleEl.checked = hideUiWhenFullscreenEnabled;
         if (hideUiWhenFullscreenToggleModalEl) hideUiWhenFullscreenToggleModalEl.checked = hideUiWhenFullscreenEnabled;
         if (reverseDpadHorizontalToggleEl) reverseDpadHorizontalToggleEl.checked = dpadHorizontalReversed;
+        if (reverseDpadVerticalToggleEl) reverseDpadVerticalToggleEl.checked = dpadVerticalReversed;
         syncDevModeToggleUI();
         applyDpadVisibility();
         updateBuildPlateMaterial();
@@ -8880,6 +8888,7 @@ function getURLSettings(searchStr = location.search) {
         modelSyncPart: g('bsp'),
         modelSyncFollow: g('bsf'),
         dpadHorizontalReverse: g('dr'),
+        dpadVerticalReverse: g('dv2'),
         uploadChoicePrompt: g('uap'),
         uploadDefaultAction: p.has('uam') ? (p.get('uam') === 'r' ? 'replace' : 'newplate') : null,
         devMode: g('dv'),
@@ -8968,6 +8977,7 @@ function settingsToURL() {
     if (bgSyncPartIndex > 0) p.set('bsp', String(bgSyncPartIndex));
     if (!bgSyncFollowSelected) p.set('bsf', '0');
     p.set('dr', dpadHorizontalReversed ? '1' : '0');
+    p.set('dv2', dpadVerticalReversed ? '1' : '0');
     if (!uploadChoicePromptEnabled) p.set('uap', '0');
     if (uploadDefaultAction === 'replace') p.set('uam', 'r');
     if (devModeEnabled) p.set('dv', '1');
@@ -9853,6 +9863,11 @@ function mapDpadHorizontalDirection(dir) {
     return dpadHorizontalReversed ? -normalized : normalized;
 }
 
+function mapDpadVerticalDirection(dir) {
+    const normalized = dir < 0 ? -1 : 1;
+    return dpadVerticalReversed ? -normalized : normalized;
+}
+
 // Re-clicking active Spin card toggles CC/CCW; other active cards toggle pause.
 // Use delegated handlers so clicks on any nested element in the card behave consistently.
 const rotateOptionWasChecked = new WeakMap();
@@ -9918,24 +9933,28 @@ document.addEventListener('keydown', e => {
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     if (e.code === 'ArrowLeft') { e.preventDefault(); snapOrbit(mapDpadHorizontalDirection(-1), 0); }
     if (e.code === 'ArrowRight') { e.preventDefault(); snapOrbit(mapDpadHorizontalDirection(1), 0); }
-    if (e.code === 'ArrowUp') { e.preventDefault(); snapOrbit(0, -1); }
-    if (e.code === 'ArrowDown') { e.preventDefault(); snapOrbit(0, 1); }
+    if (e.code === 'ArrowUp') { e.preventDefault(); snapOrbit(0, mapDpadVerticalDirection(-1)); }
+    if (e.code === 'ArrowDown') { e.preventDefault(); snapOrbit(0, mapDpadVerticalDirection(1)); }
 });
 
 function snapCamera(azimuth, elevation) {
     if (!camera) return;
-    const { target, dist } = getOrbitFrameState();
+    const { dist } = getOrbitFrameState();
+    const target = new THREE.Vector3(0, 0, 0); // Always snap back to model center
     const el = THREE.MathUtils.clamp(elevation, -(Math.PI / 2 - 0.01), Math.PI / 2 - 0.01);
-    // Zero any residual damping velocity so the snap is instant with no post-snap drift
+
+    // Zero any residual damping velocity so the snap is instant
     controls.enableDamping = false;
     controls.update();
     controls.enableDamping = true;
+
+    // Use a consistent up vector (Y-up) to avoid jars and crop sync issues
+    camera.up.set(0, 1, 0);
     setCameraFromOrbitState(camera, target, dist, el, azimuth);
-    // Avoid gimbal lock on near-vertical views
-    camera.up.set(0, Math.abs(elevation) > Math.PI / 4 ? 0 : 1, Math.abs(elevation) > Math.PI / 4 ? (elevation > 0 ? -1 : 1) : 0);
-    camera.lookAt(target);
+
     controls.target.copy(target);
     controls.update();
+
     if (exportFrameEnabled) {
         _cropLiveSyncArmed = true;
         syncExportCameraFromViewport();
@@ -9946,30 +9965,33 @@ function snapCamera(azimuth, elevation) {
 // Orbit snap buttons — move camera only, mesh never moves
 function snapOrbit(azDir, elDir) {
     if (!camera) return;
-    const STEP = Math.PI / 4; // 45° snap increment
+    const STEP = Math.PI / 8; // 22.5° snap increment
     const MAX_EL = Math.PI / 2 - 0.01;
     const { elev, az: baseAz } = getOrbitFrameState();
-    let el = THREE.MathUtils.clamp(elev, -MAX_EL, MAX_EL);
-    let az = baseAz;
+
+    // Round current state to nearest step to avoid floating point drift and getting "stuck"
+    let az = Math.round(baseAz / STEP) * STEP;
+    let el = Math.round(elev / STEP) * STEP;
+
     if (azDir !== 0) {
-        const eps = 1e-6;
-        az = azDir > 0
-            ? Math.ceil((az + eps) / STEP) * STEP
-            : Math.floor((az - eps) / STEP) * STEP;
+        az += (azDir > 0 ? STEP : -STEP);
     }
+    // Normalize azimuth to [0, 2π)
+    az = ((az % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
+
     if (elDir !== 0) {
-        const eps = 1e-6;
-        el = elDir > 0
-            ? Math.min(Math.ceil((el + eps) / STEP) * STEP, MAX_EL)
-            : Math.max(Math.floor((el - eps) / STEP) * STEP, -MAX_EL);
+        el += (elDir > 0 ? STEP : -STEP);
     }
+    // Clamp elevation slightly away from poles to keep azimuth stable
+    el = THREE.MathUtils.clamp(el, -MAX_EL, MAX_EL);
+
     snapCamera(az, el);
 }
 
 document.getElementById('btnCamLeft').addEventListener('click', () => snapOrbit(mapDpadHorizontalDirection(-1), 0));
 document.getElementById('btnCamRight').addEventListener('click', () => snapOrbit(mapDpadHorizontalDirection(1), 0));
-document.getElementById('btnCamUp').addEventListener('click', () => snapOrbit(0, -1));
-document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(0, 1));
+document.getElementById('btnCamUp').addEventListener('click', () => snapOrbit(0, mapDpadVerticalDirection(-1)));
+document.getElementById('btnCamDown').addEventListener('click', () => snapOrbit(0, mapDpadVerticalDirection(1)));
 
 function applyLevelAndReframeToCamera() {
     if (!camera) return;
@@ -9978,7 +10000,7 @@ function applyLevelAndReframeToCamera() {
     // Use getOrbitFrameState() so azimuth is relative to controls.target (correct even after pan).
     const { az } = getOrbitFrameState();
     const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    
+
     // Determine distance: fit within full viewport, or constrain to crop frame if in export mode
     let newDist = modelRadius / tanHalfFov * VIEWPORT_FIT_SCALE;
     if (exportFrameEnabled) {
@@ -10743,9 +10765,9 @@ syncExportQualityUiForFormat(exportFormatEl?.value ?? 'gif');
 syncExportDurationFromMain();
 syncCropModeFromSelectedExportDimensions();
 // Initialize which ratio is currently selected (for crop toggle logic) - update this on every restore
-    const checkedRatio = Array.from(exportDimensionInputs).find(i => i.checked);
-    if (checkedRatio) lastSelectedExportCropRatio = checkedRatio.value;
-    else lastSelectedExportCropRatio = null;
+const checkedRatio = Array.from(exportDimensionInputs).find(i => i.checked);
+if (checkedRatio) lastSelectedExportCropRatio = checkedRatio.value;
+else lastSelectedExportCropRatio = null;
 
 if (exportGridEl) {
     exportGridEl.checked = rulerLinesVisible;
@@ -10866,10 +10888,10 @@ cropPillOptions.forEach(label => {
 exportDimensionInputs.forEach(input => {
     input.addEventListener('change', () => {
         if (!input.checked) return;
-        
+
         lastSelectedExportCropRatio = input.value;
         syncCropModeFromSelectedExportDimensions({ forceReframe: false });
-        
+
         // Mobile: auto-collapse pill after selecting a ratio
         if (window.innerWidth < 900) {
             footerCropControlsEl?.classList.add('is-collapsed');
@@ -10889,8 +10911,8 @@ function syncCropPillChevron(expanded) {
     const path = document.getElementById('cropChevronPath');
     if (!path) return;
     path.setAttribute('d', expanded
-    ? 'M13.9502 6C14.3169 6 14.626 6.125 14.876 6.375C15.1257 6.62492 15.251 6.93335 15.251 7.2998C15.2509 7.66627 15.1258 7.9747 14.876 8.22461L11.1504 11.9492L14.876 15.6748C15.1257 15.9247 15.251 16.2331 15.251 16.5996C15.251 16.9661 15.1257 17.2745 14.876 17.5244C14.626 17.7744 14.3169 17.8994 13.9502 17.8994C13.5837 17.8993 13.2753 17.7743 13.0254 17.5244L8.37598 12.875C8.24264 12.7417 8.14622 12.5992 8.08789 12.4492C8.02965 12.2993 8 12.1324 8 11.9492C8.00004 11.766 8.0296 11.5991 8.08789 11.4492C8.14624 11.2993 8.24273 11.1577 8.37598 11.0244L13.0254 6.375C13.2753 6.12507 13.5837 6.00007 13.9502 6Z'
-    : 'M9.30078 6C9.66732 6.00007 9.97565 6.12507 10.2256 6.375L14.876 11.0244C15.0091 11.1576 15.1048 11.2994 15.1631 11.4492C15.2214 11.5991 15.2509 11.766 15.251 11.9492C15.251 12.1324 15.2213 12.2993 15.1631 12.4492C15.1048 12.5992 15.0093 12.7417 14.876 12.875L10.2256 17.5244C9.97565 17.7743 9.66732 17.8993 9.30078 17.8994C8.93419 17.8994 8.62595 17.7743 8.37598 17.5244C8.12598 17.2744 8 16.9663 8 16.5996C8 16.2329 8.12598 15.9248 8.37598 15.6748L12.1006 11.9492L8.37598 8.22461C8.12602 7.97465 8.00004 7.66639 8 7.2998C8 6.93314 8.12598 6.625 8.37598 6.375C8.62597 6.12503 8.93414 6 9.30078 6Z');
+        ? 'M13.9502 6C14.3169 6 14.626 6.125 14.876 6.375C15.1257 6.62492 15.251 6.93335 15.251 7.2998C15.2509 7.66627 15.1258 7.9747 14.876 8.22461L11.1504 11.9492L14.876 15.6748C15.1257 15.9247 15.251 16.2331 15.251 16.5996C15.251 16.9661 15.1257 17.2745 14.876 17.5244C14.626 17.7744 14.3169 17.8994 13.9502 17.8994C13.5837 17.8993 13.2753 17.7743 13.0254 17.5244L8.37598 12.875C8.24264 12.7417 8.14622 12.5992 8.08789 12.4492C8.02965 12.2993 8 12.1324 8 11.9492C8.00004 11.766 8.0296 11.5991 8.08789 11.4492C8.14624 11.2993 8.24273 11.1577 8.37598 11.0244L13.0254 6.375C13.2753 6.12507 13.5837 6.00007 13.9502 6Z'
+        : 'M9.30078 6C9.66732 6.00007 9.97565 6.12507 10.2256 6.375L14.876 11.0244C15.0091 11.1576 15.1048 11.2994 15.1631 11.4492C15.2214 11.5991 15.2509 11.766 15.251 11.9492C15.251 12.1324 15.2213 12.2993 15.1631 12.4492C15.1048 12.5992 15.0093 12.7417 14.876 12.875L10.2256 17.5244C9.97565 17.7743 9.66732 17.8993 9.30078 17.8994C8.93419 17.8994 8.62595 17.7743 8.37598 17.5244C8.12598 17.2744 8 16.9663 8 16.5996C8 16.2329 8.12598 15.9248 8.37598 15.6748L12.1006 11.9492L8.37598 8.22461C8.12602 7.97465 8.00004 7.66639 8 7.2998C8 6.93314 8.12598 6.625 8.37598 6.375C8.62597 6.12503 8.93414 6 9.30078 6Z');
 }
 
 function syncCropPillCancelBtn() {
@@ -12442,6 +12464,22 @@ if (reverseDpadHorizontalToggleEl) {
     }
 }
 
+if (reverseDpadVerticalToggleEl) {
+    reverseDpadVerticalToggleEl.checked = dpadVerticalReversed;
+    const reverseDpadVerticalHandler = () => {
+        dpadVerticalReversed = !!reverseDpadVerticalToggleEl.checked;
+        saveSettings();
+    };
+    reverseDpadVerticalToggleEl.addEventListener('change', reverseDpadVerticalHandler);
+    if (reverseDpadVerticalToggleModalEl) {
+        reverseDpadVerticalToggleModalEl.checked = dpadVerticalReversed;
+        reverseDpadVerticalToggleModalEl.addEventListener('change', () => {
+            reverseDpadVerticalToggleEl.checked = reverseDpadVerticalToggleModalEl.checked;
+            reverseDpadVerticalHandler();
+        });
+    }
+}
+
 if (devModeToggleEl) {
     devModeToggleEl.checked = !!devModeEnabled;
     const devModeHandler = () => {
@@ -13096,7 +13134,7 @@ window.addEventListener('pointermove', (e) => {
 canvas?.addEventListener('click', (e) => {
     // Don't process click if we just finished dragging the recipe card
     if (recipeCardDragInProgress) return;
-    
+
     // Close crop mode if clicking outside the crop frame area
     // BUT: Don't close if recipe card is open (may have been dragged to trigger this)
     const recipeCard = document.getElementById('recipe-card-preview');
@@ -13105,7 +13143,7 @@ canvas?.addEventListener('click', (e) => {
         else cancelCropMode();
         return;
     }
-    
+
     closeModelPartActionMenus();
     if (isModelPartFloatingCardOpen()) {
         closeModelPartSelectorMenu(true);
@@ -13125,14 +13163,14 @@ canvas?.addEventListener('click', (e) => {
 document.addEventListener('pointerdown', (e) => {
     // DO NOT close crop/export if dragging or clicking the recipe card
     if (recipeCardDragInProgress) return;
-    
+
     // If the recipe card is open, we want to allow interacting with the app 
     // without clicking outside the crop frame closing the export workspace.
     const recipeCard = document.getElementById('recipe-card-preview');
     if (recipeCard && (e.target?.closest?.('#recipe-card-preview') || e.target?.closest?.('.export-modal-panel'))) {
         return;
     }
-    
+
     // If recipe card is open, clicking elsewhere (like the canvas) shouldn't close the export either
     if (recipeCard) return;
 
@@ -13968,166 +14006,166 @@ btnVideo.addEventListener('click', async () => {
     await exportMp4RuntimeController.runMp4Export({
         runEncodeFlow: async ({ fps, bitrate, W, H, n, totalFrames }) => {
 
-        // Render directly to the main canvas at 2x resolution for SSAA
-        const SSAA = 2;
-        const savedPR = renderer.getPixelRatio();
-        const wrap = canvas.parentElement;
-        const savedViewW = Math.max(1, wrap.clientWidth);
-        const savedViewH = Math.max(1, wrap.clientHeight);
-        renderer.setPixelRatio(1);
-        renderer.setSize(W * SSAA, H * SSAA, false); // 2× buffer, CSS unchanged
+            // Render directly to the main canvas at 2x resolution for SSAA
+            const SSAA = 2;
+            const savedPR = renderer.getPixelRatio();
+            const wrap = canvas.parentElement;
+            const savedViewW = Math.max(1, wrap.clientWidth);
+            const savedViewH = Math.max(1, wrap.clientHeight);
+            renderer.setPixelRatio(1);
+            renderer.setSize(W * SSAA, H * SSAA, false); // 2× buffer, CSS unchanged
 
-        const savedAspect = camera.aspect;
-        const savedZoom = camera.zoom;
-        camera.aspect = W / H;
+            const savedAspect = camera.aspect;
+            const savedZoom = camera.zoom;
+            camera.aspect = W / H;
 
-        const muxer = new Muxer({
-            target: new ArrayBufferTarget(),
-            video: { codec: 'avc', width: W, height: H },
-            fastStart: 'in-memory',
-        });
+            const muxer = new Muxer({
+                target: new ArrayBufferTarget(),
+                video: { codec: 'avc', width: W, height: H },
+                fastStart: 'in-memory',
+            });
 
-        let encoderError = null;
-        const encoder = new VideoEncoder({
-            output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-            error: e => { encoderError = e; },
-        });
-        // avc1.4200XX — Baseline profile
-        // level 3.1 (0x1f) up to 720p, level 4.0 (0x28) up to 1080p, level 5.1 (0x33) up to 4K/2048x2048
-        exportMp4CodecConfigController.configureMp4Encoder({
-            encoder,
-            width: W,
-            height: H,
-            bitrate,
-            fps,
-        });
+            let encoderError = null;
+            const encoder = new VideoEncoder({
+                output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+                error: e => { encoderError = e; },
+            });
+            // avc1.4200XX — Baseline profile
+            // level 3.1 (0x1f) up to 720p, level 4.0 (0x28) up to 1080p, level 5.1 (0x33) up to 4K/2048x2048
+            exportMp4CodecConfigController.configureMp4Encoder({
+                encoder,
+                width: W,
+                height: H,
+                bitrate,
+                fps,
+            });
 
-        const { target, dist, elev, az } = getOrbitFrameState();
-        // Use stored export framing only in crop mode; otherwise mirror the live viewport.
-        const exportDist = (exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
-        const exportElev = (exportFrameEnabled && exportCamDist !== null) ? exportCamElev : elev;
+            const { target, dist, elev, az } = getOrbitFrameState();
+            // Use stored export framing only in crop mode; otherwise mirror the live viewport.
+            const exportDist = (exportFrameEnabled && exportCamDist !== null) ? exportCamDist : dist;
+            const exportElev = (exportFrameEnabled && exportCamDist !== null) ? exportCamElev : elev;
 
-        const exportZoom = (exportFrameEnabled && exportCamDist !== null)
-            ? (exportCamZoom || 1)
-            : (camera.zoom || 1);
+            const exportZoom = (exportFrameEnabled && exportCamDist !== null)
+                ? (exportCamZoom || 1)
+                : (camera.zoom || 1);
 
-        camera.zoom = exportZoom;
-        camera.updateProjectionMatrix();
-        const savedCamPos = camera.position.clone();
-        const isTilt = rotateModeEl.value === 'tilt';
-        const isWobble = rotateModeEl.value === 'wobble';
-        const isSpinLimited = rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360;
-        const isWobbleArc = isWobble && parseFloat(wobbleSpinRangeSlider.value) < 360;
-        const baseEl = exportElev;
-        const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
-        const wobbleSpinSwing = THREE.MathUtils.degToRad(parseFloat(wobbleSpinRangeSlider.value) / 2);
-        const spinSign = spinDir > 0 ? -1 : 1;
-        const MAX_EL = Math.PI / 2 - 0.05;
-        const savedMeshRx = mesh ? mesh.rotation.x : 0;
-        const {
-            out,
-            outCtx,
-            restoreExportScene,
-        } = exportMp4ScenePrepController.prepareMp4Scene({
-            width: W,
-            height: H,
-            exportBgColorChecked: exportBgColorEl?.checked ?? true,
-        });
-        if (!out || !outCtx) {
-            throw new Error('Could not prepare MP4 export canvas.');
-        }
-
-        let exportSucceeded = false;
-        try {
-            for (let f = 0; f < totalFrames; f++) {
-                if (isTilt) {
-                    mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
-                    setCameraFromOrbitState(camera, target, exportDist, exportElev, az);
-                } else if (isWobbleArc) {
-                    // Wobble arc: mesh tilts AND camera arcs
-                    mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
-                    const el = Math.min(baseEl, MAX_EL);
-                    const azimuth = az + Math.sin(2 * Math.PI * f / n) * wobbleSpinSwing;
-                    setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
-                } else if (isWobble) {
-                    // Wobble full spin: mesh tilts AND camera spins 360°
-                    mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
-                    const azimuth = az + spinSign * (2 * Math.PI * f) / n;
-                    setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
-                } else if (isSpinLimited) {
-                    const el = Math.min(baseEl, MAX_EL);
-                    const azimuth = az + Math.sin(2 * Math.PI * f / n) * tiltSwing;
-                    setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
-                } else {
-                    const azimuth = az + spinSign * (2 * Math.PI * f) / n;
-                    setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
-                }
-
-                syncLightRig();
-                renderer.render(scene, camera);
-                outCtx.clearRect(0, 0, W, H);
-                outCtx.drawImage(canvas, 0, 0, W, H);
-                drawRulerOverlay(outCtx, W, H, camera);
-
-                await exportMp4EncoderQueueController.waitForEncoderQueue({
-                    encoder,
-                    getEncoderError: () => encoderError,
-                    // Soft/hard queue thresholds smooth pacing and avoid
-                    // abrupt mid-export stop/start behavior under load.
-                    maxQueue: 160,
-                    hardQueue: 320,
-                    frameIndex: f,
-                    total: totalFrames,
-                });
-                const timestamp = Math.round(f * (1_000_000 / fps));
-                let frame = null;
-                try {
-                    frame = new VideoFrame(out, { timestamp });
-                    if (encoderError) throw encoderError;
-                    if (encoder.state === 'closed') throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.');
-                    encoder.encode(frame, { keyFrame: f % 30 === 0 });
-                } finally {
-                    try { frame?.close(); } catch (_) { }
-                }
-
-                await maybePaintExportProgress(`Encoding… ${f + 1} / ${totalFrames}`, f + 1, totalFrames);
+            camera.zoom = exportZoom;
+            camera.updateProjectionMatrix();
+            const savedCamPos = camera.position.clone();
+            const isTilt = rotateModeEl.value === 'tilt';
+            const isWobble = rotateModeEl.value === 'wobble';
+            const isSpinLimited = rotateModeEl.value === 'spin' && parseFloat(tiltRangeSlider.value) < 360;
+            const isWobbleArc = isWobble && parseFloat(wobbleSpinRangeSlider.value) < 360;
+            const baseEl = exportElev;
+            const tiltSwing = THREE.MathUtils.degToRad(parseFloat(tiltRangeSlider.value) / 2);
+            const wobbleSpinSwing = THREE.MathUtils.degToRad(parseFloat(wobbleSpinRangeSlider.value) / 2);
+            const spinSign = spinDir > 0 ? -1 : 1;
+            const MAX_EL = Math.PI / 2 - 0.05;
+            const savedMeshRx = mesh ? mesh.rotation.x : 0;
+            const {
+                out,
+                outCtx,
+                restoreExportScene,
+            } = exportMp4ScenePrepController.prepareMp4Scene({
+                width: W,
+                height: H,
+                exportBgColorChecked: exportBgColorEl?.checked ?? true,
+            });
+            if (!out || !outCtx) {
+                throw new Error('Could not prepare MP4 export canvas.');
             }
 
-            setAnimStatus('Finishing video... preparing your download.', totalFrames, totalFrames);
-            await new Promise(r => setTimeout(r, 0));
-            await exportMp4EncoderQueueController.waitForEncoderFlush({
-                encoder,
-                getEncoderError: () => encoderError,
-                total: totalFrames,
-            });
-            if (encoderError) throw encoderError;
-            muxer.finalize();
-            exportSucceeded = true;
-        } finally {
-            restoreExportScene();
-        }
+            let exportSucceeded = false;
+            try {
+                for (let f = 0; f < totalFrames; f++) {
+                    if (isTilt) {
+                        mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
+                        setCameraFromOrbitState(camera, target, exportDist, exportElev, az);
+                    } else if (isWobbleArc) {
+                        // Wobble arc: mesh tilts AND camera arcs
+                        mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
+                        const el = Math.min(baseEl, MAX_EL);
+                        const azimuth = az + Math.sin(2 * Math.PI * f / n) * wobbleSpinSwing;
+                        setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
+                    } else if (isWobble) {
+                        // Wobble full spin: mesh tilts AND camera spins 360°
+                        mesh.rotation.x = tiltBaseMeshRx + Math.sin(2 * Math.PI * f / n) * tiltSwing;
+                        const azimuth = az + spinSign * (2 * Math.PI * f) / n;
+                        setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
+                    } else if (isSpinLimited) {
+                        const el = Math.min(baseEl, MAX_EL);
+                        const azimuth = az + Math.sin(2 * Math.PI * f / n) * tiltSwing;
+                        setCameraFromOrbitState(camera, target, exportDist, el, azimuth);
+                    } else {
+                        const azimuth = az + spinSign * (2 * Math.PI * f) / n;
+                        setCameraFromOrbitState(camera, target, exportDist, exportElev, azimuth);
+                    }
 
-        if (mesh) mesh.rotation.x = savedMeshRx;
-        camera.position.copy(savedCamPos);
-        camera.lookAt(target);
-        camera.aspect = savedAspect;
-        camera.zoom = savedZoom;
-        camera.updateProjectionMatrix();
+                    syncLightRig();
+                    renderer.render(scene, camera);
+                    outCtx.clearRect(0, 0, W, H);
+                    outCtx.drawImage(canvas, 0, 0, W, H);
+                    drawRulerOverlay(outCtx, W, H, camera);
 
-        const finalViewW = Math.max(1, wrap.clientWidth || savedViewW);
-        const finalViewH = Math.max(1, wrap.clientHeight || savedViewH);
-        renderer.setPixelRatio(savedPR);
-        renderer.setSize(finalViewW, finalViewH, false);
-        camera.aspect = finalViewW / finalViewH;
-        camera.updateProjectionMatrix();
+                    await exportMp4EncoderQueueController.waitForEncoderQueue({
+                        encoder,
+                        getEncoderError: () => encoderError,
+                        // Soft/hard queue thresholds smooth pacing and avoid
+                        // abrupt mid-export stop/start behavior under load.
+                        maxQueue: 160,
+                        hardQueue: 320,
+                        frameIndex: f,
+                        total: totalFrames,
+                    });
+                    const timestamp = Math.round(f * (1_000_000 / fps));
+                    let frame = null;
+                    try {
+                        frame = new VideoFrame(out, { timestamp });
+                        if (encoderError) throw encoderError;
+                        if (encoder.state === 'closed') throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.');
+                        encoder.encode(frame, { keyFrame: f % 30 === 0 });
+                    } finally {
+                        try { frame?.close(); } catch (_) { }
+                    }
 
-        controls.update();
-        renderer.render(scene, camera); // Refresh visible canvas before download
+                    await maybePaintExportProgress(`Encoding… ${f + 1} / ${totalFrames}`, f + 1, totalFrames);
+                }
 
-        if (exportSucceeded) {
-            download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
-            setAnimStatus('MP4 saved ✓');
-        }
+                setAnimStatus('Finishing video... preparing your download.', totalFrames, totalFrames);
+                await new Promise(r => setTimeout(r, 0));
+                await exportMp4EncoderQueueController.waitForEncoderFlush({
+                    encoder,
+                    getEncoderError: () => encoderError,
+                    total: totalFrames,
+                });
+                if (encoderError) throw encoderError;
+                muxer.finalize();
+                exportSucceeded = true;
+            } finally {
+                restoreExportScene();
+            }
+
+            if (mesh) mesh.rotation.x = savedMeshRx;
+            camera.position.copy(savedCamPos);
+            camera.lookAt(target);
+            camera.aspect = savedAspect;
+            camera.zoom = savedZoom;
+            camera.updateProjectionMatrix();
+
+            const finalViewW = Math.max(1, wrap.clientWidth || savedViewW);
+            const finalViewH = Math.max(1, wrap.clientHeight || savedViewH);
+            renderer.setPixelRatio(savedPR);
+            renderer.setSize(finalViewW, finalViewH, false);
+            camera.aspect = finalViewW / finalViewH;
+            camera.updateProjectionMatrix();
+
+            controls.update();
+            renderer.render(scene, camera); // Refresh visible canvas before download
+
+            if (exportSucceeded) {
+                download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
+                setAnimStatus('MP4 saved ✓');
+            }
         },
     });
     schedulePostExportViewportResync();
@@ -15406,13 +15444,13 @@ function makeRecipeCardDraggable(container) {
         // Only drag from the header area or if clicking on the drag handle
         const header = e.target.closest('[data-recipe-card-header]');
         if (!header) return;
-        
+
         // Don't drag if clicking buttons or interactive elements
         if (e.target.closest('button, input, [onclick]')) return;
-        
+
         e.stopPropagation();  // Prevent event from bubbling to other handlers
         e.preventDefault();   // Prevent default behavior
-        
+
         isDragging = true;
         recipeCardDragInProgress = true;  // SET FLAG to prevent canvas click from closing export
         const rect = container.getBoundingClientRect();
@@ -15420,7 +15458,7 @@ function makeRecipeCardDraggable(container) {
         offsetY = e.clientY - rect.top;
         container.style.cursor = 'grabbing';
         container.style.userSelect = 'none';
-        
+
         // Block overlay interactions during drag
         const overlay = document.querySelector('.export-crop-overlay-dark');
         if (overlay) {
@@ -15430,12 +15468,12 @@ function makeRecipeCardDraggable(container) {
 
     const onMouseMove = (e) => {
         if (!isDragging) return;
-        
+
         e.preventDefault();  // Prevent default drag behavior
-        
+
         const newLeft = e.clientX - offsetX;
         const newTop = e.clientY - offsetY;
-        
+
         container.style.left = newLeft + 'px';
         container.style.top = newTop + 'px';
         container.style.transform = 'none';  // Remove center transform when dragging
@@ -15447,7 +15485,7 @@ function makeRecipeCardDraggable(container) {
             recipeCardDragInProgress = false;  // CLEAR FLAG
             container.style.cursor = 'default';
             container.style.userSelect = 'auto';
-            
+
             // Re-enable overlay interactions
             const overlay = document.querySelector('.export-crop-overlay-dark');
             if (overlay) {
@@ -15546,7 +15584,7 @@ function generateRecipeCardFromCurrentState() {
             display: block;
         `;
         document.body.appendChild(container);
-        
+
         // Make draggable
         makeRecipeCardDraggable(container);
     }
@@ -15559,7 +15597,7 @@ function generateRecipeCardFromCurrentState() {
             </button>
         </div>
     `;
-    
+
     // Ensure card is centered (reset any previous drag positioning)
     container.style.transform = 'translate(-50%, -50%)';
     container.style.left = '50%';
@@ -15567,13 +15605,13 @@ function generateRecipeCardFromCurrentState() {
     container.style.display = 'block'; // Ensure it's visible
 
     console.log('✓ Recipe card displayed immediately (without thumbnails for performance)\n');
-    
+
     // IMPORTANT: Generate thumbnails AFTER displaying the card
     // This ensures the UI is responsive and doesn't freeze during thumbnail rendering
     // We use async/await within the RAF to process incrementally without blocking
     requestAnimationFrame(async () => {
         console.log('Generating thumbnails asynchronously...');
-        
+
         try {
             const thumbnails = await generateRecipeCardThumbnails(aggregated, {
                 size: 68,  // Match picker size
@@ -15585,9 +15623,9 @@ function generateRecipeCardFromCurrentState() {
                     }
                 }
             });
-            
+
             console.log(`✓ ${thumbnails.size} thumbnails generated\n`);
-            
+
             // Inject thumbnails into the card (if container still exists)
             if (container && container.parentElement) {
                 // Store thumbnails for potential future use or UI injection
