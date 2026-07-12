@@ -1786,6 +1786,23 @@ html.loaded .controls-bar.hidden {
     align-items: center;
     gap: 10px;
     min-height: 22px;
+    flex: 1;
+    justify-content: flex-start;
+}
+
+.model-bulk-center-actions {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.model-bulk-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    flex: 1;
 }
 
 .model-bulk-selection-count {
@@ -6865,9 +6882,9 @@ html.crop-mode .crop-corner {
 }
 
 .copy-link-btn--text-link {
-    display: inline;
+    display: inline-block;
     min-height: 0;
-    padding: 2px 4px;
+    padding: 6px 12px;
     background: transparent;
     border: none;
     box-shadow: none;
