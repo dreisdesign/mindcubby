@@ -5589,10 +5589,15 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     if (!singleModel) {
         const selectedCount = getUiSelectedPartIndices().length;
         const allSelected = partCount > 0 && selectedCount >= partCount;
+        const anyHidden = modelPartNames.some((_, i) => !!getPartSettings(i).hidden);
+
         const bulkBar = document.createElement('div');
         bulkBar.className = 'model-bulk-bar';
         const multiActive = isModelPartPreviewMultiSelectActive();
-        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><div class="model-bulk-selection"><label class="model-bulk-toggle-all" title="${allSelected ? 'Clear selection' : 'Select all'}" aria-label="${allSelected ? 'Clear selection' : 'Select all'}"><input type="checkbox" class="thumb-select-option-check-input" data-bulk-action="toggle-all"></label><span class="model-bulk-selection-count" data-bulk-selection-count>${selectedCount}/${partCount} Selected</span></div><div class="model-bulk-controls"><button type="button" class="copy-link-btn copy-link-btn--secondary copy-link-btn--compact" data-bulk-action="show-all">Show all</button><button type="button" class="model-bulk-switch model-bulk-switch--multi${multiActive ? ' is-active' : ''}" data-bulk-action="toggle-multi" aria-pressed="${multiActive ? 'true' : 'false'}" title="${multiActive ? 'Multi-select on' : 'Multi-select off'}" aria-label="${multiActive ? 'Multi-select on' : 'Multi-select off'}"><span class="model-bulk-switch-label">Multi-select</span><span class="model-bulk-switch-track" aria-hidden="true"><span class="model-bulk-switch-thumb"><span class="model-bulk-switch-state" data-bulk-switch-state>${multiActive ? 'On' : 'Off'}</span></span></span></button></div></div>`;
+        
+        const showAllHtml = anyHidden ? `<button type="button" class="copy-link-btn copy-link-btn--text-link" data-bulk-action="show-all">Show all</button>` : '';
+
+        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><div class="model-bulk-selection"><label class="model-bulk-toggle-all" title="${allSelected ? 'Clear selection' : 'Select all'}" aria-label="${allSelected ? 'Clear selection' : 'Select all'}"><input type="checkbox" class="thumb-select-option-check-input" data-bulk-action="toggle-all"></label><span class="model-bulk-selection-count" data-bulk-selection-count>${selectedCount}/${partCount} Selected</span></div><div class="model-bulk-controls">${showAllHtml}<button type="button" class="model-bulk-switch model-bulk-switch--multi${multiActive ? ' is-active' : ''}" data-bulk-action="toggle-multi" aria-pressed="${multiActive ? 'true' : 'false'}" title="${multiActive ? 'Multi-select on' : 'Multi-select off'}" aria-label="${multiActive ? 'Multi-select on' : 'Multi-select off'}"><span class="model-bulk-switch-label">Multi-select</span><span class="model-bulk-switch-track" aria-hidden="true"><span class="model-bulk-switch-thumb"><span class="model-bulk-switch-state" data-bulk-switch-state>${multiActive ? 'On' : 'Off'}</span></span></span></button></div></div>`;
         bulkBar.addEventListener('click', (ev) => ev.stopPropagation());
         bulkBar.querySelector('[data-bulk-action="show-all"]')?.addEventListener('click', (ev) => {
             ev.stopPropagation();
