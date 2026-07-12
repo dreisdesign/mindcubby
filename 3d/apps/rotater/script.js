@@ -3345,7 +3345,11 @@ function openSelectedPartsActionMenu(anchorEl) {
     const visibilityLabel = selected.length === 1 ? 'Show model' : 'Show selected models';
     const deleteLabel = selected.length === 1 ? 'Delete Model' : `Delete ${selected.length} Selected Models`;
 
-    modelPartSelectedActionsMenuEl.innerHTML = `<button type="button" class="part-option-action part-option-action--toggle" data-part-action="visibility-toggle" data-part-index="${selected[0]}" data-part-action-scope="selected"><span>${visibilityLabel}</span><span class="option-switch${allHidden ? '' : ' is-on'}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${selected[0]}" data-part-action-scope="selected">${deleteLabel}</button>`;
+    if (selected.length === 1) {
+        modelPartSelectedActionsMenuEl.innerHTML = `<button type="button" class="part-option-action part-option-action--toggle" data-part-action="visibility-toggle" data-part-index="${selected[0]}" data-part-action-scope="selected"><span>${visibilityLabel}</span><span class="option-switch${allHidden ? '' : ' is-on'}" aria-hidden="true"></span></button><button type="button" class="part-option-action" data-part-action="hide-others" data-part-index="${selected[0]}" data-part-action-scope="selected">Hide others</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${selected[0]}" data-part-action-scope="selected">${deleteLabel}</button>`;
+    } else {
+        modelPartSelectedActionsMenuEl.innerHTML = `<button type="button" class="part-option-action part-option-action--toggle" data-part-action="visibility-toggle" data-part-index="${selected[0]}" data-part-action-scope="selected"><span>${visibilityLabel}</span><span class="option-switch${allHidden ? '' : ' is-on'}" aria-hidden="true"></span></button><button type="button" class="part-option-action" data-part-action="hide-others" data-part-index="${selected[0]}" data-part-action-scope="selected">Hide others</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${selected[0]}" data-part-action-scope="selected">${deleteLabel}</button>`;
+    }
 
     modelPartSelectedActionsMenuEl.querySelectorAll('.part-option-action').forEach((actionBtn) => {
         actionBtn.addEventListener('click', async (ev) => {
@@ -3360,6 +3364,21 @@ function openSelectedPartsActionMenu(anchorEl) {
                 const allTargetsHidden = targetPartIndices.every((idx) => !!getPartSettings(idx).hidden);
                 targetPartIndices.forEach((targetIdx) => {
                     getPartSettings(targetIdx).hidden = !allTargetsHidden;
+                });
+                rebuildMeshMaterialsForCurrentShading();
+                syncModelPartSelectorUI(true);
+                saveSettings();
+                closeModelPartActionMenus();
+                return;
+            }
+
+            if (action === 'hide-others') {
+                modelPartNames.forEach((_, i) => {
+                    if (targetPartIndices.includes(i)) {
+                        getPartSettings(i).hidden = false;
+                    } else {
+                        getPartSettings(i).hidden = true;
+                    }
                 });
                 rebuildMeshMaterialsForCurrentShading();
                 syncModelPartSelectorUI(true);
@@ -5573,8 +5592,17 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
         const bulkBar = document.createElement('div');
         bulkBar.className = 'model-bulk-bar';
         const multiActive = isModelPartPreviewMultiSelectActive();
-        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><div class="model-bulk-selection"><label class="model-bulk-toggle-all" title="${allSelected ? 'Clear selection' : 'Select all'}" aria-label="${allSelected ? 'Clear selection' : 'Select all'}"><input type="checkbox" class="thumb-select-option-check-input" data-bulk-action="toggle-all"></label><span class="model-bulk-selection-count" data-bulk-selection-count>${selectedCount}/${partCount} Selected</span></div><button type="button" class="model-bulk-switch model-bulk-switch--multi${multiActive ? ' is-active' : ''}" data-bulk-action="toggle-multi" aria-pressed="${multiActive ? 'true' : 'false'}" title="${multiActive ? 'Multi-select on' : 'Multi-select off'}" aria-label="${multiActive ? 'Multi-select on' : 'Multi-select off'}"><span class="model-bulk-switch-label">Multi-select</span><span class="model-bulk-switch-track" aria-hidden="true"><span class="model-bulk-switch-thumb"><span class="model-bulk-switch-state" data-bulk-switch-state>${multiActive ? 'On' : 'Off'}</span></span></span></button></div>`;
+        bulkBar.innerHTML = `<div class="model-bulk-bar-actions"><div class="model-bulk-selection"><label class="model-bulk-toggle-all" title="${allSelected ? 'Clear selection' : 'Select all'}" aria-label="${allSelected ? 'Clear selection' : 'Select all'}"><input type="checkbox" class="thumb-select-option-check-input" data-bulk-action="toggle-all"></label><span class="model-bulk-selection-count" data-bulk-selection-count>${selectedCount}/${partCount} Selected</span></div><div class="model-bulk-controls"><button type="button" class="copy-link-btn copy-link-btn--secondary copy-link-btn--compact" data-bulk-action="show-all">Show all</button><button type="button" class="model-bulk-switch model-bulk-switch--multi${multiActive ? ' is-active' : ''}" data-bulk-action="toggle-multi" aria-pressed="${multiActive ? 'true' : 'false'}" title="${multiActive ? 'Multi-select on' : 'Multi-select off'}" aria-label="${multiActive ? 'Multi-select on' : 'Multi-select off'}"><span class="model-bulk-switch-label">Multi-select</span><span class="model-bulk-switch-track" aria-hidden="true"><span class="model-bulk-switch-thumb"><span class="model-bulk-switch-state" data-bulk-switch-state>${multiActive ? 'On' : 'Off'}</span></span></span></button></div></div>`;
         bulkBar.addEventListener('click', (ev) => ev.stopPropagation());
+        bulkBar.querySelector('[data-bulk-action="show-all"]')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            modelPartNames.forEach((_, i) => {
+                getPartSettings(i).hidden = false;
+            });
+            rebuildMeshMaterialsForCurrentShading();
+            syncModelPartSelectorUI(true);
+            saveSettings();
+        });
         bulkBar.querySelector('[data-bulk-action="toggle-all"]')?.addEventListener('change', (ev) => {
             ev.stopPropagation();
             const shouldSelectAll = !!ev.currentTarget.checked;
@@ -5621,7 +5649,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             const mutateDisabledAttr = canMutateFiles ? '' : ' disabled title="Part source files are unavailable for editing"';
             const bulkLabel = `Select part ${idx + 1} for bulk edit`;
             const syncOn = activeBgPreset === 'modelcolor' && idx === bgSyncPartIndex;
-            opt.innerHTML = `<label class="thumb-select-option-check" title="${bulkLabel}" aria-label="${bulkLabel}"><input type="checkbox" class="thumb-select-option-check-input" data-part-bulk-select="${idx}"></label><button type="button" class="thumb-select-option-main" data-part-select="${idx}"><span class="thumb-select-option-thumb-wrap"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas></span><span class="thumb-select-option-text">Part ${idx + 1}: ${safeName}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">${getPartOptionMoreIconSVG()}</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}" data-part-action-scope="row"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="visibility-toggle" data-part-index="${idx}" data-part-action-scope="row"><span>${visibilityLabel}</span><span class="option-switch${settings.hidden ? '' : ' is-on'}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="bg-sync-toggle" data-part-index="${idx}" data-part-action-scope="row"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}" data-part-action-scope="row"${mutateDisabledAttr}>Delete Model</button></div>`;
+            opt.innerHTML = `<label class="thumb-select-option-check" title="${bulkLabel}" aria-label="${bulkLabel}"><input type="checkbox" class="thumb-select-option-check-input" data-part-bulk-select="${idx}"></label><button type="button" class="thumb-select-option-main" data-part-select="${idx}"><span class="thumb-select-option-thumb-wrap"><canvas class="thumb-select-option-canvas js-part-thumb-preview" data-part-index="${idx}" width="72" height="72" aria-hidden="true"></canvas></span><span class="thumb-select-option-text">Part ${idx + 1}: ${safeName}</span></button><button type="button" class="part-option-more" data-part-more="${idx}" aria-label="Part actions">${getPartOptionMoreIconSVG()}</button><div class="part-option-actions" hidden><button type="button" class="part-option-action" data-part-action="replace" data-part-index="${idx}" data-part-action-scope="row"${mutateDisabledAttr}>Replace STL</button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="visibility-toggle" data-part-index="${idx}" data-part-action-scope="row"><span>${visibilityLabel}</span><span class="option-switch${settings.hidden ? '' : ' is-on'}" aria-hidden="true"></span></button><button type="button" class="part-option-action" data-part-action="hide-others" data-part-index="${idx}" data-part-action-scope="row">Hide others</button><button type="button" class="part-option-action part-option-action--toggle" data-part-action="bg-sync-toggle" data-part-index="${idx}" data-part-action-scope="row"><span>Background Color Sync</span><span class="option-switch${syncOn ? ' is-on' : ''}" aria-hidden="true"></span></button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${idx}" data-part-action-scope="row"${mutateDisabledAttr}>Delete Model</button></div>`;
 
             const bulkCheck = opt.querySelector('[data-part-bulk-select]');
             const bulkCheckWrap = opt.querySelector('.thumb-select-option-check');
@@ -5752,6 +5780,21 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                         const allTargetsHidden = targetPartIndices.every((idx) => !!getPartSettings(idx).hidden);
                         targetPartIndices.forEach((targetIdx) => {
                             getPartSettings(targetIdx).hidden = !allTargetsHidden;
+                        });
+                        rebuildMeshMaterialsForCurrentShading();
+                        syncModelPartSelectorUI(true);
+                        saveSettings();
+                        closeModelPartActionMenus();
+                        return;
+                    }
+
+                    if (action === 'hide-others') {
+                        modelPartNames.forEach((_, i) => {
+                            if (i !== partIdx) {
+                                getPartSettings(i).hidden = true;
+                            } else {
+                                getPartSettings(i).hidden = false;
+                            }
                         });
                         rebuildMeshMaterialsForCurrentShading();
                         syncModelPartSelectorUI(true);
