@@ -1,3 +1,8 @@
+## [Unreleased] - 2026-07-14
+
+### Fixed
+- **Fixed "Hide others" not selecting the shown part**: When clicking "Hide others" on a part, the non-hidden part is now immediately set as the active/selected part shown in the top-left thumbnail picker. Root cause: the hide-others action was setting `modelPartSelected` in code, but `syncModelPartSelectorUI()` would rebuild the DOM and call `syncActivePartFromUiSelection()` before the rebuild was complete, reading the old DOM state (which still had the previously-selected part highlighted) and overwriting the new selection back to the old value. Fixed by selecting the part in both code AND DOM immediately when the 3-dot action menu opens, ensuring that by the time hide-others runs, the part is already the active selection in both layers.
+
 ## [Unreleased] - 2026-06-24
 
 ### Fixed

@@ -2937,7 +2937,6 @@ function pruneBulkPartSelection() {
 
 function getBulkSelectedPartIndices() {
     pruneBulkPartSelection();
-    normalizeBulkSelectionForMode();
     return Array.from(bulkSelectedPartIndices).sort((a, b) => a - b);
 }
 
@@ -2953,6 +2952,8 @@ function getEffectiveSelectedPartIndices() {
 function getUiSelectedPartIndices() {
     if (!hasModelParts()) return [];
     if (!isMultipartModel()) return [Math.max(0, modelPartSelected)];
+    // Ensure selection state is normalized for current mode before reading
+    normalizeBulkSelectionForMode();
     const selected = getBulkSelectedPartIndices();
     if (selected.length) return selected;
     const fallback = Math.max(0, Math.min(modelPartSelected, Math.max(0, modelPartNames.length - 1)));
@@ -3380,9 +3381,20 @@ function openSelectedPartsActionMenu(anchorEl) {
                         getPartSettings(i).hidden = true;
                     }
                 });
+
+                // Parts are already selected from 3-dot menu click
+                // Just rebuild and persist
                 rebuildMeshMaterialsForCurrentShading();
-                syncModelPartSelectorUI(true);
+                applyPartColorsToMesh();
+                queueModelPartThumbsRender();
+                persistCurrentMultipartParts({ immediate: true });
                 saveSettings();
+
+                // Sync UI to reflect hidden state changes
+                syncModelPartCheckboxStates();
+                syncModelPartBulkUIState();
+                renderMultipartSummaryThumbnail(modelPartSelectorBtn);
+
                 closeModelPartActionMenus();
                 return;
             }
@@ -3519,12 +3531,11 @@ function getPartSettings(index) {
 }
 
 function getSelectedPartSettings() {
-    if (isMultipartModel() && !rulerPartSelectMultiEnabled && modelPartSelectorMenu && !modelPartSelectorMenu.hidden) {
-        const selectedRow = modelPartSelectorMenu?.querySelector('.thumb-select-option.is-selected');
-        const selectedIdx = parseInt(selectedRow?.dataset?.partIndex ?? '', 10);
-        if (Number.isInteger(selectedIdx) && selectedIdx >= 0 && selectedIdx < modelPartNames.length) {
-            modelPartSelected = selectedIdx;
-        }
+    // Just return settings for the current modelPartSelected
+    // Do NOT overwrite modelPartSelected based on UI state - that causes sync issues
+    // when operations like hide-others have just changed the selection
+    if (isMultipartModel() && modelPartSelected >= modelPartNames.length) {
+        modelPartSelected = Math.max(0, modelPartNames.length - 1);
     }
     return getPartSettings(modelPartSelected);
 }
@@ -4518,6 +4529,7 @@ function renderMultipartSummaryThumbnail(canvasEl) {
 
     const selected = getUiSelectedPartIndices();
     if (selected.length === 1) {
+        console.log('📌 [THUMB] Rendering single part thumbnail:', selected[0]);
         renderSinglePartThumbnail(canvasEl, selected[0], 'low-res');
         return;
     }
@@ -5606,6 +5618,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             });
             rebuildMeshMaterialsForCurrentShading();
             syncModelPartSelectorUI(true);
+            persistCurrentMultipartParts({ immediate: true });
             saveSettings();
         });
         bulkBar.querySelector('[data-bulk-action="toggle-all"]')?.addEventListener('change', (ev) => {
@@ -5762,6 +5775,14 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 const willOpen = !!menu?.hidden;
                 closeModelPartActionMenus();
                 if (!menu || !willOpen) return;
+
+                // Select the part when opening the action menu
+                // This ensures the part is active in both code and DOM before any action runs
+                modelPartSelected = idx;
+                bulkSelectedPartIndices.clear();
+                setBulkPartSelected(idx, true);
+                syncModelPartCheckboxStates();
+
                 menu.hidden = false;
                 positionModelPartActionMenu(menu, ev.currentTarget);
             });
@@ -5801,9 +5822,20 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                                 getPartSettings(i).hidden = false;
                             }
                         });
+
+                        // Part is already selected from 3-dot menu click
+                        // Just rebuild and persist
                         rebuildMeshMaterialsForCurrentShading();
-                        syncModelPartSelectorUI(true);
+                        applyPartColorsToMesh();
+                        queueModelPartThumbsRender();
+                        persistCurrentMultipartParts({ immediate: true });
                         saveSettings();
+
+                        // Sync UI to reflect hidden state changes
+                        syncModelPartCheckboxStates();
+                        syncModelPartBulkUIState();
+                        renderMultipartSummaryThumbnail(modelPartSelectorBtn);
+
                         closeModelPartActionMenus();
                         return;
                     }
