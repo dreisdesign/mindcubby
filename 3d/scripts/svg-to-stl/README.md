@@ -45,7 +45,19 @@ You do not need to create any folders manually.
 * **First-Layer Prep:** The model is horizontally mirrored on the X-axis (crucial for preserving orientation when printed face-down on the build plate), centered at (0,0), and aligned so its lowest point rests exactly at Z \= 0\.  
 * **Explicit Filename Metadata:** During export, output files are named with explicit dimension metadata appended to the tail (\_W-{Width}mm\_H-{Height}mm.stl), ensuring slicer instances instantly recognize physical targets.
 
-## **3\. UX & Engineering Decisions**
+## **3\. Security & Privacy**
+
+This script is **100% local and offline**:
+
+* ✅ **No external calls** — operates entirely within your Blender instance
+* ✅ **No telemetry** — no data collection, tracking, or logging
+* ✅ **No credentials required** — only reads/writes files on your disk
+* ✅ **Minimal permissions** — only uses macOS `open` command (or equivalent) to show folders
+* ✅ **No dependencies** — uses only Blender's built-in `bpy` module
+
+All data remains on your machine. The only persistent storage is your Blender scene file (.blend), which stores width and height preferences.
+
+## **4\. UX & Engineering Decisions**
 
 ### **Eliminating Slicer Tessellation Failures**
 
@@ -60,8 +72,6 @@ An earlier iteration attempted to clear Finder selections via macOS AppleScript 
 Because physical print sizing shifts between prototype runs, saving files as standard static names makes it easy to lose track of which STL corresponds to which calibration size. Appending dimensions directly to the filename cleanly partitions physical versions. By checking "Overwrite" by default, design updates remain seamless while still safeguarding existing files.
 
 ### **Frictionless Slicing Hand-off**
-
-Opening the target STL/ directory upon a successful run minimizes physical clicks, allowing you to instantly drag-and-drop the generated models straight into OrcaSlicer.
 
 # **CHANGELOG.md**
 
