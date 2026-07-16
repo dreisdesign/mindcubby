@@ -128,9 +128,15 @@ class BatchCenterSTLOperator(bpy.types.Operator):
                 min_z = min(c.z for c in bbox)
                 imported_obj.location.z = -min_z
 
-            # Apply transforms
+            # Apply transforms (need object selected)
+            imported_obj.select_set(True)
             bpy.ops.object.transform_apply(location=True)
             bpy.context.view_layer.update()
+
+            # Ensure selected before export
+            bpy.ops.object.select_all(action='DESELECT')
+            imported_obj.select_set(True)
+            bpy.context.view_layer.objects.active = imported_obj
 
             # Export centered STL
             bpy.ops.wm.stl_export(
