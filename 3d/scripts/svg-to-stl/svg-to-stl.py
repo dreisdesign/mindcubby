@@ -30,6 +30,12 @@ class BatchProcessSVGOperator(bpy.types.Operator):
         min=0.01
     )
 
+    mirror_on_x: bpy.props.BoolProperty(
+        name="Mirror on X-axis",
+        description="Mirror the model on the X-axis for face-down printing",
+        default=True
+    )
+
     overwrite_existing: bpy.props.BoolProperty(
         name="Overwrite Existing STLs",
         description="Uncheck to skip files that already have an exported STL",
@@ -41,6 +47,7 @@ class BatchProcessSVGOperator(bpy.types.Operator):
         
         layout.prop(self, "target_width")
         layout.prop(self, "target_height")
+        layout.prop(self, "mirror_on_x")
         layout.prop(self, "overwrite_existing")
         
         blend_filepath = bpy.data.filepath
@@ -65,6 +72,7 @@ class BatchProcessSVGOperator(bpy.types.Operator):
         # PERSISTENCE: Save current inputs to the scene data block before exporting
         context.scene["svg_batch_last_width"] = self.target_width
         context.scene["svg_batch_last_height"] = self.target_height
+        context.scene["svg_batch_last_mirror_on_x"] = self.mirror_on_x
 
         root_dir = os.path.dirname(blend_filepath)
         svg_dir = os.path.join(root_dir, "SVG")
@@ -144,9 +152,10 @@ class BatchProcessSVGOperator(bpy.types.Operator):
             active_obj.location = (0, 0, 0)
             bpy.ops.object.transform_apply(location=True)
 
-            active_obj.scale.x *= -1
-            bpy.ops.object.transform_apply(scale=True)
-            bpy.context.view_layer.update()
+            if self.mirror_on_x:
+                active_obj.scale.x *= -1
+                bpy.ops.object.transform_apply(scale=True)
+                bpy.context.view_layer.update()
 
             current_width = active_obj.dimensions.x
             if current_width > 0:
@@ -198,6 +207,7 @@ class BatchProcessSVGOperator(bpy.types.Operator):
         # PERSISTENCE: Check if the scene already has saved values. If not, use standard defaults.
         self.target_width = context.scene.get("svg_batch_last_width", 50.0)
         self.target_height = context.scene.get("svg_batch_last_height", 0.2)
+        self.mirror_on_x = context.scene.get("svg_batch_last_mirror_on_x", True)
 
         root_dir = os.path.dirname(blend_filepath)
         svg_dir = os.path.join(root_dir, "SVG")
