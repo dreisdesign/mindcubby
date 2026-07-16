@@ -1,0 +1,57 @@
+# PDF Catalog Generator - Stackables-Specific Configuration
+# WARNING: Contains privacy-sensitive project paths
+# This config file should NOT be committed to public repos
+
+paths:
+  input_dir: "/Users/danielreis/Documents/3D_PRINTING/MODELS/154. Stackables/BLENDER_THUMBNAIL-GENERATOR"
+  output_pdf: "/Users/danielreis/Documents/3D_PRINTING/MODELS/154. Stackables/BLENDER_THUMBNAIL-GENERATOR/OUTPUT/STACKABLES_CATALOG.pdf"
+  branding_text: "Stackables Modular System by MindCubby"
+
+grid:
+  images_per_row: 6
+  rows_per_page: 3
+
+image:
+  width_inches: 1.3
+  height_inches: 1.3
+  horizontal_spacing_inches: 0.35
+  vertical_spacing_inches: 2.3
+
+layout:
+  margin_lr_inches: 0.6
+  title_area_inches: 1.4
+  footer_area_inches: 0.5
+  page_orientation: "landscape"
+
+text:
+  title_font: "Helvetica-Bold"
+  title_size: 26
+  subtitle_font: "Helvetica"
+  subtitle_size: 11
+  label_font: "Helvetica-Bold"
+  label_size: 9
+  footer_font: "Helvetica"
+  footer_size: 8
+
+colors:
+  title: "#222222"
+  subtitle: "#666666"
+  label_primary: "#111111"
+  label_secondary: "#555555"
+  label_filename: "#AAAAAA"
+  footer: "#999999"
+  image_background: "#FFFFFF"
+
+metadata:
+  pattern: "auto"
+  separator: "--"
+  components:
+    - "position"      # top, bottom, middle
+    - "type"          # tube, flat
+    - "size_label"    # xs, sm, md, lg
+    - "size_value"    # 18.0mm, etc
+    - "texture"       # smooth, ribbed
+
+batch:
+  variant_pattern: "*"                # Process all variant folders
+  test_mode: 0                        # 0 = all images
