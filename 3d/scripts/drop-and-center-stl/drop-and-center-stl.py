@@ -107,22 +107,27 @@ class BatchCenterSTLOperator(bpy.types.Operator):
                 continue
 
             bpy.context.view_layer.objects.active = imported_obj
-
-            # Center on XY by moving origin
-            if self.center_xy:
-                # Set origin to geometry center
-                bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
-                imported_obj.location.x = 0
-                imported_obj.location.y = 0
-
-            # Ground on Z (set lowest point to Z=0)
-            if self.ground_z:
-                bbox = [imported_obj.matrix_world @ mathutils.Vector(corner) for corner in imported_obj.bound_box]
-                min_z = min(c.z for c in bbox)
-                imported_obj.location.z = -min_z
-
-            # Apply transforms (need object selected)
             imported_obj.select_set(True)
+
+            # Get bounding box in world space
+            bbox = [imported_obj.matrix_world @ mathutils.Vector(corner) for corner in imported_obj.bound_box]
+            min_x = min(c.x for c in bbox)
+            max_x = max(c.x for c in bbox)
+            min_y = min(c.y for c in bbox)
+            max_y = max(c.y for c in bbox)
+            min_z = min(c.z for c in bbox)
+
+            # Calculate offsets to center on XY and ground on Z
+            if self.center_xy:
+                center_x = (min_x + max_x) / 2
+                center_y = (min_y + max_y) / 2
+                imported_obj.location.x -= center_x
+                imported_obj.location.y -= center_y
+
+            if self.ground_z:
+                imported_obj.location.z -= min_z
+
+            # Apply transforms to actually move the geometry vertices
             bpy.ops.object.transform_apply(location=True)
             bpy.context.view_layer.update()
 
