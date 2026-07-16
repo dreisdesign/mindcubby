@@ -1,3 +1,12 @@
+## [Unreleased] - 2026-07-16
+
+### Fixed
+- **Export filename now reflects selected part, not first part**: When exporting a multipart model with a single part selected, the export filename now correctly uses that part's name instead of the first part in the list. For multiple selections, the filename format is `{first-part}-plus-X-more`. Root cause: export filename logic was using the global `currentFileName` variable instead of the actual selected part indices. Fixed by wiring `getEffectiveSelectedPartIndices()` and `modelPartNames` into the filename controller.
+- **ZIP import limit now reflects export capability**: Increased `maxArchiveBytes` from 64 MB → 150 MB to match real-world export sizes. Users can now re-import their own 90 MB+ exports without hitting the size limit. Other safety limits remain: 220 MB total extracted, 160× decompression ratio protection.
+
+### Changed
+- **Upload UI now displays size limits**: Upload interface now shows "(Max: 150 MB ZIP or individual STL files)" to set user expectations before file selection. Size limit errors now show in an alert dialog instead of a transient status message, making the issue immediately visible.
+
 ## [Unreleased] - 2026-07-14
 
 ### Fixed

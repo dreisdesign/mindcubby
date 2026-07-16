@@ -9194,7 +9194,7 @@ async function requestUploadFlowFromButtons() {
 
     if (mesh && uploadChoiceOverlayEl) {
         setUploadChoiceFiles([]);
-        if (uploadChoiceTextEl) uploadChoiceTextEl.textContent = 'Drop STL or ZIP files here, or click Browse.';
+        if (uploadChoiceTextEl) uploadChoiceTextEl.textContent = 'Drop STL or ZIP files here, or click Browse. (Max: 150 MB ZIP or individual STL files)';
         uploadChoiceDropZoneEl?.classList.remove('is-dragover');
         uploadChoiceOverlayEl.hidden = false;
         return;
@@ -9427,7 +9427,7 @@ async function appendSTLPartsToCurrentModel(fileList) {
 }
 
 const IMPORT_ZIP_LIMITS = {
-    maxArchiveBytes: 64 * 1024 * 1024,
+    maxArchiveBytes: 150 * 1024 * 1024,
     maxEntryCount: 300,
     maxStlCount: 120,
     maxSingleEntryBytes: 96 * 1024 * 1024,
@@ -9457,7 +9457,7 @@ async function importRotaterPackage(zipFile) {
         throw new Error('Please select a valid .zip package.');
     }
     if (zipFile.size > IMPORT_ZIP_LIMITS.maxArchiveBytes) {
-        throw new Error('Package is too large. Use a ZIP smaller than 64 MB.');
+        throw new Error('Package is too large. Use a ZIP smaller than 150 MB.');
     }
 
     const zip = await JSZip.loadAsync(zipFile, { createFolders: false });
@@ -9733,9 +9733,15 @@ fileInput.addEventListener('change', async (e) => {
     try {
         await handlePickedUploadFiles(e.target.files, requestedAction);
     } catch (err) {
-        setStatus('Error: ' + (err?.message || 'Failed to import file(s).'));
+        const errorMsg = err?.message || 'Failed to import file(s).';
+        const isLimitError = errorMsg.includes('too large') || errorMsg.includes('too many');
+        if (isLimitError) {
+            alert('Upload Limit:\n\n' + errorMsg);
+        } else {
+            setStatus('Error: ' + errorMsg);
+            setTimeout(() => setStatus(''), 5000);
+        }
         console.error(err);
-        setTimeout(() => setStatus(''), 5000);
     }
     // Allow re-selecting the same file(s) to retrigger change.
     e.target.value = '';
@@ -13739,6 +13745,9 @@ const exportFilenameController = createExportFilenameController({
     getCurrentFileName: () => currentFileName,
     getRotateMode: () => rotateModeEl.value || 'spin',
     getNamePrefix: () => getDefaultExportNamePrefix(),
+    getSelectedPartIndices: () => getEffectiveSelectedPartIndices(),
+    getPartNameByIndex: (idx) => modelPartNames[idx] || null,
+    stemFromFileName: (name) => stemFromFileName(name),
 });
 
 function getQualityTag() {
