@@ -1,0 +1,12 @@
+# Demo video
+*.mp4
+*.mov
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~

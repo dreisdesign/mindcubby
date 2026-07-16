@@ -2,6 +2,10 @@
 
 This batch automation script streamlines the pipeline of converting raw 2D vector graphic assets (.svg) into clean, print-ready 3D models (.stl). It is optimized for face-down multi-color printing.
 
+## Demo
+
+[![Watch the demo](https://img.youtube.com/vi/eGqzUqrl4PI/maxresdefault.jpg)](https://www.youtube.com/watch?v=eGqzUqrl4PI)
+
 ## **1\. How to Use**
 
 ### **Setup the Workspace**
