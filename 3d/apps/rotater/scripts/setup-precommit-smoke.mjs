@@ -37,6 +37,12 @@ function installHook(repoRoot, rotaterPath) {
   const script = `#!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
+
+# Only run checks if rotater files are staged
+if ! git diff --cached --name-only | grep -q '^3d/apps/rotater/'; then
+  exit 0
+fi
+
 cd "$ROOT/${relRotater}"
 echo "[pre-commit] Rotater smoke checks"
 npm run -s test:smoke

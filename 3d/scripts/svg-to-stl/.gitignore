@@ -1,6 +1,7 @@
-# Demo video
+# Demo video and dev folder
 *.mp4
 *.mov
+IGNORE/
 
 # macOS
 .DS_Store
