@@ -12,7 +12,7 @@ Modules:
   - cli: Command-line interface
 
 Quick start:
-  python generate_thumbnails.py --config config.yaml
+  python generate-thumbnails.py --config config.yaml
 """
 
 __version__ = "0.1.0"

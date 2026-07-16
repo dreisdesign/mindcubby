@@ -90,5 +90,5 @@ if __name__ == "__main__":
     print("=" * 60)
     print("\nNote: Some tests require running inside Blender.")
     print("Full integration testing should be done with:")
-    print("  blender --background --python generate_thumbnails.py \\")
+    print("  blender --background --python generate-thumbnails.py \\")
     print("    --config stackables-config.yaml --test-limit 2")

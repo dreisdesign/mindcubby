@@ -16,16 +16,16 @@ def create_parser() -> argparse.ArgumentParser:
         epilog="""
 Examples:
   # Use config file
-  python generate_thumbnails.py --config config.yaml
+  python generate-thumbnails.py --config config.yaml
   
   # Override config values
-  python generate_thumbnails.py \\
+  python generate-thumbnails.py \\
     --config config.yaml \\
     --input /path/to/stls \\
     --output /path/to/output
   
   # Test mode (limit renders per variant)
-  python generate_thumbnails.py --config config.yaml --test-limit 2
+  python generate-thumbnails.py --config config.yaml --test-limit 2
         """
     )
     

@@ -8,13 +8,13 @@ This script can run in two contexts:
 
 Usage:
   # In Blender:
-  exec(open('/path/to/generate_thumbnails.py').read())
+  exec(open('/path/to/generate-thumbnails.py').read())
   
   # From command line:
-  python generate_thumbnails.py --config config.yaml
+  python generate-thumbnails.py --config config.yaml
   
   # With overrides:
-  python generate_thumbnails.py --config config.yaml --input /path/input --output /path/output
+  python generate-thumbnails.py --config config.yaml --input /path/input --output /path/output
 """
 
 import sys
@@ -160,7 +160,7 @@ def main_cli() -> None:
     
     if not IN_BLENDER:
         print("❌ This script must run inside Blender!")
-        print("   Use: blender --background --python generate_thumbnails.py")
+        print("   Use: blender --background --python generate-thumbnails.py")
         sys.exit(1)
     
     # Run in Blender

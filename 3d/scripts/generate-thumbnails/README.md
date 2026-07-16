@@ -41,7 +41,7 @@ render:
 ### 2. Run in Blender
 
 ```bash
-blender --background --python generate_thumbnails.py -- --config my-thumbnails-config.yaml
+blender --background --python generate-thumbnails.py -- --config my-thumbnails-config.yaml
 ```
 
 ### 3. Check Output
@@ -97,7 +97,7 @@ batch:
 Override config values:
 
 ```bash
-blender --background --python generate_thumbnails.py -- \
+blender --background --python generate-thumbnails.py -- \
   --config config.yaml \
   --input /new/input/path \
   --output /new/output/path \
@@ -113,7 +113,7 @@ export TG_PATHS_INPUT_DIR=/path/to/input
 export TG_RENDER_RESOLUTION_X=1024
 export TG_SCENE_CAMERA_LOCATION="110,110,90"
 
-blender --background --python generate_thumbnails.py
+blender --background --python generate-thumbnails.py
 ```
 
 ---
@@ -123,14 +123,14 @@ blender --background --python generate_thumbnails.py
 ### Example 1: Basic Render
 
 ```bash
-blender --background --python generate_thumbnails.py \
+blender --background --python generate-thumbnails.py \
   --config config.yaml
 ```
 
 ### Example 2: Test Mode (First 3 Files Per Variant)
 
 ```bash
-blender --background --python generate_thumbnails.py \
+blender --background --python generate-thumbnails.py \
   --config config.yaml \
   --test-limit 3
 ```
@@ -138,7 +138,7 @@ blender --background --python generate_thumbnails.py \
 ### Example 3: Force Re-render Everything
 
 ```bash
-blender --background --python generate_thumbnails.py \
+blender --background --python generate-thumbnails.py \
   --config config.yaml \
   --force-rerender
 ```
@@ -146,7 +146,7 @@ blender --background --python generate_thumbnails.py \
 ### Example 4: Higher Quality (Cycles Engine)
 
 ```bash
-blender --background --python generate_thumbnails.py \
+blender --background --python generate-thumbnails.py \
   --config config.yaml \
   --engine CYCLES \
   --resolution 2048 2048
@@ -155,7 +155,7 @@ blender --background --python generate_thumbnails.py \
 ### Example 5: Specific Variant Pattern
 
 ```bash
-blender --background --python generate_thumbnails.py \
+blender --background --python generate-thumbnails.py \
   --config config.yaml \
   --variant-pattern "smooth-*"
 ```
@@ -163,7 +163,7 @@ blender --background --python generate_thumbnails.py \
 ### Example 6: Validate Config Without Rendering
 
 ```bash
-blender --background --python generate_thumbnails.py \
+blender --background --python generate-thumbnails.py \
   --config config.yaml \
   --validate-only
 ```
@@ -197,31 +197,25 @@ stats = renderer.batch_render(variants, output_dir)
 
 ### With PDF Catalog Generator
 
-```python
-from generate_thumbnails import main_blender
-from build_pdf_catalog import PDFCatalogBuilder
-
+```bash
 # Step 1: Generate thumbnails
-main_blender(config_path="config.yaml")
+blender --background --python generate-thumbnails.py -- --config config.yaml
 
 # Step 2: Build PDF from thumbnails
-pdf_builder = PDFCatalogBuilder(config)
-pdf_builder.generate_catalog()
+python build-pdf-catalog.py --config pdf-config.yaml --input thumbnails/
 ```
 
 ### With Model Alignment
 
-```python
-from align_and_package_stls import STLAligner
-from generate_thumbnails import main_blender
-
-# Step 1: Align STLs
-aligner = STLAligner(input_dir, output_dir)
-aligner.align_all()
+```bash
+# Step 1: Align STLs (Blender script)
+blender --background --python drop-and-center-stl.py -- --input raw-stls/ --output aligned-stls/
 
 # Step 2: Generate thumbnails from aligned STLs
-config.set("paths.input_dir", output_dir)
-main_blender(config_path="config.yaml")
+blender --background --python generate-thumbnails.py -- \
+  --config config.yaml \
+  --input aligned-stls/ \
+  --output thumbnails/
 ```
 
 ---
