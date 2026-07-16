@@ -131,7 +131,7 @@ class BatchCenterSTLOperator(bpy.types.Operator):
             bpy.ops.wm.stl_export(
                 filepath=output_filepath,
                 export_selected_objects=True,
-                global_scale=1000.0
+                global_scale=1.0
             )
 
             print(f"  ✓ Saved to {os.path.basename(output_filepath)}")
