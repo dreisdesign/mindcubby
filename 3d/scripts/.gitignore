@@ -8,6 +8,7 @@
 
 # Development/ignore folders
 IGNORE/
+_originals/  # Backup scripts during refactoring
 
 # macOS
 .DS_Store
