@@ -108,21 +108,14 @@ class BatchCenterSTLOperator(bpy.types.Operator):
 
             bpy.context.view_layer.objects.active = imported_obj
 
-            # Center on XY
+            # Center on XY by moving origin
             if self.center_xy:
-                bbox = [imported_obj.matrix_world @ mathutils.Vector(corner) for corner in imported_obj.bound_box]
-                min_x = min(c.x for c in bbox)
-                max_x = max(c.x for c in bbox)
-                min_y = min(c.y for c in bbox)
-                max_y = max(c.y for c in bbox)
+                # Set origin to geometry center
+                bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+                imported_obj.location.x = 0
+                imported_obj.location.y = 0
 
-                center_x = (min_x + max_x) / 2
-                center_y = (min_y + max_y) / 2
-
-                imported_obj.location.x = -center_x
-                imported_obj.location.y = -center_y
-
-            # Ground on Z
+            # Ground on Z (set lowest point to Z=0)
             if self.ground_z:
                 bbox = [imported_obj.matrix_world @ mathutils.Vector(corner) for corner in imported_obj.bound_box]
                 min_z = min(c.z for c in bbox)
