@@ -109,32 +109,23 @@ class BatchCenterSTLOperator(bpy.types.Operator):
             bpy.context.view_layer.objects.active = imported_obj
             imported_obj.select_set(True)
 
-            # Get bounding box in world space
-            bbox = [imported_obj.matrix_world @ mathutils.Vector(corner) for corner in imported_obj.bound_box]
-            min_x = min(c.x for c in bbox)
-            max_x = max(c.x for c in bbox)
-            min_y = min(c.y for c in bbox)
-            max_y = max(c.y for c in bbox)
-            min_z = min(c.z for c in bbox)
+            # Apply any existing transforms first
+            bpy.ops.object.transform_apply(scale=True, rotation=True, location=True)
 
-            # Calculate offsets to center on XY and ground on Z
+            # Center on XY (using the proven convert-svg-to-stl pattern)
             if self.center_xy:
-                center_x = (min_x + max_x) / 2
-                center_y = (min_y + max_y) / 2
-                imported_obj.location.x -= center_x
-                imported_obj.location.y -= center_y
+                bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+                imported_obj.location = (0, 0, 0)
+                bpy.ops.object.transform_apply(location=True)
 
+            # Ground on Z
             if self.ground_z:
-                imported_obj.location.z -= min_z
-
-            # Apply transforms to actually move the geometry vertices
-            bpy.ops.object.transform_apply(location=True)
-            bpy.context.view_layer.update()
-
-            # Ensure selected before export
-            bpy.ops.object.select_all(action='DESELECT')
-            imported_obj.select_set(True)
-            bpy.context.view_layer.objects.active = imported_obj
+                bbox = [imported_obj.matrix_world @ mathutils.Vector(corner) for corner in imported_obj.bound_box]
+                min_z = min(c.z for c in bbox)
+                imported_obj.location.x = 0
+                imported_obj.location.y = 0
+                imported_obj.location.z = -min_z
+                bpy.ops.object.transform_apply(location=True)
 
             # Export centered STL
             bpy.ops.wm.stl_export(
