@@ -286,15 +286,35 @@ class BatchRenderThumbnailsOperator(bpy.types.Operator):
 
 
 def register():
-    bpy.utils.register_class(BatchRenderThumbnailsOperator)
+    if not hasattr(bpy.types, 'OBJECT_OT_batch_render_thumbnails'):
+        print("[TG] Registering BatchRenderThumbnailsOperator...")
+        bpy.utils.register_class(BatchRenderThumbnailsOperator)
+        print("[TG] ✓ Operator registered")
+    else:
+        print("[TG] ✓ Operator already registered")
 
 
 def unregister():
-    bpy.utils.unregister_class(BatchRenderThumbnailsOperator)
+    if hasattr(bpy.types, 'OBJECT_OT_batch_render_thumbnails'):
+        print("[TG] Unregistering BatchRenderThumbnailsOperator...")
+        bpy.utils.unregister_class(BatchRenderThumbnailsOperator)
+        print("[TG] ✓ Operator unregistered")
 
 
-if __name__ == "__main__":
+# Register immediately when script runs
+try:
+    print("\n" + "="*60)
+    print("🎬 THUMBNAIL GENERATOR Script loaded")
+    print("="*60)
     register()
     
     # Show the operator dialog
+    print("[TG] Showing operator dialog...")
     bpy.ops.object.batch_render_thumbnails('INVOKE_DEFAULT')
+    print("[TG] ✓ Operator invoked")
+    
+except Exception as e:
+    print(f"[TG] ERROR: {e}")
+    import traceback
+    traceback.print_exc()
+    print("="*60 + "\n")
