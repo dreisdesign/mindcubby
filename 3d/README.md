@@ -20,18 +20,50 @@ Generate Printables specifications and estimates from G-code files. Extract prin
 
 ## Scripts
 
-Blender scripts and utility tools for batch processing and model preparation.
+Blender scripts and command-line tools for batch 3D asset processing.
 
 ### [convert-svg-to-stl](scripts/convert-svg-to-stl/)
-Batch convert 2D vector graphics (.svg) to print-ready 3D models (.stl). Optimized for face-down multi-color printing and text-based models. Runs in Blender.
+Batch convert 2D vector graphics (.svg) to print-ready 3D models (.stl). Optimized for face-down multi-color printing and text-based models.
 
-**Usage:** Paste script into Blender's Scripting workspace and run.
+**Usage:** Paste script into Blender's Scripting workspace and run. [Docs](scripts/convert-svg-to-stl/README.md)
 
 ### [drop-and-center-stl](scripts/drop-and-center-stl/)
-Center 3D models on the build plate (XY center, Z at bottom). 
+Center 3D models on the build plate (XY center at origin, Z at bottom).
 
-- **Blender version:** Paste `drop-and-center-stl-blender.py` into Blender's Scripting workspace
-- **macOS app:** Standalone native application with file picker and batch processing
+**Usage:** Paste script into Blender's Scripting workspace and run. [Docs](scripts/drop-and-center-stl/README.md)
+
+### [generate-thumbnails](scripts/generate-thumbnails/)
+Batch render 3D STL models to PNG thumbnails via Blender with customizable lighting, camera, and color schemes.
+
+**Usage:** Paste script into Blender's Scripting workspace and run (Blender 3.0+). [Docs](scripts/generate-thumbnails/README.md)
+
+**Features:**
+- Smart color-coding based on part properties (texture, position, type)
+- Configurable EEVEE or Cycles rendering
+- Organized output matching input structure (variants/positions)
+- Skips already-rendered images
+
+### [build-pdf-catalog](scripts/build-pdf-catalog/)
+Generate multi-page PDF catalogs from thumbnail images organized by variant and position.
+
+**Usage:** `python3 build-pdf-catalog.py` (Python 3.7+, requires PIL and ReportLab). [Docs](scripts/build-pdf-catalog/README.md)
+
+**Features:**
+- Automatic metadata extraction from filenames
+- Configurable grid layout (6×3 default, customizable)
+- Multi-page PDFs with variant titles and pagination
+- Landscape letter-size format with branding footer
+- Smart image spacing and label positioning
+
+---
+
+## Workflow
+
+Typical asset production pipeline:
+
+1. **Center models** → `drop-and-center-stl` (prepare for printing)
+2. **Generate thumbnails** → `generate-thumbnails` (render for catalog)
+3. **Build catalog** → `build-pdf-catalog` (create product catalog PDF)
 
 ---
 

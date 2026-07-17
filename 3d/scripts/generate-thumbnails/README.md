@@ -1,305 +1,79 @@
-# Generate Thumbnails - README
+# Generate Thumbnails
 
-## Overview
-
-Generate PNG thumbnail images from 3D STL models with configurable Blender rendering.
-
-**Key Features:**
-- Modular, tested components
-- Flexible configuration (YAML + CLI overrides)
-- Batch processing with variant organization
-- Works both standalone and as part of larger pipelines
-- Customizable lighting, camera, render engine
-
----
-
-## Installation
-
-Requires:
-- Python 3.7+
-- Blender 3.0+ (for rendering)
-- PyYAML: `pip install pyyaml`
-
----
+Batch render 3D STL models to PNG thumbnails in Blender.
 
 ## Quick Start
 
-### 1. Create Configuration File
+1. **Open Blender** (3.0+)
+2. **Go to Scripting workspace**
+3. **Load script:** File → Open → select `generate-thumbnails.py`
+4. **Configure paths** at the top:
+   - `DIR_INPUT`: Directory with STL files organized as `{variant}/{position}/` folders
+   - `DIR_OUTPUT`: Where to save rendered thumbnails
+5. **Run** (Alt+P or play button)
 
-```yaml
-# my-thumbnails-config.yaml
-paths:
-  input_dir: /path/to/stl/variants
-  output_dir: /path/to/output/thumbnails
+## Directory Structure
 
-render:
-  resolution_x: 512
-  resolution_y: 512
-  engine: EEVEE
+Input files should be organized as:
+
+```
+input_stls/
+├── variant_1/
+│   ├── Top/
+│   │   ├── model-01.stl
+│   │   └── model-02.stl
+│   ├── Middle/
+│   └── Bottom/
+├── variant_2/
+│   └── ...
 ```
 
-### 2. Run in Blender
+Output will be created in the same structure:
 
-```bash
-blender --background --python generate-thumbnails.py -- --config my-thumbnails-config.yaml
 ```
-
-### 3. Check Output
-
-Thumbnails are organized by variant:
+output_thumbnails/
+├── variant_1/
+│   ├── Top/
+│   │   ├── model-01.png
+│   │   └── model-02.png
+│   ├── Middle/
+│   └── Bottom/
 ```
-output/
-├── 01_Variant_A/
-│   ├── model_1.png
-│   ├── model_2.png
-├── 02_Variant_B/
-│   ├── model_3.png
-```
-
----
 
 ## Configuration
 
-**⚠️ Privacy Note:** Configuration files with hardcoded local paths should not be committed to version control. Use the example configs as templates and create your own local config files. Consider adding `my-config.yaml` to `.gitignore` if storing personal paths.
+Edit these variables at the top of the script:
 
-### Via YAML File
+- **RESOLUTION_X, RESOLUTION_Y**: Output image size (default: 512×512px)
+- **RENDER_SAMPLES**: EEVEE quality (32 = good balance, higher = slower)
+- **USE_CYCLES**: Use Cycles renderer instead of EEVEE (slower, better quality)
+- **FORCE_RERENDER**: Re-render all images or skip existing (default: False)
+- **COLORS**: Customize color scheme for parts (smart defaults included)
 
-Create `config.yaml`:
+## Color Coding
 
-```yaml
-paths:
-  input_dir: /path/to/stls
-  output_dir: /path/to/thumbnails
+By default, parts are automatically colored based on filename patterns:
 
-render:
-  resolution_x: 1024
-  resolution_y: 1024
-  engine: EEVEE  # or CYCLES
-  samples: 32
-  force_rerender: false
+- **Texture:** Smooth = blue shades, Ribbed = purple shades
+- **Position:** Top = dark, Middle = medium, Bottom = light
+- **Type:** Flat parts = red highlight, Tube parts = yellow highlight
 
-scene:
-  camera_location: [110, -110, 90]
-  camera_rotation: [75, 0, 45]  # degrees
-  light_location: [100, -100, 200]
-  light_energy: 5.0
-  light_rotation: [45, 0, 30]  # degrees
-  background_color: [1, 1, 1, 1]  # RGBA
+Colors are blended to show all three properties at once.
 
-batch:
-  variant_pattern: "*"      # glob pattern for folders
-  test_mode: 0              # 0 = all, 5 = first 5 only
-  skip_existing: false
-```
+## Notes
 
-### Via Command Line
-
-Override config values:
-
-```bash
-blender --background --python generate-thumbnails.py -- \
-  --config config.yaml \
-  --input /new/input/path \
-  --output /new/output/path \
-  --resolution 1024 1024 \
-  --engine CYCLES \
-  --test-limit 5
-```
-
-### Via Environment Variables
-
-```bash
-export TG_PATHS_INPUT_DIR=/path/to/input
-export TG_RENDER_RESOLUTION_X=1024
-export TG_SCENE_CAMERA_LOCATION="110,110,90"
-
-blender --background --python generate-thumbnails.py
-```
-
----
-
-## Usage Examples
-
-### Example 1: Basic Render
-
-```bash
-blender --background --python generate-thumbnails.py \
-  --config config.yaml
-```
-
-### Example 2: Test Mode (First 3 Files Per Variant)
-
-```bash
-blender --background --python generate-thumbnails.py \
-  --config config.yaml \
-  --test-limit 3
-```
-
-### Example 3: Force Re-render Everything
-
-```bash
-blender --background --python generate-thumbnails.py \
-  --config config.yaml \
-  --force-rerender
-```
-
-### Example 4: Higher Quality (Cycles Engine)
-
-```bash
-blender --background --python generate-thumbnails.py \
-  --config config.yaml \
-  --engine CYCLES \
-  --resolution 2048 2048
-```
-
-### Example 5: Specific Variant Pattern
-
-```bash
-blender --background --python generate-thumbnails.py \
-  --config config.yaml \
-  --variant-pattern "smooth-*"
-```
-
-### Example 6: Validate Config Without Rendering
-
-```bash
-blender --background --python generate-thumbnails.py \
-  --config config.yaml \
-  --validate-only
-```
-
----
-
-## Architecture
-
-Modular design allows using components independently:
-
-```python
-# Use scene setup module
-from blender_scene_setup import BlenderSceneSetup
-setup = BlenderSceneSetup(config)
-setup.setup_complete_scene()
-
-# Use STL importer
-from stl_importer import STLImporter
-variants = STLImporter.find_stl_files("/path/to/stls")
-obj, success = STLImporter.import_stl(stl_path)
-
-# Use renderer
-from thumbnail_renderer import ThumbnailRenderer
-renderer = ThumbnailRenderer(config)
-stats = renderer.batch_render(variants, output_dir)
-```
-
----
-
-## Integrating with Other Pipelines
-
-### With PDF Catalog Generator
-
-```bash
-# Step 1: Generate thumbnails
-blender --background --python generate-thumbnails.py -- --config config.yaml
-
-# Step 2: Build PDF from thumbnails
-python build-pdf-catalog.py --config pdf-config.yaml --input thumbnails/
-```
-
-### With Model Alignment
-
-```bash
-# Step 1: Align STLs (Blender script)
-blender --background --python drop-and-center-stl.py -- --input raw-stls/ --output aligned-stls/
-
-# Step 2: Generate thumbnails from aligned STLs
-blender --background --python generate-thumbnails.py -- \
-  --config config.yaml \
-  --input aligned-stls/ \
-  --output thumbnails/
-```
-
----
+- Requires Blender 3.0 or later
+- First run will be slower (Blender initialization)
+- Scenes are re-initialized for each batch (cleaner renders)
+- Transparent background (PNGs have alpha channel)
 
 ## Troubleshooting
 
-**Error: "Blender not found"**
-- Ensure Blender 3.0+ is installed
-- Or specify path: `blender_path=/Applications/Blender.app/Contents/MacOS/blender`
+- **"Input directory not found"**: Check `DIR_INPUT` path in script
+- **Slow rendering**: Reduce `RENDER_SAMPLES` or use EEVEE (not Cycles)
+- **Memory issues**: Process variants in smaller batches
+- **Python error**: Ensure you're in the Blender Scripting workspace
 
-**Error: "No STL files found"**
-- Check `paths.input_dir` points to root of variant folders
-- Variant folders should directly contain `.stl` files
-- Check `batch.variant_pattern` glob doesn't exclude folders
+## Integration
 
-**Slow rendering**
-- Use `EEVEE` engine (faster)
-- Reduce `render.samples`
-- Lower `render.resolution_x/y`
-- Use `test_limit` to test with fewer files first
-
-**Output quality issues**
-- Increase `render.samples`
-- Switch to `CYCLES` engine
-- Check `scene.light_energy` and `camera_location`
-
----
-
-## Module Reference
-
-### config.py
-
-`Config` class for loading/managing configuration.
-
-```python
-config = Config()
-config.load_yaml("config.yaml")
-config.set("render.resolution_x", 1024)
-value = config.get("paths.input_dir")
-valid, error = config.validate()
-```
-
-### blender_scene_setup.py
-
-`BlenderSceneSetup` class for Blender scene configuration.
-
-```python
-setup = BlenderSceneSetup(config)
-setup.setup_complete_scene()
-```
-
-### stl_importer.py
-
-`STLImporter` class for discovering and importing STL files.
-
-```python
-variants = STLImporter.find_stl_files("/path")
-obj, success = STLImporter.import_stl("/path/file.stl")
-STLImporter.center_object(obj)
-```
-
-### thumbnail_renderer.py
-
-`ThumbnailRenderer` class for rendering to images.
-
-```python
-renderer = ThumbnailRenderer(config)
-stats = renderer.batch_render(variants, output_dir)
-```
-
-### cli.py
-
-CLI argument parsing and utilities.
-
-```python
-from cli import create_parser, print_config_summary
-parser = create_parser()
-args = parser.parse_args()
-```
-
----
-
-## See Also
-
-- [build-pdf-catalog](../build-pdf-catalog) - Create PDFs from thumbnails
-- [align-and-package-stls](../align-and-package-stls) - Prepare STLs for production
-- [3d/README.md](../../README.md) - Overview of all 3D tools
+Next step: Use generated thumbnails with **[build-pdf-catalog](../build-pdf-catalog/)** to create a complete PDF catalog.
