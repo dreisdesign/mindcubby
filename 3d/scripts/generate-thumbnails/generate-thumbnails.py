@@ -191,7 +191,7 @@ def render_thumbnails(stl_dir: str, output_dir: str) -> int:
 
 
 class BatchRenderThumbnailsOperator(bpy.types.Operator):
-    """Batch render STL models to PNG thumbnails (for future UI integration)."""
+    """Batch render STL models to PNG thumbnails."""
     bl_idname = "object.batch_render_thumbnails"
     bl_label = "Batch Render Thumbnails"
     bl_options = {'REGISTER', 'UNDO'}
@@ -210,13 +210,52 @@ class BatchRenderThumbnailsOperator(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
+        
+        blend_filepath = bpy.data.filepath
+        if not blend_filepath:
+            layout.label(text="⚠ Save your Blender file first!", icon='ERROR')
+            return
+        
+        root_dir = os.path.dirname(blend_filepath)
+        stl_dir = os.path.join(root_dir, "STL")
+        output_dir = os.path.join(root_dir, "THUMBNAILS")
+        
+        # Show paths
+        box = layout.box()
+        box.label(text="Paths:", icon='FOLDER_REDIRECT')
+        box.label(text=f"Input:  STL/", icon='MESH_DATA')
+        box.label(text=f"Output: THUMBNAILS/", icon='IMAGE_DATA')
+        
+        # Show file count
+        if os.path.exists(stl_dir):
+            stl_files = []
+            for root, dirs, files in os.walk(stl_dir):
+                for f in files:
+                    if f.lower().endswith('.stl'):
+                        stl_files.append(f)
+            
+            layout.separator()
+            if stl_files:
+                box = layout.box()
+                box.label(text=f"Found {len(stl_files)} STL files:", icon='CHECKMARK')
+                for i, fname in enumerate(stl_files[:5]):
+                    box.label(text=f"  • {fname}")
+                if len(stl_files) > 5:
+                    box.label(text=f"  ... and {len(stl_files) - 5} more")
+            else:
+                layout.label(text="⚠ No STL files found in STL/ directory", icon='ERROR')
+        else:
+            layout.separator()
+            layout.label(text="⚠ STL directory not found (create STL/ folder)", icon='ERROR')
+        
+        layout.separator()
         layout.prop(self, "force_rerender")
         layout.prop(self, "use_cycles")
 
     def execute(self, context):
         blend_filepath = bpy.data.filepath
         if not blend_filepath:
-            self.report({'ERROR'}, "Please save your Blender file before running this script.")
+            self.report({'ERROR'}, "Please save your Blender file first!")
             return {'CANCELLED'}
 
         root_dir = os.path.dirname(blend_filepath)
@@ -227,92 +266,30 @@ class BatchRenderThumbnailsOperator(bpy.types.Operator):
             self.report({'ERROR'}, f"STL directory not found: {stl_dir}")
             return {'CANCELLED'}
 
+        # Set global variables
         global FORCE_RERENDER, USE_CYCLES
         FORCE_RERENDER = self.force_rerender
         USE_CYCLES = self.use_cycles
 
+        # Run the render
         setup_scene()
         render_count = render_thumbnails(stl_dir, output_dir)
 
         if render_count == 0:
-            self.report({'INFO'}, "No new thumbnails to render (all exist, use Force Re-render to override)")
+            self.report({'INFO'}, "No new thumbnails to render (all exist, enable Force Re-render)")
         else:
-            self.report({'INFO'}, f"Rendered {render_count} thumbnails")
+            self.report({'INFO'}, f"✓ Rendered {render_count} thumbnails")
 
         return {'FINISHED'}
 
 def register():
-    """For potential future UI integration."""
-    if not hasattr(bpy.types, 'OBJECT_OT_batch_render_thumbnails'):
-        bpy.utils.register_class(BatchRenderThumbnailsOperator)
+    bpy.utils.register_class(BatchRenderThumbnailsOperator)
 
 
 def unregister():
-    """For potential future UI integration."""
-    if hasattr(bpy.types, 'OBJECT_OT_batch_render_thumbnails'):
-        bpy.utils.unregister_class(BatchRenderThumbnailsOperator)
+    bpy.utils.unregister_class(BatchRenderThumbnailsOperator)
 
 
-# Register immediately when script runs
-try:
-    print("\n" + "="*60)
-    print("🎬 THUMBNAIL GENERATOR Script loaded")
-    print("="*60)
-    
-    # Get directories from saved blend file
-    blend_filepath = bpy.data.filepath
-    if not blend_filepath:
-        print("[TG] ERROR: Please save your Blender file first!")
-        print("="*60 + "\n")
-    else:
-        root_dir = os.path.dirname(blend_filepath)
-        stl_dir = os.path.join(root_dir, "STL")
-        output_dir = os.path.join(root_dir, "THUMBNAILS")
-        
-        print(f"[TG] Blend file: {blend_filepath}")
-        print(f"[TG] Input:  {stl_dir}")
-        print(f"[TG] Output: {output_dir}")
-        print()
-        
-        # Check if STL directory exists
-        if not os.path.exists(stl_dir):
-            print(f"[TG] ERROR: STL directory not found!")
-            print(f"[TG] Please create: {stl_dir}")
-            print("="*60 + "\n")
-        else:
-            # Count STL files
-            stl_files = []
-            for root, dirs, files in os.walk(stl_dir):
-                for f in files:
-                    if f.lower().endswith('.stl'):
-                        stl_files.append(os.path.join(root, f))
-            
-            if not stl_files:
-                print(f"[TG] ERROR: No STL files found in {stl_dir}")
-                print("="*60 + "\n")
-            else:
-                print(f"[TG] Found {len(stl_files)} STL files:")
-                for stl_file in stl_files[:10]:
-                    rel_path = os.path.relpath(stl_file, stl_dir)
-                    print(f"[TG]   • {rel_path}")
-                if len(stl_files) > 10:
-                    print(f"[TG]   ... and {len(stl_files) - 10} more")
-                print()
-                
-                print(f"[TG] Starting render...")
-                print(f"[TG]   Force re-render: {FORCE_RERENDER}")
-                print(f"[TG]   Use Cycles: {USE_CYCLES}")
-                print()
-                
-                # Setup and render
-                setup_scene()
-                render_count = render_thumbnails(stl_dir, output_dir)
-                
-                print(f"[TG] Render complete: {render_count} thumbnails")
-                print("="*60 + "\n")
-    
-except Exception as e:
-    print(f"[TG] ERROR: {e}")
-    import traceback
-    traceback.print_exc()
-    print("="*60 + "\n")
+if __name__ == "__main__":
+    register()
+    bpy.ops.object.batch_render_thumbnails('INVOKE_DEFAULT')
