@@ -30,8 +30,31 @@ Batch convert 2D vector graphics (.svg) to print-ready 3D models (.stl). Optimiz
 ### [drop-and-center-stl](scripts/drop-and-center-stl/)
 Center 3D models on the build plate (XY center, Z at bottom). 
 
-- **Blender version:** Paste `drop-and-center-stl-blender.py` into Blender's Scripting workspace
-- **macOS app:** Standalone native application with file picker and batch processing
+**Usage:** Paste script into Blender's Scripting workspace and run.
+
+### [generate-thumbnails](scripts/generate-thumbnails/)
+Batch render 3D STL models to PNG thumbnails via Blender. Configure camera, lighting, output resolution, and rendering engine with YAML config or CLI arguments.
+
+**Usage:** 
+```bash
+python3 generate-thumbnails.py --config config.yaml
+```
+
+**Features:** Configurable EEVEE/Cycles rendering, flexible scene setup, batch processing, CLI + YAML + env var config hierarchy.
+
+[Docs & Examples](scripts/generate-thumbnails/README.md)
+
+### [build-pdf-catalog](scripts/build-pdf-catalog/)
+Generate multi-page PDF catalogs from thumbnail images organized by variant folders. Automatically extracts metadata from filenames and arranges in configurable grid layout.
+
+**Usage:** 
+```bash
+python3 build-pdf-catalog.py --config config.yaml --input thumbnails/ --output catalog.pdf
+```
+
+**Features:** Multi-page PDF generation, automatic variant detection, metadata labels, configurable grid layout, dry-run mode.
+
+[Docs & Examples](scripts/build-pdf-catalog/README.md)
 
 ---
 
