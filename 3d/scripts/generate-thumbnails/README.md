@@ -1,22 +1,36 @@
 # Generate Thumbnails
 
-Batch render 3D STL models to PNG thumbnails in Blender with an interactive dialog UI.
+Batch render 3D STL models to PNG thumbnails in Blender.
 
 ## Quick Start
 
 1. **Save a Blender file** in your project directory
-2. **Open Blender** → Scripting workspace
-3. **Load script:** File → Open → select `generate-thumbnails.py`
-4. **Run** (Alt+P or play button)
-5. **Dialog appears** showing:
-   - Input and output directories (auto-detected from .blend location)
-   - Number of STL files found
-   - Options to configure
-6. **Click** "Batch Render Thumbnails" to start
+2. **Create an `STL/` folder** next to it with your models:
+   ```
+   project/
+   ├── project.blend
+   └── STL/
+       ├── variant_1/
+       │   ├── Top/
+       │   ├── Middle/
+       │   └── Bottom/
+       └── variant_2/
+           └── ...
+   ```
+3. **Open Blender** → Scripting workspace
+4. **Load script:** File → Open → select `generate-thumbnails.py`
+5. **Run** (Alt+P or play button)
+6. **Watch the console** for progress
+
+The script will:
+- Auto-detect your STL directory (next to the .blend file)
+- Display how many files it found
+- Render all of them to `THUMBNAILS/` folder
+- Show progress in Blender's console
 
 ## Directory Structure
 
-Save your Blender file in a directory with this structure:
+Input: `STL/` folder next to your Blender file
 
 ```
 project_directory/
@@ -32,7 +46,7 @@ project_directory/
     └── ...
 ```
 
-The script will create:
+Output: `THUMBNAILS/` folder (created automatically)
 
 ```
 project_directory/
@@ -43,14 +57,23 @@ project_directory/
     │   │   └── model-02.png
     │   ├── Middle/
     │   └── Bottom/
-    ├── variant_2/
-    └── ...
+    └── variant_2/
+        └── ...
 ```
 
-## Dialog Options
+## Customization
 
-- **Force Re-render:** Re-render all images (default: unchecked = skip existing)
-- **Use Cycles Engine:** Use Cycles renderer instead of EEVEE (default: unchecked)
+Edit these settings at the top of the script:
+
+```python
+RESOLUTION_X = 512        # Output width in pixels
+RESOLUTION_Y = 512        # Output height in pixels
+RENDER_SAMPLES = 32       # EEVEE quality (higher = slower)
+USE_CYCLES = False        # False = EEVEE (faster), True = Cycles (better)
+FORCE_RERENDER = False    # False = skip existing, True = re-render all
+```
+
+Then run the script again.
 
 ## Color Coding
 
@@ -60,31 +83,43 @@ Parts are automatically colored based on filename patterns:
 - **Position:** Top = dark, Middle = medium, Bottom = light  
 - **Type:** Flat = red highlight, Tube = yellow highlight
 
-Colors blend to show all three properties simultaneously.
+## Console Output
 
-## Render Settings
+You should see something like:
 
-Edit these at the top of the script to customize:
+```
+============================================================
+🎬 THUMBNAIL GENERATOR Script loaded
+============================================================
+[TG] Blend file: /path/to/project.blend
+[TG] Input:  /path/to/STL
+[TG] Output: /path/to/THUMBNAILS
 
-```python
-RESOLUTION_X = 512        # Output width in pixels
-RESOLUTION_Y = 512        # Output height in pixels
-RENDER_SAMPLES = 32       # EEVEE quality (higher = slower)
-USE_CYCLES = False        # False = EEVEE, True = Cycles
-FORCE_RERENDER = False    # False = skip existing, True = re-render all
+[TG] Found 15 STL files:
+[TG]   • variant_1/Top/model-01.stl
+[TG]   • variant_1/Top/model-02.stl
+[TG]   ...
+
+[TG] Starting render...
+[TG]   Force re-render: False
+[TG]   Use Cycles: False
+
+[TG] 🎬 THUMBNAIL GENERATOR
+...
+✓ Rendered 15 thumbnails
+============================================================
 ```
 
 ## Troubleshooting
 
-- **Dialog doesn't appear:** Check that you saved the Blender file first
-- **"STL directory not found":** Create `STL/` folder next to your .blend file
-- **"No STL files found":** Verify files are in `STL/{variant}/{position}/` structure
-- **Rendering is slow:** Reduce `RENDER_SAMPLES` or use EEVEE (default)
-- **Black/dark renders:** Check scene lighting (sun light should be visible)
+- **"Please save your Blender file first!"**: Save your .blend file first
+- **"STL directory not found"**: Create `STL/` folder next to your .blend file
+- **"No STL files found"**: Check that files are in `STL/{variant}/{position}/` structure
+- **Rendering is slow**: Reduce `RENDER_SAMPLES` or use EEVEE (default)
+- **No console output**: Open Window → Toggle System Console (or launch Blender from terminal)
 
 ## Integration
 
-After rendering thumbnails:
-1. Use **[build-pdf-catalog](../build-pdf-catalog/)** to create a PDF catalog
-2. Or manually browse thumbnails in `THUMBNAILS/` folder
+After rendering thumbnails, use **[build-pdf-catalog](../build-pdf-catalog/)** to create a PDF catalog.
+
 
