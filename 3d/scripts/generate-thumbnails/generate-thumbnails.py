@@ -299,11 +299,6 @@ try:
                     print(f"[TG]   ... and {len(stl_files) - 10} more")
                 print()
                 
-                # Set global options
-                global FORCE_RERENDER, USE_CYCLES
-                FORCE_RERENDER = False  # Set to True to re-render all
-                USE_CYCLES = False      # Set to True for better quality (slower)
-                
                 print(f"[TG] Starting render...")
                 print(f"[TG]   Force re-render: {FORCE_RERENDER}")
                 print(f"[TG]   Use Cycles: {USE_CYCLES}")
