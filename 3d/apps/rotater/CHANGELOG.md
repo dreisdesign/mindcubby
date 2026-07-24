@@ -1,3 +1,14 @@
+## [Unreleased] - 2026-07-24
+
+### Validated
+- **V1 — Multi-select state parity on reopen**: Validated that multi-select OFF state persists correctly across open/close and reload cycles. No regression found.
+- **V2 — Multi-select toggle should not pause animation**: Validated that toggling multi-select does not pause Spin/Tilt/Wobble animations. Pause remains only for hover/inspect interaction mode.
+- **V5 — Benchy load always levels and reframes**: Validated that benchy model loads at level orientation and auto-reframes correctly on first load and after reset/load cycles.
+
+### Known Issues / Triage
+- **V3 — Right-drag pivot drift unresolved**: Right-dragging during animations causes horizontal shift and off-center pivot. Root cause: OrbitControls buffers pan operations asynchronously. Reverted attempted fixes (custom pan handler, damping disable, state clearing) — issue persists at architectural level.
+- **V4 — FPS regression test protocol unclear**: Preset-apply FPS mitigation was implemented but lacks clear baseline/after sampling protocol to validate measurable improvement.
+
 ## [Unreleased] - 2026-07-16
 
 ### Fixed

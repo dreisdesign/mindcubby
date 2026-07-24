@@ -1,6 +1,6 @@
 # Rotater Roadmap
 
-Updated: 2026-06-14
+Updated: 2026-07-24
 
 This roadmap tracks incomplete work only. Completed work is recorded in CHANGELOG.md.
 
@@ -33,11 +33,7 @@ Design status key:
 
 | ID | Project | Type | Difficulty | Design Status | Notes |
 |---|---|---|---|---|---|
-| V1 | Multi-select state parity on reopen (OFF mismatch regression) | Validation | S | Ready | Validate across open/close and reload paths |
-| V2 | Multi-select toggle behavior should not pause animation | Validation | S | Ready | Validate with Spin/Tilt active |
-| V3 | Right-drag vertical-lock behavior and pivot stability in spin/tilt flows | Validation | M | Details | Add expected-pivot assertions to smoke checklist |
-| V4 | Preset-apply FPS regression mitigation under repeated color/preset switching | Validation | M | Details | Capture baseline/after FPS sampling protocol |
-| V5 | Benchy load should always level and reframe | Validation | S | Ready | Validate first load + reset/load cycles |
+| (moved to complete) | | | | | |
 
 ### Ready Next
 
@@ -54,6 +50,8 @@ Design status key:
 
 | ID | Project | Type | Difficulty | Design Status | Notes |
 |---|---|---|---|---|---|
+| V3 | Right-drag vertical-lock behavior and pivot stability in spin/tilt flows | Validation | M | Details | Right-drag during animations shifts pivot off-axis. Needs lower-level pointer interception or custom camera handling. |
+| V4 | Preset-apply FPS regression mitigation under repeated color/preset switching | Validation | M | Details | Unclear how to test FPS regression. Need protocol for baseline capture. |
 | T1 | Optional tilt pivot choice (top/bottom anchor) | Motion UX | M | Needs design | Confirm naming and default behavior |
 | T2 | Crop/export simultaneous mode exploration with share-overlay toggle | Export UX | M | Needs design | Validate with existing crop workflow |
 | T3 | Click-to-edit build plate interaction concept (canvas-first affordance) | Interaction UX | M | Needs design | Prototype-only until conflict matrix is defined |
