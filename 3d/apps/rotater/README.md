@@ -4,10 +4,10 @@ View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapsh
 
 **Version (current workspace): 1.0.27**
 
-Documentation sync: 2026-06-14
-- Latest updates documented in `CHANGELOG.md` include crop UI refinements: consistent pointer cursor on hotspots (no flicker), visual distinction between on/off crop states, desktop layout fix (export stays in overlay), and **new crop toggle behavior** (click active crop ratio to toggle mode on/off while preserving selection).
-- Crop mode now shows by default when a ratio is pre-selected on startup/refresh, and clicking the same ratio again toggles crop mode OFF, then ON again on another click.
-- Desktop export layout now correctly maintains sidebar on v2 layout instead of taking over full screen.
+Documentation sync: 2026-07-27
+- Latest updates documented in `CHANGELOG.md` include per-part opacity control for all materials (10-100% in 10% increments), matching opacity slider gradient visual feedback, and updated undo/redo buttons with consistent 52x52px circular design matching other canvas controls.
+- Opacity values persist through undo/redo via `ppo{idx}` URL parameters and page reloads. Clear materials preserve proper light transmission by multiplying opacity by 0.92.
+- Previous updates: crop UI refinements, crop toggle behavior, desktop export layout fixes.
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 

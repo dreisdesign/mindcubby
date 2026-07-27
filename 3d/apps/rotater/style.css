@@ -1169,6 +1169,46 @@ html.loaded .canvas-replace-btn {
     font-family: "Source Sans 3", system-ui, sans-serif;
 }
 
+.undo-redo-btn {
+    z-index: 1;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 2px solid rgba(74, 67, 145, 0.14);
+    background: #fff;
+    color: var(--palette-blueberry-500);
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
+    transition: border-color 0.15s, color 0.15s, opacity 0.15s, background 0.15s;
+    font-size: 0;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+}
+
+.undo-redo-btn:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
+    color: var(--palette-blueberry-500);
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
+}
+
+.undo-redo-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.undo-redo-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.undo-redo-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-300) 75%, transparent);
+}
+
 #btnFrameOverlay {
     gap: 0;
 }
@@ -3245,6 +3285,18 @@ html.loaded footer {
 .theme-toggle-btn:hover {
     background: rgba(21, 18, 43, 0.96);
     color: var(--palette-blueberry-100);
+}
+
+/* ── Canvas top-left overlay group ── */
+
+.canvas-overlay-tl {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 /* ── Canvas bottom-left overlay group ── */
@@ -8467,6 +8519,7 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
     }
 
     html.loaded.layout-v2-desktop.export-workspace-active .canvas-top-right,
+    html.loaded.layout-v2-desktop.export-workspace-active .canvas-overlay-tl,
     html.loaded.layout-v2-desktop.export-workspace-active .canvas-overlay-bl,
     html.loaded.layout-v2-desktop.export-workspace-active .orbit-hint-bar {
         display: none !important;
@@ -8828,6 +8881,7 @@ html.loaded.export-workspace-active .canvas-wrap {
     }
 
     .export-workspace-active .canvas-bottom-center,
+    .export-workspace-active .canvas-overlay-tl,
     .export-workspace-active .canvas-overlay-bl,
     .export-workspace-active .canvas-overlay-br,
     .export-workspace-active .canvas-top-right {
@@ -9279,6 +9333,7 @@ html.theme-dark .export-crop-tab:has(input:checked) {
 /* Hide Preview UI state: hide all canvas overlays, D-pad, FPS counter, buttons */
 html.preview-ui-hidden .canvas-top-left,
 html.preview-ui-hidden .canvas-top-right,
+html.preview-ui-hidden .canvas-overlay-tl,
 html.preview-ui-hidden .canvas-overlay-bl,
 html.preview-ui-hidden .canvas-overlay-br,
 html.preview-ui-hidden .canvas-bottom-center {

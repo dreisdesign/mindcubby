@@ -1,3 +1,10 @@
+## [Unreleased] - 2026-07-27
+
+### Added
+- **Per-part opacity slider for all materials**: Added official opacity control above the Shade slider, enabling transparency adjustment for any material type (not just Clear). Opacity ranges from 10% to 100% in 10% increments, with matching snap points. Clear materials multiply transparency by 0.92 to maintain proper light transmission. Opacity values persist through undo/redo via `ppo{idx}` URL parameters and survive page reloads.
+- **Updated undo/redo button styling**: Redo and Undo buttons now use matching 52x52px circular design consistent with other canvas controls (Pause, Inspect, Camera buttons). Buttons include proper hover scaling, focus indicators, and disabled state styling.
+- **Improved opacity slider visual feedback**: Opacity slider gradient dynamically updates to show the current part color transitioning from transparent (left) to fully opaque (right), providing visual confirmation of opacity changes.
+
 ## [Unreleased] - 2026-07-24
 
 ### Validated

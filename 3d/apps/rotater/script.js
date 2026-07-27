@@ -169,6 +169,9 @@ import {
     createRightPanLockController,
 } from './modules/right-pan-lock.js';
 import {
+    createSettingsUndoController,
+} from './modules/settings-undo.js';
+import {
     parseStackablesFilenames,
     isValidStackablesFilename,
 } from './modules/export-recipe-card-parser.js';
@@ -898,6 +901,8 @@ const viewerSec = document.getElementById('viewerSection');
 const colorPick = document.getElementById('colorPicker');
 const opacitySlider = document.getElementById('opacitySlider');
 const opacityVal = document.getElementById('opacityVal');
+const partOpacitySlider = document.getElementById('partOpacitySlider');
+const partOpacityVal = document.getElementById('partOpacityVal');
 const quickPresetsBar = document.getElementById('quickPresetsBar');
 const modelCardSliders = document.querySelector('#modelBox .model-sliders');
 const modelPartThumbsWrap = document.getElementById('modelPartThumbsWrap');
@@ -1107,6 +1112,12 @@ try {
     else if (localStorage.getItem('rotater_devlog') === '1') DEV_LOG = true;
 } catch (e) { }
 let suppressSave = false;
+let suppressUndoSnapshot = true; // Start true to prevent snapshots during initialization
+let isUndoRedoInProgress = false; // Flag to prevent snapshots during undo/redo navigation
+let undoRedoNavigationInFlight = false; // Guard against rapid undo/redo clicks during page navigation
+console.log('[Init] Page load started, suppressUndoSnapshot initialized to true');
+const pageLoadId = Math.random().toString(36).substr(2, 9);
+console.log('[Init] Page load ID:', pageLoadId);
 // Declared early so restoreSettings() (called before these would otherwise be
 // initialized by their let declarations later in the file) can safely read/write them.
 let activeModelPreset = 'custom';
@@ -2778,6 +2789,12 @@ function getMaterial(shading, baseColor, partSettings) {
     const toneVal = ps != null && ps.tone != null ? ps.tone : parseInt(opacitySlider ? opacitySlider.value : 0, 10);
     const baseC = computeModelDisplayColor(baseColor, toneVal, ps);
 
+    // Per-part opacity (transparency) - separate from tone (color shade)
+    // If part has explicit opacity set, use it; otherwise use 100 (opaque)
+    const partOpacity = ps != null && ps.partOpacity != null ? ps.partOpacity : 100;
+    const opacityPercent = Math.max(0, Math.min(100, partOpacity));
+    const alphaValue = opacityPercent / 100; // Convert to 0-1 range
+
     // Per-part roughness/metalness when available; fall back to global textureTuneState.
     const matteRoughness = ps != null && ps.matteRoughness != null ? ps.matteRoughness : textureTuneState.matteRoughness;
     const matteReflection = ps != null && ps.matteReflection != null ? ps.matteReflection : textureTuneState.matteReflection;
@@ -2790,13 +2807,16 @@ function getMaterial(shading, baseColor, partSettings) {
     const materialFamily = normalizeMaterialFamily(ps?.materialFamily, getMaterialFamilyFromShading(shading));
     const isClear = materialFamily === 'clear' || shading === "clear" || shading === "glass";
     const isCeramicLike = materialFamily === 'ceramic' && shading === 'phong';
-    const finalAlpha = isClear ? 0.92 : 1.0;
+    
+    // Determine if material should be transparent based on opacity and type
+    const isTransparent = opacityPercent < 100 || isClear;
+    const finalAlpha = isClear && isTransparent ? 0.92 * alphaValue : alphaValue;
 
     const base = {
         color: baseC, side: THREE.DoubleSide, shadowSide: THREE.FrontSide,
-        transparent: isClear,
+        transparent: isTransparent,
         opacity: finalAlpha,
-        depthWrite: !isClear
+        depthWrite: !isTransparent
     };
 
     if (isClear) {
@@ -3508,6 +3528,7 @@ function createPartSettings(colorHex = colorPick.value) {
     return {
         color: colorHex,
         tone: parseInt(opacitySlider ? opacitySlider.value : 0, 10) || 0,
+        partOpacity: 100, // Per-part transparency: 0-100 (100 = fully opaque)
         shading: shadingEl?.value || 'phong',
         materialFamily: getMaterialFamilyFromShading(shadingEl?.value || 'phong'),
         hidden: false,
@@ -3764,6 +3785,18 @@ function updateShadeSliderVisual() {
     opacitySlider.style.setProperty('--slider-track-gradient', `linear-gradient(to right, ${lightHex} 0%, ${darkHex} 100%)`);
 }
 
+function updatePartOpacitySliderVisual() {
+    if (!partOpacitySlider) return;
+    const s = getSelectedPartSettings();
+    const baseHex = s?.color || colorPick.value;
+    const opaqueColor = baseHex;
+    const transparentColor = `${baseHex}00`; // Add 00 alpha for full transparency
+    // Create gradient from transparent (left) to opaque (right)
+    partOpacitySlider.style.setProperty('--slider-fill', opaqueColor);
+    partOpacitySlider.style.setProperty('--slider-track-base', opaqueColor);
+    partOpacitySlider.style.setProperty('--slider-track-gradient', `linear-gradient(to right, ${transparentColor} 0%, ${opaqueColor} 100%)`);
+}
+
 function updateBgShadeSliderVisual() {
     if (!bgOpacitySlider || !bgPick) return;
     const baseHex = getActiveBackgroundBaseColor();
@@ -3807,6 +3840,14 @@ function syncUIFromSelectedPart() {
         const toneVal = Math.round(getSliderEffectiveValue(opacitySlider));
         opacityVal.textContent = (toneVal >= 0 ? '+' : '') + toneVal;
         syncSliderTooltip(opacitySlider);
+    }
+    // Sync per-part opacity slider
+    if (partOpacitySlider) {
+        const opacity = s.partOpacity ?? 100;
+        partOpacitySlider.value = String(opacity);
+        partOpacityVal.textContent = String(Math.round(opacity));
+        syncSliderTooltip(partOpacitySlider);
+        updatePartOpacitySliderVisual();
     }
     if (shadingEl) shadingEl.value = s.shading || shadingEl.value;
 
@@ -5150,6 +5191,13 @@ window.addEventListener('scroll', () => {
 
 document.addEventListener('keydown', (ev) => {
     if (ev.key === 'Escape') closeModelPartActionMenus();
+});
+
+document.addEventListener('keydown', (ev) => {
+    if ((ev.metaKey || ev.ctrlKey) && ev.key === 'z') {
+        ev.preventDefault();
+        restoreSettingsUndo();
+    }
 });
 
 fileChipEl?.addEventListener('click', (ev) => {
@@ -6734,6 +6782,7 @@ const cropDimensionsDockController = createCropDimensionsDockController({
     getCropFrameRect,
 });
 const rightPanLockController = createRightPanLockController();
+const settingsUndoController = createSettingsUndoController();
 
 function setExportWorkspaceActive(active) {
     exportWorkspaceRuntimeController.setExportWorkspaceActive(active);
@@ -8262,6 +8311,36 @@ function scheduleSettingsToURL(delayMs = 120) {
     settingsUrlSyncController.schedule(delayMs);
 }
 
+function restoreSettingsUndo() {
+    // Guard against rapid undo clicks during page navigation
+    if (undoRedoNavigationInFlight) {
+        console.log('[UNDO] Undo/redo navigation already in flight, ignoring');
+        return;
+    }
+    
+    console.log('[UNDO] restoreSettingsUndo() CALLED');
+    const undoUrl = settingsUndoController.undo();
+    if (!undoUrl) {
+        console.warn('[UNDO] No undo snapshot available');
+        return;
+    }
+
+    console.log('[UNDO] About to navigate to:', undoUrl);
+    try {
+        // Set flags to prevent snapshots during navigation and restoration
+        undoRedoNavigationInFlight = true;
+        isUndoRedoInProgress = true;
+        // Ensure suppression is enabled during the navigation
+        suppressUndoSnapshot = true;
+        // Navigate to the saved URL to restore settings
+        window.location.href = undoUrl;
+    } catch (e) {
+        console.error('[UNDO] Failed to restore URL:', e);
+        undoRedoNavigationInFlight = false;
+        isUndoRedoInProgress = false;
+    }
+}
+
 function saveSettings() {
     const options = arguments[0] || {};
     const immediateUrlSync = !!options?.immediateUrlSync;
@@ -8270,6 +8349,7 @@ function saveSettings() {
         if (DEV_LOG) console.log(`[rotater] saveSettings suppressed at ${Date.now()}`);
         return;
     }
+
     const orbitState = (camera && controls) ? getOrbitFrameStateFast() : null;
     const orbitTarget = orbitState?.target;
     try {
@@ -8374,6 +8454,7 @@ function saveSettings() {
     }
     if (immediateUrlSync) flushSettingsToURL();
     else scheduleSettingsToURL();
+    updateUndoButtonState();
 }
 
 function restoreSettings() {
@@ -8425,7 +8506,19 @@ function restoreSettings() {
 
         if (s && Object.keys(s).length > 0) {
             if (s.shading === 'flat' || s.shading === 'toon') s.shading = 'matte'; // migrate legacy modes
-            if (s.color) colorPick.value = s.color;
+            if (s.color) {
+                colorPick.value = s.color;
+                // Apply color to mesh by calling the handler functions directly
+                if (typeof applyColorPickPreview === 'function') {
+                    applyColorPickPreview();
+                }
+                if (typeof flushColorPickPreview === 'function') {
+                    flushColorPickPreview();
+                }
+                if (typeof flushColorCommit === 'function') {
+                    flushColorCommit();
+                }
+            }
             if ((s.tone !== undefined || s.opacity !== undefined) && opacitySlider) {
                 let toneRestored;
                 if (s.tone !== undefined) {
@@ -8453,7 +8546,26 @@ function restoreSettings() {
                     lastManualBgShade = Math.max(-100, Math.min(100, manualShade));
                 }
             }
-            if (s.bg) bgPick.value = s.bg;
+            if (s.bg) {
+                bgPick.value = s.bg;
+                // Apply background color by executing the input handler logic directly
+                scene.background = null;
+                {
+                    const tone = bgOpacitySlider ? Math.round(getSliderEffectiveValue(bgOpacitySlider)) : 0;
+                    const baseHex = getActiveBackgroundBaseColor();
+                    const c = computeSurfaceShadeColor(baseHex, tone);
+                    if (renderer) renderer.setClearColor(c, 1);
+                }
+                if (typeof updateBuildPlateMaterial === 'function') {
+                    updateBuildPlateMaterial({ skipTextureRefresh: true });
+                }
+                if (typeof updateBgShadeSliderVisual === 'function') {
+                    updateBgShadeSliderVisual();
+                }
+                if (isDynamicBg && typeof updateDynamicBg === 'function') {
+                    updateDynamicBg();
+                }
+            }
             if (s.shading) {
                 shadingEl.value = s.shading;
                 // Ensure the preview material matches the restored shading immediately.
@@ -8799,6 +8911,7 @@ function restoreSettings() {
         if (pendingUrlModelAppearanceOverride && modelPartSettings.length) {
             applyPendingUrlModelAppearanceOverride();
             if (mesh) rebuildMeshMaterialsForCurrentShading();
+            if (mesh) applyPartColorsToMesh();  // Apply the appearance changes to the 3D mesh
         }
 
         // Always apply mode-based classes/slider setup — even when s is null (settings reset)
@@ -8881,6 +8994,7 @@ function restoreSettings() {
         } else {
             saveSettings();
         }
+        updateUndoButtonState();
     } catch (e) { /* non-fatal */ }
 }
 
@@ -8975,6 +9089,161 @@ function getURLSettings(searchStr = location.search) {
     };
 }
 
+function getUndoSnapshotURL(baseURL) {
+    // Use provided URL (freshly built) or fall back to current location
+    let url = baseURL || window.location.href;
+
+    // For multipart models, encode all part colors, shading, material family, AND texture tune values into the URL
+    if (isMultipartModel() && modelPartBaseColors.length > 1) {
+        // Remove existing multipart params if present
+        const urlObj = new URL(url);
+        const params = urlObj.searchParams;
+
+        // Remove old pc*, ps*, pmf*, pt* params
+        for (let i = 0; i < 10; i++) {
+            params.delete(`pc${i}`);
+            params.delete(`ps${i}`);
+            params.delete(`pmf${i}`);
+            params.delete(`pt${i}`);
+        }
+
+        // Add current part colors as pc0, pc1, pc2, etc.
+        modelPartBaseColors.forEach((color, idx) => {
+            params.set(`pc${idx}`, color.replace('#', ''));
+        });
+
+        // Add shading, material family, and texture tune for each part
+        modelPartSettings.forEach((partSettings, idx) => {
+            if (partSettings) {
+                if (partSettings.shading) {
+                    params.set(`ps${idx}`, partSettings.shading);
+                }
+                if (partSettings.materialFamily) {
+                    params.set(`pmf${idx}`, partSettings.materialFamily);
+                }
+                // Encode texture tune as comma-separated: mroughness,mmetalness,mreflection,proughness,preflection,mroughness,mreflection,tone
+                const tuneStr = [
+                    partSettings.metallicRoughness ?? '',
+                    partSettings.metallicMetalness ?? '',
+                    partSettings.metallicReflection ?? '',
+                    partSettings.phongRoughness ?? '',
+                    partSettings.phongReflection ?? '',
+                    partSettings.matteRoughness ?? '',
+                    partSettings.matteReflection ?? '',
+                    partSettings.tone ?? '0'
+                ].join(',');
+                if (tuneStr !== ',,,,,,0') { // Only store if non-default
+                    console.log(`[getUndoSnapshotURL] Part ${idx} capturing texture tune: ${tuneStr}`);
+                    params.set(`pt${idx}`, tuneStr);
+                }
+                
+                // Capture per-part opacity (ppo = part per-opacity)
+                if (partSettings.partOpacity != null && partSettings.partOpacity !== 100) {
+                    console.log(`[getUndoSnapshotURL] Part ${idx} capturing opacity: ${partSettings.partOpacity}`);
+                    params.set(`ppo${idx}`, String(partSettings.partOpacity));
+                }
+            }
+        });
+
+        url = urlObj.toString();
+    }
+
+    return url;
+}
+
+function applyMultipartColorsFromURL() {
+    if (!isMultipartModel() || !modelPartBaseColors.length) return;
+
+    // Look for pc0, pc1, pc2, etc. in URL for colors AND ps0, ps1, etc. for shading AND pt0, pt1, etc. for texture tune
+    const params = new URLSearchParams(location.search);
+    let foundChanges = false;
+
+    for (let i = 0; i < modelPartBaseColors.length; i++) {
+        // Restore color for this part
+        const colorParam = params.get(`pc${i}`);
+        if (colorParam) {
+            modelPartBaseColors[i] = '#' + colorParam.toLowerCase();
+            if (modelPartSettings[i]) {
+                modelPartSettings[i].color = modelPartBaseColors[i];
+            }
+            foundChanges = true;
+        }
+
+        // Restore shading for this part
+        const shadingParam = params.get(`ps${i}`);
+        const materialFamilyParam = params.get(`pmf${i}`);
+        
+        if ((shadingParam || materialFamilyParam) && modelPartSettings[i]) {
+            if (shadingParam) {
+                modelPartSettings[i].shading = shadingParam;
+            }
+            // Use explicit material family if provided, otherwise derive from shading
+            if (materialFamilyParam) {
+                modelPartSettings[i].materialFamily = materialFamilyParam;
+                console.log(`[applyMultipartColorsFromURL] Part ${i} restored material family: ${materialFamilyParam}`);
+            } else if (shadingParam) {
+                modelPartSettings[i].materialFamily = getMaterialFamilyFromShading(shadingParam);
+            }
+            foundChanges = true;
+        }
+
+        // Restore texture tune for this part
+        const tuneParam = params.get(`pt${i}`);
+        if (tuneParam && modelPartSettings[i]) {
+            const parts = tuneParam.split(',');
+            if (parts.length >= 8) {
+                const metallicRoughness = parseFloat(parts[0]);
+                const metallicMetalness = parseFloat(parts[1]);
+                const metallicReflection = parseFloat(parts[2]);
+                const phongRoughness = parseFloat(parts[3]);
+                const phongReflection = parseFloat(parts[4]);
+                const matteRoughness = parseFloat(parts[5]);
+                const matteReflection = parseFloat(parts[6]);
+                const tone = parseInt(parts[7], 10);
+
+                console.log(`[applyMultipartColorsFromURL] Part ${i} texture tune: roughness=${metallicRoughness}, metalness=${metallicMetalness}, reflection=${metallicReflection}`);
+
+                if (!isNaN(metallicRoughness)) modelPartSettings[i].metallicRoughness = metallicRoughness;
+                if (!isNaN(metallicMetalness)) modelPartSettings[i].metallicMetalness = metallicMetalness;
+                if (!isNaN(metallicReflection)) modelPartSettings[i].metallicReflection = metallicReflection;
+                if (!isNaN(phongRoughness)) modelPartSettings[i].phongRoughness = phongRoughness;
+                if (!isNaN(phongReflection)) modelPartSettings[i].phongReflection = phongReflection;
+                if (!isNaN(matteRoughness)) modelPartSettings[i].matteRoughness = matteRoughness;
+                if (!isNaN(matteReflection)) modelPartSettings[i].matteReflection = matteReflection;
+                if (Number.isFinite(tone)) modelPartSettings[i].tone = tone;
+
+                foundChanges = true;
+            }
+        }
+
+        // Restore per-part opacity
+        const opacityParam = params.get(`ppo${i}`);
+        if (opacityParam && modelPartSettings[i]) {
+            const opacity = parseInt(opacityParam, 10);
+            if (!isNaN(opacity)) {
+                modelPartSettings[i].partOpacity = opacity;
+                console.log(`[applyMultipartColorsFromURL] Part ${i} restored opacity: ${opacity}%`);
+                foundChanges = true;
+            }
+        }
+    }
+
+    // If we found multipart changes, apply them to mesh
+    if (foundChanges && mesh) {
+        console.log('[applyMultipartColorsFromURL] Found changes, applying to mesh');
+        if (typeof applyPartColorsToMesh === 'function') {
+            console.log('[applyMultipartColorsFromURL] Calling applyPartColorsToMesh()');
+            applyPartColorsToMesh();
+        }
+        if (typeof rebuildMeshMaterialsForCurrentShading === 'function') {
+            console.log('[applyMultipartColorsFromURL] Calling rebuildMeshMaterialsForCurrentShading()');
+            rebuildMeshMaterialsForCurrentShading();
+        }
+    } else {
+        console.log(`[applyMultipartColorsFromURL] No changes to apply (foundChanges=${foundChanges}, mesh=${!!mesh})`);
+    }
+}
+
 function settingsToURL() {
     const p = new URLSearchParams();
     const selectedPartSettings = getSelectedPartSettings();
@@ -9062,11 +9331,29 @@ function settingsToURL() {
     if (uploadDefaultAction === 'replace') p.set('uam', 'r');
     if (devModeEnabled) p.set('dv', '1');
     history.replaceState(null, '', '?' + p.toString());
+
+    // Capture this URL as a potential undo point (but not during page restoration or undo/redo operations)
+    const colorHex = colorPick.value.replace('#', '').toUpperCase();
+    if (suppressUndoSnapshot || isUndoRedoInProgress) {
+        console.log('[settingsToURL] SKIPPING snapshot - suppress=' + suppressUndoSnapshot + ', undoRedoInProgress=' + isUndoRedoInProgress);
+    } else if (!settingsUndoController) {
+        console.log('[settingsToURL] SKIPPING snapshot - no controller');
+    } else {
+        console.log('[settingsToURL] CAPTURING snapshot - c=' + colorHex);
+        // For multipart models, capture all part colors in the snapshot URL
+        // Pass the freshly-built URL (before history.replaceState) to ensure accuracy
+        const freshURL = window.location.origin + window.location.pathname + '?' + p.toString();
+        const snapshotURL = getUndoSnapshotURL(freshURL);
+        settingsUndoController.captureSnapshot(snapshotURL);
+    }
 }
 
 async function restoreSession() {
     // Always show the full viewer shell first so startup is consistent:
     // Splash -> full UI (no model yet) -> full UI with model.
+    suppressUndoSnapshot = true; // Prevent snapshots during initialization
+    isUndoRedoInProgress = false; // Reset undo/redo flag on page load
+    undoRedoNavigationInFlight = false; // Reset undo/redo navigation guard on page load
     document.documentElement.classList.add('startup-shell-ready');
     document.documentElement.classList.remove('startup-model-ready');
     if (!renderer) initThree();
@@ -9085,6 +9372,17 @@ async function restoreSession() {
     const saved = await loadFileFromIDB();
     if (!saved) {
         scheduleAutoDemoModelLoad();
+        // Re-enable snapshots after restoration completes (300ms is safe for initialization)
+        setTimeout(() => {
+            suppressUndoSnapshot = false;
+            isUndoRedoInProgress = false;
+            undoRedoNavigationInFlight = false;
+            console.log('[restoreSession] Re-enabled undo snapshots (no saved file) after 300ms delay');
+            // Ensure preset thumbnails are updated to show correct active preset
+            if (typeof updateShadingThumbs === 'function') {
+                updateShadingThumbs();
+            }
+        }, 300);
         return;
     }
     const isMultipart = Array.isArray(saved.parts) && saved.parts.length > 1;
@@ -9110,6 +9408,14 @@ async function restoreSession() {
                 saved.parts.map(p => p.color || colorPick.value),
                 saved.parts.map(p => p.settings || null),
             );
+            // NOW apply multipart colors from URL if present (for undo/redo) - AFTER mesh is loaded
+            applyMultipartColorsFromURL();
+            // Reload the currently selected part's material settings into global state
+            syncUIFromSelectedPart();
+            // Rebuild mesh materials with restored texture tune values
+            if (mesh && typeof rebuildMeshMaterialsForCurrentShading === 'function') {
+                rebuildMeshMaterialsForCurrentShading();
+            }
         } else {
             modelPartFiles = null;
             await loadSTLBuffer(saved.buffer, saved.name);
@@ -9120,6 +9426,17 @@ async function restoreSession() {
         setTimeout(() => setStatus(''), 5200);
         scheduleAutoDemoModelLoad();
     }
+    // Re-enable snapshots after restoration completes (300ms is safe for initialization)
+    setTimeout(() => {
+        suppressUndoSnapshot = false;
+        isUndoRedoInProgress = false;
+        undoRedoNavigationInFlight = false;
+        console.log('[restoreSession] Re-enabled undo snapshots after 300ms delay');
+        // Ensure preset thumbnails are updated to show correct active preset
+        if (typeof updateShadingThumbs === 'function') {
+            updateShadingThumbs();
+        }
+    }, 300);
 }
 
 function suppressAutoDemoModelLoad() {
@@ -9942,6 +10259,42 @@ function forceSpinRangeDefault() {
 btnPause.addEventListener('click', togglePause);
 document.getElementById('btnExportPause')?.addEventListener('click', togglePause);
 updateExportPauseButtonUI();
+
+// Settings Undo button
+const btnSettingsUndo = document.getElementById('btnSettingsUndo');
+const btnSettingsRedo = document.getElementById('btnSettingsRedo');
+function updateUndoButtonState() {
+    if (!btnSettingsUndo) return;
+    const hasUndo = settingsUndoController.hasUndo();
+    const hasRedo = settingsUndoController.hasRedo();
+    btnSettingsUndo.disabled = !hasUndo;
+    btnSettingsUndo.style.opacity = hasUndo ? '1' : '0.4';
+    if (btnSettingsRedo) {
+        btnSettingsRedo.disabled = !hasRedo;
+        btnSettingsRedo.style.opacity = hasRedo ? '1' : '0.4';
+    }
+}
+btnSettingsUndo?.addEventListener('click', restoreSettingsUndo);
+btnSettingsRedo?.addEventListener('click', () => {
+    // Guard against rapid redo clicks during page navigation
+    if (undoRedoNavigationInFlight) {
+        console.log('[REDO] Undo/redo navigation already in flight, ignoring');
+        return;
+    }
+    
+    const redoUrl = settingsUndoController.redo();
+    if (redoUrl) {
+        console.log('[REDO] Navigating to:', redoUrl);
+        // Set flags to prevent snapshots during navigation and restoration
+        undoRedoNavigationInFlight = true;
+        isUndoRedoInProgress = true;
+        // Ensure suppression is enabled during the navigation
+        suppressUndoSnapshot = true;
+        window.location.href = redoUrl;
+    }
+});
+updateUndoButtonState();
+
 applyDpadVisibility();
 
 function mapDpadHorizontalDirection(dir) {
@@ -10448,6 +10801,7 @@ function applyColorPickPreview() {
 
     if (mesh) applyPartColorsToMesh({ buildPlatePreview: activeBuildPlatePreset === 'modelcolor' });
     updateShadeSliderVisual();
+    updatePartOpacitySliderVisual();
     updateFinishSliderVisual();
     if (activeBgPreset === 'modelcolor') {
         bgPick.value = getModelSyncSourceColor();
@@ -10531,6 +10885,7 @@ if (opacitySlider) {
         });
         if (mesh) applyPartColorsToMesh({ buildPlatePreview: activeBuildPlatePreset === 'modelcolor' });
         updateShadeSliderVisual();
+        updatePartOpacitySliderVisual();
         scheduleModelToneCommit(targets);
     });
     opacitySlider.addEventListener('change', () => {
@@ -10557,6 +10912,33 @@ if (bgOpacitySlider) {
     bgOpacitySlider.addEventListener('change', () => {
         bgOpacitySlider.value = String(getSliderEffectiveValue(bgOpacitySlider));
         saveSettings();
+    });
+}
+
+// Per-part opacity (transparency) slider handler
+if (partOpacitySlider) {
+    partOpacitySlider.addEventListener('input', () => {
+        const opacityVal = Math.round(getSliderEffectiveValue(partOpacitySlider));
+        partOpacityVal.textContent = String(opacityVal);
+        syncSliderTooltip(partOpacitySlider);
+        
+        // Apply opacity to selected part(s)
+        const targets = applyToModelPartEditTargets((partSettings) => {
+            partSettings.partOpacity = opacityVal;
+        });
+        
+        // Rebuild materials to apply new opacity
+        if (mesh && typeof rebuildMeshMaterialsForCurrentShading === 'function') {
+            rebuildMeshMaterialsForCurrentShading();
+        }
+        
+        // Schedule undo snapshot
+        scheduleSettingsToURL();
+    });
+    
+    partOpacitySlider.addEventListener('change', () => {
+        partOpacitySlider.value = String(getSliderEffectiveValue(partOpacitySlider));
+        flushSettingsToURL();
     });
 }
 
@@ -14278,6 +14660,7 @@ requestAnimationFrame(() => {
         loadColorRules().finally(() => {
             initPresetGallery();
             updateShadeSliderVisual();
+            updatePartOpacitySliderVisual();
             updateBgShadeSliderVisual();
             updateBuildPlateShadeSliderVisual();
         }).then(() => restoreSession()).finally(finishRestoreSessionState);
@@ -14535,6 +14918,15 @@ function applyModelPresetOnly(preset) {
         applyPresetIntoPartSettings(partSettings, p, preset.id);
         modelPartBaseColors[idx] = partSettings.color;
     });
+
+    // Capture undo snapshot AFTER applying preset - so all part changes are included
+    try {
+        const snapshotURL = getUndoSnapshotURL();
+        settingsUndoController.captureSnapshot(snapshotURL);
+    } catch (e) {
+        console.warn('[Settings Undo] Failed to capture URL:', e);
+    }
+
     syncUIFromSelectedPart();
 
     if (mesh) {
@@ -15189,6 +15581,7 @@ function setShadeBlendMode(mode, persist = true) {
     syncShadeModeControls();
     if (mesh) applyPartColorsToMesh({ buildPlatePreview: activeBuildPlatePreset === 'modelcolor' });
     updateShadeSliderVisual();
+    updatePartOpacitySliderVisual();
     updateBgShadeSliderVisual();
     updateBuildPlateShadeSliderVisual();
     updateBuildPlateMaterial();
