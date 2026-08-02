@@ -1,0 +1,18 @@
+{
+    "name": "G-CODER - G-Code to Printables Specs",
+    "short_name": "G-CODER",
+    "description": "Generate printer specs directly from G-code",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff",
+    "icons": [
+        {
+            "src": "favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ]
+}
