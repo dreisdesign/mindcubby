@@ -31,6 +31,7 @@ _ignore/
 **/_ignore/
 _IGNORE/
 **/_IGNORE/
+SCRIPT TESTING/
 
 # Secrets & credentials — never commit these
 .env
