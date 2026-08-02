@@ -1,3 +1,8 @@
+## [Unreleased] - 2026-08-02
+
+### Added
+- **Settings undo/redo persistence via localStorage**: Implemented `settings-undo.js` module providing persistent undo/redo history across page reloads. Maintains a 50-entry circular history buffer with deduplication logic (skips identical consecutive snapshots and snapshots matching current position). History state and index stored in localStorage under `rotater-settings-history` key. Provides `captureSnapshot(url)`, `undo()`, `redo()`, `hasUndo()`, `hasRedo()`, and `clearHistory()` methods.
+
 ## [Unreleased] - 2026-07-27
 
 ### Added

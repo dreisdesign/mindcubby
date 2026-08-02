@@ -4,8 +4,8 @@ View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapsh
 
 **Version (current workspace): 1.0.27**
 
-Documentation sync: 2026-07-27
-- Latest updates documented in `CHANGELOG.md` include per-part opacity control for all materials (10-100% in 10% increments), matching opacity slider gradient visual feedback, and updated undo/redo buttons with consistent 52x52px circular design matching other canvas controls.
+Documentation sync: 2026-08-02
+- Latest updates documented in `CHANGELOG.md` include persistent undo/redo history via localStorage (50-item circular buffer with deduplication), per-part opacity control for all materials (10-100% in 10% increments), matching opacity slider gradient visual feedback, and updated undo/redo buttons with consistent 52x52px circular design matching other canvas controls.
 - Opacity values persist through undo/redo via `ppo{idx}` URL parameters and page reloads. Clear materials preserve proper light transmission by multiplying opacity by 0.92.
 - Previous updates: crop UI refinements, crop toggle behavior, desktop export layout fixes.
 
@@ -89,6 +89,7 @@ Current extracted modules:
 | [modules/export-recipe-card-aggregator.js](modules/export-recipe-card-aggregator.js) | Logic to group and aggregate parts by spec and color | Active |
 | [modules/export-recipe-card-renderer.js](modules/export-recipe-card-renderer.js) | HTML/CSS generator for the draggable recipe visualizer | Active |
 | [modules/export-recipe-card-thumbnails.js](modules/export-recipe-card-thumbnails.js) | Async 3D thumbnail generator for recipe card ingredients | Active |
+| [modules/settings-undo.js](modules/settings-undo.js) | Persistent undo/redo history controller with localStorage backing and circular buffer deduplication | Active |
 
 ---
 

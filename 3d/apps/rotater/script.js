@@ -2807,7 +2807,7 @@ function getMaterial(shading, baseColor, partSettings) {
     const materialFamily = normalizeMaterialFamily(ps?.materialFamily, getMaterialFamilyFromShading(shading));
     const isClear = materialFamily === 'clear' || shading === "clear" || shading === "glass";
     const isCeramicLike = materialFamily === 'ceramic' && shading === 'phong';
-    
+
     // Determine if material should be transparent based on opacity and type
     const isTransparent = opacityPercent < 100 || isClear;
     const finalAlpha = isClear && isTransparent ? 0.92 * alphaValue : alphaValue;
@@ -8317,7 +8317,7 @@ function restoreSettingsUndo() {
         console.log('[UNDO] Undo/redo navigation already in flight, ignoring');
         return;
     }
-    
+
     console.log('[UNDO] restoreSettingsUndo() CALLED');
     const undoUrl = settingsUndoController.undo();
     if (!undoUrl) {
@@ -9136,7 +9136,7 @@ function getUndoSnapshotURL(baseURL) {
                     console.log(`[getUndoSnapshotURL] Part ${idx} capturing texture tune: ${tuneStr}`);
                     params.set(`pt${idx}`, tuneStr);
                 }
-                
+
                 // Capture per-part opacity (ppo = part per-opacity)
                 if (partSettings.partOpacity != null && partSettings.partOpacity !== 100) {
                     console.log(`[getUndoSnapshotURL] Part ${idx} capturing opacity: ${partSettings.partOpacity}`);
@@ -9172,7 +9172,7 @@ function applyMultipartColorsFromURL() {
         // Restore shading for this part
         const shadingParam = params.get(`ps${i}`);
         const materialFamilyParam = params.get(`pmf${i}`);
-        
+
         if ((shadingParam || materialFamilyParam) && modelPartSettings[i]) {
             if (shadingParam) {
                 modelPartSettings[i].shading = shadingParam;
@@ -10281,7 +10281,7 @@ btnSettingsRedo?.addEventListener('click', () => {
         console.log('[REDO] Undo/redo navigation already in flight, ignoring');
         return;
     }
-    
+
     const redoUrl = settingsUndoController.redo();
     if (redoUrl) {
         console.log('[REDO] Navigating to:', redoUrl);
@@ -10921,21 +10921,21 @@ if (partOpacitySlider) {
         const opacityVal = Math.round(getSliderEffectiveValue(partOpacitySlider));
         partOpacityVal.textContent = String(opacityVal);
         syncSliderTooltip(partOpacitySlider);
-        
+
         // Apply opacity to selected part(s)
         const targets = applyToModelPartEditTargets((partSettings) => {
             partSettings.partOpacity = opacityVal;
         });
-        
+
         // Rebuild materials to apply new opacity
         if (mesh && typeof rebuildMeshMaterialsForCurrentShading === 'function') {
             rebuildMeshMaterialsForCurrentShading();
         }
-        
+
         // Schedule undo snapshot
         scheduleSettingsToURL();
     });
-    
+
     partOpacitySlider.addEventListener('change', () => {
         partOpacitySlider.value = String(getSliderEffectiveValue(partOpacitySlider));
         flushSettingsToURL();
