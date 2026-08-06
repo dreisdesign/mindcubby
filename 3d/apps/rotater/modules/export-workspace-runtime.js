@@ -40,7 +40,7 @@ export function createExportWorkspaceRuntimeController({
                 setWorkspaceActive?.(!!nextActive);
             },
             rootEl,
-            applyRootWorkspaceClass: !isDesktopV2Layout,
+            applyRootWorkspaceClass: true,
             exportOverlayEl,
             exportGridEl,
             rulerLinesVisible: !!getRulerLinesVisible?.(),

@@ -1,3 +1,11 @@
+## [Unreleased] - 2026-08-06
+
+### Fixed
+- **Export workspace transparency checkered pattern now works on desktop**: Fixed issue where checkered background pattern only displayed on mobile but not desktop layouts. Root cause: `applyRootWorkspaceClass` was set to `!isDesktopV2Layout`, preventing the `export-workspace-active` class from being applied to the HTML root on desktop. Changed to always apply the class across all layouts. Added desktop-specific CSS rule with `layout-v2-desktop` selector to ensure checkered pattern renders correctly on desktop Chrome while maintaining mobile compatibility.
+
+### Removed
+- **Stashed SVG export functionality**: Temporarily disabled SVG export feature (not ready for production). Commented out `renderSvgBlob()` function, SVG button event listener, and removed SVG from FORMAT_BTNS. Removed SVG tab from export UI. All code preserved for future re-enabling.
+
 ## [Unreleased] - 2026-08-02
 
 ### Added

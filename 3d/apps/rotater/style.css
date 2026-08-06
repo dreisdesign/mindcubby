@@ -567,6 +567,15 @@ html.export-workspace-active .canvas-wrap.is-export-transparent {
     background-position: 0 0, 14px 14px;
 }
 
+html.loaded.layout-v2-desktop.export-workspace-active .canvas-wrap.is-export-transparent {
+    background-color: #f0f0f0;
+    background-image:
+        linear-gradient(45deg, rgba(0, 0, 0, 0.08) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.08) 75%),
+        linear-gradient(45deg, rgba(0, 0, 0, 0.08) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.08) 75%);
+    background-size: 28px 28px;
+    background-position: 0 0, 14px 14px;
+}
+
 .canvas-wrap canvas {
     width: 100% !important;
     height: 100% !important;
@@ -1313,7 +1322,7 @@ html.none-mode #btnExportPause {
     grid-template-columns: repeat(3, 1.9rem);
     grid-template-rows: repeat(3, 1.9rem);
     gap: 3px;
-    z-index: 1;
+    z-index: 10;
     pointer-events: auto;
 }
 
@@ -3729,41 +3738,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     margin: 0;
 }
 
-.export-preview-details {
-    margin: 0;
-}
 
-.export-preview-summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    list-style: none;
-    padding: 4px 0;
-}
-
-.export-preview-summary::-webkit-details-marker {
-    display: none;
-}
-
-.export-preview-summary::after {
-    content: '';
-    width: 18px;
-    height: 18px;
-    color: var(--color-label);
-    background: currentColor;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z'/%3E%3C/svg%3E") center / contain no-repeat;
-    transition: transform 0.16s ease;
-}
-
-.export-preview-details:not([open]) .export-preview-summary::after {
-    transform: rotate(-90deg);
-}
-
-.export-preview-details:not([open]) .export-preview-wrap {
-    display: none;
-}
 
 .export-dimensions-row {
     display: flex;
@@ -3912,42 +3887,10 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
     display: none !important;
 }
 
-/* Preview thumbnail */
-.export-preview-wrap {
-    width: 100%;
-    max-width: 470px;
-    margin-left: auto;
-    margin-right: auto;
-    border-radius: 6px;
-    overflow: hidden;
-    background: var(--color-background);
-    margin-top: 8px;
-    margin-bottom: 0;
-    position: relative;
-    aspect-ratio: 1 / 1;
-    border: 1.5px solid var(--color-border, rgba(0, 0, 0, 0.14));
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-}
+/* Modal preview for export */
 
-.export-preview-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
 
-/* Checkerboard when preview is rendered with alpha */
-.export-preview-wrap.is-transparent {
-    background-color: transparent;
-    background-image:
-        linear-gradient(45deg, rgba(0, 0, 0, 0.06) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.06) 75%),
-        linear-gradient(45deg, rgba(0, 0, 0, 0.06) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.06) 75%);
-    background-size: 16px 16px;
-    background-position: 0 0, 8px 8px;
-    border-color: rgba(0, 0, 0, 0.22);
-}
 
-/* Main export button */
 .export-btn--main {
     display: inline-flex;
     align-items: center;
@@ -9086,9 +9029,7 @@ html.loaded.export-workspace-active .canvas-wrap {
     margin-top: 0;
 }
 
-.export-preview-details--legacy[hidden] {
-    display: none !important;
-}
+
 
 .export-format-tabs {
     display: grid;

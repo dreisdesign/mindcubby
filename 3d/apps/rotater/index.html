@@ -1103,6 +1103,7 @@
                                 aria-selected="false">PNG</button>
                             <button type="button" class="export-format-tab" data-export-format-tab="jpg" role="tab"
                                 aria-selected="false">JPEG</button>
+                            <!-- SVG export temporarily stashed -->
                         </div>
                     </div>
 
@@ -1116,6 +1117,7 @@
                                 <option value="mp4">MP4 Video</option>
                                 <option value="png">PNG Image</option>
                                 <option value="jpg">JPEG Image</option>
+                                <option value="svg">SVG Vector</option>
                             </select>
                         </div>
                         <div class="export-select-group export-select-group--size">
@@ -1218,17 +1220,15 @@
                     <div id="exportOpts-jpg" class="export-format-opts" hidden>
                     </div>
 
-                    <div id="exportPreviewDetails" class="export-preview-details export-preview-details--legacy" hidden
-                        aria-hidden="true">
-                        <div class="export-preview-wrap">
-                            <canvas id="exportPreview" class="export-preview-canvas"></canvas>
-                        </div>
+                    <div id="exportOpts-svg" class="export-format-opts" hidden>
+                        <input type="checkbox" id="exportTransparentSvg" hidden>
                     </div>
 
                     <button id="btnExportGif" hidden style="display:none"></button>
                     <button id="btnExportVideo" hidden style="display:none"></button>
                     <button id="btnExportPng" hidden style="display:none"></button>
                     <button id="btnExportJpeg" hidden style="display:none"></button>
+                    <button id="btnExportSvg" hidden style="display:none"></button>
 
                     <div class="anim-export-footer">
                         <div id="animProgress" class="anim-progress" hidden>

@@ -6580,8 +6580,12 @@ function loop() {
 
         profiler.markStart('render');
         const renderWithExportOptions = !!(exportFrameEnabled && !isExporting);
-        const restoreViewportExportScene = renderWithExportOptions
-            ? applyExportSceneForRender({ maintainBackground: true })
+        const renderWithWorkspaceTransparency = !!(exportWorkspaceActive && !isExporting && !(exportBgColorEl?.checked ?? true));
+        const restoreViewportExportScene = (renderWithExportOptions || renderWithWorkspaceTransparency)
+            ? applyExportSceneForRender({
+                maintainBackground: renderWithExportOptions && !renderWithWorkspaceTransparency,
+                forceTransparent: renderWithWorkspaceTransparency,
+            })
             : null;
         try {
             renderer.render(scene, camera);
@@ -8973,16 +8977,6 @@ function restoreSettings() {
         if (!exportFormatEl?.value || !document.getElementById(`exportOpts-${exportFormatEl.value}`)) {
             applyExportFormat('gif');
         }
-        // Restore export checkbox states from URL/localStorage
-        if (s.exportBgColor != null) {
-            const bgChecked = (s.exportBgColor === '1' || s.exportBgColor === true || s.exportBgColor === 1);
-            const el = document.getElementById('exportBgColor');
-            if (el) {
-                el.checked = bgChecked;
-                // Sync dependent checkboxes and patterns
-                syncTransparentCheckboxes('exportBgColor');
-            }
-        }
         syncCropModeFromSelectedExportDimensions();
         updateCardResetButtonStates();
     } catch (e) { }
@@ -9041,7 +9035,6 @@ function getURLSettings(searchStr = location.search) {
         exportImageSize: g('eis'),
         exportDimensions: g('ed'),
         exportTransparent: p.has('et') ? p.get('et') : null,
-        exportBgColor: p.has('ebg') ? p.get('ebg') : null,
         gifDither: p.has('gd') ? p.get('gd') : null,
         jpegQuality: g('jq'),
         textureTuneOpen: p.has('tto') ? p.get('tto') : null,
@@ -9280,7 +9273,6 @@ function settingsToURL() {
     const dim = getSelectedExportDimensionsId();
     if (dim) p.set('ed', dim);
     p.set('et', document.getElementById('exportTransparent')?.checked ? '1' : '0');
-    p.set('ebg', document.getElementById('exportBgColor')?.checked ? '1' : '0');
     p.set('gd', document.getElementById('gifDither')?.checked ? '1' : '0');
     const jq = document.getElementById('jpegQuality')?.value;
     if (jq != null) p.set('jq', jq);
@@ -10552,6 +10544,25 @@ document.getElementById('btnExportJpeg').addEventListener('click', async () => {
     }
 });
 
+// SVG export temporarily stashed - function not ready for production
+// document.getElementById('btnExportSvg').addEventListener('click', async () => {
+//     if (!mesh) return;
+//     await ensurePausedForStillExport();
+//     // SVG respects the main Background toggle
+//     const isTransparent = !(document.getElementById('exportBgColor')?.checked ?? true);
+//
+//     try {
+//         const blob = await renderSvgBlob({ transparent: isTransparent });
+//         download(blob, buildExportFilename('svg'), 'image/svg+xml');
+//     } catch (err) {
+//         setStatus('Error: ' + err.message);
+//         console.error(err);
+//         setTimeout(() => setStatus(''), 5000);
+//     } finally {
+//         schedulePostExportViewportResync();
+//     }
+// });
+
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
@@ -11203,15 +11214,18 @@ function syncExportSizeSelectForFormat(format = exportFormatEl?.value ?? 'gif') 
 
 function syncExportQualityUiForFormat(format = exportFormatEl?.value ?? 'gif') {
     const qualityGroupEl = document.querySelector('.export-select-group--quality');
+    const sizeGroupEl = document.querySelector('.export-select-group--size');
     const durationGroupEl = document.querySelector('.export-select-group--duration');
     const isAnimated = format === 'gif' || format === 'mp4';
     const isStill = format === 'png' || format === 'jpg';
-    if (qualityGroupEl) qualityGroupEl.hidden = false;
+    const isSvg = format === 'svg';
+    if (qualityGroupEl) qualityGroupEl.hidden = isSvg;
+    if (sizeGroupEl) sizeGroupEl.hidden = isSvg;
     if (durationGroupEl) durationGroupEl.hidden = !isAnimated;
     if (exportQualityLabelEl) exportQualityLabelEl.textContent = 'Quality';
-    if (exportQualityLabelEl) exportQualityLabelEl.hidden = isStill;
+    if (exportQualityLabelEl) exportQualityLabelEl.hidden = isStill || isSvg;
     if (exportQualitySegmentedEl) exportQualitySegmentedEl.hidden = !isAnimated;
-    if (exportCompressionRowEl) exportCompressionRowEl.hidden = !isStill;
+    if (exportCompressionRowEl) exportCompressionRowEl.hidden = !isStill || isSvg;
     if (gifLoopRowEl) gifLoopRowEl.hidden = format !== 'gif';
     if (gifDitherRowEl) gifDitherRowEl.hidden = format !== 'gif';
     if (exportQualityMiniSummaryEl) exportQualityMiniSummaryEl.hidden = false;
@@ -11482,7 +11496,7 @@ const FORMAT_SHORT_LABELS = {
     png: 'Export PNG',
     jpg: 'Export JPEG',
 };
-const FORMAT_BTNS = { gif: 'btnExportGif', mp4: 'btnExportVideo', png: 'btnExportPng', jpg: 'btnExportJpeg' };
+const FORMAT_BTNS = { gif: 'btnExportGif', mp4: 'btnExportVideo', png: 'btnExportPng', jpg: 'btnExportJpeg' }; // svg: 'btnExportSvg' stashed
 
 const EXPORT_OPTION_VISIBILITY = {
     gif: {
@@ -11507,6 +11521,13 @@ const EXPORT_OPTION_VISIBILITY = {
         exportBuildPlate: true,
     },
     jpg: {
+        gifLoop: false,
+        gifDither: false,
+        exportBgColor: true,
+        exportGrid: true,
+        exportBuildPlate: true,
+    },
+    svg: {
         gifLoop: false,
         gifDither: false,
         exportBgColor: true,
@@ -11584,6 +11605,9 @@ function applyExportFormat(fmt) {
         refreshExportPreviewNow,
         queueDesktopV2RailLayoutSync,
     });
+
+
+
     syncExportSizeSelectForFormat(fmt);
     syncExportQualityUiForFormat(fmt);
 }
@@ -11617,12 +11641,6 @@ bindExportFormatSelectChangeHandlersController({
     exportFormatCollapsedEl,
     onApply: applyExportFormat,
     onSave: saveSettings,
-});
-
-bindExportPreviewDetailsToggleController({
-    previewDetailsEl: document.getElementById('exportPreviewDetails'),
-    onRefreshPreview: refreshExportPreviewNow,
-    onQueueRailLayoutSync: queueDesktopV2RailLayoutSync,
 });
 
 btnToggleExportPanel?.addEventListener('click', () => {
@@ -11799,17 +11817,107 @@ function syncTransparentCheckboxes(sourceId = 'exportBgColor') {
     syncTransparentCheckboxesController(sourceId, {
         transparentEl: document.getElementById('exportTransparent'),
         transparentPngEl: document.getElementById('exportTransparentPng'),
+        transparentSvgEl: document.getElementById('exportTransparentSvg'),
         bgToggleEl: document.getElementById('exportBgColor'),
-        exportPreviewWrapEl: document.querySelector('.export-preview-wrap'),
         updateExportWorkspaceTransparencyPattern,
         updateEstimate,
         saveSettings,
         refreshExportPreviewNow,
     });
 }
-document.getElementById('exportBgColor')?.addEventListener('change', () => syncTransparentCheckboxes('exportBgColor'));
-document.getElementById('exportTransparent')?.addEventListener('change', () => syncTransparentCheckboxes('exportTransparent'));
-document.getElementById('exportTransparentPng')?.addEventListener('change', () => syncTransparentCheckboxes('exportTransparentPng'));
+document.getElementById('exportBgColor')?.addEventListener('change', (e) => {
+    // Update main canvas transparency pattern
+    updateExportWorkspaceTransparencyPattern();
+    refreshExportPreviewNow();
+});
+
+// Debug: Verify CSS rules are loaded
+function validateExportPreviewStyles() {
+    console.log('[CSS Debug] ========== Validating Export Preview Styles ==========');
+
+    const wrap = document.querySelector('.canvas-wrap');
+    console.log('[CSS Debug] Preview wrap element exists:', !!wrap);
+
+    if (!wrap) {
+        console.warn('[CSS Debug] Preview wrap not found in DOM');
+        return;
+    }
+
+    // Check if CSS rule is loaded
+    const stylesheets = Array.from(document.styleSheets);
+    console.log('[CSS Debug] Total stylesheets loaded:', stylesheets.length);
+
+    let foundRule = false;
+    stylesheets.forEach((sheet, idx) => {
+        try {
+            const rules = Array.from(sheet.cssRules || sheet.rules || []);
+            rules.forEach(rule => {
+                if (rule.selectorText && rule.selectorText.includes('is-transparent')) {
+                    console.log('[CSS Debug] Found is-transparent rule in stylesheet', idx);
+                    console.log('[CSS Debug]   Selector:', rule.selectorText);
+                    console.log('[CSS Debug]   Background-image:', rule.style.backgroundImage?.substring(0, 80));
+                    console.log('[CSS Debug]   Background-size:', rule.style.backgroundSize);
+                    foundRule = true;
+                }
+            });
+        } catch (e) {
+            console.log('[CSS Debug] Stylesheet', idx, 'is cross-origin or protected');
+        }
+    });
+
+    if (!foundRule) {
+        console.warn('[CSS Debug] WARNING: is-transparent CSS rule NOT found!');
+    }
+
+    // Test the class
+    console.log('[CSS Debug] Testing class application...');
+    wrap.classList.add('is-transparent');
+    const computedAfterAdd = window.getComputedStyle(wrap);
+    console.log('[CSS Debug] After adding is-transparent class:');
+    console.log('[CSS Debug]   Computed backgroundImage:', computedAfterAdd.backgroundImage?.substring(0, 100));
+    console.log('[CSS Debug]   Computed backgroundSize:', computedAfterAdd.backgroundSize);
+    console.log('[CSS Debug]   Computed display:', computedAfterAdd.display);
+    console.log('[CSS Debug]   Computed visibility:', computedAfterAdd.visibility);
+    console.log('[CSS Debug]   offsetHeight:', wrap.offsetHeight);
+    console.log('[CSS Debug]   offsetWidth:', wrap.offsetWidth);
+
+    wrap.classList.remove('is-transparent');
+    console.log('[CSS Debug] ========== Validation Complete ==========');
+}
+
+// Expose for debugging
+window.validateExportPreviewStyles = validateExportPreviewStyles;
+
+// Run validation when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', validateExportPreviewStyles);
+} else {
+    validateExportPreviewStyles();
+}
+document.getElementById('exportTransparent')?.addEventListener('change', () => {
+    syncTransparentCheckboxes('exportTransparent');
+    refreshExportPreviewNow();
+});
+document.getElementById('exportTransparentPng')?.addEventListener('change', () => {
+    syncTransparentCheckboxes('exportTransparentPng');
+    refreshExportPreviewNow();
+});
+document.getElementById('exportTransparentSvg')?.addEventListener('change', () => {
+    syncTransparentCheckboxes('exportTransparentSvg');
+    refreshExportPreviewNow();
+});
+document.getElementById('exportGrid')?.addEventListener('change', () => {
+    refreshExportPreviewNow();
+    saveSettings();
+});
+document.getElementById('exportBuildPlate')?.addEventListener('change', () => {
+    refreshExportPreviewNow();
+    saveSettings();
+});
+document.getElementById('exportRuler')?.addEventListener('change', () => {
+    refreshExportPreviewNow();
+    saveSettings();
+});
 document.getElementById('jpegQuality').addEventListener('input', function () {
     document.getElementById('jpegQualityVal').textContent = this.value + '%';
     syncSliderTooltip(this);
@@ -13768,46 +13876,7 @@ canvas?.addEventListener('pointercancel', () => {
     setRulerHoveredPartIndex(-1);
 });
 
-const exportPreviewCanvas = document.getElementById('exportPreview');
-const exportPreviewWrap = exportPreviewCanvas?.closest('.export-preview-wrap');
-const exportPreviewForwardHost = exportPreviewWrap || exportPreviewCanvas;
-let _previewForwardPointer = null;
-
-function forwardPreviewPointerToMainCanvas(e) {
-    if (!canvas || !controls) return;
-    const init = {
-        pointerId: e.pointerId,
-        pointerType: e.pointerType,
-        isPrimary: e.isPrimary,
-        button: e.button,
-        buttons: e.buttons,
-        clientX: e.clientX,
-        clientY: e.clientY,
-        screenX: e.screenX,
-        screenY: e.screenY,
-        ctrlKey: e.ctrlKey,
-        shiftKey: e.shiftKey,
-        altKey: e.altKey,
-        metaKey: e.metaKey,
-        pressure: e.pressure,
-        tangentialPressure: e.tangentialPressure,
-        tiltX: e.tiltX,
-        tiltY: e.tiltY,
-        twist: e.twist,
-        width: e.width,
-        height: e.height,
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-    };
-    try {
-        canvas.dispatchEvent(new PointerEvent(e.type, init));
-    } catch (_) {
-        if (e.type === 'pointercancel') return;
-        const fallbackType = e.type.replace('pointer', 'mouse');
-        canvas.dispatchEvent(new MouseEvent(fallbackType, init));
-    }
-}
+// Modal preview removed - using main canvas for export preview
 
 function isCanvasOrbitClickGuardEligible(e) {
     return !!(
@@ -13859,69 +13928,7 @@ function dispatchSyntheticCanvasPointer(type, source) {
     }
 }
 
-if (exportPreviewForwardHost) {
-    ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((eventName) => {
-        exportPreviewForwardHost.addEventListener(eventName, (e) => {
-            if (!canvas || !controls) return;
-            if (eventName === 'pointerdown' && e.button === 0 && e.isTrusted) {
-                _previewForwardPointer = {
-                    pointerId: e.pointerId,
-                    startX: e.clientX,
-                    startY: e.clientY,
-                    moved: false,
-                };
-            } else if (eventName === 'pointermove' && _previewForwardPointer && e.pointerId === _previewForwardPointer.pointerId) {
-                const dx = e.clientX - _previewForwardPointer.startX;
-                const dy = e.clientY - _previewForwardPointer.startY;
-                if ((dx * dx) + (dy * dy) > (CANVAS_ORBIT_CLICK_DRAG_THRESHOLD_PX * CANVAS_ORBIT_CLICK_DRAG_THRESHOLD_PX)) {
-                    _previewForwardPointer.moved = true;
-                }
-            } else if ((eventName === 'pointerup' || eventName === 'pointercancel') && _previewForwardPointer && e.pointerId === _previewForwardPointer.pointerId) {
-                const shouldClose = false; // preview clicks orbit the model; close via canvas or close button
-                _previewForwardPointer = null;
-                if (shouldClose) {
-                    closeExportWorkspace();
-                }
-            }
-            e.preventDefault();
-            e.stopPropagation();
-            forwardPreviewPointerToMainCanvas(e);
-        }, { passive: false });
-    });
-
-    exportPreviewForwardHost.addEventListener('wheel', (e) => {
-        if (!canvas || !controls) return;
-        e.preventDefault();
-        e.stopPropagation();
-        const forwarded = new WheelEvent('wheel', {
-            deltaX: e.deltaX,
-            deltaY: e.deltaY,
-            deltaZ: e.deltaZ,
-            clientX: e.clientX,
-            clientY: e.clientY,
-            ctrlKey: e.ctrlKey,
-            shiftKey: e.shiftKey,
-            altKey: e.altKey,
-            metaKey: e.metaKey,
-            bubbles: true,
-            cancelable: true,
-        });
-        canvas.dispatchEvent(forwarded);
-    }, { passive: false });
-
-    exportPreviewForwardHost.addEventListener('contextmenu', (e) => {
-        if (!canvas || !controls) return;
-        e.preventDefault();
-        e.stopPropagation();
-        canvas.dispatchEvent(new MouseEvent('contextmenu', {
-            clientX: e.clientX,
-            clientY: e.clientY,
-            bubbles: true,
-            cancelable: true,
-        }));
-    });
-
-}
+// Preview canvas event forwarding removed - main canvas is now the preview
 
 // ── Crop corner drag to snap aspect ratio ─────────────────────────────────────
 let _cropCornerDrag = null; // { id, startX, startY, initW, initH } or null
@@ -14240,6 +14247,74 @@ async function renderStillImageBlob(type, { quality = 0.92, transparent = false 
     if (!blob) throw new Error('Could not encode exported image.');
     return blob;
 }
+
+// Render 2D view as SVG (embeds high-res raster in scalable SVG container)
+// Note: This embeds a 2048x2048 PNG inside the SVG for maximum compatibility.
+// The SVG wrapper makes it scalable and importable into design tools.
+// True vector tracing is complex for 3D renders; this raster approach is reliable.
+// SVG export temporarily stashed - function not ready for production
+// async function renderSvgBlob({ transparent = false } = {}) {
+//     if (!renderer || !camera || !scene || !mesh) throw new Error('Viewer is not ready.');
+//     const wasCropEnabled = exportFrameEnabled;
+//     if (exportFrameEnabled) exportFrameEnabled = false;
+//     const W = 2048;
+//     const H = 2048;
+//     validateExportWorkload({ format: 'svg', width: W, height: H, fps: 1, frames: 1 });
+//     const savedAspect = camera.aspect;
+//     const savedZoom = camera.zoom;
+//     const savedCamPos = camera.position.clone();
+//     const savedUp = camera.up.clone();
+//     const savedTarget = controls?.target ? controls.target.clone() : new THREE.Vector3(0, 0, 0);
+//     const { target, dist, elev, az } = getOrbitFrameState();
+//     const SSAA = 2;
+//     const savedPR = renderer.getPixelRatio();
+//     const wrap = canvas.parentElement;
+//     const savedViewW = Math.max(1, wrap.clientWidth);
+//     const savedViewH = Math.max(1, wrap.clientHeight);
+//     renderer.setPixelRatio(1);
+//     renderer.setSize(W * SSAA, H * SSAA, false);
+//     camera.aspect = W / H;
+//     camera.zoom = camera.zoom || 1;
+//     setCameraFromOrbitState(camera, target, dist, elev, az);
+//     camera.updateProjectionMatrix();
+//     const restoreExportScene = applyExportSceneForRender({ forceTransparent: transparent });
+//     try {
+//         syncLightRig();
+//         renderer.render(scene, camera);
+//     } finally {
+//         restoreExportScene();
+//     }
+//     const out = document.createElement('canvas');
+//     out.width = W;
+//     out.height = H;
+//     const outCtx = out.getContext('2d', { willReadFrequently: true });
+//     outCtx.imageSmoothingEnabled = true;
+//     outCtx.imageSmoothingQuality = 'high';
+//     outCtx.drawImage(canvas, 0, 0, W, H);
+//     drawRulerOverlay(outCtx, W, H, camera);
+//     camera.position.copy(savedCamPos);
+//     camera.up.copy(savedUp);
+//     camera.aspect = savedAspect;
+//     camera.zoom = savedZoom;
+//     camera.lookAt(savedTarget);
+//     camera.updateProjectionMatrix();
+//     if (controls?.target) controls.target.copy(savedTarget);
+//     controls?.update?.();
+//     renderer.setPixelRatio(savedPR);
+//     renderer.setSize(savedViewW, savedViewH, false);
+//     camera.aspect = savedViewW / savedViewH;
+//     camera.updateProjectionMatrix();
+//     renderer.render(scene, camera);
+//     exportFrameEnabled = wasCropEnabled;
+//     const pngDataUrl = out.toDataURL('image/png');
+//     const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+// <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+//      width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+//   <image x="0" y="0" width="${W}" height="${H}" xlink:href="${pngDataUrl}"/>
+// </svg>`;
+//     const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+//     return blob;
+// }
 
 // Capture N frames by orbiting the camera, return array of Uint8ClampedArrays
 async function captureFrames(n, dims = null, transparent = false, options = {}) {
