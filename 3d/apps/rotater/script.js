@@ -8973,6 +8973,16 @@ function restoreSettings() {
         if (!exportFormatEl?.value || !document.getElementById(`exportOpts-${exportFormatEl.value}`)) {
             applyExportFormat('gif');
         }
+        // Restore export checkbox states from URL/localStorage
+        if (s.exportBgColor != null) {
+            const bgChecked = (s.exportBgColor === '1' || s.exportBgColor === true || s.exportBgColor === 1);
+            const el = document.getElementById('exportBgColor');
+            if (el) {
+                el.checked = bgChecked;
+                // Sync dependent checkboxes and patterns
+                syncTransparentCheckboxes('exportBgColor');
+            }
+        }
         syncCropModeFromSelectedExportDimensions();
         updateCardResetButtonStates();
     } catch (e) { }
@@ -9031,6 +9041,7 @@ function getURLSettings(searchStr = location.search) {
         exportImageSize: g('eis'),
         exportDimensions: g('ed'),
         exportTransparent: p.has('et') ? p.get('et') : null,
+        exportBgColor: p.has('ebg') ? p.get('ebg') : null,
         gifDither: p.has('gd') ? p.get('gd') : null,
         jpegQuality: g('jq'),
         textureTuneOpen: p.has('tto') ? p.get('tto') : null,
@@ -9269,6 +9280,7 @@ function settingsToURL() {
     const dim = getSelectedExportDimensionsId();
     if (dim) p.set('ed', dim);
     p.set('et', document.getElementById('exportTransparent')?.checked ? '1' : '0');
+    p.set('ebg', document.getElementById('exportBgColor')?.checked ? '1' : '0');
     p.set('gd', document.getElementById('gifDither')?.checked ? '1' : '0');
     const jq = document.getElementById('jpegQuality')?.value;
     if (jq != null) p.set('jq', jq);
