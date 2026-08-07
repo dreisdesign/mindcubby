@@ -12,10 +12,10 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 
 ✅ **No Installation Required** – Runs entirely in your browser  
 ✅ **Fast Processing** – Parse G-code files instantly  
-✅ **Multi-Slicer Support** – Works with Cura and PrusaSlicer/SuperSlicer  
-✅ **Rich Formatting** – Generates Markdown tables optimized for Printables  
-✅ **Smart Copy** – Copy as raw Markdown or formatted HTML for direct pasting  
-✅ **Download Export** – Save specifications as `.md` files  
+✅ **Multi-Slicer Support** – Works with Cura, PrusaSlicer, SuperSlicer, and OrcaSlicer  
+✅ **Extraction Verification** – Verify accuracy with raw G-code lines paired to extracted values  
+✅ **Multiple Export Formats** – Full JSON, Pure JSON, Pure G-Code, or Side-by-Side Comparison  
+✅ **Object-Level Overrides** – Correctly handles per-object settings from post-processing scripts  
 ✅ **No Data Upload** – All processing happens locally in your browser  
 
 ---
@@ -41,11 +41,13 @@ G-coder automatically extracts and formats:
 
 1. **Visit** https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
 2. **Click** "Select G-Code File" or drag & drop your `.gcode` file
-3. **View** the formatted specifications in the preview
-4. **Choose** an action:
-   - **Copy for Printables (Rich Text)** – Paste directly into Printables description
-   - **Copy Markdown** – Copy raw Markdown text
-   - **Download .md** – Save as a Markdown file
+3. **View** extracted specifications with accuracy verification
+4. **Choose** an export format:
+   - **Full JSON** – Complete verification log with raw G-code lines paired to extracted values (recommended for detailed cross-checking)
+   - **Pure JSON** – Settings dictionary only, minimal format
+   - **Pure G-Code** – Extracted G-code comment lines as plain text
+   - **Comparison** – Opens side-by-side table in new window: raw lines vs. extracted values
+   - **Reprocess** – Re-extract settings with current app version (useful after app updates)
 
 ---
 
@@ -93,6 +95,35 @@ G-coder correctly handles **object-level settings overrides** from post-processi
 - Thickness calculations never override object-level settings
 
 This is especially useful when working with **OrcaSlicer's model-specific settings**.
+
+### Extraction Verification & Cross-Checking
+
+G-coder includes a built-in **verification system** to ensure extraction accuracy:
+
+- **Verification Summary** – Shows total settings extracted and any discrepancies detected
+- **Raw G-Code Pairing** – Each extracted setting includes the original G-code comment line for manual verification
+- **Computed vs. Extracted** – Yellow highlighting shows when a value differs from its source
+- **Multiple Export Formats** – Export as Full JSON (with verification log), Pure JSON, Pure G-Code, or visual Comparison
+
+The **Full JSON export** is designed for easy cross-checking:
+```json
+{
+  "verification_log": {
+    "summary": {
+      "total_settings_extracted": 615,
+      "settings_with_differences": 0
+    },
+    "settings": {
+      "wall_loops": {
+        "extracted_gcode_line": "; wall_loops = 2",
+        "extracted_value": "2",
+        "computed_final_value": "2",
+        "has_difference": false
+      }
+    }
+  }
+}
+```
 
 ## Example Output
 
