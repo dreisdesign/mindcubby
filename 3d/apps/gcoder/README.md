@@ -41,12 +41,10 @@ G-coder automatically extracts and formats:
 
 1. **Visit** https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
 2. **Click** "Select G-Code File" or drag & drop your `.gcode` file
-3. **View** extracted specifications with accuracy verification
-4. **Choose** an export format:
-   - **Full JSON** – Complete verification log with raw G-code lines paired to extracted values (recommended for detailed cross-checking)
-   - **Pure JSON** – Settings dictionary only, minimal format
-   - **Pure G-Code** – Extracted G-code comment lines as plain text
-   - **Comparison** – Opens side-by-side table in new window: raw lines vs. extracted values
+3. **View** extracted specifications with accuracy verification in the table
+4. **Choose** an action:
+   - **Export Settings** – Download settings as JSON (stripped format for import/archiving)
+   - **View Comparison** – Open side-by-side comparison in new window: raw G-code lines vs. extracted values (for verification)
    - **Reprocess** – Re-extract settings with current app version (useful after app updates)
 
 ---

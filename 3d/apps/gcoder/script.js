@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusMessage = document.getElementById('statusMessage');
 
     const btnCopyRich = document.getElementById('btnCopyRich');
-    const btnCopySettings = document.getElementById('btnCopySettings');
     const btnDownload = document.getElementById('btnDownload');
 
     let currentFileName = '';
@@ -136,78 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Download All Settings as JSON
-    btnCopySettings.addEventListener('click', () => {
-        if (!currentSpecs) {
-            alert('No settings available. Parse a G-code file first.');
-            return;
-        }
-
-        // Build verification section showing raw G-code lines paired with computed values
-        const verificationData = {};
-        const differences = [];
-
-        if (currentSpecs.extraction_log) {
-            for (const [key, logEntry] of Object.entries(currentSpecs.extraction_log)) {
-                const computed = logEntry.computed_value !== null ? logEntry.computed_value : logEntry.extracted_value;
-                const hasDifference = valuesDiffer(logEntry.extracted_value, computed);
-
-                verificationData[key] = {
-                    extracted_gcode_line: logEntry.raw_line,
-                    extracted_value: logEntry.extracted_value,
-                    is_object_override: logEntry.is_override,
-                    override_source: logEntry.override_source || null,
-                    computed_final_value: computed,
-                    has_difference: hasDifference
-                };
-
-                // Track differences for summary
-                if (hasDifference) {
-                    differences.push({
-                        setting_name: key,
-                        extracted_value: logEntry.extracted_value,
-                        computed_final_value: computed,
-                        override_applied: logEntry.override_source ? true : false,
-                        override_source: logEntry.override_source || null
-                    });
-                }
-            }
-        }
-
-        const settingsJSON = JSON.stringify({
-            file: currentFileName,
-            extracted_at: new Date().toISOString(),
-            print_specs: {
-                estimated_print_time: formatTime(currentSpecs.print_time_s),
-                filament_used_g: currentSpecs.filament_used_g,
-                layer_height: currentSpecs.layer_height,
-                nozzle_temp: currentSpecs.nozzle_temp,
-                bed_temp: currentSpecs.bed_temp,
-                printer_model: currentSpecs.printer_model,
-                slicer: currentSpecs.slicer
-            },
-            verification_log: {
-                description: "Raw G-code lines paired with computed values for cross-checking accuracy",
-                summary: {
-                    total_settings_extracted: Object.keys(verificationData).length,
-                    settings_with_differences: differences.length,
-                    differences_flagged: differences.length > 0 ? differences : null
-                },
-                settings: verificationData
-            }
-        }, null, 2);
-
-        const blob = new Blob([settingsJSON], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = currentFileName.replace(/\.gcode$/i, '') + '_SETTINGS.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast(btnCopySettings, 'Downloaded!');
-    });
-
     // Hide markdown download button and preview area
     if (btnDownload) btnDownload.style.display = 'none';
     if (previewArea) previewArea.style.display = 'none';
@@ -240,37 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             showToast(btnPureJSON, 'Downloaded!');
-        });
-    }
-
-    // Pure G-code export (only extracted G-code lines)
-    const btnPureGcode = document.getElementById('btnPureGcode');
-    if (btnPureGcode) {
-        btnPureGcode.addEventListener('click', () => {
-            if (!currentSpecs) {
-                alert('No settings available. Parse a G-code file first.');
-                return;
-            }
-
-            let gcodeLines = '';
-            if (currentSpecs.extraction_log) {
-                for (const [key, logEntry] of Object.entries(currentSpecs.extraction_log)) {
-                    if (logEntry.raw_line) {
-                        gcodeLines += logEntry.raw_line + '\n';
-                    }
-                }
-            }
-
-            const blob = new Blob([gcodeLines], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = currentFileName.replace(/\.gcode$/i, '') + '_EXTRACTED.txt';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast(btnPureGcode, 'Downloaded!');
         });
     }
 
