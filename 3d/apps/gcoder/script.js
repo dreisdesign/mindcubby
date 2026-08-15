@@ -243,9 +243,89 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${totalMinutes} Minute${totalMinutes > 1 ? 's' : ''}`;
     }
 
-    // Pure JSON export - AI-Friendly Settings Summary
-    // Optimized for sharing with AI for troubleshooting
-    // Export as JSON
+    // === SHARED EXPORT DATA BUILDER ===
+    // Builds hierarchical export data matching the display order exactly
+    function buildHierarchicalExportData() {
+        if (!currentSpecs) return [];
+        
+        const rows = [];
+        
+        // === PROFILE SETTINGS (from object_level_settings) ===
+        if (currentSpecs.hierarchy && currentSpecs.hierarchy.object_level_settings) {
+            const objectSettings = currentSpecs.hierarchy.object_level_settings;
+            if (Object.keys(objectSettings).length > 0) {
+                rows.push({ type: 'section_header', label: 'Profile Settings' });
+                
+                // Organize by categories (matching display logic)
+                const categorizedSettings = {};
+                for (const [category, subcategories] of Object.entries(SETTING_CATEGORIES)) {
+                    categorizedSettings[category] = {};
+                    for (const [subcategory, settingsList] of Object.entries(subcategories)) {
+                        categorizedSettings[category][subcategory] = [];
+                        for (const setting of settingsList) {
+                            if (objectSettings.hasOwnProperty(setting)) {
+                                const val = objectSettings[setting];
+                                const displayValue = formatSettingValue(val);
+                                categorizedSettings[category][subcategory].push({ setting, value: displayValue });
+                            }
+                        }
+                    }
+                    // Remove empty subcategories
+                    for (const subcat in categorizedSettings[category]) {
+                        if (categorizedSettings[category][subcat].length === 0) {
+                            delete categorizedSettings[category][subcat];
+                        }
+                    }
+                    // Remove empty categories
+                    if (Object.keys(categorizedSettings[category]).length === 0) {
+                        delete categorizedSettings[category];
+                    }
+                }
+                
+                // Add rows for each category/subcategory
+                for (const [category, subcategories] of Object.entries(categorizedSettings)) {
+                    rows.push({ type: 'category_header', label: `${category} Profile` });
+                    for (const [subcategory, settings] of Object.entries(subcategories)) {
+                        rows.push({ type: 'subcategory_header', label: subcategory });
+                        for (const { setting, value } of settings) {
+                            rows.push({ type: 'setting', key: setting, value, section: `${category}: ${subcategory}` });
+                        }
+                    }
+                }
+            }
+        }
+        
+        // === LAYER RANGES ===
+        if (currentSpecs.hierarchy && currentSpecs.hierarchy.layer_ranges && currentSpecs.hierarchy.layer_ranges.length > 0) {
+            rows.push({ type: 'section_header', label: 'Layer Ranges' });
+            for (let i = 0; i < currentSpecs.hierarchy.layer_ranges.length; i++) {
+                const range = currentSpecs.hierarchy.layer_ranges[i];
+                const min_z = range.z_range.min;
+                const max_z = range.z_range.max;
+                rows.push({ type: 'range_header', label: `Layer Range ${min_z}–${max_z}mm` });
+                for (const [key, value] of Object.entries(range.merged_effective || {})) {
+                    const displayValue = formatSettingValue(value);
+                    rows.push({ type: 'setting', key, value: displayValue, section: `Layer Range ${min_z}–${max_z}mm` });
+                }
+            }
+        }
+        
+        // === GLOBAL SETTINGS ===
+        if (currentSpecs.hierarchy && currentSpecs.hierarchy.global_settings) {
+            const globalSettings = currentSpecs.hierarchy.global_settings;
+            if (Object.keys(globalSettings).length > 0) {
+                rows.push({ type: 'section_header', label: 'Global Settings' });
+                for (const [key, value] of Object.entries(globalSettings)) {
+                    const displayValue = formatSettingValue(value);
+                    rows.push({ type: 'setting', key, value: displayValue, section: 'Global' });
+                }
+            }
+        }
+        
+        return rows;
+    }
+
+    // Export as JSON (hierarchical, matching display)
     const btnExportJSON = document.getElementById('btnExportJSON');
     if (btnExportJSON) {
         btnExportJSON.addEventListener('click', () => {
@@ -254,53 +334,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Build AI-friendly JSON with actual settings and override info
-            const aiJSON = {
-                // File & Slicer Info
+            const exportRows = buildHierarchicalExportData();
+            
+            // Convert to hierarchical JSON structure
+            const hierarchicalJSON = {
                 file: currentFileName,
                 slicer: currentSpecs.slicer || 'Unknown',
                 printer: currentSpecs.printer_model || 'Unknown',
-
-                // What Will Actually Print
-                actual_settings: currentSpecs.actual_settings || {},
-
-                // Settings Source Map (for troubleshooting)
-                settings_map: currentSpecs.settings_map || {},
-
-                // Summary of Overrides
-                has_object_overrides: Object.keys(currentSpecs.object_level_settings || {}).length > 0,
-                object_level_settings: currentSpecs.object_level_settings || {},
-
-                // Key Print Parameters
-                print_info: {
-                    layer_height: currentSpecs.layer_height,
-                    nozzle_temp: currentSpecs.nozzle_temp,
-                    bed_temp: currentSpecs.bed_temp,
-                    filament_used_g: currentSpecs.filament_used_g,
-                    print_time_s: currentSpecs.print_time_s,
-                    print_time_formatted: formatTime(currentSpecs.print_time_s),
-                    top_shell_layers: currentSpecs.top_shell_layers,
-                    bottom_shell_layers: currentSpecs.bottom_shell_layers,
-                    perimeters: currentSpecs.perimeters,
-                    infill_density: currentSpecs.infill_density,
-                    infill_pattern: currentSpecs.infill_pattern
-                },
-
-                // Advanced Settings
-                advanced: {
-                    spiral_vase: currentSpecs.spiral_vase,
-                    support_material: currentSpecs.support_material,
-                    fuzzy_skin: currentSpecs.fuzzy_skin,
-                    seam_position: currentSpecs.seam_position,
-                    brim_type: currentSpecs.brim_type,
-                    print_sequence: currentSpecs.print_sequence
-                },
-
-                // All Global Settings (for reference)
-                global_settings: currentSpecs.global_settings || {}
+                hierarchy: {
+                    profile_settings: currentSpecs.hierarchy?.object_level_settings || {},
+                    layer_ranges: (currentSpecs.hierarchy?.layer_ranges || []).map(r => ({
+                        z_range: r.z_range,
+                        settings: r.merged_effective || {}
+                    })),
+                    global_settings: currentSpecs.hierarchy?.global_settings || {}
+                }
             };
 
-            const pureJSON = JSON.stringify(aiJSON, null, 2);
+            const pureJSON = JSON.stringify(hierarchicalJSON, null, 2);
             const blob = new Blob([pureJSON], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -314,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Export as CSV
+    // Export as CSV (hierarchical, matching display order)
     const btnExportCSV = document.getElementById('btnExportCSV');
     if (btnExportCSV) {
         btnExportCSV.addEventListener('click', () => {
@@ -323,53 +374,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Build CSV with all settings
-            let csvContent = 'Setting,Value,Source\n';
-
-            // Add print info section
-            const printInfo = [
-                ['layer_height', currentSpecs.layer_height, 'Global'],
-                ['nozzle_temp', currentSpecs.nozzle_temp, 'Global'],
-                ['bed_temp', currentSpecs.bed_temp, 'Global'],
-                ['filament_used_g', currentSpecs.filament_used_g, 'Global'],
-                ['print_time_s', currentSpecs.print_time_s, 'Global'],
-                ['print_time_formatted', formatTime(currentSpecs.print_time_s), 'Global'],
-                ['top_shell_layers', currentSpecs.top_shell_layers, 'Global'],
-                ['bottom_shell_layers', currentSpecs.bottom_shell_layers, 'Global'],
-                ['perimeters', currentSpecs.perimeters, 'Global'],
-                ['infill_density', currentSpecs.infill_density, 'Global'],
-                ['infill_pattern', currentSpecs.infill_pattern, 'Global'],
-                ['spiral_vase', currentSpecs.spiral_vase, 'Global'],
-                ['support_material', currentSpecs.support_material, 'Global'],
-                ['fuzzy_skin', currentSpecs.fuzzy_skin, 'Global'],
-                ['seam_position', currentSpecs.seam_position, 'Global'],
-                ['brim_type', currentSpecs.brim_type, 'Global'],
-                ['print_sequence', currentSpecs.print_sequence, 'Global']
-            ];
-
-            for (const [key, value, source] of printInfo) {
-                if (value !== null && value !== undefined) {
-                    const escapedValue = String(value).replace(/"/g, '""');
-                    csvContent += `"${key}","${escapedValue}","${source}"\n`;
-                }
-            }
-
-            // Add object-level overrides
-            if (currentSpecs.object_level_settings) {
-                for (const [key, value] of Object.entries(currentSpecs.object_level_settings)) {
-                    const escapedValue = String(value).replace(/"/g, '""');
-                    csvContent += `"${key}","${escapedValue}","Object Override"\n`;
-                }
-            }
-
-            // Add global settings
-            if (currentSpecs.global_settings) {
-                const printInfoKeys = new Set(printInfo.map(arr => arr[0]));
-                for (const [key, value] of Object.entries(currentSpecs.global_settings)) {
-                    if (!printInfoKeys.has(key)) {
-                        const escapedValue = String(value).replace(/"/g, '""');
-                        csvContent += `"${key}","${escapedValue}","Global"\n`;
-                    }
+            const exportRows = buildHierarchicalExportData();
+            
+            // Build CSV matching display structure
+            let csvContent = 'Setting,Value\n';
+            
+            for (const row of exportRows) {
+                if (row.type === 'section_header') {
+                    // Add blank line before section
+                    csvContent += '\n';
+                    csvContent += `${row.label}\n`;
+                } else if (row.type === 'category_header') {
+                    csvContent += `${row.label}\n`;
+                } else if (row.type === 'subcategory_header') {
+                    csvContent += `${row.label}\n`;
+                } else if (row.type === 'range_header') {
+                    csvContent += `${row.label}\n`;
+                } else if (row.type === 'setting') {
+                    // Escape quotes in values for CSV
+                    const escapedValue = String(row.value).replace(/"/g, '""');
+                    csvContent += `"${row.key}","${escapedValue}"\n`;
                 }
             }
 
