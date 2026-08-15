@@ -247,15 +247,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Builds hierarchical export data matching the display order exactly
     function buildHierarchicalExportData() {
         if (!currentSpecs) return [];
-        
+
         const rows = [];
-        
+
         // === PROFILE SETTINGS (from object_level_settings) ===
         if (currentSpecs.hierarchy && currentSpecs.hierarchy.object_level_settings) {
             const objectSettings = currentSpecs.hierarchy.object_level_settings;
             if (Object.keys(objectSettings).length > 0) {
                 rows.push({ type: 'section_header', label: 'Profile Settings' });
-                
+
                 // Organize by categories (matching display logic)
                 const categorizedSettings = {};
                 for (const [category, subcategories] of Object.entries(SETTING_CATEGORIES)) {
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         delete categorizedSettings[category];
                     }
                 }
-                
+
                 // Add rows for each category/subcategory
                 for (const [category, subcategories] of Object.entries(categorizedSettings)) {
                     rows.push({ type: 'category_header', label: `${category} Profile` });
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
+
         // === LAYER RANGES ===
         if (currentSpecs.hierarchy && currentSpecs.hierarchy.layer_ranges && currentSpecs.hierarchy.layer_ranges.length > 0) {
             rows.push({ type: 'section_header', label: 'Layer Ranges' });
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
+
         // === GLOBAL SETTINGS ===
         if (currentSpecs.hierarchy && currentSpecs.hierarchy.global_settings) {
             const globalSettings = currentSpecs.hierarchy.global_settings;
@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
+
         return rows;
     }
 
@@ -334,7 +334,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const exportRows = buildHierarchicalExportData();
+            // Build profile settings using same categorization as display
+            const profileSettings = {};
+            if (currentSpecs.hierarchy && currentSpecs.hierarchy.object_level_settings) {
+                const objectSettings = currentSpecs.hierarchy.object_level_settings;
+                
+                // Use SETTING_CATEGORIES to filter/organize (matching display exactly)
+                for (const [category, subcategories] of Object.entries(SETTING_CATEGORIES)) {
+                    for (const [subcategory, settingsList] of Object.entries(subcategories)) {
+                        for (const setting of settingsList) {
+                            if (objectSettings.hasOwnProperty(setting)) {
+                                profileSettings[setting] = objectSettings[setting];
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Build layer ranges with same settings as display
+            const layerRanges = (currentSpecs.hierarchy?.layer_ranges || []).map(r => ({
+                z_range: r.z_range,
+                settings: r.merged_effective || {}
+            }));
             
             // Convert to hierarchical JSON structure
             const hierarchicalJSON = {
@@ -342,11 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 slicer: currentSpecs.slicer || 'Unknown',
                 printer: currentSpecs.printer_model || 'Unknown',
                 hierarchy: {
-                    profile_settings: currentSpecs.hierarchy?.object_level_settings || {},
-                    layer_ranges: (currentSpecs.hierarchy?.layer_ranges || []).map(r => ({
-                        z_range: r.z_range,
-                        settings: r.merged_effective || {}
-                    })),
+                    profile_settings: profileSettings,
+                    layer_ranges: layerRanges,
                     global_settings: currentSpecs.hierarchy?.global_settings || {}
                 }
             };
@@ -375,10 +393,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const exportRows = buildHierarchicalExportData();
-            
+
             // Build CSV matching display structure
             let csvContent = 'Setting,Value\n';
-            
+
             for (const row of exportRows) {
                 if (row.type === 'section_header') {
                     // Add blank line before section
