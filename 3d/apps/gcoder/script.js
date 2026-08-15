@@ -1,3 +1,38 @@
+// Helper function to format setting values (handle arrays without JSON brackets)
+function formatSettingValue(value) {
+    if (Array.isArray(value)) {
+        // Extract first element if array has items, otherwise return empty string
+        if (value.length === 0) return '';
+        // Recursively format the first element in case it's also nested
+        return formatSettingValue(value[0]);
+    }
+    if (typeof value === 'object' && value !== null) {
+        // Only stringify complex objects, not simple values
+        return JSON.stringify(value);
+    }
+    // Convert to string and return
+    return String(value);
+}
+
+// Setting category mapping for hierarchical display
+const SETTING_CATEGORIES = {
+    'Filament': {
+        'Temperature': ['nozzle_temperature', 'bed_temperature', 'first_layer_temperature'],
+        'Cooling': ['additional_cooling_fan_speed', 'filament_cooling_moves', 'filament_cooling_initial_speed'],
+        'Retraction': ['filament_retraction_speed', 'filament_z_hop', 'filament_z_hop_types'],
+        'Flow & Pressure': ['filament_flow_ratio', 'filament_max_volumetric_speed', 'pressure_advance']
+    },
+    'Process': {
+        'Layer': ['layer_height', 'first_layer_height', 'max_layer_height', 'min_layer_height'],
+        'Walls': ['wall_loops', 'outer_wall_speed', 'inner_wall_speed', 'outer_wall_acceleration', 'precise_outer_wall', 'reduce_crossing_wall'],
+        'Infill': ['infill_density', 'infill_pattern', 'sparse_infill_density'],
+        'Top/Bottom': ['top_shell_layers', 'bottom_shell_layers', 'top_solid_infill_flow_ratio'],
+        'Quality': ['elefant_foot_compensation', 'first_layer_flow_ratio', 'initial_layer_line_width'],
+        'Features': ['extra_perimeters_on_overhangs', 'seam_position', 'brim_type', 'skirt_loops'],
+        'Speed': ['full_fan_speed_layer', 'slow_down_layer_time']
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('fileInput');
     const fileNameDisplay = document.getElementById('fileName');
@@ -9,6 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const btnCopyRich = document.getElementById('btnCopyRich');
     const btnDownload = document.getElementById('btnDownload');
+    const btnReprocess = document.getElementById('btnReprocess');
+    const processTime = document.getElementById('processTime');
 
     let currentFileName = '';
     let currentSpecs = null;
@@ -63,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Restore on load
     restoreSession();
 
+    // === HANDLE .gcode.3mf ZIP FILE ===
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -74,30 +112,69 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsSection.classList.add('hidden');
 
         const reader = new FileReader();
-        reader.onload = (event) => {
-            const content = event.target.result;
-            currentFileContent = content; // Store for reprocessing
+        reader.onload = async (event) => {
             try {
-                const specs = parseGcode(content, file.name);
+                if (file.name.endsWith('.gcode')) {
+                    // Plain G-code file
+                    const gcodeContent = event.target.result;
+                    currentFileContent = { gcodeContent };
+                    const specs = parseGcode(gcodeContent, file.name, null, null);
+                    saveSession(specs, file.name);
+                    displayResults(specs);
+                } else if (file.name.endsWith('.3mf')) {
+                    // OrcaSlicer .3mf file (ZIP archive)
+                    const arrayBuffer = event.target.result;
+                    const zip = new JSZip();
+                    const zipContents = await zip.loadAsync(arrayBuffer);
 
-                // Save to localStorage
-                saveSession(specs, file.name);
+                    let gcodeContent = null;
+                    let configContent = null;
+                    let layerRangesContent = null;
 
-                displayResults(specs);
+                    for (const fileName in zipContents.files) {
+                        if (fileName.startsWith('Metadata/plate_') && fileName.endsWith('.gcode')) {
+                            gcodeContent = await zipContents.files[fileName].async('string');
+                        }
+                        if (fileName === 'Metadata/project_settings.config') {
+                            configContent = await zipContents.files[fileName].async('string');
+                        }
+                        if (fileName === 'Metadata/layer_config_ranges.xml') {
+                            layerRangesContent = await zipContents.files[fileName].async('string');
+                        }
+                    }
+
+                    if (!gcodeContent) {
+                        throw new Error('No gcode file found in ZIP');
+                    }
+
+                    currentFileContent = { gcodeContent, configContent, layerRangesContent };
+                    const specs = parseGcode(gcodeContent, file.name, configContent, layerRangesContent);
+                    saveSession(specs, file.name);
+                    displayResults(specs);
+                } else {
+                    throw new Error('Unsupported file type. Please select a .gcode or .3mf file.');
+                }
             } catch (err) {
                 console.error(err);
-                statusMessage.textContent = 'Error parsing file. Please ensure it is a valid G-code file.';
+                statusMessage.textContent = 'Error processing file: ' + err.message;
                 clearSession();
             }
         };
-        reader.readAsText(file);
+
+        if (file.name.endsWith('.gcode')) {
+            reader.readAsText(file);
+        } else {
+            reader.readAsArrayBuffer(file);
+        }
     });
 
-    // Reprocess file with current app version
-    const btnReprocess = document.getElementById('btnReprocess');
-    const processTime = document.getElementById('processTime');
-
+    // === REPROCESS FILE WITH CURRENT APP VERSION ===
     function updateProcessTime() {
+        // Guard against null reference
+        if (!processTime) {
+            console.warn('processTime element not found in DOM');
+            return;
+        }
         const now = new Date();
         const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         processTime.textContent = `Processed at ${timeStr}`;
@@ -112,7 +189,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const specs = parseGcode(currentFileContent, currentFileName);
+            const specs = parseGcode(
+                currentFileContent.gcodeContent,
+                currentFileName,
+                currentFileContent.configContent,
+                currentFileContent.layerRangesContent
+            );
             saveSession(specs, currentFileName);
             displayResults(specs);
             updateProcessTime();
@@ -147,107 +229,165 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000);
     }
 
-    // Pure JSON export (only settings, no verification wrapper)
-    const btnPureJSON = document.getElementById('btnPureJSON');
-    if (btnPureJSON) {
-        btnPureJSON.addEventListener('click', () => {
+    // Helper function to format print time
+    function formatTime(seconds) {
+        if (!seconds) return null;
+        const totalMinutes = Math.ceil(seconds / 60);
+        if (totalMinutes >= 60) {
+            const hours = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+            return mins === 0
+                ? `${hours} Hour${hours > 1 ? 's' : ''}`
+                : `${hours}h ${mins}m`;
+        }
+        return `${totalMinutes} Minute${totalMinutes > 1 ? 's' : ''}`;
+    }
+
+    // Pure JSON export - AI-Friendly Settings Summary
+    // Optimized for sharing with AI for troubleshooting
+    // Export as JSON
+    const btnExportJSON = document.getElementById('btnExportJSON');
+    if (btnExportJSON) {
+        btnExportJSON.addEventListener('click', () => {
             if (!currentSpecs) {
                 alert('No settings available. Parse a G-code file first.');
                 return;
             }
 
-            const pureJSON = JSON.stringify(currentSpecs.extraction_log || {}, null, 2);
+            // Build AI-friendly JSON with actual settings and override info
+            const aiJSON = {
+                // File & Slicer Info
+                file: currentFileName,
+                slicer: currentSpecs.slicer || 'Unknown',
+                printer: currentSpecs.printer_model || 'Unknown',
+
+                // What Will Actually Print
+                actual_settings: currentSpecs.actual_settings || {},
+
+                // Settings Source Map (for troubleshooting)
+                settings_map: currentSpecs.settings_map || {},
+
+                // Summary of Overrides
+                has_object_overrides: Object.keys(currentSpecs.object_level_settings || {}).length > 0,
+                object_level_settings: currentSpecs.object_level_settings || {},
+
+                // Key Print Parameters
+                print_info: {
+                    layer_height: currentSpecs.layer_height,
+                    nozzle_temp: currentSpecs.nozzle_temp,
+                    bed_temp: currentSpecs.bed_temp,
+                    filament_used_g: currentSpecs.filament_used_g,
+                    print_time_s: currentSpecs.print_time_s,
+                    print_time_formatted: formatTime(currentSpecs.print_time_s),
+                    top_shell_layers: currentSpecs.top_shell_layers,
+                    bottom_shell_layers: currentSpecs.bottom_shell_layers,
+                    perimeters: currentSpecs.perimeters,
+                    infill_density: currentSpecs.infill_density,
+                    infill_pattern: currentSpecs.infill_pattern
+                },
+
+                // Advanced Settings
+                advanced: {
+                    spiral_vase: currentSpecs.spiral_vase,
+                    support_material: currentSpecs.support_material,
+                    fuzzy_skin: currentSpecs.fuzzy_skin,
+                    seam_position: currentSpecs.seam_position,
+                    brim_type: currentSpecs.brim_type,
+                    print_sequence: currentSpecs.print_sequence
+                },
+
+                // All Global Settings (for reference)
+                global_settings: currentSpecs.global_settings || {}
+            };
+
+            const pureJSON = JSON.stringify(aiJSON, null, 2);
             const blob = new Blob([pureJSON], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = currentFileName.replace(/\.gcode$/i, '') + '_PURE.json';
+            a.download = currentFileName.replace(/\.gcode$/i, '') + '_SETTINGS.json';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showToast(btnPureJSON, 'Downloaded!');
+            showToast(btnExportJSON, 'Downloaded!');
         });
     }
 
-    // Comparison view (side-by-side in modal or new window)
-    const btnComparison = document.getElementById('btnComparison');
-    if (btnComparison) {
-        btnComparison.addEventListener('click', () => {
+    // Export as CSV
+    const btnExportCSV = document.getElementById('btnExportCSV');
+    if (btnExportCSV) {
+        btnExportCSV.addEventListener('click', () => {
             if (!currentSpecs) {
                 alert('No settings available. Parse a G-code file first.');
                 return;
             }
 
-            // Build comparison HTML
-            let comparisonHTML = `<style>
-                .comparison-container { font-family: system-ui, -apple-system, sans-serif; max-width: 1400px; margin: 20px; }
-                .comparison-header { text-align: center; margin-bottom: 30px; }
-                .comparison-header h1 { margin: 0; }
-                .comparison-header p { margin: 5px 0; color: #666; }
-                .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-                .comparison-section { }
-                .comparison-section h2 { border-bottom: 2px solid #333; padding-bottom: 10px; }
-                .comparison-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-                .comparison-table th { background: #f0f0f0; padding: 8px; text-align: left; font-weight: 600; }
-                .comparison-table td { padding: 6px 8px; border-bottom: 1px solid #eee; }
-                .comparison-table tr:hover { background: #f9f9f9; }
-                .raw-line { font-family: 'Courier New', monospace; color: #333; background: #f5f5f5; padding: 2px 4px; }
-                .value { font-family: 'Courier New', monospace; color: #666; }
-            </style>
-            <div class="comparison-container">
-                <div class="comparison-header">
-                    <h1>G-Code Extraction Comparison</h1>
-                    <p>File: ${currentFileName}</p>
-                    <p>Generated: ${new Date().toLocaleString()}</p>
-                </div>
-                <div class="comparison-grid">
-                    <div class="comparison-section">
-                        <h2>Raw G-Code Lines</h2>
-                        <table class="comparison-table">
-                            <thead><tr><th>Setting</th><th>Raw Line</th></tr></thead>
-                            <tbody>`;
+            // Build CSV with all settings
+            let csvContent = 'Setting,Value,Source\n';
 
-            if (currentSpecs.extraction_log) {
-                for (const [key, logEntry] of Object.entries(currentSpecs.extraction_log)) {
-                    if (logEntry.raw_line) {
-                        comparisonHTML += `<tr>
-                            <td><strong>${key}</strong></td>
-                            <td><code class="raw-line">${escapeHtml(logEntry.raw_line.substring(0, 80))}</code></td>
-                        </tr>`;
+            // Add print info section
+            const printInfo = [
+                ['layer_height', currentSpecs.layer_height, 'Global'],
+                ['nozzle_temp', currentSpecs.nozzle_temp, 'Global'],
+                ['bed_temp', currentSpecs.bed_temp, 'Global'],
+                ['filament_used_g', currentSpecs.filament_used_g, 'Global'],
+                ['print_time_s', currentSpecs.print_time_s, 'Global'],
+                ['print_time_formatted', formatTime(currentSpecs.print_time_s), 'Global'],
+                ['top_shell_layers', currentSpecs.top_shell_layers, 'Global'],
+                ['bottom_shell_layers', currentSpecs.bottom_shell_layers, 'Global'],
+                ['perimeters', currentSpecs.perimeters, 'Global'],
+                ['infill_density', currentSpecs.infill_density, 'Global'],
+                ['infill_pattern', currentSpecs.infill_pattern, 'Global'],
+                ['spiral_vase', currentSpecs.spiral_vase, 'Global'],
+                ['support_material', currentSpecs.support_material, 'Global'],
+                ['fuzzy_skin', currentSpecs.fuzzy_skin, 'Global'],
+                ['seam_position', currentSpecs.seam_position, 'Global'],
+                ['brim_type', currentSpecs.brim_type, 'Global'],
+                ['print_sequence', currentSpecs.print_sequence, 'Global']
+            ];
+
+            for (const [key, value, source] of printInfo) {
+                if (value !== null && value !== undefined) {
+                    const escapedValue = String(value).replace(/"/g, '""');
+                    csvContent += `"${key}","${escapedValue}","${source}"\n`;
+                }
+            }
+
+            // Add object-level overrides
+            if (currentSpecs.object_level_settings) {
+                for (const [key, value] of Object.entries(currentSpecs.object_level_settings)) {
+                    const escapedValue = String(value).replace(/"/g, '""');
+                    csvContent += `"${key}","${escapedValue}","Object Override"\n`;
+                }
+            }
+
+            // Add global settings
+            if (currentSpecs.global_settings) {
+                const printInfoKeys = new Set(printInfo.map(arr => arr[0]));
+                for (const [key, value] of Object.entries(currentSpecs.global_settings)) {
+                    if (!printInfoKeys.has(key)) {
+                        const escapedValue = String(value).replace(/"/g, '""');
+                        csvContent += `"${key}","${escapedValue}","Global"\n`;
                     }
                 }
             }
 
-            comparisonHTML += `</tbody></table>
-                    </div>
-                    <div class="comparison-section">
-                        <h2>Extracted Values</h2>
-                        <table class="comparison-table">
-                            <thead><tr><th>Setting</th><th>Value</th></tr></thead>
-                            <tbody>`;
-
-            if (currentSpecs.extraction_log) {
-                for (const [key, logEntry] of Object.entries(currentSpecs.extraction_log)) {
-                    const computed = logEntry.computed_value !== null ? logEntry.computed_value : logEntry.extracted_value;
-                    comparisonHTML += `<tr>
-                        <td><strong>${key}</strong></td>
-                        <td><code class="value">${escapeHtml(String(computed))}</code></td>
-                    </tr>`;
-                }
-            }
-
-            comparisonHTML += `</tbody></table>
-                    </div>
-                </div>
-            </div>`;
-
-            const blob = new Blob([comparisonHTML], { type: 'text/html' });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-            showToast(btnComparison, 'Opened!');
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentFileName.replace(/\.gcode$/i, '') + '_SETTINGS.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(btnExportCSV, 'Downloaded!');
         });
     }
+
+
+
 
     function escapeHtml(text) {
         const map = {
@@ -262,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- PARSING LOGIC (Ported from Python) ---
 
-    function parseGcode(content, filename) {
+    function parseGcode(content, filename, configContent = null, layerRangesContent = null) {
         const specs = {
             filename: filename,
             slicer: null,
@@ -356,6 +496,32 @@ document.addEventListener('DOMContentLoaded', () => {
             if (key === 'skirt_loops') specs.skirt_loops = parseInt(value);
             if (key === 'print_sequence') specs.print_sequence = value;
             if (key === 'ironing_type') specs.ironing_type = value;
+        }
+
+        // === IDENTIFY OBJECT-LEVEL OVERRIDES FROM ORCASLICER ===
+        // OrcaSlicer marks per-object overrides in "different_settings_to_system" list
+        if (allSettings['different_settings_to_system']) {
+            const differentSettingsList = allSettings['different_settings_to_system']
+                .split(';')
+                .map(s => s.trim())
+                .filter(s => s.length > 0);
+
+            for (const overrideKey of differentSettingsList) {
+                // Find matching settings by checking various naming conventions
+                if (allSettings[overrideKey]) {
+                    objectLevelSettings[overrideKey] = allSettings[overrideKey];
+                }
+                // Also check for alternate names
+                else if (overrideKey === 'top_shell_layers' && allSettings['top_solid_layers']) {
+                    objectLevelSettings[overrideKey] = allSettings['top_solid_layers'];
+                }
+                else if (overrideKey === 'bottom_shell_layers' && allSettings['bottom_solid_layers']) {
+                    objectLevelSettings[overrideKey] = allSettings['bottom_solid_layers'];
+                }
+                else if (overrideKey === 'wall_loops' && allSettings['perimeters']) {
+                    objectLevelSettings[overrideKey] = allSettings['perimeters'];
+                }
+            }
         }
 
         // Apply object-level setting overrides (from post-processing script injection)
@@ -469,11 +635,98 @@ document.addEventListener('DOMContentLoaded', () => {
         specs.all_settings = allSettings;
         specs.extraction_log = extractionLog;
 
+        // === BUILD COMPREHENSIVE OVERRIDE MAP ===
+        // Track global vs object-level settings for AI troubleshooting
+        const globalSettings = {};
+        const objectSettings = {};
+
+        for (const [key, value] of Object.entries(allSettings)) {
+            if (!key.startsWith('OBJECT_')) {
+                globalSettings[key] = value;
+            }
+        }
+
+        for (const [key, value] of Object.entries(objectLevelSettings)) {
+            objectSettings[key] = value;
+        }
+
+        // === BUILD ACTUAL SETTINGS (What Will Actually Print) ===
+        // Priority: object-level > global
+        const actualSettings = {};
+
+        // Map global settings to actual settings
+        const settingsMappings = {
+            'top_shell_layers': 'top_shell_layers',
+            'top_solid_layers': 'top_shell_layers',
+            'bottom_shell_layers': 'bottom_shell_layers',
+            'bottom_solid_layers': 'bottom_shell_layers',
+            'wall_loops': 'perimeters',
+            'perimeters': 'perimeters',
+            'layer_height': 'layer_height',
+            'nozzle_diameter': 'nozzle_diameter',
+            'fill_density': 'infill_density',
+            'infill_pattern': 'infill_pattern',
+            'top_fill_pattern': 'top_fill_pattern',
+            'bottom_fill_pattern': 'bottom_fill_pattern',
+            'first_layer_temperature': 'nozzle_temp',
+            'nozzle_temperature': 'nozzle_temp',
+            'bed_temperature': 'bed_temp',
+            'fuzzy_skin': 'fuzzy_skin',
+            'fuzzy_skin_thickness': 'fuzzy_skin_thickness',
+            'fuzzy_skin_point_distance': 'fuzzy_skin_point_distance',
+            'fuzzy_skin_mode': 'fuzzy_skin_mode',
+            'seam_position': 'seam_position',
+            'brim_type': 'brim_type',
+            'skirt_loops': 'skirt_loops',
+            'support_material': 'support_material',
+            'spiral_vase': 'spiral_vase',
+            'spiral_mode': 'spiral_mode',
+            'variable_layer_height': 'variable_layer_height',
+            'print_sequence': 'print_sequence',
+            'ironing_type': 'ironing_type'
+        };
+
+        // Start with global settings
+        for (const [gcodeName, actualName] of Object.entries(settingsMappings)) {
+            if (allSettings[gcodeName] !== undefined) {
+                actualSettings[actualName] = allSettings[gcodeName];
+            }
+        }
+
+        // Apply object-level overrides (these take precedence)
+        for (const [key, value] of Object.entries(objectSettings)) {
+            actualSettings[key] = value;
+        }
+
+        // === BUILD SETTINGS MAP (For troubleshooting) ===
+        // Shows where each setting comes from
+        const settingsMap = {};
+        for (const [key, value] of Object.entries(actualSettings)) {
+            const source = objectSettings[key] !== undefined ? 'OBJECT_LEVEL' : 'GLOBAL';
+            const globalValue = allSettings[Object.keys(settingsMappings).find(k => settingsMappings[k] === key)];
+
+            settingsMap[key] = {
+                actual_value: value,
+                source: source,
+                global_value: globalValue || null,
+                object_override: objectSettings[key] || null,
+                differs_from_global: objectSettings[key] !== undefined && objectSettings[key] !== globalValue
+            };
+        }
+
+        // Store override tracking in specs for JSON export
+        specs.global_settings = globalSettings;
+        specs.object_level_settings = objectSettings;
+        specs.actual_settings = actualSettings;
+        specs.settings_map = settingsMap;
+
         // Detect Slicer
         if (content.includes('PrusaSlicer') || content.includes('SuperSlicer')) {
             specs.slicer = 'PrusaSlicer';
         } else if (content.includes('Cura')) {
             specs.slicer = 'Cura';
+        } else if (content.includes('OrcaSlicer')) {
+            specs.slicer = 'OrcaSlicer';
         }
 
         // Material from filename
@@ -511,20 +764,67 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        return specs;
-    }
+        // === BUILD 3-LEVEL SETTINGS HIERARCHY (from .3mf config and layer ranges) ===
+        if (configContent || layerRangesContent) {
+            specs.hierarchy = {
+                global_settings: {},
+                object_level_settings: {},
+                layer_ranges: []
+            };
 
-    function formatTime(seconds) {
-        if (!seconds) return null;
-        const totalMinutes = Math.ceil(seconds / 60);
-        if (totalMinutes >= 60) {
-            const hours = Math.floor(totalMinutes / 60);
-            const mins = totalMinutes % 60;
-            return mins === 0
-                ? `${hours} Hour${hours > 1 ? 's' : ''}`
-                : `${hours}h ${mins}m`;
+            // Parse global settings from project_settings.config JSON
+            if (configContent) {
+                try {
+                    const config = JSON.parse(configContent);
+                    // Filter out null/empty values for cleaner display
+                    for (const [key, value] of Object.entries(config)) {
+                        if (value !== null && value !== undefined && value !== '' && value !== []) {
+                            specs.hierarchy.global_settings[key] = value;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse project_settings.config:', e);
+                }
+            }
+
+            // Extract object-level overrides from gcode
+            specs.hierarchy.object_level_settings = objectLevelSettings;
+
+            // Parse layer ranges from XML if available
+            if (layerRangesContent) {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(layerRangesContent, 'text/xml');
+                    const ranges = xmlDoc.querySelectorAll('range');
+
+                    ranges.forEach(rangeEl => {
+                        const rangeData = {
+                            z_range: {
+                                min: parseFloat(rangeEl.getAttribute('min_z')),
+                                max: parseFloat(rangeEl.getAttribute('max_z'))
+                            },
+                            merged_effective: {}
+                        };
+
+                        // Parse settings within this range (stored as option elements with opt_key and text content)
+                        const options = rangeEl.querySelectorAll('option');
+                        options.forEach(optEl => {
+                            const key = optEl.getAttribute('opt_key');
+                            const value = optEl.textContent.trim();
+                            if (key && value) {
+                                rangeData.merged_effective[key] = value;
+                            }
+                        });
+
+                        specs.hierarchy.layer_ranges.push(rangeData);
+                    });
+                } catch (e) {
+                    console.warn('Failed to parse layer_config_ranges.xml:', e);
+                }
+            }
         }
-        return `${totalMinutes} Minute${totalMinutes > 1 ? 's' : ''}`;
+
+        return specs;
     }
 
     function generateMarkdown(specs) {
@@ -735,92 +1035,139 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function generateSettingsHTML(specs) {
-        // Generate HTML table for all extracted settings
-        if (!specs || !specs.all_settings || Object.keys(specs.all_settings).length === 0) {
-            return "<p style='color: #999;'>No additional settings found.</p>";
+        if (!specs) {
+            return "<p>No settings found.</p>";
         }
 
-        // Build verification summary at top
-        let summaryHTML = '';
-        let differenceCount = 0;
-        const differences = [];
+        let html = '';
+        let totalSettings = 0;
+        let globalCount = 0;
+        let objectCount = 0;
+        let rangeCount = 0;
 
-        if (specs.extraction_log) {
-            for (const [key, logEntry] of Object.entries(specs.extraction_log)) {
-                const computed = logEntry.computed_value !== null ? logEntry.computed_value : logEntry.extracted_value;
-                const normExtracted = String(logEntry.extracted_value).toLowerCase().trim();
-                const normComputed = String(computed).toLowerCase().trim();
+        if (specs.hierarchy) {
+            globalCount = Object.keys(specs.hierarchy.global_settings || {}).length;
+            objectCount = Object.keys(specs.hierarchy.object_level_settings || {}).length;
+            rangeCount = (specs.hierarchy.layer_ranges || []).length;
+            totalSettings = globalCount + objectCount;
+        }
 
-                if (normExtracted !== normComputed) {
-                    differenceCount++;
-                    differences.push({
-                        name: key,
-                        extracted: logEntry.extracted_value,
-                        computed: computed
-                    });
+        // === SUMMARY ===
+        html += `<div style="margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1em; font-weight: 600;">Summary</h3>
+            <div style="font-family: monospace; font-size: 0.9em; line-height: 1.6; color: #333;">
+                <strong>Global:</strong> ${globalCount} | <strong>Profiles:</strong> ${objectCount} | <strong>Ranges:</strong> ${rangeCount} | <strong>Total:</strong> ${totalSettings}
+            </div>
+        </div>`;
+
+        // === CATEGORIZED PROFILE SETTINGS (HIERARCHICAL) ===
+        if (specs.hierarchy && specs.hierarchy.object_level_settings) {
+            const objectSettings = specs.hierarchy.object_level_settings;
+            if (Object.keys(objectSettings).length > 0) {
+                // Organize settings by category
+                const categorizedSettings = {};
+
+                for (const [category, subcategories] of Object.entries(SETTING_CATEGORIES)) {
+                    categorizedSettings[category] = {};
+                    for (const [subcategory, settingsList] of Object.entries(subcategories)) {
+                        categorizedSettings[category][subcategory] = [];
+                        for (const setting of settingsList) {
+                            if (objectSettings.hasOwnProperty(setting)) {
+                                const val = objectSettings[setting];
+                                const displayValue = formatSettingValue(val);
+                                categorizedSettings[category][subcategory].push({ setting, value: displayValue });
+                            }
+                        }
+                    }
+                    // Remove empty subcategories
+                    for (const subcat in categorizedSettings[category]) {
+                        if (categorizedSettings[category][subcat].length === 0) {
+                            delete categorizedSettings[category][subcat];
+                        }
+                    }
+                    // Remove empty categories
+                    if (Object.keys(categorizedSettings[category]).length === 0) {
+                        delete categorizedSettings[category];
+                    }
+                }
+
+                // Display categorized settings in a single table per category (for proper column alignment)
+                for (const [category, subcategories] of Object.entries(categorizedSettings)) {
+                    const categoryCount = Object.values(subcategories).reduce((sum, items) => sum + items.length, 0);
+
+                    html += `<div style="margin-bottom: 2rem;">
+                        <h3 style="margin: 0 0 1rem 0; font-size: 1em; font-weight: 600;">${category} Profile (${categoryCount})</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0; font-size: 0.9em; border-bottom: 2px solid #333; width: 100%;">
+                            <div style="padding: 8px; font-weight: 600; background: #f0f0f0; border-bottom: 2px solid #333; text-align: left;">Setting</div>
+                            <div style="padding: 8px; font-weight: 600; background: #f0f0f0; border-bottom: 2px solid #333; text-align: left;">Value</div>`;
+
+                    let isFirstSubcategory = true;
+                    for (const [subcategory, settings] of Object.entries(subcategories)) {
+                        // Add simple group header row for subcategory
+                        if (!isFirstSubcategory) {
+                            html += `<div style="grid-column: 1 / -1; height: 1px; background: #e0e0e0; padding: 0;"></div>`;
+                        }
+                        html += `<div style="grid-column: 1 / -1; padding: 6px 8px; font-size: 0.85em; font-weight: 600; color: #333; border-bottom: 1px solid #ddd; white-space: nowrap; overflow: hidden;">
+                            ${subcategory}
+                        </div>`;
+
+                        for (const { setting, value } of settings) {
+                            html += `<div style="padding: 6px 8px; font-family: monospace; color: #333; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #eee; text-align: left;">${setting}</div>
+                            <div style="padding: 6px 8px; font-family: monospace; color: #666; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #eee; text-align: left;">${value}</div>`;
+                        }
+
+                        isFirstSubcategory = false;
+                    }
+
+                    html += `</div></div>`;
                 }
             }
         }
 
-        const totalSettings = Object.keys(specs.all_settings).length;
-        const summaryColor = differenceCount > 0 ? '#fff3cd' : '#d4edda';
-        const summaryBorder = differenceCount > 0 ? '#ffc107' : '#28a745';
-        const summaryIcon = differenceCount > 0 ? '⚠️' : '✓';
+        // === LAYER RANGES ===
+        if (specs.hierarchy && specs.hierarchy.layer_ranges && specs.hierarchy.layer_ranges.length > 0) {
+            for (let i = 0; i < specs.hierarchy.layer_ranges.length; i++) {
+                const range = specs.hierarchy.layer_ranges[i];
+                const min_z = range.z_range.min;
+                const max_z = range.z_range.max;
+                const settingsCount = Object.keys(range.merged_effective || {}).length;
 
-        summaryHTML = `
-            <div style="background: ${summaryColor}; border-left: 4px solid ${summaryBorder}; padding: 12px; margin-bottom: 16px; border-radius: 4px; font-size: 0.95em;">
-                <strong>${summaryIcon} Verification Summary</strong><br>
-                Total Settings: <strong>${totalSettings}</strong> | Differences Detected: <strong>${differenceCount}</strong>
-        `;
+                html += `<div style="margin-bottom: 2rem;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1em; font-weight: 600;">Layer Range ${min_z}–${max_z}mm (${settingsCount})</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0; font-size: 0.9em; border-bottom: 2px solid #333; width: 100%;">
+                        <div style="padding: 8px; font-weight: 600; background: #f0f0f0; border-bottom: 2px solid #333; text-align: left;">Setting</div>
+                        <div style="padding: 8px; font-weight: 600; background: #f0f0f0; border-bottom: 2px solid #333; text-align: left;">Value</div>`;
 
-        if (differenceCount > 0 && differences.length > 0) {
-            summaryHTML += `<details style="margin-top: 8px; cursor: pointer;"><summary style="font-weight: bold; color: #856404;">Show ${differenceCount} Differences</summary><div style="margin-top: 8px; padding-left: 12px; border-left: 2px solid #ffc107;">`;
-            for (const diff of differences.slice(0, 10)) {
-                summaryHTML += `<div style="margin: 4px 0; font-family: monospace; font-size: 0.85em;"><strong>${diff.name}</strong><br>&nbsp;&nbsp;Extracted: ${diff.extracted}<br>&nbsp;&nbsp;Computed: ${diff.computed}</div>`;
-            }
-            if (differences.length > 10) {
-                summaryHTML += `<div style="margin-top: 8px; color: #666; font-size: 0.85em;">... and ${differences.length - 10} more</div>`;
-            }
-            summaryHTML += `</div></details>`;
-        }
-
-        summaryHTML += `</div>`;
-
-        let html = summaryHTML + `<table style="width: 100%; border-collapse: collapse; font-size: 0.9em; table-layout: auto; min-width: 0;"><thead><tr style="background: #f5f5f5;"><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd; min-width: 120px;">Setting Name</th><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd; min-width: 250px;">G-Code (Reality)</th><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd; min-width: 150px;">JSON Settings</th></tr></thead><tbody>`;
-
-        // Sort settings alphabetically
-        const sortedKeys = Object.keys(specs.all_settings).sort();
-        for (const key of sortedKeys) {
-            const displayName = key
-                .replace(/_/g, ' ')
-                .split(' ')
-                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-                .join(' ');
-
-            const value = specs.all_settings[key];
-            const displayValue = value && value.length > 150 ? value.substring(0, 150) + '...' : value;
-
-            // Get the raw G-code line if available
-            let rawLine = '';
-            let rowStyle = '';
-            if (specs.extraction_log && specs.extraction_log[key]) {
-                const logEntry = specs.extraction_log[key];
-                rawLine = logEntry.raw_line || '';
-                const computed = logEntry.computed_value !== null ? logEntry.computed_value : logEntry.extracted_value;
-                const normExtracted = String(logEntry.extracted_value).toLowerCase().trim();
-                const normComputed = String(computed).toLowerCase().trim();
-                if (normExtracted !== normComputed) {
-                    rowStyle = ' style="background: #fff3cd;"';
+                for (const [key, value] of Object.entries(range.merged_effective || {})) {
+                    const displayValue = formatSettingValue(value);
+                    html += `<div style="padding: 6px 8px; font-family: monospace; color: #333; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #eee; text-align: left;">${key}</div>
+                    <div style="padding: 6px 8px; font-family: monospace; color: #666; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #eee; text-align: left;">${displayValue}</div>`;
                 }
+                html += `</div></div>`;
             }
-
-            // Truncate raw line if too long
-            const displayRawLine = rawLine && rawLine.length > 150 ? rawLine.substring(0, 150) + '...' : rawLine;
-
-            html += `<tr${rowStyle}><td style="padding: 8px; border-bottom: 1px solid #eee; min-width: 120px;"><strong>${displayName}</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee; font-family: monospace; color: #555; min-width: 250px; word-break: break-word; white-space: pre-wrap; background: #f9f9f9;">${displayRawLine}</td><td style="padding: 8px; border-bottom: 1px solid #eee; font-family: monospace; color: #666; min-width: 150px; word-break: break-word;">${displayValue}</td></tr>`;
         }
 
-        html += "</tbody></table>";
+        // === GLOBAL SETTINGS TABLE ===
+        if (specs.hierarchy && specs.hierarchy.global_settings) {
+            const globalSettings = specs.hierarchy.global_settings;
+            if (Object.keys(globalSettings).length > 0) {
+                html += `<div style="margin-bottom: 2rem;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1em; font-weight: 600;">Global Settings (${Object.keys(globalSettings).length})</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0; font-size: 0.9em; border-bottom: 2px solid #333; width: 100%;">
+                        <div style="padding: 8px; font-weight: 600; background: #f0f0f0; border-bottom: 2px solid #333; text-align: left;">Setting</div>
+                        <div style="padding: 8px; font-weight: 600; background: #f0f0f0; border-bottom: 2px solid #333; text-align: left;">Value</div>`;
+
+                for (const [key, value] of Object.entries(globalSettings)) {
+                    const displayValue = formatSettingValue(value);
+                    html += `<div style="padding: 6px 8px; font-family: monospace; color: #333; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #eee; text-align: left;">${key}</div>
+                    <div style="padding: 6px 8px; font-family: monospace; color: #666; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #eee; text-align: left;">${displayValue}</div>`;
+                }
+                html += `</div></div>`;
+            }
+        }
+
         return html;
     }
+
+    // === COPY HIERARCHY TO CLIPBOARD ===
 });

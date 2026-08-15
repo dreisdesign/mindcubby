@@ -5,6 +5,23 @@ All notable changes to G-coder will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-08-15
+
+### Added
+- **CSV Export** – New dedicated export button for tabular CSV format with Setting, Value, and Source columns
+- **Support for OrcaSlicer .3mf Files** – Parse project settings directly from OrcaSlicer 3MF exports
+
+### Changed
+- **Export UI Refactoring** – Split "Export Settings" into two distinct buttons:
+  - "Export JSON" – Structured AI-friendly format with file info and actual settings
+  - "Export CSV" – Tabular format ideal for spreadsheets and data analysis
+- **Improved Table Styling** – Global Settings table now uses consistent column width layout (2fr 1fr) matching Profile and Layer Range tables
+- **Removed Redundant Features** – "Detailed Report" button removed (functionality replaced by comprehensive hierarchical table display)
+
+### Fixed
+- **Table Column Alignment** – Fixed width inconsistency in Global Settings table; all tables now maintain uniform 2:1 column proportions
+- **Cell Overflow** – Added white-space: nowrap and overflow: hidden to prevent table cells from wrapping and breaking grid layout
+
 ## [0.4.0] - 2026-02-25
 
 ### Added

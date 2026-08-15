@@ -13,8 +13,8 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 ✅ **No Installation Required** – Runs entirely in your browser  
 ✅ **Fast Processing** – Parse G-code files instantly  
 ✅ **Multi-Slicer Support** – Works with Cura, PrusaSlicer, SuperSlicer, and OrcaSlicer  
-✅ **Extraction Verification** – Verify accuracy with raw G-code lines paired to extracted values  
-✅ **Multiple Export Formats** – Full JSON, Pure JSON, Pure G-Code, or Side-by-Side Comparison  
+✅ **Hierarchical Settings Tables** – View Global, Profile, and Layer Range settings with consistent column formatting  
+✅ **Multiple Export Formats** – JSON, CSV, and Markdown table exports  
 ✅ **Object-Level Overrides** – Correctly handles per-object settings from post-processing scripts  
 ✅ **No Data Upload** – All processing happens locally in your browser  
 
@@ -40,12 +40,13 @@ G-coder automatically extracts and formats:
 ## How to Use
 
 1. **Visit** https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
-2. **Click** "Select G-Code File" or drag & drop your `.gcode` file
-3. **View** extracted specifications with accuracy verification in the table
-4. **Choose** an action:
-   - **Export Settings** – Download settings as JSON (stripped format for import/archiving)
-   - **View Comparison** – Open side-by-side comparison in new window: raw G-code lines vs. extracted values (for verification)
-   - **Reprocess** – Re-extract settings with current app version (useful after app updates)
+2. **Click** "Select G-Code File" or drag & drop your `.gcode` or `.gcode.3mf` file
+3. **View** extracted specifications with hierarchical tables organized by category
+4. **Choose** an export format:
+   - **Export JSON** – Download structured JSON with file info, actual settings, and print parameters (ideal for AI processing and archiving)
+   - **Export CSV** – Download tabular CSV with three columns: Setting, Value, and Source (ideal for spreadsheets and data analysis)
+   - **Download .md** – Export as Markdown table (for Printables.com listings)
+5. **Reprocess** – Re-extract settings with current app version (useful after app updates)
 
 ---
 

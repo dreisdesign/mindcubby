@@ -31,6 +31,8 @@ _ignore/
 **/_ignore/
 _IGNORE/
 **/_IGNORE/
+LOCAL/
+**/LOCAL/
 SCRIPT TESTING/
 
 # Secrets & credentials — never commit these
