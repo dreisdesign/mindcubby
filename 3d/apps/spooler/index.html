@@ -48,6 +48,12 @@
             margin: 0;
             background: #f9f9f9;
             padding: 20px;
+            border: 2px solid #ddd;
+            transition: border-color 0.2s ease;
+        }
+
+        .history-container.copied {
+            border-color: #28a745;
         }
 
         h1 {
@@ -989,13 +995,20 @@
             hexDisplay.textContent = hex;
             addToLog(currentType, currentSubtype, currentColor, hex);
             navigator.clipboard.writeText(hex).then(() => {
+                // Visual feedback on button
                 copyHexBtn.textContent = 'Copied!';
                 copyHexBtn.style.background = '#28a745';
                 copyHexBtn.style.borderColor = '#28a745';
+                
+                // Highlight history container
+                const historyContainer = document.querySelector('.history-container');
+                historyContainer.classList.add('copied');
+                
                 setTimeout(() => {
                     copyHexBtn.textContent = 'Copy Hex to Clipboard';
                     copyHexBtn.style.background = '#007bff';
                     copyHexBtn.style.borderColor = '#007bff';
+                    historyContainer.classList.remove('copied');
                 }, 2000);
             }).catch(() => {
                 showMessage('Failed to copy', 'error');
