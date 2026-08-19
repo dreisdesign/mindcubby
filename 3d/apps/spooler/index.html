@@ -82,13 +82,8 @@
 
         /* Status messages */
         #message {
-            position: fixed;
-            top: 380px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000;
-            max-width: 300px;
-            font-size: 12px;
+            margin-top: 8px;
+            text-align: center;
         }
 
         .message {
@@ -96,6 +91,7 @@
             font-size: 12px;
             border: 1px solid #999;
             background: #fff;
+            display: inline-block;
         }
 
         .message.success {
@@ -556,6 +552,7 @@
                     <label>NFC Hex Code (for NFC Tools)</label>
                     <div class="hex-output" id="hexDisplay"></div>
                     <button type="button" class="copy-btn" id="copyHexBtn">Copy Hex to Clipboard</button>
+                    <div id="message"></div>
                 </div>
             </form>
         </div>
@@ -581,8 +578,6 @@
             <button type="button" id="resetBtn">Clear History</button>
         </div>
     </div>
-
-    <div id="message"></div>
 
     <script>
         // Material config
