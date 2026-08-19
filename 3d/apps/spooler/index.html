@@ -83,8 +83,9 @@
         /* Status messages */
         #message {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            top: 380px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 10000;
             max-width: 300px;
             font-size: 12px;
@@ -554,7 +555,7 @@
                 <div id="nfcOutput">
                     <label>NFC Hex Code (for NFC Tools)</label>
                     <div class="hex-output" id="hexDisplay"></div>
-                    <button type="button" class="copy-btn" id="copyHexBtn">Copy Hex</button>
+                    <button type="button" class="copy-btn" id="copyHexBtn">Copy Hex to Clipboard</button>
                 </div>
             </form>
         </div>
@@ -994,10 +995,10 @@
             hexDisplay.textContent = hex;
             addToLog(currentType, currentSubtype, currentColor, hex);
             navigator.clipboard.writeText(hex).then(() => {
-                showMessage('Copied', 'success');
+                showMessage('Copied to Clipboard', 'success');
                 copyHexBtn.textContent = 'Copied!';
                 setTimeout(() => {
-                    copyHexBtn.textContent = 'Copy Hex';
+                    copyHexBtn.textContent = 'Copy Hex to Clipboard';
                 }, 2000);
             }).catch(() => {
                 showMessage('Failed to copy', 'error');
