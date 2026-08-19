@@ -22,6 +22,19 @@
 
 ---
 
+#### [<img src="3d/apps/spooler/spooler.svg" width="128">](https://dreisdesign.github.io/mindcubby/3d/apps/spooler/)
+**Spooler: Track and manage 3D printer filament using NFC tags.**
+
+- **NFC tagging** – Tag your filament spools with filament info
+- **Track inventory** – Know what you have and where it is
+- **Client-side storage** – All data stored locally in your browser
+- **Easy export** – Download your inventory as CSV
+
+#### [**Try Spooler Now**](https://dreisdesign.github.io/mindcubby/3d/apps/spooler/)
+[Docs](https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/spooler/README.md)
+
+---
+
 ## About
 
 All tools run entirely in your browser. No data uploads, no tracking. Just utility.
