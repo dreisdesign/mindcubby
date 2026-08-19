@@ -552,7 +552,6 @@
                     <label>NFC Hex Code (for NFC Tools)</label>
                     <div class="hex-output" id="hexDisplay"></div>
                     <button type="button" class="copy-btn" id="copyHexBtn">Copy Hex to Clipboard</button>
-                    <div id="message"></div>
                 </div>
             </form>
         </div>
@@ -990,10 +989,13 @@
             hexDisplay.textContent = hex;
             addToLog(currentType, currentSubtype, currentColor, hex);
             navigator.clipboard.writeText(hex).then(() => {
-                showMessage('Copied to Clipboard', 'success');
                 copyHexBtn.textContent = 'Copied!';
+                copyHexBtn.style.background = '#28a745';
+                copyHexBtn.style.borderColor = '#28a745';
                 setTimeout(() => {
                     copyHexBtn.textContent = 'Copy Hex to Clipboard';
+                    copyHexBtn.style.background = '#007bff';
+                    copyHexBtn.style.borderColor = '#007bff';
                 }, 2000);
             }).catch(() => {
                 showMessage('Failed to copy', 'error');
