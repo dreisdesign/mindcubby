@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spooler - NFC Filament Tagger</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+
+        .tagline {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #222;
+        }
+
+        /* Upload area */
+        .upload-area {
+            border: 2px dashed #999;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            background: #fafafa;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: #333;
+            background: #f0f0f0;
+        }
+
+        .upload-area.active {
+            border-color: #28a745;
+            background: #f0f8f0;
+        }
+
+        .upload-area p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Data table */
+        .data-preview {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f0f0f0;
+            font-weight: bold;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .color-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        /* Status messages - Toast overlay */
+        #message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 300px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            border: 1px solid;
+            animation: slideIn 0.2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        button.primary {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        button.primary:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none;
+        }
+
+        /* Stats */
+        .stats {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .stats strong {
+            color: #333;
+        }
+
+        /* Form elements */
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group:has(input[type="color"]) {
+            flex: 0 0 auto;
+            min-width: auto;
+        }
+
+        .color-picker-wrapper {
+            position: relative;
+            display: block;
+            width: 100%;
+            flex: 1;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+        }
+
+        .color-picker-button {
+            display: block;
+            width: 100%;
+            height: 100%;
+            min-height: 32px;
+            padding: 8px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            background: white;
+            pointer-events: none;
+        }
+
+        .color-picker-button:hover {
+            border-color: #999;
+        }
+
+        /* Temperature control styling */
+        .temp-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .temp-display {
+            min-width: 50px;
+            text-align: center;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background: #f9f9f9;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .temp-btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .temp-btn:hover:not(:disabled) {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        .temp-btn:disabled {
+            background: #eee;
+            color: #ccc;
+            cursor: not-allowed;
+            border-color: #ddd;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+        }
+
+        input[type="color"] {
+            width: 44px;
+            height: auto;
+            padding: 8px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+        }
+
+        input:disabled,
+        select:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+
+
+        input:disabled+label,
+        label:has(+ input:disabled) {
+            color: #999;
+            opacity: 0.6;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: flex-end;
+        }
+
+        /* 2-column form layout */
+        .form-columns {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-column-right {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Chip styling */
+        .chips-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chips-group label {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 16px;
+            background: white;
+            color: #333;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .chip:hover {
+            border-color: #999;
+            background: #f9f9f9;
+        }
+
+        .chip.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Spooler</h1>
+        <p class="tagline">CSV to NFC filament tagger. Import from Notion/Sheets, export for NFC Tools.</p>
+
+        <!-- Upload Section -->
+        <div class="section">
+            <div class="section-title">1. Import CSV</div>
+            <div class="upload-area" id="uploadArea">
+                <p><strong>Drop CSV here</strong> or click to browse</p>
+                <p style="color: #999; font-size: 12px; margin-top: 5px;">Expected columns: brand, filament_type, color,
+                    color_hex, weight_g</p>
+            </div>
+            <input type="file" id="fileInput" accept=".csv">
+            <div id="message"></div>
+        </div>
+
+        <!-- Manual Entry Section -->
+        <div class="section">
+            <div class="section-title">2. Add Spool Manually</div>
+            <form id="manualForm">
+                <div class="form-columns">
+                    <!-- Brand (as chips: Elegoo / Generic) -->
+                    <div class="chips-group">
+                        <label>Brand</label>
+                        <button type="button" class="chip active" data-brand="Elegoo">Elegoo</button>
+                        <button type="button" class="chip" data-brand="Generic">Generic</button>
+                    </div>
+
+                    <!-- Type (as chips: PLA / PETG / TPU) -->
+                    <div class="chips-group">
+                        <label>Type</label>
+                        <button type="button" class="chip active" data-type="PLA">PLA</button>
+                        <button type="button" class="chip" data-type="PETG">PETG</button>
+                        <button type="button" class="chip" data-type="TPU">TPU</button>
+                    </div>
+
+                    <!-- Subtype (as chips, dynamically populated) -->
+                    <div class="chips-group" id="subtypeChipsGroup">
+                        <label>Subtype</label>
+                    </div>
+
+                    <!-- Color, Hex, Temps -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 0 0 auto;">
+                            <label for="colorPickerInput">Color</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="colorPickerInput" value="#ffffff">
+                                <button type="button" class="color-picker-button" id="colorPickerButton"
+                                    style="background: #ffffff;"></button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="colorHexInput">Hex Code</label>
+                            <input type="text" id="colorHexInput" value="#FFFFFF" required>
+                        </div>
+                    </div>
+
+                    <!-- Temp (Nozzle Min/Max - Preset from Material, informational only) -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nozzle Min (°C) <span style="font-size: 11px; color: #999;">preset</span></label>
+                            <div class="temp-control">
+                                <div class="temp-display" id="nozzleMinDisplay">190</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Nozzle Max (°C) <span style="font-size: 11px; color: #999;">preset</span></label>
+                            <div class="temp-control">
+                                <div class="temp-display" id="nozzleMaxDisplay">230</div>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="color: #f44336; font-size: 12px; margin-top: -8px; margin-bottom: 12px;">
+                        ℹ️ <strong>Note:</strong> Canvas firmware uses hardcoded temperatures per material type. 
+                        These values are <strong>for metadata/logging only</strong> and don't override printer settings. 
+                        Use your slicer (OrcaSlicer) to customize print temperatures.
+                    </p>
+
+                    <!-- Buttons (right-aligned) -->
+                    <div class="form-actions">
+                        <button type="reset" id="resetFormBtn">Reset</button>
+                        <button type="submit" class="primary">+ Add</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="section hidden" id="previewSection">
+            <div class="section-title">3. Preview</div>
+            <div class="stats">
+                <strong id="rowCount">0</strong> spools loaded
+            </div>
+            <div class="data-preview">
+                <table id="previewTable">
+                    <thead>
+                        <tr>
+                            <th>Brand</th>
+                            <th>Type</th>
+                            <th>Variant</th>
+                            <th>Color</th>
+                            <th>NFC Hex Code</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="section hidden" id="exportSection">
+            <div class="section-title">4. Export</div>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                Export as JSON for NFC Tools app, or CSV for spreadsheets.
+            </p>
+            <div class="button-group">
+                <button class="primary" id="downloadJsonBtn">Download JSON</button>
+                <button id="downloadCsvBtn">Download CSV</button>
+                <button id="resetBtn">Start Over</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Storage keys
+        const STORAGE_KEY = 'spooler_data';
+        const FORM_STORAGE_KEY = 'spooler_form_state';
+
+        // Material type and subtype mappings for Elegoo Canvas
+        // These map to specific A2:12 (material) and A2:13 (subtype) NFC codes
+        const MATERIAL_CONFIG = {
+            'PLA': {
+                code: '00807665',
+                variants: {
+                    'PLA': { code: '03000000', temp_min: 190, temp_max: 230 },
+                    'PLA+': { code: '00010000', temp_min: 190, temp_max: 230 },
+                    'PLA PRO': { code: '00020000', temp_min: 190, temp_max: 230 },
+                    'PLA Silk': { code: '00030000', temp_min: 190, temp_max: 230 },
+                    'PLA-CF': { code: '00040000', temp_min: 210, temp_max: 240 },
+                    'PLA Matte': { code: '00060000', temp_min: 190, temp_max: 230 },
+                    'PLA Wood': { code: '00070000', temp_min: 190, temp_max: 230 },
+                    'PLA Basic': { code: '00070000', temp_min: 190, temp_max: 230 },
+                    'RAPID PLA+': { code: '00080000', temp_min: 190, temp_max: 230 },
+                    'PLA Marble': { code: '00090000', temp_min: 190, temp_max: 230 },
+                    'PLA Galaxy': { code: '000A0000', temp_min: 190, temp_max: 230 },
+                    'PLA Red Copper': { code: '000B0000', temp_min: 190, temp_max: 230 }
+                }
+            },
+            'PETG': {
+                code: '80698471',
+                variants: {
+                    'PETG': { code: '00000000', temp_min: 230, temp_max: 260 },
+                    'PETG-CF': { code: '00010000', temp_min: 240, temp_max: 270 },
+                    'PETG-GF': { code: '00020000', temp_min: 240, temp_max: 270 },
+                    'PETG PRO': { code: '00030000', temp_min: 230, temp_max: 260 },
+                    'PETG Translucent': { code: '00040000', temp_min: 230, temp_max: 260 },
+                    'RAPID PETG': { code: '00050000', temp_min: 230, temp_max: 260 }
+                }
+            },
+            'TPU': {
+                code: '00848085',
+                variants: {
+                    'TPU 95A': { code: '00010000', temp_min: 220, temp_max: 240 },
+                    'RAPID TPU 95A': { code: '00020000', temp_min: 220, temp_max: 240 }
+                }
+            }
+        };
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const messageDiv = document.getElementById('message');
+        const previewSection = document.getElementById('previewSection');
+        const exportSection = document.getElementById('exportSection');
+        const tableBody = document.getElementById('tableBody');
+        const rowCount = document.getElementById('rowCount');
+        const resetBtn = document.getElementById('resetBtn');
+        const manualForm = document.getElementById('manualForm');
+
+        // State variables for chip selections
+        let currentBrand = 'Elegoo';
+        let currentType = 'PLA';
+        let currentSubtype = 'PLA';
+        let currentNozzleMin = 190;
+        let currentNozzleMax = 230;
+        let tempRangeMin = 190;
+        let tempRangeMax = 230;
+
+        // ========== TEMPERATURE CONTROL FUNCTIONS ==========
+        function updateTemperatureDisplay() {
+            document.getElementById('nozzleMinDisplay').textContent = currentNozzleMin;
+            document.getElementById('nozzleMaxDisplay').textContent = currentNozzleMax;
+
+            // Enable/disable buttons based on range
+            document.getElementById('nozzleMinDecBtn').disabled = currentNozzleMin <= tempRangeMin;
+            document.getElementById('nozzleMinIncBtn').disabled = currentNozzleMin >= tempRangeMax;
+            document.getElementById('nozzleMaxDecBtn').disabled = currentNozzleMax <= tempRangeMin;
+            document.getElementById('nozzleMaxIncBtn').disabled = currentNozzleMax >= tempRangeMax;
+        }
+
+        function updateTemperatureRange(minTemp, maxTemp) {
+            tempRangeMin = minTemp;
+            tempRangeMax = maxTemp;
+            currentNozzleMin = minTemp;
+            currentNozzleMax = maxTemp;
+            updateTemperatureDisplay();
+        }
+
+        // ========== CHIP HANDLERS ==========
+
+        // Brand chip handler
+        document.querySelectorAll('[data-brand]').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('[data-brand]').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentBrand = chip.dataset.brand;
+                saveFormState();
+            });
+        });
+
+        // Type chip handler
+        document.querySelectorAll('[data-type]').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentType = chip.dataset.type;
+
+                // Populate subtype chips based on selected type
+                const material = currentType;
+                const config = MATERIAL_CONFIG[material];
+                const subtypeChipsGroup = document.getElementById('subtypeChipsGroup');
+
+                if (config) {
+                    const variants = Object.keys(config.variants);
+                    // Clear existing subtype chips (keep label)
+                    const existingChips = subtypeChipsGroup.querySelectorAll('.chip');
+                    existingChips.forEach(c => c.remove());
+
+                    // Create new subtype chips
+                    variants.forEach((variant, idx) => {
+                        const chip = document.createElement('button');
+                        chip.type = 'button';
+                        chip.className = 'chip';
+                        if (idx === 0) chip.classList.add('active'); // Auto-select first
+                        chip.textContent = variant;
+                        chip.dataset.subtype = variant;
+                        chip.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            document.querySelectorAll('#subtypeChipsGroup .chip').forEach(c => c.classList.remove('active'));
+                            chip.classList.add('active');
+                            currentSubtype = chip.dataset.subtype;
+
+                            // Update temperature fields
+                            const variantConfig = MATERIAL_CONFIG[currentType]?.variants[currentSubtype];
+                            if (variantConfig) {
+                                updateTemperatureRange(variantConfig.temp_min, variantConfig.temp_max);
+                            }
+                            saveFormState();
+                        });
+                        subtypeChipsGroup.appendChild(chip);
+                    });
+
+                    currentSubtype = variants[0]; // Auto-select first variant
+                    // Update temps
+                    const variantConfig = config.variants[variants[0]];
+                    updateTemperatureRange(variantConfig.temp_min, variantConfig.temp_max);
+                }
+                saveFormState();
+            });
+        });
+
+        // Initialize with default subtype chips
+        (function initializeSubtypeChips() {
+            const material = currentType;
+            const config = MATERIAL_CONFIG[material];
+            const subtypeChipsGroup = document.getElementById('subtypeChipsGroup');
+
+            if (config) {
+                const variants = Object.keys(config.variants);
+                variants.forEach((variant, idx) => {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'chip';
+                    if (idx === 0) chip.classList.add('active');
+                    chip.textContent = variant;
+                    chip.dataset.subtype = variant;
+                    chip.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        document.querySelectorAll('#subtypeChipsGroup .chip').forEach(c => c.classList.remove('active'));
+                        chip.classList.add('active');
+                        currentSubtype = chip.dataset.subtype;
+
+                        // Update temperature fields
+                        const variantConfig = MATERIAL_CONFIG[currentType]?.variants[currentSubtype];
+                        if (variantConfig) {
+                            updateTemperatureRange(variantConfig.temp_min, variantConfig.temp_max);
+                        }
+                        saveFormState();
+                    });
+                    subtypeChipsGroup.appendChild(chip);
+                });
+                currentSubtype = variants[0];
+                const variantConfig = config.variants[variants[0]];
+                updateTemperatureRange(variantConfig.temp_min, variantConfig.temp_max);
+            }
+        })();
+
+        // Color picker
+        const colorPickerInput = document.getElementById('colorPickerInput');
+        const colorPickerButton = document.getElementById('colorPickerButton');
+        const colorHexInput = document.getElementById('colorHexInput');
+
+        // ========== HELPER FUNCTIONS (defined first) ==========
+
+        function showMessage(text, type) {
+            messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
+            // Auto-dismiss after 3.5 seconds for all message types
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 3500);
+        }
+
+        // Save data to localStorage
+        function saveToStorage() {
+            console.log('💾 saveToStorage() called');
+            console.log('   parsedData:', parsedData);
+            console.log('   parsedData.length:', parsedData.length);
+
+            // Check if localStorage is available
+            try {
+                const test = '__test__';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                console.log('✅ localStorage is available');
+            } catch (e) {
+                console.error('❌ localStorage is NOT available:', e);
+                alert('⚠️  localStorage is disabled or unavailable. Data cannot be saved.');
+                return;
+            }
+
+            try {
+                const json = JSON.stringify(parsedData);
+                console.log('   JSON to save:', json);
+                localStorage.setItem(STORAGE_KEY, json);
+                console.log('✅ Saved to localStorage:', parsedData.length, 'items');
+
+                // Verify it was saved
+                const verify = localStorage.getItem(STORAGE_KEY);
+                console.log('   ✓ Verification - retrieved:', verify);
+            } catch (e) {
+                console.error('❌ Failed to save to localStorage:', e);
+                alert('⚠️  Unable to save data: ' + e.message);
+            }
+        }
+
+        // Load data from localStorage on page load
+        function loadFromStorage() {
+            try {
+                console.log('🔍 Checking localStorage for key:', STORAGE_KEY);
+                const stored = localStorage.getItem(STORAGE_KEY);
+                console.log('📦 Retrieved from localStorage:', stored);
+
+                if (stored) {
+                    parsedData = JSON.parse(stored);
+                    console.log('✅ Parsed data array:', parsedData);
+                    console.log('   Items count:', parsedData.length);
+
+                    if (parsedData.length > 0) {
+                        setTimeout(() => {
+                            renderPreview();
+                            previewSection.classList.remove('hidden');
+                            exportSection.classList.remove('hidden');
+                        }, 100);
+                    }
+                } else {
+                    console.log('ℹ️  No data in localStorage');
+                }
+            } catch (e) {
+                console.error('❌ Failed to load from localStorage:', e);
+                parsedData = [];
+            }
+        }
+
+        // Save form field state to localStorage
+        function saveFormState() {
+            try {
+                const formState = {
+                    brand: currentBrand,
+                    type: currentType,
+                    name: currentSubtype,
+                    colorHex: colorHexInput.value,
+                    nozzleMinTemp: currentNozzleMin,
+                    nozzleMaxTemp: currentNozzleMax
+                };
+                localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formState));
+                console.log('📝 Form state saved:', formState);
+            } catch (e) {
+                console.error('❌ Failed to save form state:', e);
+            }
+        }
+
+        // Load form field state from localStorage
+        function loadFormState() {
+            try {
+                const stored = localStorage.getItem(FORM_STORAGE_KEY);
+                if (stored) {
+                    const formState = JSON.parse(stored);
+                    console.log('📝 Restoring form state:', formState);
+
+                    // Restore brand chip
+                    if (formState.brand) {
+                        document.querySelectorAll('[data-brand]').forEach(c => c.classList.remove('active'));
+                        const brandChip = document.querySelector(`[data-brand="${formState.brand}"]`);
+                        if (brandChip) {
+                            brandChip.classList.add('active');
+                            currentBrand = formState.brand;
+                        }
+                    }
+
+                    // Restore type chip and regenerate subtype chips
+                    if (formState.type) {
+                        document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
+                        const typeChip = document.querySelector(`[data-type="${formState.type}"]`);
+                        if (typeChip) {
+                            typeChip.classList.add('active');
+                            currentType = formState.type;
+
+                            // Regenerate subtype chips
+                            const config = MATERIAL_CONFIG[currentType];
+                            if (config) {
+                                const variants = Object.keys(config.variants);
+                                const subtypeChipsGroup = document.getElementById('subtypeChipsGroup');
+                                subtypeChipsGroup.querySelectorAll('.chip').forEach(c => c.remove());
+
+                                variants.forEach(variant => {
+                                    const chip = document.createElement('button');
+                                    chip.type = 'button';
+                                    chip.className = 'chip';
+                                    chip.textContent = variant;
+                                    chip.dataset.subtype = variant;
+                                    chip.addEventListener('click', (e) => {
+                                        e.preventDefault();
+                                        document.querySelectorAll('#subtypeChipsGroup .chip').forEach(c => c.classList.remove('active'));
+                                        chip.classList.add('active');
+                                        currentSubtype = chip.dataset.subtype;
+
+                                        const variantConfig = MATERIAL_CONFIG[currentType]?.variants[currentSubtype];
+                                        if (variantConfig) {
+                                            updateTemperatureRange(variantConfig.temp_min, variantConfig.temp_max);
+                                        }
+                                        saveFormState();
+                                    });
+                                    subtypeChipsGroup.appendChild(chip);
+                                });
+                            }
+                        }
+                    }
+
+                    // Restore subtype chip selection
+                    if (formState.name) {
+                        const subtypeChip = document.querySelector(`[data-subtype="${formState.name}"]`);
+                        if (subtypeChip) {
+                            document.querySelectorAll('[data-subtype]').forEach(c => c.classList.remove('active'));
+                            subtypeChip.classList.add('active');
+                            currentSubtype = formState.name;
+                        }
+                    }
+
+                    colorHexInput.value = formState.colorHex || '';
+
+                    // Restore temperature values
+                    if (formState.nozzleMinTemp !== undefined) {
+                        currentNozzleMin = formState.nozzleMinTemp;
+                    }
+                    if (formState.nozzleMaxTemp !== undefined) {
+                        currentNozzleMax = formState.nozzleMaxTemp;
+                    }
+
+                    // Sync color picker to hex value
+                    if (formState.colorHex) {
+                        colorPickerInput.value = formState.colorHex;
+                        colorPickerButton.style.background = formState.colorHex;
+                    }
+
+                    // Update display
+                    updateTemperatureDisplay();
+                }
+            } catch (e) {
+                console.error('❌ Failed to load form state:', e);
+            }
+        }
+
+        // Clear form field state from localStorage
+        function clearFormState() {
+            try {
+                localStorage.removeItem(FORM_STORAGE_KEY);
+                console.log('🧹 Form state cleared');
+            } catch (e) {
+                console.error('❌ Failed to clear form state:', e);
+            }
+        }
+
+        // Convert string to hex bytes (padded to 4 bytes)
+        function stringToHex(str, padTo = 4) {
+            let hex = '';
+            for (let i = 0; i < str.length && i < padTo; i++) {
+                hex += str.charCodeAt(i).toString(16).padStart(2, '0').toUpperCase();
+            }
+            // Pad with zeros if needed
+            while (hex.length < padTo * 2) {
+                hex += '00';
+            }
+            return hex;
+        }
+
+        // CRC16-CCITT checksum for Elegoo NFC validation
+        // This validates the entire payload; changes to temps/color require CRC recalculation
+        function calculateElegooNFCChecksum(pages) {
+            // pages is an object like { 04: '0103A00C', 05: '34030FD1', ... 17: '00AF03E8' }
+            // Concatenate all page data (04-17) into a single byte string
+            let payloadHex = '';
+            for (let pageNum = 0x04; pageNum <= 0x17; pageNum++) {
+                const pageKey = '0' + pageNum.toString(16).toUpperCase();
+                payloadHex += (pages[pageKey] || '00000000');
+            }
+
+            // Convert hex string to byte array
+            const bytes = [];
+            for (let i = 0; i < payloadHex.length; i += 2) {
+                bytes.push(parseInt(payloadHex.substr(i, 2), 16));
+            }
+
+            // CRC16-CCITT polynomial: x^16 + x^12 + x^5 + 1 (0x1021)
+            // Initial value: 0xFFFF, no final XOR
+            let crc = 0xFFFF;
+            for (let byte of bytes) {
+                crc ^= (byte << 8);
+                for (let i = 0; i < 8; i++) {
+                    crc <<= 1;
+                    if (crc & 0x10000) {
+                        crc = (crc ^ 0x1021) & 0xFFFF;
+                    }
+                }
+            }
+
+            // Return as 4-byte hex string (2 bytes CRC + 2 bytes padding/date info)
+            // Format: [CRC high byte][CRC low byte][date part 1][date part 2]
+            const crcHigh = ((crc >> 8) & 0xFF).toString(16).padStart(2, '0').toUpperCase();
+            const crcLow = (crc & 0xFF).toString(16).padStart(2, '0').toUpperCase();
+
+            // Keep the date bytes from the original (YYMM format)
+            // For now, return CRC + 0000 (can be updated with actual date later)
+            return crcHigh + crcLow + '0000';
+        }
+
+        function encodeToNDEFHex(rowData) {
+            console.log('🔧 Encoding to ELEGOO NFC format:', rowData);
+
+            const materialType = rowData.filament_type || 'PLA';
+            const variantName = rowData.name || 'PLA';
+
+            // Get config for this material/variant combination
+            const materialConfig = MATERIAL_CONFIG[materialType];
+            if (!materialConfig) {
+                console.error('❌ Unknown material type:', materialType);
+                return '';
+            }
+
+            const variantConfig = materialConfig.variants[variantName];
+            if (!variantConfig) {
+                console.error('❌ Unknown variant:', variantName, 'for material:', materialType);
+                return '';
+            }
+
+            const materialCode = materialConfig.code;
+            const subtypeCode = variantConfig.code;
+            const temps = {
+                nozzleMin: rowData.nozzle_min_temp !== null ? rowData.nozzle_min_temp : variantConfig.temp_min,
+                nozzleMax: rowData.nozzle_max_temp !== null ? rowData.nozzle_max_temp : variantConfig.temp_max
+            };
+
+            // Color code: RGB hex (e.g., #1565C0 → 1565C0)
+            let colorHex = (rowData.color_hex || '#FFFFFF').replace('#', '').toUpperCase();
+            if (colorHex.length !== 6) {
+                colorHex = 'FFFFFF';
+            }
+
+            // Production date (YYMM format)
+            const now = new Date();
+            const year = now.getFullYear().toString().slice(-2);
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const dateYYMM = year + month;
+            const dateHex = parseInt(dateYYMM).toString(16).padStart(4, '0').toUpperCase();
+
+            // Temperature encoding
+            // Nozzle min: 1 byte (e.g., 215°C = 0xD7)
+            // Nozzle max: 2 bytes big-endian (e.g., 225°C = 0x00E1)
+            // NOTE: Temperatures are fixed based on material variant
+            const nozzleMinHex = temps.nozzleMin.toString(16).padStart(2, '0').toUpperCase();
+            const nozzleMaxHex = temps.nozzleMax.toString(16).padStart(4, '0').toUpperCase();
+
+            // For Page 21, we need just 1 byte for max temp (not the 2-byte big-endian version)
+            const nozzleMaxHexSingleByte = temps.nozzleMax.toString(16).padStart(2, '0').toUpperCase();
+
+            // === PAGES 04-0F: Header/Brand ID (constant elegoo.com) ===
+            const headerPages = [
+                '0103A00C',  // Page 04
+                '34030FD1',  // Page 05
+                '010B5504',  // Page 06
+                '656C6567',  // Page 07: "eleg" (part of "elegoo.com")
+                '6F6F2E63',  // Page 08: "oo.c" (part of "elegoo.com")
+                '6F6DFE00'   // Page 09: "om" + padding (Elegoo identifier)
+            ];
+
+            // === PAGES 10+: FILAMENT DATA (CRITICAL!) ===
+            // A2:10: 36EEEEEE (header 36 + manufacturer EEEEEEEE)
+            const page10 = '36EEEEEE';
+
+            // A2:11: EE000100 (manufacturer continuation + filament code)
+            const page11 = 'EE000100';
+
+            // A2:12: Material code (e.g., 00807665 for PLA)
+            const page12 = materialCode;
+
+            // A2:13: Subtype/Variant code (e.g., 00010000 for PLA+)
+            const page13 = subtypeCode;
+
+            // A2:14: **COLOR! Direct RGB hex + padding** (e.g., 1565C000 for #1565C0)
+            const page14 = colorHex + '00';
+
+            // A2:15: Legacy temperature data (kept for compatibility)
+            // Format: 00[nozzleMin][nozzleMax2bytes]
+            const page15 = '00' + nozzleMinHex + nozzleMaxHex;
+
+            // A2:16: Padding
+            const page16 = '00000000';
+
+            // A2:17: Diameter (00AF = 1.75mm) + Weight (03E8 = 1000g)
+            const page17 = '00AF03E8';
+
+            // A2:18: RECALCULATED CHECKSUM (CRC16-CCITT over pages 04-17)
+            // This validates the custom temp/color data; must be recalculated dynamically
+            const pagesForCRC = {
+                '04': headerPages[0],
+                '05': headerPages[1],
+                '06': headerPages[2],
+                '07': headerPages[3],
+                '08': headerPages[4],
+                '09': headerPages[5],
+                '10': page10,
+                '11': page11,
+                '12': page12,
+                '13': page13,
+                '14': page14,
+                '15': page15,
+                '16': page16,
+                '17': page17
+            };
+            const page18 = calculateElegooNFCChecksum(pagesForCRC);
+
+            // A2:19-20: Padding
+            const page19 = '00000000';
+            const page20 = '00000000';
+
+            // A2:21: ACTUAL TEMPERATURE DATA (required by Centauri Carbon / Elegoo firmware)
+            // Format: [nozzleMin 1byte][nozzleMax 1byte][padding 2 bytes]
+            // Example: EBF00000 = 235°C min, 240°C max
+            const page21 = nozzleMinHex + nozzleMaxHexSingleByte + '0000';
+
+            // === BUILD PAGE WRITES ===
+            const pageWrites = [
+                `A2:04:${headerPages[0]}`,
+                `A2:05:${headerPages[1]}`,
+                `A2:06:${headerPages[2]}`,
+                `A2:07:${headerPages[3]}`,
+                `A2:08:${headerPages[4]}`,
+                `A2:09:${headerPages[5]}`,
+                // Omit A2:0A through A2:0F (zero-only) for faster writes
+                `A2:10:${page10}`,
+                `A2:11:${page11}`,
+                `A2:12:${page12}`,
+                `A2:13:${page13}`,
+                `A2:14:${page14}`,
+                `A2:15:${page15}`,
+                // Omit A2:16 (zero-only)
+                `A2:17:${page17}`,
+                `A2:18:${page18}`,
+                // Omit A2:19-20 (zero-only)
+                `A2:21:${page21}`
+            ];
+
+            // Join with ", " (comma + space) for NFC Tools compatibility
+            const hexOutput = pageWrites.join(', ');
+
+            console.log('📊 ELEGOO NFC Format:');
+            console.log('  Material:', materialType, '→', materialCode);
+            console.log('  Variant:', variantName, '→', subtypeCode);
+            console.log('  🎨 Color:', `#${colorHex}`);
+            console.log('  🌡️  Temps (metadata only):', `${temps.nozzleMin}–${temps.nozzleMax}°C`);
+            console.log('  ⚠️  Canvas firmware ignores custom temps; uses hardcoded preset per material type');
+            console.log('  💡 Use OrcaSlicer to control actual print temperatures');
+            console.log('  ✅ CRC Checksum (Page 18):', page18);
+            console.log('  Date:', dateYYMM);
+
+            return hexOutput;
+        }
+
+        function renderPreview() {
+            console.log('🎨 Rendering preview with', parsedData.length, 'items');
+            tableBody.innerHTML = '';
+            rowCount.textContent = parsedData.length;
+
+            parsedData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                const hexColor = row.color_hex || '#cccccc';
+                const nfcHex = encodeToNDEFHex(row);
+                // Combine name + type for display (variant first, then type)
+                const displayName = row.name
+                    ? `${row.name} ${row.filament_type}`
+                    : row.filament_type;
+
+                tr.innerHTML = `
+                    <td>${row.brand || '-'}</td>
+                    <td>${row.filament_type || '-'}</td>
+                    <td>${displayName}</td>
+                    <td>
+                        <span class="color-swatch" style="background: ${hexColor}"></span>
+                        ${hexColor}
+                    </td>
+                    <td style="font-family: monospace; font-size: 11px; background: #f5f5f5; padding: 4px; border-radius: 3px; word-break: break-all; margin-right: 4px;\">${nfcHex}</td>
+                    <td>
+                        <button class="edit-row-btn" data-index="${index}" style="padding: 4px 8px; font-size: 12px; background: #2196F3; color: white; border: none; border-radius: 3px; cursor: pointer; white-space: nowrap; margin-right: 4px;">Edit</button>
+                        <button class="copy-nfc-btn" data-index="${index}" data-hex="${nfcHex}" style="padding: 4px 8px; font-size: 12px; background: #4caf50; color: white; border: none; border-radius: 3px; cursor: pointer; white-space: nowrap; margin-right: 4px;">Copy</button>
+                        <button class="delete-row-btn" data-index="${index}" style="padding: 4px 8px; font-size: 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer; white-space: nowrap;">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+                console.log(`  [${index}] ${row.brand} ${row.filament_type} - ${hexColor}`);
+            });
+
+            // Add NFC hex copy button listeners
+            document.querySelectorAll('.copy-nfc-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const nfcHex = e.target.dataset.hex;
+                    navigator.clipboard.writeText(nfcHex).then(() => {
+                        showMessage(`✅ Hex copied!`, 'success');
+                        e.target.textContent = '✓';
+                        setTimeout(() => {
+                            e.target.textContent = 'Copy';
+                        }, 2000);
+                    }).catch(() => {
+                        showMessage('❌ Failed to copy', 'error');
+                    });
+                });
+            });
+
+            // Add edit row button listeners
+            document.querySelectorAll('.edit-row-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const row = parsedData[index];
+                    if (!row) return;
+
+                    // Set chip states for brand, type, subtype
+                    document.querySelectorAll('[data-brand]').forEach(c => c.classList.remove('active'));
+                    const brandChip = document.querySelector(`[data-brand="${row.brand || 'Elegoo'}"]`);
+                    if (brandChip) {
+                        brandChip.classList.add('active');
+                        currentBrand = row.brand || 'Elegoo';
+                    }
+
+                    document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
+                    const typeChip = document.querySelector(`[data-type="${row.filament_type || 'PLA'}"]`);
+                    if (typeChip) {
+                        typeChip.classList.add('active');
+                        currentType = row.filament_type || 'PLA';
+
+                        // Regenerate subtype chips based on selected type
+                        const config = MATERIAL_CONFIG[currentType];
+                        if (config) {
+                            const variants = Object.keys(config.variants);
+                            const subtypeChipsGroup = document.getElementById('subtypeChipsGroup');
+                            subtypeChipsGroup.querySelectorAll('.chip').forEach(c => c.remove());
+
+                            variants.forEach(variant => {
+                                const chip = document.createElement('button');
+                                chip.type = 'button';
+                                chip.className = 'chip';
+                                chip.textContent = variant;
+                                chip.dataset.subtype = variant;
+                                if (variant === row.name) chip.classList.add('active');
+                                chip.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    document.querySelectorAll('#subtypeChipsGroup .chip').forEach(c => c.classList.remove('active'));
+                                    chip.classList.add('active');
+                                    currentSubtype = chip.dataset.subtype;
+
+                                    // Update temperature range
+                                    const variantConfig = MATERIAL_CONFIG[currentType]?.variants[currentSubtype];
+                                    if (variantConfig) {
+                                        updateTemperatureRange(variantConfig.temp_min, variantConfig.temp_max);
+                                    }
+                                    saveFormState();
+                                });
+                                subtypeChipsGroup.appendChild(chip);
+                            });
+                            currentSubtype = row.name || variants[0];
+
+                            // Set temps for the selected subtype
+                            const subtypeConfig = config.variants[currentSubtype];
+                            if (subtypeConfig) {
+                                updateTemperatureRange(subtypeConfig.temp_min, subtypeConfig.temp_max);
+                            }
+                        }
+                    }
+
+                    colorHexInput.value = row.color_hex || '#FFFFFF';
+                    colorPickerInput.value = row.color_hex || '#FFFFFF';
+                    colorPickerButton.style.background = row.color_hex || '#FFFFFF';
+
+                    // Restore temperature values from the row being edited
+                    if (row.nozzle_min_temp !== null && row.nozzle_min_temp !== undefined) {
+                        currentNozzleMin = row.nozzle_min_temp;
+                    }
+                    if (row.nozzle_max_temp !== null && row.nozzle_max_temp !== undefined) {
+                        currentNozzleMax = row.nozzle_max_temp;
+                    }
+                    updateTemperatureDisplay();
+
+                    // Remove the row from parsedData
+                    parsedData.splice(index, 1);
+
+                    // Re-render preview
+                    if (parsedData.length === 0) {
+                        previewSection.classList.add('hidden');
+                        exportSection.classList.add('hidden');
+                    } else {
+                        renderPreview();
+                    }
+
+                    // Save updated data
+                    saveToStorage();
+
+                    // Scroll to form
+                    document.getElementById('manualForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    showMessage('✏️ Editing row data. Modify and click + Add to update.', 'info');
+                });
+            });
+
+            // Add delete row button listeners
+            document.querySelectorAll('.delete-row-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const row = parsedData[index];
+                    if (!row) return;
+
+                    const displayName = row.name
+                        ? `${row.name} ${row.filament_type}`
+                        : row.filament_type;
+
+                    // Remove the row from parsedData
+                    parsedData.splice(index, 1);
+
+                    // Re-render preview
+                    if (parsedData.length === 0) {
+                        previewSection.classList.add('hidden');
+                        exportSection.classList.add('hidden');
+                    } else {
+                        renderPreview();
+                    }
+
+                    // Save updated data
+                    saveToStorage();
+
+                    // Show confirmation
+                    showMessage(`🗑️ Deleted ${displayName}. Total: ${parsedData.length}`, 'success');
+                });
+            });
+        }
+
+        function normalizeHeaderName(header) {
+            // Map common variations to standard field names
+            const nameMap = {
+                'brand': 'brand',
+                'type': 'filament_type',
+                'filament_type': 'filament_type',
+                'filament type': 'filament_type',
+                'name': 'name',
+                'variant': 'name',
+                'material name': 'name',
+                'color': 'color',
+                'hex': 'color_hex',
+                'hex code': 'color_hex',
+                'color_hex': 'color_hex',
+                'color hex': 'color_hex',
+                'weight': 'weight_g',
+                'weight_g': 'weight_g',
+                'weight (g)': 'weight_g',
+                'weight (grams)': 'weight_g'
+            };
+            return nameMap[header] || header;
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) throw new Error('CSV must have header and at least one row');
+
+            const rawHeaders = lines[0].split(',').map(h => h.trim().toLowerCase());
+            const headers = rawHeaders.map(normalizeHeaderName);
+            parsedData = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                if (values.filter(v => v).length === 0) continue; // Skip empty rows
+
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+
+                parsedData.push(row);
+            }
+            saveToStorage();
+            renderPreview();
+            previewSection.classList.remove('hidden');
+            exportSection.classList.remove('hidden');
+        }
+
+        function handleFile(file) {
+            if (!file.name.endsWith('.csv')) {
+                showMessage('Only CSV files accepted', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    parseCSV(e.target.result);
+                    showMessage(`Loaded ${parsedData.length} spools`, 'success');
+                } catch (error) {
+                    showMessage(`Error: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ========== EVENT LISTENERS ==========
+
+        // Color picker sync
+        colorPickerInput.addEventListener('change', (e) => {
+            const color = e.target.value;
+            colorPickerButton.style.background = color;
+            colorHexInput.value = color;
+            saveFormState();
+        });
+
+        colorPickerInput.addEventListener('input', (e) => {
+            const color = e.target.value;
+            colorPickerButton.style.background = color;
+            colorHexInput.value = color;
+            saveFormState();
+        });
+
+        // Update picker and hex input when hex is typed
+        colorHexInput.addEventListener('change', (e) => {
+            let hexVal = e.target.value;
+            if (!hexVal.startsWith('#')) hexVal = '#' + hexVal;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hexVal)) {
+                colorPickerInput.value = hexVal;
+                colorPickerButton.style.background = hexVal;
+                colorHexInput.value = hexVal;
+                saveFormState();
+            }
+        });
+
+        colorHexInput.addEventListener('input', (e) => {
+            let hexVal = e.target.value;
+            if (!hexVal.startsWith('#')) hexVal = '#' + hexVal;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hexVal)) {
+                colorPickerInput.value = hexVal;
+                colorPickerButton.style.background = hexVal;
+                saveFormState();
+            }
+        });
+
+        // Temperature display is read-only (Canvas firmware uses hardcoded presets)
+        // Removed event listeners for temperature button controls
+
+        // Drag and drop
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('active');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('active');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('active');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+
+        // Manual form submission
+        manualForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const brand = currentBrand || 'Elegoo';
+            const filamentType = currentType;
+            const name = currentSubtype;
+            const colorHex = colorHexInput.value || colorPickerInput.value;
+
+            if (!filamentType || !name || !colorHex) {
+                showMessage('Please fill in all required fields (Type, Subtype, Color)', 'error');
+                return;
+            }
+
+            const newSpool = {
+                brand,
+                filament_type: filamentType,
+                name: name || '',
+                color_hex: colorHex,
+                nozzle_min_temp: currentNozzleMin,
+                nozzle_max_temp: currentNozzleMax
+            };
+
+            parsedData.push(newSpool);
+
+            saveToStorage();
+            renderPreview();
+            previewSection.classList.remove('hidden');
+            exportSection.classList.remove('hidden');
+
+            // Auto-copy NFC hex to clipboard
+            const nfcHex = encodeToNDEFHex(newSpool);
+            navigator.clipboard.writeText(nfcHex).then(() => {
+                showMessage(`✅ Hex copied! Total: ${parsedData.length}`, 'success');
+            }).catch(() => {
+                showMessage(`Added 1 spool. Total: ${parsedData.length}`, 'success');
+            });
+
+            // Keep form filled - don't reset
+        });
+
+        document.getElementById('downloadJsonBtn').addEventListener('click', () => {
+            const json = JSON.stringify(parsedData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spooler-export-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('downloadCsvBtn').addEventListener('click', () => {
+            const headers = ['brand', 'filament_type', 'name', 'color', 'color_hex'];
+            const rows = parsedData.map(row => {
+                // Build combined name for CSV (variant first, then type)
+                const displayName = row.name
+                    ? `${row.name} ${row.filament_type}`
+                    : row.filament_type;
+
+                return headers.map(h => {
+                    let val = h === 'name' ? displayName : (row[h] || '');
+                    return val.includes(',') ? `"${val}"` : val;
+                }).join(',');
+            });
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spooler-export-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        resetBtn.addEventListener('click', () => {
+            parsedData = [];
+            saveToStorage();
+            fileInput.value = '';
+            previewSection.classList.add('hidden');
+            exportSection.classList.add('hidden');
+            tableBody.innerHTML = '';
+            messageDiv.innerHTML = '';
+            uploadArea.classList.remove('active');
+            manualForm.reset();
+            clearFormState();
+
+            // Reset brand and type chips to defaults
+            document.querySelectorAll('[data-brand]').forEach(c => c.classList.remove('active'));
+            document.querySelector('[data-brand="Elegoo"]').classList.add('active');
+            currentBrand = 'Elegoo';
+
+            document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
+            document.querySelector('[data-type="PLA"]').classList.add('active');
+            currentType = 'PLA';
+
+            // Reset temperature to PLA defaults
+            currentNozzleMin = 190;
+            currentNozzleMax = 230;
+            tempRangeMin = 190;
+            tempRangeMax = 230;
+            updateTemperatureDisplay();
+
+            colorPickerInput.value = '#ffffff';
+            colorPickerButton.style.background = '#ffffff';
+            colorHexInput.value = '#ffffff';
+
+            // Re-enable color fields after global reset
+            colorPickerInput.disabled = false;
+            colorHexInput.disabled = false;
+            const colorLabel1 = document.querySelector('label[for="colorPickerInput"]');
+            const hexLabel1 = document.querySelector('label[for="colorHexInput"]');
+            colorLabel1.style.color = '';
+            colorLabel1.style.opacity = '';
+            hexLabel1.style.color = '';
+            hexLabel1.style.opacity = '';
+        });
+
+        // Reset form button (inside manual form)
+        document.getElementById('resetFormBtn').addEventListener('click', () => {
+            // Reset all chips to defaults (Elegoo + PLA + PLA)
+            document.querySelectorAll('[data-brand]').forEach(c => c.classList.remove('active'));
+            document.querySelector('[data-brand="Elegoo"]').classList.add('active');
+            currentBrand = 'Elegoo';
+
+            document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
+            document.querySelector('[data-type="PLA"]').classList.add('active');
+            currentType = 'PLA';
+
+            // Re-populate subtype chips with PLA variants
+            const plaConfig = MATERIAL_CONFIG['PLA'];
+            const plaVariants = Object.keys(plaConfig.variants);
+            const subtypeChipsGroup = document.getElementById('subtypeChipsGroup');
+
+            // Remove existing subtype chips
+            subtypeChipsGroup.querySelectorAll('.chip').forEach(c => c.remove());
+
+            // Create new subtype chips for PLA
+            plaVariants.forEach((variant, idx) => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'chip';
+                if (idx === 0) chip.classList.add('active');
+                chip.textContent = variant;
+                chip.dataset.subtype = variant;
+                chip.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('#subtypeChipsGroup .chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    currentSubtype = chip.dataset.subtype;
+
+                    // Update temperature fields
+                    const variantConfig = MATERIAL_CONFIG[currentType]?.variants[currentSubtype];
+                    if (variantConfig) {
+                        updateTemperatureRange(variantConfig.temp_min, variantConfig.temp_max);
+                    }
+                    saveFormState();
+                });
+                subtypeChipsGroup.appendChild(chip);
+            });
+
+            currentSubtype = 'PLA';
+
+            // Update temps for PLA
+            const plaSubtypeConfig = plaConfig.variants['PLA'];
+            updateTemperatureRange(plaSubtypeConfig.temp_min, plaSubtypeConfig.temp_max);
+
+            colorPickerInput.value = '#ffffff';
+            colorPickerButton.style.background = '#ffffff';
+            colorHexInput.value = '#ffffff';
+
+            clearFormState();
+            saveFormState();
+        });
+
+        // Load data on page load
+        loadFromStorage();
+        loadFormState();
+    </script>
+</body>
+
+</html>

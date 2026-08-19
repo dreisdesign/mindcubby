@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const profileSettings = {};
             if (currentSpecs.hierarchy && currentSpecs.hierarchy.object_level_settings) {
                 const objectSettings = currentSpecs.hierarchy.object_level_settings;
-                
+
                 // Use SETTING_CATEGORIES to filter/organize (matching display exactly)
                 for (const [category, subcategories] of Object.entries(SETTING_CATEGORIES)) {
                     for (const [subcategory, settingsList] of Object.entries(subcategories)) {
@@ -350,13 +350,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            
+
             // Build layer ranges with same settings as display
             const layerRanges = (currentSpecs.hierarchy?.layer_ranges || []).map(r => ({
                 z_range: r.z_range,
                 settings: r.merged_effective || {}
             }));
-            
+
             // Convert to hierarchical JSON structure
             const hierarchicalJSON = {
                 file: currentFileName,

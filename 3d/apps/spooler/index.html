@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spooler - NFC Filament Tagger (POC)</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            color: #333;
+            line-height: 1.5;
+            font-size: clamp(13px, 1.5vw, 14px);
+            display: grid;
+            place-items: center;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            background: white;
+            padding: 20px;
+            border: 1px solid #999;
+        }
+
+        .history-container {
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            background: #f9f9f9;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: clamp(20px, 5vw, 28px);
+            margin-bottom: 20px;
+            font-weight: normal;
+        }
+
+        .logo {
+            height: clamp(40px, 10vw, 60px);
+            width: auto;
+            display: block;
+            margin-bottom: 20px;
+            max-width: 100%;
+        }
+
+        .section {
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section:last-child {
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #222;
+        }
+
+        /* Status messages */
+        #message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 300px;
+            font-size: 12px;
+        }
+
+        .message {
+            padding: 8px 12px;
+            font-size: 12px;
+            border: 1px solid #999;
+            background: #fff;
+        }
+
+        .message.success {
+            border-color: #999;
+        }
+
+        .message.error {
+            border-color: #999;
+        }
+
+        /* Buttons */
+        button {
+            padding: 8px 15px;
+            font-size: clamp(11px, 1.6vw, 12px);
+            border: 1px solid #999;
+            background: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #f5f5f5;
+        }
+
+        button.primary {
+            background: white;
+            border: 1px solid #999;
+        }
+
+        button.primary:hover {
+            background: #f5f5f5;
+        }
+
+        /* Form elements */
+        #nfcForm {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .form-group:has(input[type="color"]) {
+            flex: 0 0 auto;
+            min-width: auto;
+        }
+
+        .color-picker-wrapper {
+            position: relative;
+            display: block;
+            width: 100%;
+            flex: 1;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+        }
+
+        .color-picker-button {
+            display: block;
+            width: 100%;
+            height: 100%;
+            min-height: 28px;
+            padding: 6px;
+            font-size: 12px;
+            border: 1px solid #999;
+            cursor: pointer;
+            background: white;
+            pointer-events: none;
+        }
+
+        .color-picker-button:hover {
+            background: #f5f5f5;
+        }
+
+        label {
+            display: block;
+            font-size: clamp(11px, 1.8vw, 12px);
+            font-weight: bold;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 6px 4px;
+            font-size: clamp(11px, 1.8vw, 12px);
+            border: 1px solid #999;
+            font-family: Arial, sans-serif;
+        }
+
+        select {
+            padding: 4px 30px 4px 12px;
+            height: 36px;
+            font-size: clamp(11px, 1.8vw, 12px);
+            border: 1px solid #999;
+            font-family: Arial, sans-serif;
+            background: white;
+            cursor: pointer;
+        }
+
+        input[type="color"] {
+            width: 44px;
+            height: auto;
+            padding: 4px;
+        }
+
+        input:focus {
+            outline: 1px solid #333;
+            border-color: #333;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* Chip styling */
+        .chips-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .chips-group label {
+            flex-basis: 100%;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border: 1px solid #999;
+            background: white;
+            color: #333;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .chip:hover {
+            background: #f5f5f5;
+        }
+
+        .chip.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        /* Preview */
+        .hex-output {
+            background: white;
+            padding: 8px;
+            font-family: monospace;
+            font-size: clamp(10px, 1.4vw, 11px);
+            word-break: break-all;
+            border: 1px solid #999;
+            line-height: 1.2;
+        }
+
+        .copy-btn {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: 1px solid #007bff;
+        }
+
+        .copy-btn:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+
+        #nfcOutput {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 0;
+        }
+
+        .color-swatch {
+            display: inline-flex;
+            width: 32px;
+            height: 32px;
+            border: 1px solid #999;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Log styling */
+        .log-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .log-header {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .log-header label {
+            font-size: clamp(11px, 1.8vw, 12px);
+            font-weight: bold;
+            color: #333;
+        }
+
+        .log-header button {
+            padding: 8px 15px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            font-size: clamp(11px, 1.6vw, 12px);
+            margin-left: auto;
+        }
+
+        #sortBtn {
+            padding: 4px;
+            font-size: clamp(11px, 1.6vw, 12px);
+            width: fit-content;
+        }
+
+        .log-entries {
+            display: grid;
+            gap: 20px;
+        }
+
+        .log-entry {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 8px;
+            border: 1px solid #999;
+            background: white;
+        }
+
+        .log-entry-header {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 0;
+            justify-content: space-between;
+        }
+
+        .log-entry-header-left {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .log-entry-hex {
+            padding: 0;
+            border: 1px solid #999;
+            background: white;
+            font-family: monospace;
+            font-size: clamp(11px, 1.8vw, 12px);
+            word-break: break-all;
+            padding: 8px;
+        }
+
+        .log-entry-actions {
+            display: flex;
+            gap: 8px;
+            padding: 0;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-entry-actions-left {
+            display: flex;
+            gap: 8px;
+        }
+
+        .log-entry-actions-right {
+            display: flex;
+        }
+
+        .log-entry-action-button {
+            background: white;
+            color: #333;
+            border: 1px solid #999;
+            padding: 8px 15px;
+            font-size: clamp(11px, 1.6vw, 12px);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .log-entry-action-button.copy-btn:hover {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .log-entry-action-button.edit-btn:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        .log-entry-action-button.delete-btn:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .log-entry .chip {
+            margin: 0;
+            padding: 6px 12px;
+            font-size: clamp(11px, 1.8vw, 12px);
+            border: 1px solid #999;
+            background: white;
+        }
+
+        .log-entry .log-timestamp {
+            padding: 6px 12px;
+            border: 1px solid #999;
+            font-size: clamp(11px, 1.8vw, 12px);
+            color: #333;
+            white-space: nowrap;
+            background: white;
+        }
+
+        .log-entry .log-actions {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            padding: 8px;
+            padding-top: 0;
+            border-top: 1px solid #eee;
+        }
+
+        .log-entry.active .log-actions {
+            display: flex;
+        }
+
+        .log-entry .log-actions .log-actions-copy {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: 1px solid #007bff;
+            padding: 8px 15px;
+            font-size: clamp(11px, 1.6vw, 12px);
+            margin-bottom: 8px;
+        }
+
+        .log-entry .log-actions .log-actions-copy:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .log-entry .log-actions-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .log-entry .log-actions-row button[data-edit] {
+            background: white;
+            color: #333;
+            border: 1px solid #999;
+            flex: 1;
+            padding: 8px 15px;
+            font-size: clamp(11px, 1.6vw, 12px);
+        }
+
+        .log-entry .log-actions-row button[data-edit]:hover {
+            background: #f0f0f0;
+        }
+
+        .log-entry .log-actions-row button[data-delete] {
+            background: #dc3545;
+            color: white;
+            border: 1px solid #dc3545;
+            flex: 1;
+            padding: 8px 15px;
+            font-size: clamp(11px, 1.6vw, 12px);
+        }
+
+        .log-entry .log-actions-row button[data-delete]:hover {
+            background: #c82333;
+            border-color: #c82333;
+        }
+
+        .log-entry button {
+            padding: 8px 15px;
+            font-size: clamp(11px, 1.6vw, 12px);
+        }
+
+        .log-entry button.danger {
+            background: #dc3545;
+            color: white;
+            border: 1px solid #dc3545;
+        }
+
+        .log-entry button.danger:hover {
+            background: #c82333;
+            border-color: #c82333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <img src="spooler.svg" alt="Spooler" class="logo">
+
+        <!-- NFC Generator -->
+        <div class="section">
+            <form id="nfcForm">
+                <!-- Type Chips -->
+                <div class="chips-group">
+                    <label>Type</label>
+                    <button type="button" class="chip active" data-type="PLA">PLA</button>
+                    <button type="button" class="chip" data-type="PETG">PETG</button>
+                    <button type="button" class="chip" data-type="TPU">TPU</button>
+                </div>
+
+                <!-- Subtype Chips -->
+                <div class="chips-group" id="subtypeChipsGroup">
+                    <label>Subtype</label>
+                </div>
+
+                <!-- Color + Hex -->
+                <div class="form-row">
+                    <div class="form-group" style="flex: 0 0 auto;">
+                        <label for="colorPickerInput">Color</label>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="colorPickerInput" value="#ffffff">
+                            <button type="button" class="color-picker-button" id="colorPickerButton"
+                                style="background: #ffffff;"></button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="colorHexInput">Hex Code</label>
+                        <input type="text" id="colorHexInput" value="#FFFFFF" required>
+                    </div>
+                </div>
+
+                <!-- NFC Output -->
+                <div id="nfcOutput">
+                    <label>NFC Hex Code (for NFC Tools)</label>
+                    <div class="hex-output" id="hexDisplay"></div>
+                    <button type="button" class="copy-btn" id="copyHexBtn">Copy Hex</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- History Container -->
+    <div class="history-container">
+        <!-- History Section -->
+        <div class="log-section">
+            <div class="log-header">
+                <label>History</label>
+                <select id="sortBtn" title="Sort order">
+                    <option value="desc">Newest First</option>
+                    <option value="asc">Oldest First</option>
+                </select>
+                <button type="button" id="downloadBtn">Download CSV</button>
+            </div>
+            <div class="log-entries" id="logEntries"></div>
+        </div>
+
+        <!-- Clear Button -->
+        <div class="form-actions">
+            <button type="button" id="resetBtn">Clear History</button>
+        </div>
+    </div>
+
+    <div id="message"></div>
+
+    <script>
+        // Material config
+        const MATERIAL_CONFIG = {
+            'PLA': {
+                code: '00807665',
+                variants: {
+                    'PLA': { code: '03000000' },
+                    'PLA+': { code: '00010000' },
+                    'PLA PRO': { code: '00020000' },
+                    'PLA Silk': { code: '00030000' },
+                    'PLA-CF': { code: '00040000' },
+                    'PLA Matte': { code: '00060000' },
+                    'PLA Wood': { code: '00070000' },
+                    'PLA Basic': { code: '00070000' },
+                    'RAPID PLA+': { code: '00080000' },
+                    'PLA Marble': { code: '00090000' },
+                    'PLA Galaxy': { code: '000A0000' },
+                    'PLA Red Copper': { code: '000B0000' }
+                }
+            },
+            'PETG': {
+                code: '80698471',
+                variants: {
+                    'PETG': { code: '00000000' },
+                    'PETG-CF': { code: '00010000' },
+                    'PETG-GF': { code: '00020000' },
+                    'PETG PRO': { code: '00030000' },
+                    'PETG Translucent': { code: '00040000' },
+                    'RAPID PETG': { code: '00050000' }
+                }
+            },
+            'TPU': {
+                code: '00848085',
+                variants: {
+                    'TPU 95A': { code: '00010000' },
+                    'RAPID TPU 95A': { code: '00020000' }
+                }
+            }
+        };
+
+        // DOM elements
+        const messageDiv = document.getElementById('message');
+        const colorPickerInput = document.getElementById('colorPickerInput');
+        const colorPickerButton = document.getElementById('colorPickerButton');
+        const colorHexInput = document.getElementById('colorHexInput');
+        const hexDisplay = document.getElementById('hexDisplay');
+        const copyHexBtn = document.getElementById('copyHexBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const sortBtn = document.getElementById('sortBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const nfcForm = document.getElementById('nfcForm');
+
+        // State
+        let currentType = 'PLA';
+        let currentSubtype = 'PLA';
+        let currentColor = '#FFFFFF';
+        let logEntries = [];
+        let sortDescending = true;
+        let clearConfirming = false;
+
+        function loadLog() {
+            const saved = localStorage.getItem('spooler_log');
+            logEntries = saved ? JSON.parse(saved) : [];
+            renderLog();
+        }
+
+        function saveLog() {
+            localStorage.setItem('spooler_log', JSON.stringify(logEntries));
+        }
+
+        function addToLog(type, subtype, color, hex) {
+            // Remove duplicate if exists
+            logEntries = logEntries.filter(e => !(e.type === type && e.subtype === subtype && e.color === color));
+            // Add new entry
+            logEntries.push({ type, subtype, color, hex, id: Date.now(), timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+            saveLog();
+            renderLog();
+        }
+
+        function deleteFromLog(id) {
+            logEntries = logEntries.filter(e => e.id !== id);
+            saveLog();
+            renderLog();
+        }
+
+        function editFromLog(id) {
+            const entry = logEntries.find(e => e.id === id);
+            if (entry) {
+                currentType = entry.type;
+                currentSubtype = entry.subtype;
+                currentColor = entry.color;
+                colorPickerInput.value = entry.color;
+                colorPickerButton.style.background = entry.color;
+                colorHexInput.value = entry.color;
+                document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
+                document.querySelector(`[data-type="${entry.type}"]`).classList.add('active');
+                initializeSubtypeChips();
+                document.querySelectorAll('#subtypeChipsGroup .chip').forEach(c => {
+                    if (c.textContent === entry.subtype) {
+                        c.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        function renderLog() {
+            const logDiv = document.getElementById('logEntries');
+            const logSection = document.querySelector('.log-section');
+
+            // Hide section and Clear button if no entries
+            if (logEntries.length === 0) {
+                logSection.style.display = 'none';
+                resetBtn.style.display = 'none';
+                return;
+            }
+            logSection.style.display = 'block';
+            resetBtn.style.display = 'block';
+
+            logDiv.innerHTML = '';
+            const sorted = [...logEntries].sort((a, b) => sortDescending ? b.id - a.id : a.id - b.id);
+            sorted.forEach(entry => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'log-entry';
+                entryDiv.dataset.id = entry.id;
+
+                // Row 1: Type/Subtype/Color/Hex | Timestamp
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'log-entry-header';
+
+                const headerLeft = document.createElement('div');
+                headerLeft.className = 'log-entry-header-left';
+                headerLeft.innerHTML = `
+                    <div class="chip">${entry.type}</div>
+                    <div class="chip">${entry.subtype}</div>
+                    <span class="color-swatch" style="background: ${entry.color};"></span>
+                    <div class="chip">${entry.color}</div>
+                `;
+
+                const headerRight = document.createElement('div');
+                headerRight.innerHTML = `<div class="log-timestamp">${entry.timestamp}</div>`;
+
+                headerDiv.appendChild(headerLeft);
+                headerDiv.appendChild(headerRight);
+
+                // Row 2: Full Hex Code
+                const hexDiv = document.createElement('div');
+                hexDiv.className = 'log-entry-hex';
+                hexDiv.textContent = entry.hex;
+
+                // Row 3: Copy/Edit | Delete
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'log-entry-actions';
+
+                const leftGroup = document.createElement('div');
+                leftGroup.className = 'log-entry-actions-left';
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.textContent = 'Copy Hex';
+                copyBtn.className = 'log-entry-action-button copy-btn';
+                copyBtn.addEventListener('click', () => copyFromLog(entry.hex));
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.textContent = 'Edit';
+                editBtn.className = 'log-entry-action-button edit-btn';
+                editBtn.addEventListener('click', () => editFromLog(entry.id));
+
+                leftGroup.appendChild(copyBtn);
+                leftGroup.appendChild(editBtn);
+
+                const rightGroup = document.createElement('div');
+                rightGroup.className = 'log-entry-actions-right';
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'log-entry-action-button delete-btn';
+
+                // Delete with confirmation
+                let deleteConfirming = false;
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!deleteConfirming) {
+                        deleteConfirming = true;
+                        const originalText = deleteBtn.textContent;
+                        deleteBtn.textContent = 'Confirm Delete';
+                        deleteBtn.style.background = '#cc0000';
+                        deleteBtn.style.borderColor = '#cc0000';
+                        deleteBtn.style.color = 'white';
+
+                        const confirmHandler = () => {
+                            deleteFromLog(entry.id);
+                            deleteBtn.removeEventListener('click', confirmHandler);
+                        };
+                        deleteBtn.addEventListener('click', confirmHandler);
+
+                        setTimeout(() => {
+                            if (deleteConfirming) {
+                                deleteConfirming = false;
+                                deleteBtn.textContent = originalText;
+                                deleteBtn.style.background = 'white';
+                                deleteBtn.style.borderColor = '#999';
+                                deleteBtn.style.color = '#333';
+                                deleteBtn.removeEventListener('click', confirmHandler);
+                            }
+                        }, 3000);
+                    }
+                });
+
+                rightGroup.appendChild(deleteBtn);
+
+                actionsDiv.appendChild(leftGroup);
+                actionsDiv.appendChild(rightGroup);
+
+                entryDiv.appendChild(headerDiv);
+                entryDiv.appendChild(hexDiv);
+                entryDiv.appendChild(actionsDiv);
+                logDiv.appendChild(entryDiv);
+            });
+        }
+
+        function showMessage(text, type) {
+            messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        function copyFromLog(hex) {
+            navigator.clipboard.writeText(hex).then(() => {
+                showMessage('Copied', 'success');
+            }).catch(() => {
+                showMessage('Failed to copy', 'error');
+            });
+        }
+
+        function downloadCSV() {
+            if (logEntries.length === 0) {
+                showMessage('No entries to download', 'error');
+                return;
+            }
+            const csv = ['Type,Subtype,Color,NFC Hex,Timestamp'].concat(
+                logEntries.map(e => `${e.type},${e.subtype},${e.color},"${e.hex}",${e.timestamp}`)
+            ).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'spooler-history.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function initializeSubtypeChips() {
+            const config = MATERIAL_CONFIG[currentType];
+            const subtypeChipsGroup = document.getElementById('subtypeChipsGroup');
+            const existingChips = subtypeChipsGroup.querySelectorAll('.chip');
+            existingChips.forEach(c => c.remove());
+
+            const variants = Object.keys(config.variants);
+            variants.forEach((variant, idx) => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'chip';
+                if (idx === 0) chip.classList.add('active');
+                chip.textContent = variant;
+                chip.dataset.subtype = variant;
+                chip.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('#subtypeChipsGroup .chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    currentSubtype = variant;
+                });
+                subtypeChipsGroup.appendChild(chip);
+            });
+            currentSubtype = variants[0];
+        }
+
+        // Type chip handlers
+        document.querySelectorAll('[data-type]').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentType = chip.dataset.type;
+                initializeSubtypeChips();
+            });
+        });
+
+        // Color picker sync
+        colorPickerInput.addEventListener('input', (e) => {
+            currentColor = e.target.value;
+            colorPickerButton.style.background = currentColor;
+            colorHexInput.value = currentColor;
+        });
+
+        colorHexInput.addEventListener('change', (e) => {
+            let hexVal = e.target.value;
+            if (!hexVal.startsWith('#')) hexVal = '#' + hexVal;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hexVal)) {
+                currentColor = hexVal;
+                colorPickerInput.value = hexVal;
+                colorPickerButton.style.background = hexVal;
+                colorHexInput.value = hexVal;
+            }
+        });
+
+        function generateNFCHex() {
+            const materialCode = MATERIAL_CONFIG[currentType].code;
+            const subtypeCode = MATERIAL_CONFIG[currentType].variants[currentSubtype].code;
+
+            let colorHex = currentColor.replace('#', '').toUpperCase();
+            if (colorHex.length !== 6) colorHex = 'FFFFFF';
+
+            // Header pages (elegoo.com)
+            const headerPages = [
+                '0103A00C',  // Page 04
+                '34030FD1',  // Page 05
+                '010B5504',  // Page 06
+                '656C6567',  // Page 07
+                '6F6F2E63',  // Page 08
+                '6F6DFE00'   // Page 09
+            ];
+
+            const page10 = '36EEEEEE';
+            const page11 = 'EE000100';
+            const page12 = materialCode;
+            const page13 = subtypeCode;
+            const page14 = colorHex + '00';
+            const page15 = '00' + '00' + colorHex.substring(0, 4); // Placeholder
+            const page17 = '00AF03E8';
+
+            // Simple CRC for now (hardcoded defaults)
+            const page18 = '0A300000';
+            const page21 = '00000000'; // Placeholder
+
+            const pageWrites = [
+                `A2:04:${headerPages[0]}`,
+                `A2:05:${headerPages[1]}`,
+                `A2:06:${headerPages[2]}`,
+                `A2:07:${headerPages[3]}`,
+                `A2:08:${headerPages[4]}`,
+                `A2:09:${headerPages[5]}`,
+                `A2:10:${page10}`,
+                `A2:11:${page11}`,
+                `A2:12:${page12}`,
+                `A2:13:${page13}`,
+                `A2:14:${page14}`,
+                `A2:15:${page15}`,
+                `A2:17:${page17}`,
+                `A2:18:${page18}`,
+                `A2:21:${page21}`
+            ];
+
+            return pageWrites.join(', ');
+        }
+
+        resetBtn.addEventListener('click', (e) => {
+            if (!clearConfirming) {
+                e.preventDefault();
+                clearConfirming = true;
+                const confirmBtn = document.createElement('button');
+                confirmBtn.type = 'button';
+                confirmBtn.textContent = 'Yes, Clear';
+                confirmBtn.className = 'danger';
+                confirmBtn.style.background = '#dc3545';
+                confirmBtn.style.color = 'white';
+                confirmBtn.style.border = '1px solid #dc3545';
+                confirmBtn.addEventListener('click', () => {
+                    logEntries = [];
+                    saveLog();
+                    renderLog();
+                    clearConfirming = false;
+                    confirmBtn.remove();
+                    resetBtn.textContent = 'Clear';
+                    resetBtn.removeEventListener('click', cancelClear, true);
+                    showMessage('History cleared', 'success');
+                });
+                resetBtn.parentNode.insertBefore(confirmBtn, resetBtn.nextSibling);
+                resetBtn.textContent = 'Cancel';
+                resetBtn.addEventListener('click', cancelClear, true);
+            }
+        });
+
+        function cancelClear(e) {
+            if (clearConfirming) {
+                e.preventDefault();
+                clearConfirming = false;
+                resetBtn.textContent = 'Clear';
+                const confirmBtn = document.querySelector('.form-actions .danger');
+                if (confirmBtn) confirmBtn.remove();
+                resetBtn.removeEventListener('click', cancelClear, true);
+            }
+        }
+
+        sortBtn.addEventListener('change', (e) => {
+            sortDescending = e.target.value === 'desc';
+            renderLog();
+        });
+
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            downloadCSV();
+        });
+
+        copyHexBtn.addEventListener('click', () => {
+            const hex = generateNFCHex();
+            hexDisplay.textContent = hex;
+            addToLog(currentType, currentSubtype, currentColor, hex);
+            navigator.clipboard.writeText(hex).then(() => {
+                showMessage('Copied', 'success');
+                copyHexBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyHexBtn.textContent = 'Copy Hex';
+                }, 2000);
+            }).catch(() => {
+                showMessage('Failed to copy', 'error');
+            });
+        });
+
+        // Initialize
+        loadLog();
+        initializeSubtypeChips();
+        const hex = generateNFCHex();
+        hexDisplay.textContent = hex;
+    </script>
+</body>
+
+</html>
