@@ -48,12 +48,6 @@
             margin: 0;
             background: #f9f9f9;
             padding: 20px;
-            border: 2px solid #ddd;
-            transition: border-color 0.2s ease;
-        }
-
-        .history-container.copied {
-            border-color: #28a745;
         }
 
         h1 {
@@ -352,6 +346,12 @@
             padding: 8px;
             border: 1px solid #999;
             background: white;
+            transition: border-color 0.2s ease;
+        }
+
+        .log-entry.copied {
+            border-color: #28a745;
+            border-width: 2px;
         }
 
         .log-entry-header {
@@ -1000,15 +1000,19 @@
                 copyHexBtn.style.background = '#28a745';
                 copyHexBtn.style.borderColor = '#28a745';
                 
-                // Highlight history container
-                const historyContainer = document.querySelector('.history-container');
-                historyContainer.classList.add('copied');
+                // Highlight the most recent log entry
+                const firstLogEntry = document.querySelector('.log-entries .log-entry');
+                if (firstLogEntry) {
+                    firstLogEntry.classList.add('copied');
+                }
                 
                 setTimeout(() => {
                     copyHexBtn.textContent = 'Copy Hex to Clipboard';
                     copyHexBtn.style.background = '#007bff';
                     copyHexBtn.style.borderColor = '#007bff';
-                    historyContainer.classList.remove('copied');
+                    if (firstLogEntry) {
+                        firstLogEntry.classList.remove('copied');
+                    }
                 }, 2000);
             }).catch(() => {
                 showMessage('Failed to copy', 'error');
