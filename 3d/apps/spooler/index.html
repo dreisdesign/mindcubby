@@ -692,13 +692,16 @@
         function renderLog() {
             const logDiv = document.getElementById('logEntries');
             const logSection = document.querySelector('.log-section');
+            const historyContainer = document.querySelector('.history-container');
 
             // Hide section and Clear button if no entries
             if (logEntries.length === 0) {
+                historyContainer.style.display = 'none';
                 logSection.style.display = 'none';
                 resetBtn.style.display = 'none';
                 return;
             }
+            historyContainer.style.display = 'block';
             logSection.style.display = 'block';
             resetBtn.style.display = 'block';
 
