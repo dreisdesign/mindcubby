@@ -88,6 +88,18 @@ Step 1: Type chips (PLA, PETG, TPU)
 - **Hex preservation**: Comma-space format preserved with CSV escaping
 - **One-click**: "Download CSV" button, no additional setup
 
+### 9. Visual Feedback for Actions with Color State Changes
+**Decision:** Use button color changes (not notifications) to confirm successful actions. Button turns green (#28a745) with "Copied!" text, log entry border highlights green simultaneously, then revert after 2 seconds.
+
+**Rationale:**
+- **Integrated feedback**: All feedback contained within the action element (button) + related context (log entry)
+- **No notifications fatigue**: Avoids extra overlay messages that users ignore
+- **Visual link**: Green border on the entry being added shows exact what-was-added
+- **Semantic color**: Green = success, immediately recognizable
+- **Mobile-friendly**: No floating alerts that obscure content
+- **Minimal aesthetic**: Fits craigslist style (no modals, no overlays)
+- **Reduces cognitive load**: "Button changed = success happened" is intuitive
+
 ---
 
 ## Design Decisions
@@ -110,17 +122,20 @@ background: white;
 /* No: box-shadow, border-radius, background-gradient, opacity tricks */
 ```
 
-### 2. Hover-Only Color Scheme
-**Decision:** Buttons are white by default, colors appear only on hover.
+### 2. Color Strategy: Hover States + Semantic State Changes
+**Decision:** Buttons default to white, colors appear on hover for interaction affordance. Additionally, successful actions (like Copy) trigger temporary state-based color changes (green for success).
 
 **Rationale:**
-- **Minimal distraction**: Resting state is neutral
-- **Semantic color on interaction**: Color means "this button does X"
-- **Mobile-friendly**: No hidden state ambiguity on touch
-- **Color meaning:**
-  - **Copy button: Blue (#007bff)** — "Safe, standard action"
-  - **Edit button: Light gray (#f0f0f0)** — "Modify, not destructive"
-  - **Delete button: Red (#dc3545)** — "Danger, permanent"
+- **Minimal distraction at rest**: Resting state is neutral (white)
+- **Interaction hint on hover**: Color signals "this button does X"
+- **Action feedback via state change**: Successful operations briefly turn green to confirm completion
+- **Semantic color meaning:**
+  - **Copy button hover: Blue (#007bff)** — "Safe, standard action"
+  - **Copy button after click: Green (#28a745)** — "Success, copied"
+  - **Edit button hover: Light gray (#f0f0f0)** — "Modify, not destructive"
+  - **Delete button hover: Red (#dc3545)** — "Danger, permanent"
+- **Mobile-friendly**: No hidden state ambiguity on touch; color changes are intentional feedback
+- **Avoids notification clutter**: State change replaces need for floating messages
 
 ### 3. Responsive Typography with clamp()
 **Decision:** All text uses `clamp(min, preferred, max)` instead of breakpoints.
