@@ -999,13 +999,13 @@
                 copyHexBtn.textContent = 'Copied!';
                 copyHexBtn.style.background = '#28a745';
                 copyHexBtn.style.borderColor = '#28a745';
-                
+
                 // Highlight the most recent log entry
                 const firstLogEntry = document.querySelector('.log-entries .log-entry');
                 if (firstLogEntry) {
                     firstLogEntry.classList.add('copied');
                 }
-                
+
                 setTimeout(() => {
                     copyHexBtn.textContent = 'Copy Hex to Clipboard';
                     copyHexBtn.style.background = '#007bff';

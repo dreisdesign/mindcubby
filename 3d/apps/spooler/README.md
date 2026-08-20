@@ -16,6 +16,12 @@ Track filament inventory using NFC tags. Write spool info to tags, log usage, ex
 
 ---
 
+## Documentation
+
+- **[Design Decisions](./DESIGN-DECISIONS.md)** – UX & styling rationale, technical decisions, architecture notes
+
+---
+
 ## What You Need
 
 - NFC-capable phone or NFC reader/writer
