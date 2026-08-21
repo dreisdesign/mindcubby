@@ -1,0 +1,3 @@
+import"./labs-checkbox-XNLbBo6c.js";import"./iframe-BY8OoYG6.js";import"./preload-helper-PPVm8Dsz.js";const c={title:"2. Components/Input/Checkbox",component:"labs-checkbox",parameters:{docs:{description:{component:"A canonical, accessible, icon-only checkbox component for use in lists and forms."}}}},e=()=>`
+  <labs-checkbox aria-label="Toggle" style="margin:8px;"></labs-checkbox>
+`;e.parameters={...e.parameters,docs:{...e.parameters?.docs,source:{originalSource:'() => `\n  <labs-checkbox aria-label="Toggle" style="margin:8px;"></labs-checkbox>\n`',...e.parameters?.docs?.source}}};const r=["Default"];export{e as Default,r as __namedExportsOrder,c as default};
