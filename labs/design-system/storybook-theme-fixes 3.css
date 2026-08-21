@@ -1,0 +1,17 @@
+/* Storybook theme fixes for dark mode and color contrast */
+
+.theme-dark .flavor-column,
+[data-color-scheme="dark"] .flavor-column {
+  background: #181825 !important;
+  color: #fff !important;
+}
+
+.theme-dark .polaroid-card,
+[data-color-scheme="dark"] .polaroid-card {
+  background: #232336 !important;
+  color: #fff !important;
+}
+
+
+
+/* Add more selectors as needed for your components */
