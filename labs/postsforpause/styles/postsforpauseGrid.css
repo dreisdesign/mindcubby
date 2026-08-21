@@ -1,0 +1,123 @@
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 40px;
+  background-color: #fff;
+  color: #444;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+h1,
+p {
+  margin: 0 0 1em 0;
+}
+
+img {
+  width: 100%;
+}
+
+.wrapper {
+  max-width: 1200px;
+  margin: 0 20px;
+  display: grid;
+  grid-gap: 10px;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 1rem;
+  font-family: sans-serif;
+}
+
+a {
+  color: rgba(86, 152, 167, 1);
+}
+
+a:hover {
+  color: darkblue;
+}
+
+a.postLink:hover {
+  padding: 2%;
+  transition: 0.3s;
+}
+
+.container-btn {
+  display: flex;
+  justify-content: center;
+  padding-top: 30px;
+}
+
+.footer-link {
+  margin: 0 10px;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+a,
+.footer-link:visited {
+  color: #1b37e7;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+.footer-link--home {
+  font-weight: bold;
+}
+
+/* no grid support? */
+
+.wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.wrapper {
+  display: grid;
+  margin: 0 auto;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-auto-rows: minmax(150px, auto);
+}
+
+.panel {
+  /* needed for the flex layout*/
+  margin-left: 5px;
+  margin-right: 5px;
+  flex: 1 1 200px;
+}
+
+.header,
+.footer {
+  margin-left: 5px;
+  margin-right: 5px;
+  flex: 0 1 100%;
+  grid-column: 1 / -1;
+}
+
+.wrapper > * {
+  background-color: #fff;
+  color: #fff;
+  border-radius: 5px;
+  padding: 0;
+  /*font-size: 150%; */
+  margin-bottom: 0;
+}
+
+/* We need to set the margin used on flex items to 0 as we have gaps in grid.  */
+
+@supports (display: grid) {
+  .wrapper > * {
+    margin: 0;
+  }
+}

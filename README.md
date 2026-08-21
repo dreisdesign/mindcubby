@@ -35,6 +35,17 @@
 
 ---
 
+## Labs
+
+#### [**Posts for Pause**](https://dreisdesign.github.io/mindcubby/labs/postsforpause/)
+**An original collection of inspirational designs by Dan Reis**
+
+A curated gallery of minimalist, thoughtful designs encouraging mindfulness and reflection. Browse through posts about stress, awareness, kindness, and living in the moment.
+
+#### [**View Posts for Pause**](https://dreisdesign.github.io/mindcubby/labs/postsforpause/)
+
+---
+
 ## About
 
 All tools run entirely in your browser. No data uploads, no tracking. Just utility.
