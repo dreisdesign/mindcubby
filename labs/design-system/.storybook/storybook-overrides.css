@@ -1,0 +1,12 @@
+.sb-show-main,
+.sb-show-main .sb-wrapper,
+.sb-show-main .sb-preparing-story,
+.sb-show-main #storybook-root {
+  background: var(--color-background) !important;
+}
+
+.sb-show-main.sb-main-centered #storybook-root {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}

@@ -1,0 +1,47 @@
+/* Storybook theme fixes for dark mode and color contrast */
+
+.theme-dark .flavor-column,
+[data-color-scheme="dark"] .flavor-column {
+  background: #181825 !important;
+  color: #fff !important;
+}
+
+.theme-dark .polaroid-card,
+[data-color-scheme="dark"] .polaroid-card {
+  background: #232336 !important;
+  color: #fff !important;
+}
+
+.theme-dark .swatch-text,
+[data-color-scheme="dark"] .swatch-text {
+  color: #fff !important;
+}
+
+/* Add more selectors as needed for your components */
+
+/* Docs preview: ensure Storybook Docs panes follow theme tokens (light/dark) */
+.sbdocs,
+.sbdocs .docs-root,
+.sbdocs .sbdocs-preview,
+.sbdocs .docs-story,
+.docs-root,
+.docs-story,
+.sbdocs-preview {
+  background: var(--color-background) !important;
+  color: var(--color-foreground) !important;
+}
+
+/* Make story 'cards' use the surface token instead of hard-coded white so patterns
+   and components that render a white card will inherit dark surfaces in dark mode. */
+.theme-dark .card,
+[data-color-scheme="dark"] .card {
+  background: var(--color-surface) !important;
+  color: var(--color-foreground) !important;
+}
+
+/* Also provide a safe light-mode mapping so cards remain white in light theme */
+.theme-light .card,
+[data-color-scheme="light"] .card {
+  background: var(--color-surface) !important;
+  color: var(--color-foreground) !important;
+}

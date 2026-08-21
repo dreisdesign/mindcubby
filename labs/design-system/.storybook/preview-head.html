@@ -1,0 +1,71 @@
+<!-- Storybook preview iframe head customizations -->
+<link rel="stylesheet" href="storybook-theme-fixes.css" />
+
+<!-- Prevent FOUC by setting default theme class early -->
+<script>
+  (function () {
+    // Set default theme on body to prevent flash of unstyled content
+    document.documentElement.classList.add('theme-light');
+
+    // If we're on a specific flavor story, add flavor class early.
+    // Storybook may encode the `globals` param in several ways: plain `flavor:strawberry`,
+    // percent-encoded `flavor%3Astrawberry`, or JSON `{"flavor":"strawberry"}` (percent-encoded).
+    const url = new URL(window.location.href);
+    const path = url.searchParams.get('path');
+    const globalsRaw = url.searchParams.get('globals') || '';
+
+    function applyFlavor(name) {
+      if (!name) return;
+      const flav = String(name).trim();
+      if (!flav) return;
+      document.documentElement.classList.add(`flavor-${flav}`);
+      try { document.documentElement.setAttribute('data-flavor', flav); } catch (e) { }
+    }
+
+    // Try multiple strategies to extract the flavor value from the globals param
+    try {
+      const decoded = decodeURIComponent(globalsRaw || '');
+      // 1) JSON form: {"flavor":"strawberry"}
+      try {
+        const maybe = decoded.trim();
+        if (maybe && (maybe[0] === '{' || maybe.indexOf('"flavor"') !== -1)) {
+          try {
+            const parsed = JSON.parse(maybe);
+            if (parsed && parsed.flavor) {
+              applyFlavor(parsed.flavor);
+            }
+          } catch (e) {
+            // fallthrough to regex if JSON parse fails
+          }
+        }
+      } catch (e) { }
+
+      // 2) Plain or percent-encoded form: flavor:strawberry or flavor%3Astrawberry
+      if (!Array.from(document.documentElement.classList).some(c => c.indexOf('flavor-') === 0)) {
+        // try match flavor:NAME
+        const m1 = decoded.match(/flavor:([^,&\}\"]+)/);
+        if (m1 && m1[1]) {
+          applyFlavor(m1[1]);
+        } else {
+          // try the raw string as a fallback (handles flavor%3Astrawberry un-decoded cases)
+          const m2 = globalsRaw.match(/flavor:([^,&\}\"]+)/) || globalsRaw.match(/flavor%3A([^,&\}\"]+)/i);
+          if (m2 && m2[1]) applyFlavor(decodeURIComponent(m2[1]));
+        }
+      }
+
+    } catch (e) {
+      // ignore decode errors
+    }
+
+    // Lastly, if no flavor found from globals, fall back to path heuristics
+    if (!Array.from(document.documentElement.classList).some(c => c.indexOf('flavor-') === 0)) {
+      if (path && path.includes('--blueberry')) {
+        document.documentElement.classList.add('flavor-blueberry');
+      } else if (path && path.includes('--strawberry')) {
+        document.documentElement.classList.add('flavor-strawberry');
+      } else if (path && path.includes('--vanilla')) {
+        document.documentElement.classList.add('flavor-vanilla');
+      }
+    }
+  })();
+</script>

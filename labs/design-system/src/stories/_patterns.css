@@ -1,0 +1,4 @@
+/* Pattern styles for story examples.
+	These rules are centralized in `design-system/src/styles/tl-entry.css`.
+	Keep this file for Storybook import convenience. */
+@import '../styles/tl-entry.css';

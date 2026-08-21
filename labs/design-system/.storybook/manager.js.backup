@@ -1,0 +1,22 @@
+import { addons } from '@storybook/addons';
+import { themes } from '@storybook/theming';
+
+// Use the built-in light theme and customize it
+addons.setConfig({
+    theme: {
+        ...themes.light,
+        brandTitle: 'Labs Design System',
+        brandUrl: '/',
+        colorPrimary: '#0066cc',
+        colorSecondary: '#666666',
+        fontBase: '"Inter", "Segoe UI", "Roboto", sans-serif',
+        fontCode: '"SF Mono", "Monaco", "Consolas", monospace',
+    },
+    // Panel on the right by default
+    panelPosition: 'right',
+    // Sidebar configuration
+    sidebar: {
+        showRoots: false,
+        collapsedRoots: ['Welcome'],
+    },
+});
