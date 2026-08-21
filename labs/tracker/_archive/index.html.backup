@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en" class="flavor-blueberry theme-light">
+
+<head>
+    <style>
+        /* Constrain timestamp and item-label so they don't force wide computed widths */
+        labs-list-item .item-label,
+        labs-list-item .timestamp {
+            text-align: center !important;
+            box-sizing: border-box !important;
+            max-width: 120px !important;
+            flex: 0 0 auto !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        /* Hide unused labelHost */
+        labs-list-item .labelHost {
+            display: none !important;
+        }
+
+        /* Ensure flex container allows growth */
+        labs-list-item>div[style*="flex-direction:column"] {
+            min-width: 0 !important;
+            width: 100% !important;
+            flex: unset !important;
+        }
+    </style>
+    <style>
+        .labelHost {
+            font-size: 0.95rem;
+            color: var(--color-on-surface, #111);
+            margin-right: 12px;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            text-align: center;
+            width: auto;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+    <style>
+        /* Ensure flex container and children fill space for timestamp/content */
+        labs-list-item>div[style*="flex-direction:column"] {
+            min-width: 0 !important;
+            width: 100% !important;
+            flex: unset !important;
+        }
+
+        labs-list-item .text {
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        labs-list-item .timestamp {
+            box-sizing: border-box !important;
+            max-width: 120px !important;
+            flex: 0 0 auto !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            text-align: center !important;
+        }
+    </style>
+    <style>
+        /* Hide hidden timestamp and allow timestamp to fill space */
+        .timestamp[aria-hidden="true"] {
+            display: none !important;
+        }
+
+        labs-list-item>div[style*="flex-direction:column"] {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+    </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <title>Labs: Tracker Powered by Smoothie</title>
+    <!-- Early theme/flavor script moved to after <body> for reliable body access -->
+
+    <link rel="stylesheet" href="../design-system/tokens/colors.css">
+    <link rel="stylesheet" href="../design-system/styles/flavors.css">
+    <link rel="stylesheet" href="../design-system/styles/main.css">
+    <style>
+        /* Tracker app - Smoothie template layout */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--color-background);
+            color: var(--color-on-surface);
+            font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Let the canonical container fill available space so footer sits at the bottom */
+        labs-container {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: auto;
+            margin-top: var(--space-lg, 32px);
+        }
+
+        #tracker-root {
+            display: grid;
+            gap: 16px;
+        }
+
+        labs-footer {
+            flex-shrink: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0 12px;
+            box-sizing: border-box;
+        }
+
+        .footer-center {
+            max-width: 300px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* App-specific: center align list items and empty state */
+        .item-label,
+        .item-content,
+        .title {
+            text-align: center;
+        }
+
+        .empty {
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 64px;
+        }
+
+        /* Hide archived badge in tracker */
+        labs-list-item #archivedBadgeContainer {
+            display: none;
+        }
+    </style>
+    <!-- Design system component imports -->
+    <script type="module" src="../design-system/components/labs-header.js"></script>
+    <style>
+        /* Pre-upgrade CSS: stabilize layout before custom elements upgrade */
+        :not(:defined) labs-button[fullwidth],
+        :not(:defined) labs-button {
+            display: block;
+            width: 100%;
+        }
+
+        :not(:defined) labs-footer {
+            min-height: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Settings overlay is owned by the encapsulated footer wrapper -->
+
+    <!-- Container with narrow width (400px) for app-like layout -->
+    <labs-container style="--app-container-max: 400px;">
+        <main>
+            <section id="tracker-root">
+                <labs-header id="tracker-header" title="Tracker" date="" center>
+                    <span slot="date" id="currentDate"></span>
+                </labs-header>
+                <!-- metric card -->
+                <div id="metric-root"></div>
+                <!-- timestamps list -->
+                <div id="list-root"></div>
+            </section>
+        </main>
+    </labs-container>
+
+    <!-- Encapsulated footer wrapper provides Add/Settings and owns its overlay -->
+    <labs-footer-with-settings id="app-footer" full-width elevated add-variant="primary"></labs-footer-with-settings>
+
+    <script type="module" src="../design-system/components/labs-icon.js"></script>
+    <script type="module" src="../design-system/components/labs-button.js"></script>
+    <script type="module" src="../design-system/components/labs-card.js"></script>
+    <script type="module" src="../design-system/components/labs-container.js"></script>
+    <script type="module" src="../design-system/components/labs-dropdown.js"></script>
+    <script type="module" src="../design-system/components/labs-list-item.js"></script>
+    <script type="module" src="../design-system/components/labs-footer-with-settings.js"></script>
+    <script type="module" src="../design-system/components/labs-toast.js"></script>
+    <script type="module" src="../design-system/components/labs-overlay.js"></script>
+    <script type="module" src="../design-system/components/labs-settings-card.js"></script>
+    <script type="module" src="../design-system/components/labs-flavor-button.js"></script>
+
+    <!-- Move main.js to the very end for reliable component definition -->
+    <script>
+        // Early theme/flavor script (tracker, prioritizes tracker-flavor/theme only)
+        (function () {
+            try {
+                var root = document && document.documentElement;
+                if (!root) return;
+                var flavor = localStorage.getItem('tracker-flavor');
+                var theme = localStorage.getItem('tracker-theme');
+                // remove any existing flavor- / theme- classes from <html> only
+                Array.from(root.classList).forEach(function (c) { if (c && c.indexOf('flavor-') === 0) root.classList.remove(c); });
+                Array.from(root.classList).forEach(function (c) { if (c && c.indexOf('theme-') === 0) root.classList.remove(c); });
+                if (flavor) root.classList.add('flavor-' + String(flavor));
+                else root.classList.add('flavor-blueberry');
+                if (theme) root.classList.add('theme-' + String(theme));
+                else root.classList.add('theme-light');
+            } catch (e) { }
+        })();
+
+        document.addEventListener('flavor-changed', function (e) {
+            try {
+                var fv = (e && e.detail && e.detail.flavor) ? String(e.detail.flavor).replace(/^flavor-/, '') : null;
+                if (fv) localStorage.setItem('tracker-flavor', fv);
+            } catch (err) { }
+        });
+
+        // Observe document.documentElement class changes and persist theme-* and flavor-* class values
+        var mo = new MutationObserver(function (mutations) {
+            try {
+                var root = document.documentElement;
+                var themeClass = Array.from(root.classList).find(function (c) { return c && c.indexOf('theme-') === 0; });
+                if (themeClass) {
+                    var tv = themeClass.replace('theme-', '');
+                    localStorage.setItem('tracker-theme', tv);
+                }
+                var flavorClass = Array.from(root.classList).find(function (c) { return c && c.indexOf('flavor-') === 0; });
+                if (flavorClass) {
+                    localStorage.setItem('tracker-flavor', flavorClass.replace('flavor-', ''));
+                }
+            } catch (err) { }
+        });
+        try {
+            mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        } catch (e) { }
+    </script>
+    <!-- Main Tracker app logic -->
+    <script type="module" src="js/main.js"></script>
+    <script type="module">
+        import createTracker from './js/main.js';
+        const tracker = createTracker({ metricRootId: 'metric-root', listRootId: 'list-root' });
+        tracker.init();
+        // Wire wrapper events
+        const footer = document.getElementById('app-footer');
+        footer?.addEventListener('add', () => tracker.handleTrack());
+        footer?.addEventListener('reset-all', () => tracker.resetAll());
+        // Set current date in header
+        document.addEventListener('DOMContentLoaded', function () {
+            var dateEl = document.getElementById('currentDate');
+            if (dateEl) {
+                var now = new Date();
+                dateEl.textContent = now.toLocaleDateString(undefined, {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

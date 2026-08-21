@@ -1,0 +1,96 @@
+/* Minimal cross-cutting utility tokens for the design system */
+:root {
+  /* Overlay */
+  --color-overlay-background: #00000080;
+
+  /* Surface container helpers */
+  --color-surface-container: var(--palette-vanilla-100);
+  --color-surface-container-high: var(--palette-vanilla-200);
+  --color-surface-variant: var(--palette-vanilla-200);
+  --color-on-surface-variant: var(--palette-vanilla-700);
+
+  /* Status colors - inherit from global tokens in colors.css */
+  /* Removed explicit values - these now inherit from colors.css for consistency and accessibility */
+
+  --color-destructive: #B5005A;
+  /* destructive mapped directly to strawberry palette anchor for consistency */
+
+  /* Status colors now inherited from colors.css - removed overrides */
+  /* --color-error and --color-warning are defined in colors.css */
+  /* --color-on-error and --color-on-warning are defined in colors.css */
+
+  /* Deprecated/compat tokens used in older components (kept as aliases) */
+  --color-status-success: var(--color-success);
+  --color-status-warning: var(--color-warning);
+  --color-status-destructive: var(--color-error);
+
+  /* Legacy compatibility aliases (flattened to palette anchors for stability) */
+  --color-accent: var(--palette-blueberry-500, #2E2B74);
+  --color-bg: var(--palette-neutral-200, #F0F0F4);
+
+  /* Hover helpers */
+  --color-hover-light: #0000000D;
+  --color-hover-medium: #0000001A;
+
+  /* Transparent helpers for light/dark mapping */
+  --color-transparent-05: #0000000D;
+  --color-transparent-10: #0000001A;
+
+  /* Outline helpers */
+  --color-outline-variant: #1C1B1F14;
+
+  /* Typography helpers (shared) */
+  --font-family-base: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  --font-size-base: 1rem;
+  --font-size-xs: 0.75rem;
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+
+  /* Small spacing aliases (ensure stories/components have defaults) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+
+  /* Footer icon sizing (used by apps to keep footer icons consistent) */
+  --labs-footer-icon-size: 28px;
+  --labs-footer-icon-padding-left: 12px;
+}
+
+/* Show label for footer icon buttons when container opts in via data attribute */
+[data-show-label="true"] .footer-label {
+  display: block !important;
+}
+
+/* Default footer label appearance (hidden by default; shown when container opts in) */
+.footer-label {
+  display: none;
+  margin-top: 1px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--color-on-surface-variant);
+  text-align: center;
+}
+
+/* Radius aliases (convenience) */
+:root {
+  --radius-full: 9999px;
+  --radius-lg: 12px;
+  --radius-md: 8px;
+}
+
+/* Shadow tokens (shared) */
+:root {
+  --shadow-base: 0 1px 3px #00000014;
+  --shadow-md: 0 6px 18px #0000001F;
+  --shadow-overlay: 0 10px 30px #00000033;
+}
+
+/* Small semantic helpers used across the system */
+:root {
+  --color-primary-75: #2E2B74BF;
+  --color-primary-25: #C1C1FF40;
+  --color-outline: var(--palette-vanilla-700);
+  /* radius-sm used by a few components */
+  --radius-sm: 4px;
+}

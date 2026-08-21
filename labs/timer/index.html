@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Minimal Pomodoro timer with bold countdown, overlays, and full theming.">
+
+  <link rel="icon" href="favicon.ico">
+  <title>Focus Timer</title>
+
+  <!-- Early Theme Injection -->
+  <script type="module">
+    import { ThemeManager } from '/labs/design-system/utils/theme-manager.js';
+    ThemeManager.init('timer');
+  </script>
+
+  <!-- Design System Tokens -->
+  <link rel="stylesheet" href="/labs/design-system/tokens/colors.css">
+  <link rel="stylesheet" href="/labs/design-system/tokens/typography.css">
+  <link rel="stylesheet" href="/labs/design-system/styles/flavors.css">
+
+  <!-- Components -->
+  <script type="module" src="/labs/design-system/components/labs-container.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-footer-media-controls.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-warning-card.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-warning-overlay.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-toast.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-family-base, system-ui, sans-serif);
+      background: var(--color-surface, #f5f5f5);
+      color: var(--color-on-surface, #222);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .timer-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      margin-bottom: 6rem;
+    }
+
+    .timer-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(4rem, 25vw, 25rem);
+      font-weight: 900;
+      line-height: 1;
+      padding: 2rem;
+      /* margin-top removed for perfect centering */
+      margin-bottom: 0.5rem;
+    }
+
+    @media (min-width: 640px) {
+      .timer-display {
+        font-size: clamp(4rem, 20vw, 20rem);
+      }
+    }
+
+    .break-hint {
+      text-align: center;
+      font-size: var(--font-size-large, 1.1rem);
+      color: var(--color-on-surface, #222);
+      margin-top: -1.5rem;
+      letter-spacing: 0.01em;
+      user-select: none;
+    }
+  </style>
+
+  <style>
+    .timer-header {
+      text-align: center;
+      font-size: var(--font-size-display, 2rem);
+      font-weight: var(--font-weight-heading, 800);
+      color: var(--color-on-surface, #222);
+      margin-bottom: -1.5rem;
+      letter-spacing: 0.01em;
+      user-select: none;
+    }
+  </style>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var flavor = localStorage.getItem('timer-flavor') || 'strawberry';
+      var theme = localStorage.getItem('timer-theme') || 'light';
+      root.classList.remove('flavor-blueberry', 'flavor-strawberry', 'flavor-vanilla');
+      root.classList.remove('theme-light', 'theme-dark');
+      root.classList.add('flavor-' + flavor);
+      root.classList.add('theme-' + theme);
+      root.setAttribute('data-color-scheme', theme);
+    })();
+  </script>
+</head>
+
+<body>
+  <labs-container fill>
+    <div class="app">
+      <div class="timer-group">
+        <div class="timer-header" id="timerHeader">Timer</div>
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="break-hint" id="breakHint">Next: 5:00 break</div>
+      </div>
+    </div>
+  </labs-container>
+  <labs-footer-media-controls mode="timer" elevated></labs-footer-media-controls>
+  <labs-warning-overlay id="resetWarning" style="display:none;">
+    <labs-icon name="warning" slot="icon"></labs-icon>
+    <span slot="header">Reset Timer?</span>
+    <span>This will reset the timer to 25:00. Are you sure?</span>
+    <div slot="actions">
+      <labs-button id="resetConfirm" variant="destructive">Okay</labs-button>
+      <labs-button id="resetCancel" variant="secondary">Cancel</labs-button>
+    </div>
+  </labs-warning-overlay>
+
+  <script type="module" src="timer.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,78 @@
+/* Grid tokens for layout system */
+:root {
+  /* Core grid sizing */
+  --grid-columns: 12;
+  --grid-gutter: 16px;
+  --grid-row-gap: 16px;
+  --grid-container-max: 1200px;
+  /* App container max width used by apps like Tracker/Today List */
+  --app-container-max: 400px;
+
+  /* Preset container widths inspired by Tracker app layouts */
+  --container-sm: 640px;
+  --container-md: 960px;
+  --container-lg: 1280px;
+  --container-xl: 1440px;
+
+  /* Useful helpers */
+  --grid-gutter-half: calc(var(--grid-gutter) / 2);
+
+  /* A sensible column base used by some components when fixed-width columns are preferred */
+  --grid-column: 64px;
+
+  /* Helpers for responsive containers */
+  --grid-container-padding-sm: 12px;
+  --grid-container-padding-md: 20px;
+  --grid-container-padding-lg: 24px;
+
+  /* Mobile-responsive container tokens for full-bleed patterns */
+  --container-mobile-padding: 12px;
+  --container-mobile-breakpoint: 640px;
+  --container-fullbleed-margin: calc(-1 * var(--container-mobile-padding));
+  --container-fullbleed-width: calc(100% + (2 * var(--container-mobile-padding)));
+
+  /* Breakpoint tokens */
+  --grid-breakpoint-sm: 640px;
+  --grid-breakpoint-md: 900px;
+  --grid-breakpoint-lg: 1200px;
+}
+
+/* Tweak values at smaller sizes so demos behave predictably */
+@media (max-width: 640px) {
+  :root {
+    --grid-column: 48px;
+    --grid-gutter: 12px;
+    --grid-row-gap: 12px;
+    --grid-container-padding-sm: 12px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  :root {
+    --grid-column: 56px;
+    --grid-gutter: 14px;
+    --grid-row-gap: 14px;
+    --grid-container-padding-md: 18px;
+  }
+}
+
+@media (min-width: 901px) {
+  :root {
+    --grid-column: 64px;
+    --grid-gutter: 16px;
+    --grid-row-gap: 16px;
+    --grid-container-padding-lg: 24px;
+  }
+}
+
+/* Cap polaroid/token card max width on larger screens so grids don't stretch cards too wide
+   This centralizes the behavior used by story templates (e.g. colors-template.js) */
+@media (min-width: 701px) {
+
+  .polaroid-row,
+  .polaroid-palette,
+  .flavor-global .polaroid-row {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 320px));
+    gap: 16px;
+  }
+}

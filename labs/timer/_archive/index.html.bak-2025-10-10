@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Focus Timer</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="A beautiful Pomodoro timer for focused work sessions" />
+  <meta name="theme-color" content="#202F48" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Focus Timer" />
+  <meta name="application-name" content="Focus Timer" />
+  <meta name="msapplication-TileColor" content="#202F48" />
+  <meta name="msapplication-config" content="none" />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json?v=2.4.0" />
+
+  <link rel="stylesheet" href="styles.css?v=2.4.3" />
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+
+<body>
+  <!-- Version number (top right) -->
+  <div class="version-number">v3.0.0</div>
+
+  <!-- Main application container -->
+  <div class="app">
+    <!-- Status header -->
+    <div class="status" id="status">Get Ready</div>
+
+    <!-- Main content area (circles) -->
+    <div class="main-content">
+      <div class="circles-container">
+        <div class="circle circle-large" id="workCircle">
+          <div class="circle-progress" id="workProgress"></div>
+          <div class="circle-content">
+            <div id="workTime">25:00</div>
+            <div>Focus</div>
+          </div>
+        </div>
+
+        <div class="circle circle-small" id="breakCircle">
+          <div class="circle-progress" id="breakProgress"></div>
+          <div class="circle-content">
+            <div id="breakTime">5:00</div>
+            <div>Break</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fixed footer with controls -->
+    <div class="bottom-buttons-wrapper">
+      <div class="bottom-buttons">
+        <button id="playPauseBtn" class="control-button control-button--footer">
+          Start
+        </button>
+        <button id="resetBtn" class="control-button control-button--secondary">
+          Reset
+        </button>
+        <button id="settingsBtn" class="settings-button" aria-label="Settings">
+          <span class="settings-icon"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Overlay -->
+  <div class="overlay hidden" id="settingsOverlay">
+    <div class="overlay-content">
+      <div class="overlay-header">
+        <h2>Settings</h2>
+        <button class="close-button" id="closeSettingsOverlay" aria-label="Close">
+          <span class="close-icon"></span>
+        </button>
+      </div>
+      <div class="overlay-body">
+        <!-- All Apps button -->
+        <button class="settings-item" id="allAppsButton">
+          <div class="settings-item-icon-container">
+            <span class="all-apps-icon"></span>
+          </div>
+          <span>All Apps</span>
+        </button>
+
+        <!-- Refresh Button -->
+        <button class="settings-item" id="refreshButton">
+          <div class="settings-item-icon-container">
+            <span class="refresh-icon"></span>
+          </div>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="focusAudio" preload="auto">
+    <source src="assets/focus-drums-25.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script>
+    // Register Service Worker for PWA functionality (skip in local dev)
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", async () => {
+        const host = window.location.hostname;
+        const port = window.location.port;
+        if (host === 'localhost' || host === '127.0.0.1' || port === '8000' || port === '6006') {
+          console.log('Skipping service worker registration in local dev environment.');
+          return;
+        }
+
+        const swUrl = './sw.js?v=2.4.3';
+        try {
+          const head = await fetch(swUrl, { method: 'HEAD' });
+          if (!head.ok) {
+            console.log('SW script not found (skipping registration):', head.status);
+            return;
+          }
+        } catch (e) {
+          console.log('SW script HEAD check failed (skipping registration):', e);
+          return;
+        }
+
+        try {
+          const registration = await navigator.serviceWorker.register(swUrl);
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        } catch (err) {
+          console.log('ServiceWorker registration failed: ', err);
+        }
+      });
+    }
+
+    // PWA Install prompt handling
+    let deferredPrompt;
+    window.addEventListener("beforeinstallprompt", (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredPrompt = e;
+
+      // Could show custom install button here
+      console.log("PWA install prompt available");
+    });
+
+    // Handle PWA installation
+    window.addEventListener("appinstalled", (e) => {
+      console.log("PWA was installed");
+      deferredPrompt = null;
+    });
+
+    class PomodoroTimer {
+      constructor() {
+        this.workDuration = 25 * 60; // 25 minutes in seconds
+        this.breakDuration = 5 * 60; // 5 minutes in seconds
+        this.currentTime = this.workDuration;
+        this.isRunning = false;
+        this.isWorkSession = true;
+        this.hasStarted = false; // Track if timer has been started
+        this.interval = null;
+
+        this.elements = {
+          status: document.getElementById("status"),
+          workTime: document.getElementById("workTime"),
+          breakTime: document.getElementById("breakTime"),
+          workProgress: document.getElementById("workProgress"),
+          breakProgress: document.getElementById("breakProgress"),
+          workCircle: document.getElementById("workCircle"),
+          breakCircle: document.getElementById("breakCircle"),
+          playPauseBtn: document.getElementById("playPauseBtn"),
+          resetBtn: document.getElementById("resetBtn"),
+          audio: document.getElementById("focusAudio"),
+        };
+
+        this.init();
+      }
+
+      init() {
+        this.updateDisplay();
+        this.elements.playPauseBtn.addEventListener("click", () =>
+          this.toggleTimer(),
+        );
+        this.elements.resetBtn.addEventListener("click", () => this.reset());
+
+        // Add click handlers to circles for play/pause functionality - only when active
+        this.elements.workCircle.addEventListener("click", () => {
+          if (this.isWorkSession) this.toggleTimer();
+        });
+        this.elements.breakCircle.addEventListener("click", () => {
+          if (!this.isWorkSession) this.toggleTimer();
+        });
+      }
+
+      toggleTimer() {
+        if (this.isRunning) {
+          this.pause();
+        } else {
+          this.start();
+        }
+      }
+
+      start() {
+        this.isRunning = true;
+        this.hasStarted = true; // Mark that timer has been started
+        this.elements.playPauseBtn.textContent = "Pause";
+        this.elements.status.textContent = this.isWorkSession
+          ? "Focus time!"
+          : "Break time!";
+
+        if (this.isWorkSession) {
+          // Play audio during work sessions
+          if (this.currentTime === this.workDuration) {
+            // Start from beginning for new work session
+            this.elements.audio.currentTime = 0;
+          }
+          this.elements.audio.play().catch(console.error);
+        }
+
+        this.interval = setInterval(() => {
+          this.currentTime--;
+          this.updateDisplay();
+
+          if (this.currentTime <= 0) {
+            this.completeSession();
+          }
+        }, 1000);
+      }
+
+      pause() {
+        this.isRunning = false;
+        // Show "Resume" if timer has been started before, otherwise "Start"
+        this.elements.playPauseBtn.textContent = this.hasStarted
+          ? "Resume"
+          : "Start";
+        this.elements.status.textContent = this.isWorkSession
+          ? "Paused - Focus"
+          : "Paused - Break";
+
+        if (this.interval) {
+          clearInterval(this.interval);
+          this.interval = null;
+        }
+
+        if (this.isWorkSession) {
+          this.elements.audio.pause();
+        }
+      }
+
+      reset() {
+        this.pause();
+        this.isWorkSession = true;
+        this.currentTime = this.workDuration;
+        this.hasStarted = false; // Reset the started flag
+        this.elements.status.textContent = "Ready to focus";
+        this.elements.playPauseBtn.textContent = "Start"; // Reset button to "Start"
+        this.elements.audio.pause();
+        this.elements.audio.currentTime = 0;
+        this.updateDisplay();
+      }
+
+      completeSession() {
+        this.pause();
+
+        if (this.isWorkSession) {
+          // Work session completed, switch to break
+          this.isWorkSession = false;
+          this.currentTime = this.breakDuration;
+          this.elements.status.textContent = "Work complete! Take a break";
+          this.elements.audio.pause();
+        } else {
+          // Break completed, switch to work
+          this.isWorkSession = true;
+          this.currentTime = this.workDuration;
+          this.elements.status.textContent = "Break over! Ready to focus";
+        }
+
+        this.updateDisplay();
+      }
+
+      updateDisplay() {
+        const workMinutes = Math.floor(this.workDuration / 60);
+        const workSeconds = this.workDuration % 60;
+        const breakMinutes = Math.floor(this.breakDuration / 60);
+        const breakSeconds = this.breakDuration % 60;
+
+        this.elements.workTime.textContent = `${workMinutes}:${workSeconds.toString().padStart(2, "0")}`;
+        this.elements.breakTime.textContent = `${breakMinutes}:${breakSeconds.toString().padStart(2, "0")}`;
+
+        // Update active circle classes for hover effects
+        if (this.isWorkSession) {
+          this.elements.workCircle.classList.add("active");
+          this.elements.breakCircle.classList.remove("active");
+        } else {
+          this.elements.workCircle.classList.remove("active");
+          this.elements.breakCircle.classList.add("active");
+        }
+
+        // Update progress circles
+        if (this.isWorkSession) {
+          const workProgress =
+            ((this.workDuration - this.currentTime) / this.workDuration) *
+            360;
+          this.elements.workProgress.style.background = `conic-gradient(black ${workProgress}deg, transparent ${workProgress}deg)`;
+          this.elements.breakProgress.style.background =
+            "conic-gradient(transparent 0deg, transparent 360deg)";
+
+          // Update current time display
+          const minutes = Math.floor(this.currentTime / 60);
+          const seconds = this.currentTime % 60;
+          this.elements.workTime.textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+        } else {
+          const breakProgress =
+            ((this.breakDuration - this.currentTime) / this.breakDuration) *
+            360;
+          this.elements.breakProgress.style.background = `conic-gradient(black ${breakProgress}deg, transparent ${breakProgress}deg)`;
+          this.elements.workProgress.style.background =
+            "conic-gradient(black 360deg, transparent 360deg)";
+
+          // Update current time display
+          const minutes = Math.floor(this.currentTime / 60);
+          const seconds = this.currentTime % 60;
+          this.elements.breakTime.textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+        }
+      }
+
+      formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+      }
+    }
+
+    // Initialize timer when page loads
+    document.addEventListener("DOMContentLoaded", () => {
+      new PomodoroTimer();
+
+      // Settings functionality
+      const settingsBtn = document.getElementById("settingsBtn");
+      const settingsOverlay = document.getElementById("settingsOverlay");
+      const closeSettingsOverlay = document.getElementById(
+        "closeSettingsOverlay",
+      );
+      const refreshButton = document.getElementById("refreshButton");
+      const allAppsButton = document.getElementById("allAppsButton");
+
+      // Show settings overlay
+      settingsBtn.addEventListener("click", () => {
+        settingsOverlay.classList.remove("hidden");
+        document.body.style.overflow = "hidden"; // Prevent body scroll
+      });
+
+      // Hide settings overlay
+      closeSettingsOverlay.addEventListener("click", () => {
+        settingsOverlay.classList.add("hidden");
+        document.body.style.overflow = ""; // Restore body scroll
+      });
+
+      // Close settings overlay when clicking outside
+      settingsOverlay.addEventListener("click", (e) => {
+        if (e.target === settingsOverlay) {
+          settingsOverlay.classList.add("hidden");
+          document.body.style.overflow = ""; // Restore body scroll
+        }
+      });
+
+      // Refresh button functionality
+      refreshButton.addEventListener("click", () => {
+        window.location.reload(true); // Force reload from server
+      });
+
+      // All Apps button functionality
+      allAppsButton.addEventListener("click", () => {
+        window.location.href = "../index.html"; // Navigate to labs home page
+      });
+
+      // Safari-specific fix for responsive layout
+      if (
+        navigator.userAgent.includes("Safari") &&
+        !navigator.userAgent.includes("Chrome")
+      ) {
+        let resizeTimeout;
+        window.addEventListener("resize", () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => {
+            // Force Safari to recalculate layout without refreshing stylesheet
+            const circlesContainer =
+              document.querySelector(".circles-container");
+            if (circlesContainer) {
+              // Temporarily change a property to force layout recalculation
+              const originalDisplay = circlesContainer.style.display;
+              circlesContainer.style.display = "none";
+              // Force reflow
+              circlesContainer.offsetHeight;
+              circlesContainer.style.display = originalDisplay || "";
+            }
+          }, 100);
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

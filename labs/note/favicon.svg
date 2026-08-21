@@ -1,0 +1,9 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="32" height="32" fill="#202F48" />
+
+  <!-- Note icon - simplified from complex paths -->
+  <path d="M9.28 6.05C11.45 5 14.0 5.32 15.55 7.34L16.35 8.64L24.32 25.17L22.96 25.81C20.82 26.85 18.27 26.54 16.72 24.52L8.35 7.63C8.13 7.18 8.35 6.62 8.9 6.32L9.28 6.05Z" fill="#ffffff"/>
+  <path d="M14.11 24C14.25 24.28 14.4 24.55 14.57 24.8H7.04V9.23L14.11 24Z" fill="#ffffff"/>
+  <path d="M24.96 22.12L18.18 7.9C18.07 7.67 17.95 7.45 17.82 7.23H24.96V22.12Z" fill="#ffffff"/>
+</svg>

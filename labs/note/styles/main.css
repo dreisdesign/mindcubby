@@ -1,0 +1,45 @@
+/**
+ * Note App - Minimal CSS
+ * Core styles for design system components
+ * Inline styles in index.html handle most styling
+ */
+
+/* Base body styling */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-family-base, system-ui, sans-serif);
+  background: var(--color-background);
+  color: var(--color-on-surface);
+}
+
+/* iOS PWA safe area support */
+@supports (-webkit-touch-callout: none) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Ensure proper layout for component hierarchy */
+labs-container {
+  flex: 1;
+  display: block;
+}
+
+/* Remove default form element styling */
+textarea,
+input {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Focus visible styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

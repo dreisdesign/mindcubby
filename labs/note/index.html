@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" href="favicon.ico">
+  <title>Labs: Note</title>
+
+  <!-- Early Theme Injection -->
+  <script type="module">
+    import { ThemeManager } from '/labs/design-system/utils/theme-manager.js';
+    ThemeManager.init('note');
+  </script>
+
+  <script>
+    // Set flavor/theme classes as early as possible for CSS tokens
+    (function () {
+      var root = document.documentElement;
+      var flavor = localStorage.getItem('note-flavor') || 'blueberry';
+      var theme = localStorage.getItem('note-theme') || 'light';
+      root.classList.remove('flavor-blueberry', 'flavor-strawberry', 'flavor-vanilla');
+      root.classList.remove('theme-light', 'theme-dark');
+      root.classList.add('flavor-' + flavor);
+      root.classList.add('theme-' + theme);
+      root.setAttribute('data-color-scheme', theme);
+    })();
+  </script>
+
+  <!-- Design System Tokens -->
+  <link rel="stylesheet" href="/labs/design-system/tokens/colors.css">
+  <link rel="stylesheet" href="/labs/design-system/tokens/spacing.css">
+  <link rel="stylesheet" href="/labs/design-system/tokens/typography.css">
+  <link rel="stylesheet" href="/labs/design-system/tokens/border-radius.css">
+  <link rel="stylesheet" href="/labs/design-system/tokens/shadows.css">
+  <link rel="stylesheet" href="/labs/design-system/styles/flavors.css">
+
+  <!-- Components -->
+  <script type="module" src="/labs/design-system/components/labs-container.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-footer-with-settings.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-template-header.wrapped.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-card.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-button.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-icon.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-toast.js"></script>
+
+  <!-- Note App Components -->
+  <script type="module" src="./components/note-input-card.js"></script>
+
+  <!-- Note App Logic -->
+  <script type="module" src="./js/main.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--color-background);
+      color: var(--color-on-surface);
+      font-family: var(--font-family-base);
+    }
+
+    labs-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      /* ensure the main container doesn't push the footer off-screen; allow internal scrolling */
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .note-display-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+      padding: var(--space-md);
+      gap: var(--space-md);
+    }
+
+    .note-display-area.expanded {
+      justify-content: flex-start;
+      padding-top: var(--space-lg);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .date-line-1,
+    .date-line-2 {
+      display: block;
+    }
+
+    note-input-card {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      flex: 0 0 auto;
+    }
+
+    .note-display-area.expanded note-input-card {
+      max-width: 100%;
+      flex: 1;
+    }
+
+    labs-footer-with-settings {
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+    }
+
+    /* Position toast above the footer */
+    labs-toast {
+      --toast-bottom: 120px;
+    }
+  </style>
+
+  <script>
+    // Hide the add button from the footer once it's loaded
+    document.addEventListener('DOMContentLoaded', function () {
+      const footer = document.getElementById('footer');
+      if (footer && footer.shadowRoot) {
+        const addBtn = footer.shadowRoot.getElementById('add-btn');
+        if (addBtn) {
+          addBtn.style.display = 'none';
+        }
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <labs-container>
+    <!-- Note display area with header and card together -->
+    <div class="note-display-area">
+      <!-- Header with current date -->
+      <labs-template-header-wrapped class="header">
+        <span slot="title" id="current-date">
+          <span class="date-line-1">Today is Sunday</span>
+          <span class="date-line-2">Oct 19, 2025</span>
+        </span>
+      </labs-template-header-wrapped>
+
+      <note-input-card id="noteInputCard"></note-input-card>
+    </div>
+
+    <!-- Toast for Undo -->
+    <labs-toast id="undoToast"></labs-toast>
+  </labs-container>
+
+  <!-- Footer with Settings -->
+  <labs-footer-with-settings id="footer">
+  </labs-footer-with-settings>
+
+  <!-- Service Worker Registration -->
+  <script>
+    // Head check to ensure SW exists before registering
+    if ("serviceWorker" in navigator) {
+      fetch("sw.js", { method: "HEAD" })
+        .then(() => {
+          navigator.serviceWorker
+            .register("sw.js")
+            .catch(function (error) {
+              console.log("Service Worker registration failed:", error);
+            });
+        })
+        .catch(() => {
+          console.log("Service Worker file not found at sw.js");
+        });
+    }
+
+    // Set current date in header
+    document.addEventListener('DOMContentLoaded', function () {
+      var dateEl = document.getElementById('current-date');
+      if (dateEl) {
+        var now = new Date();
+        var weekday = now.toLocaleDateString(undefined, { weekday: 'long' });
+        var date = now.toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+
+        var line1 = dateEl.querySelector('.date-line-1');
+        var line2 = dateEl.querySelector('.date-line-2');
+
+        if (line1) line1.textContent = 'Today is ' + weekday;
+        if (line2) line2.textContent = date;
+      }
+    });
+  </script>
+</body>
+
+</html>

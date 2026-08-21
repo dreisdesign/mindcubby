@@ -1,0 +1,105 @@
+:root {
+  --color-overlay-background: rgba(0, 0, 0, 0.5);
+  --shadow-overlay: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-overlay-background);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+
+.settings-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.settings-overlay .overlay-content {
+  background-color: var(--color-surface);
+  padding: 20px;
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: var(--shadow-overlay);
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  margin: auto;
+  max-height: 80dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: all 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.overlay-header h2 {
+  margin: 0;
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-on-surface);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-full, 9999px);
+  transition: background-color 0.2s;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.close-button:hover {
+  background-color: var(--color-primary-25);
+}
+
+.close-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: block;
+}
+
+body.dark-mode .close-icon {
+  filter: invert(1);
+}
+
+/* === Container Button System === */
+/* Modular container buttons for overlays - matches Tracker app style */
+
+/* Container button layout - let the internal button handle all styling */
+.settings-overlay labs-button[variant="container"],
+.settings-overlay labs-button[variant="container-danger"] {
+  display: block;
+  width: 100%;
+}
+
+/* Button container spacing */
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

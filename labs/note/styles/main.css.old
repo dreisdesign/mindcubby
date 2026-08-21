@@ -1,0 +1,1291 @@
+/* 
+ * DailyNote - A simple note that clears at the end of the day
+ * main.css - Core styles and themes
+ * Version: 1.0.0
+ * Based on Tracker app styles
+ */
+
+/* --- Font Face Definition --- */
+@font-face {
+  font-family: "Source Sans 3";
+  src: url("../fonts/SourceSans3VF.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  /* Define the weight range for the variable font */
+  font-style: normal;
+  font-display: swap;
+  /* Improve loading performance */
+}
+
+/* --- Base Variables (Light Mode Defaults) --- */
+:root {
+  --color-primary: rgb(46, 43, 116);
+  /* main purple */
+  --color-secondary: rgb(13, 11, 63);
+  /* dark purple */
+  --color-primary-darker: rgb(25, 23, 80);
+  /* New darker primary */
+  --color-background: rgb(193, 193, 255);
+  /* light background */
+  --color-surface: rgb(255, 255, 255);
+  /* white surface */
+  --color-success: rgb(0, 181, 106);
+  /* success green */
+  --color-error: rgb(181, 0, 90);
+  /* error pink */
+  --color-error-inactive: rgb(181, 181, 181);
+  /* inactive error (desaturated) */
+  --color-on-primary: rgb(255, 255, 255);
+  /* white text on primary */
+  --color-on-background: rgb(22, 10, 56);
+  /* dark text */
+  --color-on-surface: rgb(28, 27, 31);
+  /* dark text */
+  --color-on-error: rgb(255, 255, 255);
+  /* white text on error */
+  --color-on-error-inactive: rgb(255, 255, 255);
+  /* white text on inactive error */
+  --color-primary-75: rgba(46, 43, 116, 0.75);
+  --color-primary-25: rgba(193, 193, 255, 0.25);
+  --color-secondary-75: rgba(13, 11, 63, 0.75);
+  --color-on-surface-75: rgba(28, 27, 31, 0.75);
+  --settings-icon-color: rgba(28, 27, 31, 0.25);
+  /* 25% opacity of color-on-surface */
+  --undo-animation-duration: 3s;
+
+  /* Font Size System */
+  --font-size-sm: 0.6rem;
+  /* Extra Small (e.g., version number) */
+  --font-size-md: 1rem;
+  /* Medium (e.g., body text, standard buttons) */
+  --font-size-lg: 1.1rem;
+  /* Large (e.g., primary action buttons) */
+  --font-size-xl: 1.25rem;
+  /* Extra Large (e.g., time entries) */
+  --font-size-xxl: 1.75rem;
+  /* Double Extra Large (e.g., overlay titles) */
+  --font-size-display: 5.5rem;
+  /* Matched with Tracker app */
+  /* Display (e.g., note text) - reduced size for notes */
+
+  /* Focus visible styles for accessibility */
+  --focus-outline-color: rgb(0, 95, 204);
+  --focus-outline-width: 3px;
+  --focus-outline-offset: 2px;
+}
+
+/* iOS PWA Status Bar Adjustments */
+@supports (-webkit-touch-callout: none) {
+  /* Target only iOS devices */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Adjust version number position for iOS */
+  .version-number {
+    top: calc(1rem + env(safe-area-inset-top));
+  }
+
+  /* Bottom buttons wrapper adjustments for iOS safe areas */
+  .bottom-buttons-wrapper {
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  /* iOS tablet-specific adjustments */
+  @media (min-width: 601px) and (max-width: 1024px) {
+    .metric-card {
+      margin-bottom: calc(9rem + env(safe-area-inset-bottom, 0));
+    }
+
+    .bottom-buttons-wrapper {
+      padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    }
+  }
+
+  /* iOS landscape adjustments for better button visibility */
+  @media (orientation: landscape) {
+    .bottom-buttons-wrapper {
+      padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    }
+
+    .metric-card {
+      margin-bottom: calc(7rem + env(safe-area-inset-bottom, 0));
+    }
+  }
+}
+
+/* --- Version Number --- */
+.version-number {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  font-size: var(--font-size-sm);
+  opacity: 0.8;
+  font-family: monospace;
+  color: var(--color-on-background);
+  z-index: 1000;
+  content: "v1.0.0";
+}
+
+/* --- Global Styles --- */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--color-background);
+  color: var(--color-on-background);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  /* Add smooth transitions for theme changes */
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Add transitions to elements that change with theme */
+.metric-card,
+.bottom-buttons-wrapper,
+.metric-label,
+#mainContent,
+#mainContent::-webkit-scrollbar,
+.version-number {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
+
+/* --- Global focus styles for keyboard navigation --- */
+:focus-visible {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* --- App Container --- */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 80vw;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  align-items: center;
+  justify-content: space-between;
+  /* Space between card and bottom buttons */
+  gap: 0;
+  position: relative;
+  min-height: unset;
+  background: transparent;
+  overflow: hidden;
+  /* Prevent scrolling of the app container */
+}
+
+/* --- Note Card (based on Metric Card) --- */
+.metric-card {
+  background: var(--color-surface);
+  border-radius: 1.2rem;
+  box-shadow: none;
+  padding: 2rem 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 80%;
+  /* Keep 80% width as requested */
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 2rem;
+  margin-bottom: 6.5rem;
+  /* Increased bottom margin to prevent overlap with footer */
+  position: relative;
+  z-index: 10;
+  transition: box-shadow 0.3s ease;
+  flex: 1;
+  /* Take up available space */
+  min-height: calc(100vh - 240px);
+  /* Reduced height to avoid overlap with footer */
+}
+
+/* Dark mode shadow for note card */
+body.dark-mode .metric-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Container for label and edit button */
+.metric-label-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  transition: background-color 0.2s;
+}
+
+.metric-label {
+  font-size: var(--font-size-xl);
+  color: var(--color-on-surface);
+  font-weight: 500;
+  padding: 0;
+  margin: 0;
+  transition: color 0.2s;
+}
+
+.edit-label-icon {
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-primary);
+  mask-image: url("../assets/images/edit--fill.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("../assets/images/edit--fill.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  opacity: 0;
+  position: absolute;
+  right: -30px;
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.metric-label-container:hover .edit-label-icon {
+  opacity: 0.75;
+}
+
+.edit-label-icon:hover,
+.metric-label-container:hover:active .edit-label-icon {
+  background-color: var(--color-secondary);
+  opacity: 1;
+}
+
+/* Note content styles - using metric value styling from Tracker */
+.note-content {
+  width: 100%;
+  min-height: 100px;
+  flex: 1;
+  /* Make the content take up all available space */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Center content vertically */
+  text-align: center;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1.1;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-y: auto;
+  /* Add scrolling when content overflows */
+  transition:
+    color 0.3s,
+    font-size 0.3s;
+  padding-bottom: 1rem;
+  /* Add some bottom spacing */
+
+  /* Fluid typography implementation using clamp()
+     * - Minimum font size: 2rem (prevents text from becoming too small)
+     * - Preferred size: 8vw (scales with viewport width to fill available space)
+     * - Maximum size: var(--font-size-display) (prevents text from becoming too large)
+     * 
+     * This creates responsive text that:
+     * 1. Grows/shrinks based on available space
+     * 2. Always remains within readable size bounds
+     * 3. Optimally fills the note card
+     */
+  font-size: clamp(2rem, 8vw, 16rem);
+}
+
+/* Specific styling for the noteText element */
+#noteText {
+  margin: 0.5rem 0;
+  padding: 0;
+  /* Inherit styles from the parent .note-content */
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  line-height: inherit;
+
+  /* Text wrapping strategy:
+     * - overflow-wrap: break-word - Allows breaking long words only when necessary
+     * - word-wrap: break-word - Legacy property for backward compatibility
+     * - word-break: keep-all - Critical property that ensures words stay intact
+     * - white-space: normal - Allows text to wrap naturally at spaces
+     * - hyphens: none - Prevents automatic hyphenation of words
+     * 
+     * Combined, these properties ensure that:
+     * 1. Words will never break across lines (stay as complete units)
+     * 2. Text wraps at natural word boundaries (spaces)
+     * 3. Long text flows correctly with proper overflow handling
+     */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  /* Legacy name for overflow-wrap */
+  word-break: keep-all;
+  /* Ensures no breaking within words */
+  white-space: normal;
+  /* Allows normal wrapping at spaces */
+  hyphens: none;
+  /* Disable hyphenation */
+  text-overflow: ellipsis;
+  /* Add ellipsis for truncated text */
+  overflow: hidden;
+  /* Hide overflow */
+  /* Adjust to fill available space */
+  max-height: 100%;
+  max-width: 100%;
+}
+
+/* Empty note style */
+.note-content.empty {
+  color: var(--color-primary-75);
+  /* Use a more subtle version of primary color */
+  font-style: italic;
+  text-align: center;
+  /* Inherits the same fluid typography from parent .note-content */
+}
+
+/* --- Main Content Area --- */
+#mainContent {
+  flex: 1;
+  width: 100%;
+  max-width: 800px;
+  overflow-y: auto;
+  padding: 0 1rem;
+  margin: 0;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+/* --- Bottom Buttons --- */
+.bottom-buttons-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 95%;
+  background-color: rgba(255, 255, 255, 0.15);
+  /* Lighter background for light mode */
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(16px);
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease,
+    opacity 0.3s;
+  padding: 1.25rem 0;
+  /* Increased by 50% from 0.75rem to 1.125rem */
+  min-height: 80px;
+  /* Ensure minimum height to prevent cut-off */
+  z-index: 100;
+  border-radius: 100px 100px 0 0;
+  box-shadow: none;
+  pointer-events: auto;
+  border-top: 0.75px solid rgba(255, 255, 255, 0.5);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.bottom-buttons-wrapper.shadow {
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  border-top: 0.75px solid rgba(255, 255, 255, 0.15);
+}
+
+body.dark-mode .bottom-buttons-wrapper {
+  background-color: var(--color-surface);
+  border-top: 0.25px solid var(--color-primary-25);
+}
+
+body.dark-mode .bottom-buttons-wrapper.shadow {
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+  border-top: 0.75px solid rgba(0, 0, 0, 0.15);
+}
+
+/* Container for bottom buttons */
+.bottom-buttons {
+  display: flex;
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  min-height: 60px;
+  /* Ensure container has enough height for absolute positioned children */
+  background-color: transparent;
+  pointer-events: auto;
+  z-index: 101;
+}
+
+/* Ensure buttons don't get cut off on various viewports */
+@media (max-height: 600px) {
+  .bottom-buttons-wrapper {
+    min-height: 90px;
+    /* Larger minimum height on short viewports */
+    padding: 1.5rem 0;
+  }
+
+  .metric-card {
+    margin-bottom: 9rem;
+    /* More margin on short screens */
+    min-height: calc(100vh - 200px);
+  }
+}
+
+/* Very short viewport handling (like landscape phones) */
+@media (max-height: 400px) {
+  .bottom-buttons-wrapper {
+    min-height: 70px;
+    padding: 1rem 0;
+  }
+
+  .metric-card {
+    margin-bottom: 7rem;
+    min-height: calc(100vh - 150px);
+    padding: 1rem 0.5rem;
+  }
+
+  .note-content {
+    font-size: clamp(1.5rem, 6vw, 4rem);
+  }
+}
+
+/* Add Note Button */
+.track-button {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  border: none;
+  border-radius: 5rem;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    transform 0.1s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  position: relative;
+  padding: 0.75rem 2rem;
+  height: 54px;
+}
+
+.track-button:active,
+.track-button.button-pressed {
+  background-color: var(--color-primary-darker);
+  transform: scale(0.95);
+  transition-duration: 0.05s;
+}
+
+.track-button:hover {
+  background: var(--color-secondary);
+}
+
+.track-button:focus-visible {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
+
+.track-button--footer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* Center both horizontally and vertically */
+  width: auto;
+  min-width: 120px;
+  /* Ensure the button has a minimum width */
+  padding: 1.275rem 1.5rem;
+  /* Ensure button has proper padding */
+  margin: 0;
+  transition:
+    background-color 0.2s,
+    transform 0.1s ease-out,
+    width 0.2s ease;
+}
+
+.track-button--footer:active,
+.track-button--footer.button-pressed {
+  transform: translate(-50%, -50%) scale(0.95);
+  /* Keep centered while scaling */
+}
+
+/* Track button text styles */
+.track-button-text {
+  transition: transform 0.2s ease;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Button pressed effect */
+
+/* Settings Button (matches Tracker) */
+.settings-button {
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.5rem;
+  line-height: 1;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* Base styles for bottom buttons */
+
+/* Settings Icon (matches Tracker) */
+.settings-icon {
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-primary);
+  mask-image: url("../assets/images/settings--fill.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("../assets/images/settings--fill.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  opacity: 0.75;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+  display: block;
+}
+
+.settings-button:hover .settings-icon,
+.settings-button:focus-visible .settings-icon {
+  opacity: 1;
+  transform: rotate(30deg);
+}
+
+.settings-button:active .settings-icon {
+  opacity: 1;
+  transform: rotate(0deg) scale(0.92);
+}
+
+/* Focus state for accessibility */
+.settings-button:focus-visible {
+  outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* Dark mode adjustments for settings icon */
+body.dark-mode .settings-icon {
+  background-color: var(--color-primary);
+  opacity: 0.85;
+}
+
+body.dark-mode .settings-button:hover .settings-icon,
+body.dark-mode .settings-button:focus-visible .settings-icon {
+  opacity: 1;
+  background-color: var(--color-primary);
+  transform: rotate(30deg);
+}
+
+body.dark-mode .settings-button:active .settings-icon {
+  opacity: 1;
+  background-color: var(--color-primary-darker);
+  transform: rotate(0deg) scale(0.92);
+}
+
+/* --- Skip to content link for keyboard users --- */
+.skip-to-content {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: 0.5rem 1rem;
+  z-index: 9999;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+.skip-to-content:focus {
+  top: 0.5rem;
+  left: 0.5rem;
+}
+
+/* --- Overlay Styles --- */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Base overlay content styles */
+.overlay-content {
+  background-color: var(--color-surface);
+  border-radius: 1rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* --- Overlay Header --- */
+.overlay-header {
+  padding: 1rem 1rem 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.overlay-header h2 {
+  margin: 0;
+  font-size: var(--font-size-xxl);
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.close-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.close-icon {
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-on-surface);
+  mask-image: url("../assets/images/close--fill.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("../assets/images/close--fill.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+body.dark-mode .close-icon {
+  background-color: var(--color-on-surface);
+}
+
+.overlay-body {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Comment textarea styling */
+.comment-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-primary-75);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  font-size: var(--font-size-lg);
+  min-height: 150px;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.comment-textarea:focus {
+  border-color: var(--color-primary);
+}
+
+body.dark-mode .comment-textarea {
+  border-color: var(--color-primary-75);
+  background-color: rgb(40, 40, 40);
+}
+
+body.dark-mode .comment-textarea:focus {
+  border-color: var(--color-primary);
+}
+
+.comment-actions {
+  display: flex;
+  justify-content: space-between;
+  /* Changed to space-between to push buttons apart */
+  margin-top: 1rem;
+}
+
+.comment-button {
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  min-height: 44px;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.save-comment {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.save-comment:hover {
+  background-color: var(--color-secondary);
+}
+
+/* Delete comment button styling - similar to Reset button in settings */
+.delete-comment {
+  background-color: transparent;
+  color: var(--color-error);
+}
+
+.delete-comment:hover {
+  background-color: var(--color-error);
+  color: var(--color-on-error);
+}
+
+.delete-comment.cancel {
+  background-color: transparent;
+  color: var(--color-primary);
+}
+
+.delete-comment.cancel:hover {
+  background-color: var(--color-primary-25);
+  color: var(--color-primary);
+}
+
+/* Settings Menu Items */
+.settings-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-on-surface);
+  font-size: var(--font-size-md);
+  text-align: left;
+  border-radius: 0.5rem;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+  outline: none;
+}
+
+.settings-item:hover,
+.settings-item:focus-visible {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.settings-item:active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .settings-item {
+  color: var(--color-on-background);
+  background: none;
+}
+
+body.dark-mode .settings-item:hover,
+body.dark-mode .settings-item:focus-visible {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .settings-item:active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Theme toggle specific styling for dark mode */
+body.dark-mode #menuThemeToggle {
+  background-color: rgba(149, 117, 205, 0.15);
+}
+
+body.dark-mode #menuThemeToggle:hover,
+body.dark-mode #menuThemeToggle:focus-visible {
+  background-color: var(--color-primary-25);
+}
+
+#menuThemeToggle:hover,
+#menuThemeToggle:focus-visible {
+  background-color: var(--color-primary-25);
+}
+
+/* Inactive state for settings overlay buttons (matches Tracker) */
+.settings-item[aria-disabled="true"],
+.settings-item[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: none !important;
+  color: var(--color-on-surface);
+  transition: opacity 0.2s;
+}
+
+body.dark-mode .settings-item[aria-disabled="true"],
+body.dark-mode .settings-item[disabled] {
+  color: var(--color-on-background);
+  background: none !important;
+  opacity: 0.5;
+}
+
+/* Settings Item Icon Container */
+.settings-item-icon-container {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+/* Theme Icon */
+.theme-icon {
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-on-surface);
+  mask-image: url("../assets/images/mode-dark--fill.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("../assets/images/mode-dark--fill.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+body.dark-mode .theme-icon {
+  background-color: var(--color-on-surface);
+  mask-image: url("../assets/images/mode-light--fill.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("../assets/images/mode-light--fill.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+/* Reset Icon */
+.reset-icon {
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-error-inactive);
+  mask-image: url("../assets/images/reset--fill.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("../assets/images/reset--fill.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  transition: background-color 0.2s;
+}
+
+.settings-item-reset:hover .reset-icon {
+  background-color: var(--color-error);
+}
+
+/* Refresh Icon */
+.refresh-icon {
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-primary);
+  mask-image: url("../assets/images/refresh--fill.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("../assets/images/refresh--fill.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  transition: background-color 0.2s;
+  display: block;
+}
+
+.settings-item:hover .refresh-icon {
+  background-color: var(--color-secondary);
+}
+
+body.dark-mode .refresh-icon {
+  background-color: var(--color-primary);
+}
+
+body.dark-mode .settings-item:hover .refresh-icon {
+  background-color: var(--color-primary-darker);
+}
+
+.all-apps-icon {
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-secondary);
+  mask-image: url("../assets/images/settings--fill.svg");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("../assets/images/settings--fill.svg");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  transition: background-color 0.2s;
+  display: block;
+}
+
+.settings-item:hover .all-apps-icon {
+  background-color: var(--color-secondary);
+}
+
+body.dark-mode .all-apps-icon {
+  background-color: var(--color-primary);
+}
+
+body.dark-mode .settings-item:hover .all-apps-icon {
+  background-color: var(--color-primary-darker);
+}
+
+/* --- Undo Button Styles --- */
+.undo-button {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-primary-75);
+  color: var(--color-on-primary);
+  border: none;
+  border-radius: 2rem;
+  padding: 0.75rem 1.5rem;
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  z-index: 900;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+  opacity: 0;
+  transform: translateX(-50%) translateY(30px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* When the button should be shown */
+.undo-button.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* When the button is hidden */
+.undo-button.hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(30px);
+  pointer-events: none;
+}
+
+/* Hover and active states for the undo button */
+.undo-button:hover {
+  background-color: var(--color-primary);
+}
+
+body.dark-mode .undo-button:hover {
+  background-color: var(--color-primary);
+}
+
+.undo-button:active {
+  transform: translateX(-50%) translateY(2px);
+}
+
+/* Dark mode adjustments */
+body.dark-mode .undo-button {
+  background-color: var(--color-primary-75);
+}
+
+/* --- Dark Mode Variable Overrides --- */
+body.dark-mode {
+  /* Background and surface colors */
+  --color-background: rgb(18, 18, 18);
+  /* dark background */
+  --color-surface: rgb(30, 30, 30);
+  /* dark surface */
+
+  /* Primary and accent colors */
+  --color-primary: rgb(149, 117, 205);
+  /* lighter purple */
+  --color-primary-darker: rgb(110, 85, 160);
+  /* New darker primary for dark mode */
+  --color-secondary: rgb(126, 87, 194);
+  /* dark mode secondary */
+  --color-error: rgb(207, 102, 121);
+  /* light error */
+
+  /* Text colors (on different backgrounds) */
+  --color-on-primary: rgb(0, 0, 0);
+  /* black text on light primary */
+  --color-on-background: rgb(255, 255, 255);
+  /* Increased contrast - light text */
+  --color-on-surface: rgb(255, 255, 255);
+  /* Increased contrast - light text */
+  --color-on-error: rgb(0, 0, 0);
+  /* black text on error */
+
+  /* Opacity variants */
+  --color-primary-75: rgba(149, 117, 205, 0.75);
+  --color-primary-25: rgba(149, 117, 205, 0.25);
+  --color-secondary-75: rgba(126, 87, 194, 0.75);
+  --color-on-surface-75: rgba(255, 255, 255, 0.75);
+  --settings-icon-color: rgba(255, 255, 255, 0.25);
+
+  /* Utility variables */
+  --icon-filter: invert(1);
+  --focus-outline-color: rgb(255, 213, 0);
+  /* Different focus color for dark mode for better visibility */
+}
+
+/* Label Edit Styles */
+.label-edit-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-primary-75);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  font-size: var(--font-size-lg);
+  outline: none;
+  margin: 1rem 0;
+  box-sizing: border-box;
+}
+
+.label-edit-input:focus {
+  border-color: var(--color-primary);
+}
+
+body.dark-mode .label-edit-input {
+  border-color: var(--color-primary-75);
+  background-color: rgb(40, 40, 40);
+}
+
+body.dark-mode .label-edit-input:focus {
+  border-color: var(--color-primary);
+}
+
+.label-edit-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* General utility classes */
+.hidden {
+  display: none !important;
+}
+
+/* Hide mobile-only elements by default */
+.mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
+  .mobile-only {
+    display: flex !important;
+  }
+}
+
+/* --- Responsive Styles --- */
+
+/* Tablet-specific styles (601px to 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .app {
+    max-width: 90vw;
+    padding: 1rem 0 0 0;
+  }
+
+  .metric-card {
+    padding: 2rem 1rem 2rem 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 9rem;
+    /* Increased bottom margin for tablet to prevent footer overlap with larger button area */
+    min-height: calc(100vh - 220px);
+    /* Adjusted for tablet to avoid footer overlap */
+    max-width: 85%;
+  }
+
+  .note-content {
+    font-size: clamp(3rem, 8vw, 12rem);
+    padding-bottom: 1rem;
+  }
+
+  /* Ensure bottom buttons wrapper is visible on tablets */
+  .bottom-buttons-wrapper {
+    padding: 2rem 0;
+    /* Increased padding for better visibility and touch targets on tablet */
+    bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  /* Tablet-specific button sizing */
+  .track-button--footer {
+    min-width: 140px;
+    padding: 1rem 1.75rem;
+    font-size: 1.1rem;
+  }
+
+  .settings-button {
+    right: 40px;
+    /* Better positioning for tablet, keeping original padding for circular shape */
+  }
+}
+
+/* Mobile portrait styles (up to 600px) */
+@media (max-width: 600px) {
+  .app {
+    max-width: 98vw;
+    padding: 2vw 0 0 0;
+  }
+
+  .metric-card {
+    padding: 1.5rem 0.5rem 1.5rem 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 5.5rem;
+    /* Increased bottom margin to prevent overlap with footer on mobile */
+    min-height: calc(100vh - 190px);
+    /* Adjusted for mobile to avoid footer overlap */
+  }
+
+  .note-content {
+    /* 
+         * Fluid typography for mobile screens:
+         * - Minimum: 4rem (larger starting point for better visibility on small screens)
+         * - Preferred: 12vw (scales proportionally with viewport width at a larger ratio)
+         * - Maximum: 16rem (allows for much larger text on mobile devices)
+         *
+         * This creates a more impactful mobile experience with:
+         * 1. Significantly larger text that's easy to read at a glance
+         * 2. Text that grows/shrinks to optimally fill the available space 
+         * 3. Maintains the no-word-break behavior from base styles
+         */
+    font-size: clamp(4rem, 12vw, 16rem);
+    padding-bottom: 0.5rem;
+    /* Less padding on mobile */
+  }
+}
+
+/* --- Additional Accessibility Enhancements --- */
+
+/* Tablet landscape orientation adjustments */
+@media (min-width: 601px) and (max-width: 1024px) and (orientation: landscape) {
+  .metric-card {
+    margin-bottom: 9rem;
+    /* Even more margin in landscape to ensure button visibility */
+    min-height: calc(100vh - 180px);
+    /* Adjusted for landscape tablet to avoid footer overlap */
+    padding: 1.5rem 1rem;
+  }
+
+  .bottom-buttons-wrapper {
+    padding: 1.75rem 0;
+    /* Larger padding in landscape for better visibility */
+  }
+
+  .note-content {
+    font-size: clamp(2.5rem, 6vw, 8rem);
+    /* Smaller text in landscape to fit better */
+  }
+}
+
+/* Mobile landscape orientation */
+@media (max-width: 767px) and (orientation: landscape) {
+  .metric-card {
+    margin-bottom: 7rem;
+    min-height: calc(100vh - 160px);
+    padding: 1rem 0.5rem;
+  }
+
+  .bottom-buttons-wrapper {
+    padding: 1.25rem 0;
+  }
+
+  .note-content {
+    font-size: clamp(2rem, 8vw, 6rem);
+  }
+}
+
+@media screen and (max-width: 767px) {
+  /* Increase touch targets on mobile */
+  .track-button,
+  .bottom-button-base,
+  .edit-label-button,
+  .collapse-toggle {
+    min-height: 48px;
+    /* Larger touch targets on mobile */
+    padding: 0.75rem;
+  }
+
+  /* Increase font size on mobile for better readability */
+  html,
+  body {
+    font-size: 16px;
+    /* Ensure base font size is maintained on mobile */
+  }
+
+  /* Position settings button 10px from the right on mobile */
+  .settings-button {
+    right: 10px;
+  }
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  :root {
+    --focus-outline-color: CanvasText;
+  }
+
+  .track-button,
+  .bottom-button-base,
+  .edit-label-button,
+  .collapse-toggle {
+    border: 1px solid CanvasText;
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Pad V1.0 - Drawing App",
+  "short_name": "Pad V1.0",
+  "description": "Minimalist Apple Pencil drawing pad with clear functionality",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "theme_color": "#FBFBFD",
+  "background_color": "#FBFBFD",
+  "categories": [
+    "productivity",
+    "graphics"
+  ],
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

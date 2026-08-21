@@ -1,0 +1,130 @@
+<!-- Last updated: 7:38AM Nov 15 2025 -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" href="favicon.ico">
+    <title>Labs: Tracker</title>
+
+    <!-- Early Theme Injection -->
+    <script type="module">
+        import { ThemeManager } from '/labs/design-system/utils/theme-manager.js';
+        ThemeManager.init('tracker');
+    </script>
+
+    <script>
+        // Set flavor/theme classes as early as possible for CSS tokens
+        (function () {
+            var root = document.documentElement;
+            var flavor = localStorage.getItem('tracker-flavor') || 'blueberry';
+            var theme = localStorage.getItem('tracker-theme') || 'light';
+            root.classList.remove('flavor-blueberry', 'flavor-strawberry', 'flavor-vanilla');
+            root.classList.remove('theme-light', 'theme-dark');
+            root.classList.add('flavor-' + flavor);
+            root.classList.add('theme-' + theme);
+            root.setAttribute('data-color-scheme', theme);
+        })();
+
+        // ...existing code...
+    </script>
+
+    <!-- Design System Tokens -->
+    <link rel="stylesheet" href="/labs/design-system/tokens/colors.css">
+    <link rel="stylesheet" href="/labs/design-system/tokens/spacing.css">
+    <link rel="stylesheet" href="/labs/design-system/tokens/typography.css">
+    <link rel="stylesheet" href="/labs/design-system/tokens/border-radius.css">
+    <link rel="stylesheet" href="/labs/design-system/tokens/shadows.css">
+    <link rel="stylesheet" href="/labs/design-system/styles/flavors.css">
+
+    <!-- Components -->
+    <script type="module" src="/labs/design-system/components/labs-container.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-footer-with-settings.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-template-header.wrapped.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-metric-card.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-list-item.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-dropdown.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-icon.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-button.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-toast.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-details.js"></script>
+
+    <!-- Tracker Logic -->
+    <script type="module" src="./js/main.js"></script>
+
+    <!-- Register Tracker Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js', { scope: './' })
+                .catch(err => console.warn('Tracker SW registration failed:', err));
+        }
+    </script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            background: var(--color-background);
+            color: var(--color-on-surface);
+            font-family: var(--font-family-base);
+        }
+
+        labs-container {
+            flex: 1;
+            display: block;
+            /* allow internal scrolling when content is taller than the viewport */
+            min-height: 0;
+            overflow: auto;
+        }
+
+        .entry-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+            margin-top: var(--space-md);
+        }
+
+        labs-metric-card {
+            margin-bottom: var(--space-md);
+        }
+
+        labs-footer-with-settings {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+        }
+
+        /* Position toast above the footer */
+        labs-toast {
+            --toast-bottom: 120px;
+        }
+    </style>
+</head>
+
+<body>
+    <labs-container medium>
+        <labs-template-header-wrapped>
+            <span slot="title">Tracker</span>
+        </labs-template-header-wrapped>
+
+        <labs-metric-card id="tracker-metric">
+            <span slot="label">Entries</span>
+            <span slot="value">0</span>
+        </labs-metric-card>
+
+        <div class="entry-list" id="entry-list">
+            <!-- Tracker entries will be inserted here -->
+        </div>
+    </labs-container>
+
+    <labs-footer-with-settings elevated></labs-footer-with-settings>
+</body>
+
+</html>

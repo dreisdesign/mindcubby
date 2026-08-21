@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Pad V1.0</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#FBFBFD">
+  <link rel="stylesheet" href="/labs/design-system/tokens/colors.css">
+  <link rel="stylesheet" href="/labs/design-system/styles/flavors.css">
+  <script>// Early theme/flavor script (inlined into app pages during docs sync)
+    (function () {
+      try {
+        var root = document && document.documentElement;
+        if (!root) return;
+        var keys = [
+          'today-list-flavor', 'today-list-theme',
+          'tracker-flavor', 'tracker-theme',
+          'pad-flavor', 'pad-theme',
+          'labs-flavor', 'labs-theme'
+        ];
+        var foundFlavor = null;
+        var foundTheme = null;
+        for (var i = 0; i < keys.length; i++) {
+          try {
+            var k = keys[i];
+            var v = localStorage.getItem(k);
+            if (!v) continue;
+            v = String(v).replace(/^flavor-/, '').replace(/^theme-/, '').trim();
+            if (k.indexOf('flavor') !== -1 && !foundFlavor) foundFlavor = v;
+            if (k.indexOf('theme') !== -1 && !foundTheme) foundTheme = v;
+          } catch (e) { }
+        }
+        // remove any existing flavor- / theme- classes
+        Array.from(root.classList).forEach(function (c) { if (c && c.indexOf('flavor-') === 0) root.classList.remove(c); });
+        Array.from(root.classList).forEach(function (c) { if (c && c.indexOf('theme-') === 0) root.classList.remove(c); });
+        if (foundFlavor) root.classList.add('flavor-' + String(foundFlavor));
+        if (foundTheme) root.classList.add('theme-' + String(foundTheme));
+      } catch (e) { }
+    })();
+  </script>
+  <script type="module" src="/labs/design-system/components/labs-icon.js"></script>
+  <script type="module" src="/labs/design-system/components/labs-button.js"></script>
+  <style>
+    .pad-icon {
+      width: 32px;
+      height: 32px;
+      display: block;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--color-background, #FBFBFD);
+      color: var(--color-on-background, #1B1C1F);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .pad-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      box-sizing: border-box;
+    }
+
+
+    .pad-theme-toggle {
+      position: absolute;
+      top: calc(20px + env(safe-area-inset-top));
+      right: calc(20px + env(safe-area-inset-right));
+      z-index: 100;
+    }
+
+    .pad-version-badge {
+      position: absolute;
+      top: calc(20px + env(safe-area-inset-top));
+      right: calc(70px + env(safe-area-inset-right));
+      z-index: 100;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-outline, #b0b0b0);
+      background: var(--color-surface, #fff8);
+      border-radius: 6px;
+      padding: 2px 10px;
+      letter-spacing: 0.04em;
+      user-select: none;
+      pointer-events: none;
+      box-shadow: 0 1px 2px 0 #0001;
+    }
+
+    .pad-clear-button {
+      position: absolute;
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      right: calc(20px + env(safe-area-inset-right));
+      z-index: 100;
+    }
+
+    .pad-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+      touch-action: none;
+      /* Prevent scrolling/zooming */
+    }
+
+    /* Ensure canvas fills entire screen */
+    .pad-canvas {
+      display: block;
+    }
+
+    /* Loading state for better UX */
+    .pad-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--color-on-background, #1B1C1F);
+      opacity: 0.5;
+      font-size: 16px;
+      display: none;
+    }
+
+    /* Add some subtle visual feedback */
+    .pad-canvas:active {
+      cursor: none;
+      /* Hide cursor while drawing */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="pad-container">
+
+
+    <!-- Version badge (top-right, left of theme toggle) -->
+    <div class="pad-version-badge">pad v1.0</div>
+
+    <!-- Theme toggle button (top-right) -->
+    <labs-button id="themeToggle" class="pad-theme-toggle" variant="icon" aria-label="Toggle theme"
+      style="position:absolute;top:calc(20px + env(safe-area-inset-top));right:calc(20px + env(safe-area-inset-right));z-index:100;height:48px;width:48px;min-width:48px;min-height:48px;padding:0;display:flex;align-items:center;justify-content:center;">
+      <labs-icon id="themeIcon" slot="icon-left" name="bedtime" style="color:var(--color-on-surface);"
+        class="pad-icon"></labs-icon>
+    </labs-button>
+
+    <!-- Flavor switcher button (below theme toggle) -->
+    <button id="flavorToggle" class="pad-flavor-toggle" aria-label="Switch flavor" title="Switch flavor"
+      style="position:absolute;top:calc(74px + env(safe-area-inset-top));right:calc(20px + env(safe-area-inset-right));z-index:100;background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;height:48px;width:48px;min-width:48px;min-height:48px;">
+      <span style="display:inline-flex;align-items:center;justify-content:center;height:32px;width:32px;">
+        <!-- Inline SVG icon, color inherits from CSS -->
+        <svg id="flavorIcon" class="pad-icon" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg"
+          style="color:var(--color-on-surface);">
+          <g>
+            <path
+              d="M6.78189 18.4699L1.84048 13.5285C1.62087 13.3089 1.45249 13.0563 1.33536 12.7708C1.21823 12.4853 1.15967 12.1888 1.15967 11.8813C1.15967 11.5885 1.21823 11.2993 1.33536 11.0138C1.45249 10.7283 1.62087 10.4758 1.84048 10.2562L6.58423 5.51241L4.89318 3.82135C4.64428 3.57245 4.51616 3.26865 4.50884 2.90994C4.50152 2.55123 4.62231 2.24742 4.87121 1.99852C5.12011 1.73498 5.42758 1.59955 5.79361 1.59223C6.15964 1.58491 6.47443 1.71302 6.73797 1.97656L14.9956 10.2562C15.2152 10.4758 15.3836 10.7283 15.5007 11.0138C15.6179 11.2993 15.6764 11.5885 15.6764 11.8813C15.6764 12.1888 15.6179 12.4853 15.5007 12.7708C15.3836 13.0563 15.2152 13.3089 14.9956 13.5285L10.0542 18.4699C9.83458 18.6895 9.58202 18.8579 9.29652 18.975C9.01101 19.0921 8.72185 19.1507 8.42903 19.1507C8.12156 19.1507 7.82508 19.0921 7.53957 18.975C7.25407 18.8579 7.00151 18.6895 6.78189 18.4699ZM8.3851 7.40113L3.90489 11.8813H12.9092C12.9092 11.8521 12.9092 11.8521 12.9092 11.8813L8.3851 7.40113ZM17.8506 19.1507C17.2357 19.1507 16.7159 18.9311 16.2914 18.4918C15.8668 18.0526 15.6545 17.5255 15.6545 16.9106C15.6545 16.4567 15.7643 16.0321 15.9839 15.6368C16.2035 15.2415 16.4597 14.8608 16.7526 14.4948L17.1698 13.9677C17.3455 13.7481 17.5725 13.6383 17.8506 13.6383C18.1288 13.6383 18.3558 13.7481 18.5315 13.9677L18.9487 14.4948C19.2269 14.8608 19.4868 15.2415 19.7284 15.6368C19.97 16.0321 20.0907 16.4567 20.0907 16.9106C20.0907 17.5402 19.8711 18.0709 19.4319 18.5028C18.9927 18.9347 18.4656 19.1507 17.8506 19.1507Z"
+              fill="currentColor" />
+          </g>
+        </svg>
+      </span>
+    </button>
+
+    <!-- Clear button (bottom-right) -->
+    <labs-button id="clearButton" class="pad-clear-button" variant="icon" aria-label="Clear canvas"
+      style="height:48px;width:48px;min-width:48px;min-height:48px;padding:0;display:flex;align-items:center;justify-content:center;">
+      <labs-icon slot="icon-left" name="delete_forever" style="color:var(--color-on-surface);"
+        class="pad-icon"></labs-icon>
+    </labs-button>
+
+    <canvas id="drawingCanvas" class="pad-canvas" width="1024" height="768"></canvas>
+  </div>
+
+  <script>
+    // Theme management utilities
+    function applyTheme({ flavor = 'vanilla', theme = 'light' } = {}) {
+      const root = document.documentElement;
+      root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
+      root.classList.add(`flavor-${flavor}`);
+      root.classList.remove('theme-light', 'theme-dark');
+      root.classList.add(`theme-${theme}`);
+      root.setAttribute('data-color-scheme', theme);
+      localStorage.setItem('pad-theme', theme);
+
+      // Update meta theme-color for PWA
+      const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      const bgColor = getComputedStyle(root).getPropertyValue('--color-background').trim();
+      if (themeColorMeta && bgColor) {
+        themeColorMeta.setAttribute('content', bgColor);
+      }
+
+      // Dispatch theme change event for canvas to update drawing color
+      document.dispatchEvent(new CustomEvent('themeChanged'));
+    }
+
+    function initSystemTheme(defaultTheme = 'light') {
+      const savedTheme = localStorage.getItem('pad-theme');
+      if (savedTheme) {
+        applyTheme({ flavor: 'vanilla', theme: savedTheme });
+      } else {
+        // Always default to light mode, ignore system preference
+        applyTheme({ flavor: 'vanilla', theme: 'light' });
+      }
+    }
+
+    function updateThemeToggleButton() {
+      const themeIcon = document.getElementById('themeIcon');
+      const themeButton = document.getElementById('themeToggle');
+      const isDark = document.documentElement.classList.contains('theme-dark');
+
+      if (themeIcon) {
+        themeIcon.setAttribute('name', isDark ? 'bedtime_off' : 'bedtime');
+      }
+      if (themeButton) {
+        themeButton.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('theme-dark');
+      applyTheme({ flavor: 'vanilla', theme: isDark ? 'light' : 'dark' });
+      updateThemeToggleButton();
+    }
+
+    // Initialize theme system
+    initSystemTheme();
+
+    class PadDrawing {
+      constructor() {
+        this.canvas = document.getElementById('drawingCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.isDrawing = false;
+        this.lastPoint = { x: 0, y: 0 };
+        this.currentStroke = [];
+        this.strokes = [];
+
+        this.setupCanvas();
+        this.setupEventListeners();
+
+        // Restore drawing after a brief delay to ensure canvas is properly sized
+        setTimeout(() => this.restoreDrawing(), 100);
+      }
+
+      setupCanvas() {
+        // Set canvas size to match screen
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+
+        // Configure drawing context
+        this.updateDrawingStyle();
+
+        // Listen for theme changes to update drawing color
+        document.addEventListener('themeChanged', () => this.updateDrawingStyle());
+      }
+
+      updateDrawingStyle() {
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.ctx.strokeStyle = getComputedStyle(document.documentElement)
+          .getPropertyValue('--color-on-background').trim() || '#1B1C1F';
+      }
+
+      redrawAllStrokes() {
+        // Clear canvas
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Redraw all strokes with current color
+        const color = getComputedStyle(document.documentElement)
+          .getPropertyValue('--color-on-background').trim() || '#1B1C1F';
+        for (const stroke of this.strokes) {
+          if (stroke.length < 1) continue;
+          this.ctx.beginPath();
+          this.ctx.strokeStyle = color;
+          this.ctx.moveTo(stroke[0].x, stroke[0].y);
+          for (let i = 1; i < stroke.length; i++) {
+            const prev = stroke[i - 1];
+            const pt = stroke[i];
+            const mid = { x: (prev.x + pt.x) / 2, y: (prev.y + pt.y) / 2 };
+            this.ctx.lineWidth = 2 + (pt.force * (8 - 2));
+            this.ctx.quadraticCurveTo(prev.x, prev.y, mid.x, mid.y);
+          }
+          this.ctx.stroke();
+        }
+      }
+
+      resizeCanvas() {
+        const rect = this.canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+
+        // Set actual size in memory (scaled up for high DPI)
+        this.canvas.width = rect.width * dpr;
+        this.canvas.height = rect.height * dpr;
+
+        // Scale the drawing context to match device pixel ratio
+        this.ctx.scale(dpr, dpr);
+
+        // Set display size (CSS pixels)
+        this.canvas.style.width = rect.width + 'px';
+        this.canvas.style.height = rect.height + 'px';
+
+        // Reconfigure context after resize
+        this.updateDrawingStyle();
+      }
+
+      setupEventListeners() {
+        // Clear button functionality
+        const clearButton = document.getElementById('clearButton');
+        clearButton.addEventListener('click', () => this.clearCanvas());
+
+        // Touch events (includes Apple Pencil)
+        this.canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e));
+        this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e));
+        this.canvas.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+
+        // Pointer events (fallback for other stylus/mouse)
+        this.canvas.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
+        this.canvas.addEventListener('pointermove', (e) => this.handlePointerMove(e));
+        this.canvas.addEventListener('pointerup', (e) => this.handlePointerUp(e));
+
+        // Prevent default behaviors
+        this.canvas.addEventListener('touchstart', (e) => e.preventDefault());
+        this.canvas.addEventListener('touchmove', (e) => e.preventDefault());
+      }
+
+      getPointFromEvent(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        let clientX, clientY, force = 0.5, touchType = 'touch';
+
+        if (e.touches && e.touches.length > 0) {
+          // Touch event
+          const touch = e.touches[0];
+          clientX = touch.clientX;
+          clientY = touch.clientY;
+          force = touch.force || 0.5;
+          touchType = touch.touchType || 'touch'; // 'stylus' for Apple Pencil
+        } else {
+          // Pointer event
+          clientX = e.clientX;
+          clientY = e.clientY;
+          force = e.pressure || 0.5;
+          touchType = e.pointerType || 'touch';
+        }
+
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top,
+          force: force,
+          touchType: touchType
+        };
+      }
+
+      startDrawing(point) {
+        this.isDrawing = true;
+        this.lastPoint = point;
+        this.currentStroke = [point];
+
+        // Start the stroke
+        this.ctx.beginPath();
+        this.ctx.moveTo(point.x, point.y);
+      }
+
+      continueDrawing(point) {
+        if (!this.isDrawing) return;
+
+        this.currentStroke.push(point);
+
+        // Calculate line width based on pressure (Apple Pencil support)
+        const baseWidth = 2;
+        const maxWidth = 8;
+        const lineWidth = baseWidth + (point.force * (maxWidth - baseWidth));
+        this.ctx.lineWidth = lineWidth;
+
+        // Draw smooth curve to the new point
+        if (this.currentStroke.length > 2) {
+          // Use quadratic curves for smoother lines
+          const prevPoint = this.currentStroke[this.currentStroke.length - 2];
+          const midPoint = {
+            x: (prevPoint.x + point.x) / 2,
+            y: (prevPoint.y + point.y) / 2
+          };
+
+          this.ctx.quadraticCurveTo(prevPoint.x, prevPoint.y, midPoint.x, midPoint.y);
+        } else {
+          this.ctx.lineTo(point.x, point.y);
+        }
+
+        this.ctx.stroke();
+        this.lastPoint = point;
+      }
+
+      endDrawing() {
+        if (!this.isDrawing) return;
+
+        this.isDrawing = false;
+        if (this.currentStroke.length > 0) {
+          this.strokes.push([...this.currentStroke]);
+        }
+        this.currentStroke = [];
+
+        // Save the drawing after each stroke
+        this.saveDrawing();
+      }
+
+      clearCanvas() {
+        // Show native browser confirmation dialog
+        const confirmed = confirm("This will delete everything, are you sure you want to continue?");
+
+        if (confirmed) {
+          // Clear the entire canvas
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          // Also clear saved drawing from localStorage
+          localStorage.removeItem('padDrawing');
+          this.strokes = [];
+        }
+      }
+
+      // Touch event handlers
+      handleTouchStart(e) {
+        const point = this.getPointFromEvent(e);
+        this.startDrawing(point);
+      }
+
+      handleTouchMove(e) {
+        const point = this.getPointFromEvent(e);
+        this.continueDrawing(point);
+      }
+
+      handleTouchEnd(e) {
+        this.endDrawing();
+      }
+
+      // Pointer event handlers (fallback)
+      handlePointerDown(e) {
+        // Only handle if no touch events are active
+        if (e.pointerType !== 'touch' || !('ontouchstart' in window)) {
+          const point = this.getPointFromEvent(e);
+          this.startDrawing(point);
+        }
+      }
+
+      handlePointerMove(e) {
+        if (e.pointerType !== 'touch' || !('ontouchstart' in window)) {
+          const point = this.getPointFromEvent(e);
+          this.continueDrawing(point);
+        }
+      }
+
+      handlePointerUp(e) {
+        if (e.pointerType !== 'touch' || !('ontouchstart' in window)) {
+          this.endDrawing();
+        }
+      }
+
+      // Save and restore drawing functionality
+      saveDrawing() {
+        try {
+          localStorage.setItem('padDrawing', JSON.stringify(this.strokes));
+        } catch (e) {
+          console.warn('Could not save drawing:', e);
+        }
+      }
+
+      restoreDrawing() {
+        try {
+          const saved = localStorage.getItem('padDrawing');
+          if (saved) {
+            this.strokes = JSON.parse(saved);
+            this.redrawAllStrokes();
+          }
+        } catch (e) {
+          this.strokes = [];
+          console.warn('Could not restore drawing:', e);
+        }
+      }
+    }
+
+    // Initialize the drawing pad when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      const pad = new PadDrawing();
+
+      // Redraw all strokes on theme change
+      document.addEventListener('themeChanged', () => pad.redrawAllStrokes());
+
+      // Setup theme toggle button
+      const themeToggle = document.getElementById('themeToggle');
+      if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+        updateThemeToggleButton();
+      }
+
+      // Setup flavor switcher button
+      const flavorToggle = document.getElementById('flavorToggle');
+      const flavors = ['vanilla', 'blueberry', 'strawberry'];
+      function getCurrentFlavor() {
+        for (const f of flavors) {
+          if (document.documentElement.classList.contains(`flavor-${f}`)) return f;
+        }
+        return 'vanilla';
+      }
+      function cycleFlavor() {
+        const current = getCurrentFlavor();
+        const idx = flavors.indexOf(current);
+        const next = flavors[(idx + 1) % flavors.length];
+        // Preserve current theme (light/dark)
+        const isDark = document.documentElement.classList.contains('theme-dark');
+        applyTheme({ flavor: next, theme: isDark ? 'dark' : 'light' });
+      }
+      if (flavorToggle) {
+        flavorToggle.addEventListener('click', cycleFlavor);
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,550 @@
+/* Focus Timer v2.4.2 - PWA with Tracker-Style Layout, Larger Circles, and Cutoff Prevention */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #f5f5f5;
+  color: black;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* --- App Container (Tracker Style) --- */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* --- Version Number --- */
+.version-number {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* --- Status Header --- */
+.status {
+  flex-shrink: 0;
+  font-size: clamp(1rem, 3vh, 1.8rem);
+  text-align: center;
+  padding: clamp(0.5rem, 1vh, 1rem);
+  background: #f5f5f5;
+}
+
+/* --- Main Content (Circles) --- */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  /* Reserve space for header (~60px) and footer (~90px) */
+  max-height: calc(100vh - 150px);
+  margin-bottom: 90px;
+  /* Footer space */
+  justify-content: center;
+  align-items: center;
+}
+
+.circles-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: min(1vh, 1vw, 10px);
+  min-height: 0;
+  overflow: hidden;
+  padding: 0.5vh 0.5vw;
+  max-width: 100%;
+  max-height: 100%;
+  /* Ensure container itself doesn't exceed available space */
+  width: 100%;
+  height: auto;
+}
+
+/* --- Circle Base Styles --- */
+.circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 50%;
+  border: max(2px, 0.3vmin) solid black;
+  background: var(--color-surface, white);
+  aspect-ratio: 1;
+  container-type: size;
+  transition: transform 0.1s ease;
+  flex-shrink: 0;
+}
+
+/* Only active circles get interactive styling */
+.circle.active {
+  cursor: pointer;
+}
+
+.circle.active:hover {
+  transform: scale(1.02);
+}
+
+.circle.active:active {
+  transform: scale(0.98);
+}
+
+/* Mobile-first: Default styles for mobile portrait (320px+) */
+.circle-large {
+  width: min(85vw, 50vh, 85%);
+  font-size: clamp(2rem, 9vmin, 6rem);
+}
+
+.circle-small {
+  width: min(18vw, 12vh, 18%);
+  font-size: clamp(1rem, 3vmin, 2.5rem);
+}
+
+.circle-progress {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(black 0deg, transparent 0deg);
+}
+
+.circle-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.circle-content>div:last-child {
+  font-size: 0.6em;
+  margin-top: 0.5em;
+  opacity: 0.7;
+}
+
+/* --- Fixed Footer Controls (Tracker Style) --- */
+.bottom-buttons-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #f5f5f5;
+  padding: clamp(0.5rem, 1vh, 1rem);
+  padding-bottom: calc(clamp(0.5rem, 1vh, 1rem) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.bottom-buttons {
+  display: flex;
+  justify-content: center;
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.control-button,
+.control-button--footer,
+.control-button--secondary {
+  padding: clamp(0.5rem, 1.5vh, 1rem) clamp(1rem, 3vw, 2rem);
+  font-size: clamp(0.9rem, 2.5vh, 1.2rem);
+  border: max(1px, 0.2vmin) solid black;
+  background: var(--color-surface, white);
+  color: black;
+  cursor: pointer;
+  border-radius: 0.3em;
+  font-family: inherit;
+  transition: background-color 0.2s;
+  min-height: 44px;
+}
+
+.control-button:hover,
+.control-button--footer:hover,
+.control-button--secondary:hover {
+  background: #f8f8f8;
+}
+
+.control-button:active,
+.control-button--footer:active,
+.control-button--secondary:active {
+  background: #e8e8e8;
+}
+
+/* Small tablets and larger phones - 600px+ */
+@media (min-width: 600px) {
+  .circle-large {
+    width: min(80vw, 45vh, 80%);
+    font-size: clamp(2.2rem, 8vmin, 5.5rem);
+  }
+
+  .circle-small {
+    width: min(16vw, 11vh, 16%);
+    font-size: clamp(1.1rem, 2.8vmin, 2.3rem);
+  }
+
+  .circles-container {
+    gap: min(1.5vh, 1.5vw);
+  }
+
+  .bottom-buttons-wrapper {
+    padding: clamp(0.75rem, 1.5vh, 1.5rem);
+    padding-bottom: calc(clamp(0.75rem, 1.5vh, 1.5rem) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .main-content {
+    max-height: calc(100vh - 160px);
+    margin-bottom: 100px;
+  }
+}
+
+/* Tablet landscape - horizontal layout for landscape orientation */
+@media (min-width: 768px) and (orientation: landscape) {
+  .circles-container {
+    flex-direction: row;
+    gap: min(4vh, 4vw);
+    padding: 2vh 3vw;
+  }
+
+  .circle-large {
+    width: min(40vh, 40vw, 40%);
+    font-size: clamp(2.5rem, 7vmin, 5rem);
+  }
+
+  .circle-small {
+    width: min(8vh, 10vw, 10%);
+    font-size: clamp(1.2rem, 2.5vmin, 2.2rem);
+  }
+
+  .bottom-buttons-wrapper {
+    padding: 1rem 2rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .bottom-buttons {
+    gap: 2rem;
+  }
+
+  .main-content {
+    max-height: calc(100vh - 160px);
+    margin-bottom: 100px;
+  }
+}
+
+/* iPad portrait and similar - keep vertical but optimize sizing */
+@media (min-width: 768px) and (orientation: portrait) {
+  .circle-large {
+    width: min(80vw, 50vh, 80%);
+    font-size: clamp(2.5rem, 7vmin, 4.5rem);
+  }
+
+  .circle-small {
+    width: min(16vw, 12vh, 16%);
+    font-size: clamp(1.2rem, 3vmin, 2.3rem);
+  }
+
+  .circles-container {
+    gap: min(2vh, 2vw);
+    padding: 2vh 2vw;
+  }
+
+  .main-content {
+    max-height: calc(100vh - 140px);
+    margin-bottom: 80px;
+  }
+}
+
+/* Medium desktop screens - refined for larger circles */
+@media (min-width: 800px) and (max-width: 1100px) {
+  .circle-small {
+    font-size: clamp(1rem, 2.8vmin, 2.2rem);
+  }
+
+  .circle-large {
+    font-size: clamp(2.2rem, 6.5vmin, 4.2rem);
+  }
+}
+
+/* Wide screens - horizontal layout regardless of orientation */
+@media (min-width: 1024px) {
+  .circles-container {
+    flex-direction: row;
+    gap: min(3vh, 3vw);
+    padding: 1vh 1vw;
+  }
+
+  .circle-large {
+    width: min(55vh, 50vw, 60%);
+    font-size: clamp(2.8rem, 6vmin, 4.5rem);
+  }
+
+  .circle-small {
+    width: min(12vh, 12vw, 15%);
+    font-size: clamp(1.3rem, 2.5vmin, 2.3rem);
+  }
+
+  .main-content {
+    max-height: calc(100vh - 120px);
+    margin-bottom: 70px;
+  }
+}
+
+/* Large tablets and desktops - 900px+ */
+@media (min-width: 900px) {
+  .bottom-buttons-wrapper {
+    padding: 1.5rem;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .bottom-buttons {
+    gap: 2rem;
+  }
+
+  .control-button,
+  .control-button--footer,
+  .control-button--secondary {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    min-height: 44px;
+  }
+}
+
+/* Desktop optimization - 1200px+ */
+@media (min-width: 1200px) {
+  .circle-large {
+    width: min(65vh, 65vw, 70%);
+    font-size: clamp(3rem, 6vmin, 5rem);
+  }
+
+  .circle-small {
+    width: min(15vh, 14vw, 18%);
+    font-size: clamp(1.4rem, 2.5vmin, 2.5rem);
+  }
+}
+
+/* CSS-only Safari responsive fix */
+@media screen {
+  html {
+    /* Force Safari to recalculate on resize */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .circles-container {
+    /* Force layout recalculation and containment */
+    contain: layout style;
+  }
+}
+
+/* Settings Button Styles */
+.settings-button {
+  background: none;
+  border: max(1px, 0.2vmin) solid black;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 0.5rem;
+  font-family: inherit;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+
+.settings-button:hover {
+  background: #f8f8f8;
+}
+
+.settings-button:active {
+  background: #e8e8e8;
+}
+
+.settings-icon {
+  width: 24px;
+  height: 24px;
+  background-color: black;
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>');
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  opacity: 0.75;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+
+.settings-button:hover .settings-icon {
+  opacity: 1;
+  transform: rotate(30deg);
+}
+
+/* Overlay Styles */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.overlay-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+}
+
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.overlay-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: black;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.close-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.close-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: black;
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71c-.39-.39-1.02-.39-1.41 0L12 10.59 7.11 5.7c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41L10.59 12 5.7 16.89c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0L12 13.41l4.89 4.89c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4z"/></svg>');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71c-.39-.39-1.02-.39-1.41 0L12 10.59 7.11 5.7c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41L10.59 12 5.7 16.89c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0L12 13.41l4.89 4.89c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4z"/></svg>');
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  display: block;
+}
+
+.overlay-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Settings Items */
+.settings-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: black;
+  text-align: left;
+  font-family: inherit;
+  font-size: 1rem;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  min-height: 44px;
+}
+
+.settings-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.settings-item-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-right: 1rem;
+}
+
+.refresh-icon {
+  width: 24px;
+  height: 24px;
+  background-color: black;
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>');
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  transition: background-color 0.2s;
+  display: block;
+}
+
+.settings-item:hover .refresh-icon {
+  background-color: #333;
+}
+
+.all-apps-icon {
+  width: 24px;
+  height: 24px;
+  background-color: black;
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>');
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  transition: background-color 0.2s;
+  display: block;
+}

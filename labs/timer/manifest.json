@@ -1,0 +1,23 @@
+{
+  "name": "Focus Timer",
+  "short_name": "Focus Timer",
+  "description": "A beautiful Pomodoro timer for focused work sessions",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#202F48",
+  "orientation": "any",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "screenshots": [],
+  "lang": "en",
+  "dir": "ltr"
+}

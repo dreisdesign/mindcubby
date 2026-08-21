@@ -1,0 +1,17 @@
+/* Labs Design System - Border Radius Tokens */
+
+:root {
+    /* Canonical border-radius scale */
+    --radius-none: 0;
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+    /* Semantic aliases for components */
+    --radius-card: var(--radius-lg);
+    --radius-modal: var(--radius-xl);
+    --radius-button: var(--radius-full);
+    --radius-badge: var(--radius-full);
+    --radius-input: var(--radius-md);
+}

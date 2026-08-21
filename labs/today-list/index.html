@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" href="favicon.ico">
+    <title>Labs: Today-List</title>
+
+    <!-- Early Theme Injection -->
+    <script type="module">
+        import { ThemeManager } from '/labs/design-system/utils/theme-manager.js';
+        ThemeManager.init('today-list');
+    </script>
+
+    <script>
+        // Set flavor/theme classes as early as possible for CSS tokens
+        (function () {
+            var root = document.documentElement;
+            var flavor = localStorage.getItem('today-list-flavor') || 'blueberry';
+            var theme = localStorage.getItem('today-list-theme') || 'light';
+            root.classList.remove('flavor-blueberry', 'flavor-strawberry', 'flavor-vanilla');
+            root.classList.remove('theme-light', 'theme-dark');
+            root.classList.add('flavor-' + flavor);
+            root.classList.add('theme-' + theme);
+            root.setAttribute('data-color-scheme', theme);
+        })();
+    </script>
+
+    <!-- Design System Tokens -->
+    <link rel="stylesheet" href="/labs/design-system/tokens/colors.css">
+    <link rel="stylesheet" href="/labs/design-system/tokens/spacing.css">
+    <link rel="stylesheet" href="/labs/design-system/tokens/typography.css">
+    <link rel="stylesheet" href="/labs/design-system/tokens/border-radius.css">
+    <link rel="stylesheet" href="/labs/design-system/tokens/shadows.css">
+    <link rel="stylesheet" href="/labs/design-system/styles/flavors.css">
+
+    <!-- Components -->
+    <script type="module" src="/labs/design-system/components/labs-container.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-footer-with-settings.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-template-header.wrapped.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-metric-card.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-card.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-list-item.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-checkbox.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-dropdown.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-icon.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-button.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-toast.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-overlay.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-input-card.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-details.js"></script>
+    <script type="module" src="/labs/design-system/components/labs-list-section.js"></script>
+
+    <!-- Today-List Logic -->
+    <script type="module" src="./js/main.js?v=4"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            background: var(--color-background);
+            color: var(--color-on-surface);
+            font-family: var(--font-family-base);
+        }
+
+        labs-container {
+            flex: 1;
+            display: block;
+            /* allow the container to scroll internally; keeps footer sticky at scroll boundary */
+            min-height: 0;
+            overflow: auto;
+        }
+
+        labs-list-section {
+            margin-top: var(--space-md);
+        }
+
+        labs-list-item[data-drop-animating] {
+            animation: today-list-drop 220ms ease-out;
+        }
+
+        @keyframes today-list-drop {
+            from {
+                opacity: 0.45;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        labs-metric-card {
+            margin-bottom: var(--space-md);
+        }
+
+        labs-footer-with-settings {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+        }
+
+        /* Position toast above the footer */
+        labs-toast {
+            --toast-bottom: 120px;
+        }
+    </style>
+</head>
+
+<body>
+    <labs-container medium>
+        <labs-template-header-wrapped>
+            <span slot="title">Today</span>
+            <span slot="subtitle" id="current-date"></span>
+        </labs-template-header-wrapped>
+
+        <labs-metric-card id="todo-metric">
+            <span slot="label">Tasks</span>
+            <span slot="value">0</span>
+        </labs-metric-card>
+
+        <!-- Active todos -->
+        <labs-list-section id="todo-list">
+            <!-- Active todo items will be inserted here -->
+        </labs-list-section>
+
+        <!-- Archived todos (collapsible) -->
+        <labs-list-section id="archived-section">
+            <!-- Archived items will be inserted here if any exist -->
+        </labs-list-section>
+    </labs-container>
+
+    <labs-footer-with-settings elevated></labs-footer-with-settings>
+
+    <!-- Input overlay for adding new todos -->
+    <labs-overlay id="input-overlay" size="medium" transparent>
+        <labs-input-card></labs-input-card>
+    </labs-overlay>
+
+    <script>
+        // Set current date in header
+        document.addEventListener('DOMContentLoaded', function () {
+            var dateEl = document.getElementById('current-date');
+            if (dateEl) {
+                var now = new Date();
+                dateEl.textContent = now.toLocaleDateString(undefined, {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

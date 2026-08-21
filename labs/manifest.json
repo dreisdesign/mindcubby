@@ -1,0 +1,23 @@
+{
+  "name": "Labs",
+  "short_name": "Labs",
+  "description": "Collection of productivity web applications",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#202F48",
+  "orientation": "any",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "screenshots": [],
+  "lang": "en",
+  "dir": "ltr"
+}

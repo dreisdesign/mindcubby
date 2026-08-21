@@ -1,0 +1,10 @@
+/* Pre-upgrade CSS: stabilize layout before custom elements upgrade */
+:not(:defined) labs-button[fullwidth],
+:not(:defined) labs-button {
+    display: block;
+    width: 100%;
+}
+
+:not(:defined) labs-footer {
+    min-height: 40px;
+}

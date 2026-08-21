@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en" class="flavor-blueberry theme-light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Labs: Today-List Powered by Smoothie</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>// Early theme/flavor script (inlined into app pages during docs sync)
+    (function () {
+      try {
+        var root = document && document.documentElement;
+        if (!root) return;
+        var keys = [
+          'today-list-flavor', 'today-list-theme',
+          'tracker-flavor', 'tracker-theme',
+          'pad-flavor', 'pad-theme',
+          'labs-flavor', 'labs-theme'
+        ];
+        var foundFlavor = null;
+        var foundTheme = null;
+        for (var i = 0; i < keys.length; i++) {
+          try {
+            var k = keys[i];
+            var v = localStorage.getItem(k);
+            if (!v) continue;
+            v = String(v).replace(/^flavor-/, '').replace(/^theme-/, '').trim();
+            if (k.indexOf('flavor') !== -1 && !foundFlavor) foundFlavor = v;
+            if (k.indexOf('theme') !== -1 && !foundTheme) foundTheme = v;
+          } catch (e) { }
+        }
+        // remove any existing flavor- / theme- classes
+        Array.from(root.classList).forEach(function (c) { if (c && c.indexOf('flavor-') === 0) root.classList.remove(c); });
+        Array.from(root.classList).forEach(function (c) { if (c && c.indexOf('theme-') === 0) root.classList.remove(c); });
+        if (foundFlavor) root.classList.add('flavor-' + String(foundFlavor));
+        if (foundTheme) root.classList.add('theme-' + String(foundTheme));
+      } catch (e) { }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="../design-system/tokens/colors.css">
+  <link rel="stylesheet" href="../design-system/styles/flavors.css">
+  <link rel="stylesheet" href="../design-system/styles/main.css">
+  <link rel="stylesheet" href="../design-system/styles/tl-entry.css">
+  <script type="module" src="../design-system/components/labs-icon.js"></script>
+  <script type="module" src="../design-system/components/labs-button.js"></script>
+  <script type="module" src="../design-system/components/labs-badge.js"></script>
+  <script type="module" src="../design-system/components/labs-container.js"></script>
+  <script type="module" src="../design-system/components/labs-footer.js"></script>
+  <script type="module" src="../design-system/components/labs-checkbox.js"></script>
+  <script type="module" src="../design-system/components/labs-dropdown.js"></script>
+  <script type="module" src="../design-system/components/labs-header.js"></script>
+  <style>
+    /* Pre-upgrade CSS: stabilize layout before custom elements upgrade */
+    :not(:defined) labs-button[fullwidth],
+    :not(:defined) labs-button {
+      display: block;
+      width: 100%;
+    }
+
+    :not(:defined) labs-footer {
+      min-height: 40px;
+    }
+  </style>
+
+  <style>
+    /* Today-List app - Smoothie template layout */
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: var(--color-background);
+      color: var(--color-on-surface);
+      font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Let the canonical container fill available space so footer sits at the bottom */
+    labs-container {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: auto;
+      margin-top: var(--space-lg, 32px);
+    }
+
+    labs-footer {
+      flex-shrink: 0;
+      width: 100%;
+      margin: 0;
+      padding: 0 12px;
+      box-sizing: border-box;
+    }
+
+    .footer-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .footer-center {
+      max-width: 300px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* App header styling */
+    #app-header {
+      text-align: center;
+      margin-bottom: 12px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    #todayHeader {
+      margin: 0;
+      font-size: var(--font-size-h1, 2rem);
+      font-weight: var(--font-weight-heading, 700);
+      color: var(--color-on-surface);
+    }
+
+    #dateElement {
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    #dateElement p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--color-on-surface);
+    }
+
+    /* Content areas */
+    #welcomeCardContainer {
+      margin: 0 0 12px 0;
+      width: 100%;
+    }
+
+    #welcomeCardContainer labs-card {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #todayItems {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    /* Details element styling for archived section */
+    #archivedSection[open] summary labs-icon {
+      transform: rotate(90deg);
+    }
+
+    #archivedSection summary {
+      outline: none;
+      list-style: none;
+    }
+
+    #archivedSection summary::-webkit-details-marker {
+      display: none;
+    }
+
+    #todayItems details {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #todayItems details summary {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .hide-when-narrow {
+      display: initial;
+    }
+
+    @media (max-width: var(--container-mobile-breakpoint, 640px)) {
+      .hide-when-narrow {
+        display: none !important;
+      }
+
+      #todayItems labs-list-item {
+        width: 100%;
+        margin: 0;
+        box-sizing: border-box;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Controls moved into footer for easier access on mobile -->
+
+  <!-- Today List demo controls (dev-only) -->
+  <!-- Removed floating dev controls. Archive/Reset/Simulate actions are available from the Settings overlay or from item actions. -->
+
+  <!-- App footer (always visible) -->
+  <labs-footer full-width elevated>
+    <div slot="left" class="footer-group">
+      <!-- Icon buttons moved into settings overlay. Left slot intentionally minimal. -->
+    </div>
+    <div slot="center" class="footer-center">
+      <labs-button id="footerAddBtn" size="large" pill variant="primary" fullwidth>
+        <labs-icon name="add" slot="icon-left" width="20" height="20"></labs-icon>Add
+      </labs-button>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-left:12px;">
+        <!-- Controls moved into settings overlay (full button style). -->
+      </div>
+    </div>
+
+    <div slot="right" style="display: flex; align-items: center; gap: 8px;">
+      <labs-button id="footer-settings-btn" variant="icon" aria-label="Settings" title="Settings"
+        style="margin-right:20px;">
+        <labs-icon name="settings" slot="icon-left" width="22" height="22"></labs-icon>
+      </labs-button>
+    </div>
+  </labs-footer>
+
+  <!-- Settings overlay (used by More on mobile) -->
+  <labs-overlay id="settingsOverlay" size="medium" transparent>
+    <labs-settings-card></labs-settings-card>
+  </labs-overlay>
+
+  <!-- Container with narrow width (400px) for app-like layout -->
+  <labs-container style="--app-container-max: 400px;">
+    <main>
+      <labs-header id="app-header" title="Today" date="" center>
+        <span slot="date" id="currentDate"></span>
+      </labs-header>
+
+      <!-- metric card -->
+      <div id="metric-root"></div>
+
+      <!-- Welcome card -->
+      <div id="welcomeCardContainer"></div>
+
+      <!-- Today items list -->
+      <div id="todayItems" role="list" aria-label="Today items"></div>
+    </main>
+  </labs-container>
+
+  <!-- Input overlay (used for adding items) -->
+  <labs-overlay id="inputOverlay" size="medium" transparent>
+    <labs-input-card></labs-input-card>
+  </labs-overlay>
+
+  <script type="module" src="today-list-demo.js"></script>
+  <script>
+    // Set current date in header
+    document.addEventListener('DOMContentLoaded', function () {
+      var dateEl = document.getElementById('currentDate');
+      if (dateEl) {
+        var now = new Date();
+        dateEl.textContent = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      }
+    });
+  </script>
+</body>
+
+</html>

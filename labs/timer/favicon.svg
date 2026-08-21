@@ -1,0 +1,8 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="32" height="32" fill="#202F48" />
+
+  <!-- Timer icon - scaled from 150x150 to 32x32 -->
+  <path d="M8.53 10.45C8.53 7.51 10.9 5.12 13.87 5.12H23.47V11.95H8.53V10.45Z" fill="#ffffff"/>
+  <path d="M21.33 19.49V14.08H9.6C9.01 14.08 8.53 14.56 8.53 15.15V25.88C8.53 26.47 9.01 26.95 9.6 26.95H15.36V20.48H20.27C20.86 20.48 21.33 20.01 21.33 19.49Z" fill="#ffffff"/>
+</svg>
