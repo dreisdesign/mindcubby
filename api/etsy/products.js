@@ -29,8 +29,8 @@ export default async function handler(req, res) {
         console.log('[Products] ✅ Token found');
 
         // First, get the authenticated user's info
-        console.log('[Products] Step 2: Fetching authenticated user from /v3/application/me...');
-        const meResponse = await fetch('https://api.etsy.com/v3/application/me', {
+        console.log('[Products] Step 2: Fetching authenticated user from /v3/oauth/me...');
+        const meResponse = await fetch('https://api.etsy.com/v3/oauth/me', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
@@ -45,7 +45,7 @@ export default async function handler(req, res) {
                 error: 'Failed to fetch authenticated user',
                 status: meResponse.status,
                 details: errorText,
-                endpoint: 'https://api.etsy.com/v3/application/me',
+                endpoint: 'https://api.etsy.com/v3/oauth/me',
             });
         }
 
