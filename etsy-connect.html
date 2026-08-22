@@ -147,14 +147,25 @@
     </div>
 
     <script>
-        // Check if we have an access token stored
-        function checkAuth() {
-            const token = localStorage.getItem('etsy_access_token');
-            if (token) {
-                document.getElementById('connectBtn').style.display = 'none';
-                document.getElementById('productsSection').style.display = 'block';
-                showStatus('✅ Connected to Etsy!', 'success');
-                fetchProducts();
+        // Check if user is authenticated
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/etsy/status', {
+                    credentials: 'include', // Send cookies automatically
+                });
+                const data = await response.json();
+
+                if (data.authenticated) {
+                    document.getElementById('connectBtn').style.display = 'none';
+                    document.getElementById('productsSection').style.display = 'block';
+                    showStatus('✅ Connected to Etsy!', 'success');
+                    fetchProducts();
+                } else {
+                    document.getElementById('connectBtn').style.display = 'block';
+                    document.getElementById('productsSection').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
             }
         }
 
@@ -163,30 +174,12 @@
             window.location.href = `${origin}/api/auth/etsy`;
         }
 
-        async function handleCallback() {
-            const params = new URLSearchParams(window.location.search);
-            const token = params.get('token');
-
-            if (token) {
-                localStorage.setItem('etsy_access_token', token);
-                window.history.replaceState({}, document.title, window.location.pathname);
-                showStatus('✅ Successfully connected to Etsy!', 'success');
-                document.getElementById('connectBtn').style.display = 'none';
-                document.getElementById('productsSection').style.display = 'block';
-                fetchProducts();
-            }
-        }
-
         async function fetchProducts() {
-            const token = localStorage.getItem('etsy_access_token');
-            if (!token) {
-                showStatus('❌ Not authenticated. Click "Connect to Etsy" first.', 'error');
-                return;
-            }
-
             try {
                 document.getElementById('productContainer').innerHTML = '⏳ Loading products...';
-                const response = await fetch(`/api/etsy/products?token=${token}`);
+                const response = await fetch('/api/etsy/products', {
+                    credentials: 'include', // Auto-send cookie
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -221,9 +214,8 @@
             statusEl.className = `status ${type}`;
         }
 
-        // Check auth and handle callback on load
+        // Check auth on page load
         window.addEventListener('load', () => {
-            handleCallback();
             checkAuth();
         });
     </script>

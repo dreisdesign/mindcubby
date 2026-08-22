@@ -1,9 +1,10 @@
 /**
  * Etsy API - Fetch Products
- * GET /api/etsy/products?token=YOUR_ACCESS_TOKEN
+ * GET /api/etsy/products
  * Returns a list of products from your Etsy shop
  * 
- * Requires OAuth access token (from /api/auth/etsy flow)
+ * Requires OAuth access token (stored in HttpOnly cookie from /api/auth/etsy flow)
+ * Cookie is automatically sent with fetch(credentials: 'include')
  */
 
 export default async function handler(req, res) {
@@ -13,8 +14,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Get access token from query param or environment
-        const accessToken = req.query.token || process.env.ETSY_ACCESS_TOKEN;
+        // Get access token from HttpOnly cookie
+        const accessToken = req.cookies.etsy_token;
 
         if (!accessToken) {
             return res.status(401).json({

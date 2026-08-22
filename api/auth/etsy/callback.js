@@ -73,17 +73,15 @@ export default async function handler(req, res) {
         // Clear the code_verifier cookie
         res.setHeader('Set-Cookie', 'etsy_code_verifier=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC; HttpOnly;');
 
-        // Store token in a secure way
-        // For now, we'll set it as a cookie (user can also store in localStorage)
+        // Store token in HttpOnly cookie (secure, can't be accessed by JavaScript)
+        // Token is only sent to API for 1 hour before expiring
         res.setHeader('Set-Cookie', [
             `etsy_code_verifier=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC; HttpOnly;`,
-            `etsy_access_token=${accessToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600`
+            `etsy_token=${accessToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`
         ]);
         
-        // Redirect back to connect page with token in URL (for localStorage storage)
-        const returnUrl = `/etsy-connect.html?token=${encodeURIComponent(accessToken)}`;
-        
-        return res.redirect(returnUrl);
+        // Redirect back to connect page (token in cookie, not in URL)
+        return res.redirect('/etsy-connect.html');
 
     } catch (error) {
         console.error('OAuth callback error:', error);
