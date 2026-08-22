@@ -1,7 +1,9 @@
 /**
  * Etsy API - Fetch Products
- * GET /api/etsy/products
+ * GET /api/etsy/products?token=YOUR_ACCESS_TOKEN
  * Returns a list of products from your Etsy shop
+ * 
+ * Requires OAuth access token (from /api/auth/etsy flow)
  */
 
 export default async function handler(req, res) {
@@ -11,28 +13,50 @@ export default async function handler(req, res) {
     }
 
     try {
-        const apiKey = process.env.ETSY_API_KEY;
-        const apiSecret = process.env.ETSY_API_SECRET;
-        const shopId = process.env.ETSY_SHOP_ID;
+        // Get access token from query param or environment
+        const accessToken = req.query.token || process.env.ETSY_ACCESS_TOKEN;
 
-        // Validate environment variables
-        if (!apiKey || !apiSecret || !shopId) {
-            return res.status(500).json({
-                error: 'Missing environment variables',
-                details: 'ETSY_API_KEY, ETSY_API_SECRET, and ETSY_SHOP_ID are required',
+        if (!accessToken) {
+            return res.status(401).json({
+                error: 'Not authenticated',
+                message: 'Please authorize with Etsy first via /api/auth/etsy',
+                authUrl: '/api/auth/etsy',
             });
         }
 
-        // Fetch products from Etsy API v3
-        const etsyUrl = `https://openapi.etsy.com/v3/application/shops/${shopId}/listings`;
-        
-        // Combine key and secret for x-api-key header
-        const authHeader = `${apiKey}:${apiSecret}`;
+        // First, get the authenticated shop data to find shop ID
+        const shopResponse = await fetch('https://api.etsy.com/v3/application/shops/me', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!shopResponse.ok) {
+            return res.status(shopResponse.status).json({
+                error: 'Failed to fetch shop data',
+                details: await shopResponse.text(),
+            });
+        }
+
+        const shopData = await shopResponse.json();
+        const shopId = shopData.shop_id;
+
+        if (!shopId) {
+            return res.status(500).json({
+                error: 'Could not determine shop ID',
+                details: 'Response missing shop_id',
+            });
+        }
+
+        // Now fetch products using the authenticated shop ID
+        const etsyUrl = `https://api.etsy.com/v3/application/shops/${shopId}/listings`;
 
         const response = await fetch(etsyUrl, {
             method: 'GET',
             headers: {
-                'x-api-key': authHeader,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
             },
         });
