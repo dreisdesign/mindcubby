@@ -28,9 +28,9 @@ export default async function handler(req, res) {
         }
         console.log('[Products] ✅ Token found');
 
-        // First, get the authenticated user's shops
-        console.log('[Products] Step 2: Fetching user shops from /v3/application/me/shops...');
-        const meResponse = await fetch('https://api.etsy.com/v3/application/me/shops', {
+        // First, get the authenticated user's info
+        console.log('[Products] Step 2: Fetching authenticated user from /v3/application/me...');
+        const meResponse = await fetch('https://api.etsy.com/v3/application/me', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
@@ -40,37 +40,27 @@ export default async function handler(req, res) {
 
         if (!meResponse.ok) {
             const errorText = await meResponse.text();
-            console.error('[Products] ❌ Shop fetch failed:', meResponse.status, errorText);
+            console.error('[Products] ❌ User fetch failed:', meResponse.status, errorText);
             return res.status(meResponse.status).json({
-                error: 'Failed to fetch user shops',
+                error: 'Failed to fetch authenticated user',
                 status: meResponse.status,
                 details: errorText,
-                endpoint: 'https://api.etsy.com/v3/application/me/shops',
+                endpoint: 'https://api.etsy.com/v3/application/me',
             });
         }
 
         const meData = await meResponse.json();
-        console.log('[Products] ✅ Got shop data:', JSON.stringify(meData));
+        console.log('[Products] ✅ Got user data:', JSON.stringify(meData));
 
-        if (!meData.results || meData.results.length === 0) {
-            console.error('[Products] ❌ No shops in results array');
-            return res.status(500).json({
-                error: 'No shops found for authenticated user',
-                details: 'The OAuth token is valid but no shops are associated',
-                receivedData: meData,
-            });
-        }
-
-        const shop = meData.results[0];
-        const shopId = shop.shop_id;
-        console.log('[Products] ✅ Shop ID extracted:', shopId, 'Full shop:', JSON.stringify(shop));
+        const shopId = meData.shop_id || meData.shops?.[0]?.shop_id;
+        console.log('[Products] ✅ Shop ID extracted:', shopId, 'Full user data:', JSON.stringify(meData));
 
         if (!shopId) {
-            console.error('[Products] ❌ Shop object missing shop_id:', JSON.stringify(shop));
+            console.error('[Products] ❌ Could not find shop_id in user data:', JSON.stringify(meData));
             return res.status(500).json({
-                error: 'Could not determine shop ID',
-                details: 'Shop object missing shop_id field',
-                receivedShop: shop,
+                error: 'Could not determine shop ID from user data',
+                details: 'User data missing shop_id field',
+                receivedData: meData,
             });
         }
 
