@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'mindcubby.com';
     const redirectUri = `${protocol}://${host}/api/auth/etsy/callback`;
     const scope = 'listings_r'; // Read-only access to listings
-    const state = Math.random().toString(36).substring(7);
+    const state = generateRandomString(32);
     const codeVerifier = generateRandomString(128);
 
     if (!clientId) {
@@ -45,8 +45,11 @@ export default async function handler(req, res) {
     const hashString = String.fromCharCode.apply(null, hashArray);
     const codeChallenge = btoa(hashString).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 
-    // Store code_verifier in a cookie (will be retrieved in callback)
-    res.setHeader('Set-Cookie', `etsy_code_verifier=${codeVerifier}; Path=/; HttpOnly; SameSite=Lax`);
+    // Store code_verifier and state in HttpOnly cookies (will be retrieved/verified in callback)
+    res.setHeader('Set-Cookie', [
+        `etsy_code_verifier=${codeVerifier}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+        `etsy_oauth_state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`
+    ]);
 
     const authUrl = new URL('https://www.etsy.com/oauth/connect');
     authUrl.searchParams.set('response_type', 'code');
