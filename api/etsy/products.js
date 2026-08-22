@@ -104,10 +104,11 @@ export default async function handler(req, res) {
         }
 
         if (!userData) {
+            const triedPaths = bases.flatMap(b => ['/application/me','/oauth/me'].map(p => `${b}${p}`));
             return res.status(502).json({
                 error: 'Failed to discover user/shop endpoint',
                 details: 'None of the candidate endpoints returned a valid response',
-                tried: bases.flatMap(b => paths.map(p => `${b}${p}`)),
+                tried: triedPaths,
             });
         }
 
