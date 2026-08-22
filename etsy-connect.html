@@ -159,7 +159,8 @@
         }
 
         function connectEtsy() {
-            window.location.href = '/api/auth/etsy';
+            const origin = window.location.origin;
+            window.location.href = `${origin}/api/auth/etsy`;
         }
 
         async function handleCallback() {
