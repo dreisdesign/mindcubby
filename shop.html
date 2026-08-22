@@ -159,28 +159,20 @@
                 statusEl.className = 'status';
 
                 gridEl.innerHTML = products.map(product => {
-                    // Get first image with fallback to multiple URL formats
+                    // Get first image URL
                     let imageUrl = null;
-                    if (product.images && product.images[0]) {
-                        imageUrl = product.images[0].url_570xN || 
-                                   product.images[0].url_fullxfull || 
-                                   product.images[0].url ||
-                                   product.images[0];
+                    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                        const img = product.images[0];
+                        imageUrl = img.url_570xN || img.url_fullxfull || img.url;
                     }
-                    
-                    // Format price - handle both integer (cents) and float
+
+                    // Format price - Etsy API returns { amount, divisor, currency_code }
                     let priceDisplay = 'N/A';
-                    if (product.price) {
-                        const priceInDollars = typeof product.price === 'string' 
-                            ? parseFloat(product.price) 
-                            : product.price;
-                        if (!isNaN(priceInDollars)) {
-                            priceDisplay = priceInDollars > 100 
-                                ? `$${(priceInDollars / 100).toFixed(2)}`  // Price in cents
-                                : `$${priceInDollars.toFixed(2)}`;           // Price in dollars
-                        }
+                    if (product.price && typeof product.price === 'object' && product.price.amount && product.price.divisor) {
+                        const priceInDollars = product.price.amount / product.price.divisor;
+                        priceDisplay = `$${priceInDollars.toFixed(2)}`;
                     }
-                    
+
                     return `
                         <div class="product">
                             ${imageUrl ? `

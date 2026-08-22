@@ -96,7 +96,7 @@ export default async function handler(req, res) {
 
 
         // Step 3: Fetch listings from the shop
-        const listingsUrl = `https://api.etsy.com/v3/application/shops/${shopId}/listings`;
+        const listingsUrl = `https://api.etsy.com/v3/application/shops/${shopId}/listings?includes=images`;
         console.log('[Products] Step 3: Fetching listings from', listingsUrl);
 
         const response = await fetch(listingsUrl, {
