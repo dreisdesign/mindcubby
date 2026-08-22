@@ -28,10 +28,16 @@ export default async function handler(req, res) {
         }
         console.log('[Products] ✅ Token found');
 
-        // First, attempt to discover an endpoint that returns shop info for the authenticated token.
-        // Etsy's docs vary; try several likely endpoints and fall back to a users/{id}/shops call.
-        const base = 'https://api.etsy.com/v3';
-        const candidates = [
+        // Try multiple host bases (openapi vs api) and include x-api-key if available
+        const apiKey = process.env.ETSY_API_KEY;
+        const apiSecret = process.env.ETSY_API_SECRET;
+        const xApiKeyHeader = apiKey && apiSecret ? `${apiKey}:${apiSecret}` : null;
+
+        const bases = [
+            'https://openapi.etsy.com/v3',
+            'https://api.etsy.com/v3',
+        ];
+        const paths = [
             '/application/users/me',
             '/application/users/me/shops',
             '/application/me',
@@ -40,35 +46,32 @@ export default async function handler(req, res) {
 
         let userData = null;
         let endpointUsed = null;
-
-        for (const path of candidates) {
-            const url = `${base}${path}`;
-            console.log('[Products] Trying endpoint:', url);
-            try {
-                const r = await fetch(url, {
-                    method: 'GET',
-                    headers: {
+        // try each base and path combination
+        outer: for (const baseHost of bases) {
+            for (const path of paths) {
+                const url = `${baseHost}${path}`;
+                console.log('[Products] Trying', url);
+                try {
+                    const headers = {
                         'Authorization': `Bearer ${accessToken}`,
                         'Content-Type': 'application/json',
-                    },
-                });
-                const text = await r.text();
-                if (!r.ok) {
-                    console.log('[Products] Endpoint', url, 'returned', r.status, text);
+                    };
+                    if (xApiKeyHeader) headers['x-api-key'] = xApiKeyHeader;
+
+                    const r = await fetch(url, { method: 'GET', headers });
+                    const text = await r.text();
+                    if (!r.ok) {
+                        console.log('[Products]  ->', url, 'status', r.status, 'body', text);
+                        continue;
+                    }
+                    try { userData = JSON.parse(text); } catch (e) { userData = text; }
+                    endpointUsed = url;
+                    console.log('[Products] Success from', url, 'data', JSON.stringify(userData));
+                    break outer;
+                } catch (err) {
+                    console.error('[Products] Fetch error for', url, err);
                     continue;
                 }
-                // parse response
-                try {
-                    userData = JSON.parse(text);
-                } catch (parseErr) {
-                    userData = text;
-                }
-                endpointUsed = url;
-                console.log('[Products] Success from', url, 'data=', JSON.stringify(userData));
-                break;
-            } catch (err) {
-                console.error('[Products] Fetch error for', path, err);
-                continue;
             }
         }
 
@@ -76,40 +79,42 @@ export default async function handler(req, res) {
             return res.status(502).json({
                 error: 'Failed to discover user/shop endpoint',
                 details: 'None of the candidate endpoints returned a valid response',
-                tried: candidates.map(p => `${base}${p}`),
+                tried: bases.flatMap(b => paths.map(p => `${b}${p}`)),
             });
         }
 
-        // Try to extract a shop id from the discovered data
+        // Try common shapes to extract shop id
         let shopId = null;
         if (userData.shop_id) shopId = userData.shop_id;
-        if (!shopId && userData.shops && userData.shops.length) shopId = userData.shops[0].shop_id || userData.shops[0].id;
-        if (!shopId && userData.results && userData.results.length) shopId = userData.results[0].shop_id || userData.results[0].id;
+        if (!shopId && Array.isArray(userData.shops) && userData.shops.length) shopId = userData.shops[0].shop_id || userData.shops[0].id;
+        if (!shopId && Array.isArray(userData.results) && userData.results.length) shopId = userData.results[0].shop_id || userData.results[0].id;
 
-        // If we got a user id but no shop list, fetch the user's shops explicitly
+        // If we found a user id but not shops, try /application/users/{id}/shops
         const possibleUserId = userData.user_id || userData.user?.user_id || userData.user?.id || userData.id || userData.member_id;
         if (!shopId && possibleUserId) {
-            const shopsUrl = `${base}/application/users/${possibleUserId}/shops`;
-            console.log('[Products] Attempting user shops via', shopsUrl);
-            const shopsResp = await fetch(shopsUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-            const shopsText = await shopsResp.text();
-            if (shopsResp.ok) {
-                let shopsData;
-                try { shopsData = JSON.parse(shopsText); } catch (e) { shopsData = shopsText; }
-                console.log('[Products] Got user shops:', JSON.stringify(shopsData));
-                if (shopsData.results && shopsData.results.length) {
-                    shopId = shopsData.results[0].shop_id || shopsData.results[0].id;
-                } else if (Array.isArray(shopsData) && shopsData.length) {
-                    shopId = shopsData[0].shop_id || shopsData[0].id;
+            for (const baseHost of bases) {
+                const shopsUrl = `${baseHost}/application/users/${possibleUserId}/shops`;
+                console.log('[Products] Trying user shops at', shopsUrl);
+                try {
+                    const headers = {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    };
+                    if (xApiKeyHeader) headers['x-api-key'] = xApiKeyHeader;
+                    const shopsResp = await fetch(shopsUrl, { method: 'GET', headers });
+                    const shopsText = await shopsResp.text();
+                    if (!shopsResp.ok) { console.log('[Products] ->', shopsUrl, shopsResp.status, shopsText); continue; }
+                    let shopsData; try { shopsData = JSON.parse(shopsText); } catch (e) { shopsData = shopsText; }
+                    console.log('[Products] Got user shops:', JSON.stringify(shopsData));
+                    if (shopsData.results && shopsData.results.length) {
+                        shopId = shopsData.results[0].shop_id || shopsData.results[0].id;
+                        break;
+                    }
+                    if (Array.isArray(shopsData) && shopsData.length) { shopId = shopsData[0].shop_id || shopsData[0].id; break; }
+                } catch (err) {
+                    console.error('[Products] Error fetching user shops at', shopsUrl, err);
+                    continue;
                 }
-            } else {
-                console.log('[Products] User shops fetch returned', shopsResp.status, shopsText);
             }
         }
 
