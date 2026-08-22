@@ -122,16 +122,18 @@ export default async function handler(req, res) {
         const data = await response.json();
         console.log('[Products] ✅ Got listings data. Count:', data.count || 0);
 
-        // Log image data from first product to inspect available fields
+        // Log first product structure to debug price/image fields
         if (data.results && data.results.length > 0) {
-            const firstProduct = data.results[0];
-            console.log('[Products] 🖼️  Image fields in first product:', {
-                listing_id: firstProduct.listing_id,
-                has_images: !!firstProduct.images,
-                image_count: firstProduct.images?.length,
-                first_image_url: firstProduct.images?.[0]?.url_fullxfull || firstProduct.images?.[0]?.url_570xN,
-                available_fields: Object.keys(firstProduct).slice(0, 15)
-            });
+            const first = data.results[0];
+            console.log('[Products] First product keys:', Object.keys(first).join(', '));
+            console.log('[Products] First product sample:', JSON.stringify({
+                listing_id: first.listing_id,
+                title: first.title,
+                price: first.price,
+                price_type: typeof first.price,
+                images: first.images ? `${first.images.length} images` : 'none',
+                first_image_url: first.images?.[0]?.url_570xN || first.images?.[0]?.url,
+            }, null, 2));
         }
 
         // Return the listings (Etsy calls them listings, not products)
