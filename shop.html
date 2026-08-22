@@ -158,23 +158,50 @@
                 statusEl.textContent = `Loaded ${products.length} products`;
                 statusEl.className = 'status';
 
-                gridEl.innerHTML = products.map(product => `
-                    <div class="product">
-                        ${product.images && product.images[0] ? `
-                            <img class="product-image" src="${product.images[0].url_570xN}" alt="${product.title}" />
-                        ` : `
-                            <div class="product-image" style="background: #e5e5e5; display: flex; align-items: center; justify-content: center;">
-                                <span style="color: #999;">No image</span>
-                            </div>
-                        `}
-                        <div class="product-title">${product.title}</div>
-                        <div class="product-price">$${(product.price / 100).toFixed(2)}</div>
-                        <div class="product-id">ID: ${product.listing_id}</div>
-                        <a href="https://www.etsy.com/listing/${product.listing_id}" target="_blank" style="text-decoration: none;">
-                            <button class="buy-button">View on Etsy</button>
-                        </a>
-                    </div>
-                `).join('');
+                gridEl.innerHTML = products.map(product => {
+                    // Get first image with fallback to multiple URL formats
+                    let imageUrl = null;
+                    if (product.images && product.images[0]) {
+                        imageUrl = product.images[0].url_570xN || 
+                                   product.images[0].url_fullxfull || 
+                                   product.images[0].url ||
+                                   product.images[0];
+                    }
+                    
+                    // Format price - handle both integer (cents) and float
+                    let priceDisplay = 'N/A';
+                    if (product.price) {
+                        const priceInDollars = typeof product.price === 'string' 
+                            ? parseFloat(product.price) 
+                            : product.price;
+                        if (!isNaN(priceInDollars)) {
+                            priceDisplay = priceInDollars > 100 
+                                ? `$${(priceInDollars / 100).toFixed(2)}`  // Price in cents
+                                : `$${priceInDollars.toFixed(2)}`;           // Price in dollars
+                        }
+                    }
+                    
+                    return `
+                        <div class="product">
+                            ${imageUrl ? `
+                                <img class="product-image" src="${imageUrl}" alt="${product.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                <div class="product-image" style="background: #e5e5e5; display: none; align-items: center; justify-content: center;">
+                                    <span style="color: #999;">No image</span>
+                                </div>
+                            ` : `
+                                <div class="product-image" style="background: #e5e5e5; display: flex; align-items: center; justify-content: center;">
+                                    <span style="color: #999;">No image</span>
+                                </div>
+                            `}
+                            <div class="product-title">${product.title}</div>
+                            <div class="product-price">${priceDisplay}</div>
+                            <div class="product-id">ID: ${product.listing_id}</div>
+                            <a href="https://www.etsy.com/listing/${product.listing_id}" target="_blank" style="text-decoration: none;">
+                                <button class="buy-button">View on Etsy</button>
+                            </a>
+                        </div>
+                    `;
+                }).join('');
 
             } catch (err) {
                 statusEl.textContent = `Error: ${err.message}`;
