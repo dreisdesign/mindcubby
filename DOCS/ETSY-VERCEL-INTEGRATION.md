@@ -1,6 +1,8 @@
 # Etsy API & Vercel Integration — MindCubby
 
-This document captures the Etsy API integration and Vercel deployment details implemented in the MindCubby project. It summarizes the OAuth PKCE flow, server endpoints, cookie strategy, known issues from debugging, and next steps — essentially a write-up of this work and the conversation that produced it.
+**Status: ✅ WORKING** — Tested 2026-08-22. Successfully fetching 17 products from Etsy shop.
+
+This document captures the Etsy API integration and Vercel deployment details implemented in the MindCubby project. It summarizes the OAuth PKCE flow, server endpoints, cookie strategy, implementation notes, and next steps.
 
 ---
 
@@ -204,39 +206,50 @@ Search Vercel logs for these tags:
 
 ---
 
-## Major Fixes Applied (2026-08-22)
+## Implementation Details (Completed 2026-08-22)
 
-### Root Cause Analysis
+### Critical Requirements That Made It Work
 
-The integration was failing due to three critical issues:
+1. **The `x-api-key` Header** (MANDATORY)
+   - Format: `ETSY_API_KEY:ETSY_API_SECRET` (colon separator)
+   - Must be present on EVERY Etsy API v3 request
+   - Without this: 401/404 errors on all API calls
 
-1. **Missing `x-api-key` header** - Etsy API v3 REQUIRES this header on every request
-2. **Wrong endpoint** - Using `/application/me` instead of `/v3/application/users/me`
-3. **Incorrect user_id extraction** - Not parsing the numeric prefix from the access token
+2. **Correct Endpoint for User Info**
+   - Use: `https://api.etsy.com/v3/application/users/me`
+   - Returns: `{user_id, shop_id, ...}`
+   - DO NOT use: `/application/me`, `/oauth/me`, etc.
 
-### Fixes Implemented
+3. **OAuth Scope Requirements**
+   - Scope: `listings_r shops_r`
+   - `listings_r`: Read access to listings
+   - `shops_r`: Required for `/users/me` endpoint
 
-1. **Added mandatory `x-api-key` header**
-   - Format: `ETSY_API_KEY:ETSY_API_SECRET`
-   - Applied to all Etsy API calls
+4. **User ID Extraction from Token**
+   - Etsy access tokens have format: `"12345678.token_string"`
+   - Extract numeric prefix by splitting on `.` and parsing first segment
+   - Used for storing `etsy_user_id` cookie
 
-2. **Corrected OAuth scope**
-   - Changed from `listings_r` to `listings_r shops_r`
-   - Required for `/users/me` endpoint access
+5. **Token Lifecycle**
+   - Access tokens expire in 1 hour
+   - Stored in HttpOnly, Secure, SameSite=Lax cookies
+   - Automatically sent with requests via `credentials: 'include'`
 
-3. **Proper user_id extraction**
-   - Extract numeric prefix from access token: `"12345678.token..." → 12345678`
-   - Store as `etsy_user_id` cookie
+### Implementation Flow (Working)
 
-4. **Simplified products endpoint**
-   - Removed complex discovery logic
-   - Direct call to `/v3/application/users/me` to get `shop_id`
-   - Then call `/v3/application/shops/{shop_id}/listings`
+1. User clicks **Connect to Etsy** button
+2. Frontend calls `/api/auth/etsy` → server generates PKCE code_verifier
+3. User authorizes on Etsy.com
+4. Etsy redirects to `/api/auth/etsy/callback` with auth code
+5. Server exchanges code for access token (includes code_verifier)
+6. Server extracts user_id from token prefix, stores token in HttpOnly cookie
+7. User is redirected back to etsy-connect.html
+8. User clicks **Fetch Products** → frontend calls `/api/etsy/products`
+9. Server fetches `/v3/application/users/me` with token + x-api-key header
+10. Server gets shop_id, then fetches `/v3/application/shops/{shop_id}/listings`
+11. Products returned and displayed to user
 
-5. **Enhanced error handling**
-   - Better logging with step-by-step markers
-   - Clear error messages for missing configuration
-   - Proper status codes
+**Result: ✅ 17 products successfully fetched and displayed**
 
 ## Historical Failures & Attempts to Fix (Pre-2026-08-22)
 
