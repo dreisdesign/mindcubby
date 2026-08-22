@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'mindcubby.com';
     const redirectUri = `${protocol}://${host}/api/auth/etsy/callback`;
-    const scope = 'listings_r'; // Read-only access to listings
+    const scope = 'listings_r shops_r'; // Read access to listings and shops
     const state = generateRandomString(32);
     const codeVerifier = generateRandomString(128);
 

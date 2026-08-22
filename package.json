@@ -1,6 +1,6 @@
 {
-  "name": "mindcubby",
-  "version": "1.0.0",
-  "type": "module",
-  "description": "MindCubby - 3D designs, creative tools, and portfolio"
+    "name": "mindcubby",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "MindCubby - 3D designs, creative tools, and portfolio"
 }

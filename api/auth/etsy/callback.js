@@ -73,31 +73,34 @@ export default async function handler(req, res) {
 
         const tokenData = await tokenResponse.json();
         // Avoid logging sensitive token values; log only keys for debugging
-        try { console.log('OAuth token response keys:', Object.keys(tokenData || {}).join(',')); } catch (e) {}
+        try { console.log('OAuth token response keys:', Object.keys(tokenData || {}).join(',')); } catch (e) { }
         const accessToken = tokenData.access_token;
 
-        // If the token response includes a user id, store it for later shop lookups
-        const possibleUserId = tokenData.user_id || tokenData.user?.id || tokenData.account_id || tokenData.resource_owner?.id || tokenData.owner_id || tokenData.id;
-        // Prepare cookies: clear code_verifier and state, set token and optional user id
+        if (!accessToken) {
+            return res.status(500).json({ error: 'No access token in response' });
+        }
+
+        // Extract user_id from the access token prefix (format: "12345678.token...")
+        // According to Etsy docs, the access_token includes a numeric user_id prefix
+        const tokenParts = accessToken.split('.');
+        const userIdFromToken = tokenParts[0] ? parseInt(tokenParts[0], 10) : null;
+
+        console.log('Extracted user_id from token prefix:', userIdFromToken);
+
+        // Prepare cookies: clear code_verifier and state, set token and user id
         const setCookies = [
             `etsy_code_verifier=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly;`,
             `etsy_oauth_state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly;`,
             `etsy_token=${accessToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`
         ];
 
-        if (possibleUserId) {
-            const numericId = parseInt(possibleUserId, 10);
-            if (!isNaN(numericId)) {
-                setCookies.push(`etsy_user_id=${numericId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`);
-            }
+        // Store the user_id extracted from the token
+        if (userIdFromToken && !isNaN(userIdFromToken)) {
+            setCookies.push(`etsy_user_id=${userIdFromToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`);
         }
         res.setHeader('Set-Cookie', setCookies);
 
-        if (!accessToken) {
-            return res.status(500).json({ error: 'No access token in response' });
-        }
-
-        // Redirect back to connect page (token and optional user id in cookies)
+        // Redirect back to connect page (token and user id in cookies)
         return res.redirect('/etsy-connect.html');
 
     } catch (error) {

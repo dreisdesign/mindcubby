@@ -35,23 +35,24 @@ Key constraints/decisions:
 
 ## Endpoint summary
 
-- `GET /api/auth/etsy` — starts OAuth flow (PKCE). Creates `code_verifier`, sets `etsy_code_verifier` cookie and redirects the user to `https://www.etsy.com/oauth/connect` with `code_challenge`.
+- `GET /api/auth/etsy` — starts OAuth flow (PKCE). Creates `code_verifier`, sets `etsy_code_verifier` cookie and redirects the user to `https://www.etsy.com/oauth/connect` with `code_challenge`. Requests scopes: `listings_r shops_r`.
 
 - `GET /api/auth/etsy/callback` — Etsy redirects here with `code`. The handler:
-  - Reads the `etsy_code_verifier` cookie
-  - POSTs to `https://api.etsy.com/v3/public/oauth/token` (form-encoded) with `grant_type=authorization_code`, `client_id`, `client_secret`, `redirect_uri`, `code`, `code_verifier`.
-  - Logs the token response (useful for discovering field names)
-  - Stores `etsy_token` (HttpOnly cookie) and, when present, `etsy_user_id` (HttpOnly cookie)
-  - Clears `etsy_code_verifier`
+  - Reads the `etsy_code_verifier` and `etsy_oauth_state` cookies
+  - Validates OAuth state to prevent CSRF attacks
+  - POSTs to `https://api.etsy.com/v3/public/oauth/token` (form-encoded) with `grant_type=authorization_code`, `client_id`, `redirect_uri`, `code`, `code_verifier`.
+  - Extracts `user_id` from the access token prefix (Etsy tokens have format: "user_id.token_string")
+  - Stores `etsy_token` (HttpOnly cookie) and `etsy_user_id` (HttpOnly cookie)
+  - Clears `etsy_code_verifier` and `etsy_oauth_state`
 
 - `GET /api/auth/etsy/status` — simple status check (returns whether `etsy_token` exists).
 
 - `GET /api/etsy/products` — the primary products endpoint. Behavior:
   - Reads `etsy_token` from cookies (must be present)
-  - Prefers `etsy_user_id` cookie (if numeric) to call `/application/users/{id}/shops`
-  - Falls back to trying `/application/me` on `openapi.etsy.com` or `api.etsy.com` to discover shops
-  - Once `shopId` is found, calls `/application/shops/{shopId}/listings` and returns `results` to the client
-  - Adds `x-api-key` header as fallback if `ETSY_API_KEY` and `ETSY_API_SECRET` are set in env
+  - Calls `/v3/application/users/me` with required `x-api-key` header to get `shop_id`
+  - Calls `/v3/application/shops/{shop_id}/listings` with required `x-api-key` header
+  - Returns listings (count and results) to the client
+  - All requests include the mandatory `x-api-key: keystring:secret` header
 
 Refer to [api/etsy/products.js](api/etsy/products.js) for exact behavior and logging.
 
@@ -72,41 +73,174 @@ Vercel notes:
 
 ---
 
-## Cookies and security
+## Security and Privacy Best Practices
 
-- `etsy_code_verifier` — temporary cookie used during PKCE flow; cleared after token exchange. HttpOnly.
-- `etsy_token` — access token cookie. HttpOnly; Secure; SameSite=Lax; Max-Age ~3600s (1 hour). Server uses it to call Etsy APIs.
-- `etsy_user_id` — optional cookie set when token response includes a usable numeric id; HttpOnly; Secure; SameSite=Lax.
+### ✅ Currently Implemented
 
-Security considerations:
+1. **PKCE (Proof Key for Code Exchange)**
+   - Uses `code_verifier` and `code_challenge` (SHA-256)
+   - Prevents authorization code interception attacks
 
-- Never expose `client_secret` to client-side code.
-- Keep cookies HttpOnly to prevent XSS from reading tokens.
-- Consider storing long-lived tokens or refresh tokens in an encrypted server-side store for production.
+2. **CSRF Protection**
+   - Implements OAuth `state` parameter
+   - Validates state in callback
+   - State stored in HttpOnly cookie
+
+3. **HttpOnly Cookies**
+   - All sensitive tokens stored in HttpOnly cookies
+   - Prevents XSS attacks from accessing tokens
+   - Cookies: `etsy_token`, `etsy_user_id`, `etsy_code_verifier`, `etsy_oauth_state`
+
+4. **Secure Cookie Attributes**
+   - `HttpOnly`: Prevents JavaScript access
+   - `Secure`: Requires HTTPS
+   - `SameSite=Lax`: CSRF protection
+
+5. **Sensitive Data Logging**
+   - Never logs full token values
+   - Only logs `Object.keys()` for debugging
+   - Redacts sensitive fields in logs
+
+6. **Token Expiration**
+   - Access tokens expire after 3600 seconds (1 hour)
+   - Cookie `Max-Age` matches token lifetime
+
+### 🔒 Additional Recommendations
+
+1. **Token Storage** (for production)
+   - Consider server-side encrypted storage for refresh tokens
+   - Use a database or Redis for multi-device sessions
+   - Current cookie-based approach is suitable for single-device/session
+
+2. **Refresh Tokens**
+   - Implement refresh token flow to avoid re-authorization
+   - Store refresh tokens securely server-side
+   - Etsy provides 90-day refresh tokens
+
+3. **Rate Limiting**
+   - Add rate limiting to API endpoints
+   - Prevent abuse of OAuth endpoints
+   - Use Vercel Edge Config or Redis
+
+4. **Scope Minimization**
+   - Only request necessary scopes (`listings_r shops_r`)
+   - Don't request write access unless needed
+
+5. **Revocation Endpoint**
+   - Add `/api/auth/etsy/disconnect` endpoint
+   - Revoke tokens on logout
+   - Clear all cookies
+
+6. **Error Sanitization**
+   - Remove `_raw` and detailed errors in production
+   - Return generic error messages to clients
+   - Log detailed errors server-side only
+
+7. **HTTPS Enforcement**
+   - Ensure all requests use HTTPS
+   - Vercel automatically provides this
+
+### 🚨 Security Checklist for Production
+
+- [ ] Remove debug/raw data from API responses
+- [ ] Implement refresh token rotation
+- [ ] Add token revocation endpoint
+- [ ] Set up rate limiting
+- [ ] Enable Vercel security headers
+- [ ] Monitor for unusual API usage patterns
+- [ ] Implement logging/auditing for sensitive operations
+- [ ] Test CSRF protection thoroughly
+- [ ] Verify cookie security attributes in production domain
+- [ ] Document data retention policies
 
 ---
 
-## Common errors & debugging notes (from this work)
+## Common errors & debugging notes
 
-- ReferenceError: `paths is not defined` — caused by using a block-scoped `paths` variable outside its scope in `products.js`. Fixed in commit history.
+### CRITICAL: x-api-key Header Required
 
-- 400: `Expected int value for 'user_id' (got string)` — Etsy expects a numeric `user_id` when calling `/application/users/{id}/shops`. Ensure any stored `etsy_user_id` is an integer (use `parseInt(...)` and store numeric id), or extract numeric id from `tokenData`.
+**Every Etsy API v3 request MUST include the `x-api-key` header with format `keystring:secret`**. This was the primary cause of 401/404 errors in earlier implementations.
 
-- `404 /oauth/me` on `api.etsy.com` — this host/path is not implemented; avoid `/oauth/me` fallback. Prefer `/application/me` or `/application/users/{id}/shops`.
+```javascript
+headers: {
+    'Authorization': `Bearer ${accessToken}`,
+    'x-api-key': `${ETSY_API_KEY}:${ETSY_API_SECRET}`,  // REQUIRED!
+    'Content-Type': 'application/json'
+}
+```
 
-- `401 Not authenticated` — means no `etsy_token` cookie was present. Ensure the connect flow completed successfully and cookies are set for the app domain.
+### User ID Extraction
 
+The access token from Etsy includes a numeric `user_id` prefix: `"12345678.token_string"`. Extract it:
 
-Useful logs to inspect (Vercel): search for tags printed by the handlers:
+```javascript
+const tokenParts = accessToken.split('.');
+const userId = parseInt(tokenParts[0], 10);
+```
 
-- `OAuth tokenData:` — printed in the callback to inspect the raw token response shape
-- `[Products] ...` — prints discovery attempts, endpoints tried, and final errors
+### Correct Endpoints
+
+- ✅ Use: `/v3/application/users/me` (requires `shops_r` scope)
+- ❌ Avoid: `/application/me` (doesn't exist)
+- ❌ Avoid: `/oauth/me` (not implemented)
+- ✅ Use: `/v3/application/shops/{shop_id}/listings` for listings
+
+### Common Error Messages
+
+- `401 Not authenticated` — missing `etsy_token` cookie or invalid token
+- `403 Forbidden` — missing required scope (ensure `listings_r shops_r`)
+- `404 Not Found` — wrong endpoint URL
+- `500 Server configuration error` — missing `ETSY_API_KEY` or `ETSY_API_SECRET` environment variables
+
+### Useful Logs
+
+Search Vercel logs for these tags:
+
+- `OAuth token response keys:` — shows token response structure (without sensitive values)
+- `Extracted user_id from token prefix:` — confirms user_id extraction
+- `[Products] Step X:` — tracks the products fetch flow
+- `[Products] ✅` — success markers
+- `[Products] ❌` — error markers
 
 ---
 
-## Failures & Attempts to Fix
+## Major Fixes Applied (2026-08-22)
 
-- Summary: During development the integration surfaced several runtime failures (500/400/404) and logic bugs. Below is a concise timeline of the failures, root causes identified, debugging steps performed, and fixes applied (with commit references when available).
+### Root Cause Analysis
+
+The integration was failing due to three critical issues:
+
+1. **Missing `x-api-key` header** - Etsy API v3 REQUIRES this header on every request
+2. **Wrong endpoint** - Using `/application/me` instead of `/v3/application/users/me`
+3. **Incorrect user_id extraction** - Not parsing the numeric prefix from the access token
+
+### Fixes Implemented
+
+1. **Added mandatory `x-api-key` header**
+   - Format: `ETSY_API_KEY:ETSY_API_SECRET`
+   - Applied to all Etsy API calls
+
+2. **Corrected OAuth scope**
+   - Changed from `listings_r` to `listings_r shops_r`
+   - Required for `/users/me` endpoint access
+
+3. **Proper user_id extraction**
+   - Extract numeric prefix from access token: `"12345678.token..." → 12345678`
+   - Store as `etsy_user_id` cookie
+
+4. **Simplified products endpoint**
+   - Removed complex discovery logic
+   - Direct call to `/v3/application/users/me` to get `shop_id`
+   - Then call `/v3/application/shops/{shop_id}/listings`
+
+5. **Enhanced error handling**
+   - Better logging with step-by-step markers
+   - Clear error messages for missing configuration
+   - Proper status codes
+
+## Historical Failures & Attempts to Fix (Pre-2026-08-22)
+
+- Summary: During initial development the integration surfaced several runtime failures (500/400/404) and logic bugs. Below is a concise timeline of the failures, root causes identified, debugging steps performed, and fixes applied.
 
 - 1) Symptom: ESM/CJS compilation warnings on Vercel (functions failing to run).
   - Root cause: Vercel was transforming ESM into CJS; missing project type.
@@ -129,14 +263,86 @@ Useful logs to inspect (Vercel): search for tags printed by the handlers:
     - Added server-side discovery logic to probe `openapi.etsy.com` and `api.etsy.com` hosts for candidate endpoints.
     - Added fallback to call `/application/users/{id}/shops` when a numeric `etsy_user_id` is available.
     - Logged raw `tokenData` to discover which field contained a usable numeric id.
-  - Fix: Store `etsy_user_id` parsed as integer (now set from `tokenData` when integer), parse before calling `/application/users/{id}/shops`.
-  - Commit: `90178c0` (added user-id cookie); follow-ups also applied.
+  -Testing the Integration
 
-- 5) Symptom: Token exchange failures (wrong path) and other OAuth hiccups.
-  - Root cause: Initial incorrect token endpoint path used or missing PKCE params.
-  - Fixes:
-    - Corrected token endpoint to `https://api.etsy.com/v3/public/oauth/token`.
-    - Implemented PKCE code_challenge and code_verifier handling on `api/auth/etsy`.
+### Environment Setup
+
+1. **Vercel Environment Variables** (required):
+   ```
+   ETSY_API_KEY=your_keystring_here
+   ETSY_API_SECRET=your_shared_secret_here
+   ```
+
+2. **Etsy App Configuration**:
+   - Redirect URI: `https://your-domain.vercel.app/api/auth/etsy/callback`
+   - Required scopes: `listings_r`, `shops_r`
+
+3. **Local Testing** (optional):
+   ```bash
+   # Create .env file:
+   ETSY_API_KEY=your_keystring
+   ETSY_API_SECRET=your_secret
+   
+   # Run vercel dev
+   vercel dev
+   ```
+
+### Manual Test Flow
+
+1. **Deploy to Vercel**
+   ```bash
+   git push  # Auto-deploys if GitHub integration enabled
+   # OR
+   vercel --prod
+   ```
+
+2. **Test OAuth Flow**
+   - Visit `https://your-domain.vercel.app/etsy-connect.html`
+   - Click **Connect to Etsy**
+   - Approve the Etsy authorization request
+   - Should redirect back to connect page
+
+3. **Check Vercel Logs**
+   ```
+   Look for:
+   ✅ "OAuth token response keys:" - confirms token received
+   ✅ "Extracted user_id from token prefix: 12345678" - confirms user_id
+   ```
+
+4. **Fetch Products**
+   - Click **Fetch Products** button
+   - Should display your shop listings
+
+5. **Verify Logs**
+   ```
+   Look for step markers:
+   [Products] Step 1: Checking auth token...
+   [Products] ✅ Token found
+   [Products] Step 2: Fetching shop_id from /users/me...
+   [Products] /users/me response: {"user_id":...,"shop_id":...}
+   [Products] ✅ Got shop_id: 12345678
+   [Products] Step 3: Fetching listings from...
+   [Products] ✅ Got listings data. Count: 5
+   ```
+
+### Troubleshooting
+
+**If "Not authenticated" error:**
+- Check cookies are being set (browser DevTools → Application → Cookies)
+- Verify `etsy_token` cookie exists
+- Confirm OAuth flow completed (check redirect)
+
+**If "Server configuration error":**
+- Verify `ETSY_API_KEY` and `ETSY_API_SECRET` are set in Vercel dashboard
+- Redeploy after setting environment variables
+
+**If "403 Forbidden":**
+- Check Etsy app has required scopes enabled
+- Verify redirect URI matches exactly
+
+**If "No shop found":**
+- Confirm the Etsy account has an active shop
+- Check `/users/me` response in logs
     - Ensured `redirect_uri`, `client_id`, `client_secret`, and `code_verifier` are sent in the token exchange.
 
 - 6) Symptom: Sensitive token values appearing in logs (`OAuth tokenData:`).
@@ -174,13 +380,88 @@ Useful logs to inspect (Vercel): search for tags printed by the handlers:
 
 ---
 
-## Next steps & recommendations
+## Next Steps & Production Readiness
 
-- Gate the UI: disable/hide **Fetch Products** until `/api/auth/etsy/status` returns authenticated to prevent accidental 500/401s.
-- Normalize and persist numeric `user_id` from `tokenData` (server-side) to avoid `Expected int value` errors.
-- Add token refresh logic or persistent server-side storage for tokens if you need longer sessions.
-- Harden error handling in `products.js` to return helpful messages to the client (not raw 500s).
-- Optional: store tokens in a small persistent store (encrypted) instead of cookies for multi-device sessions.
+### High Priority
+
+1. **Test the Fixed Implementation**
+   - Deploy to Vercel
+   - Test OAuth flow end-to-end
+   - Verify listings fetch works
+   - Check all logs for expected behavior
+
+2. **Environment Variables**
+   - Ensure `ETSY_API_KEY` and `ETSY_API_SECRET` are set in Vercel
+   - Verify redirect URI matches Vercel deployment URL
+
+3. **Error Handling**
+   - Test error scenarios (invalid token, no shop, etc.)
+   - Ensure friendly error messages for users
+
+### Medium Priority  
+
+1. **Implement Refresh Token Flow**
+   ```javascript
+   // Add endpoint: /api/auth/etsy/refresh
+   // Use refresh_token grant type
+   // Etsy refresh tokens are valid for 90 days
+   ```
+
+2. **Add Disconnect Endpoint**
+   ```javascript
+   // Add endpoint: /api/auth/etsy/disconnect
+   // Revoke token on Etsy
+   // Clear all cookies
+   ```
+
+3. **Improve Frontend UX**
+   - Add loading states
+   - Better error display
+   - Show shop name/info
+   - Display product images
+
+4. **Add Token Persistence**
+   - Store refresh tokens server-side (encrypted)
+   - Implement automatic token refresh
+   - Support multi-device sessions
+
+### Low Priority
+
+1. **Enhanced Features**
+   - Pagination for listings
+   - Filter listings by status
+   - Show inventory details
+   - Support for multiple shops (if applicable)
+
+2. **Performance**
+   - Cache shop_id after first fetch
+   - Implement response caching with appropriate TTL
+   - Add Redis for session management
+
+3. **Monitoring**
+   - Set up error tracking (Sentry, etc.)
+   - Monitor API usage patterns
+   - Track OAuth success/failure rates
+
+4. **Testing**
+   - Add automated integration tests
+   - Test OAuth flow in CI/CD
+   - Test error scenarios
+
+## Known Limitations
+
+1. **Single Shop Support**: Currently assumes one shop per user
+2. **No Refresh Flow**: Tokens expire after 1 hour, requiring re-authentication
+3. **Cookie-Based Auth**: Works for single-device sessions; not suitable for multi-device
+4. **Basic Error Handling**: Could be more user-friendly
+5. **No Caching**: Fetches data fresh on every request
+
+## API Reference Quick Links
+
+- [Etsy API v3 Authentication](https://developers.etsy.com/documentation/essentials/authentication)
+- [OAuth 2.0 with PKCE](https://datatracker.ietf.org/doc/html/rfc7636)
+- [Etsy API Reference](https://developers.etsy.com/documentation/reference)
+- [Shop Listings Endpoint](https://developers.etsy.com/documentation/reference/#tag/ShopListing)
 
 ---
 

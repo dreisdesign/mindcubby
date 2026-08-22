@@ -16,6 +16,7 @@ export default async function handler(req, res) {
     try {
         // Get access token from HttpOnly cookie
         const accessToken = req.cookies.etsy_token;
+        const userIdCookie = req.cookies.etsy_user_id;
         console.log('[Products] Step 1: Checking auth token...');
 
         if (!accessToken) {
@@ -28,167 +29,105 @@ export default async function handler(req, res) {
         }
         console.log('[Products] ✅ Token found');
 
-        // Try multiple host bases (openapi vs api) and include x-api-key if available
+        // REQUIRED: x-api-key header for ALL Etsy API v3 requests
         const apiKey = process.env.ETSY_API_KEY;
         const apiSecret = process.env.ETSY_API_SECRET;
-        const xApiKeyHeader = apiKey && apiSecret ? `${apiKey}:${apiSecret}` : null;
 
-        const bases = [
-            'https://openapi.etsy.com/v3',
-            'https://api.etsy.com/v3',
-        ];
-
-        // If the OAuth callback previously stored a user id cookie, prefer that (avoid 'me' style endpoints)
-        const userIdCookie = req.cookies.etsy_user_id;
-        let userData = null;
-        let endpointUsed = null;
-
-        if (userIdCookie) {
-            const uid = parseInt(userIdCookie, 10);
-            console.log('[Products] Found etsy_user_id cookie:', userIdCookie, 'parsed:', uid);
-            if (!isNaN(uid)) {
-                for (const baseHost of bases) {
-                    const shopsUrl = `${baseHost}/application/users/${uid}/shops`;
-                    console.log('[Products] Trying user shops via cookie at', shopsUrl);
-                    try {
-                        const headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
-                        if (xApiKeyHeader) headers['x-api-key'] = xApiKeyHeader;
-                        const r = await fetch(shopsUrl, { method: 'GET', headers });
-                        const text = await r.text();
-                        if (!r.ok) { console.log('[Products] ->', shopsUrl, 'status', r.status, text); continue; }
-                        try { userData = JSON.parse(text); } catch (e) { userData = text; }
-                        endpointUsed = shopsUrl;
-                        console.log('[Products] Success from', shopsUrl, 'data', JSON.stringify(userData));
-                        break;
-                    } catch (err) {
-                        console.error('[Products] Error fetching user shops at', shopsUrl, err);
-                        continue;
-                    }
-                }
-            }
-        }
-
-        // If no cookie-based discovery worked, fall back to trying host/path combos that don't use 'me'
-        if (!userData) {
-            const paths = [
-                '/application/me',
-            ];
-            outer: for (const baseHost of bases) {
-                for (const path of paths) {
-                    const url = `${baseHost}${path}`;
-                    console.log('[Products] Trying', url);
-                    try {
-                        const headers = {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json',
-                        };
-                        if (xApiKeyHeader) headers['x-api-key'] = xApiKeyHeader;
-
-                        const r = await fetch(url, { method: 'GET', headers });
-                        const text = await r.text();
-                        if (!r.ok) {
-                            console.log('[Products]  ->', url, 'status', r.status, 'body', text);
-                            continue;
-                        }
-                        try { userData = JSON.parse(text); } catch (e) { userData = text; }
-                        endpointUsed = url;
-                        console.log('[Products] Success from', url, 'data', JSON.stringify(userData));
-                        break outer;
-                    } catch (err) {
-                        console.error('[Products] Fetch error for', url, err);
-                        continue;
-                    }
-                }
-            }
-        }
-
-        if (!userData) {
-            const triedPaths = bases.flatMap(b => ['/application/me','/oauth/me'].map(p => `${b}${p}`));
-            return res.status(502).json({
-                error: 'Failed to discover user/shop endpoint',
-                details: 'None of the candidate endpoints returned a valid response',
-                tried: triedPaths,
-            });
-        }
-
-        // Try common shapes to extract shop id
-        let shopId = null;
-        if (userData.shop_id) shopId = userData.shop_id;
-        if (!shopId && Array.isArray(userData.shops) && userData.shops.length) shopId = userData.shops[0].shop_id || userData.shops[0].id;
-        if (!shopId && Array.isArray(userData.results) && userData.results.length) shopId = userData.results[0].shop_id || userData.results[0].id;
-
-        // If we found a user id but not shops, try /application/users/{id}/shops
-        const possibleUserId = userData.user_id || userData.user?.user_id || userData.user?.id || userData.id || userData.member_id;
-        if (!shopId && possibleUserId) {
-            for (const baseHost of bases) {
-                const shopsUrl = `${baseHost}/application/users/${possibleUserId}/shops`;
-                console.log('[Products] Trying user shops at', shopsUrl);
-                try {
-                    const headers = {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json',
-                    };
-                    if (xApiKeyHeader) headers['x-api-key'] = xApiKeyHeader;
-                    const shopsResp = await fetch(shopsUrl, { method: 'GET', headers });
-                    const shopsText = await shopsResp.text();
-                    if (!shopsResp.ok) { console.log('[Products] ->', shopsUrl, shopsResp.status, shopsText); continue; }
-                    let shopsData; try { shopsData = JSON.parse(shopsText); } catch (e) { shopsData = shopsText; }
-                    console.log('[Products] Got user shops:', JSON.stringify(shopsData));
-                    if (shopsData.results && shopsData.results.length) {
-                        shopId = shopsData.results[0].shop_id || shopsData.results[0].id;
-                        break;
-                    }
-                    if (Array.isArray(shopsData) && shopsData.length) { shopId = shopsData[0].shop_id || shopsData[0].id; break; }
-                } catch (err) {
-                    console.error('[Products] Error fetching user shops at', shopsUrl, err);
-                    continue;
-                }
-            }
-        }
-
-        console.log('[Products] Final resolved shopId:', shopId, 'from endpoint', endpointUsed);
-
-        if (!shopId) {
-            console.error('[Products] ❌ Could not determine shop ID, userData=', JSON.stringify(userData));
+        if (!apiKey || !apiSecret) {
+            console.error('[Products] Missing ETSY_API_KEY or ETSY_API_SECRET');
             return res.status(500).json({
-                error: 'Could not determine shop ID from any endpoint',
-                received: userData,
-                endpoint: endpointUsed,
+                error: 'Server configuration error',
+                message: 'Etsy API credentials not configured'
             });
         }
 
-        // Now fetch products using the authenticated shop ID
-        const etsyUrl = `https://api.etsy.com/v3/application/shops/${shopId}/listings`;
-        console.log('[Products] Step 3: Fetching products from', etsyUrl);
+        const xApiKey = `${apiKey}:${apiSecret}`;
 
-        const response = await fetch(etsyUrl, {
+        // Step 2: Get shop_id using the /users/me endpoint
+        console.log('[Products] Step 2: Fetching shop_id from /users/me...');
+
+        let shopId = null;
+        const meUrl = 'https://api.etsy.com/v3/application/users/me';
+
+        try {
+            const meResponse = await fetch(meUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'x-api-key': xApiKey,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!meResponse.ok) {
+                const errorText = await meResponse.text();
+                console.error('[Products] /users/me failed:', meResponse.status, errorText);
+                return res.status(meResponse.status).json({
+                    error: 'Failed to get user info from Etsy',
+                    status: meResponse.status,
+                    details: errorText,
+                    endpoint: meUrl
+                });
+            }
+
+            const meData = await meResponse.json();
+            console.log('[Products] /users/me response:', JSON.stringify(meData));
+
+            shopId = meData.shop_id;
+
+            if (!shopId) {
+                console.error('[Products] No shop_id in /users/me response');
+                return res.status(500).json({
+                    error: 'No shop found for this user',
+                    message: 'This Etsy account does not have an active shop',
+                    received: meData
+                });
+            }
+
+            console.log('[Products] ✅ Got shop_id:', shopId);
+        } catch (err) {
+            console.error('[Products] Error calling /users/me:', err);
+            return res.status(500).json({
+                error: 'Failed to fetch user info',
+                message: err.message
+            });
+        }
+
+
+
+        // Step 3: Fetch listings from the shop
+        const listingsUrl = `https://api.etsy.com/v3/application/shops/${shopId}/listings`;
+        console.log('[Products] Step 3: Fetching listings from', listingsUrl);
+
+        const response = await fetch(listingsUrl, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
+                'x-api-key': xApiKey,
                 'Content-Type': 'application/json',
             },
         });
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('[Products] ❌ Products fetch failed:', response.status, errorText);
+            console.error('[Products] ❌ Listings fetch failed:', response.status, errorText);
             return res.status(response.status).json({
                 error: 'Etsy API Error',
                 status: response.status,
                 message: errorText,
-                endpoint: etsyUrl,
+                endpoint: listingsUrl,
             });
         }
 
         const data = await response.json();
-        console.log('[Products] ✅ Got products data:', JSON.stringify(data));
+        console.log('[Products] ✅ Got listings data. Count:', data.count || 0);
 
-        // Return the products
+        // Return the listings (Etsy calls them listings, not products)
         return res.status(200).json({
             success: true,
-            count: data.results?.length || 0,
+            shop_id: shopId,
+            count: data.count || 0,
             products: data.results || [],
-            _raw: data, // Include raw response for debugging
         });
 
     } catch (error) {
