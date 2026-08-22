@@ -72,7 +72,6 @@ export default async function handler(req, res) {
         if (!userData) {
             const paths = [
                 '/application/me',
-                '/oauth/me',
             ];
             outer: for (const baseHost of bases) {
                 for (const path of paths) {
