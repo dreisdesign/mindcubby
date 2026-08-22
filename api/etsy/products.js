@@ -25,8 +25,8 @@ export default async function handler(req, res) {
             });
         }
 
-        // First, get the authenticated shop data to find shop ID
-        const shopResponse = await fetch('https://api.etsy.com/v3/application/shops/me', {
+        // First, get the authenticated user's shops
+        const meResponse = await fetch('https://api.etsy.com/v3/application/me/shops', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
@@ -34,20 +34,29 @@ export default async function handler(req, res) {
             },
         });
 
-        if (!shopResponse.ok) {
-            return res.status(shopResponse.status).json({
-                error: 'Failed to fetch shop data',
-                details: await shopResponse.text(),
+        if (!meResponse.ok) {
+            console.error('Me shops response:', await meResponse.text());
+            return res.status(meResponse.status).json({
+                error: 'Failed to fetch user shops',
+                details: await meResponse.text(),
             });
         }
 
-        const shopData = await shopResponse.json();
-        const shopId = shopData.shop_id;
+        const meData = await meResponse.json();
+        
+        if (!meData.results || meData.results.length === 0) {
+            return res.status(500).json({
+                error: 'No shops found for authenticated user',
+                details: 'The OAuth token is valid but no shops are associated',
+            });
+        }
+
+        const shopId = meData.results[0].shop_id;
 
         if (!shopId) {
             return res.status(500).json({
                 error: 'Could not determine shop ID',
-                details: 'Response missing shop_id',
+                details: 'Shop object missing shop_id field',
             });
         }
 
