@@ -37,40 +37,68 @@ export default async function handler(req, res) {
             'https://openapi.etsy.com/v3',
             'https://api.etsy.com/v3',
         ];
-        const paths = [
-            '/application/users/me',
-            '/application/users/me/shops',
-            '/application/me',
-            '/oauth/me',
-        ];
 
+        // If the OAuth callback previously stored a user id cookie, prefer that (avoid 'me' style endpoints)
+        const userIdCookie = req.cookies.etsy_user_id;
         let userData = null;
         let endpointUsed = null;
-        // try each base and path combination
-        outer: for (const baseHost of bases) {
-            for (const path of paths) {
-                const url = `${baseHost}${path}`;
-                console.log('[Products] Trying', url);
-                try {
-                    const headers = {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json',
-                    };
-                    if (xApiKeyHeader) headers['x-api-key'] = xApiKeyHeader;
 
-                    const r = await fetch(url, { method: 'GET', headers });
-                    const text = await r.text();
-                    if (!r.ok) {
-                        console.log('[Products]  ->', url, 'status', r.status, 'body', text);
+        if (userIdCookie) {
+            const uid = parseInt(userIdCookie, 10);
+            console.log('[Products] Found etsy_user_id cookie:', userIdCookie, 'parsed:', uid);
+            if (!isNaN(uid)) {
+                for (const baseHost of bases) {
+                    const shopsUrl = `${baseHost}/application/users/${uid}/shops`;
+                    console.log('[Products] Trying user shops via cookie at', shopsUrl);
+                    try {
+                        const headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
+                        if (xApiKeyHeader) headers['x-api-key'] = xApiKeyHeader;
+                        const r = await fetch(shopsUrl, { method: 'GET', headers });
+                        const text = await r.text();
+                        if (!r.ok) { console.log('[Products] ->', shopsUrl, 'status', r.status, text); continue; }
+                        try { userData = JSON.parse(text); } catch (e) { userData = text; }
+                        endpointUsed = shopsUrl;
+                        console.log('[Products] Success from', shopsUrl, 'data', JSON.stringify(userData));
+                        break;
+                    } catch (err) {
+                        console.error('[Products] Error fetching user shops at', shopsUrl, err);
                         continue;
                     }
-                    try { userData = JSON.parse(text); } catch (e) { userData = text; }
-                    endpointUsed = url;
-                    console.log('[Products] Success from', url, 'data', JSON.stringify(userData));
-                    break outer;
-                } catch (err) {
-                    console.error('[Products] Fetch error for', url, err);
-                    continue;
+                }
+            }
+        }
+
+        // If no cookie-based discovery worked, fall back to trying host/path combos that don't use 'me'
+        if (!userData) {
+            const paths = [
+                '/application/me',
+                '/oauth/me',
+            ];
+            outer: for (const baseHost of bases) {
+                for (const path of paths) {
+                    const url = `${baseHost}${path}`;
+                    console.log('[Products] Trying', url);
+                    try {
+                        const headers = {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json',
+                        };
+                        if (xApiKeyHeader) headers['x-api-key'] = xApiKeyHeader;
+
+                        const r = await fetch(url, { method: 'GET', headers });
+                        const text = await r.text();
+                        if (!r.ok) {
+                            console.log('[Products]  ->', url, 'status', r.status, 'body', text);
+                            continue;
+                        }
+                        try { userData = JSON.parse(text); } catch (e) { userData = text; }
+                        endpointUsed = url;
+                        console.log('[Products] Success from', url, 'data', JSON.stringify(userData));
+                        break outer;
+                    } catch (err) {
+                        console.error('[Products] Fetch error for', url, err);
+                        continue;
+                    }
                 }
             }
         }

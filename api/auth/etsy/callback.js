@@ -8,9 +8,9 @@ export default async function handler(req, res) {
     const { code, state, error, error_description } = req.query;
 
     if (error) {
-        return res.status(400).json({ 
-            error: error, 
-            description: error_description || 'OAuth error occurred' 
+        return res.status(400).json({
+            error: error,
+            description: error_description || 'OAuth error occurred'
         });
     }
 
@@ -64,23 +64,32 @@ export default async function handler(req, res) {
         }
 
         const tokenData = await tokenResponse.json();
+        console.log('OAuth tokenData:', JSON.stringify(tokenData));
         const accessToken = tokenData.access_token;
+
+        // If the token response includes a user id, store it for later shop lookups
+        const possibleUserId = tokenData.user_id || tokenData.user?.id || tokenData.account_id || tokenData.resource_owner?.id || tokenData.owner_id || tokenData.id;
+        if (possibleUserId) {
+            console.log('Storing user id from token response:', possibleUserId);
+            // set HttpOnly cookie for user id (short-lived)
+            res.setHeader('Set-Cookie', [
+                `etsy_code_verifier=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC; HttpOnly;`,
+                `etsy_token=${accessToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
+                `etsy_user_id=${possibleUserId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`
+            ]);
+        } else {
+            // store only token
+            res.setHeader('Set-Cookie', [
+                `etsy_code_verifier=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC; HttpOnly;`,
+                `etsy_token=${accessToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`
+            ]);
+        }
 
         if (!accessToken) {
             return res.status(500).json({ error: 'No access token in response' });
         }
 
-        // Clear the code_verifier cookie
-        res.setHeader('Set-Cookie', 'etsy_code_verifier=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC; HttpOnly;');
-
-        // Store token in HttpOnly cookie (secure, can't be accessed by JavaScript)
-        // Token is only sent to API for 1 hour before expiring
-        res.setHeader('Set-Cookie', [
-            `etsy_code_verifier=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC; HttpOnly;`,
-            `etsy_token=${accessToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`
-        ]);
-        
-        // Redirect back to connect page (token in cookie, not in URL)
+        // Redirect back to connect page (token and optional user id in cookies)
         return res.redirect('/etsy-connect.html');
 
     } catch (error) {
