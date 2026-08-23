@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-1. **Visit shop:** https://shop.mindcubby.com/shop.html
+1. **Visit shop:** https://shop.mindcubby.com/etsy/
 2. **Authorize:** Run `./authorize-oauth.sh your_auth_secret` (first time only)
 3. **Done:** Cache updates daily at midnight UTC automatically
 
@@ -40,7 +40,7 @@ npm run refresh:cache
 ## How It Works
 
 ### First Time (Authorization)
-1. You visit `/shop.html`
+1. You visit `/etsy/`
 2. Click "Authorize with Etsy"
 3. Sign into Etsy and approve access
 4. System stores your shop_id + fetches products
@@ -63,7 +63,7 @@ npm run refresh:cache
 ## API Endpoints
 
 ### Public (No Auth)
-- `GET /shop.html` — Product storefront
+- `GET /etsy/` — Product storefront
 - `GET /api/etsy/cache` — Get cached products (JSON)
 
 ### Private (Requires Secret Header)
@@ -119,7 +119,7 @@ api/
 ├── health-check.js        # System health monitoring
 └── notifications.js       # Email alerts via Resend
 
-shop.html                  # Public product storefront
+etsy/index.html            # Public product storefront
 authorize-oauth.sh         # Secure OAuth initiation script
 refresh-cache.sh          # Manual cache refresh script
 test-health.sh            # Health check test script
@@ -168,7 +168,7 @@ SETUP.md                  # This file
 ## Troubleshooting
 
 **Products not showing?**
-- Visit https://shop.mindcubby.com/shop.html
+- Visit https://shop.mindcubby.com/etsy/
 - If empty, run: `./authorize-oauth.sh your_auth_secret`
 - Wait ~30 seconds for cache to populate
 

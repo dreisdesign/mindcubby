@@ -28,7 +28,7 @@ This document details the security model, threat mitigations, and best practices
 6. Etsy: Redirects to /api/auth/etsy/callback?code=...&state=...
 7. Backend: Exchange code for access token using code_verifier (PKCE)
 8. Backend: Fetch shop_id, products, cache for 24h
-9. Redirect: User to /shop.html (publicly viewable)
+9. Redirect: User to /etsy/ (publicly viewable)
 ```
 
 **Why PKCE Matters:**
@@ -226,7 +226,7 @@ x-api-key: {ETSY_API_KEY}:{ETSY_API_SECRET}
 
 | Endpoint | Auth | Purpose | Abuse Risk |
 |----------|------|---------|-----------|
-| `GET /shop.html` | ✗ | Storefront UI | Low (static HTML) |
+| `GET /etsy/` | ✗ | Storefront UI | Low (static HTML) |
 | `GET /api/etsy/cache` | ✗ | Product JSON | Low (read-only) |
 
 **Rate Limiting:** None (Vercel free tier doesn't support)
@@ -289,7 +289,7 @@ x-api-key: {ETSY_API_KEY}:{ETSY_API_SECRET}
 
 ### Scenario 3: Token Theft via XSS
 
-**Attack:** Attacker injects malicious JS into shop.html, steals Etsy token
+**Attack:** Attacker injects malicious JS into etsy/index.html, steals Etsy token
 
 **Mitigation:**
 - ✅ HttpOnly cookies (JS can't read token)

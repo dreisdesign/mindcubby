@@ -383,7 +383,7 @@ vercel logs --since "7d ago" > logs-weekly.json
 
 ### Important URLs
 
-- **Shop:** https://shop.mindcubby.com/shop.html
+- **Shop:** https://shop.mindcubby.com/etsy/
 - **Vercel Dashboard:** https://vercel.com/dashboard
 - **Upstash Console:** https://console.upstash.com
 - **Resend Dashboard:** https://dashboard.resend.com

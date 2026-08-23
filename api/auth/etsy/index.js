@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     const codeVerifier = generateRandomString(128);
 
     // Support return_to parameter to redirect after OAuth
-    const returnTo = req.query.return_to || req.body?.return_to || '/shop.html';
+    const returnTo = req.query.return_to || req.body?.return_to || '/etsy/';
 
     console.log('[OAuth] Authenticated - initiating flow with redirect URI:', redirectUri);
 
