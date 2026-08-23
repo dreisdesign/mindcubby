@@ -4,7 +4,9 @@
  * Returns a list of products from a public Etsy shop
  * 
  * NO AUTHENTICATION REQUIRED
- * Uses shop_id from ETSY_SHOP_ID environment variable
+ * Attempts to use:
+ * 1. Cookie-based numeric shop_id from OAuth (if available)
+ * 2. ETSY_SHOP_ID environment variable (numeric ID, not slug)
  */
 
 export default async function handler(req, res) {
@@ -14,14 +16,29 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Get shop_id from environment or query parameter
-        const shopId = process.env.ETSY_SHOP_ID;
+        // Try to get numeric shop_id from cookies first (set during OAuth)
+        let shopId = req.cookies.etsy_shop_id;
+        
+        // Fall back to environment variable
+        if (!shopId) {
+            shopId = process.env.ETSY_SHOP_ID;
+        }
 
         if (!shopId) {
-            console.error('[Public] Missing ETSY_SHOP_ID environment variable');
+            console.error('[Public] Missing shop ID');
             return res.status(500).json({
                 error: 'Server configuration error',
-                message: 'Shop ID not configured. Set ETSY_SHOP_ID in environment variables.'
+                message: 'Shop ID not available. Set ETSY_SHOP_ID (numeric ID) in environment variables or authorize via /api/auth/etsy'
+            });
+        }
+        
+        // Ensure shopId is numeric (remove any non-digits)
+        const numericShopId = shopId.toString().replace(/\D/g, '');
+        if (!numericShopId) {
+            console.error('[Public] Invalid shop ID - must be numeric:', shopId);
+            return res.status(400).json({
+                error: 'Invalid shop ID',
+                message: 'Shop ID must be numeric. You provided: ' + shopId
             });
         }
 
@@ -39,11 +56,10 @@ export default async function handler(req, res) {
 
         const xApiKey = `${apiKey}:${apiSecret}`;
 
-        // Fetch listings from the shop (public endpoint - no Bearer token needed)
-        const listingsUrl = `https://api.etsy.com/v3/public/shops/${shopId}/listings?includes=images`;
-        console.log('[Public] Fetching listings from shop:', shopId);
+        // Fetch listings from the shop using numeric ID
+        const listingsUrl = `https://api.etsy.com/v3/public/shops/${numericShopId}/listings?includes=images`;
+        console.log('[Public] Fetching listings from shop ID:', numericShopId);
         console.log('[Public] URL:', listingsUrl);
-        console.log('[Public] Using x-api-key:', xApiKey.substring(0, 10) + '...');
 
         const response = await fetch(listingsUrl, {
             method: 'GET',
@@ -56,24 +72,23 @@ export default async function handler(req, res) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('[Public] ❌ Listings fetch failed:', response.status, errorText);
-            console.error('[Public] Full URL:', listingsUrl);
-            console.error('[Public] Response:', errorText);
+            console.error('[Public] Using shop ID:', numericShopId);
             return res.status(response.status).json({
                 error: 'Etsy API Error',
                 status: response.status,
                 message: errorText,
                 endpoint: listingsUrl,
-                shopId: shopId,
+                shopId: numericShopId,
             });
         }
 
         const data = await response.json();
-        console.log('[Public] ✅ Got', data.count, 'products');
+        console.log('[Public] ✅ Got', data.count, 'products from shop', numericShopId);
 
         // Transform response to match shop.html expectations
         return res.status(200).json({
             success: true,
-            shop_id: shopId,
+            shop_id: numericShopId,
             count: data.count,
             products: data.results || []
         });
