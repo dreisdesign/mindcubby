@@ -11,7 +11,7 @@
 import { createClient } from 'redis';
 
 const CACHE_KEY = 'mindcubby:shop:products';
-const CACHE_TTL = 6 * 60 * 60; // 6 hours in seconds
+const CACHE_TTL = 24 * 60 * 60; // 24 hours in seconds (daily refresh)
 
 // Create Redis client - automatically reads REDIS_URL from environment
 let redis = null;

@@ -162,6 +162,20 @@
                 statusEl.textContent = `Loaded ${products.length} products`;
                 statusEl.className = 'status';
 
+                // Show cache age if available
+                if (data.cached_at) {
+                    const cacheDate = new Date(data.cached_at);
+                    const now = new Date();
+                    const ageMinutes = Math.floor((now - cacheDate) / 1000 / 60);
+                    const ageText = ageMinutes < 60 
+                        ? `${ageMinutes}m ago`
+                        : ageMinutes < 1440
+                        ? `${Math.floor(ageMinutes / 60)}h ago`
+                        : 'over 1 day ago';
+                    
+                    statusEl.innerHTML = `Loaded ${products.length} products · Cached: ${ageText} · <a href="/api/auth/etsy" style="color: #000; text-decoration: underline; font-size: 11px;">Refresh Cache</a>`;
+                }
+
                 gridEl.innerHTML = products.map(product => {
                     // Get first image URL
                     let imageUrl = null;
