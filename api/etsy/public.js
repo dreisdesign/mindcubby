@@ -42,6 +42,8 @@ export default async function handler(req, res) {
         // Fetch listings from the shop (public endpoint - no Bearer token needed)
         const listingsUrl = `https://api.etsy.com/v3/public/shops/${shopId}/listings?includes=images`;
         console.log('[Public] Fetching listings from shop:', shopId);
+        console.log('[Public] URL:', listingsUrl);
+        console.log('[Public] Using x-api-key:', xApiKey.substring(0, 10) + '...');
 
         const response = await fetch(listingsUrl, {
             method: 'GET',
@@ -54,11 +56,14 @@ export default async function handler(req, res) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('[Public] ❌ Listings fetch failed:', response.status, errorText);
+            console.error('[Public] Full URL:', listingsUrl);
+            console.error('[Public] Response:', errorText);
             return res.status(response.status).json({
                 error: 'Etsy API Error',
                 status: response.status,
                 message: errorText,
                 endpoint: listingsUrl,
+                shopId: shopId,
             });
         }
 
