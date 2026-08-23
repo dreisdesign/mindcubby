@@ -134,9 +134,7 @@
             const gridEl = document.getElementById('products-grid');
 
             try {
-                const response = await fetch('/api/etsy/products', {
-                    credentials: 'include'
-                });
+                const response = await fetch('/api/etsy/public');
 
                 if (!response.ok) {
                     const error = await response.json();
