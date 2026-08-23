@@ -144,7 +144,7 @@
                     gridEl.innerHTML = `
                         <div class="empty">
                             <p>${data.message || 'Products not available'}</p>
-                            <p><a href="/api/auth/etsy" style="color: #000; text-decoration: underline;">Authorize with Etsy</a></p>
+                            <p><a href="/api/auth/etsy?return_to=/shop.html" style="color: #000; text-decoration: underline;">Authorize with Etsy</a></p>
                         </div>
                     `;
                     return;

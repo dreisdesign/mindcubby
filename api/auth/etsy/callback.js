@@ -129,6 +129,19 @@ export default async function handler(req, res) {
                 const shopId = meData.shop_id;
 
                 if (shopId) {
+                    // Store shop_id in Redis for Cron refreshes
+                    try {
+                        const { createClient } = await import('redis');
+                        const redis = createClient({ url: process.env.REDIS_URL });
+                        await redis.connect();
+                        await redis.set('mindcubby:shop_id', shopId.toString());
+                        await redis.quit();
+                        console.log('[Callback] ✅ Stored shop_id in Redis:', shopId);
+                    } catch (err) {
+                        console.error('[Callback] Failed to store shop_id:', err.message);
+                        // Continue anyway - cron might not work but OAuth succeeded
+                    }
+
                     // Get listings
                     const listingsResponse = await fetch(
                         `https://api.etsy.com/v3/application/shops/${shopId}/listings?includes=images`,

@@ -1,10 +1,9 @@
 /**
- * Etsy API - Manual Cache Refresh
- * GET /api/etsy/refresh-cache
+ * Etsy API - Cron Cache Refresh
+ * Runs automatically via Vercel Cron at 00:00 UTC daily
+ * Refreshes product cache using stored shop_id
  * 
- * Manually refresh the product cache on-demand
- * Same logic as cron endpoint, but can be called anytime
- * Requires REFRESH_SECRET in query or header for security
+ * No manual intervention needed - fully autonomous
  */
 
 import { createClient } from 'redis';
@@ -12,20 +11,20 @@ import { setCachedProducts } from './cache.js';
 
 const SHOP_ID_KEY = 'mindcubby:shop_id';
 
+export const vercelCronSchedule = '0 0 * * *'; // Daily at 00:00 UTC
+
 export default async function handler(req, res) {
     try {
-        // Verify request has refresh secret
-        const refreshSecret = req.query.secret || req.headers['x-refresh-secret'];
-        const expectedSecret = process.env.REFRESH_SECRET;
-
-        if (!expectedSecret || !refreshSecret || refreshSecret !== expectedSecret) {
+        // Verify this is a Vercel Cron request (security check)
+        const vercelCronSecret = req.headers['x-vercel-cron-secret'];
+        if (!vercelCronSecret) {
             return res.status(401).json({
                 error: 'Unauthorized',
-                message: 'Missing or invalid refresh secret'
+                message: 'This endpoint only accepts Vercel Cron requests'
             });
         }
 
-        console.log('[Refresh] Manual cache refresh triggered');
+        console.log('[Cron] Starting daily cache refresh at', new Date().toISOString());
 
         // Get shop_id from Redis
         const redis = createClient({ url: process.env.REDIS_URL });
@@ -34,14 +33,14 @@ export default async function handler(req, res) {
         await redis.quit();
 
         if (!shopId) {
-            console.error('[Refresh] No shop_id found in Redis');
-            return res.status(400).json({
+            console.error('[Cron] No shop_id found in Redis - user may not have authorized yet');
+            return res.status(200).json({
                 success: false,
                 message: 'No shop_id stored - please authorize at /api/auth/etsy first'
             });
         }
 
-        console.log('[Refresh] Found shop_id:', shopId);
+        console.log('[Cron] Found shop_id:', shopId);
 
         // Fetch products using app credentials (public API endpoint)
         const apiKey = process.env.ETSY_API_KEY;
@@ -61,7 +60,7 @@ export default async function handler(req, res) {
 
         if (!listingsResponse.ok) {
             const error = await listingsResponse.text();
-            console.error('[Refresh] Failed to fetch listings:', error);
+            console.error('[Cron] Failed to fetch listings:', error);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to fetch listings from Etsy API',
@@ -73,7 +72,7 @@ export default async function handler(req, res) {
 
         if (listingsData.results && listingsData.results.length > 0) {
             await setCachedProducts(listingsData.results);
-            console.log('[Refresh] ✅ Successfully cached', listingsData.results.length, 'products');
+            console.log('[Cron] ✅ Successfully cached', listingsData.results.length, 'products');
 
             return res.status(200).json({
                 success: true,
@@ -82,7 +81,7 @@ export default async function handler(req, res) {
                 timestamp: new Date().toISOString()
             });
         } else {
-            console.warn('[Refresh] No products found for shop_id:', shopId);
+            console.warn('[Cron] No products found for shop_id:', shopId);
             return res.status(200).json({
                 success: false,
                 message: 'No products found for this shop',
@@ -91,7 +90,7 @@ export default async function handler(req, res) {
         }
 
     } catch (error) {
-        console.error('[Refresh] Error:', error);
+        console.error('[Cron] Error:', error);
         return res.status(500).json({
             error: 'Internal server error',
             message: error.message
