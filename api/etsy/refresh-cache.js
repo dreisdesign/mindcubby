@@ -9,22 +9,37 @@
 
 import { createClient } from 'redis';
 import { setCachedProducts } from './cache.js';
+import { checkRateLimit } from '../middleware/rate-limit.js';
+import { logSecurityEvent, logRequest, logError } from '../middleware/logger.js';
 
 const SHOP_ID_KEY = 'mindcubby:shop_id';
 
 export default async function handler(req, res) {
+    const startTime = Date.now();
+
+    // Rate limit: 10 refresh attempts per IP per hour (prevent abuse)
+    if (!checkRateLimit(req, { maxRequests: 10, windowMs: 60 * 60 * 1000 })) {
+        logSecurityEvent(req, 'RATE_LIMITED', { endpoint: '/api/etsy/refresh-cache' });
+        return res.status(429).json({ error: 'Too many refresh requests - rate limited' });
+    }
+
     try {
         // Verify request has refresh secret
         const refreshSecret = req.query.secret || req.headers['x-refresh-secret'];
         const expectedSecret = process.env.REFRESH_SECRET;
 
         if (!expectedSecret || !refreshSecret || refreshSecret !== expectedSecret) {
+            logSecurityEvent(req, 'REFRESH_AUTH_FAILED', {
+                endpoint: '/api/etsy/refresh-cache',
+                reason: !refreshSecret ? 'missing_secret' : 'invalid_secret'
+            });
             return res.status(401).json({
                 error: 'Unauthorized',
                 message: 'Missing or invalid refresh secret'
             });
         }
 
+        logSecurityEvent(req, 'REFRESH_INITIATED', { endpoint: '/api/etsy/refresh-cache' });
         console.log('[Refresh] Manual cache refresh triggered');
 
         // Get shop_id from Redis
@@ -34,7 +49,7 @@ export default async function handler(req, res) {
         await redis.quit();
 
         if (!shopId) {
-            console.error('[Refresh] No shop_id found in Redis');
+            logError(req, 'No shop_id found', { endpoint: '/api/etsy/refresh-cache' });
             return res.status(400).json({
                 success: false,
                 message: 'No shop_id stored - please authorize at /api/auth/etsy first'
@@ -75,6 +90,15 @@ export default async function handler(req, res) {
             await setCachedProducts(listingsData.results);
             console.log('[Refresh] ✅ Successfully cached', listingsData.results.length, 'products');
 
+            const duration = Date.now() - startTime;
+            logRequest(req, res, {
+                status: 200,
+                endpoint: '/api/etsy/refresh-cache',
+                productCount: listingsData.results.length,
+                success: true,
+                duration
+            });
+
             return res.status(200).json({
                 success: true,
                 message: 'Cache refreshed successfully',
@@ -83,6 +107,15 @@ export default async function handler(req, res) {
             });
         } else {
             console.warn('[Refresh] No products found for shop_id:', shopId);
+            const duration = Date.now() - startTime;
+            logRequest(req, res, {
+                status: 200,
+                endpoint: '/api/etsy/refresh-cache',
+                productCount: 0,
+                success: false,
+                duration
+            });
+
             return res.status(200).json({
                 success: false,
                 message: 'No products found for this shop',
@@ -91,7 +124,12 @@ export default async function handler(req, res) {
         }
 
     } catch (error) {
-        console.error('[Refresh] Error:', error);
+        const duration = Date.now() - startTime;
+        logError(req, 'Manual refresh error', {
+            error,
+            endpoint: '/api/etsy/refresh-cache',
+            duration
+        });
         return res.status(500).json({
             error: 'Internal server error',
             message: error.message

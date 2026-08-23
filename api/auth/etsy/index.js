@@ -4,7 +4,8 @@
  * Redirects user to Etsy OAuth authorization page with PKCE
  */
 
-// Generate random string for PKCE
+import { checkRateLimit } from '../../middleware/rate-limit.js';
+import { logSecurityEvent, logRequest } from '../../middleware/logger.js';
 function generateRandomString(length = 43) {
     const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
     let result = '';
@@ -29,6 +30,12 @@ export default async function handler(req, res) {
     // POST with X-Auth-Token header is more secure (token not in URL)
     // GET with query param is fallback (deprecated)
 
+    // Rate limit: 20 OAuth initiation attempts per IP per 15 minutes (prevent abuse)
+    if (!checkRateLimit(req, { maxRequests: 20, windowMs: 15 * 60 * 1000 })) {
+        logSecurityEvent(req, 'RATE_LIMITED', { endpoint: '/api/auth/etsy' });
+        return res.status(429).json({ error: 'Too many requests - rate limited' });
+    }
+
     const authSecret = process.env.AUTH_SECRET;
     let authTokenFromRequest = null;
 
@@ -39,6 +46,7 @@ export default async function handler(req, res) {
         // GET: Token in query param (fallback, less secure but convenient)
         authTokenFromRequest = req.query.auth_token;
     } else {
+        logRequest(req, res, { status: 405, endpoint: '/api/auth/etsy' });
         return res.status(405).json({ error: 'Method not allowed - use GET or POST' });
     }
 
@@ -49,12 +57,17 @@ export default async function handler(req, res) {
     }
 
     if (!authTokenFromRequest || authTokenFromRequest !== authSecret) {
-        console.warn('[OAuth] Invalid or missing auth token attempt');
+        logSecurityEvent(req, 'AUTH_FAILED', {
+            endpoint: '/api/auth/etsy',
+            reason: !authTokenFromRequest ? 'missing_token' : 'invalid_token'
+        });
         return res.status(401).json({
             error: 'Unauthorized',
             message: 'Invalid or missing auth token'
         });
     }
+
+    logSecurityEvent(req, 'AUTH_SUCCESS', { endpoint: '/api/auth/etsy' });
 
     const clientId = process.env.ETSY_API_KEY;
     // ALWAYS use production domain - must match Etsy app OAuth settings exactly

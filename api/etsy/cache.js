@@ -9,6 +9,8 @@
  */
 
 import { createClient } from 'redis';
+import { checkRateLimit } from '../middleware/rate-limit.js';
+import { logRequest, logError } from '../middleware/logger.js';
 
 const CACHE_KEY = 'mindcubby:shop:products';
 const CACHE_TTL = 24 * 60 * 60; // 24 hours in seconds (daily refresh)
@@ -63,15 +65,31 @@ export async function setCachedProducts(products) {
 }
 
 export default async function handler(req, res) {
+    const startTime = Date.now();
+
     if (req.method !== 'GET') {
+        logRequest(req, res, { status: 405, endpoint: '/api/etsy/cache' });
         return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Rate limit: 100 requests per IP per 15 minutes
+    if (!checkRateLimit(req, { maxRequests: 100, windowMs: 15 * 60 * 1000 })) {
+        const duration = Date.now() - startTime;
+        logRequest(req, res, { status: 429, endpoint: '/api/etsy/cache', duration });
+        return res.status(429).json({ error: 'Too many requests - rate limited' });
     }
 
     try {
         const cache = await getCachedProducts();
 
         if (!cache) {
-            console.log('[Cache] No cache found - user needs to authorize first');
+            const duration = Date.now() - startTime;
+            logRequest(req, res, {
+                status: 200,
+                endpoint: '/api/etsy/cache',
+                cached: false,
+                duration
+            });
             return res.status(200).json({
                 success: false,
                 cached: false,
@@ -84,6 +102,15 @@ export default async function handler(req, res) {
         // Parse cache if it's a string (from KV)
         const cacheData = typeof cache === 'string' ? JSON.parse(cache) : cache;
 
+        const duration = Date.now() - startTime;
+        logRequest(req, res, {
+            status: 200,
+            endpoint: '/api/etsy/cache',
+            cached: true,
+            productCount: cacheData.count,
+            duration
+        });
+
         return res.status(200).json({
             success: true,
             cached: true,
@@ -93,7 +120,8 @@ export default async function handler(req, res) {
         });
 
     } catch (err) {
-        console.error('[Cache] Unexpected error:', err);
+        const duration = Date.now() - startTime;
+        logError(req, 'Cache endpoint error', { error: err, endpoint: '/api/etsy/cache', duration });
         return res.status(500).json({
             error: 'Internal server error',
             message: err.message
