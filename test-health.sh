@@ -3,7 +3,7 @@
 # Local health check test
 # Usage: npm run test:health
 
-DOMAIN="${1:-https://mindcubby.vercel.app}"
+DOMAIN="${1:-https://shop.mindcubby.com}"
 
 echo "🏥 Testing MindCubby health check..."
 echo "Domain: $DOMAIN"

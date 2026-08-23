@@ -4,7 +4,7 @@
     "type": "module",
     "description": "MindCubby - 3D designs, creative tools, and portfolio",
     "scripts": {
-        "test:health": "bash test-health.sh https://mindcubby.vercel.app",
+        "test:health": "bash test-health.sh https://shop.mindcubby.com",
         "test:health:local": "bash test-health.sh",
         "refresh:cache": "bash refresh-cache.sh",
         "auth:oauth": "bash authorize-oauth.sh"
