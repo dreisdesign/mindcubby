@@ -25,6 +25,37 @@ async function generateCodeChallenge(verifier) {
 }
 
 export default async function handler(req, res) {
+    // Support both GET and POST for OAuth initiation
+    // POST with X-Auth-Token header is more secure (token not in URL)
+    // GET with query param is fallback (deprecated)
+    
+    const authSecret = process.env.AUTH_SECRET;
+    let authTokenFromRequest = null;
+
+    if (req.method === 'POST') {
+        // POST: Token in header (secure, hidden from URL/logs)
+        authTokenFromRequest = req.headers['x-auth-token'];
+    } else if (req.method === 'GET') {
+        // GET: Token in query param (fallback, less secure but convenient)
+        authTokenFromRequest = req.query.auth_token;
+    } else {
+        return res.status(405).json({ error: 'Method not allowed - use GET or POST' });
+    }
+
+    // Validate auth token
+    if (!authSecret) {
+        console.error('[OAuth] AUTH_SECRET not configured');
+        return res.status(500).json({ error: 'Server misconfiguration' });
+    }
+
+    if (!authTokenFromRequest || authTokenFromRequest !== authSecret) {
+        console.warn('[OAuth] Invalid or missing auth token attempt');
+        return res.status(401).json({ 
+            error: 'Unauthorized',
+            message: 'Invalid or missing auth token'
+        });
+    }
+
     const clientId = process.env.ETSY_API_KEY;
     // ALWAYS use production domain - must match Etsy app OAuth settings exactly
     const redirectUri = 'https://mindcubby.vercel.app/api/auth/etsy/callback';
@@ -33,9 +64,9 @@ export default async function handler(req, res) {
     const codeVerifier = generateRandomString(128);
 
     // Support return_to parameter to redirect after OAuth
-    const returnTo = req.query.return_to || '/shop.html';
+    const returnTo = req.query.return_to || req.body?.return_to || '/shop.html';
 
-    console.log('[OAuth] Initiating flow with redirect URI:', redirectUri);
+    console.log('[OAuth] Authenticated - initiating flow with redirect URI:', redirectUri);
 
     if (!clientId) {
         return res.status(500).json({ error: 'ETSY_API_KEY not configured' });

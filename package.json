@@ -6,7 +6,8 @@
     "scripts": {
         "test:health": "bash test-health.sh https://mindcubby.vercel.app",
         "test:health:local": "bash test-health.sh",
-        "refresh:cache": "bash refresh-cache.sh"
+        "refresh:cache": "bash refresh-cache.sh",
+        "auth:oauth": "bash authorize-oauth.sh"
     },
     "dependencies": {
         "@vercel/kv": "^0.2.4",
