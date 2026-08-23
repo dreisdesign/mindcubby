@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         const clientSecret = process.env.ETSY_API_SECRET;
         // ALWAYS use production domain - must match Etsy app OAuth settings exactly
         const redirectUri = 'https://mindcubby.vercel.app/api/auth/etsy/callback';
-        
+
         console.log('[Callback] OAuth redirect URI:', redirectUri);
 
         if (!clientId || !clientSecret) {
@@ -157,8 +157,8 @@ export default async function handler(req, res) {
             // Don't fail the OAuth flow if caching fails
         }
 
-        // Redirect back to connect page (token and user id in cookies)
-        return res.redirect('/etsy-connect.html');
+        // Redirect to shop page after successful auth and caching
+        return res.redirect('/shop.html');
 
     } catch (error) {
         console.error('OAuth callback error:', error);
