@@ -40,7 +40,7 @@ export default async function handler(req, res) {
         const xApiKey = `${apiKey}:${apiSecret}`;
 
         // Fetch listings from the shop (public endpoint - no Bearer token needed)
-        const listingsUrl = `https://api.etsy.com/v3/application/shops/${shopId}/listings?includes=images`;
+        const listingsUrl = `https://api.etsy.com/v3/public/shops/${shopId}/listings?includes=images`;
         console.log('[Public] Fetching listings from shop:', shopId);
 
         const response = await fetch(listingsUrl, {
