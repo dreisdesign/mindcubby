@@ -26,13 +26,13 @@ async function generateCodeChallenge(verifier) {
 
 export default async function handler(req, res) {
     const clientId = process.env.ETSY_API_KEY;
-    const protocol = 'https';
-    // Use production domain for OAuth redirect (Etsy only allows configured URIs)
-    const host = process.env.VERCEL_URL || 'mindcubby.vercel.app';
-    const redirectUri = `${protocol}://${host}/api/auth/etsy/callback`;
+    // ALWAYS use production domain - must match Etsy app OAuth settings exactly
+    const redirectUri = 'https://mindcubby.vercel.app/api/auth/etsy/callback';
     const scope = 'listings_r shops_r'; // Read access to listings and shops
     const state = generateRandomString(32);
     const codeVerifier = generateRandomString(128);
+    
+    console.log('[OAuth] Initiating flow with redirect URI:', redirectUri);
 
     if (!clientId) {
         return res.status(500).json({ error: 'ETSY_API_KEY not configured' });

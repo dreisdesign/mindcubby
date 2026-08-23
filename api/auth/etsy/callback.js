@@ -24,10 +24,10 @@ export default async function handler(req, res) {
     try {
         const clientId = process.env.ETSY_API_KEY;
         const clientSecret = process.env.ETSY_API_SECRET;
-        const protocol = 'https';
-        // Use production domain for OAuth redirect (must match Etsy app settings)
-        const host = process.env.VERCEL_URL || 'mindcubby.vercel.app';
-        const redirectUri = `${protocol}://${host}/api/auth/etsy/callback`;
+        // ALWAYS use production domain - must match Etsy app OAuth settings exactly
+        const redirectUri = 'https://mindcubby.vercel.app/api/auth/etsy/callback';
+        
+        console.log('[Callback] OAuth redirect URI:', redirectUri);
 
         if (!clientId || !clientSecret) {
             return res.status(500).json({ error: 'Missing Etsy credentials' });
@@ -124,7 +124,7 @@ export default async function handler(req, res) {
             if (meResponse.ok) {
                 const meData = await meResponse.json();
                 const shopId = meData.shop_id;
-                
+
                 if (shopId) {
                     // Get listings
                     const listingsResponse = await fetch(
