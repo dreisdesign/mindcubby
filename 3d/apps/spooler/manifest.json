@@ -1,0 +1,25 @@
+{
+  "name": "Spooler - NFC Filament Tagger",
+  "short_name": "Spooler",
+  "description": "Tag filament spools with NFC data for your Elegoo Canvas 3D printer",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#333333",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "spooler.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
