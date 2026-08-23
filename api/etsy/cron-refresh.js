@@ -77,7 +77,7 @@ export default async function handler(req, res) {
             // Run health check after successful refresh
             console.log('[Cron] Running health check...');
             try {
-                const healthResponse = await fetch('https://mindcubby.vercel.app/api/health-check');
+                const healthResponse = await fetch('https://shop.mindcubby.com/api/health-check');
                 const healthData = await healthResponse.json();
                 console.log('[Cron] Health check:', healthData.healthy ? '✅ Healthy' : '❌ Unhealthy');
             } catch (err) {
