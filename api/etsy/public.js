@@ -55,28 +55,19 @@ export default async function handler(req, res) {
         }
 
         const xApiKey = `${apiKey}:${apiSecret}`;
-        
-        // Try to get Bearer token from cookies if available
-        const accessToken = req.cookies.etsy_token;
-        const headers = {
-            'x-api-key': xApiKey,
-            'Content-Type': 'application/json',
-        };
-        
-        // Include Bearer token if available (for authenticated requests)
-        if (accessToken) {
-            headers['Authorization'] = `Bearer ${accessToken}`;
-        }
 
-        // Try application endpoint first (works with or without Bearer token)
-        let listingsUrl = `https://api.etsy.com/v3/application/shops/${numericShopId}/listings?includes=images`;
+        // Use public endpoint (requires only x-api-key, not Bearer token)
+        // This works without authentication, so fresh tokens aren't needed
+        const listingsUrl = `https://api.etsy.com/v3/public/shops/${numericShopId}/listings`;
         console.log('[Public] Fetching listings from shop ID:', numericShopId);
         console.log('[Public] URL:', listingsUrl);
-        console.log('[Public] Has Bearer token:', !!accessToken);
 
         const response = await fetch(listingsUrl, {
             method: 'GET',
-            headers: headers,
+            headers: {
+                'x-api-key': xApiKey,
+                'Content-Type': 'application/json',
+            },
         });
 
         if (!response.ok) {
