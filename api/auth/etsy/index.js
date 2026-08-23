@@ -26,8 +26,9 @@ async function generateCodeChallenge(verifier) {
 
 export default async function handler(req, res) {
     const clientId = process.env.ETSY_API_KEY;
-    const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'mindcubby.com';
+    const protocol = 'https';
+    // Use production domain for OAuth redirect (Etsy only allows configured URIs)
+    const host = process.env.VERCEL_URL || 'mindcubby.vercel.app';
     const redirectUri = `${protocol}://${host}/api/auth/etsy/callback`;
     const scope = 'listings_r shops_r'; // Read access to listings and shops
     const state = generateRandomString(32);
