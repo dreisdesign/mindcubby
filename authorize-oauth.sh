@@ -4,7 +4,7 @@
 # Usage: ./authorize-oauth.sh your_auth_secret
 
 AUTH_SECRET="${1:?Error: Auth secret required as first argument}"
-DOMAIN="https://mindcubby.vercel.app"
+DOMAIN="https://shop.mindcubby.com"
 
 echo "🔐 Initiating secure OAuth flow..."
 echo "Auth method: POST with X-Auth-Token header (token hidden from URL)"

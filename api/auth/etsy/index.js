@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     // Support both GET and POST for OAuth initiation
     // POST with X-Auth-Token header is more secure (token not in URL)
     // GET with query param is fallback (deprecated)
-    
+
     const authSecret = process.env.AUTH_SECRET;
     let authTokenFromRequest = null;
 
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
 
     if (!authTokenFromRequest || authTokenFromRequest !== authSecret) {
         console.warn('[OAuth] Invalid or missing auth token attempt');
-        return res.status(401).json({ 
+        return res.status(401).json({
             error: 'Unauthorized',
             message: 'Invalid or missing auth token'
         });
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
 
     const clientId = process.env.ETSY_API_KEY;
     // ALWAYS use production domain - must match Etsy app OAuth settings exactly
-    const redirectUri = 'https://mindcubby.vercel.app/api/auth/etsy/callback';
+    const redirectUri = 'https://shop.mindcubby.com/api/auth/etsy/callback';
     const scope = 'listings_r shops_r'; // Read access to listings and shops
     const state = generateRandomString(32);
     const codeVerifier = generateRandomString(128);
