@@ -3,10 +3,8 @@
  * GET /api/etsy/public
  * Returns a list of products from a public Etsy shop
  * 
- * NO AUTHENTICATION REQUIRED
- * Attempts to use:
- * 1. Cookie-based numeric shop_id from OAuth (if available)
- * 2. ETSY_SHOP_ID environment variable (numeric ID, not slug)
+ * Uses server-side API credentials (no user auth needed)
+ * Fetches using x-api-key only
  */
 
 export default async function handler(req, res) {
@@ -16,38 +14,33 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Try to get numeric shop_id from cookies first (set during OAuth)
-        let shopId = req.cookies.etsy_shop_id;
-        
-        // Fall back to environment variable
-        if (!shopId) {
-            shopId = process.env.ETSY_SHOP_ID;
-        }
+        // Get numeric shop_id from cookies or environment
+        let shopId = req.cookies.etsy_shop_id || process.env.ETSY_SHOP_ID;
 
         if (!shopId) {
             console.error('[Public] Missing shop ID');
             return res.status(500).json({
                 error: 'Server configuration error',
-                message: 'Shop ID not available. Set ETSY_SHOP_ID (numeric ID) in environment variables or authorize via /api/auth/etsy'
+                message: 'Shop ID not available. Authorize via /api/auth/etsy or set ETSY_SHOP_ID env var'
             });
         }
         
-        // Ensure shopId is numeric (remove any non-digits)
+        // Extract numeric shop ID
         const numericShopId = shopId.toString().replace(/\D/g, '');
         if (!numericShopId) {
-            console.error('[Public] Invalid shop ID - must be numeric:', shopId);
+            console.error('[Public] Invalid shop ID:', shopId);
             return res.status(400).json({
                 error: 'Invalid shop ID',
-                message: 'Shop ID must be numeric. You provided: ' + shopId
+                message: 'Shop ID must contain numbers. Got: ' + shopId
             });
         }
 
-        // REQUIRED: x-api-key header for ALL Etsy API v3 requests
+        // Get API credentials
         const apiKey = process.env.ETSY_API_KEY;
         const apiSecret = process.env.ETSY_API_SECRET;
 
         if (!apiKey || !apiSecret) {
-            console.error('[Public] Missing ETSY_API_KEY or ETSY_API_SECRET');
+            console.error('[Public] Missing API credentials');
             return res.status(500).json({
                 error: 'Server configuration error',
                 message: 'Etsy API credentials not configured'
@@ -56,11 +49,10 @@ export default async function handler(req, res) {
 
         const xApiKey = `${apiKey}:${apiSecret}`;
 
-        // Use public endpoint (requires only x-api-key, not Bearer token)
-        // This works without authentication, so fresh tokens aren't needed
-        const listingsUrl = `https://api.etsy.com/v3/public/shops/${numericShopId}/listings`;
-        console.log('[Public] Fetching listings from shop ID:', numericShopId);
-        console.log('[Public] URL:', listingsUrl);
+        // Fetch listings using application endpoint with x-api-key only
+        // No Bearer token needed - just API key
+        const listingsUrl = `https://api.etsy.com/v3/application/shops/${numericShopId}/listings?includes=images`;
+        console.log('[Public] Fetching from:', listingsUrl);
 
         const response = await fetch(listingsUrl, {
             method: 'GET',
@@ -72,19 +64,16 @@ export default async function handler(req, res) {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('[Public] ❌ Listings fetch failed:', response.status, errorText);
-            console.error('[Public] Using shop ID:', numericShopId);
+            console.error('[Public] ❌ Failed:', response.status, errorText);
             return res.status(response.status).json({
                 error: 'Etsy API Error',
                 status: response.status,
-                message: errorText,
-                endpoint: listingsUrl,
-                shopId: numericShopId,
+                details: errorText,
             });
         }
 
         const data = await response.json();
-        console.log('[Public] ✅ Got', data.count, 'products from shop', numericShopId);
+        console.log('[Public] ✅ Got', data.count, 'products');
 
         // Transform response to match shop.html expectations
         return res.status(200).json({
