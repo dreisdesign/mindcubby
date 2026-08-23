@@ -134,16 +134,22 @@
             const gridEl = document.getElementById('products-grid');
 
             try {
-                const response = await fetch('/api/etsy/cached');
+                const response = await fetch('/api/etsy/cache');
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    statusEl.textContent = `Error: ${error.message || error.error}`;
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    statusEl.textContent = `${data.message || data.error}`;
                     statusEl.className = 'status error';
+                    gridEl.innerHTML = `
+                        <div class="empty">
+                            <p>${data.message || 'Products not available'}</p>
+                            <p><a href="/etsy-connect.html" style="color: #000; text-decoration: underline;">Authorize with Etsy</a></p>
+                        </div>
+                    `;
                     return;
                 }
 
-                const data = await response.json();
                 const products = data.products || [];
 
                 if (products.length === 0) {

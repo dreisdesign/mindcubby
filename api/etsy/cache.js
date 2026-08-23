@@ -55,10 +55,13 @@ export default async function handler(req, res) {
         const cache = await getCachedProducts();
         
         if (!cache) {
-            return res.status(503).json({
+            console.log('[Cache] No cache found - user needs to authorize first');
+            return res.status(200).json({
+                success: false,
+                cached: false,
                 error: 'Cache not available',
-                message: 'Products cache not found. Authorize at /api/auth/etsy first.',
-                authUrl: '/api/auth/etsy',
+                message: 'Products cache is empty. Please authorize at /api/auth/etsy first.',
+                products: []
             });
         }
 
