@@ -173,7 +173,7 @@
                         ? `${Math.floor(ageMinutes / 60)}h ago`
                         : 'over 1 day ago';
                     
-                    statusEl.innerHTML = `Loaded ${products.length} products · Cached: ${ageText} · <a href="/api/auth/etsy" style="color: #000; text-decoration: underline; font-size: 11px;">Refresh Cache</a>`;
+                    statusEl.textContent += ` (cached ${ageText})`;
                 }
 
                 gridEl.innerHTML = products.map(product => {

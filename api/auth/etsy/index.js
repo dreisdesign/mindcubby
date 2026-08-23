@@ -32,6 +32,9 @@ export default async function handler(req, res) {
     const state = generateRandomString(32);
     const codeVerifier = generateRandomString(128);
 
+    // Support return_to parameter to redirect after OAuth
+    const returnTo = req.query.return_to || '/shop.html';
+
     console.log('[OAuth] Initiating flow with redirect URI:', redirectUri);
 
     if (!clientId) {
@@ -46,10 +49,11 @@ export default async function handler(req, res) {
     const hashString = String.fromCharCode.apply(null, hashArray);
     const codeChallenge = btoa(hashString).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 
-    // Store code_verifier and state in HttpOnly cookies (will be retrieved/verified in callback)
+    // Store code_verifier, state, and return_to in HttpOnly cookies
     res.setHeader('Set-Cookie', [
         `etsy_code_verifier=${codeVerifier}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
-        `etsy_oauth_state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`
+        `etsy_oauth_state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+        `etsy_return_to=${encodeURIComponent(returnTo)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`
     ]);
 
     const authUrl = new URL('https://www.etsy.com/oauth/connect');

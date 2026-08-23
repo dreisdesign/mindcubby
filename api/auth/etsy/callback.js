@@ -33,12 +33,14 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Missing Etsy credentials' });
         }
 
-        // Get code_verifier and state from cookie for PKCE / CSRF verification
+        // Get code_verifier, state, and return_to from cookie for PKCE / CSRF verification
         const cookies = req.headers.cookie || '';
         const codeVerifierMatch = cookies.match(/etsy_code_verifier=([^;]+)/);
         const codeVerifier = codeVerifierMatch ? codeVerifierMatch[1] : null;
         const stateMatch = cookies.match(/etsy_oauth_state=([^;]+)/);
         const stateCookie = stateMatch ? stateMatch[1] : null;
+        const returnToMatch = cookies.match(/etsy_return_to=([^;]+)/);
+        const returnTo = returnToMatch ? decodeURIComponent(returnToMatch[1]) : '/shop.html';
 
         if (!codeVerifier) {
             return res.status(400).json({ error: 'Missing code verifier - session may have expired' });
@@ -91,10 +93,11 @@ export default async function handler(req, res) {
 
         console.log('Extracted user_id from token prefix:', userIdFromToken);
 
-        // Prepare cookies: clear code_verifier and state, set token and user id
+        // Prepare cookies: clear code_verifier, state, and return_to, set token and user id
         const setCookies = [
             `etsy_code_verifier=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly;`,
             `etsy_oauth_state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly;`,
+            `etsy_return_to=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly;`,
             `etsy_token=${accessToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`
         ];
 
@@ -157,8 +160,8 @@ export default async function handler(req, res) {
             // Don't fail the OAuth flow if caching fails
         }
 
-        // Redirect to shop page after successful auth and caching
-        return res.redirect('/shop.html');
+        // Redirect to appropriate page (shop or admin) after successful auth and caching
+        return res.redirect(returnTo);
 
     } catch (error) {
         console.error('OAuth callback error:', error);
