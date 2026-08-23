@@ -3,8 +3,14 @@
     "version": "1.0.0",
     "type": "module",
     "description": "MindCubby - 3D designs, creative tools, and portfolio",
+    "scripts": {
+        "test:health": "bash test-health.sh https://mindcubby.vercel.app",
+        "test:health:local": "bash test-health.sh",
+        "refresh:cache": "bash refresh-cache.sh"
+    },
     "dependencies": {
         "@vercel/kv": "^0.2.4",
-        "redis": "^6.2.1"
+        "redis": "^6.2.1",
+        "resend": "^6.22.0"
     }
 }

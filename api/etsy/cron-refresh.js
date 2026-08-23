@@ -74,6 +74,16 @@ export default async function handler(req, res) {
             await setCachedProducts(listingsData.results);
             console.log('[Cron] ✅ Successfully cached', listingsData.results.length, 'products');
 
+            // Run health check after successful refresh
+            console.log('[Cron] Running health check...');
+            try {
+                const healthResponse = await fetch('https://mindcubby.vercel.app/api/health-check');
+                const healthData = await healthResponse.json();
+                console.log('[Cron] Health check:', healthData.healthy ? '✅ Healthy' : '❌ Unhealthy');
+            } catch (err) {
+                console.error('[Cron] Health check failed:', err.message);
+            }
+
             return res.status(200).json({
                 success: true,
                 message: 'Cache refreshed successfully',
