@@ -24,7 +24,7 @@ export default async function handler(req, res) {
                 message: 'Shop ID not available. Authorize via /api/auth/etsy or set ETSY_SHOP_ID env var'
             });
         }
-        
+
         // Extract numeric shop ID
         const numericShopId = shopId.toString().replace(/\D/g, '');
         if (!numericShopId) {

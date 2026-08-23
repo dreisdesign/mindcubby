@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     const scope = 'listings_r shops_r'; // Read access to listings and shops
     const state = generateRandomString(32);
     const codeVerifier = generateRandomString(128);
-    
+
     console.log('[OAuth] Initiating flow with redirect URI:', redirectUri);
 
     if (!clientId) {
