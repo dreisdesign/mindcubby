@@ -231,10 +231,16 @@ font-size: clamp(12px, 1.8vw, 14px);
 
 ### NFC Encoding
 - **Material codes**: PLA=`00807665`, PETG=`80698471`, TPU=`00848085`
-- **Variant codes**: Material-specific subtype mappings
-- **Color encoding**: RGB values converted to NFC NDEF format
-- **Checksum**: CRC16-CCITT over pages 04-17
+- **Variant codes** (Page 13): Material-specific subtype mappings, verified against Elegoo/anyspool.de reference tags
+  - **PLA variants**: `00` prefix (e.g., PLA=`00000000`, RAPID PLA+=`00080000`)
+  - **PETG variants**: `00` or `01` prefix depending on type (e.g., PETG=`00000000`, RAPID PETG=`01050000`)
+  - **TPU variants**: `03` prefix for standard (e.g., TPU 95A=`03000000`)
+  - **Note**: Variant codes are firmware-specific; incorrect codes cause printer to default to base material type
+- **Color encoding** (Page 14): RGB hex value (6 digits) + padding
 - **Output format**: Comma-space separated page writes (e.g., `A2:04:01, A2:05:34, ...`)
+- **Sources**: 
+  - Elegoo Canvas NFC tag specification
+  - anyspool.de reference implementations (https://anyspool.de)
 
 ### Responsive Breakpoints
 **None.** All sizing uses `clamp()`:
