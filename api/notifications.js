@@ -16,7 +16,7 @@ export async function sendAlert({ subject, errors, checks }) {
         }
 
         const errorList = errors.map(e => `<li>${e}</li>`).join('');
-        
+
         const htmlBody = `
             <html>
                 <body style="font-family: Arial, sans-serif; color: #333;">
@@ -53,7 +53,7 @@ export async function sendAlert({ subject, errors, checks }) {
         `;
 
         console.log('[Notifications] Sending alert to', ALERT_EMAIL);
-        
+
         const response = await resend.emails.send({
             from: 'MindCubby Alerts <onboarding@resend.dev>',
             to: ALERT_EMAIL,

@@ -8,12 +8,12 @@ import { createClient } from 'redis';
 export default async function handler(req, res) {
     try {
         const CACHE_KEY = 'mindcubby:shop:products';
-        
+
         const redis = createClient({
             url: process.env.REDIS_URL
         });
         await redis.connect();
-        
+
         const cacheJson = await redis.get(CACHE_KEY);
         await redis.quit();
 

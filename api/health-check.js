@@ -63,11 +63,11 @@ export default async function handler(req, res) {
         }
 
         // Determine overall status
-        const isHealthy = checks.cache_exists && 
-                         checks.cache_not_expired && 
-                         checks.shop_id_stored && 
-                         checks.product_count > 0 &&
-                         checks.errors.length === 0;
+        const isHealthy = checks.cache_exists &&
+            checks.cache_not_expired &&
+            checks.shop_id_stored &&
+            checks.product_count > 0 &&
+            checks.errors.length === 0;
 
         checks.healthy = isHealthy;
 
