@@ -2,7 +2,10 @@
  * Etsy OAuth - Callback Handler
  * GET /api/auth/etsy/callback
  * Handles OAuth code from Etsy, exchanges for access token with PKCE
+ * Also fetches and caches shop products for public browsing
  */
+
+import { setCachedProducts } from '../../etsy/cache.js';
 
 export default async function handler(req, res) {
     const { code, state, error, error_description } = req.query;
@@ -99,6 +102,59 @@ export default async function handler(req, res) {
             setCookies.push(`etsy_user_id=${userIdFromToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`);
         }
         res.setHeader('Set-Cookie', setCookies);
+
+        // Fetch and cache shop products for public access
+        try {
+            console.log('[Callback] Fetching shop products for cache...');
+            const apiKey = process.env.ETSY_API_KEY;
+            const apiSecret = process.env.ETSY_API_SECRET;
+            const xApiKey = `${apiKey}:${apiSecret}`;
+
+            // Get shop_id
+            const meResponse = await fetch('https://api.etsy.com/v3/application/users/me', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'x-api-key': xApiKey,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (meResponse.ok) {
+                const meData = await meResponse.json();
+                const shopId = meData.shop_id;
+                
+                if (shopId) {
+                    // Get listings
+                    const listingsResponse = await fetch(
+                        `https://api.etsy.com/v3/application/shops/${shopId}/listings?includes=images`,
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${accessToken}`,
+                                'x-api-key': xApiKey,
+                                'Content-Type': 'application/json',
+                            }
+                        }
+                    );
+
+                    if (listingsResponse.ok) {
+                        const listingsData = await listingsResponse.json();
+                        if (listingsData.results && listingsData.results.length > 0) {
+                            await setCachedProducts(listingsData.results);
+                            console.log('[Callback] ✅ Cached', listingsData.results.length, 'products');
+                        }
+                    } else {
+                        console.error('[Callback] Failed to fetch listings for cache');
+                    }
+                }
+            } else {
+                console.error('[Callback] Failed to get shop info for cache');
+            }
+        } catch (cacheErr) {
+            console.error('[Callback] Cache update failed (non-fatal):', cacheErr.message);
+            // Don't fail the OAuth flow if caching fails
+        }
 
         // Redirect back to connect page (token and user id in cookies)
         return res.redirect('/etsy-connect.html');
