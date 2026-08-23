@@ -5,42 +5,59 @@
  * Returns cached products from the shop. No authentication required.
  * Cache is updated whenever a user authorizes (see callback.js)
  * 
- * Uses Vercel KV for persistent storage across deployments
+ * Uses Redis (Upstash via REDIS_URL) for persistent storage across deployments
  */
 
-import { kv } from '@vercel/kv';
+import { createClient } from 'redis';
 
 const CACHE_KEY = 'mindcubby:shop:products';
 const CACHE_TTL = 6 * 60 * 60; // 6 hours in seconds
 
+// Create Redis client - automatically reads REDIS_URL from environment
+let redis = null;
+
+async function getRedisClient() {
+    if (!redis) {
+        redis = createClient({
+            url: process.env.REDIS_URL
+        });
+        redis.on('error', (err) => console.error('[Cache] Redis error:', err));
+        await redis.connect();
+    }
+    return redis;
+}
+
 export async function getCachedProducts() {
     try {
-        const cache = await kv.get(CACHE_KEY);
+        const client = await getRedisClient();
+        const cacheJson = await client.get(CACHE_KEY);
 
-        if (cache) {
-            console.log('[Cache] ✅ Using cached products from KV:', cache.count, 'items');
+        if (cacheJson) {
+            const cache = JSON.parse(cacheJson);
+            console.log('[Cache] ✅ Using cached products from Redis:', cache.count, 'items');
             return cache;
         }
     } catch (err) {
-        console.error('[Cache] Error reading from KV:', err.message);
-        // Continue gracefully if KV is unavailable
+        console.error('[Cache] Error reading from Redis:', err.message);
+        // Continue gracefully if Redis is unavailable
     }
     return null;
 }
 
 export async function setCachedProducts(products) {
     try {
+        const client = await getRedisClient();
         const cache = {
             timestamp: Date.now(),
             count: products.length,
             products: products
         };
 
-        // Store in Vercel KV with TTL
-        await kv.setex(CACHE_KEY, CACHE_TTL, JSON.stringify(cache));
-        console.log('[Cache] ✅ Cached', products.length, 'products in KV (TTL:', CACHE_TTL, 's)');
+        // Store in Redis with TTL
+        await client.setEx(CACHE_KEY, CACHE_TTL, JSON.stringify(cache));
+        console.log('[Cache] ✅ Cached', products.length, 'products in Redis (TTL:', CACHE_TTL, 's)');
     } catch (err) {
-        console.error('[Cache] Error writing to KV:', err.message);
+        console.error('[Cache] Error writing to Redis:', err.message);
         // Don't fail the OAuth flow if caching fails
     }
 }

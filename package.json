@@ -4,6 +4,7 @@
     "type": "module",
     "description": "MindCubby - 3D designs, creative tools, and portfolio",
     "dependencies": {
-        "@vercel/kv": "^0.2.4"
+        "@vercel/kv": "^0.2.4",
+        "redis": "^6.2.1"
     }
 }

@@ -3,22 +3,29 @@
  * GET /api/debug/cache-status
  */
 
-import { kv } from '@vercel/kv';
+import { createClient } from 'redis';
 
 export default async function handler(req, res) {
     try {
         const CACHE_KEY = 'mindcubby:shop:products';
-        const cache = await kv.get(CACHE_KEY);
+        
+        const redis = createClient({
+            url: process.env.REDIS_URL
+        });
+        await redis.connect();
+        
+        const cacheJson = await redis.get(CACHE_KEY);
+        await redis.quit();
 
-        if (!cache) {
+        if (!cacheJson) {
             return res.status(200).json({
                 status: 'no_cache',
-                message: 'No products cached in KV',
+                message: 'No products cached in Redis',
                 cache_key: CACHE_KEY
             });
         }
 
-        const cacheData = typeof cache === 'string' ? JSON.parse(cache) : cache;
+        const cacheData = JSON.parse(cacheJson);
 
         return res.status(200).json({
             status: 'cached',
