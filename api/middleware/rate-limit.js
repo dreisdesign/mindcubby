@@ -66,14 +66,14 @@ export function checkRateLimit(req, options = {}) {
 export function getRateLimitStats(req) {
     const ip = getClientIp(req);
     const entry = rateLimitStore.get(ip);
-    
+
     if (!entry) {
         return { ip, requests: 0, resetIn: 'N/A' };
     }
 
     const now = Date.now();
     const resetIn = entry.resetTime - now;
-    
+
     return {
         ip,
         requests: entry.count,
@@ -88,13 +88,13 @@ export function getRateLimitStats(req) {
 export function cleanupRateLimitStore() {
     const now = Date.now();
     let removed = 0;
-    
+
     for (const [ip, entry] of rateLimitStore.entries()) {
         if (now > entry.resetTime) {
             rateLimitStore.delete(ip);
             removed++;
         }
     }
-    
+
     return { removed, remaining: rateLimitStore.size };
 }
