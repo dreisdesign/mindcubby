@@ -2,5 +2,8 @@
     "name": "mindcubby",
     "version": "1.0.0",
     "type": "module",
-    "description": "MindCubby - 3D designs, creative tools, and portfolio"
+    "description": "MindCubby - 3D designs, creative tools, and portfolio",
+    "dependencies": {
+        "@vercel/kv": "^0.2.4"
+    }
 }
