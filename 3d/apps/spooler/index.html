@@ -1009,13 +1009,6 @@
                     firstLogEntry.classList.add('copied');
                 }
 
-                // Open NFC Tools app with deeplink
-                setTimeout(() => {
-                    const hexData = hex.replace(/,\s*/g, ''); // Remove commas and spaces
-                    const nfcToolsDeeplink = `nfctools://write?hex=${encodeURIComponent(hexData)}`;
-                    window.location.href = nfcToolsDeeplink;
-                }, 100);
-
                 setTimeout(() => {
                     copyHexBtn.textContent = 'Copy Hex to Clipboard';
                     copyHexBtn.style.background = '#007bff';
