@@ -1,0 +1,19 @@
+{
+  "name": "Tracker",
+  "short_name": "Tracker",
+  "description": "A simple app that helps you count and track activities with timestamps. Features dark/light themes and smooth animations.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#202F48",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

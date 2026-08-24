@@ -1,0 +1,19 @@
+{
+  "name": "Rotater 3D Studio",
+  "short_name": "Rotater",
+  "description": "Create stunning 3D product animations and exports",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2e2b74",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
