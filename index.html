@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,13 +8,13 @@
         :root {
             --bg: #fff;
             --text: #000;
-            --border: #ccc;
+            --border: #000;
         }
 
         [data-theme="dark"] {
             --bg: #1a1a1a;
             --text: #fff;
-            --border: #333;
+            --border: #666;
         }
 
         * {
@@ -24,16 +23,22 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+        }
+
         body {
             font-family: system-ui, -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text);
-            padding: 3rem 2rem;
+            line-height: 1.6;
+            font-size: 14px;
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 3rem 2rem;
         }
 
         header {
@@ -41,14 +46,14 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 4rem;
+            padding-bottom: 1rem;
             border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
         }
 
         h1 {
             font-size: 2rem;
             font-weight: 400;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.02em;
         }
 
         .theme-toggle {
@@ -58,7 +63,6 @@
             padding: 0.5rem 1rem;
             cursor: pointer;
             font-size: 0.9rem;
-            font-family: inherit;
         }
 
         .theme-toggle:hover {
@@ -66,29 +70,50 @@
             color: var(--bg);
         }
 
+        section {
+            margin-bottom: 5rem;
+        }
+
+        section > h2 {
+            font-size: 1rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
         }
 
         .card {
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            min-height: 180px;
+            background: var(--bg);
+            padding: 2rem;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            gap: 1rem;
+            min-height: 300px;
+            text-decoration: none;
+            color: inherit;
+            border: none;
+        }
+
+        .card:hover {
+            background: var(--text);
+            color: var(--bg);
         }
 
         .card-icon {
             width: 40px;
             height: 40px;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .card-icon img {
@@ -97,44 +122,91 @@
             object-fit: contain;
         }
 
-        .card:hover {
+        .card h3 {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .card p {
+            font-size: 0.9rem;
+            flex-grow: 1;
+        }
+
+        .card-link {
+            font-size: 0.9rem;
+            text-decoration: underline;
+            margin-top: auto;
+        }
+
+        .hero {
+            border: 1px solid var(--border);
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+
+        .hero h2 {
+            font-size: 2.5rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            letter-spacing: 0.02em;
+        }
+
+        .hero p {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            opacity: 0.8;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
             background: var(--text);
             color: var(--bg);
         }
 
-        .card h2 {
-            font-size: 1.25rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .card p {
-            font-size: 0.95rem;
-            line-height: 1.5;
-            opacity: 0.85;
-        }
-
-        .card-link {
-            margin-top: auto;
+        footer {
+            border-top: 1px solid var(--border);
+            padding-top: 2rem;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
             font-size: 0.9rem;
+        }
+
+        footer a {
+            color: inherit;
             text-decoration: underline;
         }
 
-        section {
-            margin-bottom: 3rem;
+        footer a:hover {
+            text-decoration: none;
         }
 
-        section h3 {
-            font-size: 1rem;
-            font-weight: 400;
-            letter-spacing: 0.05em;
-            margin-bottom: 1.5rem;
-            text-transform: uppercase;
-            opacity: 0.7;
+        .loading {
+            text-align: center;
+            opacity: 0.6;
+            padding: 2rem;
         }
 
         @media (max-width: 768px) {
-            body {
+            .container {
                 padding: 1.5rem 1rem;
             }
 
@@ -142,101 +214,137 @@
                 flex-direction: column;
                 gap: 1rem;
                 text-align: center;
-                margin-bottom: 2rem;
             }
 
             h1 {
                 font-size: 1.75rem;
             }
-
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <header>
             <h1>MindCubby</h1>
-            <button id="themeToggle" class="theme-toggle">Dark</button>
+            <button class="theme-toggle" id="theme-toggle">Dark</button>
         </header>
 
-        <section>
-            <h3>Tools</h3>
+        <!-- HERO SECTION -->
+        <div class="hero">
+            <h2>MindCubby</h2>
+            <p>Things I make because they bring me joy</p>
+            <div class="hero-cta">
+                <a href="https://www.etsy.com/shop/MindCubby" class="btn" target="_blank">Buy One</a>
+                <a href="#make-your-own" class="btn">Make Your Own</a>
+            </div>
+        </div>
+
+        <!-- FEATURED PHYSICAL PRODUCTS -->
+        <section id="physical-products">
+            <h2>Physical Products</h2>
+            <div class="grid" id="products-grid">
+                <div class="loading">Loading products...</div>
+            </div>
+        </section>
+
+        <!-- 3D CREATOR TOOLS -->
+        <section id="make-your-own">
+            <h2>3D Creator Tools</h2>
             <div class="grid">
                 <a href="3d/apps/rotater/" class="card">
-                    <div>
-                        <img src="3d/apps/rotater/rotater.svg" alt="Rotater" class="card-icon">
-                        <h2>Rotater</h2>
-                        <p>Export rotating 3D models as GIF, MP4, or PNG in your browser.</p>
+                    <div class="card-icon">
+                        <img src="3d/apps/rotater/rotater.svg" alt="Rotater">
                     </div>
+                    <h3>Rotater</h3>
+                    <p>Export rotating 3D models as GIF, MP4, or PNG in your browser</p>
                     <div class="card-link">Open →</div>
                 </a>
-
                 <a href="3d/apps/gcoder/" class="card">
-                    <div>
-                        <img src="3d/apps/gcoder/gcoder.svg" alt="G-coder" class="card-icon">
-                        <h2>G-coder</h2>
-                        <p>Generate specifications from G-code files.</p>
+                    <div class="card-icon">
+                        <img src="3d/apps/gcoder/gcoder.svg" alt="G-coder">
                     </div>
+                    <h3>G-coder</h3>
+                    <p>Generate specifications from G-code files</p>
                     <div class="card-link">Open →</div>
                 </a>
-
                 <a href="3d/apps/spooler/" class="card">
-                    <div>
-                        <img src="3d/apps/spooler/spooler.svg" alt="Spooler" class="card-icon">
-                        <h2>Spooler</h2>
-                        <p>Track 3D printer filament inventory with NFC tags.</p>
+                    <div class="card-icon">
+                        <img src="3d/apps/spooler/spooler.svg" alt="Spooler">
                     </div>
+                    <h3>Spooler</h3>
+                    <p>Track 3D printer filament inventory with NFC tags</p>
                     <div class="card-link">Open →</div>
                 </a>
             </div>
         </section>
 
-        <section>
-            <h3>Shop</h3>
-            <div class="grid">
-                <a href="/etsy/" class="card">
-                    <div>
-                        <img src="3d/apps/mindcubby-logo.png" alt="Shop" class="card-icon">
-                        <h2>MindCubby Shop</h2>
-                        <p>Browse 17+ 3D printable designs.</p>
-                    </div>
-                    <div class="card-link">Browse →</div>
-                </a>
+        <!-- FREE DESIGNS FROM PRINTABLES -->
+        <section id="free-designs">
+            <h2>Free Designs</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
+                <iframe src="https://www.printables.com/embed/1813667" scrolling="no" frameborder="0" style="height: 400px; border: 1px solid var(--border);"></iframe>
+                <iframe src="https://www.printables.com/embed/1752263" scrolling="no" frameborder="0" style="height: 400px; border: 1px solid var(--border);"></iframe>
+                <iframe src="https://www.printables.com/embed/1737909" scrolling="no" frameborder="0" style="height: 400px; border: 1px solid var(--border);"></iframe>
             </div>
         </section>
 
-        <section>
-            <h3>Collections</h3>
+        <!-- LABS APPS -->
+        <section id="labs">
+            <h2>Experimental Apps</h2>
             <div class="grid">
                 <a href="labs/postsforpause/" class="card">
-                    <div>
-                        <img src="labs/postsforpause/favicon.svg" alt="Posts for Pause" class="card-icon">
-                        <h2>Posts for Pause</h2>
-                        <p>Minimalist designs encouraging mindfulness and reflection.</p>
+                    <div class="card-icon">
+                        <img src="labs/postsforpause/favicon.svg" alt="Posts for Pause">
                     </div>
-                    <div class="card-link">View →</div>
+                    <h3>Posts for Pause</h3>
+                    <p>Minimalist designs encouraging mindfulness and reflection</p>
+                    <div class="card-link">Open →</div>
                 </a>
-
-                <a href="labs/" class="card">
-                    <div>
-                        <img src="labs/favicon.svg" alt="Labs" class="card-icon">
-                        <h2>Labs</h2>
-                        <p>Experimental apps: Timer, Notes, Tracker, Pad, Todo.</p>
-                    </div>
-                    <div class="card-link">Explore →</div>
+                <a href="labs/timer/" class="card">
+                    <div class="card-icon">⏱️</div>
+                    <h3>Timer</h3>
+                    <p>Simple, elegant interval timer for focused work</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="labs/note/" class="card">
+                    <div class="card-icon">📝</div>
+                    <h3>Note</h3>
+                    <p>Quick notes that sync to your browser</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="labs/pad/" class="card">
+                    <div class="card-icon">📄</div>
+                    <h3>Pad</h3>
+                    <p>Minimalist text editor for distraction-free writing</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="labs/tracker/" class="card">
+                    <div class="card-icon">📊</div>
+                    <h3>Tracker</h3>
+                    <p>Track habits and patterns over time</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="labs/today-list/" class="card">
+                    <div class="card-icon">✓</div>
+                    <h3>Today List</h3>
+                    <p>Daily task list that resets each morning</p>
+                    <div class="card-link">Open →</div>
                 </a>
             </div>
         </section>
+
+        <!-- FOOTER -->
+        <footer>
+            <div><a href="/etsy/">Shop</a></div>
+            <div><a href="https://www.youtube.com/mindcubby" target="_blank">YouTube</a></div>
+            <div><a href="https://www.tiktok.com/@mindcubby" target="_blank">TikTok</a></div>
+        </footer>
     </div>
 
     <script>
-        const themeToggle = document.getElementById('themeToggle');
-        const root = document.documentElement;
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
 
         const saved = localStorage.getItem('mindcubby-theme');
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -244,10 +352,10 @@
 
         function applyTheme(t) {
             if (t === 'dark') {
-                root.setAttribute('data-theme', 'dark');
+                htmlElement.setAttribute('data-theme', 'dark');
                 themeToggle.textContent = 'Light';
             } else {
-                root.removeAttribute('data-theme');
+                htmlElement.removeAttribute('data-theme');
                 themeToggle.textContent = 'Dark';
             }
             localStorage.setItem('mindcubby-theme', t);
@@ -259,7 +367,38 @@
             theme = theme === 'dark' ? 'light' : 'dark';
             applyTheme(theme);
         });
+
+        // Load products from Etsy cache
+        async function loadProducts() {
+            const gridEl = document.getElementById('products-grid');
+            try {
+                const response = await fetch('/api/etsy/cache');
+                const data = await response.json();
+
+                if (data.success && data.products && data.products.length > 0) {
+                    const products = data.products.slice(0, 3);
+                    gridEl.innerHTML = products.map(product => `
+                        <a href="https://www.etsy.com/listing/${product.listing_id}" class="card" target="_blank">
+                            <div style="height: 150px; overflow: hidden; margin-bottom: 1rem; border: 1px solid var(--border);">
+                                ${product.images && product.images[0] ? 
+                                    `<img src="${product.images[0].url_170x135}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                                    '<div style="width: 100%; height: 100%; background: #f0f0f0;"></div>'}
+                            </div>
+                            <h3>${product.title}</h3>
+                            <p style="font-weight: 500; margin-top: auto;">$${(product.price / 100).toFixed(2)}</p>
+                            <div class="card-link">Buy on Etsy →</div>
+                        </a>
+                    `).join('');
+                } else {
+                    gridEl.innerHTML = '<div class="loading">Products unavailable</div>';
+                }
+            } catch (err) {
+                console.error('Error loading products:', err);
+                gridEl.innerHTML = '<div class="loading">Error loading products</div>';
+            }
+        }
+
+        loadProducts();
     </script>
 </body>
-
 </html>
