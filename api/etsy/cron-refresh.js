@@ -1,15 +1,12 @@
 /**
  * Etsy API - Cron Cache Refresh
  * Runs automatically via Vercel Cron at 00:00 UTC daily
- * Refreshes product cache using stored shop_id
+ * Refreshes product cache using hardcoded shop_id (62670465)
  * 
  * No manual intervention needed - fully autonomous
  */
 
-import { createClient } from 'redis';
 import { setCachedProducts } from './cache.js';
-
-const SHOP_ID_KEY = 'mindcubby:shop_id';
 
 export const vercelCronSchedule = '0 0 * * *'; // Daily at 00:00 UTC
 
@@ -26,21 +23,18 @@ export default async function handler(req, res) {
 
         console.log('[Cron] Starting daily cache refresh at', new Date().toISOString());
 
-        // Get shop_id from Redis
-        const redis = createClient({ url: process.env.REDIS_URL });
-        await redis.connect();
-        const shopId = await redis.get(SHOP_ID_KEY);
-        await redis.quit();
+        // Use hardcoded shop_id (set during initial OAuth authorization)
+        const shopId = process.env.ETSY_SHOP_ID || '62670465';
 
         if (!shopId) {
-            console.error('[Cron] No shop_id found in Redis - user may not have authorized yet');
-            return res.status(200).json({
+            console.error('[Cron] No ETSY_SHOP_ID configured');
+            return res.status(500).json({
                 success: false,
-                message: 'No shop_id stored - please authorize at /api/auth/etsy first'
+                message: 'ETSY_SHOP_ID environment variable not configured'
             });
         }
 
-        console.log('[Cron] Found shop_id:', shopId);
+        console.log('[Cron] Using shop_id:', shopId);
 
         // Fetch products using app credentials (public API endpoint)
         const apiKey = process.env.ETSY_API_KEY;

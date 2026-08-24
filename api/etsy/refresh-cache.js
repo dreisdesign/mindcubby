@@ -7,12 +7,9 @@
  * Requires REFRESH_SECRET in query or header for security
  */
 
-import { createClient } from 'redis';
 import { setCachedProducts } from './cache.js';
 import { checkRateLimit } from '../middleware/rate-limit.js';
 import { logSecurityEvent, logRequest, logError } from '../middleware/logger.js';
-
-const SHOP_ID_KEY = 'mindcubby:shop_id';
 
 export default async function handler(req, res) {
     const startTime = Date.now();
@@ -42,21 +39,18 @@ export default async function handler(req, res) {
         logSecurityEvent(req, 'REFRESH_INITIATED', { endpoint: '/api/etsy/refresh-cache' });
         console.log('[Refresh] Manual cache refresh triggered');
 
-        // Get shop_id from Redis
-        const redis = createClient({ url: process.env.REDIS_URL });
-        await redis.connect();
-        const shopId = await redis.get(SHOP_ID_KEY);
-        await redis.quit();
+        // Use hardcoded shop_id
+        const shopId = process.env.ETSY_SHOP_ID || '62670465';
 
         if (!shopId) {
-            logError(req, 'No shop_id found', { endpoint: '/api/etsy/refresh-cache' });
-            return res.status(400).json({
+            logError(req, 'No ETSY_SHOP_ID configured', { endpoint: '/api/etsy/refresh-cache' });
+            return res.status(500).json({
                 success: false,
-                message: 'No shop_id stored - please authorize at /api/auth/etsy first'
+                message: 'ETSY_SHOP_ID environment variable not configured'
             });
         }
 
-        console.log('[Refresh] Found shop_id:', shopId);
+        console.log('[Refresh] Using shop_id:', shopId);
 
         // Fetch products using app credentials (public API endpoint)
         const apiKey = process.env.ETSY_API_KEY;
