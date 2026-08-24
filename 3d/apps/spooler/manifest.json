@@ -12,14 +12,7 @@
         {
             "src": "favicon.svg",
             "sizes": "any",
-            "type": "image/svg+xml",
-            "purpose": "any"
-        },
-        {
-            "src": "spooler.svg",
-            "sizes": "any",
-            "type": "image/svg+xml",
-            "purpose": "maskable"
+            "type": "image/svg+xml"
         }
     ]
 }
