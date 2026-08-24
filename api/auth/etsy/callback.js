@@ -25,7 +25,7 @@ export default async function handler(req, res) {
         const clientId = process.env.ETSY_API_KEY;
         const clientSecret = process.env.ETSY_API_SECRET;
         // ALWAYS use production domain - must match Etsy app OAuth settings exactly
-        const redirectUri = 'https://shop.mindcubby.com/api/auth/etsy/callback';
+        const redirectUri = 'https://mindcubby.com/api/auth/etsy/callback';
 
         console.log('[Callback] OAuth redirect URI:', redirectUri);
 
