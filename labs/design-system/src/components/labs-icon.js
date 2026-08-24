@@ -5,14 +5,16 @@
 const ICON_BASE = (() => {
   const path = window.location.pathname;
   const hostname = window.location.hostname;
+  // Strip www. prefix for consistent checking
+  const cleanHostname = hostname.replace(/^www\./, '');
 
   // GitHub Pages production (dreisdesign.github.io)
-  if (hostname === 'dreisdesign.github.io') {
+  if (cleanHostname === 'dreisdesign.github.io') {
     return "/labs/design-system/icons/";
   }
 
-  // GitHub Pages production (mindcubby.com)
-  if (hostname === 'mindcubby.com') {
+  // Vercel/Production (mindcubby.com, www.mindcubby.com, etc.)
+  if (cleanHostname === 'mindcubby.com' || cleanHostname.includes('mindcubby')) {
     return "/labs/design-system/icons/";
   }
 
@@ -23,7 +25,7 @@ const ICON_BASE = (() => {
   }
 
   // Default for other local development
-  return "/design-system/icons/";
+  return "/labs/design-system/icons/";
 })();
 })();
 
