@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindCubby – 3D Tools & Designs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background: #fafbfc;
+            color: #24292e;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 60px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 100px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #586069;
+        }
+
+        .tools-section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e4e8;
+        }
+
+        .tool {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 30px;
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s;
+        }
+
+        .tool:hover {
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .tool-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 4px;
+            background: #f6f8fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            flex-shrink: 0;
+        }
+
+        .tool-header-text h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .tool-header-text p {
+            font-size: 14px;
+            color: #586069;
+        }
+
+        .tool-description {
+            color: #24292e;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .tool-features {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .tool-features li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 14px;
+        }
+
+        .tool-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .tool-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #0366d6;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+            border: 1px solid #0366d6;
+        }
+
+        .btn:hover {
+            background: #0256c7;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #0366d6;
+        }
+
+        .btn-secondary:hover {
+            background: #f6f8fa;
+        }
+
+        .shop-banner {
+            background: #fff8e1;
+            border: 1px solid #ffd700;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .shop-banner h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .shop-banner p {
+            margin-bottom: 15px;
+            color: #586069;
+        }
+
+        footer {
+            text-align: center;
+            padding-top: 40px;
+            border-top: 1px solid #e1e4e8;
+            font-size: 12px;
+            color: #6a737d;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 28px;
+            }
+
+            .tool {
+                padding: 20px;
+            }
+
+            .tool-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .tool-links {
+                flex-direction: column;
+            }
+
+            .btn {
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <img src="3d/apps/mindcubby-logo.png" alt="MindCubby" class="logo">
+            <h1>MindCubby</h1>
+            <p class="subtitle">3D Design Tools & Printable Collections</p>
+        </header>
+
+        <div class="shop-banner">
+            <h2>🛍️ MindCubby Shop</h2>
+            <p>Browse 17+ 3D printable designs on our Etsy-powered shop</p>
+            <a href="/etsy/" class="btn">Browse Shop</a>
+        </div>
+
+        <div class="tools-section">
+            <h2 class="section-title">Tools</h2>
+
+            <div class="tool">
+                <div class="tool-header">
+                    <div class="tool-icon">🎨</div>
+                    <div class="tool-header-text">
+                        <h3>Rotater</h3>
+                        <p>3D Model Viewer & Exporter</p>
+                    </div>
+                </div>
+                <p class="tool-description">View and export rotating 3D STL models as animated GIF, MP4, or PNG — entirely in your browser.</p>
+                <ul class="tool-features">
+                    <li>No installation needed – Upload an STL and go</li>
+                    <li>Multiple export formats – GIF, MP4, or PNG</li>
+                    <li>Client-side processing – Your files stay private</li>
+                    <li>Customizable – Adjust spin, tilt, wobble, and more</li>
+                </ul>
+                <div class="tool-links">
+                    <a href="3d/apps/rotater/" class="btn">Try Rotater</a>
+                    <a href="https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/rotater/README.md" class="btn btn-secondary">Docs</a>
+                </div>
+            </div>
+
+            <div class="tool">
+                <div class="tool-header">
+                    <div class="tool-icon">🖨️</div>
+                    <div class="tool-header-text">
+                        <h3>G-coder</h3>
+                        <p>G-code Analyzer</p>
+                    </div>
+                </div>
+                <p class="tool-description">Generate Printables specifications from G-code files for 3D printers.</p>
+                <ul class="tool-features">
+                    <li>Parse and analyze G-code files</li>
+                    <li>Extract print specifications</li>
+                    <li>Generate Printables-compatible data</li>
+                </ul>
+                <div class="tool-links">
+                    <a href="3d/apps/gcoder/" class="btn">Try G-coder</a>
+                    <a href="https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/gcoder/README.md" class="btn btn-secondary">Docs</a>
+                </div>
+            </div>
+
+            <div class="tool">
+                <div class="tool-header">
+                    <div class="tool-icon">🧵</div>
+                    <div class="tool-header-text">
+                        <h3>Spooler</h3>
+                        <p>Filament Inventory Manager</p>
+                    </div>
+                </div>
+                <p class="tool-description">Track and manage 3D printer filament using NFC tags.</p>
+                <ul class="tool-features">
+                    <li>NFC tagging for filament spools</li>
+                    <li>Track inventory and locations</li>
+                    <li>Client-side storage – all data stays local</li>
+                    <li>Export inventory as CSV</li>
+                </ul>
+                <div class="tool-links">
+                    <a href="3d/apps/spooler/" class="btn">Try Spooler</a>
+                    <a href="https://github.com/dreisdesign/mindcubby/blob/main/3d/apps/spooler/README.md" class="btn btn-secondary">Docs</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="tools-section">
+            <h2 class="section-title">Collections</h2>
+
+            <div class="tool">
+                <div class="tool-header">
+                    <div class="tool-icon">📝</div>
+                    <div class="tool-header-text">
+                        <h3>Posts for Pause</h3>
+                        <p>Inspirational Design Gallery</p>
+                    </div>
+                </div>
+                <p class="tool-description">An original collection of minimalist, thoughtful designs by Dan Reis encouraging mindfulness and reflection. Browse through posts about stress, awareness, kindness, and living in the moment.</p>
+                <div class="tool-links">
+                    <a href="labs/postsforpause/" class="btn">View Collection</a>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2024 MindCubby. All tools available on <a href="https://github.com/dreisdesign/mindcubby" style="color: inherit;">GitHub</a>.</p>
+        </footer>
+    </div>
+</body>
+
+</html>
