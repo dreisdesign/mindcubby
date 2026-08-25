@@ -46,13 +46,13 @@ export default async function handler(req, res) {
 
     const clientId = process.env.ETSY_API_KEY;
     // ALWAYS use production domain - must match Etsy app OAuth settings exactly
-    const redirectUri = 'https://shop.mindcubby.com/api/auth/etsy/callback';
+    const redirectUri = 'https://mindcubby.com/api/auth/etsy/callback';
     const scope = 'listings_r shops_r'; // Read access to listings and shops
     const state = generateRandomString(32);
     const codeVerifier = generateRandomString(128);
 
     // Support return_to parameter to redirect after OAuth
-    const returnTo = req.query.return_to || req.body?.return_to || '/etsy/';
+    const returnTo = req.query.return_to || req.body?.return_to || '/';
 
     console.log('[OAuth] Authenticated - initiating flow with redirect URI:', redirectUri);
 
