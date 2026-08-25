@@ -40,7 +40,7 @@ export default async function handler(req, res) {
         const stateMatch = cookies.match(/etsy_oauth_state=([^;]+)/);
         const stateCookie = stateMatch ? stateMatch[1] : null;
         const returnToMatch = cookies.match(/etsy_return_to=([^;]+)/);
-        const returnTo = returnToMatch ? decodeURIComponent(returnToMatch[1]) : '/';
+        const returnTo = returnToMatch ? decodeURIComponent(returnToMatch[1]) : '/';  // Home by default
 
         if (!codeVerifier) {
             return res.status(400).json({ error: 'Missing code verifier - session may have expired' });
