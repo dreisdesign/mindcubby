@@ -37,15 +37,45 @@
 
 ## Labs
 
-#### [**Posts for Pause**](https://mindcubby.com/labs/postsforpause/)
-**An original collection of inspirational designs by Dan Reis**
+Experimental tools and applications exploring different workflows and features.
 
-A curated gallery of minimalist, thoughtful designs encouraging mindfulness and reflection. Browse through posts about stress, awareness, kindness, and living in the moment.
+#### [**Timer**](https://mindcubby.com/labs/timer/)
+Simple, elegant interval timer for focused work sessions
+
+#### [**Note**](https://mindcubby.com/labs/note/)
+Quick notes that sync to your browser
+
+#### [**Pad**](https://mindcubby.com/labs/pad/)
+Minimalist text editor for distraction-free writing
+
+#### [**Tracker**](https://mindcubby.com/labs/tracker/)
+Track habits and patterns over time
+
+#### [**Today List**](https://mindcubby.com/labs/today-list/)
+Daily task list that resets each morning
+
+#### [**Posts for Pause**](https://mindcubby.com/labs/postsforpause/)
+Minimalist designs encouraging mindfulness and reflection. An original collection by Dan Reis exploring stress, awareness, kindness, and living in the moment.
 
 **Migration complete:** `postsforpause.com` now redirects to `mindcubby.com/labs/postsforpause/` via 301 redirect.
 
-#### [**View Posts for Pause**](https://mindcubby.com/labs/postsforpause/)
-Also accessible via legacy domain: `postsforpause.com`
+#### [**Smoothie Design System**](https://mindcubby.com/labs/design-system/)
+Component library and design documentation for the Labs design system
+
+---
+
+## Project Structure
+
+### Assets
+Logos are centralized in `assets/logos/` for consistent management:
+```
+assets/logos/
+├── 3d-apps/          # 3D Creator Tools app icons
+├── labs-apps/        # Labs applications icons  
+└── design-system/    # Smoothie Design System logo
+```
+
+All app logos are SVG format for responsive scaling across different screen sizes and contexts (homescreen, browser tabs, etc.).
 
 ---
 

@@ -1,24 +1,19 @@
 {
-    "name": "Spooler - NFC Filament Tagger",
-    "short_name": "Spooler",
-    "description": "Tag filament spools with NFC data for your Elegoo Canvas 3D printer",
+    "name": "Rotater - 3D Model Animator",
+    "short_name": "Rotater",
+    "description": "Export rotating 3D models as GIF, MP4, or PNG in your browser",
     "start_url": "./index.html",
     "scope": "./",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#333333",
+    "theme_color": "#202F48",
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "mindcubby-apps-spooler--app-icon.svg",
+            "src": "mindcubby-apps-rotater--app-icon.svg",
             "sizes": "any",
             "type": "image/svg+xml",
             "purpose": "any maskable"
-        },
-        {
-            "src": "favicon.png",
-            "sizes": "192x192",
-            "type": "image/png"
         },
         {
             "src": "favicon.svg",

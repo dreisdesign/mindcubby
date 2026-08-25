@@ -89,9 +89,7 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1px;
-            background: var(--border);
-            border: 1px solid var(--border);
+            gap: 0;
             margin-bottom: 2rem;
             grid-auto-flow: dense;
         }
@@ -105,7 +103,7 @@
             min-height: 300px;
             text-decoration: none;
             color: inherit;
-            border: none;
+            border: 1px solid var(--border);
         }
 
         .card:hover {
@@ -127,7 +125,7 @@
             height: 40px;
             object-fit: contain;
         }
-        
+
         .card-icon svg {
             width: 40px;
             height: 40px;
@@ -248,7 +246,8 @@
             </div>
             <h2>MindCubby</h2>
             <p>Things I make because they bring me joy</p>
-            <p style="font-size: 0.85rem; opacity: 0.6; font-style: italic; margin-top: 1rem;">🚧 Site under construction</p>
+            <p style="font-size: 0.85rem; opacity: 0.6; font-style: italic; margin-top: 1rem;">🚧 Site under
+                construction</p>
         </div>
 
         <!-- FEATURED PHYSICAL PRODUCTS -->
@@ -257,7 +256,8 @@
             <div class="grid" id="products-grid">
                 <div class="loading">Loading products...</div>
             </div>
-            <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;" id="products-count"></div>
+            <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;" id="products-count">
+            </div>
         </section>
 
         <!-- 3D CREATOR TOOLS -->
@@ -266,7 +266,8 @@
             <div class="grid">
                 <a href="3d/apps/rotater/" class="card">
                     <div class="card-icon">
-                        <img src="3d/apps/rotater/favicon.svg" alt="Rotater" style="width: 40px; height: 40px;">
+                        <img src="assets/logos/3d-apps/mindcubby-apps-rotater--circle-logo.svg" alt="Rotater"
+                            style="width: 48px; height: 48px;">
                     </div>
                     <h3>Rotater</h3>
                     <p>Export rotating 3D models as GIF, MP4, or PNG in your browser</p>
@@ -274,7 +275,8 @@
                 </a>
                 <a href="3d/apps/gcoder/" class="card">
                     <div class="card-icon">
-                        <img src="3d/apps/gcoder/favicon.svg" alt="G-coder" style="width: 40px; height: 40px;">
+                        <img src="assets/logos/3d-apps/mindcubby-apps-gcoder--circle-logo.svg" alt="G-coder"
+                            style="width: 48px; height: 48px;">
                     </div>
                     <h3>G-coder</h3>
                     <p>Generate specifications from G-code files</p>
@@ -282,7 +284,8 @@
                 </a>
                 <a href="3d/apps/spooler/" class="card">
                     <div class="card-icon">
-                        <img src="3d/apps/spooler/favicon.svg" alt="Spooler" style="width: 40px; height: 40px;">
+                        <img src="assets/logos/3d-apps/mindcubby-apps-spooler--circle-logo.svg" alt="Spooler"
+                            style="width: 48px; height: 48px;">
                     </div>
                     <h3>Spooler</h3>
                     <p>Track 3D printer filament inventory with NFC tags</p>
@@ -309,46 +312,58 @@
             <h2>Labs</h2>
             <div class="grid">
                 <a href="labs/timer/" class="card">
-                    <div class="card-icon">⏱️</div>
+                    <div class="card-icon">
+                        <img src="assets/logos/labs-apps/mindcubby--labs-apps--focus-timer.svg" alt="Timer" style="width: 40px; height: 40px;">
+                    </div>
                     <h3>Timer</h3>
                     <p>Simple, elegant interval timer for focused work</p>
                     <div class="card-link">Open →</div>
                 </a>
                 <a href="labs/note/" class="card">
-                    <div class="card-icon">📝</div>
+                    <div class="card-icon">
+                        <img src="assets/logos/labs-apps/mindcubby--labs-apps--note.svg" alt="Note" style="width: 40px; height: 40px;">
+                    </div>
                     <h3>Note</h3>
                     <p>Quick notes that sync to your browser</p>
                     <div class="card-link">Open →</div>
                 </a>
                 <a href="labs/pad/" class="card">
-                    <div class="card-icon">📄</div>
+                    <div class="card-icon">
+                        <img src="assets/logos/labs-apps/mindcubby--labs-apps--pad.svg" alt="Pad" style="width: 40px; height: 40px;">
+                    </div>
                     <h3>Pad</h3>
                     <p>Minimalist text editor for distraction-free writing</p>
                     <div class="card-link">Open →</div>
                 </a>
                 <a href="labs/tracker/" class="card">
-                    <div class="card-icon">📊</div>
+                    <div class="card-icon">
+                        <img src="assets/logos/labs-apps/mindcubby--labs-apps--tracker.svg" alt="Tracker" style="width: 40px; height: 40px;">
+                    </div>
                     <h3>Tracker</h3>
                     <p>Track habits and patterns over time</p>
                     <div class="card-link">Open →</div>
                 </a>
                 <a href="labs/today-list/" class="card">
-                    <div class="card-icon">✓</div>
+                    <div class="card-icon">
+                        <img src="assets/logos/labs-apps/mindcubby--labs-apps--today-list.svg" alt="Today List" style="width: 40px; height: 40px;">
+                    </div>
                     <h3>Today List</h3>
                     <p>Daily task list that resets each morning</p>
                     <div class="card-link">Open →</div>
                 </a>
                 <a href="labs/postsforpause/" class="card">
                     <div class="card-icon">
-                        <img src="labs/postsforpause/favicon.svg" alt="Posts for Pause" style="width: 40px; height: 40px;">
+                        <img src="assets/logos/labs-apps/postsforpause-logo.svg" alt="Posts for Pause" style="width: 40px; height: 40px;">
                     </div>
                     <h3>Posts for Pause</h3>
                     <p>Minimalist designs encouraging mindfulness and reflection</p>
                     <div class="card-link">Open →</div>
                 </a>
                 <a href="labs/design-system/" class="card">
-                    <div class="card-icon">◻</div>
-                    <h3>Design System</h3>
+                    <div class="card-icon">
+                        <img src="assets/logos/design-system/mindcubby--labs-smoothie.svg" alt="Smoothie Design System" style="width: 40px; height: 40px;">
+                    </div>
+                    <h3>Smoothie Design System</h3>
                     <p>Component library and design documentation</p>
                     <div class="card-link">Open →</div>
                 </a>
@@ -435,9 +450,9 @@
                 return `
                 <a href="https://www.etsy.com/listing/${product.listing_id}" class="card" target="_blank">
                     <div style="height: 150px; overflow: hidden; margin-bottom: 1rem; border: 1px solid var(--border);">
-                        ${product.images && product.images[0] ? 
-                            `<img src="${product.images[0].url_170x135}" style="width: 100%; height: 100%; object-fit: cover;">` :
-                            '<div style="width: 100%; height: 100%; background: #f0f0f0;"></div>'}
+                        ${product.images && product.images[0] ?
+                        `<img src="${product.images[0].url_170x135}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                        '<div style="width: 100%; height: 100%; background: #f0f0f0;"></div>'}
                     </div>
                     <h3>${product.title}</h3>
                     <p style="font-weight: 500; margin-top: auto;">${priceDisplay}</p>
