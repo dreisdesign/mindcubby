@@ -2,9 +2,9 @@
 
 ## Quick Start
 
-1. **Authorization:** Run `./authorize-oauth.sh your_auth_secret` (first time only)
-2. **Done:** Cache updates daily at midnight UTC automatically
-3. **Access via API:** Use `/api/etsy/cache` endpoint for product data (no UI page; will integrate into mindcubby.com hub)
+1. **Visit shop:** https://shop.mindcubby.com/etsy/
+2. **Authorize:** Run `./authorize-oauth.sh your_auth_secret` (first time only)
+3. **Done:** Cache updates daily at midnight UTC automatically
 
 ## Environment Variables (Vercel)
 
@@ -63,6 +63,7 @@ npm run refresh:cache
 ## API Endpoints
 
 ### Public (No Auth)
+- `GET /etsy/` — Product storefront
 - `GET /api/etsy/cache` — Get cached products (JSON)
 
 ### Private (Requires Secret Header)
@@ -167,7 +168,7 @@ SETUP.md                  # This file
 ## Troubleshooting
 
 **Products not showing?**
-- Check API endpoint: `https://shop.mindcubby.com/api/etsy/cache`
+- Visit https://shop.mindcubby.com/etsy/
 - If empty, run: `./authorize-oauth.sh your_auth_secret`
 - Wait ~30 seconds for cache to populate
 

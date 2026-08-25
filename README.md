@@ -1,34 +1,6 @@
 #### <img src="3d/apps/mindcubby-logo.png" width="128">
 # MindCubby
 
-**All-In-One Creative Studio for the Maker Economy** — 3D designs, creative tools, and design systems.
-
----
-
-## 📚 Documentation
-
-### Getting Started
-- **[SETUP.md](SETUP.md)** — Initial shop configuration & environment setup
-- **[SITEMAP.md](SITEMAP.md)** — Site structure & architecture
-
-### Operations & Security
-- **[MONITORING.md](MONITORING.md)** — Health checks, deployment, troubleshooting
-- **[SECURITY.md](SECURITY.md)** — Authentication, OAuth, best practices
-
-### Design System
-- **[SMOOTHIE-MIGRATION-STRATEGY.md](SMOOTHIE-MIGRATION-STRATEGY.md)** — Plan to unify design system, eliminate Storybook complexity
-
-### Reference
-- **[DOCS/ETSY-API-QUICK-FIX.md](DOCS/ETSY-API-QUICK-FIX.md)** — Etsy API troubleshooting
-- **[DOCS/ETSY-VERCEL-INTEGRATION.md](DOCS/ETSY-VERCEL-INTEGRATION.md)** — API integration details
-
-### Multi-Domain Strategy
-- **[MULTI-DOMAIN-STRATEGY.md](/Users/danielreis/web/MULTI-DOMAIN-STRATEGY.md)** — Overall consolidation strategy (danreisdesign.com + mindcubby.com)
-
----
-
-## 🚀 Quick Start
-
 #### [<img src="3d/apps/rotater/rotater.png" width="128">](https://dreisdesign.github.io/mindcubby/3d/apps/rotater/)
 **Rotater: View and export rotating 3D STL models as animated GIF, MP4, or PNG — entirely in your browser.**
 
