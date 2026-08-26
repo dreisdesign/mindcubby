@@ -98,22 +98,14 @@
 
         .color-name {
             font-weight: 600;
-            color: var(--color-on-surface);
+            color: var(--color-on-background);
             margin-bottom: 0.25rem;
         }
 
-        :root.theme-dark .color-name {
-            color: var(--color-on-surface-alt);
-        }
-
         .color-value {
-            color: var(--color-on-surface-variant, var(--color-on-surface));
+            color: var(--color-on-background);
             font-family: 'Monaco', monospace;
             word-break: break-all;
-        }
-
-        :root.theme-dark .color-value {
-            color: var(--color-on-surface-alt);
         }
 
         .token-table {
@@ -199,11 +191,11 @@
             <h2>Color Palette</h2>
 
             <h3 style="font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 1rem; color: var(--color-on-background);">
-                Global Colors</h3>
+                Global</h3>
             
-            <!-- Neutral/Base Palette -->
+            <!-- Core Palette -->
             <div style="margin-bottom: 2rem;">
-                <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--color-on-background);">Neutral (Base)</h4>
+                <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--color-on-background);">Core Palette</h4>
                 <div class="color-grid">
                     <div class="color-card">
                         <div class="color-swatch" style="background-color: #FBFBFD; border: 1px solid #E0E0E0;">Base 100</div>
