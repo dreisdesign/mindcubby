@@ -61,14 +61,15 @@
         .control-group label {
             font-size: 0.875rem;
             font-weight: 500;
+            color: var(--color-on-surface, #333);
         }
 
         .control-group select {
             padding: 0.5rem 1rem;
-            border: 1px solid var(--color-border, #ddd);
+            border: 1px solid var(--color-outline, #ddd);
             border-radius: 4px;
             background: var(--color-background, #fff);
-            color: var(--color-text, #333);
+            color: var(--color-on-background, #333);
             font-family: inherit;
             cursor: pointer;
         }
@@ -83,6 +84,7 @@
             font-size: 1.25rem;
             margin-bottom: 1.5rem;
             font-weight: 600;
+            color: var(--color-on-background, #333);
         }
 
         .grid {
@@ -92,7 +94,7 @@
         }
 
         .component-card {
-            border: 1px solid var(--color-border, #ddd);
+            border: 1px solid var(--color-outline, #ddd);
             border-radius: 8px;
             overflow: hidden;
             background: var(--color-surface, #f5f5f5);
@@ -103,7 +105,7 @@
         .component-preview {
             flex: 1;
             background: var(--color-surface, #f5f5f5);
-            border-bottom: 1px solid var(--color-border, #ddd);
+            border-bottom: 1px solid var(--color-outline, #ddd);
         }
 
         .component-preview iframe {
@@ -123,27 +125,22 @@
         .component-name {
             font-weight: 600;
             font-size: 0.9rem;
+            color: var(--color-on-surface, #333);
         }
 
         .component-link {
             display: inline-block;
-            color: var(--color-primary, #0066cc);
-            text-decoration: none;
-            font-size: 0.875rem;
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--color-primary, #0066cc);
-            border-radius: 4px;
-            transition: background-color 0.2s, color 0.2s;
-        }
 
-        .component-link:hover {
-            background-color: var(--color-primary, #0066cc);
-            color: white;
         }
     </style>
 </head>
 
 <body>
+    <!-- Import Components -->
+    <script type="module">
+        import '../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+    </script>
+
     <header>
         <div class="header-content">
             <h1>Smoothie Design System</h1>
@@ -177,7 +174,9 @@
                 </div>
                 <div class="component-footer">
                     <span class="component-name">Button</span>
-                    <a href="./button/" class="component-link" target="_blank">Open →</a>
+                    <a href="./button/" class="component-link" target="_blank">
+                        <labs-button variant="secondary" size="small">Open →</labs-button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -222,22 +221,43 @@
         // Broadcast theme/mode to all iframes
         function broadcastToIframes() {
             iframes.forEach((iframe) => {
-                // Ensure we broadcast to iframe when it loads
+                // Use postMessage for reliable cross-iframe communication
+                try {
+                    iframe.contentWindow.postMessage(
+                        {
+                            type: 'smoothie-theme-update',
+                            theme: themeSelect.value,
+                            mode: modeSelect.value
+                        },
+                        '*'
+                    );
+                } catch (e) {
+                    // iframe not ready yet, will be handled on load
+                }
+
+                // Also try direct class manipulation for same-origin access
                 const updateIframe = () => {
                     try {
+                        if (!iframe.contentDocument) return;
                         const iframeRoot = iframe.contentDocument.documentElement;
+                        if (!iframeRoot) return;
                         // Remove all flavor and theme classes
                         iframeRoot.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry', 'theme-light', 'theme-dark');
                         // Add current flavor and mode classes
                         iframeRoot.classList.add(`flavor-${themeSelect.value}`, `theme-${modeSelect.value}`);
                     } catch (e) {
-                        // iframe not loaded yet
+                        // Not accessible, postMessage will handle it
                     }
                 };
 
-                iframe.addEventListener('load', updateIframe);
-                // Try immediately in case iframe is already loaded
-                updateIframe();
+                // Only add listener once
+                if (!iframe._themeListenerAdded) {
+                    iframe.addEventListener('load', updateIframe);
+                    iframe._themeListenerAdded = true;
+                }
+
+                // Try immediately if already loaded
+                setTimeout(updateIframe, 100);
             });
         }
     </script>

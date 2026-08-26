@@ -34,7 +34,7 @@
         }
 
         .subtitle {
-            color: var(--color-text-secondary, #666);
+            color: var(--color-on-surface-variant, #999);
             margin-bottom: 2rem;
             font-size: 0.9rem;
         }
@@ -58,14 +58,15 @@
         .control-group label {
             font-size: 0.875rem;
             font-weight: 500;
+            color: var(--color-on-surface, #333);
         }
 
         .control-group select {
             padding: 0.5rem 1rem;
-            border: 1px solid var(--color-border, #ddd);
+            border: 1px solid var(--color-outline, #ddd);
             border-radius: 4px;
             background: var(--color-background, #fff);
-            color: var(--color-text, #333);
+            color: var(--color-on-background, #333);
             font-family: inherit;
             cursor: pointer;
         }
@@ -78,8 +79,9 @@
             font-size: 1.25rem;
             margin-bottom: 1.5rem;
             font-weight: 600;
-            border-bottom: 1px solid var(--color-border, #ddd);
+            border-bottom: 1px solid var(--color-outline, #ddd);
             padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
         }
 
         .grid {
@@ -92,7 +94,7 @@
         .preview {
             padding: 1.5rem;
             background: var(--color-surface, #f5f5f5);
-            border: 1px solid var(--color-border, #ddd);
+            border: 1px solid var(--color-outline, #ddd);
             border-radius: 8px;
             display: flex;
             flex-direction: column;
@@ -104,14 +106,14 @@
 
         .preview label {
             font-size: 0.8rem;
-            color: var(--color-text-secondary, #666);
+            color: var(--color-on-surface-variant, #999);
             text-align: center;
             width: 100%;
         }
 
         .theme-indicator {
             font-size: 0.75rem;
-            color: var(--color-text-secondary, #666);
+            color: var(--color-on-surface-variant, #999);
             text-align: center;
             margin-top: auto;
         }
@@ -121,7 +123,7 @@
             bottom: 2rem;
             right: 2rem;
             background: var(--color-surface, #fff);
-            border: 1px solid var(--color-border, #ddd);
+            border: 1px solid var(--color-outline, #ddd);
             border-radius: 8px;
             padding: 1rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -135,14 +137,15 @@
             font-size: 0.75rem;
             font-weight: 600;
             margin-bottom: 0.25rem;
+            color: var(--color-on-surface, #333);
         }
 
         .floating-toolbar select {
             padding: 0.5rem;
-            border: 1px solid var(--color-border, #ddd);
+            border: 1px solid var(--color-outline, #ddd);
             border-radius: 4px;
             background: var(--color-background, #fff);
-            color: var(--color-text, #333);
+            color: var(--color-on-background, #333);
             font-family: inherit;
             font-size: 0.875rem;
             cursor: pointer;
@@ -303,6 +306,23 @@
             root.classList.remove('theme-light', 'theme-dark');
             root.classList.add(`theme-${mode}`);
             localStorage.setItem('smoothie-mode', mode);
+        });
+
+        // Listen for theme updates from parent hub via postMessage
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'smoothie-theme-update') {
+                const { theme, mode } = event.data;
+                // Update theme
+                root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
+                root.classList.add(`flavor-${theme}`);
+                localStorage.setItem('smoothie-theme', theme);
+                themeSelect.value = theme;
+                // Update mode
+                root.classList.remove('theme-light', 'theme-dark');
+                root.classList.add(`theme-${mode}`);
+                localStorage.setItem('smoothie-mode', mode);
+                modeSelect.value = mode;
+            }
         });
     </script>
 </body>
