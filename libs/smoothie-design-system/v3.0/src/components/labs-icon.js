@@ -1,9 +1,7 @@
 
 // Dynamic icon loading - Vite-friendly approach
-// Use the correct base path for both local dev and GitHub Pages
 // Icons are served under /libs/smoothie-design-system/v3.0/icons/
 const ICON_BASE = (() => {
-  const path = window.location.pathname;
   const hostname = window.location.hostname;
   // Strip www. prefix for consistent checking
   const cleanHostname = hostname.replace(/^www\./, '');
@@ -18,12 +16,7 @@ const ICON_BASE = (() => {
     return "/libs/smoothie-design-system/v3.0/icons/";
   }
 
-  // Local development (localhost, 127.0.0.1)
-  if (cleanHostname === 'localhost' || cleanHostname === '127.0.0.1') {
-    return "/libs/smoothie-design-system/v3.0/icons/";
-  }
-
-  // Fallback for other local development
+  // Local development (localhost, 127.0.0.1) and all other cases
   return "/libs/smoothie-design-system/v3.0/icons/";
 })();
 
@@ -214,23 +207,19 @@ class LabsIcon extends HTMLElement {
 
     const iconName = this.getAttribute("name");
     let url = icons[iconName];
-    // console.log('[labs-icon] render:', { iconName, url, icons });
 
     if (!url) {
       this.shadowRoot.innerHTML = styleBlock;
       return;
     }
 
-    // width/height now handled above for host and SVG
-
-
-    // Try to fetch and inline the SVG
+    // Fetch and inline the SVG
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error("SVG fetch failed");
       let svg = await response.text();
 
-      // Simple approach: just set the color directly on fill attributes
+      // Set the color on fill attributes
       svg = svg.replace(/fill="#[^"]*"/gi, `fill="${color}"`);
       svg = svg.replace(/fill='#[^']*'/gi, `fill='${color}'`);
 
@@ -241,15 +230,17 @@ class LabsIcon extends HTMLElement {
       this.shadowRoot.innerHTML = styleBlock + svg;
       return;
     } catch (e) {
-      // Fallback to mask if fetch fails
+      // Fallback: Use img tag
       this.shadowRoot.innerHTML = styleBlock + `
-        <div style="
-          width: 100%;
-          height: 100%;
-          background-color: ${color};
-          mask: url('${url}') no-repeat center / contain;
-          -webkit-mask: url('${url}') no-repeat center / contain;
-        "></div>
+        <img 
+          src="${url}" 
+          alt="" 
+          style="
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+          "
+        />
       `;
     }
   }
