@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle - Smoothie Design System</title>
+    <link rel="stylesheet" href="../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <script type="module">
+        import '../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js';
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface, #666);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #f5f5f5);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        /* Hide toolbar when page is embedded in iframe */
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        .floating-toolbar label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--color-on-background);
+        }
+
+        .floating-toolbar select {
+            padding: 0.5rem;
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 4px;
+            background: var(--color-background);
+            color: var(--color-on-background);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+            border-bottom: 2px solid var(--color-outline);
+            padding-bottom: 0.75rem;
+        }
+
+        .demo-grid {
+            display: grid;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .demo-item {
+            background: var(--color-surface-container);
+            border: 1px solid var(--color-outline);
+            border-radius: 8px;
+            overflow: hidden;
+            padding: 1.5rem;
+        }
+
+        .demo-item h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+        }
+
+        .demo-preview {
+            background: var(--color-background);
+            border: 2px dashed var(--color-outline);
+            border-radius: 4px;
+            position: relative;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .demo-info {
+            font-size: 0.875rem;
+            color: var(--color-on-surface);
+            line-height: 1.5;
+        }
+
+        .demo-info strong {
+            color: var(--color-on-background);
+        }
+
+        .code-block {
+            background: var(--color-surface-container);
+            border: 1px solid var(--color-outline);
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            color: var(--color-on-background);
+            margin-top: 1rem;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .note {
+            background: var(--color-primary, #6B5C4B);
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--color-success, #00800C);
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <labs-button class="back-link" onclick="window.location.href='../';" variant="secondary">← Back to Hub</labs-button>
+
+        <h1>Theme Toggle Component</h1>
+        <p class="subtitle">Organism component: Smart theme/mode switcher with broadcasting</p>
+
+        <div class="section">
+            <h2>About This Component</h2>
+            <p style="margin-bottom: 1rem; color: var(--color-on-surface);">
+                <code>&lt;labs-theme-toggle&gt;</code> is an <strong>organism-level component</strong> that combines theme switching logic with UI presentation. Unlike basic molecules like buttons, it includes:
+            </p>
+            <ul class="feature-list">
+                <li>Internal state management (localStorage persistence)</li>
+                <li>Event emission and postMessage broadcasting</li>
+                <li>External communication with iframes</li>
+                <li>Icon/emoji toggling based on state</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Live Demo</h2>
+            <div class="demo-grid">
+                <!-- Standard Mode -->
+                <div class="demo-item">
+                    <h3>Standard Theme Toggle</h3>
+                    <div class="demo-preview">
+                        <labs-theme-toggle></labs-theme-toggle>
+                    </div>
+                    <div class="demo-info">
+                        <strong>Features:</strong><br>
+                        • Shows current mode (Light/Dark)<br>
+                        • Click to toggle between modes<br>
+                        • Saves preference to localStorage<br>
+                        • Updates page theme automatically
+                    </div>
+                </div>
+
+                <!-- Icon-Only Mode -->
+                <div class="demo-item">
+                    <h3>Icon-Only Variant</h3>
+                    <div class="demo-preview">
+                        <labs-theme-toggle icon-only></labs-theme-toggle>
+                    </div>
+                    <div class="demo-info">
+                        <strong>Features:</strong><br>
+                        • Compact form (just the icon)<br>
+                        • Perfect for toolbars/headers<br>
+                        • Same toggle functionality<br>
+                        • Same theme broadcast capability
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>How It Works</h2>
+            <div class="demo-item">
+                <h3>Theme Switching Flow</h3>
+                <div style="background: var(--color-background); padding: 1.5rem; border-radius: 4px; border-left: 4px solid var(--color-primary);">
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--color-on-background);">1. User clicks toggle</strong><br>
+                        <span style="color: var(--color-on-surface); font-size: 0.9rem;">
+                            The component detects the click and toggles between light/dark
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--color-on-background);">2. State updates</strong><br>
+                        <span style="color: var(--color-on-surface); font-size: 0.9rem;">
+                            Updates display (icon + label), saves to localStorage
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--color-on-background);">3. Broadcasts change</strong><br>
+                        <span style="color: var(--color-on-surface); font-size: 0.9rem;">
+                            Sends postMessage to all iframes (if in hub), and emits custom event
+                        </span>
+                    </div>
+                    <div>
+                        <strong style="color: var(--color-on-background);">4. Page updates</strong><br>
+                        <span style="color: var(--color-on-surface); font-size: 0.9rem;">
+                            CSS variables update, theme classes applied to document root
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Usage Examples</h2>
+
+            <div class="demo-item">
+                <h3>Basic Usage</h3>
+                <div class="code-block">&lt;labs-theme-toggle&gt;&lt;/labs-theme-toggle&gt;</div>
+            </div>
+
+            <div class="demo-item">
+                <h3>Icon-Only Mode</h3>
+                <div class="code-block">&lt;labs-theme-toggle icon-only&gt;&lt;/labs-theme-toggle&gt;</div>
+            </div>
+
+            <div class="demo-item">
+                <h3>JavaScript Event Listener</h3>
+                <div class="code-block">
+const toggle = document.querySelector('labs-theme-toggle');<br>
+toggle.addEventListener('mode-changed', (e) => {<br>
+&nbsp;&nbsp;console.log('Mode changed to:', e.detail.mode);<br>
+});
+                </div>
+            </div>
+
+            <div class="demo-item">
+                <h3>In a Hub/Showcase</h3>
+                <div class="code-block">
+// In hub, create toggle in header:<br>
+&lt;labs-theme-toggle id="main-toggle"&gt;&lt;/labs-theme-toggle&gt;<br>
+<br>
+// It automatically broadcasts to all iframes:<br>
+// window.self === window.top // true in hub
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Component Architecture</h2>
+            <div class="demo-item">
+                <h3>File Structure</h3>
+                <div class="code-block">
+/libs/smoothie-design-system/v3.0/<br>
+  └── src/components/<br>
+      └── labs-theme-toggle.js  ← Organism component<br>
+<br>
+/smoothie/<br>
+  └── theme-toggle/           ← Showcase page<br>
+      └── index.html
+                </div>
+                <div class="note" style="background: var(--color-primary); color: white; margin-top: 1rem;">
+                    <strong>Why "Organism"?</strong><br>
+                    This component combines multiple concerns: state management, event broadcasting, localStorage handling, and UI rendering. It's too complex for a "molecule" (simple UI component) but too focused for a "template" (page layout). It's the bridge between primitive components and full applications.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Component API</h2>
+            <div class="demo-item">
+                <h3>Attributes</h3>
+                <ul class="feature-list">
+                    <li><code>icon-only</code> — Hide label text, show only emoji icon</li>
+                </ul>
+            </div>
+
+            <div class="demo-item">
+                <h3>Events</h3>
+                <div class="code-block">
+// Custom event fired when mode changes<br>
+event: 'mode-changed'<br>
+detail: { mode: 'light' | 'dark' }
+                </div>
+            </div>
+
+            <div class="demo-item">
+                <h3>PostMessage (iframe communication)</h3>
+                <div class="code-block">
+// Broadcasted to all iframes<br>
+{<br>
+&nbsp;&nbsp;type: 'smoothie-theme-update',<br>
+&nbsp;&nbsp;mode: 'light' | 'dark'<br>
+}
+                </div>
+            </div>
+
+            <div class="demo-item">
+                <h3>localStorage</h3>
+                <ul class="feature-list">
+                    <li><code>smoothie-mode</code> — Persisted current mode (light/dark)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Theme Toolbar -->
+    <div class="floating-toolbar">
+        <div>
+            <label for="theme-select">Theme</label>
+            <select id="theme-select">
+                <option value="vanilla">Vanilla</option>
+                <option value="blueberry">Blueberry</option>
+                <option value="strawberry">Strawberry</option>
+            </select>
+        </div>
+    </div>
+
+    <script type="module">
+        // Theme Manager
+        const themeSelect = document.getElementById('theme-select');
+        const root = document.documentElement;
+
+        // Detect if page is in iframe and hide toolbar
+        if (window.self !== window.top) {
+            root.classList.add('in-iframe');
+        }
+
+        // Load saved preferences
+        const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
+        themeSelect.value = savedTheme;
+        root.classList.add(`flavor-${savedTheme}`, 'theme-light');
+
+        // Theme change handler
+        themeSelect.addEventListener('change', (e) => {
+            const theme = e.target.value;
+            root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
+            root.classList.add(`flavor-${theme}`);
+            localStorage.setItem('smoothie-theme', theme);
+        });
+
+        // Listen for theme updates from parent hub via postMessage
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'smoothie-theme-update') {
+                const { theme } = event.data;
+                if (theme) {
+                    root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
+                    root.classList.add(`flavor-${theme}`);
+                    localStorage.setItem('smoothie-theme', theme);
+                    themeSelect.value = theme;
+                }
+            }
+        });
+
+        // Listen for mode changes from theme-toggle
+        const toggle = document.querySelector('labs-theme-toggle');
+        toggle.addEventListener('mode-changed', (e) => {
+            const mode = e.detail.mode;
+            root.classList.remove('theme-light', 'theme-dark');
+            root.classList.add(`theme-${mode}`);
+        });
+    </script>
+</body>
+
+</html>
