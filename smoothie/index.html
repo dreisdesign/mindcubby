@@ -38,13 +38,40 @@
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             gap: 2rem;
         }
 
         h1 {
             font-size: 1.5rem;
             font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-link {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-on-surface, #666);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+
+        .tab-link:hover {
+            color: var(--color-on-background, #333);
+        }
+
+        .tab-link.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
         }
 
         .controls {
@@ -78,6 +105,18 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
+        }
+
+        section {
+            margin-bottom: 4rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--color-outline, #ddd);
+        }
+
+        section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
         h2 {
@@ -143,7 +182,15 @@
 
     <header>
         <div class="header-content">
-            <h1>Smoothie Design System</h1>
+            <div>
+                <h1>Smoothie Design System</h1>
+                <nav class="tabs">
+                    <a href="#tokens" class="tab-link active">0. Tokens</a>
+                    <a href="#components" class="tab-link">1. Components</a>
+                    <a href="#patterns" class="tab-link">2. Patterns</a>
+                    <a href="#utilities" class="tab-link">3. Utilities</a>
+                </nav>
+            </div>
             <div class="controls">
                 <div class="control-group">
                     <label for="theme-select">Theme</label>
@@ -165,21 +212,54 @@
     </header>
 
     <main class="main">
-        <h2>Components</h2>
-        <div class="grid">
-            <!-- Button -->
-            <div class="component-card">
-                <div class="component-preview">
-                    <iframe src="./button/"></iframe>
-                </div>
-                <div class="component-footer">
-                    <span class="component-name">Button</span>
-                    <a href="./button/" class="component-link" target="_blank">
-                        <labs-button variant="secondary" size="small">Open →</labs-button>
-                    </a>
+        <!-- 0. Tokens Section -->
+        <section id="tokens">
+            <h2>0. Design Tokens</h2>
+            <div class="grid">
+                <div class="component-card">
+                    <div class="component-preview">
+                        <iframe src="./tokens/"></iframe>
+                    </div>
+                    <div class="component-footer">
+                        <span class="component-name">Palette & Typography</span>
+                        <a href="./tokens/" class="component-link" target="_blank">
+                            <labs-button variant="secondary" size="small">Open →</labs-button>
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- 1. Components Section -->
+        <section id="components">
+            <h2>1. Components</h2>
+            <div class="grid">
+                <!-- Button -->
+                <div class="component-card">
+                    <div class="component-preview">
+                        <iframe src="./button/"></iframe>
+                    </div>
+                    <div class="component-footer">
+                        <span class="component-name">Button</span>
+                        <a href="./button/" class="component-link" target="_blank">
+                            <labs-button variant="secondary" size="small">Open →</labs-button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Patterns Section -->
+        <section id="patterns">
+            <h2>2. Patterns</h2>
+            <p style="color: var(--color-on-surface, #666); font-size: 0.9rem; margin-bottom: 2rem;">Coming soon: Form layouts, card grids, navigation patterns...</p>
+        </section>
+
+        <!-- 3. Utilities Section -->
+        <section id="utilities">
+            <h2>3. Utilities</h2>
+            <p style="color: var(--color-on-surface, #666); font-size: 0.9rem; margin-bottom: 2rem;">Coming soon: Theme manager, storage API, other non-visual utilities...</p>
+        </section>
     </main>
 
     <script>
@@ -260,6 +340,29 @@
                 setTimeout(updateIframe, 100);
             });
         }
+
+        // Update active tab on scroll
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section');
+            const tabs = document.querySelectorAll('.tab-link');
+            
+            let currentSection = null;
+            sections.forEach((section) => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top < 200) {
+                    currentSection = section.id;
+                }
+            });
+
+            tabs.forEach((tab) => {
+                tab.classList.remove('active');
+            });
+
+            if (currentSection) {
+                const activeTab = document.querySelector(`a[href="#${currentSection}"]`);
+                if (activeTab) activeTab.classList.add('active');
+            }
+        });
     </script>
 </body>
 

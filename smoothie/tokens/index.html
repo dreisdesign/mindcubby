@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Tokens - Smoothie Design System</title>
+    <link rel="stylesheet" href="../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-background);
+            color: var(--color-on-background);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+            border-bottom: 2px solid var(--color-outline);
+            padding-bottom: 0.75rem;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .color-card {
+            border: 1px solid var(--color-outline);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--color-surface);
+        }
+
+        .color-swatch {
+            width: 100%;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: inherit;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .color-info {
+            padding: 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .color-name {
+            font-weight: 600;
+            color: var(--color-on-surface);
+            margin-bottom: 0.25rem;
+        }
+
+        .color-value {
+            color: var(--color-on-surface-variant, var(--color-on-surface));
+            font-family: 'Monaco', monospace;
+            word-break: break-all;
+        }
+
+        .token-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-surface);
+            border: 1px solid var(--color-outline);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .token-table th,
+        .token-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-outline);
+            font-size: 0.9rem;
+        }
+
+        .token-table th {
+            background: var(--color-surface-container);
+            font-weight: 600;
+            color: var(--color-on-background);
+        }
+
+        .token-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .token-table code {
+            background: var(--color-surface-container);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: var(--color-primary);
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-outline);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        .floating-toolbar label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--color-on-background);
+        }
+
+        .floating-toolbar select {
+            padding: 0.5rem;
+            border: 1px solid var(--color-outline);
+            border-radius: 4px;
+            background: var(--color-background);
+            color: var(--color-on-background);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="../" class="back-link">← Back to Showcase</a>
+
+        <h1>Design Tokens</h1>
+        <p class="subtitle">Colors, typography, spacing, and other design system foundations</p>
+
+        <!-- Color Palette Section -->
+        <section>
+            <h2>Color Palette</h2>
+            
+            <h3 style="font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 1rem; color: var(--color-on-background);">Semantic Colors (Current Theme)</h3>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background-color: var(--color-primary);">Primary</div>
+                    <div class="color-info">
+                        <div class="color-name">Primary</div>
+                        <div class="color-value">--color-primary</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background-color: var(--color-on-primary); color: var(--color-primary);">On Primary</div>
+                    <div class="color-info">
+                        <div class="color-name">On Primary</div>
+                        <div class="color-value">--color-on-primary</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background-color: var(--color-background);">Background</div>
+                    <div class="color-info">
+                        <div class="color-name">Background</div>
+                        <div class="color-value">--color-background</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background-color: var(--color-surface);">Surface</div>
+                    <div class="color-info">
+                        <div class="color-name">Surface</div>
+                        <div class="color-value">--color-surface</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background-color: var(--color-on-surface);">On Surface</div>
+                    <div class="color-info">
+                        <div class="color-name">On Surface</div>
+                        <div class="color-value">--color-on-surface</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background-color: var(--color-error, #d32f2f); color: white;">Error</div>
+                    <div class="color-info">
+                        <div class="color-name">Error</div>
+                        <div class="color-value">--color-error</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background-color: var(--color-success, #388e3c); color: white;">Success</div>
+                    <div class="color-info">
+                        <div class="color-name">Success</div>
+                        <div class="color-value">--color-success</div>
+                    </div>
+                </div>
+
+                <div class="color-card">
+                    <div class="color-swatch" style="background-color: var(--color-warning, #f57c00); color: white;">Warning</div>
+                    <div class="color-info">
+                        <div class="color-name">Warning</div>
+                        <div class="color-value">--color-warning</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography Section -->
+        <section>
+            <h2>Typography</h2>
+            
+            <table class="token-table">
+                <thead>
+                    <tr>
+                        <th>Scale</th>
+                        <th>CSS Variable</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-size: 2rem; font-weight: 600;">Display</td>
+                        <td><code>--font-size-display</code></td>
+                        <td>Page titles, hero sections</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 1.5rem; font-weight: 600;">Heading 1</td>
+                        <td><code>--font-size-heading-1</code></td>
+                        <td>Section titles</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 1.25rem; font-weight: 600;">Heading 2</td>
+                        <td><code>--font-size-heading-2</code></td>
+                        <td>Subsection titles</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 1.125rem; font-weight: 600;">Heading 3</td>
+                        <td><code>--font-size-heading-3</code></td>
+                        <td>Component titles</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 1rem; font-weight: 600;">Body Large</td>
+                        <td><code>--font-size-body-large</code></td>
+                        <td>Primary body text</td>
+                    </tr>
+                    <tr>
+                        <td>Body Regular</td>
+                        <td><code>--font-size-body</code></td>
+                        <td>Standard body text</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 0.875rem;">Body Small</td>
+                        <td><code>--font-size-body-small</code></td>
+                        <td>Secondary text, captions</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Spacing Section -->
+        <section>
+            <h2>Spacing Scale</h2>
+            
+            <p style="margin-bottom: 1rem; color: var(--color-on-surface);">Base unit: 0.25rem (4px)</p>
+
+            <table class="token-table">
+                <thead>
+                    <tr>
+                        <th>Visual</th>
+                        <th>CSS Variable</th>
+                        <th>Value</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><div style="width: 100%; height: 0.25rem; background: var(--color-primary);"></div></td>
+                        <td><code>--spacing-xs</code></td>
+                        <td>0.25rem (4px)</td>
+                        <td>Extra tight, icon spacing</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 100%; height: 0.5rem; background: var(--color-primary);"></div></td>
+                        <td><code>--spacing-sm</code></td>
+                        <td>0.5rem (8px)</td>
+                        <td>Compact, button padding</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 100%; height: 1rem; background: var(--color-primary);"></div></td>
+                        <td><code>--spacing-md</code></td>
+                        <td>1rem (16px)</td>
+                        <td>Standard spacing, padding</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 100%; height: 1.5rem; background: var(--color-primary);"></div></td>
+                        <td><code>--spacing-lg</code></td>
+                        <td>1.5rem (24px)</td>
+                        <td>Component gaps, margins</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 100%; height: 2rem; background: var(--color-primary);"></div></td>
+                        <td><code>--spacing-xl</code></td>
+                        <td>2rem (32px)</td>
+                        <td>Section spacing</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 100%; height: 3rem; background: var(--color-primary);"></div></td>
+                        <td><code>--spacing-2xl</code></td>
+                        <td>3rem (48px)</td>
+                        <td>Large section gaps</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Border Radius Section -->
+        <section>
+            <h2>Border Radius</h2>
+            
+            <table class="token-table">
+                <thead>
+                    <tr>
+                        <th>Visual</th>
+                        <th>CSS Variable</th>
+                        <th>Value</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><div style="width: 60px; height: 60px; background: var(--color-primary); border-radius: 0px;"></div></td>
+                        <td><code>--radius-none</code></td>
+                        <td>0px</td>
+                        <td>No rounding, hard edges</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 60px; height: 60px; background: var(--color-primary); border-radius: 4px;"></div></td>
+                        <td><code>--radius-sm</code></td>
+                        <td>4px</td>
+                        <td>Small components, inputs</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 60px; height: 60px; background: var(--color-primary); border-radius: 8px;"></div></td>
+                        <td><code>--radius-md</code></td>
+                        <td>8px</td>
+                        <td>Standard components, cards</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 60px; height: 60px; background: var(--color-primary); border-radius: 12px;"></div></td>
+                        <td><code>--radius-lg</code></td>
+                        <td>12px</td>
+                        <td>Larger components, modals</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 60px; height: 60px; background: var(--color-primary); border-radius: 9999px;"></div></td>
+                        <td><code>--radius-pill</code></td>
+                        <td>9999px</td>
+                        <td>Pill buttons, badges</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <!-- Floating Theme Toolbar -->
+    <div class="floating-toolbar">
+        <div>
+            <label for="theme-select">Theme</label>
+            <select id="theme-select">
+                <option value="vanilla">Vanilla</option>
+                <option value="blueberry">Blueberry</option>
+                <option value="strawberry">Strawberry</option>
+            </select>
+        </div>
+        <div>
+            <label for="mode-select">Mode</label>
+            <select id="mode-select">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+
+    <script type="module">
+        // Theme Manager
+        const themeSelect = document.getElementById('theme-select');
+        const modeSelect = document.getElementById('mode-select');
+        const root = document.documentElement;
+
+        // Load saved preferences
+        const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
+        const savedMode = localStorage.getItem('smoothie-mode') || 'light';
+
+        themeSelect.value = savedTheme;
+        modeSelect.value = savedMode;
+
+        // Apply on load - use CSS classes that match flavors.css selectors
+        root.classList.add(`flavor-${savedTheme}`, `theme-${savedMode}`);
+
+        // Theme change handler
+        themeSelect.addEventListener('change', (e) => {
+            const theme = e.target.value;
+            root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
+            root.classList.add(`flavor-${theme}`);
+            localStorage.setItem('smoothie-theme', theme);
+        });
+
+        // Mode change handler
+        modeSelect.addEventListener('change', (e) => {
+            const mode = e.target.value;
+            root.classList.remove('theme-light', 'theme-dark');
+            root.classList.add(`theme-${mode}`);
+            localStorage.setItem('smoothie-mode', mode);
+        });
+
+        // Listen for theme updates from parent hub via postMessage
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'smoothie-theme-update') {
+                const { theme, mode } = event.data;
+                // Update theme
+                root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
+                root.classList.add(`flavor-${theme}`);
+                localStorage.setItem('smoothie-theme', theme);
+                themeSelect.value = theme;
+                // Update mode
+                root.classList.remove('theme-light', 'theme-dark');
+                root.classList.add(`theme-${mode}`);
+                localStorage.setItem('smoothie-mode', mode);
+                modeSelect.value = mode;
+            }
+        });
+    </script>
+</body>
+
+</html>
