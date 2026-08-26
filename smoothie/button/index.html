@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button - Smoothie Design System</title>
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-background, #fff);
+            color: var(--color-text, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--color-text-secondary, #666);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+            padding: 1rem;
+            background: var(--color-surface, #f5f5f5);
+            border-radius: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .control-group select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--color-border, #ddd);
+            border-radius: 4px;
+            background: var(--color-background, #fff);
+            color: var(--color-text, #333);
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-border, #ddd);
+            padding-bottom: 0.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .preview {
+            padding: 1.5rem;
+            background: var(--color-surface, #f5f5f5);
+            border: 1px solid var(--color-border, #ddd);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            min-height: 150px;
+        }
+
+        .preview label {
+            font-size: 0.8rem;
+            color: var(--color-text-secondary, #666);
+            text-align: center;
+            width: 100%;
+        }
+
+        .theme-indicator {
+            font-size: 0.75rem;
+            color: var(--color-text-secondary, #666);
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-border, #ddd);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        .floating-toolbar label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .floating-toolbar select {
+            padding: 0.5rem;
+            border: 1px solid var(--color-border, #ddd);
+            border-radius: 4px;
+            background: var(--color-background, #fff);
+            color: var(--color-text, #333);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: var(--color-primary, #0066cc);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/smoothie/" class="back-link">← Back to Hub</a>
+
+        <h1>Button Component</h1>
+        <p class="subtitle">All button variants, states, and themes</p>
+
+        <div class="section">
+            <h2>Primary Variant</h2>
+            <div class="grid">
+                <div class="preview">
+                    <labs-button variant="primary">Primary Button</labs-button>
+                    <label>Default</label>
+                </div>
+                <div class="preview">
+                    <labs-button variant="primary" disabled>Disabled</labs-button>
+                    <label>Disabled</label>
+                </div>
+                <div class="preview">
+                    <labs-button variant="primary" size="large">Large</labs-button>
+                    <label>Large</label>
+                </div>
+                <div class="preview">
+                    <labs-button variant="primary" size="small">Small</labs-button>
+                    <label>Small</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Secondary Variant</h2>
+            <div class="grid">
+                <div class="preview">
+                    <labs-button variant="secondary">Secondary Button</labs-button>
+                    <label>Default</label>
+                </div>
+                <div class="preview">
+                    <labs-button variant="secondary" disabled>Disabled</labs-button>
+                    <label>Disabled</label>
+                </div>
+                <div class="preview">
+                    <labs-button variant="secondary" pill>Pill</labs-button>
+                    <label>Pill Style</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Destructive Variant</h2>
+            <div class="grid">
+                <div class="preview">
+                    <labs-button variant="destructive">Delete</labs-button>
+                    <label>Default</label>
+                </div>
+                <div class="preview">
+                    <labs-button variant="destructive" disabled>Disabled</labs-button>
+                    <label>Disabled</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Icon Variant</h2>
+            <div class="grid">
+                <div class="preview">
+                    <labs-button variant="icon" aria-label="Settings">
+                        <labs-icon name="settings" slot="icon-left"></labs-icon>
+                    </labs-button>
+                    <label>Icon Button</label>
+                </div>
+                <div class="preview">
+                    <labs-button variant="primary">
+                        <labs-icon name="add" slot="icon-left"></labs-icon>
+                        Add
+                    </labs-button>
+                    <label>With Icon Left</label>
+                </div>
+                <div class="preview">
+                    <labs-button variant="secondary">
+                        Download
+                        <labs-icon name="download" slot="icon-right"></labs-icon>
+                    </labs-button>
+                    <label>With Icon Right</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Theme Toolbar -->
+    <div class="floating-toolbar">
+        <div>
+            <label for="theme-select">Theme</label>
+            <select id="theme-select">
+                <option value="vanilla">Vanilla</option>
+                <option value="blueberry">Blueberry</option>
+                <option value="strawberry">Strawberry</option>
+            </select>
+        </div>
+        <div>
+            <label for="mode-select">Mode</label>
+            <select id="mode-select">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Import Components -->
+    <script type="module">
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+
+        // Theme Manager
+        const themeSelect = document.getElementById('theme-select');
+        const modeSelect = document.getElementById('mode-select');
+        const root = document.documentElement;
+
+        // Load saved preferences
+        const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
+        const savedMode = localStorage.getItem('smoothie-mode') || 'light';
+
+        themeSelect.value = savedTheme;
+        modeSelect.value = savedMode;
+
+        // Apply on load
+        root.setAttribute('data-theme', savedTheme);
+        root.setAttribute('data-mode', savedMode);
+
+        // Theme change handler
+        themeSelect.addEventListener('change', (e) => {
+            const theme = e.target.value;
+            root.setAttribute('data-theme', theme);
+            localStorage.setItem('smoothie-theme', theme);
+        });
+
+        // Mode change handler
+        modeSelect.addEventListener('change', (e) => {
+            const mode = e.target.value;
+            root.setAttribute('data-mode', mode);
+            localStorage.setItem('smoothie-mode', mode);
+        });
+    </script>
+</body>
+</html>

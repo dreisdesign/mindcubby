@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smoothie Design System</title>
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-background, #fff);
+            color: var(--color-text, #333);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            background: var(--color-surface, #f5f5f5);
+            border-bottom: 1px solid var(--color-border, #ddd);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .control-group select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--color-border, #ddd);
+            border-radius: 4px;
+            background: var(--color-background, #fff);
+            color: var(--color-text, #333);
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+        }
+
+        .component-card {
+            border: 1px solid var(--color-border, #ddd);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--color-surface, #f5f5f5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .component-preview {
+            flex: 1;
+            background: var(--color-surface, #f5f5f5);
+            border-bottom: 1px solid var(--color-border, #ddd);
+        }
+
+        .component-preview iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+        }
+
+        .component-footer {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .component-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .component-link {
+            display: inline-block;
+            color: var(--color-primary, #0066cc);
+            text-decoration: none;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--color-primary, #0066cc);
+            border-radius: 4px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .component-link:hover {
+            background-color: var(--color-primary, #0066cc);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Smoothie Design System</h1>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="theme-select">Theme</label>
+                    <select id="theme-select">
+                        <option value="vanilla">Vanilla</option>
+                        <option value="blueberry">Blueberry</option>
+                        <option value="strawberry">Strawberry</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="mode-select">Mode</label>
+                    <select id="mode-select">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <h2>Components</h2>
+        <div class="grid">
+            <!-- Button -->
+            <div class="component-card">
+                <div class="component-preview">
+                    <iframe src="/smoothie/button/"></iframe>
+                </div>
+                <div class="component-footer">
+                    <span class="component-name">Button</span>
+                    <a href="/smoothie/button/" class="component-link" target="_blank">Open →</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Theme Manager for Hub
+        const themeSelect = document.getElementById('theme-select');
+        const modeSelect = document.getElementById('mode-select');
+        const root = document.documentElement;
+        const iframes = document.querySelectorAll('.component-preview iframe');
+
+        // Load saved preferences
+        const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
+        const savedMode = localStorage.getItem('smoothie-mode') || 'light';
+
+        themeSelect.value = savedTheme;
+        modeSelect.value = savedMode;
+
+        // Apply on load
+        root.setAttribute('data-theme', savedTheme);
+        root.setAttribute('data-mode', savedMode);
+        broadcastToIframes();
+
+        // Theme change handler
+        themeSelect.addEventListener('change', (e) => {
+            const theme = e.target.value;
+            root.setAttribute('data-theme', theme);
+            localStorage.setItem('smoothie-theme', theme);
+            broadcastToIframes();
+        });
+
+        // Mode change handler
+        modeSelect.addEventListener('change', (e) => {
+            const mode = e.target.value;
+            root.setAttribute('data-mode', mode);
+            localStorage.setItem('smoothie-mode', mode);
+            broadcastToIframes();
+        });
+
+        // Broadcast theme/mode to all iframes
+        function broadcastToIframes() {
+            iframes.forEach((iframe) => {
+                iframe.addEventListener('load', () => {
+                    const iframeRoot = iframe.contentDocument.documentElement;
+                    iframeRoot.setAttribute('data-theme', themeSelect.value);
+                    iframeRoot.setAttribute('data-mode', modeSelect.value);
+                });
+
+                // Try to update immediately if already loaded
+                try {
+                    const iframeRoot = iframe.contentDocument.documentElement;
+                    iframeRoot.setAttribute('data-theme', themeSelect.value);
+                    iframeRoot.setAttribute('data-mode', modeSelect.value);
+                } catch (e) {
+                    // iframe not loaded yet
+                }
+            });
+        }
+
+        // Update iframes when they load
+        iframes.forEach((iframe) => {
+            iframe.addEventListener('load', () => {
+                const iframeRoot = iframe.contentDocument.documentElement;
+                iframeRoot.setAttribute('data-theme', themeSelect.value);
+                iframeRoot.setAttribute('data-mode', modeSelect.value);
+            });
+        });
+    </script>
+</body>
+</html>
