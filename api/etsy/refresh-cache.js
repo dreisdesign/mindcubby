@@ -39,18 +39,38 @@ export default async function handler(req, res) {
         logSecurityEvent(req, 'REFRESH_INITIATED', { endpoint: '/api/etsy/refresh-cache' });
         console.log('[Refresh] Manual cache refresh triggered');
 
-        // Use hardcoded shop_id
-        const shopId = process.env.ETSY_SHOP_ID || '62670465';
+        // First, try to read shop_id from Redis (set during OAuth authorization)
+        let shopId = null;
+        try {
+            const { createClient } = await import('redis');
+            const redis = createClient({ url: process.env.REDIS_URL });
+            await redis.connect();
+            shopId = await redis.get('mindcubby:shop_id');
+            await redis.quit();
+            if (shopId) {
+                console.log('[Refresh] ✅ Read shop_id from Redis:', shopId);
+            }
+        } catch (err) {
+            console.error('[Refresh] Failed to read shop_id from Redis:', err.message);
+        }
+
+        // Fallback to environment variable if Redis fails
+        if (!shopId) {
+            shopId = process.env.ETSY_SHOP_ID;
+            if (shopId) {
+                console.log('[Refresh] Using ETSY_SHOP_ID from environment:', shopId);
+            }
+        }
 
         if (!shopId) {
-            logError(req, 'No ETSY_SHOP_ID configured', { endpoint: '/api/etsy/refresh-cache' });
+            logError(req, 'No shop_id available', { endpoint: '/api/etsy/refresh-cache' });
             return res.status(500).json({
                 success: false,
-                message: 'ETSY_SHOP_ID environment variable not configured'
+                message: 'No shop_id configured - please authorize first at /api/auth/etsy'
             });
         }
 
-        console.log('[Refresh] Using shop_id:', shopId);
+        console.log('[Refresh] Using shop_id for refresh:', shopId);
 
         // Fetch products using app credentials (public API endpoint)
         const apiKey = process.env.ETSY_API_KEY;

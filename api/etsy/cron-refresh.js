@@ -23,18 +23,38 @@ export default async function handler(req, res) {
 
         console.log('[Cron] Starting daily cache refresh at', new Date().toISOString());
 
-        // Use hardcoded shop_id (set during initial OAuth authorization)
-        const shopId = process.env.ETSY_SHOP_ID || '62670465';
+        // First, try to read shop_id from Redis (set during OAuth authorization)
+        let shopId = null;
+        try {
+            const { createClient } = await import('redis');
+            const redis = createClient({ url: process.env.REDIS_URL });
+            await redis.connect();
+            shopId = await redis.get('mindcubby:shop_id');
+            await redis.quit();
+            if (shopId) {
+                console.log('[Cron] ✅ Read shop_id from Redis:', shopId);
+            }
+        } catch (err) {
+            console.error('[Cron] Failed to read shop_id from Redis:', err.message);
+        }
+
+        // Fallback to environment variable if Redis fails
+        if (!shopId) {
+            shopId = process.env.ETSY_SHOP_ID;
+            if (shopId) {
+                console.log('[Cron] Using ETSY_SHOP_ID from environment:', shopId);
+            }
+        }
 
         if (!shopId) {
-            console.error('[Cron] No ETSY_SHOP_ID configured');
+            console.error('[Cron] No shop_id available (not in Redis and ETSY_SHOP_ID not set)');
             return res.status(500).json({
                 success: false,
-                message: 'ETSY_SHOP_ID environment variable not configured'
+                message: 'No shop_id configured - please authorize first at /api/auth/etsy'
             });
         }
 
-        console.log('[Cron] Using shop_id:', shopId);
+        console.log('[Cron] Using shop_id for refresh:', shopId);
 
         // Fetch products using app credentials (public API endpoint)
         const apiKey = process.env.ETSY_API_KEY;
@@ -71,7 +91,7 @@ export default async function handler(req, res) {
             // Run health check after successful refresh
             console.log('[Cron] Running health check...');
             try {
-                const healthResponse = await fetch('https://shop.mindcubby.com/api/health-check');
+                const healthResponse = await fetch('https://mindcubby.com/api/health-check');
                 const healthData = await healthResponse.json();
                 console.log('[Cron] Health check:', healthData.healthy ? '✅ Healthy' : '❌ Unhealthy');
             } catch (err) {
