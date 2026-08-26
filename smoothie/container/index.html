@@ -143,11 +143,15 @@
             overflow: visible;
             margin-bottom: 1rem;
             padding: 2rem;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* Visual container demo wrapper */
         .container-demo-wrapper {
+            max-width: 600px;
             width: 100%;
+            margin: 0 auto;
             background: var(--color-surface-container);
             border-radius: 8px;
             padding: 2rem;
@@ -155,6 +159,7 @@
             flex-direction: column;
             align-items: center;
             gap: 1rem;
+            box-sizing: border-box;
         }
 
         .container-demo-inner {
@@ -169,6 +174,13 @@
             gap: 1rem;
             align-items: center;
             border: 2px solid var(--color-on-primary);
+        }
+
+        /* Ensure button has high contrast on dark background */
+        .container-demo-inner labs-button {
+            --color-primary: white;
+            --color-on-primary: var(--color-primary, #2E2B74);
+            --button-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
         .container-demo-label {
@@ -244,7 +256,8 @@
                 <h2>Live Container Demo</h2>
                 <p style="margin-bottom: 2rem; color: var(--color-on-surface);">The entire page is wrapped in a
                     <code>&lt;labs-container&gt;</code>. Use the toolbar to switch between sizes and watch how the
-                    layout responds.</p>
+                    layout responds.
+                </p>
 
                 <div class="demo-item">
                     <h3 id="demo-title" style="margin-bottom: 1.5rem;">labs-container [medium] (600px)</h3>
@@ -255,7 +268,8 @@
                                 It stays centered and respects the container's max-width constraint on desktop, fills
                                 100% on mobile
                             </div>
-                            <labs-button onclick="alert('Container is working!')">Sample Button</labs-button>
+                            <labs-button variant="secondary" onclick="alert('Container is working!')">Sample
+                                Button</labs-button>
                         </div>
                     </div>
                 </div>
