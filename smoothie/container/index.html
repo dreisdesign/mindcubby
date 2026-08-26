@@ -277,12 +277,22 @@
                 <option value="dark">Dark</option>
             </select>
         </div>
+        <div style="border-top: 1px solid var(--color-outline); padding-top: 0.75rem; margin-top: 0.75rem;">
+            <label for="size-select">Container Size</label>
+            <select id="size-select">
+                <option value="small">Small (400px)</option>
+                <option value="medium" selected>Medium (600px)</option>
+                <option value="large">Large (800px)</option>
+                <option value="fill">Fill (100vw)</option>
+            </select>
+        </div>
     </div>
 
     <script type="module">
         // Theme Manager
         const themeSelect = document.getElementById('theme-select');
         const modeSelect = document.getElementById('mode-select');
+        const sizeSelect = document.getElementById('size-select');
         const root = document.documentElement;
 
         // Detect if page is in iframe and hide toolbar
@@ -293,12 +303,15 @@
         // Load saved preferences
         const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
         const savedMode = localStorage.getItem('smoothie-mode') || 'light';
+        const savedSize = localStorage.getItem('smoothie-container-size') || 'medium';
 
         themeSelect.value = savedTheme;
         modeSelect.value = savedMode;
+        sizeSelect.value = savedSize;
 
         // Apply on load - use CSS classes that match flavors.css selectors
         root.classList.add(`flavor-${savedTheme}`, `theme-${savedMode}`);
+        updateContainerSize(savedSize);
 
         // Theme change handler
         themeSelect.addEventListener('change', (e) => {
@@ -315,6 +328,23 @@
             root.classList.add(`theme-${mode}`);
             localStorage.setItem('smoothie-mode', mode);
         });
+
+        // Container size change handler
+        sizeSelect.addEventListener('change', (e) => {
+            const size = e.target.value;
+            updateContainerSize(size);
+            localStorage.setItem('smoothie-container-size', size);
+        });
+
+        // Update container size - scroll to that demo
+        function updateContainerSize(size) {
+            const demoItems = document.querySelectorAll('.demo-item');
+            demoItems.forEach((item, index) => {
+                if (item.querySelector('h3').textContent.toLowerCase().includes(size)) {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
 
         // Listen for theme updates from parent hub via postMessage
         window.addEventListener('message', (event) => {
