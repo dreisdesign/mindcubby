@@ -140,8 +140,48 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            overflow: visible;
             margin-bottom: 1rem;
+            padding: 2rem;
+        }
+
+        /* Visual container demo wrapper */
+        .container-demo-wrapper {
+            width: 100%;
+            background: var(--color-surface-container);
+            border-radius: 8px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .container-demo-inner {
+            background: var(--color-primary);
+            color: white;
+            padding: 2rem;
+            border-radius: 4px;
+            text-align: center;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+            border: 2px solid var(--color-on-primary);
+        }
+
+        .container-demo-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .container-demo-content {
+            font-size: 1rem;
+            line-height: 1.5;
         }
 
         .demo-content {
@@ -179,87 +219,83 @@
             margin-bottom: 0.5rem;
             color: var(--color-primary);
         }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            color: var(--color-on-surface);
+        }
+
+        .feature-list li strong {
+            color: var(--color-on-background);
+        }
     </style>
 </head>
 
 <body>
     <labs-container id="main-container" medium>
         <div class="container">
-            <labs-button class="back-link" onclick="window.location.href='../';" variant="secondary">← Back to Hub</labs-button>
+            <labs-button class="back-link" onclick="window.location.href='../';" variant="secondary">← Back to
+                Hub</labs-button>
 
             <h1>Container Component</h1>
             <p class="subtitle">Responsive width container with desktop and mobile padding</p>
 
             <div class="section">
-                <h2>Container Variants</h2>
-                <p style="margin-bottom: 2rem; color: var(--color-on-surface);">Change the container size using the toolbar. The entire page will resize to demonstrate each variant.</p>
+                <h2>Live Container Demo</h2>
+                <p style="margin-bottom: 2rem; color: var(--color-on-surface);">The entire page is wrapped in a
+                    <code>&lt;labs-container&gt;</code>. Use the toolbar to switch between sizes and watch how the
+                    layout responds.</p>
 
-                <div class="demo-grid">
-                    <!-- Info Display -->
-                    <div class="demo-item">
-                        <h3>Current Container Size</h3>
-                        <div class="demo-preview" style="min-height: 100px; justify-content: flex-start; align-items: flex-start;">
-                            <div style="color: var(--color-on-background); line-height: 1.6; text-align: left;">
-                                <div><strong>Size:</strong> <span id="size-display">Medium (600px)</span></div>
-                                <div><strong>Max-width:</strong> <span id="width-display">600px</span></div>
-                                <div><strong>Padding:</strong> <span id="padding-display">2rem desktop / 1rem mobile</span></div>
-                                <div><strong>Breakpoint:</strong> 640px</div>
+                <div class="demo-item">
+                    <h3 id="demo-title" style="margin-bottom: 1.5rem;">labs-container [medium] (600px)</h3>
+                    <div class="container-demo-wrapper">
+                        <div class="container-demo-inner">
+                            <div class="container-demo-label">This is your content</div>
+                            <div class="container-demo-content">
+                                It stays centered and respects the container's max-width constraint on desktop, fills
+                                100% on mobile
                             </div>
+                            <labs-button onclick="alert('Container is working!')">Sample Button</labs-button>
                         </div>
                     </div>
                 </div>
-
-                <div class="responsive-note">
-                    <strong>Responsive Behavior</strong><br>
-                    The entire page container changes size. Try resizing your browser to see mobile behavior (100vw with 1rem padding).
-                </div>
             </div>
 
             <div class="section">
-                <h2>Variant Details</h2>
-
+                <h2>Container Metrics</h2>
                 <div class="demo-item">
-                    <h3>Small (400px max-width)</h3>
-                    <div class="demo-info">
-                        <strong>Desktop:</strong> max-width 400px, padding 2rem<br>
-                        <strong>Mobile:</strong> 100vw, padding 1rem<br>
-                        <strong>Use case:</strong> Narrow content (blog posts, articles)
-                    </div>
-                </div>
-
-                <div class="demo-item">
-                    <h3>Medium (600px max-width)</h3>
-                    <div class="demo-info">
-                        <strong>Desktop:</strong> max-width 600px, padding 2rem (default)<br>
-                        <strong>Mobile:</strong> 100vw, padding 1rem<br>
-                        <strong>Use case:</strong> Standard UI layouts, forms
-                    </div>
-                </div>
-
-                <div class="demo-item">
-                    <h3>Large (800px max-width)</h3>
-                    <div class="demo-info">
-                        <strong>Desktop:</strong> max-width 800px, padding 2rem<br>
-                        <strong>Mobile:</strong> 100vw, padding 1rem<br>
-                        <strong>Use case:</strong> Content-rich pages, dashboards
-                    </div>
-                </div>
-
-                <div class="demo-item">
-                    <h3>Fill (100vw full viewport)</h3>
-                    <div class="demo-info">
-                        <strong>Desktop & Mobile:</strong> 100vw width, 100vh height, flexbox layout<br>
-                        <strong>Use case:</strong> Full-page layouts, hero sections, modal backgrounds
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <strong style="color: var(--color-on-background);">Current Size:</strong><br>
+                            <span id="size-display" style="font-size: 1.1rem; color: var(--color-primary);">Medium
+                                (600px)</span>
+                        </div>
+                        <div>
+                            <strong style="color: var(--color-on-background);">Max-width:</strong><br>
+                            <span id="width-display"
+                                style="font-size: 1.1rem; color: var(--color-primary);">600px</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="section">
-                <h2>Usage Example</h2>
-                <pre style="background: var(--color-surface-container); border: 1px solid var(--color-outline); border-radius: 4px; padding: 1rem; overflow-x: auto; color: var(--color-on-background);"><code>&lt;labs-container medium&gt;
-  &lt;h1&gt;Centered Content&lt;/h1&gt;
-  &lt;p&gt;This content is centered with max-width 600px&lt;/p&gt;
-&lt;/labs-container&gt;</code></pre>
+                <h2>Responsive Breakdown</h2>
+                <div class="demo-item">
+                    <h3>How Container Sizes Work</h3>
+                    <ul class="feature-list" style="list-style: none; padding: 0;">
+                        <li><strong>Small (400px):</strong> Narrow content layouts, blog posts</li>
+                        <li><strong>Medium (600px):</strong> Standard UI layouts, forms, cards (default)</li>
+                        <li><strong>Large (800px):</strong> Content-rich pages, dashboards</li>
+                        <li><strong>Fill (100vw):</strong> Full-page layouts, modal backgrounds</li>
+                    </ul>
+                </div>
+                <div class="demo-item">
+                    <h3>Mobile Behavior</h3>
+                    <p style="margin: 0; color: var(--color-on-surface);">At breakpoint 640px and below, all containers
+                        switch to <strong>100vw width with 1rem padding</strong>. Try resizing your browser to see this
+                        in action!</p>
+                </div>
             </div>
         </div>
     </labs-container>
@@ -354,17 +390,20 @@
 
             // Update display info
             const sizeInfo = {
-                small: { size: 'Small (400px)', width: '400px' },
-                medium: { size: 'Medium (600px)', width: '600px' },
-                large: { size: 'Large (800px)', width: '800px' },
-                fill: { size: 'Fill (100vw)', width: '100vw' }
+                small: { size: 'Small (400px)', width: '400px', title: 'labs-container [small] (400px)' },
+                medium: { size: 'Medium (600px)', width: '600px', title: 'labs-container [medium] (600px)' },
+                large: { size: 'Large (800px)', width: '800px', title: 'labs-container [large] (800px)' },
+                fill: { size: 'Fill (100vw)', width: '100vw', title: 'labs-container [fill] (100vw)' }
             };
 
             const info = sizeInfo[size] || sizeInfo.medium;
             const sizeDisplay = document.getElementById('size-display');
             const widthDisplay = document.getElementById('width-display');
+            const demoTitle = document.getElementById('demo-title');
+
             if (sizeDisplay) sizeDisplay.textContent = info.size;
             if (widthDisplay) widthDisplay.textContent = info.width;
+            if (demoTitle) demoTitle.textContent = info.title;
         }
 
         // Listen for theme updates from parent hub via postMessage

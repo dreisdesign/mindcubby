@@ -87,81 +87,81 @@ template.innerHTML = `
 `;
 
 class LabsThemeToggle extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot.appendChild(template.content.cloneNode(true));
-  }
-
-  async connectedCallback() {
-    // Dynamic import of labs-icon
-    await import('./labs-icon.js');
-
-    this.button = this.shadowRoot.querySelector('.toggle-button');
-    this.label = this.shadowRoot.querySelector('.label');
-    this.iconSlot = this.shadowRoot.querySelector('#icon-slot');
-
-    // Load current mode
-    const currentMode = localStorage.getItem('smoothie-mode') || 'light';
-    this.updateDisplay(currentMode);
-
-    // Listen for clicks
-    this.button.addEventListener('click', () => this.toggle());
-
-    // Listen for external changes via postMessage
-    window.addEventListener('message', (event) => {
-      if (event.data.type === 'smoothie-theme-update' && event.data.mode) {
-        this.updateDisplay(event.data.mode);
-      }
-    });
-  }
-
-  toggle() {
-    const currentMode = localStorage.getItem('smoothie-mode') || 'light';
-    const newMode = currentMode === 'light' ? 'dark' : 'light';
-    
-    // Update self
-    this.updateDisplay(newMode);
-    
-    // Persist
-    localStorage.setItem('smoothie-mode', newMode);
-
-    // Emit custom event for parent
-    this.dispatchEvent(new CustomEvent('mode-changed', {
-      detail: { mode: newMode },
-      bubbles: true,
-      composed: true
-    }));
-
-    // Broadcast to all iframes if in hub
-    if (window.self === window.top) {
-      this.broadcastToIframes({ mode: newMode });
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot.appendChild(template.content.cloneNode(true));
     }
-  }
 
-  updateDisplay(mode) {
-    const isDark = mode === 'dark';
-    this.label.textContent = isDark ? 'Dark' : 'Light';
-    this.button.setAttribute('title', isDark ? 'Turn on light mode' : 'Turn on dark mode');
-    
-    // Use labs-icon component
-    const iconName = isDark ? 'bedtime_off' : 'bedtime';
-    this.iconSlot.innerHTML = `<labs-icon name="${iconName}"></labs-icon>`;
-  }
+    async connectedCallback() {
+        // Dynamic import of labs-icon
+        await import('./labs-icon.js');
 
-  broadcastToIframes(data) {
-    const iframes = document.querySelectorAll('iframe');
-    iframes.forEach((iframe) => {
-      try {
-        iframe.contentWindow.postMessage(
-          { type: 'smoothie-theme-update', ...data },
-          '*'
-        );
-      } catch (e) {
-        // Cross-origin or not ready
-      }
-    });
-  }
+        this.button = this.shadowRoot.querySelector('.toggle-button');
+        this.label = this.shadowRoot.querySelector('.label');
+        this.iconSlot = this.shadowRoot.querySelector('#icon-slot');
+
+        // Load current mode
+        const currentMode = localStorage.getItem('smoothie-mode') || 'light';
+        this.updateDisplay(currentMode);
+
+        // Listen for clicks
+        this.button.addEventListener('click', () => this.toggle());
+
+        // Listen for external changes via postMessage
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'smoothie-theme-update' && event.data.mode) {
+                this.updateDisplay(event.data.mode);
+            }
+        });
+    }
+
+    toggle() {
+        const currentMode = localStorage.getItem('smoothie-mode') || 'light';
+        const newMode = currentMode === 'light' ? 'dark' : 'light';
+
+        // Update self
+        this.updateDisplay(newMode);
+
+        // Persist
+        localStorage.setItem('smoothie-mode', newMode);
+
+        // Emit custom event for parent
+        this.dispatchEvent(new CustomEvent('mode-changed', {
+            detail: { mode: newMode },
+            bubbles: true,
+            composed: true
+        }));
+
+        // Broadcast to all iframes if in hub
+        if (window.self === window.top) {
+            this.broadcastToIframes({ mode: newMode });
+        }
+    }
+
+    updateDisplay(mode) {
+        const isDark = mode === 'dark';
+        this.label.textContent = isDark ? 'Dark' : 'Light';
+        this.button.setAttribute('title', isDark ? 'Turn on light mode' : 'Turn on dark mode');
+
+        // Use labs-icon component
+        const iconName = isDark ? 'bedtime_off' : 'bedtime';
+        this.iconSlot.innerHTML = `<labs-icon name="${iconName}"></labs-icon>`;
+    }
+
+    broadcastToIframes(data) {
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach((iframe) => {
+            try {
+                iframe.contentWindow.postMessage(
+                    { type: 'smoothie-theme-update', ...data },
+                    '*'
+                );
+            } catch (e) {
+                // Cross-origin or not ready
+            }
+        });
+    }
 }
 
 customElements.define('labs-theme-toggle', LabsThemeToggle);
