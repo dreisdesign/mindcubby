@@ -155,9 +155,6 @@
         .back-link {
             display: inline-block;
             margin-bottom: 2rem;
-            color: var(--color-primary, #0066cc);
-            text-decoration: underline;
-            font-size: 0.875rem;
         }
 
         .back-link:hover {
@@ -168,7 +165,8 @@
 
 <body>
     <div class="container">
-        <a href="../" class="back-link">← Back to Hub</a>
+        <labs-button class="back-link" onclick="window.location.href='../';" variant="secondary">← Back to
+            Hub</labs-button>
 
         <h1>Button Component</h1>
         <p class="subtitle">All button variants, states, and themes</p>
