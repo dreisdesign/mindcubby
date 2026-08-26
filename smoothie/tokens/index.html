@@ -155,6 +155,11 @@
             z-index: 1000;
         }
 
+        /* Hide toolbar when page is embedded in iframe */
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
         .floating-toolbar label {
             font-size: 0.75rem;
             font-weight: 600;
@@ -690,6 +695,11 @@
         const themeSelect = document.getElementById('theme-select');
         const modeSelect = document.getElementById('mode-select');
         const root = document.documentElement;
+
+        // Detect if page is in iframe and hide toolbar
+        if (window.self !== window.top) {
+            root.classList.add('in-iframe');
+        }
 
         // Load saved preferences
         const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
