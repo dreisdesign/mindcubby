@@ -102,10 +102,18 @@
             margin-bottom: 0.25rem;
         }
 
+        :root.theme-dark .color-name {
+            color: var(--color-on-surface-alt);
+        }
+
         .color-value {
             color: var(--color-on-surface-variant, var(--color-on-surface));
             font-family: 'Monaco', monospace;
             word-break: break-all;
+        }
+
+        :root.theme-dark .color-value {
+            color: var(--color-on-surface-alt);
         }
 
         .token-table {
@@ -191,6 +199,72 @@
             <h2>Color Palette</h2>
 
             <h3 style="font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 1rem; color: var(--color-on-background);">
+                Global Colors</h3>
+            
+            <!-- Neutral/Base Palette -->
+            <div style="margin-bottom: 2rem;">
+                <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--color-on-background);">Neutral (Base)</h4>
+                <div class="color-grid">
+                    <div class="color-card">
+                        <div class="color-swatch" style="background-color: #FBFBFD; border: 1px solid #E0E0E0;">Base 100</div>
+                        <div class="color-info">
+                            <div class="color-name">Light Surface</div>
+                            <div class="color-value">#FBFBFD</div>
+                        </div>
+                    </div>
+                    <div class="color-card">
+                        <div class="color-swatch" style="background-color: #E0E0E0;">Base 300</div>
+                        <div class="color-info">
+                            <div class="color-name">Border/Divider</div>
+                            <div class="color-value">#E0E0E0</div>
+                        </div>
+                    </div>
+                    <div class="color-card">
+                        <div class="color-swatch" style="background-color: #A8B4C2; color: white;">Base 500</div>
+                        <div class="color-info">
+                            <div class="color-name">Mid-tone</div>
+                            <div class="color-value">#A8B4C2</div>
+                        </div>
+                    </div>
+                    <div class="color-card">
+                        <div class="color-swatch" style="background-color: #2A2A30; color: white;">Base 800</div>
+                        <div class="color-info">
+                            <div class="color-name">Dark Surface</div>
+                            <div class="color-value">#2A2A30</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Palette -->
+            <div style="margin-bottom: 2rem;">
+                <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--color-on-background);">Status Colors</h4>
+                <div class="color-grid">
+                    <div class="color-card">
+                        <div class="color-swatch" style="background-color: #00800C; color: white;">Success</div>
+                        <div class="color-info">
+                            <div class="color-name">Success</div>
+                            <div class="color-value">#00800C</div>
+                        </div>
+                    </div>
+                    <div class="color-card">
+                        <div class="color-swatch" style="background-color: #FFB300; color: #1B1C1F;">Warning</div>
+                        <div class="color-info">
+                            <div class="color-name">Warning</div>
+                            <div class="color-value">#FFB300</div>
+                        </div>
+                    </div>
+                    <div class="color-card">
+                        <div class="color-swatch" style="background-color: #D32F2F; color: white;">Error</div>
+                        <div class="color-info">
+                            <div class="color-name">Error</div>
+                            <div class="color-value">#D32F2F</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="font-size: 1.1rem; margin-top: 2rem; margin-bottom: 1rem; color: var(--color-on-background);">
                 Theme Palettes</h3>
             
             <!-- Vanilla Palette -->
