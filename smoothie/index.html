@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smoothie Design System</title>
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css">
+    <link rel="stylesheet" href="../libs/smoothie-design-system/v3.0/styles/main.css">
     <style>
         * {
             margin: 0;
@@ -141,6 +142,7 @@
         }
     </style>
 </head>
+
 <body>
     <header>
         <div class="header-content">
@@ -171,11 +173,11 @@
             <!-- Button -->
             <div class="component-card">
                 <div class="component-preview">
-                    <iframe src="/smoothie/button/"></iframe>
+                    <iframe src="./button/"></iframe>
                 </div>
                 <div class="component-footer">
                     <span class="component-name">Button</span>
-                    <a href="/smoothie/button/" class="component-link" target="_blank">Open →</a>
+                    <a href="./button/" class="component-link" target="_blank">Open →</a>
                 </div>
             </div>
         </div>
@@ -195,15 +197,15 @@
         themeSelect.value = savedTheme;
         modeSelect.value = savedMode;
 
-        // Apply on load
-        root.setAttribute('data-theme', savedTheme);
-        root.setAttribute('data-mode', savedMode);
+        // Apply on load - use CSS classes that match flavors.css selectors
+        root.classList.add(`flavor-${savedTheme}`, `theme-${savedMode}`);
         broadcastToIframes();
 
         // Theme change handler
         themeSelect.addEventListener('change', (e) => {
             const theme = e.target.value;
-            root.setAttribute('data-theme', theme);
+            root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
+            root.classList.add(`flavor-${theme}`);
             localStorage.setItem('smoothie-theme', theme);
             broadcastToIframes();
         });
@@ -211,7 +213,8 @@
         // Mode change handler
         modeSelect.addEventListener('change', (e) => {
             const mode = e.target.value;
-            root.setAttribute('data-mode', mode);
+            root.classList.remove('theme-light', 'theme-dark');
+            root.classList.add(`theme-${mode}`);
             localStorage.setItem('smoothie-mode', mode);
             broadcastToIframes();
         });
@@ -219,31 +222,25 @@
         // Broadcast theme/mode to all iframes
         function broadcastToIframes() {
             iframes.forEach((iframe) => {
-                iframe.addEventListener('load', () => {
-                    const iframeRoot = iframe.contentDocument.documentElement;
-                    iframeRoot.setAttribute('data-theme', themeSelect.value);
-                    iframeRoot.setAttribute('data-mode', modeSelect.value);
-                });
+                // Ensure we broadcast to iframe when it loads
+                const updateIframe = () => {
+                    try {
+                        const iframeRoot = iframe.contentDocument.documentElement;
+                        // Remove all flavor and theme classes
+                        iframeRoot.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry', 'theme-light', 'theme-dark');
+                        // Add current flavor and mode classes
+                        iframeRoot.classList.add(`flavor-${themeSelect.value}`, `theme-${modeSelect.value}`);
+                    } catch (e) {
+                        // iframe not loaded yet
+                    }
+                };
 
-                // Try to update immediately if already loaded
-                try {
-                    const iframeRoot = iframe.contentDocument.documentElement;
-                    iframeRoot.setAttribute('data-theme', themeSelect.value);
-                    iframeRoot.setAttribute('data-mode', modeSelect.value);
-                } catch (e) {
-                    // iframe not loaded yet
-                }
+                iframe.addEventListener('load', updateIframe);
+                // Try immediately in case iframe is already loaded
+                updateIframe();
             });
         }
-
-        // Update iframes when they load
-        iframes.forEach((iframe) => {
-            iframe.addEventListener('load', () => {
-                const iframeRoot = iframe.contentDocument.documentElement;
-                iframeRoot.setAttribute('data-theme', themeSelect.value);
-                iframeRoot.setAttribute('data-mode', modeSelect.value);
-            });
-        });
     </script>
 </body>
+
 </html>

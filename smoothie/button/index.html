@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Button - Smoothie Design System</title>
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css">
+    <link rel="stylesheet" href="../../libs/smoothie-design-system/v3.0/styles/main.css">
     <style>
         * {
             margin: 0;
@@ -160,9 +161,10 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <a href="/smoothie/" class="back-link">← Back to Hub</a>
+        <a href="../" class="back-link">← Back to Hub</a>
 
         <h1>Button Component</h1>
         <p class="subtitle">All button variants, states, and themes</p>
@@ -269,8 +271,8 @@
 
     <!-- Import Components -->
     <script type="module">
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
 
         // Theme Manager
         const themeSelect = document.getElementById('theme-select');
@@ -284,23 +286,25 @@
         themeSelect.value = savedTheme;
         modeSelect.value = savedMode;
 
-        // Apply on load
-        root.setAttribute('data-theme', savedTheme);
-        root.setAttribute('data-mode', savedMode);
+        // Apply on load - use CSS classes that match flavors.css selectors
+        root.classList.add(`flavor-${savedTheme}`, `theme-${savedMode}`);
 
         // Theme change handler
         themeSelect.addEventListener('change', (e) => {
             const theme = e.target.value;
-            root.setAttribute('data-theme', theme);
+            root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
+            root.classList.add(`flavor-${theme}`);
             localStorage.setItem('smoothie-theme', theme);
         });
 
         // Mode change handler
         modeSelect.addEventListener('change', (e) => {
             const mode = e.target.value;
-            root.setAttribute('data-mode', mode);
+            root.classList.remove('theme-light', 'theme-dark');
+            root.classList.add(`theme-${mode}`);
             localStorage.setItem('smoothie-mode', mode);
         });
     </script>
 </body>
+
 </html>
