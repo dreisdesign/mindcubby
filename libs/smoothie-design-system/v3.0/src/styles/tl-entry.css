@@ -1,0 +1,166 @@
+/* Shared Today List entry pattern styles (single source of truth) */
+.tl-entry {
+  display: flex;
+  align-items: center;
+  /* vertically center content */
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg, 8px);
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  gap: 0.75rem;
+  min-height: 3.5rem;
+}
+
+.tl-entry-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.tl-entry-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* vertically center text/meta */
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.tl-entry-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.tl-entry-meta {
+  font-size: var(--font-size-body-xs, 12px);
+  color: var(--color-on-surface);
+  opacity: 0.7;
+}
+
+.tl-entry-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  /* slightly larger gap for clarity */
+  margin-top: 0.125rem;
+}
+
+.tl-entry-header.completed {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Hover states for action buttons */
+.tl-entry-actions labs-button[variant="icon"]:hover {
+  background: var(--color-hover-light, rgba(0, 0, 0, 0.05));
+}
+
+/* Icon color default and hover: make icons visible and use primary darker on hover */
+.tl-entry-actions labs-button[variant="icon"] labs-icon {
+  color: var(--color-on-surface);
+  opacity: 0.8;
+}
+
+.tl-entry-actions labs-button[variant="icon"]:hover labs-icon {
+  color: var(--color-primary);
+  opacity: 1;
+}
+
+/* Delete button: change icon color to danger on hover (don't fill the button) */
+.tl-entry-actions labs-button[data-action="delete"] {
+  background: transparent;
+}
+
+.tl-entry-actions labs-button[data-action="delete"] labs-icon {
+  color: var(--color-on-surface);
+  opacity: 0.8;
+}
+
+.tl-entry-actions labs-button[data-action="delete"]:hover labs-icon {
+  color: var(--color-error);
+  opacity: 1;
+}
+
+/* Archive/restore states */
+.tl-entry.archived {
+  opacity: 0.6;
+}
+
+.tl-entry.archived .tl-entry-text,
+.tl-entry.archived .tl-entry-meta {
+  opacity: 0.7;
+}
+
+/* Floating remove-all button in bottom-right of viewport */
+.today-list-app .floating-remove {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 1200;
+}
+
+/* Ensure lists have comfortable vertical spacing */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Horizontal padding for other lists so they align with today-list entries */
+.list.today-list,
+.list.completed-list,
+.list.archived-list {
+  padding: 0 1rem;
+}
+
+/* Spacing below the date/today header */
+.today-header {
+  margin-bottom: 1.5rem;
+}
+
+/* Section spacing between Today, Completed, and Archived sections */
+.section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: var(--color-on-background);
+}
+
+/* Controls spacing - spacing between Today and Add Item */
+.controls {
+  margin-bottom: 2rem;
+}
+
+/* Archive and restore icons should be visible with consistent colors */
+.tl-entry-actions labs-button[aria-label="Archive"] labs-icon,
+.tl-entry-actions labs-button[aria-label="Restore item"] labs-icon {
+  color: var(--color-on-surface);
+  opacity: 0.8;
+}
+
+.tl-entry-actions labs-button[aria-label="Archive"]:hover labs-icon,
+.tl-entry-actions labs-button[aria-label="Restore item"]:hover labs-icon {
+  color: var(--color-primary);
+  opacity: 1;
+}
+
+/* Horizontal padding for Today List container so entries align with entry padding */
+.list.today-list {
+  padding: 0 1rem;
+}
+
+/* Remove button background fills for clean appearance */
+.today-list-app labs-button[variant="icon"] {
+  background: transparent !important;
+}

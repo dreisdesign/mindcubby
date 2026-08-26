@@ -1,0 +1,122 @@
+/* Palette variables (single source of truth for raw colors)
+   Minimal anchor set: 5 shades per flavor and 5 neutral stops.
+*/
+:root {
+  /* Primary Lighter background color (semantic, e.g. 300 stop) */
+  --color-primary-lighter: var(--palette-blueberry-300);
+  /* Primary Lighter: uses Blueberry 300 for backgrounds like cards, footers, etc. */
+  --color-on-primary-lighter: var(--base-800);
+  /* On Primary Lighter: text color for primary-lighter backgrounds (dark text for contrast) */
+  /*
+    Global semantic tokens:
+
+    Surface System (global, consistent across themes):
+    - Surface: default light surface (#FBFBFD)
+    - Surface Alt: default dark surface (#2A2A30)
+    - On Surface: dark text for light surfaces
+    - On Surface Alt: light text for dark surfaces
+
+    Background System (theme-specific):
+    - Background: theme's page background (overridden per flavor/theme)
+    - On Background: text for the theme's background (overridden per flavor/theme)
+  */
+  --color-surface: var(--base-100);
+  /* Surface: light surface for cards, modals, etc. */
+  --color-surface-alt: var(--base-800);
+  /* Surface Alt: dark surface for contrast areas */
+  --color-on-surface: var(--base-800);
+  /* On Surface: dark text for light surfaces */
+  --color-on-surface-alt: var(--base-100);
+  /* On Surface Alt: light text for dark surfaces */
+  --color-background: var(--base-100);
+  /* Background: page background (themes customize this) */
+  --color-on-background: var(--base-800);
+  /* On Background: text for page background (themes customize this) */
+  /* On Background: default text for backgrounds (themes override this) */
+  --palette-vanilla-100: #F5F1E7;
+  /* Vanilla palette — for Vanilla theme and as a base for other flavors */
+  --palette-vanilla-100: #F5F1E7;
+  /* background */
+  --palette-vanilla-200: #E8E2D6;
+  --palette-vanilla-300: #D6C6A8;
+  /* TODO: Adjust value for Vanilla 300 */
+  --palette-vanilla-500: #6B5C4B;
+  /* was 700, now 500 */
+  --palette-vanilla-800: #3A2F25;
+  --palette-vanilla-900: #1B1C1F;
+  --palette-vanilla-1000: #000000;
+  /* primary */
+  --color-primary: var(--palette-blueberry-500);
+  /* Primary: main brand color (Blueberry 500 by default) */
+  --color-on-primary: #fff;
+  /* On Primary: text color for use on primary backgrounds (white for contrast) */
+  --color-primary-darker: var(--palette-blueberry-800);
+  /* Primary Darker: darker variant of primary color */
+  --color-on-primary-darker: #fff;
+  /* On Primary Darker: text color for primary-darker backgrounds */
+  /* Blueberry (5 stops) — canonical anchors */
+  --palette-blueberry-100: #F0EEFF;
+  /* intermediate 200 stop (added back for theme pages) */
+  --palette-blueberry-200: #DBD7FF;
+  --palette-blueberry-300: #B3A8F7;
+  /* Made Blueberry 300 lighter for better visual appeal */
+  --palette-blueberry-500: #2E2B74;
+  --palette-blueberry-700: #26225A;
+  /* generated 800 stop (midpoint between 700 #26225A and 900 #15122B) */
+  --palette-blueberry-800: #1E193E;
+  --palette-blueberry-900: #15122B;
+
+  /* Strawberry (5 stops) — canonical anchors */
+  --palette-strawberry-100: #FFF2F1;
+  /* intermediate 200 stop (added back for theme pages) */
+  --palette-strawberry-200: #FFD3D2;
+  --palette-strawberry-300: #FFB3B0;
+  /* TODO: Adjust value for Strawberry 300 */
+  --palette-strawberry-500: #800800;
+  --palette-strawberry-700: #9B2F2B;
+  /* made darker to match other 800 variants */
+  --palette-strawberry-800: #5C1A18;
+  --palette-strawberry-900: #2A0B0A;
+
+  /* Base (gray) palette */
+  --palette-white: #FFFFFF;
+  --palette-base-100: #FBFBFD;
+  --palette-base-300: #E0E0E0;
+  /* TODO: Adjust value for Base 300 */
+  /* mid-tone base for borders and outlines */
+  --palette-base-500: #A8B4C2;
+  /* darker base anchor used for deep surfaces */
+  --palette-base-800: #2A2A30;
+  --palette-black: #000000;
+
+  /* Base convenience aliases — allow semantic tokens to reference
+    `--base-100` etc. without knowing the underlying palette variable name */
+  --base-100: var(--palette-base-100);
+  --base-500: var(--palette-base-500);
+  --base-800: var(--palette-base-800);
+  /* Status palette (for semantic feedback colors) */
+  --palette-green-500: #00800C;
+  /* Success */
+  --palette-yellow-500: #FFB300;
+  /* Warning */
+  --palette-red-500: #D32F2F;
+  /* Error */
+
+  /* Map semantic tokens for status colors */
+  --color-success: var(--palette-green-500);
+  --color-on-success: #fff;
+  /* On Success: white text for high contrast on green #00800C background */
+  --color-warning: var(--palette-yellow-500);
+  --color-on-warning: var(--color-on-surface);
+  /* On Warning: use surface text color for high contrast on yellow #FFB300 background */
+  --color-warning-text: #1B1C1F;
+  /* Warning Text: dark text for accessibility on yellow badges */
+  --color-error: var(--palette-red-500);
+  --color-on-error: #fff;
+  /* On Error: white text for high contrast on red #D32F2F background */
+  /* UI tokens */
+  /* Opacity used for archived or dimmed list items — themeable */
+  --labs-archived-opacity: 0.7;
+  /* Secondary surface used for subtle accents like badges */
+  --color-surface-secondary: color-mix(in srgb, var(--color-surface) 92%, transparent);
+}

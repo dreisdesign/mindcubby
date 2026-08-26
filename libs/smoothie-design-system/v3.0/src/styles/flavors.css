@@ -1,0 +1,190 @@
+/*
+  All flavors inherit --color-surface and --color-on-surface from the global tokens in tokens/colors.css.
+  These are semantic tokens:
+    --color-surface: var(--neutral-100) (Surface: background, Text: On Surface)
+    --color-on-surface: var(--neutral-800) (On Surface: text, Text: Surface)
+  Only override if a flavor/theme needs a different mapping.
+*/
+
+/* Vanilla */
+/* Vanilla flavor: root and Storybook table isolation */
+:root.flavor-vanilla.theme-light,
+.tokens-doc-root.flavor-vanilla.theme-light {
+  --color-footer-bg: rgba(255, 255, 255, 0.25);
+  /* 15% white, matches tracker */
+  --color-background-darkest: var(--palette-vanilla-900);
+  --color-on-background-darkest: var(--palette-vanilla-100);
+  --color-primary: var(--palette-vanilla-500);
+  /* Use 500 (#6B5C4B) as primary */
+  --color-primary-darker: var(--palette-vanilla-800);
+  /* Use 800 (#1B1C1F) as primary-darker */
+  --color-primary-lighter: var(--palette-vanilla-300);
+  /* Use 300 as primary-lighter */
+  --color-background: var(--palette-vanilla-200);
+  /* #E8E2D6 */
+  /* Surface mapping for vanilla light theme */
+  --color-surface: var(--palette-vanilla-100);
+  --color-on-surface: var(--palette-vanilla-800);
+  --color-on-primary: var(--palette-vanilla-100);
+  --color-on-primary-darker: var(--palette-vanilla-100);
+  --color-background: var(--palette-vanilla-200);
+  --color-on-background: var(--palette-vanilla-800);
+  --color-surface-hover: #ede8de;
+  --color-surface: var(--palette-vanilla-100);
+  --color-surface-container: var(--palette-vanilla-100);
+  --color-surface-container-high: var(--palette-vanilla-200);
+  --color-surface-variant: var(--palette-vanilla-200);
+  --color-on-surface-variant: var(--palette-vanilla-700);
+  /* Status colors inherit from global tokens */
+}
+
+/* Vanilla dark flavor: root and Storybook table isolation */
+:root.flavor-vanilla.theme-dark,
+.tokens-doc-root.flavor-vanilla.theme-dark {
+  --color-footer-bg: rgba(27, 28, 31, 0.15);
+  --footer-shadow: none;
+  /* #1B1C1F, 15% */
+  --color-background-darkest: var(--palette-vanilla-900);
+  --color-on-background-darkest: var(--palette-vanilla-100);
+  --color-primary: var(--palette-vanilla-500);
+  /* Use 500 for primary, matching other flavors */
+  --color-primary-darker: var(--palette-vanilla-800);
+  --color-primary-lighter: var(--palette-vanilla-300);
+  --color-background: var(--palette-vanilla-800);
+  /* Surface mapping for vanilla dark theme */
+  --color-surface: var(--palette-vanilla-500);
+  --color-on-primary: var(--palette-vanilla-100);
+  --color-on-primary-darker: var(--palette-vanilla-100);
+  --color-on-primary-lighter: var(--palette-vanilla-100);
+  --color-on-background: var(--palette-vanilla-100);
+  --color-on-surface: var(--palette-vanilla-100);
+  /* Added for dark mode icon contrast */
+  --color-surface-hover: #29282a;
+  /* Surface container helpers for vanilla dark */
+  --color-surface-container: var(--palette-vanilla-800);
+  --color-surface-container-high: var(--palette-vanilla-500);
+  --color-surface-variant: var(--palette-vanilla-500);
+  --color-on-surface-variant: var(--palette-vanilla-200);
+  /* Status colors inherit from global tokens */
+}
+
+/* Flavors map the small canonical semantic set to palette anchors.
+  Each flavor defines the same semantic names. Don't add new global names here.
+  Global neutral palette is now used only for the default theme, not for Vanilla. */
+
+/* Blueberry */
+/* Blueberry flavor: root and Storybook table isolation */
+:root.flavor-blueberry.theme-light,
+.tokens-doc-root.flavor-blueberry.theme-light {
+  --color-footer-bg: rgba(255, 255, 255, 0.15);
+  /* 15% white, matches tracker */
+  --color-background-darkest: var(--palette-blueberry-900);
+  --color-on-background-darkest: var(--palette-blueberry-100);
+  --color-primary: var(--palette-blueberry-500);
+  --color-primary-darker: var(--palette-blueberry-800);
+  --color-primary-lighter: var(--palette-blueberry-300);
+  --color-background: var(--palette-blueberry-200);
+  /* Surface mapping for blueberry light theme */
+  --color-surface: var(--palette-blueberry-100);
+  --color-on-surface: var(--palette-blueberry-900);
+  --color-on-primary: var(--palette-white);
+  --color-on-primary-darker: var(--palette-white);
+  --color-on-primary-lighter: var(--palette-blueberry-900);
+  --color-on-background: var(--palette-blueberry-900);
+  --settings-icon-color: #1c1b1f40;
+  --color-surface-hover: #e6e3fa;
+  /* Surface container helpers for blueberry */
+  --color-surface-container: var(--palette-blueberry-100);
+  --color-surface-container-high: var(--palette-blueberry-200);
+  --color-surface-variant: var(--palette-blueberry-200);
+  --color-on-surface-variant: var(--palette-blueberry-700);
+  /* Status colors inherit from global tokens */
+}
+
+/* Blueberry dark flavor: root and Storybook table isolation */
+:root.flavor-blueberry.theme-dark,
+.tokens-doc-root.flavor-blueberry.theme-dark {
+  --color-footer-bg: rgba(28, 27, 31, 0.15);
+  --footer-shadow: none;
+  /* #1C1B1F, 15% */
+  --color-background-darkest: var(--palette-blueberry-900);
+  --color-on-background-darkest: var(--palette-blueberry-100);
+  --color-primary: var(--palette-blueberry-500);
+  --color-primary-darker: var(--palette-blueberry-800);
+  --color-primary-lighter: var(--palette-blueberry-300);
+  --color-background: var(--palette-blueberry-800);
+  --color-surface: var(--palette-blueberry-800);
+  --color-on-surface: var(--palette-white);
+  /* secondary surface for badges in dark mode */
+  --color-surface-secondary: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  --color-on-primary: var(--palette-white);
+  --color-on-primary-darker: var(--palette-white);
+  --color-on-primary-lighter: var(--palette-white);
+  --color-on-background: var(--palette-blueberry-100);
+  --settings-icon-color: #ffffff40;
+  --color-surface-hover: #292a3a;
+  /* Surface container helpers for blueberry dark */
+  --color-surface-container: var(--palette-blueberry-800);
+  --color-surface-container-high: var(--palette-blueberry-700);
+  --color-surface-variant: var(--palette-blueberry-700);
+  --color-on-surface-variant: var(--palette-blueberry-200);
+  /* Status colors inherit from global tokens */
+}
+
+/* Strawberry */
+/* Strawberry flavor: root and Storybook table isolation */
+:root.flavor-strawberry.theme-light,
+.tokens-doc-root.flavor-strawberry.theme-light {
+  --color-footer-bg: rgba(255, 255, 255, 0.15);
+  /* 15% white, matches tracker */
+  --color-background-darkest: var(--palette-strawberry-900);
+  --color-on-background-darkest: var(--palette-strawberry-100);
+  --color-primary: var(--palette-strawberry-500);
+  --color-primary-darker: var(--palette-strawberry-800);
+  --color-primary-lighter: var(--palette-strawberry-300);
+  --color-background: var(--palette-strawberry-200);
+  /* Surface mapping for strawberry light theme */
+  --color-surface: var(--palette-strawberry-100);
+  --color-on-surface: var(--palette-strawberry-900);
+  --color-on-primary: var(--palette-white);
+  --color-on-primary-darker: var(--palette-white);
+  --color-on-primary-lighter: var(--palette-strawberry-900);
+  --color-on-background: var(--palette-strawberry-900);
+  --settings-icon-color: var(--palette-strawberry-700);
+  --color-surface-hover: #ffe3e2;
+  /* Surface container helpers for strawberry */
+  --color-surface-container: var(--palette-strawberry-100);
+  --color-surface-container-high: var(--palette-strawberry-200);
+  --color-surface-variant: var(--palette-strawberry-200);
+  --color-on-surface-variant: var(--palette-strawberry-700);
+  /* Status colors inherit from global tokens */
+}
+
+/* Strawberry dark flavor: root and Storybook table isolation */
+:root.flavor-strawberry.theme-dark,
+.tokens-doc-root.flavor-strawberry.theme-dark {
+  --color-footer-bg: rgba(58, 22, 21, 0.15);
+  --footer-shadow: none;
+  /* #3A1615, 15% */
+  --color-background-darkest: var(--palette-strawberry-900);
+  --color-on-background-darkest: var(--palette-strawberry-100);
+  --color-primary: var(--palette-strawberry-500);
+  --color-primary-darker: var(--palette-strawberry-800);
+  --color-primary-lighter: var(--palette-strawberry-300);
+  --color-background: var(--palette-strawberry-800);
+  --color-surface: var(--palette-strawberry-500);
+  --color-on-surface: var(--palette-white);
+  --color-surface-secondary: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  --color-on-primary: var(--palette-white);
+  --color-on-primary-darker: var(--palette-white);
+  --color-on-primary-lighter: var(--palette-white);
+  --color-on-background: var(--palette-strawberry-100);
+  --settings-icon-color: var(--palette-strawberry-500);
+  --color-surface-hover: #5a2322;
+  /* Surface container helpers for strawberry dark */
+  --color-surface-container: var(--palette-strawberry-800);
+  --color-surface-container-high: var(--palette-strawberry-700);
+  --color-surface-variant: var(--palette-strawberry-700);
+  --color-on-surface-variant: var(--palette-strawberry-200);
+  /* Status colors inherit from global tokens */
+}

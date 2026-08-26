@@ -1,0 +1,73 @@
+/* storybook-tokens.css - Shared grid/card styles for token stories */
+
+.tokens-container {
+  padding: 2rem;
+  background: var(--color-surface, #fff);
+  max-width: 1100px;
+  margin: auto;
+}
+
+.tokens-title {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-on-background, #222);
+  font-size: 1.5rem;
+}
+
+.tokens-subtitle {
+  margin: 0 0 2rem 0;
+  color: var(--color-on-background, #222);
+  opacity: 0.7;
+}
+
+.tokens-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.tokens-card {
+  background: var(--color-surface, #fafbfc);
+  border: 1px solid var(--color-primary-25, #eee);
+  border-radius: var(--radius-lg, 8px);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tokens-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tokens-swatch {
+  height: 80px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tokens-details {
+  padding: 1rem;
+}
+
+.tokens-token-name {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--color-on-surface, #222);
+  margin-bottom: 0.5rem;
+}
+
+.tokens-value {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--color-on-surface, #222);
+  opacity: 0.7;
+}
+
+.tokens-usage {
+  font-size: 0.75rem;
+  color: var(--color-on-surface, #222);
+  opacity: 0.5;
+  margin-top: 0.5rem;
+}
