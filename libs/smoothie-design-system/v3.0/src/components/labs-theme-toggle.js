@@ -80,7 +80,7 @@ template.innerHTML = `
 
   <div class="toggle-container">
     <button class="toggle-button" aria-label="Toggle dark mode" title="Toggle dark mode">
-      <span class="icon">🌙</span>
+      <span class="icon" id="icon-slot"></span>
     </button>
     <span class="label">Light</span>
   </div>
@@ -93,9 +93,13 @@ class LabsThemeToggle extends HTMLElement {
     this.shadowRoot.appendChild(template.content.cloneNode(true));
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    // Dynamic import of labs-icon
+    await import('./labs-icon.js');
+
     this.button = this.shadowRoot.querySelector('.toggle-button');
     this.label = this.shadowRoot.querySelector('.label');
+    this.iconSlot = this.shadowRoot.querySelector('#icon-slot');
 
     // Load current mode
     const currentMode = localStorage.getItem('smoothie-mode') || 'light';
@@ -139,7 +143,10 @@ class LabsThemeToggle extends HTMLElement {
     const isDark = mode === 'dark';
     this.label.textContent = isDark ? 'Dark' : 'Light';
     this.button.setAttribute('title', isDark ? 'Turn on light mode' : 'Turn on dark mode');
-    this.button.innerHTML = `<span class="icon">${isDark ? '☀️' : '🌙'}</span>`;
+    
+    // Use labs-icon component
+    const iconName = isDark ? 'bedtime_off' : 'bedtime';
+    this.iconSlot.innerHTML = `<labs-icon name="${iconName}"></labs-icon>`;
   }
 
   broadcastToIframes(data) {
