@@ -288,38 +288,38 @@
 
         // Load saved preferences
         const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
-        const savedMode = localStorage.getItem('smoothie-mode') || 'light';
-        let currentMode = savedMode;
+        const savedAppearance = localStorage.getItem('smoothie-appearance') || 'light';
+        let currentAppearance = savedAppearance;
 
         // Apply on load - use CSS classes that match flavors.css selectors
-        root.classList.add(`flavor-${savedTheme}`, `theme-${savedMode}`);
+        root.classList.add(`theme-${savedTheme}`, `appearance-${savedAppearance}`);
         updateModeButtons();
         broadcastToIframes();
 
         // Theme change handler (labs-flavor-selector emits flavor-changed event)
         themeSelector.addEventListener('flavor-changed', (e) => {
             const theme = e.detail.flavor;
-            root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
-            root.classList.add(`flavor-${theme}`);
+            root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+            root.classList.add(`theme-${theme}`);
             localStorage.setItem('smoothie-theme', theme);
             broadcastToIframes();
         });
 
-        // Mode change handler
+        // Appearance (light/dark) change handler
         modeLightBtn.addEventListener('click', () => {
-            setMode('light');
+            setAppearance('light');
         });
 
         modeDarkBtn.addEventListener('click', () => {
-            setMode('dark');
+            setAppearance('dark');
         });
 
-        function setMode(mode) {
-            if (currentMode === mode) return;
-            currentMode = mode;
-            root.classList.remove('theme-light', 'theme-dark');
-            root.classList.add(`theme-${mode}`);
-            localStorage.setItem('smoothie-mode', mode);
+        function setAppearance(appearance) {
+            if (currentAppearance === appearance) return;
+            currentAppearance = appearance;
+            root.classList.remove('appearance-light', 'appearance-dark');
+            root.classList.add(`appearance-${appearance}`);
+            localStorage.setItem('smoothie-appearance', appearance);
             updateModeButtons();
             broadcastToIframes();
         }
@@ -334,9 +334,9 @@
             }
         }
 
-        // Broadcast theme/mode to all iframes
+        // Broadcast theme/appearance to all iframes
         function broadcastToIframes() {
-            const currentTheme = [...root.classList].find(c => c.startsWith('flavor-'))?.replace('flavor-', '') || 'vanilla';
+            const currentTheme = [...root.classList].find(c => c.startsWith('theme-'))?.replace('theme-', '') || 'vanilla';
             iframes.forEach((iframe) => {
                 // Use postMessage for reliable cross-iframe communication
                 try {
@@ -344,7 +344,7 @@
                         {
                             type: 'smoothie-theme-update',
                             theme: currentTheme,
-                            mode: currentMode
+                            appearance: currentAppearance
                         },
                         '*'
                     );
@@ -358,10 +358,10 @@
                         if (!iframe.contentDocument) return;
                         const iframeRoot = iframe.contentDocument.documentElement;
                         if (!iframeRoot) return;
-                        // Remove all flavor and theme classes
-                        iframeRoot.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry', 'theme-light', 'theme-dark');
-                        // Add current flavor and mode classes
-                        iframeRoot.classList.add(`flavor-${currentTheme}`, `theme-${currentMode}`);
+                        // Remove all theme and appearance classes
+                        iframeRoot.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry', 'appearance-light', 'appearance-dark');
+                        // Add current theme and appearance classes
+                        iframeRoot.classList.add(`theme-${currentTheme}`, `appearance-${currentAppearance}`);
                     } catch (e) {
                         // Not accessible, postMessage will handle it
                     }

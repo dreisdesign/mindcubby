@@ -705,44 +705,44 @@
 
         // Load saved preferences
         const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
-        const savedMode = localStorage.getItem('smoothie-mode') || 'light';
+        const savedAppearance = localStorage.getItem('smoothie-appearance') || 'light';
 
         themeSelect.value = savedTheme;
-        modeSelect.value = savedMode;
+        modeSelect.value = savedAppearance;
 
         // Apply on load - use CSS classes that match flavors.css selectors
-        root.classList.add(`flavor-${savedTheme}`, `theme-${savedMode}`);
+        root.classList.add(`theme-${savedTheme}`, `appearance-${savedAppearance}`);
 
         // Theme change handler
         themeSelect.addEventListener('change', (e) => {
             const theme = e.target.value;
-            root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
-            root.classList.add(`flavor-${theme}`);
+            root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+            root.classList.add(`theme-${theme}`);
             localStorage.setItem('smoothie-theme', theme);
         });
 
-        // Mode change handler
+        // Appearance (light/dark) change handler
         modeSelect.addEventListener('change', (e) => {
-            const mode = e.target.value;
-            root.classList.remove('theme-light', 'theme-dark');
-            root.classList.add(`theme-${mode}`);
-            localStorage.setItem('smoothie-mode', mode);
+            const appearance = e.target.value;
+            root.classList.remove('appearance-light', 'appearance-dark');
+            root.classList.add(`appearance-${appearance}`);
+            localStorage.setItem('smoothie-appearance', appearance);
         });
 
         // Listen for theme updates from parent hub via postMessage
         window.addEventListener('message', (event) => {
             if (event.data.type === 'smoothie-theme-update') {
-                const { theme, mode } = event.data;
+                const { theme, appearance } = event.data;
                 // Update theme
-                root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
-                root.classList.add(`flavor-${theme}`);
+                root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+                root.classList.add(`theme-${theme}`);
                 localStorage.setItem('smoothie-theme', theme);
                 themeSelect.value = theme;
-                // Update mode
-                root.classList.remove('theme-light', 'theme-dark');
-                root.classList.add(`theme-${mode}`);
-                localStorage.setItem('smoothie-mode', mode);
-                modeSelect.value = mode;
+                // Update appearance
+                root.classList.remove('appearance-light', 'appearance-dark');
+                root.classList.add(`appearance-${appearance}`);
+                localStorage.setItem('smoothie-appearance', appearance);
+                modeSelect.value = appearance;
             }
         });
     </script>

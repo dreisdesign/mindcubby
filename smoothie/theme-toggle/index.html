@@ -401,36 +401,43 @@
 
         // Load saved preferences
         const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
+        const savedAppearance = localStorage.getItem('smoothie-appearance') || 'light';
         themeSelect.value = savedTheme;
-        root.classList.add(`flavor-${savedTheme}`, 'theme-light');
+        root.classList.add(`theme-${savedTheme}`, `appearance-${savedAppearance}`);
 
         // Theme change handler
         themeSelect.addEventListener('change', (e) => {
             const theme = e.target.value;
-            root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
-            root.classList.add(`flavor-${theme}`);
+            root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+            root.classList.add(`theme-${theme}`);
             localStorage.setItem('smoothie-theme', theme);
         });
 
         // Listen for theme updates from parent hub via postMessage
         window.addEventListener('message', (event) => {
             if (event.data.type === 'smoothie-theme-update') {
-                const { theme } = event.data;
+                const { theme, appearance } = event.data;
                 if (theme) {
-                    root.classList.remove('flavor-vanilla', 'flavor-blueberry', 'flavor-strawberry');
-                    root.classList.add(`flavor-${theme}`);
+                    root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+                    root.classList.add(`theme-${theme}`);
                     localStorage.setItem('smoothie-theme', theme);
                     themeSelect.value = theme;
+                }
+                if (appearance) {
+                    root.classList.remove('appearance-light', 'appearance-dark');
+                    root.classList.add(`appearance-${appearance}`);
+                    localStorage.setItem('smoothie-appearance', appearance);
                 }
             }
         });
 
-        // Listen for mode changes from theme-toggle
+        // Listen for appearance (light/dark) changes from theme-toggle component
         const toggle = document.querySelector('labs-theme-toggle');
         toggle.addEventListener('mode-changed', (e) => {
-            const mode = e.detail.mode;
-            root.classList.remove('theme-light', 'theme-dark');
-            root.classList.add(`theme-${mode}`);
+            const appearance = e.detail.mode;
+            root.classList.remove('appearance-light', 'appearance-dark');
+            root.classList.add(`appearance-${appearance}`);
+            localStorage.setItem('smoothie-appearance', appearance);
         });
     </script>
 </body>

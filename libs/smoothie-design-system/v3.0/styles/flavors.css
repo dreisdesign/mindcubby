@@ -1,15 +1,15 @@
 /*
-  All flavors inherit --color-surface and --color-on-surface from the global tokens in tokens/colors.css.
+  All themes inherit --color-surface and --color-on-surface from the global tokens in tokens/colors.css.
   These are semantic tokens:
     --color-surface: var(--neutral-100) (Surface: background, Text: On Surface)
     --color-on-surface: var(--neutral-800) (On Surface: text, Text: Surface)
-  Only override if a flavor/theme needs a different mapping.
+  Only override if a theme needs a different mapping.
 */
 
 /* Vanilla */
-/* Vanilla flavor: root and Storybook table isolation */
-:root.flavor-vanilla.theme-light,
-.tokens-doc-root.flavor-vanilla.theme-light {
+/* Vanilla theme (color): root and Storybook table isolation */
+:root.theme-vanilla.appearance-light,
+.tokens-doc-root.theme-vanilla.appearance-light {
   --color-footer-bg: rgba(255, 255, 255, 0.25);
   /* 15% white, matches tracker */
   --color-background-darkest: var(--palette-vanilla-900);
@@ -41,9 +41,9 @@
   /* Status colors inherit from global tokens */
 }
 
-/* Vanilla dark flavor: root and Storybook table isolation */
-:root.flavor-vanilla.theme-dark,
-.tokens-doc-root.flavor-vanilla.theme-dark {
+/* Vanilla dark theme (color): root and Storybook table isolation */
+:root.theme-vanilla.appearance-dark,
+.tokens-doc-root.theme-vanilla.appearance-dark {
   --color-footer-bg: rgba(27, 28, 31, 0.15);
   --footer-shadow: none;
   /* #1B1C1F, 15% */
@@ -74,14 +74,14 @@
   /* Status colors inherit from global tokens */
 }
 
-/* Flavors map the small canonical semantic set to palette anchors.
-  Each flavor defines the same semantic names. Don't add new global names here.
+/* Themes map the small canonical semantic set to palette anchors.
+  Each theme defines the same semantic names. Don't add new global names here.
   Global neutral palette is now used only for the default theme, not for Vanilla. */
 
 /* Blueberry */
-/* Blueberry flavor: root and Storybook table isolation */
-:root.flavor-blueberry.theme-light,
-.tokens-doc-root.flavor-blueberry.theme-light {
+/* Blueberry theme (color): root and Storybook table isolation */
+:root.theme-blueberry.appearance-light,
+.tokens-doc-root.theme-blueberry.appearance-light {
   --color-footer-bg: rgba(255, 255, 255, 0.15);
   /* 15% white, matches tracker */
   --color-background-darkest: var(--palette-blueberry-900);
@@ -110,9 +110,9 @@
   /* Status colors inherit from global tokens */
 }
 
-/* Blueberry dark flavor: root and Storybook table isolation */
-:root.flavor-blueberry.theme-dark,
-.tokens-doc-root.flavor-blueberry.theme-dark {
+/* Blueberry dark theme (color): root and Storybook table isolation */
+:root.theme-blueberry.appearance-dark,
+.tokens-doc-root.theme-blueberry.appearance-dark {
   --color-footer-bg: rgba(28, 27, 31, 0.15);
   --footer-shadow: none;
   /* #1C1B1F, 15% */
@@ -144,9 +144,9 @@
 }
 
 /* Strawberry */
-/* Strawberry flavor: root and Storybook table isolation */
-:root.flavor-strawberry.theme-light,
-.tokens-doc-root.flavor-strawberry.theme-light {
+/* Strawberry theme (color): root and Storybook table isolation */
+:root.theme-strawberry.appearance-light,
+.tokens-doc-root.theme-strawberry.appearance-light {
   --color-footer-bg: rgba(255, 255, 255, 0.15);
   /* 15% white, matches tracker */
   --color-background-darkest: var(--palette-strawberry-900);
@@ -175,9 +175,9 @@
   /* Status colors inherit from global tokens */
 }
 
-/* Strawberry dark flavor: root and Storybook table isolation */
-:root.flavor-strawberry.theme-dark,
-.tokens-doc-root.flavor-strawberry.theme-dark {
+/* Strawberry dark theme (color): root and Storybook table isolation */
+:root.theme-strawberry.appearance-dark,
+.tokens-doc-root.theme-strawberry.appearance-dark {
   --color-footer-bg: rgba(58, 22, 21, 0.15);
   --footer-shadow: none;
   /* #3A1615, 15% */

@@ -101,41 +101,41 @@ class LabsThemeToggle extends HTMLElement {
         this.label = this.shadowRoot.querySelector('.label');
         this.iconSlot = this.shadowRoot.querySelector('#icon-slot');
 
-        // Load current mode
-        const currentMode = localStorage.getItem('smoothie-mode') || 'light';
-        this.updateDisplay(currentMode);
+        // Load current appearance (light/dark)
+        const currentAppearance = localStorage.getItem('smoothie-appearance') || 'light';
+        this.updateDisplay(currentAppearance);
 
         // Listen for clicks
         this.button.addEventListener('click', () => this.toggle());
 
         // Listen for external changes via postMessage
         window.addEventListener('message', (event) => {
-            if (event.data.type === 'smoothie-theme-update' && event.data.mode) {
-                this.updateDisplay(event.data.mode);
+            if (event.data.type === 'smoothie-theme-update' && event.data.appearance) {
+                this.updateDisplay(event.data.appearance);
             }
         });
     }
 
     toggle() {
-        const currentMode = localStorage.getItem('smoothie-mode') || 'light';
-        const newMode = currentMode === 'light' ? 'dark' : 'light';
+        const currentAppearance = localStorage.getItem('smoothie-appearance') || 'light';
+        const newAppearance = currentAppearance === 'light' ? 'dark' : 'light';
 
         // Update self
-        this.updateDisplay(newMode);
+        this.updateDisplay(newAppearance);
 
         // Persist
-        localStorage.setItem('smoothie-mode', newMode);
+        localStorage.setItem('smoothie-appearance', newAppearance);
 
-        // Emit custom event for parent
+        // Emit custom event for parent (keep mode-changed for backward compat)
         this.dispatchEvent(new CustomEvent('mode-changed', {
-            detail: { mode: newMode },
+            detail: { mode: newAppearance },
             bubbles: true,
             composed: true
         }));
 
         // Broadcast to all iframes if in hub
         if (window.self === window.top) {
-            this.broadcastToIframes({ mode: newMode });
+            this.broadcastToIframes({ appearance: newAppearance });
         }
     }
 
