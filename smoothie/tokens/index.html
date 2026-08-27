@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Design Tokens - Smoothie Design System</title>
+    <link rel="icon" href="../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../../libs/smoothie-design-system/v3.0/styles/main.css">
     <script type="module">
         import '../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
@@ -415,7 +416,7 @@
                 Semantic Colors (Current Theme)</h3>
             <div class="color-grid">
                 <div class="color-card">
-                    <div class="color-swatch" style="background-color: var(--color-primary);">Primary</div>
+                    <div class="color-swatch" style="background-color: var(--color-primary); color: var(--color-on-primary);">Primary</div>
                     <div class="color-info">
                         <div class="color-name">Primary</div>
                         <div class="color-value">--color-primary</div>
@@ -426,13 +427,13 @@
                     <div class="color-swatch"
                         style="background-color: var(--color-on-primary); color: var(--color-primary);">On Primary</div>
                     <div class="color-info">
-                        <div class="color-name">On Primary</div>
-                        <div class="color-value">--color-on-primary</div>
+                        <div class="color-name" style="color: var(--color-on-background);">On Primary</div>
+                        <div class="color-value" style="color: var(--color-on-surface);">--color-on-primary</div>
                     </div>
                 </div>
 
                 <div class="color-card">
-                    <div class="color-swatch" style="background-color: var(--color-background);">Background</div>
+                    <div class="color-swatch" style="background-color: var(--color-background); color: var(--color-on-background); border: 1px solid var(--color-outline);">Background</div>
                     <div class="color-info">
                         <div class="color-name">Background</div>
                         <div class="color-value">--color-background</div>
@@ -440,7 +441,7 @@
                 </div>
 
                 <div class="color-card">
-                    <div class="color-swatch" style="background-color: var(--color-surface);">Surface</div>
+                    <div class="color-swatch" style="background-color: var(--color-surface); color: var(--color-on-surface); border: 1px solid var(--color-outline);">Surface</div>
                     <div class="color-info">
                         <div class="color-name">Surface</div>
                         <div class="color-value">--color-surface</div>
@@ -448,7 +449,7 @@
                 </div>
 
                 <div class="color-card">
-                    <div class="color-swatch" style="background-color: var(--color-on-surface);">On Surface</div>
+                    <div class="color-swatch" style="background-color: var(--color-on-surface); color: var(--color-surface);">On Surface</div>
                     <div class="color-info">
                         <div class="color-name">On Surface</div>
                         <div class="color-value">--color-on-surface</div>
@@ -684,7 +685,7 @@
             </select>
         </div>
         <div>
-            <label for="mode-select">Mode</label>
+            <label for="mode-select">Appearance</label>
             <select id="mode-select">
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
