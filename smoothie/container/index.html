@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Container - Smoothie Design System</title>
+    <link rel="icon" href="../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../../libs/smoothie-design-system/v3.0/styles/main.css">
     <script type="module">
         import '../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
@@ -26,6 +27,11 @@
             line-height: 1.6;
             transition: background-color 0.3s, color 0.3s;
             min-height: 100vh;
+        }
+
+        labs-container#main-container {
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .container {
@@ -123,6 +129,10 @@
             border-radius: 8px;
             overflow: hidden;
             padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
         }
 
         .demo-item h3 {
@@ -150,9 +160,8 @@
 
         /* Visual container demo wrapper */
         .container-demo-wrapper {
+            width: fit-content;
             max-width: 400px;
-            margin: 0 auto;
-            background: var(--color-surface-container);
             border-radius: 8px;
             padding: 2rem;
             display: flex;
@@ -178,8 +187,10 @@
 
         /* Ensure button has high contrast on dark background */
         .container-demo-inner labs-button {
-            --color-primary: white !important;
-            --color-on-primary: #2E2B74 !important;
+            --color-primary: #ffffff !important;
+            --color-on-primary: #000000 !important;
+            --color-primary-darker: #e0e0e0 !important;
+            --color-primary-lighter: #ffffff !important;
         }
 
         .container-demo-label {
@@ -267,7 +278,7 @@
                                 It stays centered and respects the container's max-width constraint on desktop, fills
                                 100% on mobile
                             </div>
-                            <labs-button variant="secondary" onclick="alert('Container is working!')">Sample
+                            <labs-button variant="primary" onclick="alert('Container is working!')">Sample
                                 Button</labs-button>
                         </div>
                     </div>
@@ -324,7 +335,7 @@
             </select>
         </div>
         <div>
-            <label for="mode-select">Mode</label>
+            <label for="mode-select">Appearance</label>
             <select id="mode-select">
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
