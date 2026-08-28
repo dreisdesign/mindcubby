@@ -7,21 +7,30 @@
 
 ## UX Decisions
 
-### 1. Type → Subtype → Color Workflow
-**Decision:** Three-step input progression instead of combined dropdown.
+### 1. Flat Variant Selector with Material Section Headers (v1.0.3)
+**Decision:** Single flat list of all 20 variants organized under 3 material section headers (PLA, PETG, TPU) instead of Type → Name progression.
 
 **Rationale:**
-- **Progressive disclosure**: Users see available subtypes only after selecting a material type
-- **Error prevention**: Can't select incompatible subtype/material combinations
-- **Physical mapping**: Mirrors the NFC tag structure (material code → variant → color RGB)
-- **Reduced cognitive load**: One choice at a time
+- **Simplicity**: One-step selection instead of two-step
+- **Visual organization**: Section headers (PLA, PETG, TPU) keep variants grouped without adding UI overhead
+- **Fast access**: All variants visible at once, users can jump directly to what they want
+- **Scannability**: Material grouping maintains clarity without intermediate clicks
+- **Physical justification**: After variant testing, confirmed only 3 materials + 20 variants are actually used/supported
 
 **Implementation:**
 ```
-Step 1: Type chips (PLA, PETG, TPU)
-  └─ Step 2: Subtype chips (dynamic based on type)
-      └─ Step 3: Color picker + optional hex input
+PLA (section header)
+├─ PLA, PLA+, PLA PRO, PLA Silk, PLA-CF, PLA Matte, PLA Wood, PLA Basic, Rapid PLA+, PLA Marble, PLA Galaxy, PLA Red Copper
+PETG (section header)
+├─ PETG, PETG-CF, PETG-GF, PETG PRO, PETG Translucent, Rapid PETG
+TPU (section header)
+├─ TPU 95A, Rapid TPU 95A
 ```
+
+**Previous approach (v1.0.1–1.0.2):**
+- Type selector → Name selector → Color picker
+- Rationale was progressive disclosure, but testing showed users always want quick access to specific variants
+- Too many intermediate clicks for a tool focused on speed
 
 ### 2. Real-Time NFC Hex Generation
 **Decision:** Display hex code as user selects material/color (not just on "Add" button).
@@ -34,12 +43,12 @@ Step 1: Type chips (PLA, PETG, TPU)
 
 ### 3. History Entry Structure: 3-Row Layout
 **Decision:** Split each history entry into three distinct rows:
-- **Row 1 (Chips)**: Type | Subtype | Color Swatch | Hex Color | Timestamp (right-aligned)
+- **Row 1 (Chips)**: Type | Name | Color Swatch | Hex Color | Timestamp (right-aligned)
 - **Row 2 (Hex Display)**: Full NFC hex code in monospace, bordered box
 - **Row 3 (Actions)**: Copy/Edit buttons (left), Delete button (right)
 
 **Rationale:**
-- **Scannability**: Type + subtype + color visible at a glance
+- **Scannability**: Type + name + color visible at a glance
 - **Accessibility**: Hex code separated into dedicated row (easier to copy/reference)
 - **Action clarity**: Buttons grouped logically (modify left, destroy right)
 - **Touch-friendly**: Adequate spacing prevents accidental clicks
@@ -79,7 +88,17 @@ Step 1: Type chips (PLA, PETG, TPU)
 - **Time window**: 3 seconds gives user recovery window
 - **No modals**: Stays in context, doesn't interrupt flow
 
-### 8. CSV Export with Full Hex Codes
+### 9. Firmware Selector (v1.0.2)
+**Decision:** Dropdown at top of form to choose between Elegoo Canvas (Official) and Generic/Compatible firmware.
+
+**Rationale:**
+- **Critical discovery**: Material codes encode menu position, not material type. Different firmware versions have different menu orders.
+- **User empowerment**: Users with non-Elegoo printers can select the correct firmware and get accurate codes.
+- **Persistent choice**: Selection saved to localStorage, so users don't have to re-select every time.
+- **Future-proof**: Easy to add more firmware variants as users report different menu orders.
+- **Error prevention**: Selecting the wrong firmware is now obvious instead of silently generating wrong codes.
+
+## CSV Export with Full Hex Codes
 **Decision:** Include NFC hex in CSV with proper quoting to handle embedded commas.
 
 **Rationale:**
@@ -88,7 +107,7 @@ Step 1: Type chips (PLA, PETG, TPU)
 - **Hex preservation**: Comma-space format preserved with CSV escaping
 - **One-click**: "Download CSV" button, no additional setup
 
-### 9. Visual Feedback for Actions with Color State Changes
+### 10. Visual Feedback for Actions with Color State Changes
 **Decision:** Use button color changes (not notifications) to confirm successful actions. Button turns green (#28a745) with "Copied!" text, log entry border highlights green simultaneously, then revert after 2 seconds.
 
 **Rationale:**
@@ -224,23 +243,43 @@ font-size: clamp(12px, 1.8vw, 14px);
 
 ## Technical Implementation Notes
 
+### Version Control
+- **Current version**: v1.0.2 (added firmware selector for Elegoo + Generic support)
+- **Tracking**: Version in HTML comment, meta tag, and console log on page load
+- **Build timestamp**: Auto-generated on each load in format "Fri Aug 28 09:55 AM" (DDD MMM DD HH:MM AM/PM)
+
+### Firmware Support (v1.0.2)
+- **Elegoo Canvas (Official)** – Verified menu order from official documentation
+- **Generic / Compatible** – Alternative firmware menu order (may differ by printer model)
+- **Persistent selection** – User's firmware choice saved to localStorage
+- **Dual configs** – Separate MATERIAL_CONFIG for each firmware (can be updated as needed)
+- **Why this matters** – Material hex codes encode menu position, not type. Different firmware versions have different menus, so codes must match the specific printer's firmware
+
 ### Storage
 - **Key**: `'spooler_log'` in localStorage
-- **Format**: JSON array of objects `[{type, subtype, color, hex, id, timestamp}, ...]`
+- **Format**: JSON array of objects `[{type, name, color, hex, id, timestamp}, ...]`
 - **ID**: Timestamp-based (milliseconds since epoch) for unique, sortable entries
 
-### NFC Encoding
-- **Material codes**: PLA=`00807665`, PETG=`80698471`, TPU=`00848085`
-- **Variant codes** (Page 13): Material-specific subtype mappings, verified against Elegoo/anyspool.de reference tags
-  - **PLA variants**: `00` prefix (e.g., PLA=`00000000`, RAPID PLA+=`00080000`)
-  - **PETG variants**: `00` or `01` prefix depending on type (e.g., PETG=`00000000`, RAPID PETG=`01050000`)
-  - **TPU variants**: `03` prefix for standard (e.g., TPU 95A=`03000000`)
-  - **Note**: Variant codes are firmware-specific; incorrect codes cause printer to default to base material type
-- **Color encoding** (Page 14): RGB hex value (6 digits) + padding
-- **Output format**: Comma-space separated page writes (e.g., `A2:04:01, A2:05:34, ...`)
+### NFC Encoding (v1.0.2 — Firmware-Aware)
+- **CRITICAL DISCOVERY**: Material hex codes (A2:12) encode the **printer menu position**, not an abstract material type. If your printer's menu order differs from the configured order, you will get wrong results.
+- **Firmware selection is essential** – Different firmware versions (Elegoo vs Generic) have different menu orders and available materials. The spooler now supports both via a dropdown selector (top of form).
+- **Material codes**: Encode menu position in the printer's firmware (e.g., PLA=`00807665`, PETG=`80698471`, TPU=`00848085`)
+- **Variant codes** (Page 13): Firmware-specific variant mappings
+  - **PLA variants** (13 total): `00000000` (PLA), `00010000` (PLA+), `00020000` (Rapid PLA), `00030000` (Rapid PLA+), `00040000` (Matte), `00050000` (Silk), `00060000` (CF), `00070000` (Luminous), `00080000` (Wood), `00090000` (Marble), `000A0000` (Galaxy), `000B0000` (Dual-Color), `000C0000` (Tri-Color)
+  - **PETG variants** (4 total): `00000000` (Standard), `00020000` (Rapid), `00060000` (CF), `000D0000` (GF)
+  - **TPU variants** (2 total): `00000000` (Standard), `00020000` (Rapid)
+  - **Note**: Codes are firmware-specific; incorrect codes or wrong firmware selection will cause printer to show wrong material
+- **Color encoding** (Page 14): RGB hex value (6 digits) + padding (`RRGGBB00`)
+- **Output format**: Comma-space separated page writes (e.g., `A2:04:0103A00C, A2:05:34030FD1, ...`)
+- **Verification**: Use [PRINTER-MENU-VERIFICATION.md](./PRINTER-MENU-VERIFICATION.md) to verify your printer's actual menu order
 - **Sources**: 
-  - Elegoo Canvas NFC tag specification
-  - anyspool.de reference implementations (https://anyspool.de)
+  - Official Elegoo-RFID-HEX-FILAMENT-CODES.md (Elegoo firmware reference)
+  - User testing and community feedback (Generic firmware variants)
+
+### Real-Time Preview (v1.0.1)
+- **Hex display updates** on every material/color change (type chip, subtype chip, color picker)
+- **No stale data**: Users see exact NFC codes before copying or scanning
+- **Debugging**: Console logs on subtype selection show actual codes being generated
 
 ### Responsive Breakpoints
 **None.** All sizing uses `clamp()`:

@@ -87,81 +87,81 @@ template.innerHTML = `
 `;
 
 class LabsThemeToggle extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-        this.shadowRoot.appendChild(template.content.cloneNode(true));
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.appendChild(template.content.cloneNode(true));
+  }
+
+  async connectedCallback() {
+    // Dynamic import of labs-icon
+    await import('./labs-icon.js');
+
+    this.button = this.shadowRoot.querySelector('.toggle-button');
+    this.label = this.shadowRoot.querySelector('.label');
+    this.iconSlot = this.shadowRoot.querySelector('#icon-slot');
+
+    // Load current appearance (light/dark)
+    const currentAppearance = localStorage.getItem('smoothie-appearance') || 'light';
+    this.updateDisplay(currentAppearance);
+
+    // Listen for clicks
+    this.button.addEventListener('click', () => this.toggle());
+
+    // Listen for external changes via postMessage
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'smoothie-theme-update' && event.data.appearance) {
+        this.updateDisplay(event.data.appearance);
+      }
+    });
+  }
+
+  toggle() {
+    const currentAppearance = localStorage.getItem('smoothie-appearance') || 'light';
+    const newAppearance = currentAppearance === 'light' ? 'dark' : 'light';
+
+    // Update self
+    this.updateDisplay(newAppearance);
+
+    // Persist
+    localStorage.setItem('smoothie-appearance', newAppearance);
+
+    // Emit custom event for parent (keep mode-changed for backward compat)
+    this.dispatchEvent(new CustomEvent('mode-changed', {
+      detail: { mode: newAppearance },
+      bubbles: true,
+      composed: true
+    }));
+
+    // Broadcast to all iframes if in hub
+    if (window.self === window.top) {
+      this.broadcastToIframes({ appearance: newAppearance });
     }
+  }
 
-    async connectedCallback() {
-        // Dynamic import of labs-icon
-        await import('./labs-icon.js');
+  updateDisplay(mode) {
+    const isDark = mode === 'dark';
+    this.label.textContent = isDark ? 'Dark' : 'Light';
+    this.button.setAttribute('title', isDark ? 'Turn on light mode' : 'Turn on dark mode');
 
-        this.button = this.shadowRoot.querySelector('.toggle-button');
-        this.label = this.shadowRoot.querySelector('.label');
-        this.iconSlot = this.shadowRoot.querySelector('#icon-slot');
+    // Use labs-icon component
+    const iconName = isDark ? 'bedtime_off' : 'bedtime';
+    this.iconSlot.innerHTML = `<labs-icon name="${iconName}"></labs-icon>`;
+  }
 
-        // Load current appearance (light/dark)
-        const currentAppearance = localStorage.getItem('smoothie-appearance') || 'light';
-        this.updateDisplay(currentAppearance);
-
-        // Listen for clicks
-        this.button.addEventListener('click', () => this.toggle());
-
-        // Listen for external changes via postMessage
-        window.addEventListener('message', (event) => {
-            if (event.data.type === 'smoothie-theme-update' && event.data.appearance) {
-                this.updateDisplay(event.data.appearance);
-            }
-        });
-    }
-
-    toggle() {
-        const currentAppearance = localStorage.getItem('smoothie-appearance') || 'light';
-        const newAppearance = currentAppearance === 'light' ? 'dark' : 'light';
-
-        // Update self
-        this.updateDisplay(newAppearance);
-
-        // Persist
-        localStorage.setItem('smoothie-appearance', newAppearance);
-
-        // Emit custom event for parent (keep mode-changed for backward compat)
-        this.dispatchEvent(new CustomEvent('mode-changed', {
-            detail: { mode: newAppearance },
-            bubbles: true,
-            composed: true
-        }));
-
-        // Broadcast to all iframes if in hub
-        if (window.self === window.top) {
-            this.broadcastToIframes({ appearance: newAppearance });
-        }
-    }
-
-    updateDisplay(mode) {
-        const isDark = mode === 'dark';
-        this.label.textContent = isDark ? 'Dark' : 'Light';
-        this.button.setAttribute('title', isDark ? 'Turn on light mode' : 'Turn on dark mode');
-
-        // Use labs-icon component
-        const iconName = isDark ? 'bedtime_off' : 'bedtime';
-        this.iconSlot.innerHTML = `<labs-icon name="${iconName}"></labs-icon>`;
-    }
-
-    broadcastToIframes(data) {
-        const iframes = document.querySelectorAll('iframe');
-        iframes.forEach((iframe) => {
-            try {
-                iframe.contentWindow.postMessage(
-                    { type: 'smoothie-theme-update', ...data },
-                    '*'
-                );
-            } catch (e) {
-                // Cross-origin or not ready
-            }
-        });
-    }
+  broadcastToIframes(data) {
+    const iframes = document.querySelectorAll('iframe');
+    iframes.forEach((iframe) => {
+      try {
+        iframe.contentWindow.postMessage(
+          { type: 'smoothie-theme-update', ...data },
+          '*'
+        );
+      } catch (e) {
+        // Cross-origin or not ready
+      }
+    });
+  }
 }
 
 customElements.define('labs-theme-toggle', LabsThemeToggle);

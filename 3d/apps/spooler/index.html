@@ -1,13 +1,17 @@
 <!DOCTYPE html>
+<!-- Spooler v1.0.3: Flat material variant selector (PLA, PETG, TPU) -->
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="version" content="1.0.3">
+    <meta name="build-date" id="buildDate" content="Fri Aug 28 03:32 PM">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spooler - NFC Filament Tagger (POC)</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#333333">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Spooler">
@@ -532,17 +536,8 @@
         <!-- NFC Generator -->
         <div class="section">
             <form id="nfcForm">
-                <!-- Type Chips -->
-                <div class="chips-group">
-                    <label>Type</label>
-                    <button type="button" class="chip active" data-type="PLA">PLA</button>
-                    <button type="button" class="chip" data-type="PETG">PETG</button>
-                    <button type="button" class="chip" data-type="TPU">TPU</button>
-                </div>
-
-                <!-- Subtype Chips -->
-                <div class="chips-group" id="subtypeChipsGroup">
-                    <label>Subtype</label>
+                <!-- Material Variant Chips (Flat List) -->
+                <div class="chips-group" id="variantChipsGroup">
                 </div>
 
                 <!-- Color + Hex -->
@@ -593,44 +588,122 @@
     </div>
 
     <script>
-        // Material config
-        const MATERIAL_CONFIG = {
+        // Material config by firmware version
+        // Elegoo Canvas (Official) - verified against official Elegoo firmware
+        const MATERIAL_CONFIG_ELEGOO = {
             'PLA': {
                 code: '00807665',
                 variants: {
-                    'PLA': { code: '03000000' },
-                    'PLA+': { code: '00010000' },
-                    'PLA PRO': { code: '00020000' },
-                    'PLA Silk': { code: '00030000' },
-                    'PLA-CF': { code: '00040000' },
-                    'PLA Matte': { code: '00060000' },
-                    'PLA Wood': { code: '00070000' },
-                    'PLA Basic': { code: '00070000' },
-                    'RAPID PLA+': { code: '00080000' },
-                    'PLA Marble': { code: '00090000' },
-                    'PLA Galaxy': { code: '000A0000' },
-                    'PLA Red Copper': { code: '000B0000' }
+                    'PLA': { code: 'FFFFFFFF' },
+                    'PLA+': { code: 'FFFFFFFF' },
+                    'PLA PRO': { code: '00000000' },
+                    'PLA Silk': { code: '00010000' },
+                    'PLA-CF': { code: '00020000' },
+                    'PLA Matte': { code: '00030000' },
+                    'PLA Wood': { code: '00040000' },
+                    'PLA Basic': { code: '00050000' },
+                    'Rapid PLA+': { code: '00060000' },
+                    'PLA Marble': { code: '00070000' },
+                    'PLA Galaxy': { code: '00080000' },
+                    'PLA Red Copper': { code: '00090000' }
                 }
             },
             'PETG': {
                 code: '80698471',
                 variants: {
-                    'PETG': { code: '00000000' },
-                    'PETG-CF': { code: '00010000' },
-                    'PETG-GF': { code: '00020000' },
-                    'PETG PRO': { code: '00030000' },
-                    'PETG Translucent': { code: '00040000' },
-                    'RAPID PETG': { code: '01050000' }
+                    'PETG': { code: '01000000' },
+                    'PETG-CF': { code: '01010000' },
+                    'PETG-GF': { code: '01020000' },
+                    'PETG PRO': { code: '01030000' },
+                    'PETG Translucent': { code: '01040000' },
+                    'Rapid PETG': { code: '01050000' }
+                }
+            },
+            'ABS': {
+                code: '00656683',
+                variants: {
+                    'ABS': { code: '00000000' },
+                    'ABS-CF': { code: '00010000' }
                 }
             },
             'TPU': {
                 code: '00848085',
                 variants: {
-                    'TPU 95A': { code: '03000000' },
-                    'RAPID TPU 95A': { code: '00020000' }
+                    'TPU 95A': { code: '00000000' },
+                    'Rapid TPU 95A': { code: '00010000' }
+                }
+            },
+            'PA': {
+                code: '00008065',
+                variants: {
+                    'PA-CF': { code: '00000000' },
+                    'PAHT-CF': { code: '00010000' }
+                }
+            },
+            'PC': {
+                code: '00008067',
+                variants: {
+                    'PC': { code: '00000000' },
+                    'PC-FR': { code: '00010000' }
+                }
+            },
+            'ASA': {
+                code: '00658365',
+                variants: {
+                    'ASA': { code: '00000000' },
+                    'ASA-CF': { code: '00010000' }
+                }
+            },
+            'PET': {
+                code: '00806984',
+                variants: {
+                    'PET': { code: '00000000' },
+                    'PET-CF': { code: '00010000' }
                 }
             }
         };
+
+        // Generic / Compatible firmware - different materials and menu order
+        const MATERIAL_CONFIG_GENERIC = {
+            'PLA': {
+                code: '00807665',
+                variants: {
+                    'PLA': { code: '00000000' },
+                    'PLA+': { code: '00010000' },
+                    'PLA PRO': { code: '00020000' },
+                    'PLA Silk': { code: '00030000' },
+                    'PLA-CF': { code: '00040000' },
+                    'PLA Matte': { code: '00060000' },
+                    'PLA Wood': { code: '00080000' },
+                    'PLA Basic': { code: '00090000' },
+                    'Rapid PLA+': { code: '000A0000' },
+                    'PLA Marble': { code: '000B0000' },
+                    'PLA Galaxy': { code: '000C0000' },
+                    'PLA Red Copper': { code: '000D0000' }
+                }
+            },
+            'PETG': {
+                code: '80698471',
+                variants: {
+                    'PETG': { code: '01000000' },
+                    'PETG-CF': { code: '01010000' },
+                    'PETG-GF': { code: '01020000' },
+                    'PETG PRO': { code: '01030000' },
+                    'PETG Translucent': { code: '01040000' },
+                    'Rapid PETG': { code: '01050000' }
+                }
+            },
+            'TPU': {
+                code: '00848085',
+                variants: {
+                    'TPU 95A': { code: '03010000' },
+                    'Rapid TPU 95A': { code: '03020000' }
+                }
+            }
+        };
+
+        // Using GENERIC firmware config (matches actual printer hardware)
+        let MATERIAL_CONFIG = MATERIAL_CONFIG_GENERIC;
 
         // DOM elements
         const messageDiv = document.getElementById('message');
@@ -646,7 +719,7 @@
 
         // State
         let currentType = 'PLA';
-        let currentSubtype = 'PLA';
+        let currentName = 'PLA';
         let currentColor = '#FFFFFF';
         let logEntries = [];
         let sortDescending = true;
@@ -658,15 +731,17 @@
             renderLog();
         }
 
+
+
         function saveLog() {
             localStorage.setItem('spooler_log', JSON.stringify(logEntries));
         }
 
-        function addToLog(type, subtype, color, hex) {
+        function addToLog(type, name, color, hex) {
             // Remove duplicate if exists
-            logEntries = logEntries.filter(e => !(e.type === type && e.subtype === subtype && e.color === color));
+            logEntries = logEntries.filter(e => !(e.type === type && e.name === name && e.color === color));
             // Add new entry
-            logEntries.push({ type, subtype, color, hex, id: Date.now(), timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+            logEntries.push({ type, name, color, hex, id: Date.now(), timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
             saveLog();
             renderLog();
         }
@@ -681,16 +756,15 @@
             const entry = logEntries.find(e => e.id === id);
             if (entry) {
                 currentType = entry.type;
-                currentSubtype = entry.subtype;
+                currentName = entry.name;
                 currentColor = entry.color;
                 colorPickerInput.value = entry.color;
                 colorPickerButton.style.background = entry.color;
                 colorHexInput.value = entry.color;
-                document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
-                document.querySelector(`[data-type="${entry.type}"]`).classList.add('active');
-                initializeSubtypeChips();
-                document.querySelectorAll('#subtypeChipsGroup .chip').forEach(c => {
-                    if (c.textContent === entry.subtype) {
+                // Find and activate the matching variant chip
+                document.querySelectorAll('#variantChipsGroup .chip').forEach(c => {
+                    c.classList.remove('active');
+                    if (c.dataset.type === entry.type && c.textContent === entry.name) {
                         c.classList.add('active');
                     }
                 });
@@ -728,7 +802,7 @@
                 headerLeft.className = 'log-entry-header-left';
                 headerLeft.innerHTML = `
                     <div class="chip">${entry.type}</div>
-                    <div class="chip">${entry.subtype}</div>
+                    <div class="chip">${entry.name}</div>
                     <span class="color-swatch" style="background: ${entry.color};"></span>
                     <div class="chip">${entry.color}</div>
                 `;
@@ -837,8 +911,8 @@
                 showMessage('No entries to download', 'error');
                 return;
             }
-            const csv = ['Type,Subtype,Color,NFC Hex,Timestamp'].concat(
-                logEntries.map(e => `${e.type},${e.subtype},${e.color},"${e.hex}",${e.timestamp}`)
+            const csv = ['Type,Name,Color,NFC Hex,Timestamp'].concat(
+                logEntries.map(e => `${e.type},${e.name},${e.color},"${e.hex}",${e.timestamp}`)
             ).join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
@@ -849,47 +923,61 @@
             window.URL.revokeObjectURL(url);
         }
 
-        function initializeSubtypeChips() {
-            const config = MATERIAL_CONFIG[currentType];
-            const subtypeChipsGroup = document.getElementById('subtypeChipsGroup');
-            const existingChips = subtypeChipsGroup.querySelectorAll('.chip');
+        function initializeVariantChips() {
+            const variantChipsGroup = document.getElementById('variantChipsGroup');
+            const existingChips = variantChipsGroup.querySelectorAll('.chip, label');
             existingChips.forEach(c => c.remove());
 
-            const variants = Object.keys(config.variants);
-            variants.forEach((variant, idx) => {
-                const chip = document.createElement('button');
-                chip.type = 'button';
-                chip.className = 'chip';
-                if (idx === 0) chip.classList.add('active');
-                chip.textContent = variant;
-                chip.dataset.subtype = variant;
-                chip.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.querySelectorAll('#subtypeChipsGroup .chip').forEach(c => c.classList.remove('active'));
-                    chip.classList.add('active');
-                    currentSubtype = variant;
+            let isFirst = true;
+            // Iterate through materials in order and add all their variants
+            Object.keys(MATERIAL_CONFIG).forEach(materialType => {
+                // Add section header as label
+                const sectionHeader = document.createElement('label');
+                sectionHeader.textContent = materialType;
+                variantChipsGroup.appendChild(sectionHeader);
+
+                const config = MATERIAL_CONFIG[materialType];
+                const variants = Object.keys(config.variants);
+                variants.forEach((variant) => {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'chip';
+                    if (isFirst) {
+                        chip.classList.add('active');
+                        isFirst = false;
+                    }
+                    chip.textContent = variant;
+                    chip.dataset.type = materialType;
+                    chip.dataset.name = variant;
+                    chip.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        document.querySelectorAll('#variantChipsGroup .chip').forEach(c => c.classList.remove('active'));
+                        chip.classList.add('active');
+                        currentType = chip.dataset.type;
+                        currentName = variant;
+                        console.log('Selected:', currentType, '→', variant, 'Code:', MATERIAL_CONFIG[currentType].variants[variant].code);
+                        updateHexDisplay();
+                    });
+                    variantChipsGroup.appendChild(chip);
                 });
-                subtypeChipsGroup.appendChild(chip);
             });
-            currentSubtype = variants[0];
+            // Set initial values to first variant
+            const firstChip = variantChipsGroup.querySelector('.chip');
+            if (firstChip) {
+                currentType = firstChip.dataset.type;
+                currentName = firstChip.dataset.name;
+            }
         }
 
-        // Type chip handlers
-        document.querySelectorAll('[data-type]').forEach(chip => {
-            chip.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                currentType = chip.dataset.type;
-                initializeSubtypeChips();
-            });
-        });
+        // Note: Brand is now fixed to GENERIC (matches actual printer hardware)
+
 
         // Color picker sync
         colorPickerInput.addEventListener('input', (e) => {
             currentColor = e.target.value;
             colorPickerButton.style.background = currentColor;
             colorHexInput.value = currentColor;
+            updateHexDisplay();
         });
 
         colorHexInput.addEventListener('change', (e) => {
@@ -900,12 +988,18 @@
                 colorPickerInput.value = hexVal;
                 colorPickerButton.style.background = hexVal;
                 colorHexInput.value = hexVal;
+                updateHexDisplay();
             }
         });
 
+        function updateHexDisplay() {
+            const hex = generateNFCHex();
+            hexDisplay.textContent = hex;
+        }
+
         function generateNFCHex() {
             const materialCode = MATERIAL_CONFIG[currentType].code;
-            const subtypeCode = MATERIAL_CONFIG[currentType].variants[currentSubtype].code;
+            const nameCode = MATERIAL_CONFIG[currentType].variants[currentName].code;
 
             let colorHex = currentColor.replace('#', '').toUpperCase();
             if (colorHex.length !== 6) colorHex = 'FFFFFF';
@@ -923,7 +1017,7 @@
             const page10 = '36EEEEEE';
             const page11 = 'EE000100';
             const page12 = materialCode;
-            const page13 = subtypeCode;
+            const page13 = nameCode;
             const page14 = colorHex + '00';
             const page15 = '00' + '00' + colorHex.substring(0, 4); // Placeholder
             const page17 = '00AF03E8';
@@ -1004,7 +1098,7 @@
         copyHexBtn.addEventListener('click', () => {
             const hex = generateNFCHex();
             hexDisplay.textContent = hex;
-            addToLog(currentType, currentSubtype, currentColor, hex);
+            addToLog(currentType, currentName, currentColor, hex);
             navigator.clipboard.writeText(hex).then(() => {
                 // Visual feedback on button
                 copyHexBtn.textContent = 'Copied!';
@@ -1031,8 +1125,18 @@
         });
 
         // Initialize
+        const buildDate = new Date().toLocaleString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        }).replace(',', '');
+        document.getElementById('buildDate').content = buildDate;
+        console.log(`Spooler v1.0.3 loaded — Built: ${buildDate}`);
         loadLog();
-        initializeSubtypeChips();
+        initializeVariantChips();
         const hex = generateNFCHex();
         hexDisplay.textContent = hex;
     </script>
