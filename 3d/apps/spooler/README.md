@@ -4,9 +4,16 @@ Track filament inventory using NFC tags. Write spool info to tags, log usage, ex
 
 **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/spooler/
 
-**Current Version:** v1.0.3
+**Current Version:** v1.0.4
 
 ---
+
+## What's New in v1.0.4
+
+- ✅ **All 16 Elegoo materials supported** – PLA, PETG, TPU (main section), plus ABS, PA, CPE, PC, PVA, ASA, BVOH, EVA, HIPS, PP, PPA, PPS, PET (Other section)
+- ✅ **Verified codes from Savion RFID editor** – All material & variant hex codes validated against working implementations
+- ✅ **Multi-variant support** – PA (PA-CF, PAHT-CF) and PC (PC, PC-FR) show all available options
+- ✅ **Proper defaults for unsupported variants** – Materials without working Name variants use position-based encoding for reliable printer defaults
 
 ## What's New in v1.0.3
 

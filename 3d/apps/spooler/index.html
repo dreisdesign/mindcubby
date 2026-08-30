@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Spooler v1.0.3: Flat material variant selector (PLA, PETG, TPU) -->
+<!-- Spooler v1.0.4: Flat material variant selector (PLA, PETG, TPU, Other) -->
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="version" content="1.0.3">
+    <meta name="version" content="1.0.4">
     <meta name="build-date" id="buildDate" content="Fri Aug 28 03:32 PM">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spooler - NFC Filament Tagger (POC)</title>
@@ -699,6 +699,100 @@
                     'TPU 95A': { code: '03010000' },
                     'Rapid TPU 95A': { code: '03020000' }
                 }
+            },
+            'ABS': {
+                code: '00656683',
+                category: 'other',
+                variants: {
+                    'ABS': { code: '02000000' }
+                }
+            },
+            // Other materials - ordered by position: 5. PA, 6. CPE, 7. PC, 8. PVA, 9. ASA, 10. BVOH, 11. EVA, 12. HIPS, 13. PP, 14. PPA, 15. PPS, 16. PET (verified via Savion RFID editor)
+            'PA': {
+                code: '00008065',
+                category: 'other',
+                variants: {
+                    'PA-CF': { code: '04000000' },
+                    'PAHT-CF': { code: '04030000' }
+                }
+            },
+            'CPE': {
+                code: '00678069',
+                category: 'other',
+                variants: {
+                    'CPE': { code: '05000000' }
+                }
+            },
+            'PC': {
+                code: '00008067',
+                category: 'other',
+                variants: {
+                    'PC': { code: '06000000' },
+                    'PC-FR': { code: '06020000' }
+                }
+            },
+            'PVA': {
+                code: '00808665',
+                category: 'other',
+                variants: {
+                    'PVA': { code: '07000000' }
+                }
+            },
+            'ASA': {
+                code: '00658365',
+                category: 'other',
+                variants: {
+                    'ASA': { code: '08000000' }
+                }
+            },
+            'BVOH': {
+                code: '42564F48',
+                category: 'other',
+                variants: {
+                    'BVOH': { code: '09000000' }
+                }
+            },
+            'EVA': {
+                code: '00455641',
+                category: 'other',
+                variants: {
+                    'EVA': { code: '0A000000' }
+                }
+            },
+            'HIPS': {
+                code: '48495053',
+                category: 'other',
+                variants: {
+                    'HIPS': { code: '0B000000' }
+                }
+            },
+            'PP': {
+                code: '00005050',
+                category: 'other',
+                variants: {
+                    'PP': { code: '0C000000' }
+                }
+            },
+            'PPA': {
+                code: '00505041',
+                category: 'other',
+                variants: {
+                    'PPA': { code: '0D000000' }
+                }
+            },
+            'PPS': {
+                code: '00505053',
+                category: 'other',
+                variants: {
+                    'PPS': { code: '0E000000' }
+                }
+            },
+            'PET': {
+                code: '00806984',
+                category: 'other',
+                variants: {
+                    'PET': { code: '00000000' }
+                }
             }
         };
 
@@ -929,8 +1023,20 @@
             existingChips.forEach(c => c.remove());
 
             let isFirst = true;
-            // Iterate through materials in order and add all their variants
+            const mainMaterials = [];
+            const otherMaterials = [];
+
+            // Separate materials into main and other categories
             Object.keys(MATERIAL_CONFIG).forEach(materialType => {
+                if (MATERIAL_CONFIG[materialType].category === 'other') {
+                    otherMaterials.push(materialType);
+                } else {
+                    mainMaterials.push(materialType);
+                }
+            });
+
+            // Render main materials (PLA, PETG, TPU)
+            mainMaterials.forEach(materialType => {
                 // Add section header as label
                 const sectionHeader = document.createElement('label');
                 sectionHeader.textContent = materialType;
@@ -961,6 +1067,43 @@
                     variantChipsGroup.appendChild(chip);
                 });
             });
+
+            // Render Other section header if there are other materials
+            if (otherMaterials.length > 0) {
+                const otherHeader = document.createElement('label');
+                otherHeader.textContent = 'Other';
+                variantChipsGroup.appendChild(otherHeader);
+
+                // Render other materials with all their variants
+                otherMaterials.forEach(materialType => {
+                    const config = MATERIAL_CONFIG[materialType];
+                    const variants = Object.keys(config.variants);
+                    
+                    variants.forEach((variant) => {
+                        const chip = document.createElement('button');
+                        chip.type = 'button';
+                        chip.className = 'chip';
+                        if (isFirst) {
+                            chip.classList.add('active');
+                            isFirst = false;
+                        }
+                        chip.textContent = variant;
+                        chip.dataset.type = materialType;
+                        chip.dataset.name = variant;
+                        chip.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            document.querySelectorAll('#variantChipsGroup .chip').forEach(c => c.classList.remove('active'));
+                            chip.classList.add('active');
+                            currentType = chip.dataset.type;
+                            currentName = variant;
+                            console.log('Selected:', currentType, '→', variant, 'Code:', MATERIAL_CONFIG[currentType].variants[variant].code);
+                            updateHexDisplay();
+                        });
+                        variantChipsGroup.appendChild(chip);
+                    });
+                });
+            }
+
             // Set initial values to first variant
             const firstChip = variantChipsGroup.querySelector('.chip');
             if (firstChip) {
@@ -1134,7 +1277,7 @@
             hour12: true
         }).replace(',', '');
         document.getElementById('buildDate').content = buildDate;
-        console.log(`Spooler v1.0.3 loaded — Built: ${buildDate}`);
+        console.log(`Spooler v1.0.4 loaded — Built: ${buildDate}`);
         loadLog();
         initializeVariantChips();
         const hex = generateNFCHex();

@@ -1,0 +1,1837 @@
+From: <Saved by Blink>
+Snapshot-Content-Location: https://savion.github.io/elegoo-rfid-editor/
+Subject: Elegoo RFID Tag Editor
+Date: Sun, 30 Aug 2026 08:17:50 -0400
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----MultipartBoundary--ZcTlEhWolPj2U08noVNxzL8KZyUE4OeVzqSF3i21qy----"
+
+
+------MultipartBoundary--ZcTlEhWolPj2U08noVNxzL8KZyUE4OeVzqSF3i21qy----
+Content-Type: text/html
+Content-ID: <frame-9795D9184C781C2F66D57A1DE13B680B@mhtml.blink>
+Content-Transfer-Encoding: quoted-printable
+Content-Location: https://savion.github.io/elegoo-rfid-editor/
+
+<!DOCTYPE html><html lang=3D"en"><head><meta http-equiv=3D"Content-Type" co=
+ntent=3D"text/html; charset=3DUTF-8">
+   =20
+    <link rel=3D"icon" type=3D"image/svg+xml" href=3D"https://savion.github=
+.io/vite.svg">
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=
+=3D1.0">
+    <meta name=3D"description" content=3D"Edit Elegoo NTAG213 NFC spool tag=
+s in your browser">
+    <meta name=3D"theme-color" content=3D"#FF6B35">
+    <title>Elegoo RFID Tag Editor</title>
+   =20
+    <link rel=3D"stylesheet" crossorigin=3D"" href=3D"https://savion.github=
+.io/elegoo-rfid-editor/assets/index-JqFwKgfo.css">
+  <link rel=3D"manifest" href=3D"https://savion.github.io/elegoo-rfid-edito=
+r/manifest.webmanifest"></head>
+  <body>
+    <div id=3D"root"><div class=3D"min-h-screen bg-gradient-to-br from-gray=
+-50 to-gray-100"><header class=3D"bg-elegoo-blue text-white shadow-lg"><div=
+ class=3D"container mx-auto px-4 py-2"><div class=3D"flex items-center just=
+ify-between gap-3"><div class=3D"min-w-0 flex-1"><h1 class=3D"text-lg sm:te=
+xt-xl font-bold leading-tight">Elegoo RFID Tag Editor</h1><p class=3D"text-=
+[11px] sm:text-xs text-blue-200">NTAG213 NFC spool tags - v2.2</p></div><a =
+href=3D"https://github.com/Savion/elegoo-rfid-editor" target=3D"_blank" rel=
+=3D"noopener noreferrer" class=3D"flex items-center gap-1.5 px-3 py-1.5 bg-=
+white/10 hover:bg-white/20 rounded-md transition-colors flex-shrink-0 text-=
+xs"><svg xmlns=3D"http://www.w3.org/2000/svg" width=3D"16" height=3D"16" vi=
+ewBox=3D"0 0 24 24" fill=3D"none" stroke=3D"currentColor" stroke-width=3D"2=
+" stroke-linecap=3D"round" stroke-linejoin=3D"round" class=3D"lucide lucide=
+-github "><path d=3D"M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.2=
+7-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 =
+2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49=
+-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d=3D"M9 18c-4.51=
+ 2-5-2-7-2"></path></svg><span class=3D"hidden sm:inline">GitHub</span></a>=
+</div></div></header><main class=3D"container mx-auto px-4 py-4 max-w-6xl">=
+<div class=3D"bg-white rounded-lg shadow-md p-3 mb-4"><div class=3D"flex fl=
+ex-wrap gap-2 items-center mb-2"><button class=3D"px-3 py-1.5 text-xs bg-el=
+egoo-orange text-white rounded-md hover:bg-orange-600 transition-colors fon=
+t-medium">Generate New</button><input type=3D"file" accept=3D".bin" class=
+=3D"hidden" id=3D"file-upload"><label for=3D"file-upload" class=3D"inline-f=
+lex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-600 text-white rounde=
+d-md hover:bg-green-700 transition-colors font-medium cursor-pointer"><svg =
+xmlns=3D"http://www.w3.org/2000/svg" width=3D"14" height=3D"14" viewBox=3D"=
+0 0 24 24" fill=3D"none" stroke=3D"currentColor" stroke-width=3D"2" stroke-=
+linecap=3D"round" stroke-linejoin=3D"round" class=3D"lucide lucide-upload "=
+><path d=3D"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline poi=
+nts=3D"17 8 12 3 7 8"></polyline><line x1=3D"12" x2=3D"12" y1=3D"3" y2=3D"1=
+5"></line></svg>Load .BIN</label><button class=3D"px-3 py-1.5 text-xs bg-el=
+egoo-blue text-white rounded-md hover:bg-blue-700 transition-colors font-me=
+dium disabled:opacity-50 disabled:cursor-not-allowed">Save .BIN</button><bu=
+tton class=3D"px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-md hove=
+r:bg-gray-300 transition-colors font-medium">Hide Hex Editor</button></div>=
+<div class=3D"flex items-center gap-2"><label for=3D"filename" class=3D"tex=
+t-xs font-medium text-gray-700 whitespace-nowrap">Filename:</label><input i=
+d=3D"filename" type=3D"text" placeholder=3D"BVOH_ED0202" class=3D"flex-1 px=
+-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-elegoo-or=
+ange focus:border-transparent text-xs font-mono" value=3D"BVOH_ED0202"><spa=
+n class=3D"text-xs text-gray-500">.bin</span></div></div><div class=3D"bg-w=
+hite rounded-lg shadow-md p-4 mb-4"><div class=3D"mb-3"><h2 class=3D"text-s=
+m font-bold text-gray-800">Spool Configuration</h2><p class=3D"text-xs text=
+-gray-600 mt-0.5">Manufacturer Code: <span class=3D"font-medium">ELEGOO</sp=
+an></p></div><div class=3D"grid md:grid-cols-2 gap-4"><div class=3D"space-y=
+-3"><div class=3D"grid grid-cols-2 gap-3"><div><label class=3D"text-xs font=
+-medium text-gray-700 mb-1">Material Name</label><select class=3D"w-full px=
+-2 py-1 text-xs border border-gray-300 rounded-md bg-white focus:ring-2 foc=
+us:ring-elegoo-orange focus:border-transparent"><option value=3D"ABS">ABS</=
+option><option value=3D"ASA">ASA</option><option value=3D"BVOH">BVOH</optio=
+n><option value=3D"CPE">CPE</option><option value=3D"EVA">EVA</option><opti=
+on value=3D"HIPS">HIPS</option><option value=3D"PA">PA</option><option valu=
+e=3D"PC">PC</option><option value=3D"PETG">PETG</option><option value=3D"PL=
+A">PLA</option><option value=3D"PP">PP</option><option value=3D"PPA">PPA</o=
+ption><option value=3D"PPS">PPS</option><option value=3D"PVA">PVA</option><=
+option value=3D"TPU">TPU</option></select></div><div><label class=3D"text-x=
+s font-medium text-gray-700 mb-1">Material Supplement</label><select class=
+=3D"w-full px-2 py-1 text-xs border border-gray-300 rounded-md bg-white foc=
+us:ring-2 focus:ring-elegoo-orange focus:border-transparent"><option value=
+=3D"BVOH">BVOH</option></select></div></div><div><label class=3D"text-xs fo=
+nt-medium text-gray-700 mb-1">Filament Color</label><div class=3D"flex flex=
+-wrap gap-2 items-center"><input type=3D"color" class=3D"w-16 h-8 rounded-m=
+d cursor-pointer border-2 border-gray-300" value=3D"#ed0202"><input type=3D=
+"text" placeholder=3D"#FF0000" class=3D"flex-1 min-w-[100px] px-2 py-1 text=
+-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-elegoo-orange=
+ focus:border-transparent font-mono uppercase" maxlength=3D"7" value=3D"#ED=
+0202"><div class=3D"flex gap-1.5 text-[11px] text-gray-500 whitespace-nowra=
+p"><span>R:237</span><span>G:2</span><span>B:2</span></div></div><div class=
+=3D"mt-2 border border-gray-200 rounded-md"><button class=3D"w-full flex it=
+ems-center justify-between px-2 py-1.5 text-[11px] text-gray-500 hover:text=
+-gray-700"><span>Centauri Carbon 2 Color Presets</span><svg xmlns=3D"http:/=
+/www.w3.org/2000/svg" width=3D"12" height=3D"12" viewBox=3D"0 0 24 24" fill=
+=3D"none" stroke=3D"currentColor" stroke-width=3D"2" stroke-linecap=3D"roun=
+d" stroke-linejoin=3D"round" class=3D"lucide lucide-chevron-up "><path d=3D=
+"m18 15-6-6-6 6"></path></svg></button><div class=3D"px-2 pb-2"><div class=
+=3D"flex flex-wrap gap-1.5"><button title=3D"Light Gray" class=3D"w-6 h-6 r=
+ounded-full border-2 transition-all hover:scale-110 border-gray-300 hover:b=
+order-gray-400" style=3D"background-color: rgb(211, 211, 211);"></button><b=
+utton title=3D"Yellow Green" class=3D"w-6 h-6 rounded-full border-2 transit=
+ion-all hover:scale-110 border-gray-300 hover:border-gray-400" style=3D"bac=
+kground-color: rgb(204, 204, 0);"></button><button title=3D"Yellow" class=
+=3D"w-6 h-6 rounded-full border-2 transition-all hover:scale-110 border-gra=
+y-300 hover:border-gray-400" style=3D"background-color: rgb(255, 255, 0);">=
+</button><button title=3D"Lime" class=3D"w-6 h-6 rounded-full border-2 tran=
+sition-all hover:scale-110 border-gray-300 hover:border-gray-400" style=3D"=
+background-color: rgb(170, 255, 0);"></button><button title=3D"Forest Green=
+" class=3D"w-6 h-6 rounded-full border-2 transition-all hover:scale-110 bor=
+der-gray-300 hover:border-gray-400" style=3D"background-color: rgb(34, 139,=
+ 34);"></button><button title=3D"Royal Blue" class=3D"w-6 h-6 rounded-full =
+border-2 transition-all hover:scale-110 border-gray-300 hover:border-gray-4=
+00" style=3D"background-color: rgb(41, 121, 255);"></button><button title=
+=3D"Green" class=3D"w-6 h-6 rounded-full border-2 transition-all hover:scal=
+e-110 border-gray-300 hover:border-gray-400" style=3D"background-color: rgb=
+(0, 204, 0);"></button><button title=3D"Teal" class=3D"w-6 h-6 rounded-full=
+ border-2 transition-all hover:scale-110 border-gray-300 hover:border-gray-=
+400" style=3D"background-color: rgb(0, 204, 170);"></button><button title=
+=3D"Sky Blue" class=3D"w-6 h-6 rounded-full border-2 transition-all hover:s=
+cale-110 border-gray-300 hover:border-gray-400" style=3D"background-color: =
+rgb(51, 153, 255);"></button><button title=3D"Blue" class=3D"w-6 h-6 rounde=
+d-full border-2 transition-all hover:scale-110 border-gray-300 hover:border=
+-gray-400" style=3D"background-color: rgb(0, 0, 255);"></button><button tit=
+le=3D"Navy" class=3D"w-6 h-6 rounded-full border-2 transition-all hover:sca=
+le-110 border-gray-300 hover:border-gray-400" style=3D"background-color: rg=
+b(0, 0, 128);"></button><button title=3D"Purple" class=3D"w-6 h-6 rounded-f=
+ull border-2 transition-all hover:scale-110 border-gray-300 hover:border-gr=
+ay-400" style=3D"background-color: rgb(123, 47, 190);"></button><button tit=
+le=3D"Magenta" class=3D"w-6 h-6 rounded-full border-2 transition-all hover:=
+scale-110 border-gray-300 hover:border-gray-400" style=3D"background-color:=
+ rgb(204, 0, 204);"></button><button title=3D"Lavender" class=3D"w-6 h-6 ro=
+unded-full border-2 transition-all hover:scale-110 border-gray-300 hover:bo=
+rder-gray-400" style=3D"background-color: rgb(216, 170, 238);"></button><bu=
+tton title=3D"Coral" class=3D"w-6 h-6 rounded-full border-2 transition-all =
+hover:scale-110 border-gray-300 hover:border-gray-400" style=3D"background-=
+color: rgb(255, 128, 128);"></button><button title=3D"Red Orange" class=3D"=
+w-6 h-6 rounded-full border-2 transition-all hover:scale-110 border-gray-30=
+0 hover:border-gray-400" style=3D"background-color: rgb(255, 102, 51);"></b=
+utton><button title=3D"Amber" class=3D"w-6 h-6 rounded-full border-2 transi=
+tion-all hover:scale-110 border-gray-300 hover:border-gray-400" style=3D"ba=
+ckground-color: rgb(204, 153, 0);"></button><button title=3D"Orange" class=
+=3D"w-6 h-6 rounded-full border-2 transition-all hover:scale-110 border-gra=
+y-300 hover:border-gray-400" style=3D"background-color: rgb(255, 165, 0);">=
+</button><button title=3D"Snow" class=3D"w-6 h-6 rounded-full border-2 tran=
+sition-all hover:scale-110 border-gray-300 hover:border-gray-400" style=3D"=
+background-color: rgb(240, 240, 240);"></button><button title=3D"Ivory" cla=
+ss=3D"w-6 h-6 rounded-full border-2 transition-all hover:scale-110 border-g=
+ray-300 hover:border-gray-400" style=3D"background-color: rgb(245, 245, 220=
+);"></button><button title=3D"Gold" class=3D"w-6 h-6 rounded-full border-2 =
+transition-all hover:scale-110 border-gray-300 hover:border-gray-400" style=
+=3D"background-color: rgb(218, 165, 32);"></button><button title=3D"Silver"=
+ class=3D"w-6 h-6 rounded-full border-2 transition-all hover:scale-110 bord=
+er-gray-300 hover:border-gray-400" style=3D"background-color: rgb(192, 192,=
+ 192);"></button><button title=3D"White" class=3D"w-6 h-6 rounded-full bord=
+er-2 transition-all hover:scale-110 border-gray-300 hover:border-gray-400" =
+style=3D"background-color: rgb(255, 255, 255);"></button><button title=3D"B=
+lack" class=3D"w-6 h-6 rounded-full border-2 transition-all hover:scale-110=
+ border-gray-300 hover:border-gray-400" style=3D"background-color: rgb(0, 0=
+, 0);"></button></div></div></div><div class=3D"mt-2 border border-gray-200=
+ rounded-md"><button class=3D"w-full flex items-center justify-between px-2=
+ py-1.5 text-[11px] text-gray-500 hover:text-gray-700"><span>Filament Color=
+ Catalog</span><svg xmlns=3D"http://www.w3.org/2000/svg" width=3D"12" heigh=
+t=3D"12" viewBox=3D"0 0 24 24" fill=3D"none" stroke=3D"currentColor" stroke=
+-width=3D"2" stroke-linecap=3D"round" stroke-linejoin=3D"round" class=3D"lu=
+cide lucide-chevron-down "><path d=3D"m6 9 6 6 6-6"></path></svg></button><=
+/div></div></div><div class=3D"space-y-3"><div class=3D"grid grid-cols-2 ga=
+p-3"><div><label class=3D"flex items-center gap-1 text-xs font-medium text-=
+gray-500 italic mb-1"><svg xmlns=3D"http://www.w3.org/2000/svg" width=3D"12=
+" height=3D"12" viewBox=3D"0 0 24 24" fill=3D"none" stroke=3D"currentColor"=
+ stroke-width=3D"2" stroke-linecap=3D"round" stroke-linejoin=3D"round" clas=
+s=3D"lucide lucide-info "><circle cx=3D"12" cy=3D"12" r=3D"10"></circle><pa=
+th d=3D"M12 16v-4"></path><path d=3D"M12 8h.01"></path></svg>Filament Weigh=
+t (g)</label><input type=3D"number" class=3D"w-full px-2 py-1 text-xs borde=
+r border-gray-300 rounded-md focus:ring-2 focus:ring-gray-400 focus:border-=
+transparent" min=3D"0" max=3D"10000" value=3D"1000"></div><div><label class=
+=3D"flex items-center gap-1 text-xs font-medium text-gray-500 italic mb-1">=
+<svg xmlns=3D"http://www.w3.org/2000/svg" width=3D"12" height=3D"12" viewBo=
+x=3D"0 0 24 24" fill=3D"none" stroke=3D"currentColor" stroke-width=3D"2" st=
+roke-linecap=3D"round" stroke-linejoin=3D"round" class=3D"lucide lucide-inf=
+o "><circle cx=3D"12" cy=3D"12" r=3D"10"></circle><path d=3D"M12 16v-4"></p=
+ath><path d=3D"M12 8h.01"></path></svg>Filament Diameter (mm)</label><input=
+ type=3D"number" class=3D"w-full px-2 py-1 text-xs border border-gray-300 r=
+ounded-md focus:ring-2 focus:ring-gray-400 focus:border-transparent" min=3D=
+"1.00" max=3D"5.00" step=3D"0.01" placeholder=3D"1.75" value=3D"1.75"></div=
+><div><label class=3D"flex items-center gap-1 text-xs font-medium text-gray=
+-500 italic mb-1"><svg xmlns=3D"http://www.w3.org/2000/svg" width=3D"12" he=
+ight=3D"12" viewBox=3D"0 0 24 24" fill=3D"none" stroke=3D"currentColor" str=
+oke-width=3D"2" stroke-linecap=3D"round" stroke-linejoin=3D"round" class=3D=
+"lucide lucide-info "><circle cx=3D"12" cy=3D"12" r=3D"10"></circle><path d=
+=3D"M12 16v-4"></path><path d=3D"M12 8h.01"></path></svg>Min Temp (=C2=B0C)=
+</label><input type=3D"number" class=3D"w-full px-2 py-1 text-xs border bor=
+der-gray-300 rounded-md focus:ring-2 focus:ring-gray-400 focus:border-trans=
+parent" min=3D"0" max=3D"400" value=3D"190"></div><div><label class=3D"flex=
+ items-center gap-1 text-xs font-medium text-gray-500 italic mb-1"><svg xml=
+ns=3D"http://www.w3.org/2000/svg" width=3D"12" height=3D"12" viewBox=3D"0 0=
+ 24 24" fill=3D"none" stroke=3D"currentColor" stroke-width=3D"2" stroke-lin=
+ecap=3D"round" stroke-linejoin=3D"round" class=3D"lucide lucide-info "><cir=
+cle cx=3D"12" cy=3D"12" r=3D"10"></circle><path d=3D"M12 16v-4"></path><pat=
+h d=3D"M12 8h.01"></path></svg>Max Temp (=C2=B0C)</label><input type=3D"num=
+ber" class=3D"w-full px-2 py-1 text-xs border border-gray-300 rounded-md fo=
+cus:ring-2 focus:ring-gray-400 focus:border-transparent" min=3D"0" max=3D"4=
+00" value=3D"230"></div></div></div></div></div><div class=3D"bg-white roun=
+ded-lg shadow-md p-3 mb-4"><div class=3D"flex gap-1.5"><button class=3D"fle=
+x-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-purple-60=
+0 text-white rounded-md hover:bg-purple-700 transition-colors font-medium">=
+<svg xmlns=3D"http://www.w3.org/2000/svg" width=3D"12" height=3D"12" viewBo=
+x=3D"0 0 24 24" fill=3D"none" stroke=3D"currentColor" stroke-width=3D"2" st=
+roke-linecap=3D"round" stroke-linejoin=3D"round" class=3D"lucide lucide-sma=
+rtphone "><rect width=3D"14" height=3D"20" x=3D"5" y=3D"2" rx=3D"2" ry=3D"2=
+"></rect><path d=3D"M12 18h.01"></path></svg>Mobile</button><button class=
+=3D"flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-bl=
+ue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-mediu=
+m"><svg xmlns=3D"http://www.w3.org/2000/svg" width=3D"12" height=3D"12" vie=
+wBox=3D"0 0 24 24" fill=3D"none" stroke=3D"currentColor" stroke-width=3D"2"=
+ stroke-linecap=3D"round" stroke-linejoin=3D"round" class=3D"lucide lucide-=
+copy "><rect width=3D"14" height=3D"14" x=3D"8" y=3D"8" rx=3D"2" ry=3D"2"><=
+/rect><path d=3D"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"><=
+/path></svg>Hex</button><button class=3D"flex-1 flex items-center justify-c=
+enter gap-1 px-2 py-1.5 text-xs bg-green-600 text-white rounded-md hover:bg=
+-green-700 transition-colors font-medium"><svg xmlns=3D"http://www.w3.org/2=
+000/svg" width=3D"12" height=3D"12" viewBox=3D"0 0 24 24" fill=3D"none" str=
+oke=3D"currentColor" stroke-width=3D"2" stroke-linecap=3D"round" stroke-lin=
+ejoin=3D"round" class=3D"lucide lucide-share2 "><circle cx=3D"18" cy=3D"5" =
+r=3D"3"></circle><circle cx=3D"6" cy=3D"12" r=3D"3"></circle><circle cx=3D"=
+18" cy=3D"19" r=3D"3"></circle><line x1=3D"8.59" x2=3D"15.42" y1=3D"13.51" =
+y2=3D"17.49"></line><line x1=3D"15.41" x2=3D"8.59" y1=3D"6.51" y2=3D"10.49"=
+></line></svg>Share</button></div></div><div class=3D"bg-white rounded-lg s=
+hadow-md p-6 mb-20"><h2 class=3D"text-xl font-bold text-gray-800 mb-4">Hex =
+Editor (Read-Only)</h2><div class=3D"flex items-center justify-between mb-3=
+ gap-3"><div class=3D"flex items-center gap-2 text-sm"><label>Bytes per pag=
+e:</label><select class=3D"border rounded px-2 py-1 text-sm"><option value=
+=3D"4">4</option><option value=3D"8">8</option><option value=3D"16">16</opt=
+ion></select></div><div class=3D"flex items-center gap-2 text-sm"><span>Pag=
+es: 45</span></div></div><div class=3D"overflow-x-auto"><table class=3D"w-f=
+ull text-sm font-mono"><thead><tr class=3D"bg-gray-100 border-b"><th class=
+=3D"px-3 py-2 text-left">Page</th><th class=3D"px-3 py-2 text-left">Offset<=
+/th><th class=3D"px-3 py-2 text-left">Hex</th><th class=3D"px-3 py-2 text-l=
+eft">Dec</th><th class=3D"px-3 py-2 text-left">ASCII</th><th class=3D"px-3 =
+py-2 text-left">Description</th></tr></thead><tbody><tr class=3D"border-b h=
+over:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 0</td><td class=
+=3D"px-3 py-1 text-gray-600">0x00</td><td class=3D"px-3 py-1 font-bold whit=
+espace-nowrap"><span title=3D"0x00: UID / Serial" class=3D"inline-block w-8=
+ text-center bg-gray-100 ">53</span><span title=3D"0x01: UID / Serial" clas=
+s=3D"inline-block w-8 text-center bg-gray-100 ">44</span><span title=3D"0x0=
+2: UID / Serial" class=3D"inline-block w-8 text-center bg-gray-100 ">E5</sp=
+an><span title=3D"0x03: UID / Serial" class=3D"inline-block w-8 text-center=
+ bg-gray-100 ">7A</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><spa=
+n title=3D"0x00: UID / Serial" class=3D"inline-block w-8 text-center bg-gra=
+y-100 "> 83</span><span title=3D"0x01: UID / Serial" class=3D"inline-block =
+w-8 text-center bg-gray-100 "> 68</span><span title=3D"0x02: UID / Serial" =
+class=3D"inline-block w-8 text-center bg-gray-100 ">229</span><span title=
+=3D"0x03: UID / Serial" class=3D"inline-block w-8 text-center bg-gray-100 "=
+>122</span></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><sp=
+an title=3D"0x00: UID / Serial" class=3D"inline-block w-6 text-center bg-gr=
+ay-100 ">S</span><span title=3D"0x01: UID / Serial" class=3D"inline-block w=
+-6 text-center bg-gray-100 ">D</span><span title=3D"0x02: UID / Serial" cla=
+ss=3D"inline-block w-6 text-center bg-gray-100 ">.</span><span title=3D"0x0=
+3: UID / Serial" class=3D"inline-block w-6 text-center bg-gray-100 ">z</spa=
+n></td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=3D"bg-gray-=
+100 px-1 inline-block mr-2" title=3D"UID / Serial (0x00-0x03)">UID / Serial=
+ (0x00-0x03)</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td cl=
+ass=3D"px-3 py-1 text-gray-600">Page 1</td><td class=3D"px-3 py-1 text-gray=
+-600">0x04</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span ti=
+tle=3D"0x04: UID / Serial" class=3D"inline-block w-8 text-center bg-gray-10=
+0 ">01</span><span title=3D"0x05: UID / Serial" class=3D"inline-block w-8 t=
+ext-center bg-gray-100 ">A0</span><span title=3D"0x06: UID / Serial" class=
+=3D"inline-block w-8 text-center bg-gray-100 ">00</span><span title=3D"0x07=
+: UID / Serial" class=3D"inline-block w-8 text-center bg-gray-100 ">04</spa=
+n></td><td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x04: UID /=
+ Serial" class=3D"inline-block w-8 text-center bg-gray-100 ">  1</span><spa=
+n title=3D"0x05: UID / Serial" class=3D"inline-block w-8 text-center bg-gra=
+y-100 ">160</span><span title=3D"0x06: UID / Serial" class=3D"inline-block =
+w-8 text-center bg-gray-100 ">  0</span><span title=3D"0x07: UID / Serial" =
+class=3D"inline-block w-8 text-center bg-gray-100 ">  4</span></td><td clas=
+s=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x04: UID / =
+Serial" class=3D"inline-block w-6 text-center bg-gray-100 ">.</span><span t=
+itle=3D"0x05: UID / Serial" class=3D"inline-block w-6 text-center bg-gray-1=
+00 ">.</span><span title=3D"0x06: UID / Serial" class=3D"inline-block w-6 t=
+ext-center bg-gray-100 ">.</span><span title=3D"0x07: UID / Serial" class=
+=3D"inline-block w-6 text-center bg-gray-100 ">.</span></td><td class=3D"px=
+-3 py-1 text-gray-700 italic"><span class=3D"bg-gray-100 px-1 inline-block =
+mr-2" title=3D"UID / Serial (0x04-0x07)">UID / Serial (0x04-0x07)</span></t=
+d></tr><tr class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-=
+gray-600">Page 2</td><td class=3D"px-3 py-1 text-gray-600">0x08</td><td cla=
+ss=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=3D"0x08: UID / Ser=
+ial" class=3D"inline-block w-8 text-center bg-gray-100 ">A5</span><span tit=
+le=3D"0x09: BCC1 Checksum" class=3D"inline-block w-8 text-center bg-stone-1=
+00 ">48</span><span title=3D"0x0A: UID / BCC1 Checksum" class=3D"inline-blo=
+ck w-8 text-center  ">00</span><span title=3D"0x0B: UID / BCC1 Checksum" cl=
+ass=3D"inline-block w-8 text-center  ">00</span></td><td class=3D"px-3 py-1=
+ whitespace-nowrap"><span title=3D"0x08: UID / Serial" class=3D"inline-bloc=
+k w-8 text-center bg-gray-100 ">165</span><span title=3D"0x09: BCC1 Checksu=
+m" class=3D"inline-block w-8 text-center bg-stone-100 "> 72</span><span tit=
+le=3D"0x0A: UID / BCC1 Checksum" class=3D"inline-block w-8 text-center  "> =
+ 0</span><span title=3D"0x0B: UID / BCC1 Checksum" class=3D"inline-block w-=
+8 text-center  ">  0</span></td><td class=3D"px-3 py-1 text-gray-600 whites=
+pace-nowrap"><span title=3D"0x08: UID / Serial" class=3D"inline-block w-6 t=
+ext-center bg-gray-100 ">.</span><span title=3D"0x09: BCC1 Checksum" class=
+=3D"inline-block w-6 text-center bg-stone-100 ">H</span><span title=3D"0x0A=
+: UID / BCC1 Checksum" class=3D"inline-block w-6 text-center  ">.</span><sp=
+an title=3D"0x0B: UID / BCC1 Checksum" class=3D"inline-block w-6 text-cente=
+r  ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=
+=3D"bg-gray-100 px-1 inline-block mr-2" title=3D"UID / Serial (0x08)">UID /=
+ Serial (0x08)</span><span class=3D"bg-stone-100 px-1 inline-block mr-2" ti=
+tle=3D"BCC1 Checksum (0x09)">BCC1 Checksum (0x09)</span></td></tr><tr class=
+=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 3=
+</td><td class=3D"px-3 py-1 text-gray-600">0x0C</td><td class=3D"px-3 py-1 =
+font-bold whitespace-nowrap"><span title=3D"0x0C: Capability Container" cla=
+ss=3D"inline-block w-8 text-center  ">E1</span><span title=3D"0x0D: Capabil=
+ity Container" class=3D"inline-block w-8 text-center  ">10</span><span titl=
+e=3D"0x0E: Capability Container" class=3D"inline-block w-8 text-center  ">1=
+2</span><span title=3D"0x0F: Capability Container" class=3D"inline-block w-=
+8 text-center  ">00</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><s=
+pan title=3D"0x0C: Capability Container" class=3D"inline-block w-8 text-cen=
+ter  ">225</span><span title=3D"0x0D: Capability Container" class=3D"inline=
+-block w-8 text-center  "> 16</span><span title=3D"0x0E: Capability Contain=
+er" class=3D"inline-block w-8 text-center  "> 18</span><span title=3D"0x0F:=
+ Capability Container" class=3D"inline-block w-8 text-center  ">  0</span><=
+/td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"=
+0x0C: Capability Container" class=3D"inline-block w-6 text-center  ">.</spa=
+n><span title=3D"0x0D: Capability Container" class=3D"inline-block w-6 text=
+-center  ">.</span><span title=3D"0x0E: Capability Container" class=3D"inli=
+ne-block w-6 text-center  ">.</span><span title=3D"0x0F: Capability Contain=
+er" class=3D"inline-block w-6 text-center  ">.</span></td><td class=3D"px-3=
+ py-1 text-gray-700 italic"><span class=3D" px-1 inline-block">Capability C=
+ontainer</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=
+=3D"px-3 py-1 text-gray-600">Page 4</td><td class=3D"px-3 py-1 text-gray-60=
+0">0x10</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=
+=3D"0x10: NDEF TLV / Structure" class=3D"inline-block w-8 text-center  ">01=
+</span><span title=3D"0x11: NDEF TLV / Structure" class=3D"inline-block w-8=
+ text-center  ">03</span><span title=3D"0x12: NDEF TLV / Structure" class=
+=3D"inline-block w-8 text-center  ">A0</span><span title=3D"0x13: NDEF TLV =
+/ Structure" class=3D"inline-block w-8 text-center  ">0C</span></td><td cla=
+ss=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x10: NDEF TLV / Structur=
+e" class=3D"inline-block w-8 text-center  ">  1</span><span title=3D"0x11: =
+NDEF TLV / Structure" class=3D"inline-block w-8 text-center  ">  3</span><s=
+pan title=3D"0x12: NDEF TLV / Structure" class=3D"inline-block w-8 text-cen=
+ter  ">160</span><span title=3D"0x13: NDEF TLV / Structure" class=3D"inline=
+-block w-8 text-center  "> 12</span></td><td class=3D"px-3 py-1 text-gray-6=
+00 whitespace-nowrap"><span title=3D"0x10: NDEF TLV / Structure" class=3D"i=
+nline-block w-6 text-center  ">.</span><span title=3D"0x11: NDEF TLV / Stru=
+cture" class=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x12=
+: NDEF TLV / Structure" class=3D"inline-block w-6 text-center  ">.</span><s=
+pan title=3D"0x13: NDEF TLV / Structure" class=3D"inline-block w-6 text-cen=
+ter  ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"><span clas=
+s=3D" px-1 inline-block">NDEF TLV / Structure</span></td></tr><tr class=3D"=
+border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 5</td=
+><td class=3D"px-3 py-1 text-gray-600">0x14</td><td class=3D"px-3 py-1 font=
+-bold whitespace-nowrap"><span title=3D"0x14: NDEF Message Header" class=3D=
+"inline-block w-8 text-center  ">34</span><span title=3D"0x15: NDEF Message=
+ Header" class=3D"inline-block w-8 text-center  ">03</span><span title=3D"0=
+x16: NDEF Message Header" class=3D"inline-block w-8 text-center  ">0F</span=
+><span title=3D"0x17: NDEF Message Header" class=3D"inline-block w-8 text-c=
+enter  ">D1</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><span titl=
+e=3D"0x14: NDEF Message Header" class=3D"inline-block w-8 text-center  "> 5=
+2</span><span title=3D"0x15: NDEF Message Header" class=3D"inline-block w-8=
+ text-center  ">  3</span><span title=3D"0x16: NDEF Message Header" class=
+=3D"inline-block w-8 text-center  "> 15</span><span title=3D"0x17: NDEF Mes=
+sage Header" class=3D"inline-block w-8 text-center  ">209</span></td><td cl=
+ass=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x14: NDEF=
+ Message Header" class=3D"inline-block w-6 text-center  ">4</span><span tit=
+le=3D"0x15: NDEF Message Header" class=3D"inline-block w-6 text-center  ">.=
+</span><span title=3D"0x16: NDEF Message Header" class=3D"inline-block w-6 =
+text-center  ">.</span><span title=3D"0x17: NDEF Message Header" class=3D"i=
+nline-block w-6 text-center  ">.</span></td><td class=3D"px-3 py-1 text-gra=
+y-700 italic"><span class=3D" px-1 inline-block">NDEF Message Header</span>=
+</td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 te=
+xt-gray-600">Page 6</td><td class=3D"px-3 py-1 text-gray-600">0x18</td><td =
+class=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=3D"0x18: NDEF R=
+ecord (URI, prefix https://)" class=3D"inline-block w-8 text-center  ">01</=
+span><span title=3D"0x19: NDEF Record (URI, prefix https://)" class=3D"inli=
+ne-block w-8 text-center  ">0B</span><span title=3D"0x1A: NDEF Record (URI,=
+ prefix https://)" class=3D"inline-block w-8 text-center  ">55</span><span =
+title=3D"0x1B: NDEF Record (URI, prefix https://)" class=3D"inline-block w-=
+8 text-center  ">02</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><s=
+pan title=3D"0x18: NDEF Record (URI, prefix https://)" class=3D"inline-bloc=
+k w-8 text-center  ">  1</span><span title=3D"0x19: NDEF Record (URI, prefi=
+x https://)" class=3D"inline-block w-8 text-center  "> 11</span><span title=
+=3D"0x1A: NDEF Record (URI, prefix https://)" class=3D"inline-block w-8 tex=
+t-center  "> 85</span><span title=3D"0x1B: NDEF Record (URI, prefix https:/=
+/)" class=3D"inline-block w-8 text-center  ">  2</span></td><td class=3D"px=
+-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x18: NDEF Record (=
+URI, prefix https://)" class=3D"inline-block w-6 text-center  ">.</span><sp=
+an title=3D"0x19: NDEF Record (URI, prefix https://)" class=3D"inline-block=
+ w-6 text-center  ">.</span><span title=3D"0x1A: NDEF Record (URI, prefix h=
+ttps://)" class=3D"inline-block w-6 text-center  ">U</span><span title=3D"0=
+x1B: NDEF Record (URI, prefix https://)" class=3D"inline-block w-6 text-cen=
+ter  ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"><span clas=
+s=3D" px-1 inline-block">NDEF Record (URI, prefix https://)</span></td></tr=
+><tr class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-6=
+00">Page 7</td><td class=3D"px-3 py-1 text-gray-600">0x1C</td><td class=3D"=
+px-3 py-1 font-bold whitespace-nowrap"><span title=3D"0x1C: Marketing URL" =
+class=3D"inline-block w-8 text-center bg-rose-50 ">65</span><span title=3D"=
+0x1D: Marketing URL" class=3D"inline-block w-8 text-center bg-rose-50 ">6C<=
+/span><span title=3D"0x1E: Marketing URL" class=3D"inline-block w-8 text-ce=
+nter bg-rose-50 ">65</span><span title=3D"0x1F: Marketing URL" class=3D"inl=
+ine-block w-8 text-center bg-rose-50 ">67</span></td><td class=3D"px-3 py-1=
+ whitespace-nowrap"><span title=3D"0x1C: Marketing URL" class=3D"inline-blo=
+ck w-8 text-center bg-rose-50 ">101</span><span title=3D"0x1D: Marketing UR=
+L" class=3D"inline-block w-8 text-center bg-rose-50 ">108</span><span title=
+=3D"0x1E: Marketing URL" class=3D"inline-block w-8 text-center bg-rose-50 "=
+>101</span><span title=3D"0x1F: Marketing URL" class=3D"inline-block w-8 te=
+xt-center bg-rose-50 ">103</span></td><td class=3D"px-3 py-1 text-gray-600 =
+whitespace-nowrap"><span title=3D"0x1C: Marketing URL" class=3D"inline-bloc=
+k w-6 text-center bg-rose-50 ">e</span><span title=3D"0x1D: Marketing URL" =
+class=3D"inline-block w-6 text-center bg-rose-50 ">l</span><span title=3D"0=
+x1E: Marketing URL" class=3D"inline-block w-6 text-center bg-rose-50 ">e</s=
+pan><span title=3D"0x1F: Marketing URL" class=3D"inline-block w-6 text-cent=
+er bg-rose-50 ">g</span></td><td class=3D"px-3 py-1 text-gray-700 italic"><=
+span class=3D"bg-rose-50 px-1 inline-block mr-2" title=3D"Marketing URL (0x=
+1C-0x1F)">Marketing URL (0x1C-0x1F)</span></td></tr><tr class=3D"border-b h=
+over:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 8</td><td class=
+=3D"px-3 py-1 text-gray-600">0x20</td><td class=3D"px-3 py-1 font-bold whit=
+espace-nowrap"><span title=3D"0x20: Marketing URL" class=3D"inline-block w-=
+8 text-center bg-rose-50 ">6F</span><span title=3D"0x21: Marketing URL" cla=
+ss=3D"inline-block w-8 text-center bg-rose-50 ">6F</span><span title=3D"0x2=
+2: Marketing URL" class=3D"inline-block w-8 text-center bg-rose-50 ">2E</sp=
+an><span title=3D"0x23: Marketing URL" class=3D"inline-block w-8 text-cente=
+r bg-rose-50 ">63</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><spa=
+n title=3D"0x20: Marketing URL" class=3D"inline-block w-8 text-center bg-ro=
+se-50 ">111</span><span title=3D"0x21: Marketing URL" class=3D"inline-block=
+ w-8 text-center bg-rose-50 ">111</span><span title=3D"0x22: Marketing URL"=
+ class=3D"inline-block w-8 text-center bg-rose-50 "> 46</span><span title=
+=3D"0x23: Marketing URL" class=3D"inline-block w-8 text-center bg-rose-50 "=
+> 99</span></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><sp=
+an title=3D"0x20: Marketing URL" class=3D"inline-block w-6 text-center bg-r=
+ose-50 ">o</span><span title=3D"0x21: Marketing URL" class=3D"inline-block =
+w-6 text-center bg-rose-50 ">o</span><span title=3D"0x22: Marketing URL" cl=
+ass=3D"inline-block w-6 text-center bg-rose-50 ">.</span><span title=3D"0x2=
+3: Marketing URL" class=3D"inline-block w-6 text-center bg-rose-50 ">c</spa=
+n></td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=3D"bg-rose-=
+50 px-1 inline-block mr-2" title=3D"Marketing URL (0x20-0x23)">Marketing UR=
+L (0x20-0x23)</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td c=
+lass=3D"px-3 py-1 text-gray-600">Page 9</td><td class=3D"px-3 py-1 text-gra=
+y-600">0x24</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span t=
+itle=3D"0x24: Marketing URL" class=3D"inline-block w-8 text-center bg-rose-=
+50 ">6F</span><span title=3D"0x25: Marketing URL" class=3D"inline-block w-8=
+ text-center bg-rose-50 ">6D</span><span title=3D"0x26: Marketing URL / URI=
+ payload" class=3D"inline-block w-8 text-center  ">FE</span><span title=3D"=
+0x27: Marketing URL / URI payload" class=3D"inline-block w-8 text-center  "=
+>00</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x2=
+4: Marketing URL" class=3D"inline-block w-8 text-center bg-rose-50 ">111</s=
+pan><span title=3D"0x25: Marketing URL" class=3D"inline-block w-8 text-cent=
+er bg-rose-50 ">109</span><span title=3D"0x26: Marketing URL / URI payload"=
+ class=3D"inline-block w-8 text-center  ">254</span><span title=3D"0x27: Ma=
+rketing URL / URI payload" class=3D"inline-block w-8 text-center  ">  0</sp=
+an></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=
+=3D"0x24: Marketing URL" class=3D"inline-block w-6 text-center bg-rose-50 "=
+>o</span><span title=3D"0x25: Marketing URL" class=3D"inline-block w-6 text=
+-center bg-rose-50 ">m</span><span title=3D"0x26: Marketing URL / URI paylo=
+ad" class=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x27: M=
+arketing URL / URI payload" class=3D"inline-block w-6 text-center  ">.</spa=
+n></td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=3D"bg-rose-=
+50 px-1 inline-block mr-2" title=3D"Marketing URL (0x24-0x25)">Marketing UR=
+L (0x24-0x25)</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td c=
+lass=3D"px-3 py-1 text-gray-600">Page 10</td><td class=3D"px-3 py-1 text-gr=
+ay-600">0x28</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span =
+title=3D"0x28: Reserved for URI" class=3D"inline-block w-8 text-center  ">0=
+0</span><span title=3D"0x29: Reserved for URI" class=3D"inline-block w-8 te=
+xt-center  ">00</span><span title=3D"0x2A: Reserved for URI" class=3D"inlin=
+e-block w-8 text-center  ">00</span><span title=3D"0x2B: Reserved for URI" =
+class=3D"inline-block w-8 text-center  ">00</span></td><td class=3D"px-3 py=
+-1 whitespace-nowrap"><span title=3D"0x28: Reserved for URI" class=3D"inlin=
+e-block w-8 text-center  ">  0</span><span title=3D"0x29: Reserved for URI"=
+ class=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x2A: Re=
+served for URI" class=3D"inline-block w-8 text-center  ">  0</span><span ti=
+tle=3D"0x2B: Reserved for URI" class=3D"inline-block w-8 text-center  ">  0=
+</span></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span t=
+itle=3D"0x28: Reserved for URI" class=3D"inline-block w-6 text-center  ">.<=
+/span><span title=3D"0x29: Reserved for URI" class=3D"inline-block w-6 text=
+-center  ">.</span><span title=3D"0x2A: Reserved for URI" class=3D"inline-b=
+lock w-6 text-center  ">.</span><span title=3D"0x2B: Reserved for URI" clas=
+s=3D"inline-block w-6 text-center  ">.</span></td><td class=3D"px-3 py-1 te=
+xt-gray-700 italic"><span class=3D" px-1 inline-block">Reserved for URI</sp=
+an></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1=
+ text-gray-600">Page 11</td><td class=3D"px-3 py-1 text-gray-600">0x2C</td>=
+<td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=3D"0x2C: Re=
+served for URI" class=3D"inline-block w-8 text-center  ">00</span><span tit=
+le=3D"0x2D: Reserved for URI" class=3D"inline-block w-8 text-center  ">00</=
+span><span title=3D"0x2E: Reserved for URI" class=3D"inline-block w-8 text-=
+center  ">00</span><span title=3D"0x2F: Reserved for URI" class=3D"inline-b=
+lock w-8 text-center  ">00</span></td><td class=3D"px-3 py-1 whitespace-now=
+rap"><span title=3D"0x2C: Reserved for URI" class=3D"inline-block w-8 text-=
+center  ">  0</span><span title=3D"0x2D: Reserved for URI" class=3D"inline-=
+block w-8 text-center  ">  0</span><span title=3D"0x2E: Reserved for URI" c=
+lass=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x2F: Rese=
+rved for URI" class=3D"inline-block w-8 text-center  ">  0</span></td><td c=
+lass=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x2C: Res=
+erved for URI" class=3D"inline-block w-6 text-center  ">.</span><span title=
+=3D"0x2D: Reserved for URI" class=3D"inline-block w-6 text-center  ">.</spa=
+n><span title=3D"0x2E: Reserved for URI" class=3D"inline-block w-6 text-cen=
+ter  ">.</span><span title=3D"0x2F: Reserved for URI" class=3D"inline-block=
+ w-6 text-center  ">.</span></td><td class=3D"px-3 py-1 text-gray-700 itali=
+c"><span class=3D" px-1 inline-block">Reserved for URI</span></td></tr><tr =
+class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">P=
+age 12</td><td class=3D"px-3 py-1 text-gray-600">0x30</td><td class=3D"px-3=
+ py-1 font-bold whitespace-nowrap"><span title=3D"0x30: Reserved for URI" c=
+lass=3D"inline-block w-8 text-center  ">00</span><span title=3D"0x31: Reser=
+ved for URI" class=3D"inline-block w-8 text-center  ">00</span><span title=
+=3D"0x32: Reserved for URI" class=3D"inline-block w-8 text-center  ">00</sp=
+an><span title=3D"0x33: Reserved for URI" class=3D"inline-block w-8 text-ce=
+nter  ">00</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><span title=
+=3D"0x30: Reserved for URI" class=3D"inline-block w-8 text-center  ">  0</s=
+pan><span title=3D"0x31: Reserved for URI" class=3D"inline-block w-8 text-c=
+enter  ">  0</span><span title=3D"0x32: Reserved for URI" class=3D"inline-b=
+lock w-8 text-center  ">  0</span><span title=3D"0x33: Reserved for URI" cl=
+ass=3D"inline-block w-8 text-center  ">  0</span></td><td class=3D"px-3 py-=
+1 text-gray-600 whitespace-nowrap"><span title=3D"0x30: Reserved for URI" c=
+lass=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x31: Reserv=
+ed for URI" class=3D"inline-block w-6 text-center  ">.</span><span title=3D=
+"0x32: Reserved for URI" class=3D"inline-block w-6 text-center  ">.</span><=
+span title=3D"0x33: Reserved for URI" class=3D"inline-block w-6 text-center=
+  ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=
+=3D" px-1 inline-block">Reserved for URI</span></td></tr><tr class=3D"borde=
+r-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 13</td><td=
+ class=3D"px-3 py-1 text-gray-600">0x34</td><td class=3D"px-3 py-1 font-bol=
+d whitespace-nowrap"><span title=3D"0x34: Reserved for URI" class=3D"inline=
+-block w-8 text-center  ">00</span><span title=3D"0x35: Reserved for URI" c=
+lass=3D"inline-block w-8 text-center  ">00</span><span title=3D"0x36: Reser=
+ved for URI" class=3D"inline-block w-8 text-center  ">00</span><span title=
+=3D"0x37: Reserved for URI" class=3D"inline-block w-8 text-center  ">00</sp=
+an></td><td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x34: Rese=
+rved for URI" class=3D"inline-block w-8 text-center  ">  0</span><span titl=
+e=3D"0x35: Reserved for URI" class=3D"inline-block w-8 text-center  ">  0</=
+span><span title=3D"0x36: Reserved for URI" class=3D"inline-block w-8 text-=
+center  ">  0</span><span title=3D"0x37: Reserved for URI" class=3D"inline-=
+block w-8 text-center  ">  0</span></td><td class=3D"px-3 py-1 text-gray-60=
+0 whitespace-nowrap"><span title=3D"0x34: Reserved for URI" class=3D"inline=
+-block w-6 text-center  ">.</span><span title=3D"0x35: Reserved for URI" cl=
+ass=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x36: Reserve=
+d for URI" class=3D"inline-block w-6 text-center  ">.</span><span title=3D"=
+0x37: Reserved for URI" class=3D"inline-block w-6 text-center  ">.</span></=
+td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=3D" px-1 inline=
+-block">Reserved for URI</span></td></tr><tr class=3D"border-b hover:bg-gra=
+y-50"><td class=3D"px-3 py-1 text-gray-600">Page 14</td><td class=3D"px-3 p=
+y-1 text-gray-600">0x38</td><td class=3D"px-3 py-1 font-bold whitespace-now=
+rap"><span title=3D"0x38: Reserved for URI" class=3D"inline-block w-8 text-=
+center  ">00</span><span title=3D"0x39: Reserved for URI" class=3D"inline-b=
+lock w-8 text-center  ">00</span><span title=3D"0x3A: Reserved for URI" cla=
+ss=3D"inline-block w-8 text-center  ">00</span><span title=3D"0x3B: Reserve=
+d for URI" class=3D"inline-block w-8 text-center  ">00</span></td><td class=
+=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x38: Reserved for URI" cla=
+ss=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x39: Reserv=
+ed for URI" class=3D"inline-block w-8 text-center  ">  0</span><span title=
+=3D"0x3A: Reserved for URI" class=3D"inline-block w-8 text-center  ">  0</s=
+pan><span title=3D"0x3B: Reserved for URI" class=3D"inline-block w-8 text-c=
+enter  ">  0</span></td><td class=3D"px-3 py-1 text-gray-600 whitespace-now=
+rap"><span title=3D"0x38: Reserved for URI" class=3D"inline-block w-6 text-=
+center  ">.</span><span title=3D"0x39: Reserved for URI" class=3D"inline-bl=
+ock w-6 text-center  ">.</span><span title=3D"0x3A: Reserved for URI" class=
+=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x3B: Reserved f=
+or URI" class=3D"inline-block w-6 text-center  ">.</span></td><td class=3D"=
+px-3 py-1 text-gray-700 italic"><span class=3D" px-1 inline-block">Reserved=
+ for URI</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=
+=3D"px-3 py-1 text-gray-600">Page 15</td><td class=3D"px-3 py-1 text-gray-6=
+00">0x3C</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span titl=
+e=3D"0x3C: Reserved for URI" class=3D"inline-block w-8 text-center  ">00</s=
+pan><span title=3D"0x3D: Reserved for URI" class=3D"inline-block w-8 text-c=
+enter  ">00</span><span title=3D"0x3E: Reserved for URI" class=3D"inline-bl=
+ock w-8 text-center  ">00</span><span title=3D"0x3F: Reserved for URI" clas=
+s=3D"inline-block w-8 text-center  ">00</span></td><td class=3D"px-3 py-1 w=
+hitespace-nowrap"><span title=3D"0x3C: Reserved for URI" class=3D"inline-bl=
+ock w-8 text-center  ">  0</span><span title=3D"0x3D: Reserved for URI" cla=
+ss=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x3E: Reserv=
+ed for URI" class=3D"inline-block w-8 text-center  ">  0</span><span title=
+=3D"0x3F: Reserved for URI" class=3D"inline-block w-8 text-center  ">  0</s=
+pan></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span titl=
+e=3D"0x3C: Reserved for URI" class=3D"inline-block w-6 text-center  ">.</sp=
+an><span title=3D"0x3D: Reserved for URI" class=3D"inline-block w-6 text-ce=
+nter  ">.</span><span title=3D"0x3E: Reserved for URI" class=3D"inline-bloc=
+k w-6 text-center  ">.</span><span title=3D"0x3F: Reserved for URI" class=
+=3D"inline-block w-6 text-center  ">.</span></td><td class=3D"px-3 py-1 tex=
+t-gray-700 italic"><span class=3D" px-1 inline-block">Reserved for URI</spa=
+n></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 =
+text-gray-600">Page 16</td><td class=3D"px-3 py-1 text-gray-600">0x40</td><=
+td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=3D"0x40: Hea=
+der" class=3D"inline-block w-8 text-center bg-cyan-200 ">36</span><span tit=
+le=3D"0x41: Manufacturer Code" class=3D"inline-block w-8 text-center bg-ind=
+igo-100 ">EE</span><span title=3D"0x42: Manufacturer Code" class=3D"inline-=
+block w-8 text-center bg-indigo-100 ">EE</span><span title=3D"0x43: Manufac=
+turer Code" class=3D"inline-block w-8 text-center bg-indigo-100 ">EE</span>=
+</td><td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x40: Header"=
+ class=3D"inline-block w-8 text-center bg-cyan-200 "> 54</span><span title=
+=3D"0x41: Manufacturer Code" class=3D"inline-block w-8 text-center bg-indig=
+o-100 ">238</span><span title=3D"0x42: Manufacturer Code" class=3D"inline-b=
+lock w-8 text-center bg-indigo-100 ">238</span><span title=3D"0x43: Manufac=
+turer Code" class=3D"inline-block w-8 text-center bg-indigo-100 ">238</span=
+></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=
+=3D"0x40: Header" class=3D"inline-block w-6 text-center bg-cyan-200 ">6</sp=
+an><span title=3D"0x41: Manufacturer Code" class=3D"inline-block w-6 text-c=
+enter bg-indigo-100 ">.</span><span title=3D"0x42: Manufacturer Code" class=
+=3D"inline-block w-6 text-center bg-indigo-100 ">.</span><span title=3D"0x4=
+3: Manufacturer Code" class=3D"inline-block w-6 text-center bg-indigo-100 "=
+>.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=3D"b=
+g-cyan-200 px-1 inline-block mr-2" title=3D"Header (0x40)">Header (0x40)</s=
+pan><span class=3D"bg-indigo-100 px-1 inline-block mr-2" title=3D"Manufactu=
+rer Code (0x41-0x43)">Manufacturer Code (0x41-0x43)</span></td></tr><tr cla=
+ss=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page=
+ 17</td><td class=3D"px-3 py-1 text-gray-600">0x44</td><td class=3D"px-3 py=
+-1 font-bold whitespace-nowrap"><span title=3D"0x44: Manufacturer Code" cla=
+ss=3D"inline-block w-8 text-center bg-indigo-100 ">EE</span><span title=3D"=
+0x45: Filament Code" class=3D"inline-block w-8 text-center bg-yellow-50 ">0=
+0</span><span title=3D"0x46: Filament Code" class=3D"inline-block w-8 text-=
+center bg-yellow-50 ">00</span><span title=3D"0x47: Manufacturer ID" class=
+=3D"inline-block w-8 text-center  ">00</span></td><td class=3D"px-3 py-1 wh=
+itespace-nowrap"><span title=3D"0x44: Manufacturer Code" class=3D"inline-bl=
+ock w-8 text-center bg-indigo-100 ">238</span><span title=3D"0x45: Filament=
+ Code" class=3D"inline-block w-8 text-center bg-yellow-50 ">  0</span><span=
+ title=3D"0x46: Filament Code" class=3D"inline-block w-8 text-center bg-yel=
+low-50 ">  0</span><span title=3D"0x47: Manufacturer ID" class=3D"inline-bl=
+ock w-8 text-center  ">  0</span></td><td class=3D"px-3 py-1 text-gray-600 =
+whitespace-nowrap"><span title=3D"0x44: Manufacturer Code" class=3D"inline-=
+block w-6 text-center bg-indigo-100 ">.</span><span title=3D"0x45: Filament=
+ Code" class=3D"inline-block w-6 text-center bg-yellow-50 ">.</span><span t=
+itle=3D"0x46: Filament Code" class=3D"inline-block w-6 text-center bg-yello=
+w-50 ">.</span><span title=3D"0x47: Manufacturer ID" class=3D"inline-block =
+w-6 text-center  ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic=
+"><span class=3D"bg-indigo-100 px-1 inline-block mr-2" title=3D"Manufacture=
+r Code (0x44)">Manufacturer Code (0x44)</span><span class=3D"bg-yellow-50 p=
+x-1 inline-block mr-2" title=3D"Filament Code (0x45-0x46)">Filament Code (0=
+x45-0x46)</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=
+=3D"px-3 py-1 text-gray-600">Page 18</td><td class=3D"px-3 py-1 text-gray-6=
+00">0x48</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span titl=
+e=3D"0x48: Material Name" class=3D"inline-block w-8 text-center bg-orange-5=
+0 ">42</span><span title=3D"0x49: Material Name" class=3D"inline-block w-8 =
+text-center bg-orange-50 ">56</span><span title=3D"0x4A: Material Name" cla=
+ss=3D"inline-block w-8 text-center bg-orange-50 ">4F</span><span title=3D"0=
+x4B: Material Name" class=3D"inline-block w-8 text-center bg-orange-50 ">48=
+</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x48: =
+Material Name" class=3D"inline-block w-8 text-center bg-orange-50 "> 66</sp=
+an><span title=3D"0x49: Material Name" class=3D"inline-block w-8 text-cente=
+r bg-orange-50 "> 86</span><span title=3D"0x4A: Material Name" class=3D"inl=
+ine-block w-8 text-center bg-orange-50 "> 79</span><span title=3D"0x4B: Mat=
+erial Name" class=3D"inline-block w-8 text-center bg-orange-50 "> 72</span>=
+</td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D=
+"0x48: Material Name" class=3D"inline-block w-6 text-center bg-orange-50 ">=
+B</span><span title=3D"0x49: Material Name" class=3D"inline-block w-6 text-=
+center bg-orange-50 ">V</span><span title=3D"0x4A: Material Name" class=3D"=
+inline-block w-6 text-center bg-orange-50 ">O</span><span title=3D"0x4B: Ma=
+terial Name" class=3D"inline-block w-6 text-center bg-orange-50 ">H</span><=
+/td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=3D"bg-orange-5=
+0 px-1 inline-block mr-2" title=3D"Material Name (0x48-0x4B)">Material Name=
+ (0x48-0x4B)</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td cl=
+ass=3D"px-3 py-1 text-gray-600">Page 19</td><td class=3D"px-3 py-1 text-gra=
+y-600">0x4C</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span t=
+itle=3D"0x4C: Material Supplement" class=3D"inline-block w-8 text-center bg=
+-amber-50 ">09</span><span title=3D"0x4D: Material Supplement" class=3D"inl=
+ine-block w-8 text-center bg-amber-50 ">00</span><span title=3D"0x4E: Mater=
+ial Position" class=3D"inline-block w-8 text-center  ">00</span><span title=
+=3D"0x4F: Material Position" class=3D"inline-block w-8 text-center  ">00</s=
+pan></td><td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x4C: Mat=
+erial Supplement" class=3D"inline-block w-8 text-center bg-amber-50 ">  9</=
+span><span title=3D"0x4D: Material Supplement" class=3D"inline-block w-8 te=
+xt-center bg-amber-50 ">  0</span><span title=3D"0x4E: Material Position" c=
+lass=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x4F: Mate=
+rial Position" class=3D"inline-block w-8 text-center  ">  0</span></td><td =
+class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x4C: Ma=
+terial Supplement" class=3D"inline-block w-6 text-center bg-amber-50 ">.</s=
+pan><span title=3D"0x4D: Material Supplement" class=3D"inline-block w-6 tex=
+t-center bg-amber-50 ">.</span><span title=3D"0x4E: Material Position" clas=
+s=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x4F: Material =
+Position" class=3D"inline-block w-6 text-center  ">.</span></td><td class=
+=3D"px-3 py-1 text-gray-700 italic"><span class=3D"bg-amber-50 px-1 inline-=
+block mr-2" title=3D"Material Supplement (0x4C-0x4D)">Material Supplement (=
+0x4C-0x4D)</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td clas=
+s=3D"px-3 py-1 text-gray-600">Page 20</td><td class=3D"px-3 py-1 text-gray-=
+600">0x50</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span tit=
+le=3D"0x50: Color Code" class=3D"inline-block w-8 text-center bg-green-50 "=
+>ED</span><span title=3D"0x51: Color Code" class=3D"inline-block w-8 text-c=
+enter bg-green-50 ">02</span><span title=3D"0x52: Color Code" class=3D"inli=
+ne-block w-8 text-center bg-green-50 ">02</span><span title=3D"0x53: Color =
+Modifier" class=3D"inline-block w-8 text-center bg-lime-50 ">FF</span></td>=
+<td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x50: Color Code" =
+class=3D"inline-block w-8 text-center bg-green-50 ">237</span><span title=
+=3D"0x51: Color Code" class=3D"inline-block w-8 text-center bg-green-50 "> =
+ 2</span><span title=3D"0x52: Color Code" class=3D"inline-block w-8 text-ce=
+nter bg-green-50 ">  2</span><span title=3D"0x53: Color Modifier" class=3D"=
+inline-block w-8 text-center bg-lime-50 ">255</span></td><td class=3D"px-3 =
+py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x50: Color Code" clas=
+s=3D"inline-block w-6 text-center bg-green-50 ">.</span><span title=3D"0x51=
+: Color Code" class=3D"inline-block w-6 text-center bg-green-50 ">.</span><=
+span title=3D"0x52: Color Code" class=3D"inline-block w-6 text-center bg-gr=
+een-50 ">.</span><span title=3D"0x53: Color Modifier" class=3D"inline-block=
+ w-6 text-center bg-lime-50 ">.</span></td><td class=3D"px-3 py-1 text-gray=
+-700 italic"><span class=3D"bg-green-50 px-1 inline-block mr-2" title=3D"Co=
+lor Code (0x50-0x52)">Color Code (0x50-0x52)</span><span class=3D"bg-lime-5=
+0 px-1 inline-block mr-2" title=3D"Color Modifier (0x53)">Color Modifier (0=
+x53)</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=3D"p=
+x-3 py-1 text-gray-600">Page 21</td><td class=3D"px-3 py-1 text-gray-600">0=
+x54</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=3D"=
+0x54: Min Temp" class=3D"inline-block w-8 text-center bg-sky-50 ">00</span>=
+<span title=3D"0x55: Min Temp" class=3D"inline-block w-8 text-center bg-sky=
+-50 ">BE</span><span title=3D"0x56: Max Temp" class=3D"inline-block w-8 tex=
+t-center bg-blue-100 ">00</span><span title=3D"0x57: Max Temp" class=3D"inl=
+ine-block w-8 text-center bg-blue-100 ">E6</span></td><td class=3D"px-3 py-=
+1 whitespace-nowrap"><span title=3D"0x54: Min Temp" class=3D"inline-block w=
+-8 text-center bg-sky-50 ">  0</span><span title=3D"0x55: Min Temp" class=
+=3D"inline-block w-8 text-center bg-sky-50 ">190</span><span title=3D"0x56:=
+ Max Temp" class=3D"inline-block w-8 text-center bg-blue-100 ">  0</span><s=
+pan title=3D"0x57: Max Temp" class=3D"inline-block w-8 text-center bg-blue-=
+100 ">230</span></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap=
+"><span title=3D"0x54: Min Temp" class=3D"inline-block w-6 text-center bg-s=
+ky-50 ">.</span><span title=3D"0x55: Min Temp" class=3D"inline-block w-6 te=
+xt-center bg-sky-50 ">.</span><span title=3D"0x56: Max Temp" class=3D"inlin=
+e-block w-6 text-center bg-blue-100 ">.</span><span title=3D"0x57: Max Temp=
+" class=3D"inline-block w-6 text-center bg-blue-100 ">.</span></td><td clas=
+s=3D"px-3 py-1 text-gray-700 italic"><span class=3D"bg-sky-50 px-1 inline-b=
+lock mr-2" title=3D"Min Temp (0x54-0x55)">Min Temp (0x54-0x55)</span><span =
+class=3D"bg-blue-100 px-1 inline-block mr-2" title=3D"Max Temp (0x56-0x57)"=
+>Max Temp (0x56-0x57)</span></td></tr><tr class=3D"border-b hover:bg-gray-5=
+0"><td class=3D"px-3 py-1 text-gray-600">Page 22</td><td class=3D"px-3 py-1=
+ text-gray-600">0x58</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap=
+"><span title=3D"0x58: " class=3D"inline-block w-8 text-center  ">00</span>=
+<span title=3D"0x59: " class=3D"inline-block w-8 text-center  ">00</span><s=
+pan title=3D"0x5A: " class=3D"inline-block w-8 text-center  ">00</span><spa=
+n title=3D"0x5B: " class=3D"inline-block w-8 text-center  ">00</span></td><=
+td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x58: " class=3D"in=
+line-block w-8 text-center  ">  0</span><span title=3D"0x59: " class=3D"inl=
+ine-block w-8 text-center  ">  0</span><span title=3D"0x5A: " class=3D"inli=
+ne-block w-8 text-center  ">  0</span><span title=3D"0x5B: " class=3D"inlin=
+e-block w-8 text-center  ">  0</span></td><td class=3D"px-3 py-1 text-gray-=
+600 whitespace-nowrap"><span title=3D"0x58: " class=3D"inline-block w-6 tex=
+t-center  ">.</span><span title=3D"0x59: " class=3D"inline-block w-6 text-c=
+enter  ">.</span><span title=3D"0x5A: " class=3D"inline-block w-6 text-cent=
+er  ">.</span><span title=3D"0x5B: " class=3D"inline-block w-6 text-center =
+ ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"></td></tr><tr =
+class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">P=
+age 23</td><td class=3D"px-3 py-1 text-gray-600">0x5C</td><td class=3D"px-3=
+ py-1 font-bold whitespace-nowrap"><span title=3D"0x5C: Filament Diameter" =
+class=3D"inline-block w-8 text-center bg-rose-100 ">00</span><span title=3D=
+"0x5D: Filament Diameter" class=3D"inline-block w-8 text-center bg-rose-100=
+ ">AF</span><span title=3D"0x5E: Filament Weight" class=3D"inline-block w-8=
+ text-center bg-fuchsia-100 ">03</span><span title=3D"0x5F: Filament Weight=
+" class=3D"inline-block w-8 text-center bg-fuchsia-100 ">E8</span></td><td =
+class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x5C: Filament Diamete=
+r" class=3D"inline-block w-8 text-center bg-rose-100 ">  0</span><span titl=
+e=3D"0x5D: Filament Diameter" class=3D"inline-block w-8 text-center bg-rose=
+-100 ">175</span><span title=3D"0x5E: Filament Weight" class=3D"inline-bloc=
+k w-8 text-center bg-fuchsia-100 ">  3</span><span title=3D"0x5F: Filament =
+Weight" class=3D"inline-block w-8 text-center bg-fuchsia-100 ">232</span></=
+td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0=
+x5C: Filament Diameter" class=3D"inline-block w-6 text-center bg-rose-100 "=
+>.</span><span title=3D"0x5D: Filament Diameter" class=3D"inline-block w-6 =
+text-center bg-rose-100 ">.</span><span title=3D"0x5E: Filament Weight" cla=
+ss=3D"inline-block w-6 text-center bg-fuchsia-100 ">.</span><span title=3D"=
+0x5F: Filament Weight" class=3D"inline-block w-6 text-center bg-fuchsia-100=
+ ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=3D=
+"bg-rose-100 px-1 inline-block mr-2" title=3D"Filament Diameter (0x5C-0x5D)=
+">Filament Diameter (0x5C-0x5D)</span><span class=3D"bg-fuchsia-100 px-1 in=
+line-block mr-2" title=3D"Filament Weight (0x5E-0x5F)">Filament Weight (0x5=
+E-0x5F)</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=
+=3D"px-3 py-1 text-gray-600">Page 24</td><td class=3D"px-3 py-1 text-gray-6=
+00">0x60</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span titl=
+e=3D"0x60: Production Date" class=3D"inline-block w-8 text-center bg-purple=
+-100 ">25</span><span title=3D"0x61: Production Date" class=3D"inline-block=
+ w-8 text-center bg-purple-100 ">01</span><span title=3D"0x62: Production /=
+ Reserved (64-bit block starting at 0x63)" class=3D"inline-block w-8 text-c=
+enter  ">C8</span><span title=3D"0x63: Reserved (64-bit block)" class=3D"in=
+line-block w-8 text-center bg-red-50 ">00</span></td><td class=3D"px-3 py-1=
+ whitespace-nowrap"><span title=3D"0x60: Production Date" class=3D"inline-b=
+lock w-8 text-center bg-purple-100 "> 37</span><span title=3D"0x61: Product=
+ion Date" class=3D"inline-block w-8 text-center bg-purple-100 ">  1</span><=
+span title=3D"0x62: Production / Reserved (64-bit block starting at 0x63)" =
+class=3D"inline-block w-8 text-center  ">200</span><span title=3D"0x63: Res=
+erved (64-bit block)" class=3D"inline-block w-8 text-center bg-red-50 ">  0=
+</span></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span t=
+itle=3D"0x60: Production Date" class=3D"inline-block w-6 text-center bg-pur=
+ple-100 ">%</span><span title=3D"0x61: Production Date" class=3D"inline-blo=
+ck w-6 text-center bg-purple-100 ">.</span><span title=3D"0x62: Production =
+/ Reserved (64-bit block starting at 0x63)" class=3D"inline-block w-6 text-=
+center  ">.</span><span title=3D"0x63: Reserved (64-bit block)" class=3D"in=
+line-block w-6 text-center bg-red-50 ">.</span></td><td class=3D"px-3 py-1 =
+text-gray-700 italic"><span class=3D"bg-purple-100 px-1 inline-block mr-2" =
+title=3D"Production Date (0x60-0x61)">Production Date (0x60-0x61)</span><sp=
+an class=3D"bg-red-50 px-1 inline-block mr-2" title=3D"Reserved (64-bit blo=
+ck) (0x63)">Reserved (64-bit block) (0x63)</span></td></tr><tr class=3D"bor=
+der-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 25</td><=
+td class=3D"px-3 py-1 text-gray-600">0x64</td><td class=3D"px-3 py-1 font-b=
+old whitespace-nowrap"><span title=3D"0x64: Reserved (64-bit block)" class=
+=3D"inline-block w-8 text-center bg-red-50 ">00</span><span title=3D"0x65: =
+Reserved (64-bit block)" class=3D"inline-block w-8 text-center bg-red-50 ">=
+00</span><span title=3D"0x66: Reserved (64-bit block)" class=3D"inline-bloc=
+k w-8 text-center bg-red-50 ">00</span><span title=3D"0x67: Reserved (64-bi=
+t block)" class=3D"inline-block w-8 text-center bg-red-50 ">00</span></td><=
+td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x64: Reserved (64-=
+bit block)" class=3D"inline-block w-8 text-center bg-red-50 ">  0</span><sp=
+an title=3D"0x65: Reserved (64-bit block)" class=3D"inline-block w-8 text-c=
+enter bg-red-50 ">  0</span><span title=3D"0x66: Reserved (64-bit block)" c=
+lass=3D"inline-block w-8 text-center bg-red-50 ">  0</span><span title=3D"0=
+x67: Reserved (64-bit block)" class=3D"inline-block w-8 text-center bg-red-=
+50 ">  0</span></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"=
+><span title=3D"0x64: Reserved (64-bit block)" class=3D"inline-block w-6 te=
+xt-center bg-red-50 ">.</span><span title=3D"0x65: Reserved (64-bit block)"=
+ class=3D"inline-block w-6 text-center bg-red-50 ">.</span><span title=3D"0=
+x66: Reserved (64-bit block)" class=3D"inline-block w-6 text-center bg-red-=
+50 ">.</span><span title=3D"0x67: Reserved (64-bit block)" class=3D"inline-=
+block w-6 text-center bg-red-50 ">.</span></td><td class=3D"px-3 py-1 text-=
+gray-700 italic"><span class=3D"bg-red-50 px-1 inline-block mr-2" title=3D"=
+Reserved (64-bit block) (0x64-0x67)">Reserved (64-bit block) (0x64-0x67)</s=
+pan></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-=
+1 text-gray-600">Page 26</td><td class=3D"px-3 py-1 text-gray-600">0x68</td=
+><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=3D"0x68: R=
+eserved (64-bit block)" class=3D"inline-block w-8 text-center bg-red-50 ">0=
+0</span><span title=3D"0x69: Reserved (64-bit block)" class=3D"inline-block=
+ w-8 text-center bg-red-50 ">00</span><span title=3D"0x6A: Reserved (64-bit=
+ block)" class=3D"inline-block w-8 text-center bg-red-50 ">00</span><span t=
+itle=3D"0x6B: " class=3D"inline-block w-8 text-center  ">00</span></td><td =
+class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x68: Reserved (64-bit=
+ block)" class=3D"inline-block w-8 text-center bg-red-50 ">  0</span><span =
+title=3D"0x69: Reserved (64-bit block)" class=3D"inline-block w-8 text-cent=
+er bg-red-50 ">  0</span><span title=3D"0x6A: Reserved (64-bit block)" clas=
+s=3D"inline-block w-8 text-center bg-red-50 ">  0</span><span title=3D"0x6B=
+: " class=3D"inline-block w-8 text-center  ">  0</span></td><td class=3D"px=
+-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x68: Reserved (64-=
+bit block)" class=3D"inline-block w-6 text-center bg-red-50 ">.</span><span=
+ title=3D"0x69: Reserved (64-bit block)" class=3D"inline-block w-6 text-cen=
+ter bg-red-50 ">.</span><span title=3D"0x6A: Reserved (64-bit block)" class=
+=3D"inline-block w-6 text-center bg-red-50 ">.</span><span title=3D"0x6B: "=
+ class=3D"inline-block w-6 text-center  ">.</span></td><td class=3D"px-3 py=
+-1 text-gray-700 italic"><span class=3D"bg-red-50 px-1 inline-block mr-2" t=
+itle=3D"Reserved (64-bit block) (0x68-0x6A)">Reserved (64-bit block) (0x68-=
+0x6A)</span></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=3D"=
+px-3 py-1 text-gray-600">Page 27</td><td class=3D"px-3 py-1 text-gray-600">=
+0x6C</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=3D=
+"0x6C: " class=3D"inline-block w-8 text-center  ">00</span><span title=3D"0=
+x6D: " class=3D"inline-block w-8 text-center  ">00</span><span title=3D"0x6=
+E: " class=3D"inline-block w-8 text-center  ">00</span><span title=3D"0x6F:=
+ " class=3D"inline-block w-8 text-center  ">00</span></td><td class=3D"px-3=
+ py-1 whitespace-nowrap"><span title=3D"0x6C: " class=3D"inline-block w-8 t=
+ext-center  ">  0</span><span title=3D"0x6D: " class=3D"inline-block w-8 te=
+xt-center  ">  0</span><span title=3D"0x6E: " class=3D"inline-block w-8 tex=
+t-center  ">  0</span><span title=3D"0x6F: " class=3D"inline-block w-8 text=
+-center  ">  0</span></td><td class=3D"px-3 py-1 text-gray-600 whitespace-n=
+owrap"><span title=3D"0x6C: " class=3D"inline-block w-6 text-center  ">.</s=
+pan><span title=3D"0x6D: " class=3D"inline-block w-6 text-center  ">.</span=
+><span title=3D"0x6E: " class=3D"inline-block w-6 text-center  ">.</span><s=
+pan title=3D"0x6F: " class=3D"inline-block w-6 text-center  ">.</span></td>=
+<td class=3D"px-3 py-1 text-gray-700 italic"></td></tr><tr class=3D"border-=
+b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 28</td><td c=
+lass=3D"px-3 py-1 text-gray-600">0x70</td><td class=3D"px-3 py-1 font-bold =
+whitespace-nowrap"><span title=3D"0x70: " class=3D"inline-block w-8 text-ce=
+nter  ">00</span><span title=3D"0x71: " class=3D"inline-block w-8 text-cent=
+er  ">00</span><span title=3D"0x72: " class=3D"inline-block w-8 text-center=
+  ">00</span><span title=3D"0x73: " class=3D"inline-block w-8 text-center  =
+">00</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x=
+70: " class=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x7=
+1: " class=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x72=
+: " class=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x73:=
+ " class=3D"inline-block w-8 text-center  ">  0</span></td><td class=3D"px-=
+3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x70: " class=3D"inl=
+ine-block w-6 text-center  ">.</span><span title=3D"0x71: " class=3D"inline=
+-block w-6 text-center  ">.</span><span title=3D"0x72: " class=3D"inline-bl=
+ock w-6 text-center  ">.</span><span title=3D"0x73: " class=3D"inline-block=
+ w-6 text-center  ">.</span></td><td class=3D"px-3 py-1 text-gray-700 itali=
+c"></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1=
+ text-gray-600">Page 29</td><td class=3D"px-3 py-1 text-gray-600">0x74</td>=
+<td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=3D"0x74: " =
+class=3D"inline-block w-8 text-center  ">00</span><span title=3D"0x75: " cl=
+ass=3D"inline-block w-8 text-center  ">00</span><span title=3D"0x76: " clas=
+s=3D"inline-block w-8 text-center  ">00</span><span title=3D"0x77: " class=
+=3D"inline-block w-8 text-center  ">00</span></td><td class=3D"px-3 py-1 wh=
+itespace-nowrap"><span title=3D"0x74: " class=3D"inline-block w-8 text-cent=
+er  ">  0</span><span title=3D"0x75: " class=3D"inline-block w-8 text-cente=
+r  ">  0</span><span title=3D"0x76: " class=3D"inline-block w-8 text-center=
+  ">  0</span><span title=3D"0x77: " class=3D"inline-block w-8 text-center =
+ ">  0</span></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><=
+span title=3D"0x74: " class=3D"inline-block w-6 text-center  ">.</span><spa=
+n title=3D"0x75: " class=3D"inline-block w-6 text-center  ">.</span><span t=
+itle=3D"0x76: " class=3D"inline-block w-6 text-center  ">.</span><span titl=
+e=3D"0x77: " class=3D"inline-block w-6 text-center  ">.</span></td><td clas=
+s=3D"px-3 py-1 text-gray-700 italic"></td></tr><tr class=3D"border-b hover:=
+bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 30</td><td class=3D"=
+px-3 py-1 text-gray-600">0x78</td><td class=3D"px-3 py-1 font-bold whitespa=
+ce-nowrap"><span title=3D"0x78: " class=3D"inline-block w-8 text-center  ">=
+00</span><span title=3D"0x79: " class=3D"inline-block w-8 text-center  ">00=
+</span><span title=3D"0x7A: " class=3D"inline-block w-8 text-center  ">00</=
+span><span title=3D"0x7B: " class=3D"inline-block w-8 text-center  ">00</sp=
+an></td><td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x78: " cl=
+ass=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x79: " cla=
+ss=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x7A: " clas=
+s=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0x7B: " class=
+=3D"inline-block w-8 text-center  ">  0</span></td><td class=3D"px-3 py-1 t=
+ext-gray-600 whitespace-nowrap"><span title=3D"0x78: " class=3D"inline-bloc=
+k w-6 text-center  ">.</span><span title=3D"0x79: " class=3D"inline-block w=
+-6 text-center  ">.</span><span title=3D"0x7A: " class=3D"inline-block w-6 =
+text-center  ">.</span><span title=3D"0x7B: " class=3D"inline-block w-6 tex=
+t-center  ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"></td>=
+</tr><tr class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gr=
+ay-600">Page 31</td><td class=3D"px-3 py-1 text-gray-600">0x7C</td><td clas=
+s=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=3D"0x7C: " class=3D=
+"inline-block w-8 text-center  ">00</span><span title=3D"0x7D: " class=3D"i=
+nline-block w-8 text-center  ">00</span><span title=3D"0x7E: " class=3D"inl=
+ine-block w-8 text-center  ">00</span><span title=3D"0x7F: " class=3D"inlin=
+e-block w-8 text-center  ">00</span></td><td class=3D"px-3 py-1 whitespace-=
+nowrap"><span title=3D"0x7C: " class=3D"inline-block w-8 text-center  ">  0=
+</span><span title=3D"0x7D: " class=3D"inline-block w-8 text-center  ">  0<=
+/span><span title=3D"0x7E: " class=3D"inline-block w-8 text-center  ">  0</=
+span><span title=3D"0x7F: " class=3D"inline-block w-8 text-center  ">  0</s=
+pan></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span titl=
+e=3D"0x7C: " class=3D"inline-block w-6 text-center  ">.</span><span title=
+=3D"0x7D: " class=3D"inline-block w-6 text-center  ">.</span><span title=3D=
+"0x7E: " class=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x=
+7F: " class=3D"inline-block w-6 text-center  ">.</span></td><td class=3D"px=
+-3 py-1 text-gray-700 italic"></td></tr><tr class=3D"border-b hover:bg-gray=
+-50"><td class=3D"px-3 py-1 text-gray-600">Page 32</td><td class=3D"px-3 py=
+-1 text-gray-600">0x80</td><td class=3D"px-3 py-1 font-bold whitespace-nowr=
+ap"><span title=3D"0x80: " class=3D"inline-block w-8 text-center  ">00</spa=
+n><span title=3D"0x81: " class=3D"inline-block w-8 text-center  ">00</span>=
+<span title=3D"0x82: " class=3D"inline-block w-8 text-center  ">00</span><s=
+pan title=3D"0x83: " class=3D"inline-block w-8 text-center  ">00</span></td=
+><td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x80: " class=3D"=
+inline-block w-8 text-center  ">  0</span><span title=3D"0x81: " class=3D"i=
+nline-block w-8 text-center  ">  0</span><span title=3D"0x82: " class=3D"in=
+line-block w-8 text-center  ">  0</span><span title=3D"0x83: " class=3D"inl=
+ine-block w-8 text-center  ">  0</span></td><td class=3D"px-3 py-1 text-gra=
+y-600 whitespace-nowrap"><span title=3D"0x80: " class=3D"inline-block w-6 t=
+ext-center  ">.</span><span title=3D"0x81: " class=3D"inline-block w-6 text=
+-center  ">.</span><span title=3D"0x82: " class=3D"inline-block w-6 text-ce=
+nter  ">.</span><span title=3D"0x83: " class=3D"inline-block w-6 text-cente=
+r  ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"></td></tr><t=
+r class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600"=
+>Page 33</td><td class=3D"px-3 py-1 text-gray-600">0x84</td><td class=3D"px=
+-3 py-1 font-bold whitespace-nowrap"><span title=3D"0x84: " class=3D"inline=
+-block w-8 text-center  ">00</span><span title=3D"0x85: " class=3D"inline-b=
+lock w-8 text-center  ">00</span><span title=3D"0x86: " class=3D"inline-blo=
+ck w-8 text-center  ">00</span><span title=3D"0x87: " class=3D"inline-block=
+ w-8 text-center  ">00</span></td><td class=3D"px-3 py-1 whitespace-nowrap"=
+><span title=3D"0x84: " class=3D"inline-block w-8 text-center  ">  0</span>=
+<span title=3D"0x85: " class=3D"inline-block w-8 text-center  ">  0</span><=
+span title=3D"0x86: " class=3D"inline-block w-8 text-center  ">  0</span><s=
+pan title=3D"0x87: " class=3D"inline-block w-8 text-center  ">  0</span></t=
+d><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x=
+84: " class=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x85:=
+ " class=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x86: " =
+class=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x87: " cla=
+ss=3D"inline-block w-6 text-center  ">.</span></td><td class=3D"px-3 py-1 t=
+ext-gray-700 italic"></td></tr><tr class=3D"border-b hover:bg-gray-50"><td =
+class=3D"px-3 py-1 text-gray-600">Page 34</td><td class=3D"px-3 py-1 text-g=
+ray-600">0x88</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span=
+ title=3D"0x88: " class=3D"inline-block w-8 text-center  ">00</span><span t=
+itle=3D"0x89: " class=3D"inline-block w-8 text-center  ">00</span><span tit=
+le=3D"0x8A: " class=3D"inline-block w-8 text-center  ">00</span><span title=
+=3D"0x8B: " class=3D"inline-block w-8 text-center  ">00</span></td><td clas=
+s=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x88: " class=3D"inline-bl=
+ock w-8 text-center  ">  0</span><span title=3D"0x89: " class=3D"inline-blo=
+ck w-8 text-center  ">  0</span><span title=3D"0x8A: " class=3D"inline-bloc=
+k w-8 text-center  ">  0</span><span title=3D"0x8B: " class=3D"inline-block=
+ w-8 text-center  ">  0</span></td><td class=3D"px-3 py-1 text-gray-600 whi=
+tespace-nowrap"><span title=3D"0x88: " class=3D"inline-block w-6 text-cente=
+r  ">.</span><span title=3D"0x89: " class=3D"inline-block w-6 text-center  =
+">.</span><span title=3D"0x8A: " class=3D"inline-block w-6 text-center  ">.=
+</span><span title=3D"0x8B: " class=3D"inline-block w-6 text-center  ">.</s=
+pan></td><td class=3D"px-3 py-1 text-gray-700 italic"></td></tr><tr class=
+=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 3=
+5</td><td class=3D"px-3 py-1 text-gray-600">0x8C</td><td class=3D"px-3 py-1=
+ font-bold whitespace-nowrap"><span title=3D"0x8C: " class=3D"inline-block =
+w-8 text-center  ">00</span><span title=3D"0x8D: " class=3D"inline-block w-=
+8 text-center  ">00</span><span title=3D"0x8E: " class=3D"inline-block w-8 =
+text-center  ">00</span><span title=3D"0x8F: " class=3D"inline-block w-8 te=
+xt-center  ">00</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><span =
+title=3D"0x8C: " class=3D"inline-block w-8 text-center  ">  0</span><span t=
+itle=3D"0x8D: " class=3D"inline-block w-8 text-center  ">  0</span><span ti=
+tle=3D"0x8E: " class=3D"inline-block w-8 text-center  ">  0</span><span tit=
+le=3D"0x8F: " class=3D"inline-block w-8 text-center  ">  0</span></td><td c=
+lass=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x8C: " c=
+lass=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x8D: " clas=
+s=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x8E: " class=
+=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x8F: " class=3D=
+"inline-block w-6 text-center  ">.</span></td><td class=3D"px-3 py-1 text-g=
+ray-700 italic"></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=
+=3D"px-3 py-1 text-gray-600">Page 36</td><td class=3D"px-3 py-1 text-gray-6=
+00">0x90</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span titl=
+e=3D"0x90: " class=3D"inline-block w-8 text-center  ">00</span><span title=
+=3D"0x91: " class=3D"inline-block w-8 text-center  ">00</span><span title=
+=3D"0x92: " class=3D"inline-block w-8 text-center  ">00</span><span title=
+=3D"0x93: " class=3D"inline-block w-8 text-center  ">00</span></td><td clas=
+s=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x90: " class=3D"inline-bl=
+ock w-8 text-center  ">  0</span><span title=3D"0x91: " class=3D"inline-blo=
+ck w-8 text-center  ">  0</span><span title=3D"0x92: " class=3D"inline-bloc=
+k w-8 text-center  ">  0</span><span title=3D"0x93: " class=3D"inline-block=
+ w-8 text-center  ">  0</span></td><td class=3D"px-3 py-1 text-gray-600 whi=
+tespace-nowrap"><span title=3D"0x90: " class=3D"inline-block w-6 text-cente=
+r  ">.</span><span title=3D"0x91: " class=3D"inline-block w-6 text-center  =
+">.</span><span title=3D"0x92: " class=3D"inline-block w-6 text-center  ">.=
+</span><span title=3D"0x93: " class=3D"inline-block w-6 text-center  ">.</s=
+pan></td><td class=3D"px-3 py-1 text-gray-700 italic"></td></tr><tr class=
+=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 3=
+7</td><td class=3D"px-3 py-1 text-gray-600">0x94</td><td class=3D"px-3 py-1=
+ font-bold whitespace-nowrap"><span title=3D"0x94: " class=3D"inline-block =
+w-8 text-center  ">00</span><span title=3D"0x95: " class=3D"inline-block w-=
+8 text-center  ">00</span><span title=3D"0x96: " class=3D"inline-block w-8 =
+text-center  ">00</span><span title=3D"0x97: " class=3D"inline-block w-8 te=
+xt-center  ">00</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><span =
+title=3D"0x94: " class=3D"inline-block w-8 text-center  ">  0</span><span t=
+itle=3D"0x95: " class=3D"inline-block w-8 text-center  ">  0</span><span ti=
+tle=3D"0x96: " class=3D"inline-block w-8 text-center  ">  0</span><span tit=
+le=3D"0x97: " class=3D"inline-block w-8 text-center  ">  0</span></td><td c=
+lass=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x94: " c=
+lass=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x95: " clas=
+s=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x96: " class=
+=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x97: " class=3D=
+"inline-block w-6 text-center  ">.</span></td><td class=3D"px-3 py-1 text-g=
+ray-700 italic"></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=
+=3D"px-3 py-1 text-gray-600">Page 38</td><td class=3D"px-3 py-1 text-gray-6=
+00">0x98</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span titl=
+e=3D"0x98: " class=3D"inline-block w-8 text-center  ">00</span><span title=
+=3D"0x99: " class=3D"inline-block w-8 text-center  ">00</span><span title=
+=3D"0x9A: " class=3D"inline-block w-8 text-center  ">00</span><span title=
+=3D"0x9B: " class=3D"inline-block w-8 text-center  ">00</span></td><td clas=
+s=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0x98: " class=3D"inline-bl=
+ock w-8 text-center  ">  0</span><span title=3D"0x99: " class=3D"inline-blo=
+ck w-8 text-center  ">  0</span><span title=3D"0x9A: " class=3D"inline-bloc=
+k w-8 text-center  ">  0</span><span title=3D"0x9B: " class=3D"inline-block=
+ w-8 text-center  ">  0</span></td><td class=3D"px-3 py-1 text-gray-600 whi=
+tespace-nowrap"><span title=3D"0x98: " class=3D"inline-block w-6 text-cente=
+r  ">.</span><span title=3D"0x99: " class=3D"inline-block w-6 text-center  =
+">.</span><span title=3D"0x9A: " class=3D"inline-block w-6 text-center  ">.=
+</span><span title=3D"0x9B: " class=3D"inline-block w-6 text-center  ">.</s=
+pan></td><td class=3D"px-3 py-1 text-gray-700 italic"></td></tr><tr class=
+=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 3=
+9</td><td class=3D"px-3 py-1 text-gray-600">0x9C</td><td class=3D"px-3 py-1=
+ font-bold whitespace-nowrap"><span title=3D"0x9C: " class=3D"inline-block =
+w-8 text-center  ">00</span><span title=3D"0x9D: " class=3D"inline-block w-=
+8 text-center  ">00</span><span title=3D"0x9E: " class=3D"inline-block w-8 =
+text-center  ">00</span><span title=3D"0x9F: " class=3D"inline-block w-8 te=
+xt-center  ">00</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><span =
+title=3D"0x9C: " class=3D"inline-block w-8 text-center  ">  0</span><span t=
+itle=3D"0x9D: " class=3D"inline-block w-8 text-center  ">  0</span><span ti=
+tle=3D"0x9E: " class=3D"inline-block w-8 text-center  ">  0</span><span tit=
+le=3D"0x9F: " class=3D"inline-block w-8 text-center  ">  0</span></td><td c=
+lass=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0x9C: " c=
+lass=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x9D: " clas=
+s=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x9E: " class=
+=3D"inline-block w-6 text-center  ">.</span><span title=3D"0x9F: " class=3D=
+"inline-block w-6 text-center  ">.</span></td><td class=3D"px-3 py-1 text-g=
+ray-700 italic"></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=
+=3D"px-3 py-1 text-gray-600">Page 40</td><td class=3D"px-3 py-1 text-gray-6=
+00">0xA0</td><td class=3D"px-3 py-1 font-bold whitespace-nowrap"><span titl=
+e=3D"0xA0: Config/Password" class=3D"inline-block w-8 text-center bg-fuchsi=
+a-50 ">00</span><span title=3D"0xA1: Config/Password" class=3D"inline-block=
+ w-8 text-center bg-fuchsia-50 ">00</span><span title=3D"0xA2: Config/Passw=
+ord" class=3D"inline-block w-8 text-center bg-fuchsia-50 ">00</span><span t=
+itle=3D"0xA3: Config/Password" class=3D"inline-block w-8 text-center bg-fuc=
+hsia-50 ">00</span></td><td class=3D"px-3 py-1 whitespace-nowrap"><span tit=
+le=3D"0xA0: Config/Password" class=3D"inline-block w-8 text-center bg-fuchs=
+ia-50 ">  0</span><span title=3D"0xA1: Config/Password" class=3D"inline-blo=
+ck w-8 text-center bg-fuchsia-50 ">  0</span><span title=3D"0xA2: Config/Pa=
+ssword" class=3D"inline-block w-8 text-center bg-fuchsia-50 ">  0</span><sp=
+an title=3D"0xA3: Config/Password" class=3D"inline-block w-8 text-center bg=
+-fuchsia-50 ">  0</span></td><td class=3D"px-3 py-1 text-gray-600 whitespac=
+e-nowrap"><span title=3D"0xA0: Config/Password" class=3D"inline-block w-6 t=
+ext-center bg-fuchsia-50 ">.</span><span title=3D"0xA1: Config/Password" cl=
+ass=3D"inline-block w-6 text-center bg-fuchsia-50 ">.</span><span title=3D"=
+0xA2: Config/Password" class=3D"inline-block w-6 text-center bg-fuchsia-50 =
+">.</span><span title=3D"0xA3: Config/Password" class=3D"inline-block w-6 t=
+ext-center bg-fuchsia-50 ">.</span></td><td class=3D"px-3 py-1 text-gray-70=
+0 italic"><span class=3D"bg-fuchsia-50 px-1 inline-block mr-2" title=3D"Con=
+fig/Password (0xA0-0xA3)">Config/Password (0xA0-0xA3)</span></td></tr><tr c=
+lass=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Pa=
+ge 41</td><td class=3D"px-3 py-1 text-gray-600">0xA4</td><td class=3D"px-3 =
+py-1 font-bold whitespace-nowrap"><span title=3D"0xA4: Config/Password" cla=
+ss=3D"inline-block w-8 text-center bg-fuchsia-50 ">00</span><span title=3D"=
+0xA5: Config/Password" class=3D"inline-block w-8 text-center bg-fuchsia-50 =
+">00</span><span title=3D"0xA6: Config/Password" class=3D"inline-block w-8 =
+text-center bg-fuchsia-50 ">00</span><span title=3D"0xA7: Config/Password" =
+class=3D"inline-block w-8 text-center bg-fuchsia-50 ">00</span></td><td cla=
+ss=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0xA4: Config/Password" cl=
+ass=3D"inline-block w-8 text-center bg-fuchsia-50 ">  0</span><span title=
+=3D"0xA5: Config/Password" class=3D"inline-block w-8 text-center bg-fuchsia=
+-50 ">  0</span><span title=3D"0xA6: Config/Password" class=3D"inline-block=
+ w-8 text-center bg-fuchsia-50 ">  0</span><span title=3D"0xA7: Config/Pass=
+word" class=3D"inline-block w-8 text-center bg-fuchsia-50 ">  0</span></td>=
+<td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0xA4=
+: Config/Password" class=3D"inline-block w-6 text-center bg-fuchsia-50 ">.<=
+/span><span title=3D"0xA5: Config/Password" class=3D"inline-block w-6 text-=
+center bg-fuchsia-50 ">.</span><span title=3D"0xA6: Config/Password" class=
+=3D"inline-block w-6 text-center bg-fuchsia-50 ">.</span><span title=3D"0xA=
+7: Config/Password" class=3D"inline-block w-6 text-center bg-fuchsia-50 ">.=
+</span></td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=3D"bg-=
+fuchsia-50 px-1 inline-block mr-2" title=3D"Config/Password (0xA4-0xA7)">Co=
+nfig/Password (0xA4-0xA7)</span></td></tr><tr class=3D"border-b hover:bg-gr=
+ay-50"><td class=3D"px-3 py-1 text-gray-600">Page 42</td><td class=3D"px-3 =
+py-1 text-gray-600">0xA8</td><td class=3D"px-3 py-1 font-bold whitespace-no=
+wrap"><span title=3D"0xA8: Config/Password" class=3D"inline-block w-8 text-=
+center bg-fuchsia-50 ">00</span><span title=3D"0xA9: Config/Password" class=
+=3D"inline-block w-8 text-center bg-fuchsia-50 ">00</span><span title=3D"0x=
+AA: Config/Password" class=3D"inline-block w-8 text-center bg-fuchsia-50 ">=
+00</span><span title=3D"0xAB: Config/Password" class=3D"inline-block w-8 te=
+xt-center bg-fuchsia-50 ">00</span></td><td class=3D"px-3 py-1 whitespace-n=
+owrap"><span title=3D"0xA8: Config/Password" class=3D"inline-block w-8 text=
+-center bg-fuchsia-50 ">  0</span><span title=3D"0xA9: Config/Password" cla=
+ss=3D"inline-block w-8 text-center bg-fuchsia-50 ">  0</span><span title=3D=
+"0xAA: Config/Password" class=3D"inline-block w-8 text-center bg-fuchsia-50=
+ ">  0</span><span title=3D"0xAB: Config/Password" class=3D"inline-block w-=
+8 text-center bg-fuchsia-50 ">  0</span></td><td class=3D"px-3 py-1 text-gr=
+ay-600 whitespace-nowrap"><span title=3D"0xA8: Config/Password" class=3D"in=
+line-block w-6 text-center bg-fuchsia-50 ">.</span><span title=3D"0xA9: Con=
+fig/Password" class=3D"inline-block w-6 text-center bg-fuchsia-50 ">.</span=
+><span title=3D"0xAA: Config/Password" class=3D"inline-block w-6 text-cente=
+r bg-fuchsia-50 ">.</span><span title=3D"0xAB: Config/Password" class=3D"in=
+line-block w-6 text-center bg-fuchsia-50 ">.</span></td><td class=3D"px-3 p=
+y-1 text-gray-700 italic"><span class=3D"bg-fuchsia-50 px-1 inline-block mr=
+-2" title=3D"Config/Password (0xA8-0xAB)">Config/Password (0xA8-0xAB)</span=
+></td></tr><tr class=3D"border-b hover:bg-gray-50"><td class=3D"px-3 py-1 t=
+ext-gray-600">Page 43</td><td class=3D"px-3 py-1 text-gray-600">0xAC</td><t=
+d class=3D"px-3 py-1 font-bold whitespace-nowrap"><span title=3D"0xAC: Conf=
+ig/Password" class=3D"inline-block w-8 text-center bg-fuchsia-50 ">00</span=
+><span title=3D"0xAD: Config/Password" class=3D"inline-block w-8 text-cente=
+r bg-fuchsia-50 ">00</span><span title=3D"0xAE: Config/Password" class=3D"i=
+nline-block w-8 text-center bg-fuchsia-50 ">00</span><span title=3D"0xAF: C=
+onfig/Password" class=3D"inline-block w-8 text-center bg-fuchsia-50 ">00</s=
+pan></td><td class=3D"px-3 py-1 whitespace-nowrap"><span title=3D"0xAC: Con=
+fig/Password" class=3D"inline-block w-8 text-center bg-fuchsia-50 ">  0</sp=
+an><span title=3D"0xAD: Config/Password" class=3D"inline-block w-8 text-cen=
+ter bg-fuchsia-50 ">  0</span><span title=3D"0xAE: Config/Password" class=
+=3D"inline-block w-8 text-center bg-fuchsia-50 ">  0</span><span title=3D"0=
+xAF: Config/Password" class=3D"inline-block w-8 text-center bg-fuchsia-50 "=
+>  0</span></td><td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><sp=
+an title=3D"0xAC: Config/Password" class=3D"inline-block w-6 text-center bg=
+-fuchsia-50 ">.</span><span title=3D"0xAD: Config/Password" class=3D"inline=
+-block w-6 text-center bg-fuchsia-50 ">.</span><span title=3D"0xAE: Config/=
+Password" class=3D"inline-block w-6 text-center bg-fuchsia-50 ">.</span><sp=
+an title=3D"0xAF: Config/Password" class=3D"inline-block w-6 text-center bg=
+-fuchsia-50 ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"><sp=
+an class=3D"bg-fuchsia-50 px-1 inline-block mr-2" title=3D"Config/Password =
+(0xAC-0xAF)">Config/Password (0xAC-0xAF)</span></td></tr><tr class=3D"borde=
+r-b hover:bg-gray-50"><td class=3D"px-3 py-1 text-gray-600">Page 44</td><td=
+ class=3D"px-3 py-1 text-gray-600">0xB0</td><td class=3D"px-3 py-1 font-bol=
+d whitespace-nowrap"><span title=3D"0xB0: PACK / RFUI" class=3D"inline-bloc=
+k w-8 text-center  ">BD</span><span title=3D"0xB1: PACK / RFUI" class=3D"in=
+line-block w-8 text-center  ">04</span><span title=3D"0xB2: PACK / RFUI" cl=
+ass=3D"inline-block w-8 text-center  ">00</span><span title=3D"0xB3: PACK /=
+ RFUI" class=3D"inline-block w-8 text-center  ">00</span></td><td class=3D"=
+px-3 py-1 whitespace-nowrap"><span title=3D"0xB0: PACK / RFUI" class=3D"inl=
+ine-block w-8 text-center  ">189</span><span title=3D"0xB1: PACK / RFUI" cl=
+ass=3D"inline-block w-8 text-center  ">  4</span><span title=3D"0xB2: PACK =
+/ RFUI" class=3D"inline-block w-8 text-center  ">  0</span><span title=3D"0=
+xB3: PACK / RFUI" class=3D"inline-block w-8 text-center  ">  0</span></td><=
+td class=3D"px-3 py-1 text-gray-600 whitespace-nowrap"><span title=3D"0xB0:=
+ PACK / RFUI" class=3D"inline-block w-6 text-center  ">.</span><span title=
+=3D"0xB1: PACK / RFUI" class=3D"inline-block w-6 text-center  ">.</span><sp=
+an title=3D"0xB2: PACK / RFUI" class=3D"inline-block w-6 text-center  ">.</=
+span><span title=3D"0xB3: PACK / RFUI" class=3D"inline-block w-6 text-cente=
+r  ">.</span></td><td class=3D"px-3 py-1 text-gray-700 italic"><span class=
+=3D" px-1 inline-block">PACK / RFUI</span></td></tr></tbody></table></div><=
+div class=3D"mt-4 flex flex-wrap gap-3 text-xs"><div class=3D"flex items-ce=
+nter gap-2"><div class=3D"w-4 h-4 bg-yellow-50 border border-yellow-200"></=
+div><span>Filament Code</span></div><div class=3D"flex items-center gap-2">=
+<div class=3D"w-4 h-4 bg-orange-50 border border-orange-200"></div><span>Ma=
+terial Name</span></div><div class=3D"flex items-center gap-2"><div class=
+=3D"w-4 h-4 bg-amber-50 border border-amber-200"></div><span>Material Suppl=
+ement</span></div><div class=3D"flex items-center gap-2"><div class=3D"w-4 =
+h-4 bg-green-50 border border-green-200"></div><span>Color</span></div><div=
+ class=3D"flex items-center gap-2"><div class=3D"w-4 h-4 bg-blue-50 border =
+border-blue-200"></div><span>Physical Properties</span></div><div class=3D"=
+flex items-center gap-2"><div class=3D"w-4 h-4 bg-purple-50 border border-p=
+urple-200"></div><span>Production Date</span></div></div></div></main><foot=
+er class=3D"fixed bottom-0 left-0 right-0 z-50"><div class=3D"bg-gray-800 t=
+ext-gray-200 cursor-pointer select-none"><div class=3D"container mx-auto ma=
+x-w-6xl px-4 py-1.5 flex items-center gap-2"><svg xmlns=3D"http://www.w3.or=
+g/2000/svg" width=3D"12" height=3D"12" viewBox=3D"0 0 24 24" fill=3D"none" =
+stroke=3D"currentColor" stroke-width=3D"2" stroke-linecap=3D"round" stroke-=
+linejoin=3D"round" class=3D"lucide lucide-terminal text-gray-400 shrink-0">=
+<polyline points=3D"4 17 10 11 4 5"></polyline><line x1=3D"12" x2=3D"20" y1=
+=3D"19" y2=3D"19"></line></svg><p class=3D"text-xs flex-1 truncate">Mobile =
+commands copied to clipboard</p><span class=3D"text-[10px] text-gray-500 sh=
+rink-0">4</span><svg xmlns=3D"http://www.w3.org/2000/svg" width=3D"12" heig=
+ht=3D"12" viewBox=3D"0 0 24 24" fill=3D"none" stroke=3D"currentColor" strok=
+e-width=3D"2" stroke-linecap=3D"round" stroke-linejoin=3D"round" class=3D"l=
+ucide lucide-chevron-up text-gray-400 shrink-0"><path d=3D"m18 15-6-6-6 6">=
+</path></svg></div></div></footer></div></div>
+ =20
+
+</body></html>
+------MultipartBoundary--ZcTlEhWolPj2U08noVNxzL8KZyUE4OeVzqSF3i21qy----
+Content-Type: text/css
+Content-Transfer-Encoding: quoted-printable
+Content-Location: https://savion.github.io/elegoo-rfid-editor/assets/index-JqFwKgfo.css
+
+@charset "utf-8";
+
+*, ::before, ::after { --tw-border-spacing-x: 0; --tw-border-spacing-y: 0; =
+--tw-translate-x: 0; --tw-translate-y: 0; --tw-rotate: 0; --tw-skew-x: 0; -=
+-tw-skew-y: 0; --tw-scale-x: 1; --tw-scale-y: 1; --tw-pan-x: ; --tw-pan-y: =
+; --tw-pinch-zoom: ; --tw-scroll-snap-strictness: proximity; --tw-gradient-=
+from-position: ; --tw-gradient-via-position: ; --tw-gradient-to-position: ;=
+ --tw-ordinal: ; --tw-slashed-zero: ; --tw-numeric-figure: ; --tw-numeric-s=
+pacing: ; --tw-numeric-fraction: ; --tw-ring-inset: ; --tw-ring-offset-widt=
+h: 0px; --tw-ring-offset-color: #fff; --tw-ring-color: rgb(59 130 246 / .5)=
+; --tw-ring-offset-shadow: 0 0 #0000; --tw-ring-shadow: 0 0 #0000; --tw-sha=
+dow: 0 0 #0000; --tw-shadow-colored: 0 0 #0000; --tw-blur: ; --tw-brightnes=
+s: ; --tw-contrast: ; --tw-grayscale: ; --tw-hue-rotate: ; --tw-invert: ; -=
+-tw-saturate: ; --tw-sepia: ; --tw-drop-shadow: ; --tw-backdrop-blur: ; --t=
+w-backdrop-brightness: ; --tw-backdrop-contrast: ; --tw-backdrop-grayscale:=
+ ; --tw-backdrop-hue-rotate: ; --tw-backdrop-invert: ; --tw-backdrop-opacit=
+y: ; --tw-backdrop-saturate: ; --tw-backdrop-sepia: ; --tw-contain-size: ; =
+--tw-contain-layout: ; --tw-contain-paint: ; --tw-contain-style: ; }
+
+::backdrop { --tw-border-spacing-x: 0; --tw-border-spacing-y: 0; --tw-trans=
+late-x: 0; --tw-translate-y: 0; --tw-rotate: 0; --tw-skew-x: 0; --tw-skew-y=
+: 0; --tw-scale-x: 1; --tw-scale-y: 1; --tw-pan-x: ; --tw-pan-y: ; --tw-pin=
+ch-zoom: ; --tw-scroll-snap-strictness: proximity; --tw-gradient-from-posit=
+ion: ; --tw-gradient-via-position: ; --tw-gradient-to-position: ; --tw-ordi=
+nal: ; --tw-slashed-zero: ; --tw-numeric-figure: ; --tw-numeric-spacing: ; =
+--tw-numeric-fraction: ; --tw-ring-inset: ; --tw-ring-offset-width: 0px; --=
+tw-ring-offset-color: #fff; --tw-ring-color: rgb(59 130 246 / .5); --tw-rin=
+g-offset-shadow: 0 0 #0000; --tw-ring-shadow: 0 0 #0000; --tw-shadow: 0 0 #=
+0000; --tw-shadow-colored: 0 0 #0000; --tw-blur: ; --tw-brightness: ; --tw-=
+contrast: ; --tw-grayscale: ; --tw-hue-rotate: ; --tw-invert: ; --tw-satura=
+te: ; --tw-sepia: ; --tw-drop-shadow: ; --tw-backdrop-blur: ; --tw-backdrop=
+-brightness: ; --tw-backdrop-contrast: ; --tw-backdrop-grayscale: ; --tw-ba=
+ckdrop-hue-rotate: ; --tw-backdrop-invert: ; --tw-backdrop-opacity: ; --tw-=
+backdrop-saturate: ; --tw-backdrop-sepia: ; --tw-contain-size: ; --tw-conta=
+in-layout: ; --tw-contain-paint: ; --tw-contain-style: ; }
+
+*, ::before, ::after { box-sizing: border-box; border-width: 0px; border-st=
+yle: solid; border-color: rgb(229, 231, 235); }
+
+::before, ::after { --tw-content: ""; }
+
+html, :host { line-height: 1.5; text-size-adjust: 100%; tab-size: 4; font-f=
+amily: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI=
+ Emoji", "Segoe UI Symbol", "Noto Color Emoji"; font-feature-settings: norm=
+al; font-variation-settings: normal; -webkit-tap-highlight-color: transpare=
+nt; }
+
+body { margin: 0px; line-height: inherit; }
+
+hr { height: 0px; color: inherit; border-top-width: 1px; }
+
+abbr:where([title]) { text-decoration: underline dotted; }
+
+h1, h2, h3, h4, h5, h6 { font-size: inherit; font-weight: inherit; }
+
+a { color: inherit; text-decoration: inherit; }
+
+b, strong { font-weight: bolder; }
+
+code, kbd, samp, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Mo=
+naco, Consolas, "Liberation Mono", "Courier New", monospace; font-feature-s=
+ettings: normal; font-variation-settings: normal; font-size: 1em; }
+
+small { font-size: 80%; }
+
+sub, sup { font-size: 75%; line-height: 0; position: relative; vertical-ali=
+gn: baseline; }
+
+sub { bottom: -0.25em; }
+
+sup { top: -0.5em; }
+
+table { text-indent: 0px; border-color: inherit; border-collapse: collapse;=
+ }
+
+button, input, optgroup, select, textarea { font-family: inherit; font-feat=
+ure-settings: inherit; font-variation-settings: inherit; font-size: 100%; f=
+ont-weight: inherit; line-height: inherit; letter-spacing: inherit; color: =
+inherit; margin: 0px; padding: 0px; }
+
+button, select { text-transform: none; }
+
+button, input:where([type=3D"button"]), input:where([type=3D"reset"]), inpu=
+t:where([type=3D"submit"]) { appearance: button; background-color: transpar=
+ent; background-image: none; }
+
+progress { vertical-align: baseline; }
+
+::-webkit-inner-spin-button, ::-webkit-outer-spin-button { height: auto; }
+
+[type=3D"search"] { appearance: textfield; outline-offset: -2px; }
+
+::-webkit-search-decoration { appearance: none; }
+
+::-webkit-file-upload-button { appearance: button; font: inherit; }
+
+summary { display: list-item; }
+
+blockquote, dl, dd, h1, h2, h3, h4, h5, h6, hr, figure, p, pre { margin: 0p=
+x; }
+
+fieldset { margin: 0px; padding: 0px; }
+
+legend { padding: 0px; }
+
+ol, ul, menu { list-style: none; margin: 0px; padding: 0px; }
+
+dialog { padding: 0px; }
+
+textarea { resize: vertical; }
+
+input::placeholder, textarea::placeholder { opacity: 1; color: rgb(156, 163=
+, 175); }
+
+button, [role=3D"button"] { cursor: pointer; }
+
+:disabled { cursor: default; }
+
+img, svg, video, canvas, audio, iframe, embed, object { display: block; ver=
+tical-align: middle; }
+
+img, video { max-width: 100%; height: auto; }
+
+[hidden]:where(:not([hidden=3D"until-found"])) { display: none; }
+
+.container { width: 100%; }
+
+@media (min-width: 640px) {
+  .container { max-width: 640px; }
+}
+
+@media (min-width: 768px) {
+  .container { max-width: 768px; }
+}
+
+@media (min-width: 1024px) {
+  .container { max-width: 1024px; }
+}
+
+@media (min-width: 1280px) {
+  .container { max-width: 1280px; }
+}
+
+@media (min-width: 1536px) {
+  .container { max-width: 1536px; }
+}
+
+.visible { visibility: visible; }
+
+.fixed { position: fixed; }
+
+.bottom-0 { bottom: 0px; }
+
+.left-0 { left: 0px; }
+
+.right-0 { right: 0px; }
+
+.z-50 { z-index: 50; }
+
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+.mb-1 { margin-bottom: 0.25rem; }
+
+.mb-2 { margin-bottom: 0.5rem; }
+
+.mb-20 { margin-bottom: 5rem; }
+
+.mb-3 { margin-bottom: 0.75rem; }
+
+.mb-4 { margin-bottom: 1rem; }
+
+.mr-2 { margin-right: 0.5rem; }
+
+.mt-0\.5 { margin-top: 0.125rem; }
+
+.mt-2 { margin-top: 0.5rem; }
+
+.mt-4 { margin-top: 1rem; }
+
+.block { display: block; }
+
+.inline-block { display: inline-block; }
+
+.flex { display: flex; }
+
+.inline-flex { display: inline-flex; }
+
+.table { display: table; }
+
+.grid { display: grid; }
+
+.hidden { display: none; }
+
+.h-4 { height: 1rem; }
+
+.h-6 { height: 1.5rem; }
+
+.h-8 { height: 2rem; }
+
+.max-h-40 { max-height: 10rem; }
+
+.min-h-screen { min-height: 100vh; }
+
+.w-16 { width: 4rem; }
+
+.w-4 { width: 1rem; }
+
+.w-6 { width: 1.5rem; }
+
+.w-8 { width: 2rem; }
+
+.w-full { width: 100%; }
+
+.min-w-0 { min-width: 0px; }
+
+.min-w-\[100px\] { min-width: 100px; }
+
+.max-w-6xl { max-width: 72rem; }
+
+.flex-1 { flex: 1 1 0%; }
+
+.flex-shrink-0, .shrink-0 { flex-shrink: 0; }
+
+@keyframes pulse {=20
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse { animation: 2s cubic-bezier(0.4, 0, 0.6, 1) 0s infinite nor=
+mal none running pulse; }
+
+.cursor-pointer { cursor: pointer; }
+
+.select-none { user-select: none; }
+
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0px, 1fr)); }
+
+.flex-wrap { flex-wrap: wrap; }
+
+.items-center { align-items: center; }
+
+.justify-center { justify-content: center; }
+
+.justify-between { justify-content: space-between; }
+
+.gap-1 { gap: 0.25rem; }
+
+.gap-1\.5 { gap: 0.375rem; }
+
+.gap-2 { gap: 0.5rem; }
+
+.gap-3 { gap: 0.75rem; }
+
+.gap-4 { gap: 1rem; }
+
+.space-y-0\.5 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; =
+margin-top: calc(.125rem * calc(1 - var(--tw-space-y-reverse))); margin-bot=
+tom: calc(.125rem * var(--tw-space-y-reverse)); }
+
+.space-y-1\.5 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; =
+margin-top: calc(.375rem * calc(1 - var(--tw-space-y-reverse))); margin-bot=
+tom: calc(.375rem * var(--tw-space-y-reverse)); }
+
+.space-y-3 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; mar=
+gin-top: calc(.75rem * calc(1 - var(--tw-space-y-reverse))); margin-bottom:=
+ calc(.75rem * var(--tw-space-y-reverse)); }
+
+.overflow-x-auto { overflow-x: auto; }
+
+.overflow-y-auto { overflow-y: auto; }
+
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;=
+ }
+
+.whitespace-nowrap { white-space: nowrap; }
+
+.rounded { border-radius: 0.25rem; }
+
+.rounded-full { border-radius: 9999px; }
+
+.rounded-lg { border-radius: 0.5rem; }
+
+.rounded-md { border-radius: 0.375rem; }
+
+.border { border-width: 1px; }
+
+.border-2 { border-width: 2px; }
+
+.border-b { border-bottom-width: 1px; }
+
+.border-t { border-top-width: 1px; }
+
+.border-amber-200 { --tw-border-opacity: 1; border-color: rgb(253 230 138 /=
+ var(--tw-border-opacity, 1)); }
+
+.border-blue-200 { --tw-border-opacity: 1; border-color: rgb(191 219 254 / =
+var(--tw-border-opacity, 1)); }
+
+.border-elegoo-orange { --tw-border-opacity: 1; border-color: rgb(255 107 5=
+3 / var(--tw-border-opacity, 1)); }
+
+.border-gray-200 { --tw-border-opacity: 1; border-color: rgb(229 231 235 / =
+var(--tw-border-opacity, 1)); }
+
+.border-gray-300 { --tw-border-opacity: 1; border-color: rgb(209 213 219 / =
+var(--tw-border-opacity, 1)); }
+
+.border-gray-700 { --tw-border-opacity: 1; border-color: rgb(55 65 81 / var=
+(--tw-border-opacity, 1)); }
+
+.border-green-200 { --tw-border-opacity: 1; border-color: rgb(187 247 208 /=
+ var(--tw-border-opacity, 1)); }
+
+.border-orange-200 { --tw-border-opacity: 1; border-color: rgb(254 215 170 =
+/ var(--tw-border-opacity, 1)); }
+
+.border-purple-200 { --tw-border-opacity: 1; border-color: rgb(233 213 255 =
+/ var(--tw-border-opacity, 1)); }
+
+.border-red-200 { --tw-border-opacity: 1; border-color: rgb(254 202 202 / v=
+ar(--tw-border-opacity, 1)); }
+
+.border-yellow-200 { --tw-border-opacity: 1; border-color: rgb(254 240 138 =
+/ var(--tw-border-opacity, 1)); }
+
+.bg-amber-50 { --tw-bg-opacity: 1; background-color: rgb(255 251 235 / var(=
+--tw-bg-opacity, 1)); }
+
+.bg-amber-500 { --tw-bg-opacity: 1; background-color: rgb(245 158 11 / var(=
+--tw-bg-opacity, 1)); }
+
+.bg-blue-100 { --tw-bg-opacity: 1; background-color: rgb(219 234 254 / var(=
+--tw-bg-opacity, 1)); }
+
+.bg-blue-50 { --tw-bg-opacity: 1; background-color: rgb(239 246 255 / var(-=
+-tw-bg-opacity, 1)); }
+
+.bg-blue-600 { --tw-bg-opacity: 1; background-color: rgb(37 99 235 / var(--=
+tw-bg-opacity, 1)); }
+
+.bg-cyan-200 { --tw-bg-opacity: 1; background-color: rgb(165 243 252 / var(=
+--tw-bg-opacity, 1)); }
+
+.bg-elegoo-blue { --tw-bg-opacity: 1; background-color: rgb(0 78 137 / var(=
+--tw-bg-opacity, 1)); }
+
+.bg-elegoo-orange { --tw-bg-opacity: 1; background-color: rgb(255 107 53 / =
+var(--tw-bg-opacity, 1)); }
+
+.bg-emerald-600 { --tw-bg-opacity: 1; background-color: rgb(5 150 105 / var=
+(--tw-bg-opacity, 1)); }
+
+.bg-fuchsia-100 { --tw-bg-opacity: 1; background-color: rgb(250 232 255 / v=
+ar(--tw-bg-opacity, 1)); }
+
+.bg-fuchsia-50 { --tw-bg-opacity: 1; background-color: rgb(253 244 255 / va=
+r(--tw-bg-opacity, 1)); }
+
+.bg-gray-100 { --tw-bg-opacity: 1; background-color: rgb(243 244 246 / var(=
+--tw-bg-opacity, 1)); }
+
+.bg-gray-200 { --tw-bg-opacity: 1; background-color: rgb(229 231 235 / var(=
+--tw-bg-opacity, 1)); }
+
+.bg-gray-800 { --tw-bg-opacity: 1; background-color: rgb(31 41 55 / var(--t=
+w-bg-opacity, 1)); }
+
+.bg-gray-900 { --tw-bg-opacity: 1; background-color: rgb(17 24 39 / var(--t=
+w-bg-opacity, 1)); }
+
+.bg-green-50 { --tw-bg-opacity: 1; background-color: rgb(240 253 244 / var(=
+--tw-bg-opacity, 1)); }
+
+.bg-green-600 { --tw-bg-opacity: 1; background-color: rgb(22 163 74 / var(-=
+-tw-bg-opacity, 1)); }
+
+.bg-indigo-100 { --tw-bg-opacity: 1; background-color: rgb(224 231 255 / va=
+r(--tw-bg-opacity, 1)); }
+
+.bg-indigo-600 { --tw-bg-opacity: 1; background-color: rgb(79 70 229 / var(=
+--tw-bg-opacity, 1)); }
+
+.bg-lime-50 { --tw-bg-opacity: 1; background-color: rgb(247 254 231 / var(-=
+-tw-bg-opacity, 1)); }
+
+.bg-orange-50 { --tw-bg-opacity: 1; background-color: rgb(255 247 237 / var=
+(--tw-bg-opacity, 1)); }
+
+.bg-purple-100 { --tw-bg-opacity: 1; background-color: rgb(243 232 255 / va=
+r(--tw-bg-opacity, 1)); }
+
+.bg-purple-50 { --tw-bg-opacity: 1; background-color: rgb(250 245 255 / var=
+(--tw-bg-opacity, 1)); }
+
+.bg-purple-600 { --tw-bg-opacity: 1; background-color: rgb(147 51 234 / var=
+(--tw-bg-opacity, 1)); }
+
+.bg-red-50 { --tw-bg-opacity: 1; background-color: rgb(254 242 242 / var(--=
+tw-bg-opacity, 1)); }
+
+.bg-rose-100 { --tw-bg-opacity: 1; background-color: rgb(255 228 230 / var(=
+--tw-bg-opacity, 1)); }
+
+.bg-rose-50 { --tw-bg-opacity: 1; background-color: rgb(255 241 242 / var(-=
+-tw-bg-opacity, 1)); }
+
+.bg-sky-50 { --tw-bg-opacity: 1; background-color: rgb(240 249 255 / var(--=
+tw-bg-opacity, 1)); }
+
+.bg-stone-100 { --tw-bg-opacity: 1; background-color: rgb(245 245 244 / var=
+(--tw-bg-opacity, 1)); }
+
+.bg-white { --tw-bg-opacity: 1; background-color: rgb(255 255 255 / var(--t=
+w-bg-opacity, 1)); }
+
+.bg-white\/10 { background-color: rgba(255, 255, 255, 0.1); }
+
+.bg-yellow-50 { --tw-bg-opacity: 1; background-color: rgb(254 252 232 / var=
+(--tw-bg-opacity, 1)); }
+
+.bg-gradient-to-br { background-image: linear-gradient(to bottom right,var(=
+--tw-gradient-stops)); }
+
+.from-gray-50 { --tw-gradient-from: #f9fafb var(--tw-gradient-from-position=
+); --tw-gradient-to: rgb(249 250 251 / 0) var(--tw-gradient-to-position); -=
+-tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+
+.to-gray-100 { --tw-gradient-to: #f3f4f6 var(--tw-gradient-to-position); }
+
+.p-3 { padding: 0.75rem; }
+
+.p-4 { padding: 1rem; }
+
+.p-6 { padding: 1.5rem; }
+
+.px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+
+.px-1\.5 { padding-left: 0.375rem; padding-right: 0.375rem; }
+
+.px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+
+.px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+
+.py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+
+.py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+
+.pb-2 { padding-bottom: 0.5rem; }
+
+.text-left { text-align: left; }
+
+.text-center { text-align: center; }
+
+.font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Cons=
+olas, "Liberation Mono", "Courier New", monospace; }
+
+.text-\[10px\] { font-size: 10px; }
+
+.text-\[11px\] { font-size: 11px; }
+
+.text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+
+.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+
+.text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+
+.text-xs { font-size: 0.75rem; line-height: 1rem; }
+
+.font-bold { font-weight: 700; }
+
+.font-medium { font-weight: 500; }
+
+.uppercase { text-transform: uppercase; }
+
+.italic { font-style: italic; }
+
+.leading-tight { line-height: 1.25; }
+
+.text-amber-500 { --tw-text-opacity: 1; color: rgb(245 158 11 / var(--tw-te=
+xt-opacity, 1)); }
+
+.text-blue-200 { --tw-text-opacity: 1; color: rgb(191 219 254 / var(--tw-te=
+xt-opacity, 1)); }
+
+.text-blue-700 { --tw-text-opacity: 1; color: rgb(29 78 216 / var(--tw-text=
+-opacity, 1)); }
+
+.text-emerald-600 { --tw-text-opacity: 1; color: rgb(5 150 105 / var(--tw-t=
+ext-opacity, 1)); }
+
+.text-gray-200 { --tw-text-opacity: 1; color: rgb(229 231 235 / var(--tw-te=
+xt-opacity, 1)); }
+
+.text-gray-300 { --tw-text-opacity: 1; color: rgb(209 213 219 / var(--tw-te=
+xt-opacity, 1)); }
+
+.text-gray-400 { --tw-text-opacity: 1; color: rgb(156 163 175 / var(--tw-te=
+xt-opacity, 1)); }
+
+.text-gray-500 { --tw-text-opacity: 1; color: rgb(107 114 128 / var(--tw-te=
+xt-opacity, 1)); }
+
+.text-gray-600 { --tw-text-opacity: 1; color: rgb(75 85 99 / var(--tw-text-=
+opacity, 1)); }
+
+.text-gray-700 { --tw-text-opacity: 1; color: rgb(55 65 81 / var(--tw-text-=
+opacity, 1)); }
+
+.text-gray-800 { --tw-text-opacity: 1; color: rgb(31 41 55 / var(--tw-text-=
+opacity, 1)); }
+
+.text-green-700 { --tw-text-opacity: 1; color: rgb(21 128 61 / var(--tw-tex=
+t-opacity, 1)); }
+
+.text-red-700 { --tw-text-opacity: 1; color: rgb(185 28 28 / var(--tw-text-=
+opacity, 1)); }
+
+.text-white { --tw-text-opacity: 1; color: rgb(255 255 255 / var(--tw-text-=
+opacity, 1)); }
+
+.shadow-lg { --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px =
+rgb(0 0 0 / .1); --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-colo=
+r), 0 4px 6px -4px var(--tw-shadow-color); box-shadow: var(--tw-ring-offset=
+-shadow, 0 0 #0000),var(--tw-ring-shadow, 0 0 #0000),var(--tw-shadow); }
+
+.shadow-md { --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / .1), 0 2px 4px -2px rg=
+b(0 0 0 / .1); --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), =
+0 2px 4px -2px var(--tw-shadow-color); box-shadow: var(--tw-ring-offset-sha=
+dow, 0 0 #0000),var(--tw-ring-shadow, 0 0 #0000),var(--tw-shadow); }
+
+.ring-2 { --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring=
+-offset-width) var(--tw-ring-offset-color); --tw-ring-shadow: var(--tw-ring=
+-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);=
+ box-shadow: var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-sh=
+adow, 0 0 #0000); }
+
+.ring-elegoo-orange { --tw-ring-opacity: 1; --tw-ring-color: rgb(255 107 53=
+ / var(--tw-ring-opacity, 1)); }
+
+.ring-offset-1 { --tw-ring-offset-width: 1px; }
+
+.filter { filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) va=
+r(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) =
+var(--tw-sepia) var(--tw-drop-shadow); }
+
+.transition-all { transition-property: all; transition-timing-function: cub=
+ic-bezier(0.4, 0, 0.2, 1); transition-duration: 0.15s; }
+
+.transition-colors { transition-property: color, background-color, border-c=
+olor, text-decoration-color, fill, stroke; transition-timing-function: cubi=
+c-bezier(0.4, 0, 0.2, 1); transition-duration: 0.15s; }
+
+body { margin: 0px; font-family: -apple-system, BlinkMacSystemFont, "Segoe =
+UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helveti=
+ca Neue", sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidd=
+en; }
+
+code { font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New"=
+, monospace; }
+
+#root { min-height: 100vh; }
+
+html { scroll-behavior: smooth; overflow-x: hidden; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+
+::-webkit-scrollbar-track { background: rgb(241, 241, 241); }
+
+::-webkit-scrollbar-thumb { background: rgb(136, 136, 136); border-radius: =
+4px; }
+
+::-webkit-scrollbar-thumb:hover { background: rgb(85, 85, 85); }
+
+.hover\:scale-110:hover { --tw-scale-x: 1.1; --tw-scale-y: 1.1; transform: =
+translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rota=
+te)) skew(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x=
+)) scaleY(var(--tw-scale-y)); }
+
+.hover\:border-gray-400:hover { --tw-border-opacity: 1; border-color: rgb(1=
+56 163 175 / var(--tw-border-opacity, 1)); }
+
+.hover\:bg-amber-600:hover { --tw-bg-opacity: 1; background-color: rgb(217 =
+119 6 / var(--tw-bg-opacity, 1)); }
+
+.hover\:bg-blue-700:hover { --tw-bg-opacity: 1; background-color: rgb(29 78=
+ 216 / var(--tw-bg-opacity, 1)); }
+
+.hover\:bg-emerald-700:hover { --tw-bg-opacity: 1; background-color: rgb(4 =
+120 87 / var(--tw-bg-opacity, 1)); }
+
+.hover\:bg-gray-300:hover { --tw-bg-opacity: 1; background-color: rgb(209 2=
+13 219 / var(--tw-bg-opacity, 1)); }
+
+.hover\:bg-gray-50:hover { --tw-bg-opacity: 1; background-color: rgb(249 25=
+0 251 / var(--tw-bg-opacity, 1)); }
+
+.hover\:bg-green-700:hover { --tw-bg-opacity: 1; background-color: rgb(21 1=
+28 61 / var(--tw-bg-opacity, 1)); }
+
+.hover\:bg-indigo-700:hover { --tw-bg-opacity: 1; background-color: rgb(67 =
+56 202 / var(--tw-bg-opacity, 1)); }
+
+.hover\:bg-orange-600:hover { --tw-bg-opacity: 1; background-color: rgb(234=
+ 88 12 / var(--tw-bg-opacity, 1)); }
+
+.hover\:bg-purple-700:hover { --tw-bg-opacity: 1; background-color: rgb(126=
+ 34 206 / var(--tw-bg-opacity, 1)); }
+
+.hover\:bg-white\/20:hover { background-color: rgba(255, 255, 255, 0.2); }
+
+.hover\:text-gray-700:hover { --tw-text-opacity: 1; color: rgb(55 65 81 / v=
+ar(--tw-text-opacity, 1)); }
+
+.focus\:border-transparent:focus { border-color: transparent; }
+
+.focus\:ring-2:focus { --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 =
+var(--tw-ring-offset-width) var(--tw-ring-offset-color); --tw-ring-shadow: =
+var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw=
+-ring-color); box-shadow: var(--tw-ring-offset-shadow),var(--tw-ring-shadow=
+),var(--tw-shadow, 0 0 #0000); }
+
+.focus\:ring-elegoo-orange:focus { --tw-ring-opacity: 1; --tw-ring-color: r=
+gb(255 107 53 / var(--tw-ring-opacity, 1)); }
+
+.focus\:ring-gray-400:focus { --tw-ring-opacity: 1; --tw-ring-color: rgb(15=
+6 163 175 / var(--tw-ring-opacity, 1)); }
+
+.disabled\:cursor-not-allowed:disabled { cursor: not-allowed; }
+
+.disabled\:opacity-50:disabled { opacity: 0.5; }
+
+@media (min-width: 640px) {
+  .sm\:inline { display: inline; }
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0px, 1fr)); }
+  .sm\:text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+  .sm\:text-xs { font-size: 0.75rem; line-height: 1rem; }
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0px, 1fr)); }
+}
+------MultipartBoundary--ZcTlEhWolPj2U08noVNxzL8KZyUE4OeVzqSF3i21qy------
