@@ -7,6 +7,15 @@
     <title>Smoothie Design System</title>
     <link rel="icon" href="../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function() {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
     <style>
         * {
             margin: 0;
@@ -23,6 +32,7 @@
             background: var(--color-background, #fff);
             color: var(--color-on-background);
             transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
         }
 
         header {
@@ -102,18 +112,24 @@
         }
 
         .component-card {
-            border: 1px solid var(--color-outline, #ddd);
-            border-radius: 8px;
+            border: 2px solid var(--color-outline, #ddd);
+            border-radius: 12px;
             overflow: hidden;
             background: var(--color-surface, #f5f5f5);
             display: flex;
             flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .component-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         }
 
         .component-preview {
             flex: 1;
-            background: var(--color-surface, #f5f5f5);
-            border-bottom: 1px solid var(--color-outline, #ddd);
+            background: var(--color-background, #fff);
+            border-bottom: 2px solid var(--color-outline, #ddd);
         }
 
         .component-preview iframe {

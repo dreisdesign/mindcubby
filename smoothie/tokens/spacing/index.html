@@ -6,8 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spacing & Radius Tokens - Smoothie Design System</title>
     <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
-    <script type="module">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function() {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>    <script type="module">
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
     </script>
     <style>
