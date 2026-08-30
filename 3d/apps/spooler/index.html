@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Spooler v1.0.4: Flat material variant selector (PLA, PETG, TPU, Other) -->
+<!-- Spooler v1.0.5: Flat material variant selector (PLA, PETG, TPU, Other) -->
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="version" content="1.0.4">
-    <meta name="build-date" id="buildDate" content="Fri Aug 28 03:32 PM">
+    <meta name="version" content="1.0.5">
+    <meta name="build-date" id="buildDate" content="Sat Aug 30 02:45 AM">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spooler - NFC Filament Tagger (POC)</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -282,6 +282,16 @@
             line-height: 1.2;
         }
 
+        .button-group {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
         .copy-btn {
             width: 100%;
             background: #007bff;
@@ -292,6 +302,17 @@
         .copy-btn:hover {
             background: #0056b3;
             border-color: #0056b3;
+        }
+
+        .howto-btn {
+            background: white;
+            color: #333;
+            border: 1px solid #999;
+        }
+
+        .howto-btn:hover {
+            background: #f5f5f5;
+            border-color: #999;
         }
 
         #nfcOutput {
@@ -560,7 +581,10 @@
                 <div id="nfcOutput">
                     <label>NFC Hex Code (for NFC Tools)</label>
                     <div class="hex-output" id="hexDisplay"></div>
-                    <button type="button" class="copy-btn" id="copyHexBtn">Copy Hex to Clipboard</button>
+                    <div class="button-group">
+                        <button type="button" class="copy-btn" id="copyHexBtn">Copy Hex to Clipboard</button>
+                        <button type="button" class="howto-btn" id="howtoBtn">How To</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -1267,6 +1291,12 @@
             });
         });
 
+        // How To button handler
+        const howtoBtn = document.getElementById('howtoBtn');
+        howtoBtn.addEventListener('click', () => {
+            window.open('Full-Sequence-Shortened.png', '_blank');
+        });
+
         // Initialize
         const buildDate = new Date().toLocaleString('en-US', {
             weekday: 'short',
@@ -1277,7 +1307,7 @@
             hour12: true
         }).replace(',', '');
         document.getElementById('buildDate').content = buildDate;
-        console.log(`Spooler v1.0.4 loaded — Built: ${buildDate}`);
+        console.log(`Spooler v1.0.5 loaded — Built: ${buildDate}`);
         loadLog();
         initializeVariantChips();
         const hex = generateNFCHex();

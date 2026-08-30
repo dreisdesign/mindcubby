@@ -4,9 +4,14 @@ Track filament inventory using NFC tags. Write spool info to tags, log usage, ex
 
 **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/spooler/
 
-**Current Version:** v1.0.4
+**Current Version:** v1.0.5
 
 ---
+
+## What's New in v1.0.5
+
+- ✅ **"How To" button** – Quick-access button displays Full-Sequence-Shortened.png image guide in new tab
+- ✅ **Improved NFC output layout** – Copy Hex and How To buttons now side-by-side for better UX
 
 ## What's New in v1.0.4
 
