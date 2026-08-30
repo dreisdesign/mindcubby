@@ -75,6 +75,10 @@
             display: none !important;
         }
 
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
         .floating-toolbar label {
             font-size: 0.75rem;
             font-weight: 600;
@@ -195,7 +199,7 @@
 <body>
     <div class="container">
         <labs-button class="back-link" onclick="window.location.href='../';" variant="secondary">← Back to
-            Hub</labs-button>
+            Home</labs-button>
 
         <h1>Theme Toggle Component</h1>
         <p class="subtitle">Organism component: Smart theme/mode switcher with broadcasting</p>
@@ -309,11 +313,11 @@
             <div class="demo-item">
                 <h3>In a Hub/Showcase</h3>
                 <div class="code-block">
-                    // In hub, create toggle in header:<br>
+                    // In home view, create toggle in header:<br>
                     &lt;labs-theme-toggle id="main-toggle"&gt;&lt;/labs-theme-toggle&gt;<br>
                     <br>
                     // It automatically broadcasts to all iframes:<br>
-                    // window.self === window.top // true in hub
+                    // window.self === window.top // true in home view
                 </div>
             </div>
         </div>
@@ -328,7 +332,7 @@
                     └── labs-theme-toggle.js ← Organism component<br>
                     <br>
                     /smoothie/<br>
-                    └── theme-toggle/ ← Showcase page<br>
+                    └── theme-toggle/ ← Individual page<br>
                     └── index.html
                 </div>
                 <div class="note" style="background: var(--color-primary); color: white; margin-top: 1rem;">
