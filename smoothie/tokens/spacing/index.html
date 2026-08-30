@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spacing & Radius Tokens - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+            border-bottom: 2px solid var(--color-outline);
+            padding-bottom: 0.75rem;
+        }
+
+        .token-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-surface);
+            border: 1px solid var(--color-outline);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .token-table th,
+        .token-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-outline);
+            font-size: 0.9rem;
+        }
+
+        .token-table th {
+            background: var(--color-surface-container);
+            font-weight: 600;
+            color: var(--color-on-background);
+        }
+
+        .token-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .token-table code {
+            background: var(--color-surface-container);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: var(--color-on-background);
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-outline);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        .floating-toolbar > div {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        .floating-toolbar label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--color-on-background);
+        }
+
+        .floating-toolbar .toolbar-divider {
+            border-top: 1px solid var(--color-outline);
+            padding-top: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .floating-toolbar select {
+            padding: 0.5rem;
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 4px;
+            background: var(--color-background);
+            color: var(--color-on-background);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <labs-button class="back-link" onclick="window.location.href='../';" variant="secondary">← Back to
+            Home</labs-button>
+
+        <h1>Spacing & Radius Tokens</h1>
+        <p class="subtitle">Spacing scale and border radius values for the Smoothie Design System</p>
+
+        <!-- Spacing Section -->
+        <section>
+            <h2>Spacing Scale</h2>
+
+            <p style="margin-bottom: 1rem; color: var(--color-on-surface);">Base unit: 0.25rem (4px)</p>
+
+            <table class="token-table">
+                <thead>
+                    <tr>
+                        <th>Visual</th>
+                        <th>CSS Variable</th>
+                        <th>Value</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div style="width: 100%; height: 0.25rem; background: var(--color-primary);"></div>
+                        </td>
+                        <td><code>--spacing-xs</code></td>
+                        <td>0.25rem (4px)</td>
+                        <td>Extra tight, icon spacing</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="width: 100%; height: 0.5rem; background: var(--color-primary);"></div>
+                        </td>
+                        <td><code>--spacing-sm</code></td>
+                        <td>0.5rem (8px)</td>
+                        <td>Compact, button padding</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="width: 100%; height: 1rem; background: var(--color-primary);"></div>
+                        </td>
+                        <td><code>--spacing-md</code></td>
+                        <td>1rem (16px)</td>
+                        <td>Standard spacing, padding</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="width: 100%; height: 1.5rem; background: var(--color-primary);"></div>
+                        </td>
+                        <td><code>--spacing-lg</code></td>
+                        <td>1.5rem (24px)</td>
+                        <td>Component gaps, margins</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="width: 100%; height: 2rem; background: var(--color-primary);"></div>
+                        </td>
+                        <td><code>--spacing-xl</code></td>
+                        <td>2rem (32px)</td>
+                        <td>Section spacing</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="width: 100%; height: 3rem; background: var(--color-primary);"></div>
+                        </td>
+                        <td><code>--spacing-2xl</code></td>
+                        <td>3rem (48px)</td>
+                        <td>Large section gaps</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Border Radius Section -->
+        <section>
+            <h2>Border Radius</h2>
+
+            <table class="token-table">
+                <thead>
+                    <tr>
+                        <th>Visual</th>
+                        <th>CSS Variable</th>
+                        <th>Value</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div
+                                style="width: 60px; height: 60px; background: var(--color-primary); border-radius: 0px;">
+                            </div>
+                        </td>
+                        <td><code>--radius-none</code></td>
+                        <td>0px</td>
+                        <td>No rounding, hard edges</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div
+                                style="width: 60px; height: 60px; background: var(--color-primary); border-radius: 4px;">
+                            </div>
+                        </td>
+                        <td><code>--radius-sm</code></td>
+                        <td>4px</td>
+                        <td>Small components, inputs</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div
+                                style="width: 60px; height: 60px; background: var(--color-primary); border-radius: 8px;">
+                            </div>
+                        </td>
+                        <td><code>--radius-md</code></td>
+                        <td>8px</td>
+                        <td>Standard components, cards</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div
+                                style="width: 60px; height: 60px; background: var(--color-primary); border-radius: 12px;">
+                            </div>
+                        </td>
+                        <td><code>--radius-lg</code></td>
+                        <td>12px</td>
+                        <td>Larger components, modals</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div
+                                style="width: 60px; height: 60px; background: var(--color-primary); border-radius: 9999px;">
+                            </div>
+                        </td>
+                        <td><code>--radius-pill</code></td>
+                        <td>9999px</td>
+                        <td>Pill buttons, badges</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <!-- Floating Theme Toolbar -->
+    <div class="floating-toolbar">
+        <div>
+            <label for="theme-select">Theme</label>
+            <select id="theme-select">
+                <option value="vanilla">Vanilla</option>
+                <option value="blueberry">Blueberry</option>
+                <option value="strawberry">Strawberry</option>
+            </select>
+        </div>
+        <div>
+            <label for="appearance-select">Appearance</label>
+            <select id="appearance-select">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+
+    <script type="module">
+        const root = document.documentElement;
+
+        if (window.self !== window.top) {
+            root.classList.add('in-iframe');
+        }
+
+        const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
+        const savedAppearance = localStorage.getItem('smoothie-appearance') || 'light';
+
+        document.getElementById('theme-select').value = savedTheme;
+        document.getElementById('appearance-select').value = savedAppearance;
+
+        root.classList.add(`theme-${savedTheme}`, `appearance-${savedAppearance}`);
+
+        document.getElementById('theme-select').addEventListener('change', (e) => {
+            const theme = e.target.value;
+            root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+            root.classList.add(`theme-${theme}`);
+            localStorage.setItem('smoothie-theme', theme);
+        });
+
+        document.getElementById('appearance-select').addEventListener('change', (e) => {
+            const appearance = e.target.value;
+            root.classList.remove('appearance-light', 'appearance-dark');
+            root.classList.add(`appearance-${appearance}`);
+            localStorage.setItem('smoothie-appearance', appearance);
+        });
+
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'smoothie-theme-update') {
+                const { theme, appearance } = event.data;
+                if (theme) {
+                    root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+                    root.classList.add(`theme-${theme}`);
+                    localStorage.setItem('smoothie-theme', theme);
+                    document.getElementById('theme-select').value = theme;
+                }
+                if (appearance) {
+                    root.classList.remove('appearance-light', 'appearance-dark');
+                    root.classList.add(`appearance-${appearance}`);
+                    localStorage.setItem('smoothie-appearance', appearance);
+                    document.getElementById('appearance-select').value = appearance;
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
