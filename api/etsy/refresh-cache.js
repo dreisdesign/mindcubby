@@ -72,7 +72,7 @@ export default async function handler(req, res) {
 
         console.log('[Refresh] Using shop_id for refresh:', shopId);
 
-        // Fetch products using app credentials (public API endpoint)
+        // Fetch products using stored refresh token if available
         const apiKey = process.env.ETSY_API_KEY;
         const apiSecret = process.env.ETSY_API_SECRET;
         const xApiKey = `${apiKey}:${apiSecret}`;
@@ -80,16 +80,63 @@ export default async function handler(req, res) {
         console.log('[Refresh] Fetching listings with shop_id:', shopId);
         console.log('[Refresh] Using API key:', apiKey ? `${apiKey.substring(0, 8)}...` : 'MISSING');
 
-        const listingsResponse = await fetch(
-            `https://api.etsy.com/v3/public/shops/${shopId}/listings?includes=images`,
-            {
-                method: 'GET',
-                headers: {
-                    'x-api-key': xApiKey,
-                    'Content-Type': 'application/json',
+        // Try to get a fresh access token using the stored refresh token
+        let accessToken = null;
+        try {
+            const { createClient } = await import('redis');
+            const redis = createClient({ url: process.env.REDIS_URL });
+            await redis.connect();
+            const refreshToken = await redis.get('mindcubby:etsy_refresh_token');
+            await redis.quit();
+
+            if (refreshToken) {
+                console.log('[Refresh] Found refresh token in Redis, exchanging for access token...');
+                const tokenResponse = await fetch('https://api.etsy.com/v3/public/oauth/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        grant_type: 'refresh_token',
+                        client_id: apiKey,
+                        refresh_token: refreshToken,
+                    }).toString(),
+                });
+
+                if (tokenResponse.ok) {
+                    const newTokenData = await tokenResponse.json();
+                    accessToken = newTokenData.access_token;
+                    console.log('[Refresh] ✅ Got fresh access token');
+                } else {
+                    console.error('[Refresh] Failed to refresh access token');
                 }
             }
-        );
+        } catch (err) {
+            console.error('[Refresh] Error getting refresh token:', err.message);
+        }
+
+        // Use authenticated endpoint if we have access token, otherwise fall back to public API
+        const endpoint = accessToken 
+            ? `https://api.etsy.com/v3/application/shops/${shopId}/listings?includes=images`
+            : `https://api.etsy.com/v3/public/shops/${shopId}/listings?includes=images`;
+        
+        const headers = accessToken 
+            ? {
+                'Authorization': `Bearer ${accessToken}`,
+                'x-api-key': xApiKey,
+                'Content-Type': 'application/json',
+              }
+            : {
+                'x-api-key': xApiKey,
+                'Content-Type': 'application/json',
+              };
+
+        console.log('[Refresh] Using endpoint:', endpoint.includes('/application/') ? 'authenticated' : 'public');
+
+        const listingsResponse = await fetch(endpoint, {
+            method: 'GET',
+            headers: headers
+        });
 
         if (!listingsResponse.ok) {
             const error = await listingsResponse.text();

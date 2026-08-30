@@ -81,9 +81,24 @@ export default async function handler(req, res) {
         // Avoid logging sensitive token values; log only keys for debugging
         try { console.log('OAuth token response keys:', Object.keys(tokenData || {}).join(',')); } catch (e) { }
         const accessToken = tokenData.access_token;
+        const refreshToken = tokenData.refresh_token;
 
         if (!accessToken) {
             return res.status(500).json({ error: 'No access token in response' });
+        }
+
+        // Store refresh token in Redis for cron jobs to use
+        if (refreshToken) {
+            try {
+                const { createClient } = await import('redis');
+                const redis = createClient({ url: process.env.REDIS_URL });
+                await redis.connect();
+                await redis.set('mindcubby:etsy_refresh_token', refreshToken);
+                await redis.quit();
+                console.log('[Callback] ✅ Stored refresh token in Redis for cron refresh');
+            } catch (err) {
+                console.error('[Callback] Failed to store refresh token:', err.message);
+            }
         }
 
         // Extract user_id from the access token prefix (format: "12345678.token...")
