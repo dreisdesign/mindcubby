@@ -61,6 +61,9 @@ export default async function handler(req, res) {
         const apiSecret = process.env.ETSY_API_SECRET;
         const xApiKey = `${apiKey}:${apiSecret}`;
 
+        console.log('[Cron] Fetching listings with shop_id:', shopId);
+        console.log('[Cron] Using API key:', apiKey ? `${apiKey.substring(0, 8)}...` : 'MISSING');
+
         const listingsResponse = await fetch(
             `https://api.etsy.com/v3/public/shops/${shopId}/listings?includes=images`,
             {
@@ -74,10 +77,12 @@ export default async function handler(req, res) {
 
         if (!listingsResponse.ok) {
             const error = await listingsResponse.text();
+            console.error('[Cron] HTTP Status:', listingsResponse.status);
             console.error('[Cron] Failed to fetch listings:', error);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to fetch listings from Etsy API',
+                status: listingsResponse.status,
                 error: error
             });
         }
