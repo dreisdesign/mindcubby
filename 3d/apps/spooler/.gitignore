@@ -22,3 +22,6 @@ logs/
 # Build
 dist/
 build/
+
+# Archives
+_ARCHIVE/
