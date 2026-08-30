@@ -274,7 +274,7 @@
                     <div style="margin-bottom: 1rem;">
                         <strong style="color: var(--color-on-background);">3. Broadcasts change</strong><br>
                         <span style="color: var(--color-on-surface); font-size: 0.9rem;">
-                            Sends postMessage to all iframes (if in hub), and emits custom event
+                            Sends postMessage to all iframes (if in home view), and emits custom event
                         </span>
                     </div>
                     <div>
@@ -311,7 +311,7 @@
             </div>
 
             <div class="demo-item">
-                <h3>In a Hub/Showcase</h3>
+                <h3>In a Home View</h3>
                 <div class="code-block">
                     // In home view, create toggle in header:<br>
                     &lt;labs-theme-toggle id="main-toggle"&gt;&lt;/labs-theme-toggle&gt;<br>
@@ -418,7 +418,7 @@
             localStorage.setItem('smoothie-theme', theme);
         });
 
-        // Listen for theme updates from parent hub via postMessage
+        // Listen for theme updates from parent home page via postMessage
         window.addEventListener('message', (event) => {
             if (event.data.type === 'smoothie-theme-update') {
                 const { theme, appearance } = event.data;
