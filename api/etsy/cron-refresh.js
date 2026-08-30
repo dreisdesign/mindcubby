@@ -65,7 +65,7 @@ export default async function handler(req, res) {
         console.log('[Cron] Using API key:', apiKey ? `${apiKey.substring(0, 8)}...` : 'MISSING');
 
         const listingsResponse = await fetch(
-            `https://api.etsy.com/v3/public/shops/${shopId}/listings?includes=images`,
+            `https://api.etsy.com/v3/application/shops/${shopId}/listings?includes=images`,
             {
                 method: 'GET',
                 headers: {
