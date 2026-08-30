@@ -126,14 +126,27 @@
             padding: 1rem;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             gap: 1rem;
+        }
+
+        .component-info {
+            flex: 1;
         }
 
         .component-name {
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 1.1rem;
             color: var(--color-on-background);
+            margin: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .component-subtitle {
+            font-size: 0.85rem;
+            color: var(--color-on-surface);
+            margin: 0;
+            line-height: 1.4;
         }
 
         .component-link {
@@ -233,7 +246,10 @@
                         <iframe src="./tokens/colors/"></iframe>
                     </div>
                     <div class="component-footer">
-                        <span class="component-name">Colors</span>
+                        <div class="component-info">
+                            <h1 class="component-name">Colors</h1>
+                            <p class="component-subtitle">All color palettes and semantic colors for the Smoothie Design System</p>
+                        </div>
                         <a href="./tokens/colors/" class="component-link" target="_blank">
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
@@ -245,7 +261,10 @@
                         <iframe src="./tokens/typography/"></iframe>
                     </div>
                     <div class="component-footer">
-                        <span class="component-name">Typography</span>
+                        <div class="component-info">
+                            <h1 class="component-name">Typography</h1>
+                            <p class="component-subtitle">Font sizes and typography scales for the Smoothie Design System</p>
+                        </div>
                         <a href="./tokens/typography/" class="component-link" target="_blank">
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
@@ -257,7 +276,10 @@
                         <iframe src="./tokens/spacing/"></iframe>
                     </div>
                     <div class="component-footer">
-                        <span class="component-name">Spacing</span>
+                        <div class="component-info">
+                            <h1 class="component-name">Spacing</h1>
+                            <p class="component-subtitle">Spacing scale for the Smoothie Design System</p>
+                        </div>
                         <a href="./tokens/spacing/" class="component-link" target="_blank">
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
@@ -269,7 +291,10 @@
                         <iframe src="./tokens/radius/"></iframe>
                     </div>
                     <div class="component-footer">
-                        <span class="component-name">Border Radius</span>
+                        <div class="component-info">
+                            <h1 class="component-name">Border Radius</h1>
+                            <p class="component-subtitle">All border radius values for the Smoothie Design System</p>
+                        </div>
                         <a href="./tokens/radius/" class="component-link" target="_blank">
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
