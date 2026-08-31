@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
     <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
     <script>
-        (function() {
+        (function () {
             const root = document.documentElement;
             const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
             const appearance = localStorage.getItem('smoothie-appearance') || 'light';
@@ -183,12 +183,12 @@
         <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
             Home</labs-button>
 
-        <h1>Color Tokens</h1>
+        <h1>Colors</h1>
         <p class="subtitle">All color palettes and semantic colors for the Smoothie Design System</p>
 
         <!-- Core Palette Section -->
         <section>
-            <h2 style="font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--color-outline); padding-bottom: 0.75rem; color: var(--color-on-background);">Core Palette</h2>
+            <h2>Core Palette</h2>
 
             <!-- Core Palette -->
             <div style="margin-bottom: 2rem;">
@@ -226,7 +226,9 @@
                 </div>
             </div>
 
-            <h2 style="font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--color-outline); padding-bottom: 0.75rem; color: var(--color-on-background);">Status Colors</h2>
+            <h2
+                style="margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--color-outline); padding-bottom: 0.75rem; color: var(--color-on-background);">
+                Status Colors</h2>
 
             <!-- Status Palette -->
             <div style="margin-bottom: 2rem;">
@@ -255,7 +257,9 @@
                 </div>
             </div>
 
-            <h2 style="font-size: 1.1rem; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid var(--color-outline); padding-bottom: 0.75rem; color: var(--color-on-background);">Theme Palettes</h2>
+            <h2
+                style="margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid var(--color-outline); padding-bottom: 0.75rem; color: var(--color-on-background);">
+                Theme Palettes</h2>
 
             <!-- Vanilla Palette -->
             <div style="margin-bottom: 2rem;">
@@ -404,7 +408,9 @@
                 </div>
             </div>
 
-            <h2 style="font-size: 1.1rem; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid var(--color-outline); padding-bottom: 0.75rem; color: var(--color-on-background);">Semantic Colors (Current Theme)</h2>
+            <h2
+                style="margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid var(--color-outline); padding-bottom: 0.75rem; color: var(--color-on-background);">
+                Semantic Colors (Current Theme)</h2>
             <div class="color-grid">
                 <div class="color-card">
                     <div class="color-swatch"

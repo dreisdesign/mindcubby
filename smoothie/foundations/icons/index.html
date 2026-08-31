@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icons - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        // Mark page as embedded if loaded in iframe
+        if (window !== window.parent) {
+            document.documentElement.classList.add('in-iframe');
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+            border-bottom: 2px solid var(--color-outline);
+            padding-bottom: 0.75rem;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .icon-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border: 1px solid var(--color-outline);
+            border-radius: 8px;
+            background: var(--color-surface);
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .icon-card:hover {
+            border-color: var(--color-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .icon-display {
+            font-size: 2.5rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+        }
+
+        .icon-name {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-outline);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        .floating-toolbar>div {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        html.in-iframe h1 {
+            display: none !important;
+        }
+
+        html.in-iframe .subtitle {
+            display: none !important;
+        }
+
+        .floating-toolbar label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--color-on-background);
+        }
+
+        .floating-toolbar .toolbar-divider {
+            border-top: 1px solid var(--color-outline);
+            padding-top: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .floating-toolbar select {
+            padding: 0.5rem;
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 4px;
+            background: var(--color-background);
+            color: var(--color-on-background);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
+            Home</labs-button>
+
+        <h1 class="sr-only">Icons</h1>
+        <p class="subtitle sr-only">Complete icon set for the Smoothie Design System</p>
+
+        <!-- Icons Section -->
+        <section>
+            <h2>Available Icons (66 total)</h2>
+
+            <div class="icon-grid">
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="add"></labs-icon></div>
+                    <div class="icon-name">add</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="add_circle"></labs-icon></div>
+                    <div class="icon-name">add_circle</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="add_comment"></labs-icon></div>
+                    <div class="icon-name">add_comment</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="apps"></labs-icon></div>
+                    <div class="icon-name">apps</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="archive"></labs-icon></div>
+                    <div class="icon-name">archive</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="bedtime"></labs-icon></div>
+                    <div class="icon-name">bedtime</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="bedtime_off"></labs-icon></div>
+                    <div class="icon-name">bedtime_off</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="build"></labs-icon></div>
+                    <div class="icon-name">build</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="cancel"></labs-icon></div>
+                    <div class="icon-name">cancel</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="change_circle"></labs-icon></div>
+                    <div class="icon-name">change_circle</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="check"></labs-icon></div>
+                    <div class="icon-name">check</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="check_box"></labs-icon></div>
+                    <div class="icon-name">check_box</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="check_box_outline_blank"></labs-icon></div>
+                    <div class="icon-name">check_box_outline_blank</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="check_indeterminate_small"></labs-icon></div>
+                    <div class="icon-name">check_indeterminate_small</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="close"></labs-icon></div>
+                    <div class="icon-name">close</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="code"></labs-icon></div>
+                    <div class="icon-name">code</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="collapse_content"></labs-icon></div>
+                    <div class="icon-name">collapse_content</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="colors"></labs-icon></div>
+                    <div class="icon-name">colors</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="comment"></labs-icon></div>
+                    <div class="icon-name">comment</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="content_copy"></labs-icon></div>
+                    <div class="icon-name">content_copy</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="delete"></labs-icon></div>
+                    <div class="icon-name">delete</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="delete_forever"></labs-icon></div>
+                    <div class="icon-name">delete_forever</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="download"></labs-icon></div>
+                    <div class="icon-name">download</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="download_2"></labs-icon></div>
+                    <div class="icon-name">download_2</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="edit"></labs-icon></div>
+                    <div class="icon-name">edit</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="electric_bolt"></labs-icon></div>
+                    <div class="icon-name">electric_bolt</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="expand_content"></labs-icon></div>
+                    <div class="icon-name">expand_content</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="forward_circle"></labs-icon></div>
+                    <div class="icon-name">forward_circle</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="genres"></labs-icon></div>
+                    <div class="icon-name">genres</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="gesture"></labs-icon></div>
+                    <div class="icon-name">gesture</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="headphones"></labs-icon></div>
+                    <div class="icon-name">headphones</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="hide"></labs-icon></div>
+                    <div class="icon-name">hide</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="history"></labs-icon></div>
+                    <div class="icon-name">history</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="indeterminate_check_box"></labs-icon></div>
+                    <div class="icon-name">indeterminate_check_box</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="info"></labs-icon></div>
+                    <div class="icon-name">info</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="keyboard_arrow_down"></labs-icon></div>
+                    <div class="icon-name">keyboard_arrow_down</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="keyboard_arrow_left"></labs-icon></div>
+                    <div class="icon-name">keyboard_arrow_left</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="keyboard_arrow_right"></labs-icon></div>
+                    <div class="icon-name">keyboard_arrow_right</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="keyboard_arrow_up"></labs-icon></div>
+                    <div class="icon-name">keyboard_arrow_up</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="lock"></labs-icon></div>
+                    <div class="icon-name">lock</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="lock_open_right"></labs-icon></div>
+                    <div class="icon-name">lock_open_right</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="mode_off_on"></labs-icon></div>
+                    <div class="icon-name">mode_off_on</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="more_horiz"></labs-icon></div>
+                    <div class="icon-name">more_horiz</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="more_vert"></labs-icon></div>
+                    <div class="icon-name">more_vert</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="motion_play"></labs-icon></div>
+                    <div class="icon-name">motion_play</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="music_note"></labs-icon></div>
+                    <div class="icon-name">music_note</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="music_off"></labs-icon></div>
+                    <div class="icon-name">music_off</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="next_plan"></labs-icon></div>
+                    <div class="icon-name">next_plan</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="no_sound"></labs-icon></div>
+                    <div class="icon-name">no_sound</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="not_started"></labs-icon></div>
+                    <div class="icon-name">not_started</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="notifications"></labs-icon></div>
+                    <div class="icon-name">notifications</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="notifications_off"></labs-icon></div>
+                    <div class="icon-name">notifications_off</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="open_in_new"></labs-icon></div>
+                    <div class="icon-name">open_in_new</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="pause"></labs-icon></div>
+                    <div class="icon-name">pause</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="pause_circle"></labs-icon></div>
+                    <div class="icon-name">pause_circle</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="play_arrow"></labs-icon></div>
+                    <div class="icon-name">play_arrow</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="play_circle"></labs-icon></div>
+                    <div class="icon-name">play_circle</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="published_with_changes"></labs-icon></div>
+                    <div class="icon-name">published_with_changes</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="rate_review"></labs-icon></div>
+                    <div class="icon-name">rate_review</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="replay"></labs-icon></div>
+                    <div class="icon-name">replay</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="settings"></labs-icon></div>
+                    <div class="icon-name">settings</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="stop_circle"></labs-icon></div>
+                    <div class="icon-name">stop_circle</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="undo"></labs-icon></div>
+                    <div class="icon-name">undo</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="volume_down_alt"></labs-icon></div>
+                    <div class="icon-name">volume_down_alt</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="volume_mute"></labs-icon></div>
+                    <div class="icon-name">volume_mute</div>
+                </div>
+                <div class="icon-card">
+                    <div class="icon-display"><labs-icon name="volume_up"></labs-icon></div>
+                    <div class="icon-name">volume_up</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="floating-toolbar">
+        <div>
+            <label>Theme:</label>
+            <select id="theme-select" onchange="changeTheme(this.value)">
+                <option value="vanilla">Vanilla</option>
+                <option value="blueberry">Blueberry</option>
+                <option value="strawberry">Strawberry</option>
+            </select>
+        </div>
+        <div>
+            <label>Appearance:</label>
+            <select id="appearance-select" onchange="changeAppearance(this.value)">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        // Initialize theme and appearance selects
+        const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+        const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+        document.getElementById('theme-select').value = theme;
+        document.getElementById('appearance-select').value = appearance;
+
+        function changeTheme(newTheme) {
+            localStorage.setItem('smoothie-theme', newTheme);
+            document.documentElement.className = `theme-${newTheme} appearance-${appearance}`;
+        }
+
+        function changeAppearance(newAppearance) {
+            localStorage.setItem('smoothie-appearance', newAppearance);
+            document.documentElement.className = `theme-${theme} appearance-${newAppearance}`;
+        }
+    </script>
+</body>
+
+</html>

@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Container - Smoothie Design System</title>
-    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <link rel="icon" href="../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../libs/smoothie-design-system/v3.0/styles/main.css">
     <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
     <script>
         (function () {
@@ -17,22 +17,10 @@
         })();
     </script>
     <script type="module">
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-container.js';
+        import '../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../libs/smoothie-design-system/v3.0/src/components/labs-container.js';
     </script>
     <style>
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border-width: 0;
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -289,11 +277,11 @@
 <body>
     <labs-container id="main-container" medium>
         <div class="container">
-            <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
+            <labs-button class="back-link" onclick="window.location.href='../';" variant="secondary">← Back to
                 Hub</labs-button>
 
-            <h1 class="sr-only">Container Component</h1>
-            <p class="subtitle sr-only">Responsive width container with desktop and mobile padding</p>
+            <h1>Container Component</h1>
+            <p class="subtitle">Responsive width container with desktop and mobile padding</p>
 
             <div class="section">
                 <h2>Live Container Demo</h2>
