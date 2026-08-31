@@ -167,7 +167,18 @@
 
         .component-link {
             display: inline-block;
+        }
 
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
         }
     </style>
 </head>
@@ -255,7 +266,7 @@
     <main class="main">
         <!-- 0. Tokens Section -->
         <section id="tokens">
-            <h2>0. Design Tokens</h2>
+            <h2 class="sr-only">0. Design Tokens</h2>
             <div class="grid">
                 <div class="component-card">
                     <div class="component-preview">
@@ -323,7 +334,7 @@
 
         <!-- 1. Foundations Section -->
         <section id="foundations">
-            <h2>1. Foundations</h2>
+            <h2 class="sr-only">1. Foundations</h2>
             <div class="grid">
                 <!-- Container -->
                 <div class="component-card">
@@ -379,7 +390,7 @@
 
         <!-- 2. Components Section -->
         <section id="components">
-            <h2>2. Components</h2>
+            <h2 class="sr-only">2. Components</h2>
             <div class="grid">
                 <!-- Button -->
                 <div class="component-card">
@@ -401,14 +412,14 @@
 
         <!-- 3. Patterns Section -->
         <section id="patterns">
-            <h2>3. Patterns</h2>
+            <h2 class="sr-only">3. Patterns</h2>
             <p style="color: var(--color-on-surface, #666); font-size: 0.9rem; margin-bottom: 2rem;">Coming soon: Form
                 layouts, card grids, navigation patterns...</p>
         </section>
 
         <!-- 4. Utilities Section -->
         <section id="utilities">
-            <h2>4. Utilities</h2>
+            <h2 class="sr-only">4. Utilities</h2>
             <p style="color: var(--color-on-surface, #666); font-size: 0.9rem; margin-bottom: 2rem;">Coming soon: Theme
                 manager, storage API, other non-visual utilities...</p>
         </section>
