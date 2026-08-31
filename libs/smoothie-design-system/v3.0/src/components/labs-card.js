@@ -33,6 +33,7 @@ class LabsCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
+          --labs-card-padding: 2rem;
           display: block;
           width: 100%;
           box-sizing: border-box;
@@ -40,7 +41,7 @@ class LabsCard extends HTMLElement {
           background: var(--color-surface, #fff);
           border-radius: var(--radius-card, 0.5rem);
           box-shadow: var(--labs-card-shadow, 0 6px 40px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.04));
-          padding: var(--labs-card-padding, 20px 18px);
+          padding: var(--labs-card-padding);
           font-family: var(--font-family-base, system-ui, sans-serif);
           position: relative;
         }

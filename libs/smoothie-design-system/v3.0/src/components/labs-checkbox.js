@@ -7,11 +7,11 @@ class LabsCheckbox extends HTMLElement {
     this.render();
   }
 
-  static get observedAttributes() { return ['checked', 'inactive']; }
+  static get observedAttributes() { return ['checked', 'inactive', 'disabled']; }
 
   attributeChangedCallback(name, oldV, newV) {
     if (name === 'checked') this._checked = this.hasAttribute('checked');
-    if (name === 'inactive') this._inactive = this.hasAttribute('inactive');
+    if (name === 'inactive' || name === 'disabled') this._inactive = this.hasAttribute('inactive') || this.hasAttribute('disabled');
     this._updateAria();
     this.render();
   }
@@ -66,7 +66,8 @@ class LabsCheckbox extends HTMLElement {
   _updateAria() {
     if (!this.shadowRoot) return;
     this.setAttribute('aria-checked', String(this._checked));
-    if (this._inactive) {
+    const isInactive = this._inactive || this.hasAttribute('disabled');
+    if (isInactive) {
       this.setAttribute('aria-disabled', 'true');
       this.setAttribute('tabindex', '-1');
     } else {

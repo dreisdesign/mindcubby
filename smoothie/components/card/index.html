@@ -69,12 +69,12 @@
         }
 
         .section {
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
 
         .section h2 {
             font-size: 1.25rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             font-weight: 600;
             border-bottom: 1px solid var(--color-outline, #ddd);
             padding-bottom: 0.5rem;
@@ -83,7 +83,7 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
             margin-bottom: 2rem;
         }
@@ -91,7 +91,7 @@
         .preview-container {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
 
         .preview-label {
@@ -101,7 +101,9 @@
         }
 
         labs-card {
-            flex: 1;
+            max-width: 100%;
+            padding: var(--labs-card-padding);
+            --labs-card-max-width: 520px;
         }
 
         .floating-toolbar {
@@ -162,56 +164,65 @@
 
 <body>
     <div class="container">
-        <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
-            Home</labs-button>
+        <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to Home</labs-button>
 
         <h1 class="sr-only">Card Component</h1>
-        <p class="subtitle sr-only">All card variants and layouts</p>
+        <p class="subtitle sr-only">Flexible card container with header, description, input, and actions</p>
 
         <div class="section">
             <h2>Basic Card</h2>
+            <div style="display: flex; justify-content: center; padding: 1rem 0;">
+                <labs-card>
+                    <span slot="header">Card Title</span>
+                    <button slot="close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-on-surface); padding: 0;">×</button>
+                    <span slot="description">This is a description for the canonical card.</span>
+                    <input slot="input" type="text" placeholder="Type here..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--color-outline); border-radius: 4px; background: var(--color-background); color: var(--color-on-background); font-size: 1rem;">
+                    <div slot="actions" style="display: flex; gap: 0.75rem;">
+                        <labs-button variant="secondary">Cancel</labs-button>
+                        <labs-button variant="primary">Save</labs-button>
+                    </div>
+                </labs-card>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Card Variants</h2>
             <div class="grid">
                 <div class="preview-container">
                     <labs-card>
-                        <span slot="header">Card Title</span>
-                        <div slot="description">This is a basic card component with a header and description.</div>
+                        <span slot="header">Simple</span>
+                        <span slot="description">A basic card with header and description only.</span>
                     </labs-card>
-                    <label class="preview-label">Default</label>
+                    <label class="preview-label">Header + Description</label>
                 </div>
                 <div class="preview-container">
                     <labs-card>
                         <span slot="header">With Actions</span>
-                        <div slot="description">Cards can include action buttons.</div>
-                        <div slot="actions" style="display: flex; gap: 0.5rem;">
+                        <span slot="description">Card with action buttons below.</span>
+                        <div slot="actions">
                             <labs-button variant="primary" size="small">Confirm</labs-button>
                             <labs-button variant="secondary" size="small">Cancel</labs-button>
                         </div>
                     </labs-card>
                     <label class="preview-label">With Actions</label>
                 </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Card with Content</h2>
-            <div class="grid">
                 <div class="preview-container">
                     <labs-card>
-                        <span slot="header">Rich Content</span>
-                        <div slot="content" style="padding: 1rem; background: var(--color-surface); border-radius: 4px;">
-                            <p style="margin: 0; color: var(--color-on-surface);">This is the main content area of the card.</p>
-                        </div>
+                        <span slot="header">With Close</span>
+                        <button slot="close" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--color-on-surface);">×</button>
+                        <span slot="description">Card with close button in header.</span>
                     </labs-card>
-                    <label class="preview-label">With Content Slot</label>
+                    <label class="preview-label">With Close Button</label>
                 </div>
                 <div class="preview-container">
-                    <labs-card>
-                        <span slot="header">Input Card</span>
-                        <div slot="input">
-                            <input type="text" placeholder="Enter text..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--color-outline); border-radius: 4px; background: var(--color-background);">
+                    <labs-card variant="welcome">
+                        <span slot="header">Welcome!</span>
+                        <span slot="description">Get started with the design system.</span>
+                        <div slot="actions">
+                            <labs-button variant="primary" size="small">Get Started</labs-button>
                         </div>
                     </labs-card>
-                    <label class="preview-label">With Input Slot</label>
+                    <label class="preview-label">Welcome Variant</label>
                 </div>
             </div>
         </div>
@@ -242,22 +253,17 @@
         const modeSelect = document.getElementById('mode-select');
         const root = document.documentElement;
 
-        // Detect if page is in iframe and hide toolbar
         if (window.self !== window.top) {
             root.classList.add('in-iframe');
         }
 
-        // Load saved preferences
         const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
         const savedAppearance = localStorage.getItem('smoothie-appearance') || 'light';
 
         themeSelect.value = savedTheme;
         modeSelect.value = savedAppearance;
-
-        // Apply on load
         root.classList.add(`theme-${savedTheme}`, `appearance-${savedAppearance}`);
 
-        // Theme change handler
         themeSelect.addEventListener('change', (e) => {
             const theme = e.target.value;
             root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
@@ -265,7 +271,6 @@
             localStorage.setItem('smoothie-theme', theme);
         });
 
-        // Appearance change handler
         modeSelect.addEventListener('change', (e) => {
             const appearance = e.target.value;
             root.classList.remove('appearance-light', 'appearance-dark');
@@ -273,7 +278,6 @@
             localStorage.setItem('smoothie-appearance', appearance);
         });
 
-        // Listen for theme updates from parent hub via postMessage
         window.addEventListener('message', (event) => {
             if (event.data.type === 'smoothie-theme-update') {
                 const { theme, appearance } = event.data;
