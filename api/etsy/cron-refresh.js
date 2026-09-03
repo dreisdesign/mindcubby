@@ -3,10 +3,12 @@
  * Runs automatically via Vercel Cron at 00:00 UTC daily
  * Refreshes product cache using hardcoded shop_id (62670465)
  * 
+ * Sends email alerts on failure to notify of issues
  * No manual intervention needed - fully autonomous
  */
 
 import { setCachedProducts } from './cache.js';
+import { sendAlert } from '../notifications.js';
 
 export const vercelCronSchedule = '0 0 * * *'; // Daily at 00:00 UTC
 
@@ -150,6 +152,8 @@ export default async function handler(req, res) {
                 console.error('[Cron] Health check failed:', err.message);
             }
 
+            console.log('[Cron] ✅ Daily cache refresh completed successfully at', new Date().toISOString());
+
             return res.status(200).json({
                 success: true,
                 message: 'Cache refreshed successfully',
@@ -158,6 +162,29 @@ export default async function handler(req, res) {
             });
         } else {
             console.warn('[Cron] No products found for shop_id:', shopId);
+            
+            // Send alert if no products were found
+            try {
+                await sendAlert({
+                    subject: '⚠️ MindCubby Etsy Cache Refresh - No Products Found',
+                    errors: [
+                        `Cron job completed but no products returned from Etsy API`,
+                        `Shop ID: ${shopId}`,
+                        `Timestamp: ${new Date().toISOString()}`,
+                        'Check if your Etsy shop has active listings'
+                    ],
+                    checks: {
+                        cache_exists: true,
+                        cache_not_expired: true,
+                        shop_id_stored: true,
+                        product_count: 0,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (alertErr) {
+                console.error('[Cron] Failed to send alert:', alertErr.message);
+            }
+            
             return res.status(200).json({
                 success: false,
                 message: 'No products found for this shop',
@@ -167,6 +194,28 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error('[Cron] Error:', error);
+        
+        // Send alert email on cron failure
+        try {
+            await sendAlert({
+                subject: '❌ MindCubby Etsy Cache Refresh Failed',
+                errors: [
+                    `Cron job failed at ${new Date().toISOString()}`,
+                    `Error: ${error.message}`,
+                    'Please check Vercel logs and environment variables (REDIS_URL, ETSY_API_KEY, ETSY_API_SECRET)'
+                ],
+                checks: {
+                    cache_exists: false,
+                    cache_not_expired: false,
+                    shop_id_stored: false,
+                    product_count: 0,
+                    timestamp: new Date().toISOString()
+                }
+            });
+        } catch (alertErr) {
+            console.error('[Cron] Failed to send alert:', alertErr.message);
+        }
+        
         return res.status(500).json({
             error: 'Internal server error',
             message: error.message
