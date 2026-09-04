@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Appearance - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+    </script>
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        /* Only hide overflow when embedded in iframe */
+        html.in-iframe body {
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-outline, #ddd);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .subsection {
+            margin-bottom: 2rem;
+        }
+
+        .subsection h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--color-on-surface, #666);
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: var(--color-surface, #f5f5f5);
+            border-radius: 8px;
+            border: 1px solid var(--color-outline, #ddd);
+        }
+
+        .button-showcase {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--color-background, #fff);
+            border-radius: 6px;
+            border: 1px solid var(--color-outline-variant, #eee);
+        }
+
+        .button-showcase labs-button {
+            width: 100%;
+        }
+
+        .button-label {
+            font-size: 0.75rem;
+            color: var(--color-on-surface-variant, #999);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .preview {
+            padding: 1.5rem;
+            background: var(--color-surface, #f5f5f5);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .preview h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .preview p {
+            font-size: 0.875rem;
+            color: var(--color-on-surface-variant, #666);
+            margin-bottom: 1rem;
+        }
+
+        .code-example {
+            background: var(--color-background, #fff);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            overflow-x: auto;
+        }
+
+        .code-example code {
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: var(--color-on-surface, #333);
+            line-height: 1.5;
+        }
+
+        .guide {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .guide-item {
+            padding: 1rem;
+            background: var(--color-surface, #f5f5f5);
+            border-radius: 6px;
+            border-left: 3px solid var(--color-primary, #6464c8);
+        }
+
+        .guide-item strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .guide-item p {
+            font-size: 0.85rem;
+            color: var(--color-on-surface-variant, #666);
+            line-height: 1.5;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        /* Hide toolbar when page is embedded in iframe */
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        html.in-iframe h1 {
+            display: none !important;
+        }
+
+        html.in-iframe .subtitle {
+            display: none !important;
+        }
+
+        .floating-toolbar label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--color-on-surface, #333);
+        }
+
+        .floating-toolbar select {
+            padding: 0.5rem;
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 4px;
+            background: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            color: var(--color-primary, #6464c8);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="../../" class="back-link">← Back to Design System</a>
+
+        <h1>Button Appearance</h1>
+        <p class="subtitle">Complete button variant and size reference. Shows primary, secondary, and destructive variants in all sizes with optional icons.</p>
+
+        <!-- Variants Section -->
+        <section class="section">
+            <h2>Variants</h2>
+
+            <div class="subsection">
+                <h3>Primary</h3>
+                <p>Main call-to-action button. Use for primary user actions.</p>
+                <div class="button-grid">
+                    <div class="button-showcase">
+                        <div class="button-label">Small</div>
+                        <labs-button variant="primary" size="small">Primary</labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Medium</div>
+                        <labs-button variant="primary" size="medium">Primary</labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Large</div>
+                        <labs-button variant="primary" size="large">Primary</labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Disabled</div>
+                        <labs-button variant="primary" disabled>Disabled</labs-button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>Secondary</h3>
+                <p>Alternative action button. Use for secondary or less critical actions.</p>
+                <div class="button-grid">
+                    <div class="button-showcase">
+                        <div class="button-label">Small</div>
+                        <labs-button variant="secondary" size="small">Secondary</labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Medium</div>
+                        <labs-button variant="secondary" size="medium">Secondary</labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Large</div>
+                        <labs-button variant="secondary" size="large">Secondary</labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Disabled</div>
+                        <labs-button variant="secondary" disabled>Disabled</labs-button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>Destructive</h3>
+                <p>Alert or destructive action button. Use for delete, remove, or critical actions.</p>
+                <div class="button-grid">
+                    <div class="button-showcase">
+                        <div class="button-label">Small</div>
+                        <labs-button variant="destructive" size="small">Delete</labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Medium</div>
+                        <labs-button variant="destructive" size="medium">Delete</labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Large</div>
+                        <labs-button variant="destructive" size="large">Delete</labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Disabled</div>
+                        <labs-button variant="destructive" disabled>Delete</labs-button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- With Icons Section -->
+        <section class="section">
+            <h2>With Icons</h2>
+
+            <div class="subsection">
+                <h3>Icon Left</h3>
+                <p>Icon placed to the left of button text.</p>
+                <div class="button-grid">
+                    <div class="button-showcase">
+                        <div class="button-label">Primary</div>
+                        <labs-button variant="primary">
+                            <labs-icon name="add" slot="icon-left"></labs-icon>
+                            Add Item
+                        </labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Secondary</div>
+                        <labs-button variant="secondary">
+                            <labs-icon name="edit" slot="icon-left"></labs-icon>
+                            Edit
+                        </labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Destructive</div>
+                        <labs-button variant="destructive">
+                            <labs-icon name="delete" slot="icon-left"></labs-icon>
+                            Remove
+                        </labs-button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>Icon Right</h3>
+                <p>Icon placed to the right of button text.</p>
+                <div class="button-grid">
+                    <div class="button-showcase">
+                        <div class="button-label">Primary</div>
+                        <labs-button variant="primary">
+                            Download
+                            <labs-icon name="download" slot="icon-right"></labs-icon>
+                        </labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Secondary</div>
+                        <labs-button variant="secondary">
+                            Next
+                            <labs-icon name="keyboard_arrow_down" slot="icon-right"></labs-icon>
+                        </labs-button>
+                    </div>
+                    <div class="button-showcase">
+                        <div class="button-label">Icon Only</div>
+                        <labs-button variant="secondary" aria-label="Close">
+                            <labs-icon name="close" slot="icon-left"></labs-icon>
+                        </labs-button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Guide Section -->
+        <section class="section">
+            <h2>Usage Guide</h2>
+
+            <div class="guide">
+                <div class="guide-item">
+                    <strong>Use Primary For</strong>
+                    <p>Main user actions like Save, Submit, Create, Continue. Only one primary button per screen when possible.</p>
+                </div>
+                <div class="guide-item">
+                    <strong>Use Secondary For</strong>
+                    <p>Alternate actions, cancellation, or less important actions like Cancel, Skip, Learn More.</p>
+                </div>
+                <div class="guide-item">
+                    <strong>Use Destructive For</strong>
+                    <p>Irreversible or critical actions like Delete, Remove, Close Account. Use sparingly.</p>
+                </div>
+                <div class="guide-item">
+                    <strong>Size Selection</strong>
+                    <p>Large for page-level actions, Medium for component-level actions, Small for compact contexts like tables.</p>
+                </div>
+                <div class="guide-item">
+                    <strong>Icons with Buttons</strong>
+                    <p>Icons clarify intent and improve scannability. Icon-only buttons must have aria-label for accessibility.</p>
+                </div>
+                <div class="guide-item">
+                    <strong>Disabled State</strong>
+                    <p>Use when action is unavailable. Disabled buttons should not show tooltips or hover states.</p>
+                </div>
+            </div>
+
+            <div class="preview" style="margin-top: 2rem;">
+                <h3>Code Example</h3>
+                <p>Basic button with primary variant and icon:</p>
+                <div class="code-example">
+                    <code>&lt;labs-button variant="primary" size="medium"&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-icon name="add" slot="icon-left"&gt;&lt;/labs-icon&gt;<br>
+                    &nbsp;&nbsp;Create<br>
+                    &lt;/labs-button&gt;</code>
+                </div>
+                <p style="margin-top: 1rem;">Disabled button:</p>
+                <div class="code-example">
+                    <code>&lt;labs-button variant="primary" disabled&gt;<br>
+                    &nbsp;&nbsp;Save<br>
+                    &lt;/labs-button&gt;</code>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Theme Controls -->
+    <div class="floating-toolbar">
+        <div>
+            <label for="theme-select">Theme</label>
+            <select id="theme-select">
+                <option value="vanilla">Vanilla</option>
+                <option value="blueberry">Blueberry</option>
+                <option value="cherry">Cherry</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="mode-select">Appearance</label>
+            <select id="mode-select">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Theme Manager -->
+    <script type="module">
+        const themeSelect = document.getElementById('theme-select');
+        const modeSelect = document.getElementById('mode-select');
+        const root = document.documentElement;
+
+        // Detect if page is in iframe and hide toolbar
+        if (window.self !== window.top) {
+            root.classList.add('in-iframe');
+        }
+
+        // Load saved preferences
+        const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
+        const savedAppearance = localStorage.getItem('smoothie-appearance') || 'light';
+
+        themeSelect.value = savedTheme;
+        modeSelect.value = savedAppearance;
+
+        // Apply on load
+        root.classList.add(`theme-${savedTheme}`, `appearance-${savedAppearance}`);
+
+        // Handle theme changes
+        themeSelect.addEventListener('change', (e) => {
+            const newTheme = e.target.value;
+            root.classList.remove(...Array.from(root.classList).filter(c => c.startsWith('theme-')));
+            root.classList.add(`theme-${newTheme}`);
+            localStorage.setItem('smoothie-theme', newTheme);
+        });
+
+        // Handle appearance changes
+        modeSelect.addEventListener('change', (e) => {
+            const newAppearance = e.target.value;
+            root.classList.remove(...Array.from(root.classList).filter(c => c.startsWith('appearance-')));
+            root.classList.add(`appearance-${newAppearance}`);
+            localStorage.setItem('smoothie-appearance', newAppearance);
+        });
+    </script>
+</body>
+
+</html>
