@@ -13,7 +13,7 @@
 import { setCachedProducts } from './cache.js';
 import { sendAlert } from '../notifications.js';
 
-export const vercelCronSchedule = '0 0 * * *'; // Daily at 00:00 UTC
+export const vercelCronSchedule = '* * * * *'; // TESTING: Every minute (change back to '0 0 * * *' for daily 00:00 UTC)
 
 export default async function handler(req, res) {
     try {
