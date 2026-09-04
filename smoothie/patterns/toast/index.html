@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toast Notifications - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-toast.js';
+    </script>
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        /* Only hide overflow when embedded in iframe */
+        html.in-iframe body {
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-outline, #ddd);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .preview {
+            padding: 1.5rem;
+            background: var(--color-surface, #f5f5f5);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 200px;
+        }
+
+        .preview h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .preview p {
+            font-size: 0.875rem;
+            color: var(--color-on-surface-variant, #666);
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+
+        .preview labs-button {
+            align-self: flex-start;
+        }
+
+        .code-example {
+            background: var(--color-background, #fff);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            overflow-x: auto;
+        }
+
+        .code-example code {
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: var(--color-on-surface, #333);
+            line-height: 1.5;
+        }
+
+        .note {
+            background: var(--color-primary-10, rgba(100, 100, 200, 0.1));
+            border-left: 3px solid var(--color-primary, #6464c8);
+            padding: 1rem;
+            margin-top: 2rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--color-on-surface, #333);
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        /* Hide toolbar when page is embedded in iframe */
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        html.in-iframe h1 {
+            display: none !important;
+        }
+
+        html.in-iframe .subtitle {
+            display: none !important;
+        }
+
+        .floating-toolbar label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--color-on-surface, #333);
+        }
+
+        .floating-toolbar select {
+            padding: 0.5rem;
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 4px;
+            background: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            color: var(--color-primary, #6464c8);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="../../" class="back-link">← Back to Design System</a>
+
+        <h1>Toast Notifications</h1>
+        <p class="subtitle">Non-blocking feedback messages that appear temporarily and auto-dismiss. Use toasts for notifications, confirmations, and reversible actions (undo).</p>
+
+        <!-- Basic Toasts Section -->
+        <section class="section">
+            <h2>Basic Toasts</h2>
+            <div class="grid">
+                <div class="preview">
+                    <h3>Success Message</h3>
+                    <p>Confirm a completed action with automatic dismiss.</p>
+                    <labs-button id="toast-success" variant="primary">Show Success Toast</labs-button>
+                    <div class="code-example">
+                        <code>toast.show('File saved')</code>
+                    </div>
+                </div>
+
+                <div class="preview">
+                    <h3>Error Message</h3>
+                    <p>Alert the user to an error that occurred.</p>
+                    <labs-button id="toast-error" variant="destructive">Show Error Toast</labs-button>
+                    <div class="code-example">
+                        <code>toast.show('Failed to load')</code>
+                    </div>
+                </div>
+
+                <div class="preview">
+                    <h3>Info Message</h3>
+                    <p>Provide helpful information or context.</p>
+                    <labs-button id="toast-info" variant="primary">Show Info Toast</labs-button>
+                    <div class="code-example">
+                        <code>toast.show('Loading...')</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Action Toasts Section -->
+        <section class="section">
+            <h2>Toasts with Actions</h2>
+            <div class="grid">
+                <div class="preview">
+                    <h3>Undo Action</h3>
+                    <p>Let users reverse their last action with an undo button.</p>
+                    <labs-button id="toast-undo" variant="primary">Show Undo Toast</labs-button>
+                    <div class="code-example">
+                        <code>toast.show('Item archived', {<br>  actionText: 'Undo',<br>  duration: 5000<br>})</code>
+                    </div>
+                </div>
+
+                <div class="preview">
+                    <h3>Confirm Action</h3>
+                    <p>Provide an action button for confirmation or next step.</p>
+                    <labs-button id="toast-confirm" variant="primary">Show Confirm Toast</labs-button>
+                    <div class="code-example">
+                        <code>toast.show('New message', {<br>  actionText: 'View',<br>  variant: 'primary'<br>})</code>
+                    </div>
+                </div>
+
+                <div class="preview">
+                    <h3>Destructive Action</h3>
+                    <p>Use for critical actions that need clear visual hierarchy.</p>
+                    <labs-button id="toast-destructive" variant="destructive">Show Delete Toast</labs-button>
+                    <div class="code-example">
+                        <code>toast.show('Delete account?', {<br>  actionText: 'Confirm',<br>  variant: 'destructive'<br>})</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Patterns Section -->
+        <section class="section">
+            <h2>Usage Patterns</h2>
+            <div class="preview">
+                <h3>When to Use Toasts</h3>
+                <p>✓ Non-blocking notifications<br>
+                   ✓ Temporary feedback (auto-dismisses)<br>
+                   ✓ Reversible actions (with Undo)<br>
+                   ✓ Success/error confirmations<br>
+                   ✓ Brief messages (avoid long text)</p>
+                <h3 style="margin-top: 1.5rem;">When NOT to Use Toasts</h3>
+                <p>✗ Critical alerts that need user confirmation<br>
+                   ✗ Important information that shouldn't be missed<br>
+                   ✗ Long-form content or instructions<br>
+                   ✗ When accessibility feedback is essential</p>
+                <div class="note">
+                    <strong>Best Practice:</strong> Toasts work best for reversible actions like archive, delete, or undo. Avoid using them for critical information users must remember.
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Theme Controls -->
+    <div class="floating-toolbar">
+        <div>
+            <label for="theme-select">Theme</label>
+            <select id="theme-select">
+                <option value="vanilla">Vanilla</option>
+                <option value="blueberry">Blueberry</option>
+                <option value="cherry">Cherry</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="mode-select">Appearance</label>
+            <select id="mode-select">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Import Components & Theme Logic -->
+    <script type="module">
+        // Theme Manager
+        const themeSelect = document.getElementById('theme-select');
+        const modeSelect = document.getElementById('mode-select');
+        const root = document.documentElement;
+
+        // Detect if page is in iframe and hide toolbar
+        if (window.self !== window.top) {
+            root.classList.add('in-iframe');
+        }
+
+        // Load saved preferences
+        const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
+        const savedAppearance = localStorage.getItem('smoothie-appearance') || 'light';
+
+        themeSelect.value = savedTheme;
+        modeSelect.value = savedAppearance;
+
+        // Apply on load - use CSS classes that match flavors.css selectors
+        root.classList.add(`theme-${savedTheme}`, `appearance-${savedAppearance}`);
+
+        // Handle theme changes
+        themeSelect.addEventListener('change', (e) => {
+            const newTheme = e.target.value;
+            root.classList.remove(...Array.from(root.classList).filter(c => c.startsWith('theme-')));
+            root.classList.add(`theme-${newTheme}`);
+            localStorage.setItem('smoothie-theme', newTheme);
+        });
+
+        // Handle appearance changes
+        modeSelect.addEventListener('change', (e) => {
+            const newAppearance = e.target.value;
+            root.classList.remove(...Array.from(root.classList).filter(c => c.startsWith('appearance-')));
+            root.classList.add(`appearance-${newAppearance}`);
+            localStorage.setItem('smoothie-appearance', newAppearance);
+        });
+
+        // Toast Demo Functions
+        function createToast(message, options = {}) {
+            let toast = document.querySelector('labs-toast');
+            if (!toast) {
+                toast = document.createElement('labs-toast');
+                document.body.appendChild(toast);
+            }
+            toast.show(message, options);
+            return toast;
+        }
+
+        // Success Toast
+        document.getElementById('toast-success').addEventListener('click', () => {
+            createToast('✓ File saved successfully', { duration: 3000 });
+        });
+
+        // Error Toast
+        document.getElementById('toast-error').addEventListener('click', () => {
+            createToast('✗ Failed to load file', { duration: 3000 });
+        });
+
+        // Info Toast
+        document.getElementById('toast-info').addEventListener('click', () => {
+            createToast('Loading 5 files...', { duration: 3000 });
+        });
+
+        // Undo Toast
+        document.getElementById('toast-undo').addEventListener('click', () => {
+            const toast = createToast('Item moved to archive', {
+                actionText: 'Undo',
+                duration: 5000
+            });
+            const onAction = () => {
+                toast.removeEventListener('action', onAction);
+                createToast('✓ Item restored', { duration: 2000 });
+            };
+            toast.addEventListener('action', onAction);
+        });
+
+        // Confirm Toast
+        document.getElementById('toast-confirm').addEventListener('click', () => {
+            const toast = createToast('You have a new message from Team', {
+                actionText: 'View',
+                variant: 'primary',
+                duration: 5000
+            });
+            const onAction = () => {
+                toast.removeEventListener('action', onAction);
+                createToast('Opening message...', { duration: 2000 });
+            };
+            toast.addEventListener('action', onAction);
+        });
+
+        // Destructive Toast
+        document.getElementById('toast-destructive').addEventListener('click', () => {
+            const toast = createToast('Delete this account permanently?', {
+                actionText: 'Confirm Delete',
+                variant: 'destructive',
+                duration: 6000
+            });
+            const onAction = () => {
+                toast.removeEventListener('action', onAction);
+                createToast('✓ Account deleted', { duration: 2000 });
+            };
+            toast.addEventListener('action', onAction);
+        });
+    </script>
+</body>
+
+</html>
