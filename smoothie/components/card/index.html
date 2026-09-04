@@ -169,65 +169,166 @@
 
 <body>
     <div class="container">
-        <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to Home</labs-button>
+        <a href="../../" class="back-link">← Back to Design System</a>
 
-        <h1 class="sr-only">Card Component</h1>
-        <p class="subtitle sr-only">Flexible card container with header, description, input, and actions</p>
+        <h1>Card Component</h1>
+        <p class="subtitle">Flexible container with slots for header, description, input, and actions</p>
 
+        <!-- Basic Card -->
         <div class="section">
             <h2>Basic Card</h2>
             <div style="display: flex; justify-content: center; padding: 1rem 0;">
                 <labs-card>
                     <span slot="header">Card Title</span>
-                    <button slot="close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-on-surface); padding: 0;">×</button>
-                    <span slot="description">This is a description for the canonical card.</span>
-                    <input slot="input" type="text" placeholder="Type here..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--color-outline); border-radius: 4px; background: var(--color-background); color: var(--color-on-background); font-size: 1rem;">
-                    <div slot="actions" style="display: flex; gap: 0.75rem;">
-                        <labs-button variant="secondary">Cancel</labs-button>
-                        <labs-button variant="primary">Save</labs-button>
+                    <button slot="close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-on-surface); padding: 0; width: 32px; height: 32px;">×</button>
+                    <span slot="description">This is a description for the card. Cards are flexible containers that combine header, content, and actions.</span>
+                    <input slot="input" type="text" placeholder="Type here..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--color-outline); border-radius: 4px; background: var(--color-background); color: var(--color-on-background); font-size: 0.95rem;">
+                    <div slot="actions" style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                        <labs-button variant="secondary" size="small">Cancel</labs-button>
+                        <labs-button variant="primary" size="small">Save</labs-button>
                     </div>
                 </labs-card>
             </div>
         </div>
 
+        <!-- Slot Combinations -->
         <div class="section">
-            <h2>Card Variants</h2>
+            <h2>Slot Combinations</h2>
             <div class="grid">
                 <div class="preview-container">
                     <labs-card>
-                        <span slot="header">Simple</span>
-                        <span slot="description">A basic card with header and description only.</span>
+                        <span slot="header">Header Only</span>
+                    </labs-card>
+                    <label class="preview-label">Header Slot</label>
+                </div>
+                <div class="preview-container">
+                    <labs-card>
+                        <span slot="header">Title</span>
+                        <span slot="description">Description text appears below the header.</span>
                     </labs-card>
                     <label class="preview-label">Header + Description</label>
                 </div>
                 <div class="preview-container">
                     <labs-card>
+                        <span slot="header">Input Form</span>
+                        <input slot="input" type="text" placeholder="Name..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--color-outline); border-radius: 4px; background: var(--color-background); color: var(--color-on-background);">
+                    </labs-card>
+                    <label class="preview-label">Header + Input</label>
+                </div>
+                <div class="preview-container">
+                    <labs-card>
                         <span slot="header">With Actions</span>
-                        <span slot="description">Card with action buttons below.</span>
-                        <div slot="actions">
+                        <span slot="description">Action buttons for user interactions.</span>
+                        <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
                             <labs-button variant="primary" size="small">Confirm</labs-button>
                             <labs-button variant="secondary" size="small">Cancel</labs-button>
                         </div>
                     </labs-card>
-                    <label class="preview-label">With Actions</label>
+                    <label class="preview-label">Header + Description + Actions</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Close Button Patterns -->
+        <div class="section">
+            <h2>Close Button Patterns</h2>
+            <div class="grid">
+                <div class="preview-container">
+                    <labs-card>
+                        <span slot="header">Dismissible Card</span>
+                        <button slot="close" aria-label="Close" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--color-on-surface); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">×</button>
+                        <span slot="description">Card can be dismissed with close button.</span>
+                    </labs-card>
+                    <label class="preview-label">Text Close (×)</label>
                 </div>
                 <div class="preview-container">
                     <labs-card>
-                        <span slot="header">With Close</span>
-                        <button slot="close" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--color-on-surface);">×</button>
-                        <span slot="description">Card with close button in header.</span>
+                        <span slot="header">Icon Close</span>
+                        <labs-button slot="close" variant="icon" aria-label="Close" style="margin-left: 0.5rem;">
+                            <labs-icon name="close" slot="icon-left"></labs-icon>
+                        </labs-button>
+                        <span slot="description">Using icon button for close action.</span>
                     </labs-card>
-                    <label class="preview-label">With Close Button</label>
+                    <label class="preview-label">Icon Close</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-World Patterns -->
+        <div class="section">
+            <h2>Real-World Patterns</h2>
+            <div class="grid">
+                <div class="preview-container">
+                    <labs-card>
+                        <span slot="header">Settings</span>
+                        <labs-button slot="close" variant="icon" aria-label="Close">
+                            <labs-icon name="close" slot="icon-left"></labs-icon>
+                        </labs-button>
+                        <div slot="description" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" checked style="cursor: pointer;">
+                                <span>Dark Mode</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" checked style="cursor: pointer;">
+                                <span>Notifications</span>
+                            </label>
+                        </div>
+                    </labs-card>
+                    <label class="preview-label">Settings Card</label>
+                </div>
+                <div class="preview-container">
+                    <labs-card>
+                        <span slot="header">Confirmation Dialog</span>
+                        <span slot="description">Are you sure you want to delete this item? This action cannot be undone.</span>
+                        <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <labs-button variant="secondary" size="small">Cancel</labs-button>
+                            <labs-button variant="destructive" size="small">Delete</labs-button>
+                        </div>
+                    </labs-card>
+                    <label class="preview-label">Confirmation Dialog</label>
                 </div>
                 <div class="preview-container">
                     <labs-card variant="welcome">
-                        <span slot="header">Welcome!</span>
-                        <span slot="description">Get started with the design system.</span>
-                        <div slot="actions">
+                        <span slot="header">Welcome to Smoothie</span>
+                        <span slot="description">A comprehensive design system for building consistent user interfaces.</span>
+                        <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
+                            <labs-button variant="secondary" size="small">Learn More</labs-button>
                             <labs-button variant="primary" size="small">Get Started</labs-button>
                         </div>
                     </labs-card>
                     <label class="preview-label">Welcome Variant</label>
+                </div>
+                <div class="preview-container">
+                    <labs-card>
+                        <span slot="header">
+                            <labs-icon name="download" slot="icon-left" style="vertical-align: middle; margin-right: 0.5rem;"></labs-icon>
+                            Download Complete
+                        </span>
+                        <span slot="description">File "design-tokens.json" (245 KB) downloaded successfully.</span>
+                        <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <labs-button variant="secondary" size="small">Show in Folder</labs-button>
+                            <labs-button variant="primary" size="small">Done</labs-button>
+                        </div>
+                    </labs-card>
+                    <label class="preview-label">Status Card</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customization -->
+        <div class="section">
+            <h2>Slot Guide</h2>
+            <div class="preview-container" style="max-width: 100%;">
+                <div style="background: var(--color-surface, #f5f5f5); border: 1px solid var(--color-outline, #ddd); border-radius: 8px; padding: 1.5rem;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600;">Card Slots</h3>
+                    <ul style="margin: 0; padding-left: 1.5rem; line-height: 1.8;">
+                        <li><strong>header</strong> — Card title or heading (appears in top-left with flex layout)</li>
+                        <li><strong>close</strong> — Optional close button or icon (appears in top-right)</li>
+                        <li><strong>description</strong> — Text description or supporting content</li>
+                        <li><strong>input</strong> — Form input, text field, or custom input element</li>
+                        <li><strong>actions</strong> — Action buttons (footer area)</li>
+                    </ul>
                 </div>
             </div>
         </div>

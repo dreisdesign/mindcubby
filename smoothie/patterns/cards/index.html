@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Patterns - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-card.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+    </script>
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        html.in-iframe body {
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-outline, #ddd);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .pattern {
+            padding: 2rem;
+            background: var(--color-surface, #f5f5f5);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .pattern h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .pattern p {
+            font-size: 0.9rem;
+            color: var(--color-on-surface-variant, #666);
+            margin-bottom: 1.5rem;
+        }
+
+        .pattern-demo {
+            padding: 1.5rem;
+            background: var(--color-background, #fff);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card-row {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .pattern-code {
+            background: var(--color-background, #fff);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 6px;
+            padding: 1rem;
+            font-size: 0.75rem;
+            overflow-x: auto;
+        }
+
+        .pattern-code code {
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: var(--color-on-surface, #333);
+            line-height: 1.5;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        html.in-iframe h1 {
+            display: none !important;
+        }
+
+        html.in-iframe .subtitle {
+            display: none !important;
+        }
+
+        .floating-toolbar label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--color-on-surface, #333);
+        }
+
+        .floating-toolbar select {
+            padding: 0.5rem;
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 4px;
+            background: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            color: var(--color-primary, #6464c8);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .label {
+            font-size: 0.75rem;
+            color: var(--color-on-surface-variant, #999);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .card-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        labs-card {
+            flex: 1;
+            min-width: 280px;
+            max-width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="../../" class="back-link">← Back to Design System</a>
+
+        <h1>Card Patterns</h1>
+        <p class="subtitle">Real-world card layouts and compositions. Grid layouts, media cards, and card groups.</p>
+
+        <!-- Card Grid -->
+        <section class="section">
+            <h2>Card Grid</h2>
+
+            <div class="pattern">
+                <h3>Product Grid (3-Column)</h3>
+                <p>Common layout for displaying products, items, or content cards in a responsive grid.</p>
+                <div class="pattern-demo">
+                    <div class="card-grid">
+                        <labs-card>
+                            <span slot="header">Design Tokens</span>
+                            <span slot="description">Complete color, typography, and spacing system.</span>
+                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <labs-button variant="secondary" size="small">Learn</labs-button>
+                                <labs-button variant="primary" size="small">View</labs-button>
+                            </div>
+                        </labs-card>
+                        <labs-card>
+                            <span slot="header">Components</span>
+                            <span slot="description">Reusable UI building blocks with full documentation.</span>
+                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <labs-button variant="secondary" size="small">Learn</labs-button>
+                                <labs-button variant="primary" size="small">View</labs-button>
+                            </div>
+                        </labs-card>
+                        <labs-card>
+                            <span slot="header">Patterns</span>
+                            <span slot="description">Common UI patterns and compositional examples.</span>
+                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <labs-button variant="secondary" size="small">Learn</labs-button>
+                                <labs-button variant="primary" size="small">View</labs-button>
+                            </div>
+                        </labs-card>
+                    </div>
+                </div>
+                <div class="pattern-code">
+                    <code>&lt;div class="card-grid"&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-card&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;span slot="header"&gt;Title&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;span slot="description"&gt;Description&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;div slot="actions"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button ...&gt;&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+                    &nbsp;&nbsp;&lt;/labs-card&gt;<br>
+                    &lt;/div&gt;<br>
+                    <br>
+                    /* CSS */<br>
+                    .card-grid {<br>
+                    &nbsp;&nbsp;display: grid;<br>
+                    &nbsp;&nbsp;grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));<br>
+                    &nbsp;&nbsp;gap: 1.5rem;<br>
+                    }</code>
+                </div>
+            </div>
+        </section>
+
+        <!-- Card Rows/Horizontal -->
+        <section class="section">
+            <h2>Card Rows (Horizontal)</h2>
+
+            <div class="pattern">
+                <h3>Side-by-Side Cards</h3>
+                <p>Two or three cards in a horizontal row. Common for comparison, before/after, or related items.</p>
+                <div class="pattern-demo">
+                    <div class="card-row">
+                        <labs-card style="flex: 1;">
+                            <span slot="header">Option A</span>
+                            <span slot="description">Left-aligned layout with standard spacing and padding.</span>
+                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <labs-button variant="secondary" size="small">Select</labs-button>
+                            </div>
+                        </labs-card>
+                        <labs-card style="flex: 1;">
+                            <span slot="header">Option B</span>
+                            <span slot="description">Center-aligned layout with emphasis on content hierarchy.</span>
+                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <labs-button variant="primary" size="small">Select</labs-button>
+                            </div>
+                        </labs-card>
+                    </div>
+                </div>
+                <div class="pattern-code">
+                    <code>&lt;div class="card-row"&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-card style="flex: 1;"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;...<br>
+                    &nbsp;&nbsp;&lt;/labs-card&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-card style="flex: 1;"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;...<br>
+                    &nbsp;&nbsp;&lt;/labs-card&gt;<br>
+                    &lt;/div&gt;</code>
+                </div>
+            </div>
+
+            <div class="pattern">
+                <h3>Status Cards</h3>
+                <p>Inline cards showing related status or metrics. Often used in dashboards.</p>
+                <div class="pattern-demo">
+                    <div class="card-row">
+                        <labs-card>
+                            <span slot="header">● Running</span>
+                            <span slot="description">3 servers online</span>
+                        </labs-card>
+                        <labs-card>
+                            <span slot="header">○ Idle</span>
+                            <span slot="description">1 server offline</span>
+                        </labs-card>
+                        <labs-card>
+                            <span slot="header">⚠ Warning</span>
+                            <span slot="description">1 server under load</span>
+                        </labs-card>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dialog/Overlay Cards -->
+        <section class="section">
+            <h2>Dialog & Overlay Patterns</h2>
+
+            <div class="pattern">
+                <h3>Confirmation Dialog</h3>
+                <p>Card used as a modal dialog with high-priority actions.</p>
+                <div class="pattern-demo" style="display: flex; justify-content: center;">
+                    <labs-card style="max-width: 400px;">
+                        <span slot="header">Delete Item?</span>
+                        <labs-button slot="close" variant="icon" aria-label="Close">
+                            <labs-icon name="close" slot="icon-left"></labs-icon>
+                        </labs-button>
+                        <span slot="description">Are you sure you want to delete "Untitled Project"? This action cannot be undone.</span>
+                        <div slot="actions" style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                            <labs-button variant="secondary" size="small">Cancel</labs-button>
+                            <labs-button variant="destructive" size="small">Delete</labs-button>
+                        </div>
+                    </labs-card>
+                </div>
+                <div class="pattern-code">
+                    <code>&lt;labs-card style="max-width: 400px;"&gt;<br>
+                    &nbsp;&nbsp;&lt;span slot="header"&gt;Delete Item?&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button slot="close" variant="icon"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-icon name="close"&gt;&lt;/labs-icon&gt;<br>
+                    &nbsp;&nbsp;&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&lt;span slot="description"&gt;Confirmation text&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&lt;div slot="actions"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button variant="secondary"&gt;Cancel&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button variant="destructive"&gt;Delete&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&lt;/div&gt;<br>
+                    &lt;/labs-card&gt;</code>
+                </div>
+            </div>
+
+            <div class="pattern">
+                <h3>Welcome/Onboarding Card</h3>
+                <p>Full-width welcome card with centered content for onboarding flows.</p>
+                <div class="pattern-demo" style="display: flex; justify-content: center;">
+                    <labs-card variant="welcome" style="max-width: 500px;">
+                        <span slot="header">Welcome to 3D Printing</span>
+                        <span slot="description">Upload your designs, customize settings, and start printing. Let's get you set up with your first project.</span>
+                        <div slot="actions" style="display: flex; gap: 0.75rem; justify-content: center;">
+                            <labs-button variant="secondary" size="small">Learn More</labs-button>
+                            <labs-button variant="primary" size="small">Create Project</labs-button>
+                        </div>
+                    </labs-card>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stacked Cards -->
+        <section class="section">
+            <h2>Stacked Cards (List)</h2>
+
+            <div class="pattern">
+                <h3>Item List with Cards</h3>
+                <p>Vertical stack of similar cards. Common for task lists, inbox, activity feeds.</p>
+                <div class="pattern-demo">
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <labs-card>
+                            <span slot="header">Design System Review</span>
+                            <span slot="description">Completed components audit and pattern documentation.</span>
+                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: space-between;">
+                                <span style="font-size: 0.85rem; color: var(--color-on-surface-variant, #666);">2 days ago</span>
+                                <labs-button variant="secondary" size="small">View</labs-button>
+                            </div>
+                        </labs-card>
+                        <labs-card>
+                            <span slot="header">Button Patterns Added</span>
+                            <span slot="description">New pattern page showing button combinations and real-world usage.</span>
+                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: space-between;">
+                                <span style="font-size: 0.85rem; color: var(--color-on-surface-variant, #666);">1 week ago</span>
+                                <labs-button variant="secondary" size="small">View</labs-button>
+                            </div>
+                        </labs-card>
+                        <labs-card>
+                            <span slot="header">Component Library v3.0</span>
+                            <span slot="description">Released 15 new components with full theming support.</span>
+                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: space-between;">
+                                <span style="font-size: 0.85rem; color: var(--color-on-surface-variant, #666);">2 weeks ago</span>
+                                <labs-button variant="secondary" size="small">View</labs-button>
+                            </div>
+                        </labs-card>
+                    </div>
+                </div>
+                <div class="pattern-code">
+                    <code>&lt;div style="display: flex; flex-direction: column; gap: 1rem;"&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-card&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;span slot="header"&gt;Item 1&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;span slot="description"&gt;...&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;div slot="actions"&gt;...&lt;/div&gt;<br>
+                    &nbsp;&nbsp;&lt;/labs-card&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-card&gt;...&lt;/labs-card&gt;<br>
+                    &lt;/div&gt;</code>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Guidelines -->
+        <section class="section">
+            <h2>Pattern Guidelines</h2>
+            <div class="pattern">
+                <h3>Grid Layout (Products, Cards, Content)</h3>
+                <p>Use `grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))` for responsive multi-column cards. Gap depends on context: 1.5rem for spacious layouts, 1rem for compact.</p>
+            </div>
+            <div class="pattern">
+                <h3>Horizontal Row (Comparison, Status)</h3>
+                <p>Use `display: flex; gap: 1.5rem; flex-wrap: wrap;` for side-by-side cards. Add `flex: 1;` to cards for equal width distribution.</p>
+            </div>
+            <div class="pattern">
+                <h3>Stacked/List (Activity, Tasks, Items)</h3>
+                <p>Use `display: flex; flex-direction: column; gap: 1rem;` for vertical card stacks. Common in inboxes, task lists, and feeds.</p>
+            </div>
+            <div class="pattern">
+                <h3>Dialog/Modal (Confirmation, Onboarding)</h3>
+                <p>Wrap cards in a modal overlay (labs-overlay). Use `max-width: 400-500px` for focused dialogs. Center horizontally with `margin: 0 auto;`</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Theme Controls -->
+    <div class="floating-toolbar">
+        <div>
+            <label for="theme-select">Theme</label>
+            <select id="theme-select">
+                <option value="vanilla">Vanilla</option>
+                <option value="blueberry">Blueberry</option>
+                <option value="cherry">Cherry</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="mode-select">Appearance</label>
+            <select id="mode-select">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Theme Manager -->
+    <script type="module">
+        const themeSelect = document.getElementById('theme-select');
+        const modeSelect = document.getElementById('mode-select');
+        const root = document.documentElement;
+
+        // Detect if page is in iframe and hide toolbar
+        if (window.self !== window.top) {
+            root.classList.add('in-iframe');
+        }
+
+        // Load saved preferences
+        const savedTheme = localStorage.getItem('smoothie-theme') || 'vanilla';
+        const savedAppearance = localStorage.getItem('smoothie-appearance') || 'light';
+
+        themeSelect.value = savedTheme;
+        modeSelect.value = savedAppearance;
+
+        // Apply on load
+        root.classList.add(`theme-${savedTheme}`, `appearance-${savedAppearance}`);
+
+        // Handle theme changes
+        themeSelect.addEventListener('change', (e) => {
+            const newTheme = e.target.value;
+            root.classList.remove(...Array.from(root.classList).filter(c => c.startsWith('theme-')));
+            root.classList.add(`theme-${newTheme}`);
+            localStorage.setItem('smoothie-theme', newTheme);
+        });
+
+        // Handle appearance changes
+        modeSelect.addEventListener('change', (e) => {
+            const newAppearance = e.target.value;
+            root.classList.remove(...Array.from(root.classList).filter(c => c.startsWith('appearance-')));
+            root.classList.add(`appearance-${newAppearance}`);
+            localStorage.setItem('smoothie-appearance', newAppearance);
+        });
+    </script>
+</body>
+
+</html>
