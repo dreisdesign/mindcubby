@@ -18,6 +18,7 @@
     </script>
     <script type="module">
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
     </script>
     <style>
         .sr-only {
@@ -46,6 +47,10 @@
             line-height: 1.6;
             transition: background-color 0.3s, color 0.3s;
             min-height: 100vh;
+        }
+
+        /* Only hide overflow when embedded in iframe */
+        html.in-iframe body {
             overflow: hidden;
         }
 
@@ -317,9 +322,6 @@
 
     <!-- Import Components -->
     <script type="module">
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
-
         // Theme Manager
         const themeSelect = document.getElementById('theme-select');
         const modeSelect = document.getElementById('mode-select');
