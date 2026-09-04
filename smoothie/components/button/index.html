@@ -275,27 +275,53 @@
         </div>
 
         <div class="section">
-            <h2>Icon Variant</h2>
+            <h2>Icon Variant (Icon-Only)</h2>
             <div class="grid">
                 <div class="preview">
                     <labs-button variant="icon" aria-label="Settings">
                         <labs-icon name="settings" slot="icon-left"></labs-icon>
                     </labs-button>
-                    <label>Icon Button</label>
+                    <label>Icon Button (Primary)</label>
                 </div>
+                <div class="preview">
+                    <labs-button variant="icon" aria-label="Edit">
+                        <labs-icon name="edit" slot="icon-left"></labs-icon>
+                    </labs-button>
+                    <label>Icon Button (Secondary)</label>
+                </div>
+                <div class="preview">
+                    <labs-button variant="icon" aria-label="Delete">
+                        <labs-icon name="delete" slot="icon-left"></labs-icon>
+                    </labs-button>
+                    <label>Icon Button (Destructive)</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Icon + Text Patterns</h2>
+            <p style="color: var(--color-on-surface-variant, #666); margin-bottom: 1.5rem; font-size: 0.9rem;">Real-world button combinations with icons. See <strong>Button Patterns</strong> in the Patterns section for compositional examples.</p>
+            <div class="grid">
                 <div class="preview">
                     <labs-button variant="primary">
                         <labs-icon name="add" slot="icon-left"></labs-icon>
                         Add
                     </labs-button>
-                    <label>With Icon Left</label>
+                    <label>With Icon Left (Primary)</label>
                 </div>
                 <div class="preview">
                     <labs-button variant="secondary">
                         Download
                         <labs-icon name="download" slot="icon-right"></labs-icon>
                     </labs-button>
-                    <label>With Icon Right</label>
+                    <label>With Icon Right (Secondary)</label>
+                </div>
+                <div class="preview">
+                    <labs-button variant="destructive">
+                        <labs-icon name="delete" slot="icon-left"></labs-icon>
+                        Delete
+                    </labs-button>
+                    <label>With Icon Left (Destructive)</label>
                 </div>
             </div>
         </div>

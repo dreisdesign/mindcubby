@@ -68,10 +68,15 @@
 
         .tab-link {
             font-size: 0.875rem;
+            transition: all 0.2s ease;
         }
 
         .tab-link:hover {
             opacity: 0.8;
+        }
+
+        .tab-link.active {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .controls {
@@ -613,18 +618,38 @@
         });
 
         // Update active tab on scroll
-        window.addEventListener('scroll', () => {
+        function updateActiveTab() {
             const sections = document.querySelectorAll('section');
             const tabs = document.querySelectorAll('.tab-link');
+            const headerHeight = document.querySelector('header').offsetHeight;
 
             let currentSection = null;
+            let maxOverlap = 0;
+
+            // Find section with most visibility
             sections.forEach((section) => {
                 const rect = section.getBoundingClientRect();
-                if (rect.top < 200) {
+                const overlapStart = Math.max(0, rect.top);
+                const overlapEnd = Math.min(window.innerHeight, rect.bottom);
+                const overlap = Math.max(0, overlapEnd - overlapStart);
+
+                if (overlap > maxOverlap) {
+                    maxOverlap = overlap;
                     currentSection = section.id;
                 }
             });
 
+            // If no section is visible, use the first one below viewport
+            if (!currentSection) {
+                sections.forEach((section) => {
+                    const rect = section.getBoundingClientRect();
+                    if (rect.top < window.innerHeight && !currentSection) {
+                        currentSection = section.id;
+                    }
+                });
+            }
+
+            // Update all tabs
             tabs.forEach((tab) => {
                 const tabId = tab.getAttribute('data-tab');
                 if (tabId === currentSection) {
@@ -635,7 +660,11 @@
                     tab.classList.remove('active');
                 }
             });
-        });
+        }
+
+        window.addEventListener('scroll', updateActiveTab, { passive: true });
+        // Call once on load to set initial state
+        updateActiveTab();
     </script>
 </body>
 
