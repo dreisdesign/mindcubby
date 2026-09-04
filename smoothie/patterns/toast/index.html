@@ -289,16 +289,16 @@
             <h2>Usage Patterns</h2>
             <div class="preview">
                 <h3>When to Use Toasts</h3>
-                <p>✓ Non-blocking notifications<br>
-                   ✓ Temporary feedback (auto-dismisses)<br>
-                   ✓ Reversible actions (with Undo)<br>
-                   ✓ Success/error confirmations<br>
-                   ✓ Brief messages (avoid long text)</p>
+                <p>• Non-blocking notifications<br>
+                   • Temporary feedback (auto-dismisses)<br>
+                   • Reversible actions (with Undo)<br>
+                   • Success/error confirmations<br>
+                   • Brief messages (avoid long text)</p>
                 <h3 style="margin-top: 1.5rem;">When NOT to Use Toasts</h3>
-                <p>✗ Critical alerts that need user confirmation<br>
-                   ✗ Important information that shouldn't be missed<br>
-                   ✗ Long-form content or instructions<br>
-                   ✗ When accessibility feedback is essential</p>
+                <p>• Critical alerts that need user confirmation<br>
+                   • Important information that shouldn't be missed<br>
+                   • Long-form content or instructions<br>
+                   • When accessibility feedback is essential</p>
                 <div class="note">
                     <strong>Best Practice:</strong> Toasts work best for reversible actions like archive, delete, or undo. Avoid using them for critical information users must remember.
                 </div>
@@ -377,12 +377,12 @@
 
         // Success Toast
         document.getElementById('toast-success').addEventListener('click', () => {
-            createToast('✓ File saved successfully', { duration: 3000 });
+            createToast('File saved successfully', { duration: 3000 });
         });
 
         // Error Toast
         document.getElementById('toast-error').addEventListener('click', () => {
-            createToast('✗ Failed to load file', { duration: 3000 });
+            createToast('Failed to load file', { duration: 3000 });
         });
 
         // Info Toast
@@ -398,7 +398,7 @@
             });
             const onAction = () => {
                 toast.removeEventListener('action', onAction);
-                createToast('✓ Item restored', { duration: 2000 });
+                createToast('Item restored', { duration: 2000 });
             };
             toast.addEventListener('action', onAction);
         });
@@ -426,7 +426,7 @@
             });
             const onAction = () => {
                 toast.removeEventListener('action', onAction);
-                createToast('✓ Account deleted', { duration: 2000 });
+                createToast('Account deleted', { duration: 2000 });
             };
             toast.addEventListener('action', onAction);
         });
