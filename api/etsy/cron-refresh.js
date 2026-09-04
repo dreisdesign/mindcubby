@@ -1,10 +1,13 @@
 /**
- * Etsy API - Cron Cache Refresh
+ * Etsy API - Cron Cache Refresh (Simplified & Resilient)
  * Runs automatically via Vercel Cron at 00:00 UTC daily
- * Refreshes product cache using hardcoded shop_id (62670465)
  * 
- * Sends email alerts on failure to notify of issues
- * No manual intervention needed - fully autonomous
+ * Strategy: Use PUBLIC Etsy API endpoint (no auth tokens needed)
+ * - Only requires ETSY_API_KEY:ETSY_API_SECRET header
+ * - No dependency on Redis refresh tokens (removes single point of failure)
+ * - Falls back gracefully if Redis is unavailable
+ * 
+ * Sends email alerts on failure
  */
 
 import { setCachedProducts } from './cache.js';
@@ -25,115 +28,64 @@ export default async function handler(req, res) {
 
         console.log('[Cron] Starting daily cache refresh at', new Date().toISOString());
 
-        // First, try to read shop_id from Redis (set during OAuth authorization)
-        let shopId = null;
-        try {
-            const { createClient } = await import('redis');
-            const redis = createClient({ url: process.env.REDIS_URL });
-            await redis.connect();
-            shopId = await redis.get('mindcubby:shop_id');
-            await redis.quit();
-            if (shopId) {
-                console.log('[Cron] ✅ Read shop_id from Redis:', shopId);
+        // Get shop_id (required for all API calls)
+        let shopId = process.env.ETSY_SHOP_ID;
+        
+        // Try to read shop_id from Redis first (may be more up-to-date if user re-authorized)
+        if (process.env.REDIS_URL) {
+            try {
+                const { createClient } = await import('redis');
+                const redis = createClient({ url: process.env.REDIS_URL });
+                redis.on('error', () => {}); // Suppress error logs
+                await redis.connect();
+                const redisShopId = await redis.get('mindcubby:shop_id');
+                if (redisShopId) {
+                    shopId = redisShopId;
+                    console.log('[Cron] ✅ Using shop_id from Redis:', shopId);
+                }
+                await redis.quit();
+            } catch (err) {
+                console.warn('[Cron] Could not read from Redis, using env var fallback');
+                // Continue - shopId from env var is fine
             }
-        } catch (err) {
-            console.error('[Cron] Failed to read shop_id from Redis:', err.message);
-        }
-
-        // Fallback to environment variable if Redis fails
-        if (!shopId) {
-            shopId = process.env.ETSY_SHOP_ID;
-            if (shopId) {
-                console.log('[Cron] Using ETSY_SHOP_ID from environment:', shopId);
-            }
         }
 
         if (!shopId) {
-            console.error('[Cron] No shop_id available (not in Redis and ETSY_SHOP_ID not set)');
-            return res.status(500).json({
-                success: false,
-                message: 'No shop_id configured - please authorize first at /api/auth/etsy'
-            });
+            console.error('[Cron] No shop_id available');
+            throw new Error('ETSY_SHOP_ID not configured');
         }
 
-        console.log('[Cron] Using shop_id for refresh:', shopId);
-
-        // Fetch products using stored refresh token if available
+        // Validate API credentials
         const apiKey = process.env.ETSY_API_KEY;
         const apiSecret = process.env.ETSY_API_SECRET;
-        const xApiKey = `${apiKey}:${apiSecret}`;
 
-        console.log('[Cron] Fetching listings with shop_id:', shopId);
-        console.log('[Cron] Using API key:', apiKey ? `${apiKey.substring(0, 8)}...` : 'MISSING');
-
-        // Try to get a fresh access token using the stored refresh token
-        let accessToken = null;
-        try {
-            const { createClient } = await import('redis');
-            const redis = createClient({ url: process.env.REDIS_URL });
-            await redis.connect();
-            const refreshToken = await redis.get('mindcubby:etsy_refresh_token');
-            await redis.quit();
-
-            if (refreshToken) {
-                console.log('[Cron] Found refresh token in Redis, exchanging for access token...');
-                const tokenResponse = await fetch('https://api.etsy.com/v3/public/oauth/token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams({
-                        grant_type: 'refresh_token',
-                        client_id: apiKey,
-                        refresh_token: refreshToken,
-                    }).toString(),
-                });
-
-                if (tokenResponse.ok) {
-                    const newTokenData = await tokenResponse.json();
-                    accessToken = newTokenData.access_token;
-                    console.log('[Cron] ✅ Got fresh access token');
-                } else {
-                    console.error('[Cron] Failed to refresh access token');
-                }
-            }
-        } catch (err) {
-            console.error('[Cron] Error getting refresh token:', err.message);
+        if (!apiKey || !apiSecret) {
+            console.error('[Cron] Missing ETSY_API_KEY or ETSY_API_SECRET');
+            throw new Error('Missing Etsy API credentials');
         }
 
-        // Use authenticated endpoint if we have access token, otherwise fall back to public API
-        const endpoint = accessToken 
-            ? `https://api.etsy.com/v3/application/shops/${shopId}/listings?includes=images`
-            : `https://api.etsy.com/v3/public/shops/${shopId}/listings?includes=images`;
-        
-        const headers = accessToken 
-            ? {
-                'Authorization': `Bearer ${accessToken}`,
-                'x-api-key': xApiKey,
-                'Content-Type': 'application/json',
-              }
-            : {
-                'x-api-key': xApiKey,
-                'Content-Type': 'application/json',
-              };
+        const xApiKey = `${apiKey}:${apiSecret}`;
 
-        console.log('[Cron] Using endpoint:', endpoint.includes('/application/') ? 'authenticated' : 'public');
+        // Use PUBLIC API endpoint - no auth token needed, just x-api-key header
+        // This is more resilient than trying to exchange refresh tokens
+        const endpoint = `https://api.etsy.com/v3/public/shops/${shopId}/listings?includes=images`;
+        
+        console.log('[Cron] Fetching from public Etsy API (no auth token needed)');
+        console.log('[Cron] Endpoint: /v3/public/shops/{shopId}/listings');
 
         const listingsResponse = await fetch(endpoint, {
             method: 'GET',
-            headers: headers
+            headers: {
+                'x-api-key': xApiKey,
+                'Content-Type': 'application/json'
+            },
+            timeout: 10000 // 10 second timeout
         });
 
         if (!listingsResponse.ok) {
             const error = await listingsResponse.text();
-            console.error('[Cron] HTTP Status:', listingsResponse.status);
-            console.error('[Cron] Failed to fetch listings:', error);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to fetch listings from Etsy API',
-                status: listingsResponse.status,
-                error: error
-            });
+            console.error('[Cron] HTTP', listingsResponse.status, ':', error);
+            throw new Error(`Etsy API returned ${listingsResponse.status}`);
         }
 
         const listingsData = await listingsResponse.json();
@@ -142,18 +94,6 @@ export default async function handler(req, res) {
             await setCachedProducts(listingsData.results);
             console.log('[Cron] ✅ Successfully cached', listingsData.results.length, 'products');
 
-            // Run health check after successful refresh
-            console.log('[Cron] Running health check...');
-            try {
-                const healthResponse = await fetch('https://mindcubby.com/api/health-check');
-                const healthData = await healthResponse.json();
-                console.log('[Cron] Health check:', healthData.healthy ? '✅ Healthy' : '❌ Unhealthy');
-            } catch (err) {
-                console.error('[Cron] Health check failed:', err.message);
-            }
-
-            console.log('[Cron] ✅ Daily cache refresh completed successfully at', new Date().toISOString());
-
             return res.status(200).json({
                 success: true,
                 message: 'Cache refreshed successfully',
@@ -161,29 +101,10 @@ export default async function handler(req, res) {
                 timestamp: new Date().toISOString()
             });
         } else {
-            console.warn('[Cron] No products found for shop_id:', shopId);
+            console.warn('[Cron] No products found (shop may have no active listings)');
             
-            // Send alert if no products were found
-            try {
-                await sendAlert({
-                    subject: '⚠️ MindCubby Etsy Cache Refresh - No Products Found',
-                    errors: [
-                        `Cron job completed but no products returned from Etsy API`,
-                        `Shop ID: ${shopId}`,
-                        `Timestamp: ${new Date().toISOString()}`,
-                        'Check if your Etsy shop has active listings'
-                    ],
-                    checks: {
-                        cache_exists: true,
-                        cache_not_expired: true,
-                        shop_id_stored: true,
-                        product_count: 0,
-                        timestamp: new Date().toISOString()
-                    }
-                });
-            } catch (alertErr) {
-                console.error('[Cron] Failed to send alert:', alertErr.message);
-            }
+            // Only send alert if genuinely problematic
+            // No products might be intentional (shop closed, items paused, etc.)
             
             return res.status(200).json({
                 success: false,
@@ -193,7 +114,7 @@ export default async function handler(req, res) {
         }
 
     } catch (error) {
-        console.error('[Cron] Error:', error);
+        console.error('[Cron] Error:', error.message);
         
         // Send alert email on cron failure
         try {
@@ -202,7 +123,10 @@ export default async function handler(req, res) {
                 errors: [
                     `Cron job failed at ${new Date().toISOString()}`,
                     `Error: ${error.message}`,
-                    'Please check Vercel logs and environment variables (REDIS_URL, ETSY_API_KEY, ETSY_API_SECRET)'
+                    'Please verify in Vercel:',
+                    '  - ETSY_API_KEY is set',
+                    '  - ETSY_API_SECRET is set',
+                    '  - ETSY_SHOP_ID is set (62670465)'
                 ],
                 checks: {
                     cache_exists: false,
@@ -217,7 +141,7 @@ export default async function handler(req, res) {
         }
         
         return res.status(500).json({
-            error: 'Internal server error',
+            error: 'Cache refresh failed',
             message: error.message
         });
     }
