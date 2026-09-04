@@ -75,10 +75,6 @@
             opacity: 0.8;
         }
 
-        .tab-link.active {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
         .controls {
             display: flex;
             gap: 1rem;
@@ -131,10 +127,18 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         }
 
+        .component-header {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            border-bottom: 2px solid var(--color-outline, #ddd);
+        }
+
         .component-preview {
             flex: 1;
             background: var(--color-background, #fff);
-            border-bottom: 2px solid var(--color-outline, #ddd);
         }
 
         .component-preview iframe {
@@ -275,10 +279,7 @@
             <h2 class="sr-only">0. Design Tokens</h2>
             <div class="grid">
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./tokens/colors/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Colors</h1>
                             <p class="component-subtitle">All color palettes and semantic colors for the Smoothie Design
@@ -288,13 +289,13 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./tokens/colors/"></iframe>
+                    </div>
                 </div>
 
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./tokens/typography/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Typography</h1>
                             <p class="component-subtitle">Font sizes and typography scales for the Smoothie Design
@@ -304,13 +305,13 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./tokens/typography/"></iframe>
+                    </div>
                 </div>
 
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./tokens/spacing/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Spacing</h1>
                             <p class="component-subtitle">Spacing scale for the Smoothie Design System</p>
@@ -319,13 +320,13 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./tokens/spacing/"></iframe>
+                    </div>
                 </div>
 
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./tokens/radius/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Border Radius</h1>
                             <p class="component-subtitle">All border radius values for the Smoothie Design System</p>
@@ -333,6 +334,9 @@
                         <a href="./tokens/radius/" class="component-link">
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
+                    </div>
+                    <div class="component-preview">
+                        <iframe src="./tokens/radius/"></iframe>
                     </div>
                 </div>
             </div>
@@ -344,10 +348,7 @@
             <div class="grid">
                 <!-- Container -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./foundations/container/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Container</h1>
                             <p class="component-subtitle">Responsive width container with desktop and mobile padding</p>
@@ -356,14 +357,14 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./foundations/container/"></iframe>
+                    </div>
                 </div>
 
                 <!-- Theme Toggle (Organism) -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./foundations/theme-toggle/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Theme Toggle</h1>
                             <p class="component-subtitle">Organism component: Smart theme/mode switcher with
@@ -373,14 +374,14 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./foundations/theme-toggle/"></iframe>
+                    </div>
                 </div>
 
                 <!-- Icons -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./foundations/icons/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Icons</h1>
                             <p class="component-subtitle">Complete icon set (66 icons) for the Smoothie Design System
@@ -389,6 +390,9 @@
                         <a href="./foundations/icons/" class="component-link">
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
+                    </div>
+                    <div class="component-preview">
+                        <iframe src="./foundations/icons/"></iframe>
                     </div>
                 </div>
             </div>
@@ -400,10 +404,7 @@
             <div class="grid">
                 <!-- Button -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./components/button/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Button</h1>
                             <p class="component-subtitle">Versatile button with variants, sizes, and icon support</p>
@@ -412,14 +413,14 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./components/button/"></iframe>
+                    </div>
                 </div>
 
                 <!-- Card -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./components/card/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Card</h1>
                             <p class="component-subtitle">Flexible container with slots for header, description, input, and actions</p>
@@ -428,14 +429,14 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./components/card/"></iframe>
+                    </div>
                 </div>
 
                 <!-- Input -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./components/input/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Input</h1>
                             <p class="component-subtitle">Text input with multiple types and validation states</p>
@@ -444,14 +445,14 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./components/input/"></iframe>
+                    </div>
                 </div>
 
                 <!-- Checkbox -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./components/checkbox/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Checkbox</h1>
                             <p class="component-subtitle">Checkbox component with states and interactive examples</p>
@@ -460,14 +461,14 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./components/checkbox/"></iframe>
+                    </div>
                 </div>
 
                 <!-- Dropdown -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./components/dropdown/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Dropdown</h1>
                             <p class="component-subtitle">Dropdown menu with trigger and action items</p>
@@ -475,6 +476,9 @@
                         <a href="./components/dropdown/" class="component-link">
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
+                    </div>
+                    <div class="component-preview">
+                        <iframe src="./components/dropdown/"></iframe>
                     </div>
                 </div>
             </div>
@@ -486,10 +490,7 @@
             <div class="grid">
                 <!-- Button Appearance -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./patterns/buttons/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Button Appearance</h1>
                             <p class="component-subtitle">Complete variant and size reference with icons and states</p>
@@ -498,14 +499,14 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./patterns/buttons/"></iframe>
+                    </div>
                 </div>
 
                 <!-- Toast Notifications -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./patterns/toast/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Toast Notifications</h1>
                             <p class="component-subtitle">Non-blocking feedback messages with actions and auto-dismiss</p>
@@ -514,14 +515,14 @@
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
                     </div>
+                    <div class="component-preview">
+                        <iframe src="./patterns/toast/"></iframe>
+                    </div>
                 </div>
 
                 <!-- Card Patterns -->
                 <div class="component-card">
-                    <div class="component-preview">
-                        <iframe src="./patterns/cards/"></iframe>
-                    </div>
-                    <div class="component-footer">
+                    <div class="component-header">
                         <div class="component-info">
                             <h1 class="component-name">Card Patterns</h1>
                             <p class="component-subtitle">Grid layouts, horizontal rows, dialogs, and stacked card lists</p>
@@ -529,6 +530,9 @@
                         <a href="./patterns/cards/" class="component-link">
                             <labs-button variant="secondary" size="small">Open →</labs-button>
                         </a>
+                    </div>
+                    <div class="component-preview">
+                        <iframe src="./patterns/cards/"></iframe>
                     </div>
                 </div>
             </div>
