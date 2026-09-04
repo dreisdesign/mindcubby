@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Button Appearance - Smoothie Design System</title>
+    <title>Button Patterns - Smoothie Design System</title>
     <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
     <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
@@ -55,7 +55,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -85,112 +85,111 @@
             color: var(--color-on-background, #333);
         }
 
-        .subsection {
+        .pattern {
+            padding: 2rem;
+            background: var(--color-surface, #f5f5f5);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 8px;
             margin-bottom: 2rem;
         }
 
-        .subsection h3 {
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-            color: var(--color-on-surface, #666);
-        }
-
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            padding: 1.5rem;
-            background: var(--color-surface, #f5f5f5);
-            border-radius: 8px;
-            border: 1px solid var(--color-outline, #ddd);
-        }
-
-        .button-showcase {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            padding: 1rem;
-            background: var(--color-background, #fff);
-            border-radius: 6px;
-            border: 1px solid var(--color-outline-variant, #eee);
-        }
-
-        .button-showcase labs-button {
-            width: 100%;
-        }
-
-        .button-label {
-            font-size: 0.75rem;
-            color: var(--color-on-surface-variant, #999);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .preview {
-            padding: 1.5rem;
-            background: var(--color-surface, #f5f5f5);
-            border: 1px solid var(--color-outline, #ddd);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .preview h3 {
+        .pattern h3 {
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
             color: var(--color-on-background, #333);
         }
 
-        .preview p {
-            font-size: 0.875rem;
+        .pattern p {
+            font-size: 0.9rem;
             color: var(--color-on-surface-variant, #666);
+            margin-bottom: 1.5rem;
+        }
+
+        .pattern-demo {
+            padding: 1.5rem;
+            background: var(--color-background, #fff);
+            border: 1px solid var(--color-outline, #ddd);
+            border-radius: 6px;
             margin-bottom: 1rem;
         }
 
-        .code-example {
+        .pattern-code {
             background: var(--color-background, #fff);
             border: 1px solid var(--color-outline, #ddd);
             border-radius: 6px;
             padding: 1rem;
-            margin-top: 0.5rem;
             font-size: 0.75rem;
             overflow-x: auto;
         }
 
-        .code-example code {
+        .pattern-code code {
             font-family: 'Monaco', 'Menlo', monospace;
             color: var(--color-on-surface, #333);
             line-height: 1.5;
         }
 
-        .guide {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-top: 1.5rem;
+        /* Pattern-specific layouts */
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .guide-item {
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .button-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .button-stack labs-button {
+            width: 100%;
+        }
+
+        .footer-demo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 1rem;
             background: var(--color-surface, #f5f5f5);
             border-radius: 6px;
-            border-left: 3px solid var(--color-primary, #6464c8);
+            gap: 1rem;
         }
 
-        .guide-item strong {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .guide-item p {
+        .footer-left {
+            flex: 1;
+            text-align: left;
             font-size: 0.85rem;
             color: var(--color-on-surface-variant, #666);
-            line-height: 1.5;
+        }
+
+        .footer-center {
+            flex: 0 0 auto;
+        }
+
+        .footer-right {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .label {
+            font-size: 0.75rem;
+            color: var(--color-on-surface-variant, #999);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            display: block;
         }
 
         .floating-toolbar {
@@ -262,189 +261,205 @@
     <div class="container">
         <a href="../../" class="back-link">← Back to Design System</a>
 
-        <h1>Button Appearance</h1>
-        <p class="subtitle">Complete button variant and size reference. Shows primary, secondary, and destructive variants in all sizes with optional icons.</p>
+        <h1>Button Patterns</h1>
+        <p class="subtitle">Common button combinations and layouts used across MindCubby apps. Real compositional examples.</p>
 
-        <!-- Variants Section -->
+        <!-- Action Button Pairs -->
         <section class="section">
-            <h2>Variants</h2>
+            <h2>Action Button Pairs</h2>
 
-            <div class="subsection">
-                <h3>Primary</h3>
-                <p>Main call-to-action button. Use for primary user actions.</p>
-                <div class="button-grid">
-                    <div class="button-showcase">
-                        <div class="button-label">Small</div>
-                        <labs-button variant="primary" size="small">Primary</labs-button>
+            <div class="pattern">
+                <h3>Form Actions (Submit + Cancel)</h3>
+                <p>Standard pattern for form submissions. Primary action on the right, secondary cancel on the left.</p>
+                <div class="pattern-demo">
+                    <div class="button-row">
+                        <labs-button variant="secondary">Cancel</labs-button>
+                        <labs-button variant="primary">Save Changes</labs-button>
                     </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Medium</div>
-                        <labs-button variant="primary" size="medium">Primary</labs-button>
-                    </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Large</div>
-                        <labs-button variant="primary" size="large">Primary</labs-button>
-                    </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Disabled</div>
-                        <labs-button variant="primary" disabled>Disabled</labs-button>
-                    </div>
+                </div>
+                <div class="pattern-code">
+                    <code>&lt;div class="button-row"&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button variant="secondary"&gt;Cancel&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button variant="primary"&gt;Save Changes&lt;/labs-button&gt;<br>
+                    &lt;/div&gt;</code>
                 </div>
             </div>
 
-            <div class="subsection">
-                <h3>Secondary</h3>
-                <p>Alternative action button. Use for secondary or less critical actions.</p>
-                <div class="button-grid">
-                    <div class="button-showcase">
-                        <div class="button-label">Small</div>
-                        <labs-button variant="secondary" size="small">Secondary</labs-button>
-                    </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Medium</div>
-                        <labs-button variant="secondary" size="medium">Secondary</labs-button>
-                    </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Large</div>
-                        <labs-button variant="secondary" size="large">Secondary</labs-button>
-                    </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Disabled</div>
-                        <labs-button variant="secondary" disabled>Disabled</labs-button>
+            <div class="pattern">
+                <h3>Delete Confirmation</h3>
+                <p>Destructive action paired with cancel. Destructive button on the right to prevent accidental clicks.</p>
+                <div class="pattern-demo">
+                    <div class="button-row">
+                        <labs-button variant="secondary">Keep It</labs-button>
+                        <labs-button variant="destructive">Delete Permanently</labs-button>
                     </div>
                 </div>
-            </div>
-
-            <div class="subsection">
-                <h3>Destructive</h3>
-                <p>Alert or destructive action button. Use for delete, remove, or critical actions.</p>
-                <div class="button-grid">
-                    <div class="button-showcase">
-                        <div class="button-label">Small</div>
-                        <labs-button variant="destructive" size="small">Delete</labs-button>
-                    </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Medium</div>
-                        <labs-button variant="destructive" size="medium">Delete</labs-button>
-                    </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Large</div>
-                        <labs-button variant="destructive" size="large">Delete</labs-button>
-                    </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Disabled</div>
-                        <labs-button variant="destructive" disabled>Delete</labs-button>
-                    </div>
+                <div class="pattern-code">
+                    <code>&lt;div class="button-row"&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button variant="secondary"&gt;Keep It&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button variant="destructive"&gt;Delete Permanently&lt;/labs-button&gt;<br>
+                    &lt;/div&gt;</code>
                 </div>
             </div>
         </section>
 
-        <!-- With Icons Section -->
+        <!-- Stacked Button Group -->
         <section class="section">
-            <h2>With Icons</h2>
+            <h2>Stacked Button Lists</h2>
 
-            <div class="subsection">
-                <h3>Icon Left</h3>
-                <p>Icon placed to the left of button text.</p>
-                <div class="button-grid">
-                    <div class="button-showcase">
-                        <div class="button-label">Primary</div>
-                        <labs-button variant="primary">
-                            <labs-icon name="add" slot="icon-left"></labs-icon>
-                            Add Item
-                        </labs-button>
+            <div class="pattern">
+                <h3>Settings Card Options</h3>
+                <p>Vertical stack of options. Full-width secondary buttons in a card context. Used in settings overlays (from labs-settings-card).</p>
+                <div class="pattern-demo">
+                    <div class="button-stack">
+                        <span class="label">Theme</span>
+                        <labs-button variant="secondary">Vanilla</labs-button>
+                        <labs-button variant="secondary">Blueberry</labs-button>
+                        <labs-button variant="secondary">Cherry</labs-button>
                     </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Secondary</div>
-                        <labs-button variant="secondary">
-                            <labs-icon name="edit" slot="icon-left"></labs-icon>
-                            Edit
-                        </labs-button>
+                </div>
+                <div class="pattern-code">
+                    <code>&lt;div class="button-stack"&gt;<br>
+                    &nbsp;&nbsp;&lt;span class="label"&gt;Theme&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button variant="secondary"&gt;Option 1&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button variant="secondary"&gt;Option 2&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button variant="secondary"&gt;Option 3&lt;/labs-button&gt;<br>
+                    &lt;/div&gt;</code>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer Patterns -->
+        <section class="section">
+            <h2>Footer Layouts</h2>
+
+            <div class="pattern">
+                <h3>Three-Section Footer (Left | Center | Right)</h3>
+                <p>Common footer layout with primary action in center, icon buttons on the right. Pattern from labs-footer-with-settings.</p>
+                <div class="pattern-demo">
+                    <div class="footer-demo">
+                        <div class="footer-left">Status: Ready</div>
+                        <div class="footer-center">
+                            <labs-button variant="primary">
+                                <labs-icon name="add" slot="icon-left"></labs-icon>
+                                Add
+                            </labs-button>
+                        </div>
+                        <div class="footer-right">
+                            <labs-button variant="secondary" aria-label="Settings">
+                                <labs-icon name="settings" slot="icon-left"></labs-icon>
+                            </labs-button>
+                        </div>
                     </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Destructive</div>
-                        <labs-button variant="destructive">
-                            <labs-icon name="delete" slot="icon-left"></labs-icon>
-                            Remove
-                        </labs-button>
-                    </div>
+                </div>
+                <div class="pattern-code">
+                    <code>&lt;div class="footer-demo"&gt;<br>
+                    &nbsp;&nbsp;&lt;div class="footer-left"&gt;Status&lt;/div&gt;<br>
+                    &nbsp;&nbsp;&lt;div class="footer-center"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button variant="primary"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-icon name="add" slot="icon-left"&gt;&lt;/labs-icon&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&lt;/div&gt;<br>
+                    &nbsp;&nbsp;&lt;div class="footer-right"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button aria-label="Settings"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-icon name="settings" slot="icon-left"&gt;&lt;/labs-icon&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&lt;/div&gt;<br>
+                    &lt;/div&gt;</code>
                 </div>
             </div>
 
-            <div class="subsection">
-                <h3>Icon Right</h3>
-                <p>Icon placed to the right of button text.</p>
-                <div class="button-grid">
-                    <div class="button-showcase">
-                        <div class="button-label">Primary</div>
-                        <labs-button variant="primary">
-                            Download
-                            <labs-icon name="download" slot="icon-right"></labs-icon>
-                        </labs-button>
-                    </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Secondary</div>
-                        <labs-button variant="secondary">
-                            Next
-                            <labs-icon name="keyboard_arrow_down" slot="icon-right"></labs-icon>
-                        </labs-button>
-                    </div>
-                    <div class="button-showcase">
-                        <div class="button-label">Icon Only</div>
-                        <labs-button variant="secondary" aria-label="Close">
+            <div class="pattern">
+                <h3>Header with Close Button</h3>
+                <p>Icon-only close button on the right, paired with heading. Pattern from labs-settings-card.</p>
+                <div class="pattern-demo">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--color-surface, #f5f5f5); border-radius: 6px;">
+                        <h3 style="margin: 0; font-size: 1rem;">Settings</h3>
+                        <labs-button variant="icon" aria-label="Close">
                             <labs-icon name="close" slot="icon-left"></labs-icon>
                         </labs-button>
                     </div>
                 </div>
+                <div class="pattern-code">
+                    <code>&lt;div class="header-row"&gt;<br>
+                    &nbsp;&nbsp;&lt;h3&gt;Settings&lt;/h3&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button variant="icon" aria-label="Close"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-icon name="close" slot="icon-left"&gt;&lt;/labs-icon&gt;<br>
+                    &nbsp;&nbsp;&lt;/labs-button&gt;<br>
+                    &lt;/div&gt;</code>
+                </div>
             </div>
         </section>
 
-        <!-- Usage Guide Section -->
+        <!-- Icon Button Patterns -->
         <section class="section">
-            <h2>Usage Guide</h2>
+            <h2>Icon Button Patterns</h2>
 
-            <div class="guide">
-                <div class="guide-item">
-                    <strong>Use Primary For</strong>
-                    <p>Main user actions like Save, Submit, Create, Continue. Only one primary button per screen when possible.</p>
+            <div class="pattern">
+                <h3>Icon-Only Button Toolbar</h3>
+                <p>Multiple icon buttons in a row. Use aria-label for accessibility. Used in headers and toolbars.</p>
+                <div class="pattern-demo">
+                    <div class="button-group">
+                        <labs-button variant="secondary" aria-label="Add">
+                            <labs-icon name="add" slot="icon-left"></labs-icon>
+                        </labs-button>
+                        <labs-button variant="secondary" aria-label="Edit">
+                            <labs-icon name="edit" slot="icon-left"></labs-icon>
+                        </labs-button>
+                        <labs-button variant="secondary" aria-label="Delete">
+                            <labs-icon name="delete" slot="icon-left"></labs-icon>
+                        </labs-button>
+                    </div>
                 </div>
-                <div class="guide-item">
-                    <strong>Use Secondary For</strong>
-                    <p>Alternate actions, cancellation, or less important actions like Cancel, Skip, Learn More.</p>
-                </div>
-                <div class="guide-item">
-                    <strong>Use Destructive For</strong>
-                    <p>Irreversible or critical actions like Delete, Remove, Close Account. Use sparingly.</p>
-                </div>
-                <div class="guide-item">
-                    <strong>Size Selection</strong>
-                    <p>Large for page-level actions, Medium for component-level actions, Small for compact contexts like tables.</p>
-                </div>
-                <div class="guide-item">
-                    <strong>Icons with Buttons</strong>
-                    <p>Icons clarify intent and improve scannability. Icon-only buttons must have aria-label for accessibility.</p>
-                </div>
-                <div class="guide-item">
-                    <strong>Disabled State</strong>
-                    <p>Use when action is unavailable. Disabled buttons should not show tooltips or hover states.</p>
+                <div class="pattern-code">
+                    <code>&lt;div class="button-group"&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button variant="secondary" aria-label="Add"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-icon name="add" slot="icon-left"&gt;&lt;/labs-icon&gt;<br>
+                    &nbsp;&nbsp;&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-button variant="secondary" aria-label="Edit"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-icon name="edit" slot="icon-left"&gt;&lt;/labs-icon&gt;<br>
+                    &nbsp;&nbsp;&lt;/labs-button&gt;<br>
+                    &lt;/div&gt;</code>
                 </div>
             </div>
 
-            <div class="preview" style="margin-top: 2rem;">
-                <h3>Code Example</h3>
-                <p>Basic button with primary variant and icon:</p>
-                <div class="code-example">
-                    <code>&lt;labs-button variant="primary" size="medium"&gt;<br>
+            <div class="pattern">
+                <h3>Primary Action with Icon</h3>
+                <p>Primary call-to-action with leading icon. Icon on the left clarifies the action. Common for "Add", "Create".</p>
+                <div class="pattern-demo">
+                    <labs-button variant="primary">
+                        <labs-icon name="add" slot="icon-left"></labs-icon>
+                        Create New
+                    </labs-button>
+                </div>
+                <div class="pattern-code">
+                    <code>&lt;labs-button variant="primary"&gt;<br>
                     &nbsp;&nbsp;&lt;labs-icon name="add" slot="icon-left"&gt;&lt;/labs-icon&gt;<br>
-                    &nbsp;&nbsp;Create<br>
+                    &nbsp;&nbsp;Create New<br>
                     &lt;/labs-button&gt;</code>
                 </div>
-                <p style="margin-top: 1rem;">Disabled button:</p>
-                <div class="code-example">
-                    <code>&lt;labs-button variant="primary" disabled&gt;<br>
-                    &nbsp;&nbsp;Save<br>
-                    &lt;/labs-button&gt;</code>
-                </div>
+            </div>
+        </section>
+
+        <!-- Usage Guidelines -->
+        <section class="section">
+            <h2>Pattern Guidelines</h2>
+            <div class="pattern">
+                <h3>Button Row (Horizontal)</h3>
+                <p>Use for action pairs: primary + secondary, or destructive + secondary. Space buttons with `gap: 1rem`. Keep to 2-3 buttons max.</p>
+            </div>
+            <div class="pattern">
+                <h3>Button Stack (Vertical)</h3>
+                <p>Use for lists of options (settings, menu items). Make buttons full-width with `width: 100%`. Space with `gap: 0.75rem`. Common in overlays and cards.</p>
+            </div>
+            <div class="pattern">
+                <h3>Icon-Only Buttons</h3>
+                <p>Always include `aria-label` for accessibility. Use in headers, toolbars, and footers where space is limited. Use secondary variant for neutral actions, primary for main CTA.</p>
+            </div>
+            <div class="pattern">
+                <h3>Spacing & Layout</h3>
+                <p>Horizontal row: `display: flex; gap: 1rem;` | Vertical stack: `display: flex; flex-direction: column; gap: 0.75rem; width: 100%;` Match button sizing to context: medium in footers, large in dialogs.</p>
             </div>
         </section>
     </div>
