@@ -23,7 +23,7 @@ class LabsBreadcrumbs extends HTMLElement {
         :host {
           display: block;
           font-size: 0.85rem;
-          color: var(--color-on-surface-variant, #999);
+          color: var(--color-outline, #ddd);
           margin-bottom: 1.5rem;
         }
 
@@ -36,28 +36,27 @@ class LabsBreadcrumbs extends HTMLElement {
 
         ::slotted([active]) {
           color: var(--color-on-background, #333);
-          font-weight: 600;
+          font-weight: 500;
           cursor: default;
         }
 
         ::slotted(a) {
-          color: var(--color-primary, #6464c8);
+          color: var(--color-on-surface-variant, #999);
           text-decoration: none;
           cursor: pointer;
-          transition: opacity 0.2s;
+          transition: color 0.2s;
         }
 
         ::slotted(a:hover) {
-          opacity: 0.7;
-          text-decoration: underline;
+          color: var(--color-primary, #6464c8);
         }
 
         ::slotted(a:active) {
-          opacity: 0.5;
+          opacity: 0.7;
         }
 
         .separator {
-          color: var(--color-on-surface-variant, #999);
+          color: var(--color-outline, #ddd);
           margin: 0 0.25rem;
           user-select: none;
         }
