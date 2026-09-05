@@ -19,6 +19,7 @@
     <script type="module">
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-container.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
@@ -255,18 +256,11 @@
 </head>
 
 <body>
-    <labs-container id="main-container" medium>
-        <div class="container">
-        <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
-            Home</labs-button>
-
-        <labs-breadcrumbs>
+    <labs-page-layout title="Theme Toggle" subtitle="Organism component: Smart theme/mode switcher with broadcasting" back-href="../../">
+        <labs-breadcrumbs slot="breadcrumbs">
             <labs-breadcrumb-item href="../">1. Foundations</labs-breadcrumb-item>
             <labs-breadcrumb-item active>Theme Toggle</labs-breadcrumb-item>
         </labs-breadcrumbs>
-
-        <h1>Theme Toggle</h1>
-        <p class="subtitle">Organism component: Smart theme/mode switcher with broadcasting</p>
 
         <!-- Live Demo Section (First) -->
         <div class="section">
@@ -446,8 +440,7 @@
                 </ul>
             </div>
         </div>
-        </div>
-    </labs-container>
+    </labs-page-layout>
 
     <!-- Floating Theme Toolbar -->
     <div class="floating-toolbar">
