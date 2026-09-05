@@ -28,18 +28,73 @@
 
 class LabsPageLayout extends HTMLElement {
   connectedCallback() {
-    this.render();
+    this.setupShadowDOM();
     this.setupIframeDetection();
   }
 
-  render() {
+  setupShadowDOM() {
     const title = this.getAttribute('title') || 'Page';
     const subtitle = this.getAttribute('subtitle') || '';
     const backHref = this.getAttribute('back-href') || '../../';
     const backText = this.getAttribute('back-text') || '← Back to Home';
 
-    // Clear existing children to rebuild
-    this.innerHTML = `
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: 'open' });
+    }
+
+    // Build the shadow DOM structure
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+        }
+
+        /* Hide elements when embedded in iframe */
+        :host(.in-iframe) .back-link {
+          display: none !important;
+        }
+
+        :host(.in-iframe) slot[name="breadcrumbs"] {
+          display: none !important;
+        }
+
+        :host(.in-iframe) h1 {
+          display: none !important;
+        }
+
+        :host(.in-iframe) .subtitle {
+          display: none !important;
+        }
+
+        /* Page content styling */
+        h1 {
+          font-size: 2rem;
+          margin: 0.5rem 0 2rem 0;
+          font-weight: 600;
+          color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+          color: var(--color-on-surface, #666);
+          margin-bottom: 2rem;
+          font-size: 0.9rem;
+        }
+
+        .back-link {
+          display: inline-block;
+          margin-bottom: 2rem;
+        }
+
+        .back-link:hover {
+          opacity: 0.8;
+        }
+
+        .container {
+          max-width: 1000px;
+          margin: 0 auto;
+        }
+      </style>
+
       <labs-container id="main-container" medium>
         <div class="container">
           <labs-button class="back-link" onclick="window.location.href='${backHref}';" variant="secondary">
@@ -48,62 +103,13 @@ class LabsPageLayout extends HTMLElement {
 
           <slot name="breadcrumbs"></slot>
 
-          <h1 class="page-title">${title}</h1>
+          <h1>${title}</h1>
           ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
 
           <slot></slot>
         </div>
       </labs-container>
     `;
-
-    // Attach stylesheet for page content
-    const style = document.createElement('style');
-    style.textContent = `
-      :host {
-        display: block;
-      }
-
-      /* Page content styling */
-      h1 {
-        font-size: 2rem;
-        margin: 0.5rem 0 2rem 0;
-        font-weight: 600;
-        color: var(--color-on-background, #333);
-      }
-
-      .subtitle {
-        color: var(--color-on-surface, #666);
-        margin-bottom: 2rem;
-        font-size: 0.9rem;
-      }
-
-      .back-link {
-        display: inline-block;
-        margin-bottom: 2rem;
-      }
-
-      .back-link:hover {
-        opacity: 0.8;
-      }
-
-      /* Hide elements when embedded in iframe */
-      :host(.in-iframe) .back-link {
-        display: none !important;
-      }
-
-      :host(.in-iframe) ::slotted([name="breadcrumbs"]) {
-        display: none !important;
-      }
-
-      :host(.in-iframe) h1 {
-        display: none !important;
-      }
-
-      :host(.in-iframe) .subtitle {
-        display: none !important;
-      }
-    `;
-    this.appendChild(style);
   }
 
   setupIframeDetection() {
@@ -119,8 +125,8 @@ class LabsPageLayout extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue !== newValue) {
-      this.render();
+    if (oldValue !== newValue && this.shadowRoot) {
+      this.setupShadowDOM();
     }
   }
 }
