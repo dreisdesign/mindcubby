@@ -19,6 +19,7 @@
     <script type="module">
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-toast.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
     <style>
         .sr-only {
@@ -214,6 +215,12 @@
 <body>
     <div class="container">
         <a href="../../" class="back-link">← Back to Design System</a>
+
+        <labs-breadcrumbs>
+            <labs-breadcrumb-item href="../../">Smoothie Design System</labs-breadcrumb-item>
+            <labs-breadcrumb-item href="../">3. Patterns</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>Toast Notifications</labs-breadcrumb-item>
+        </labs-breadcrumbs>
 
         <h1>Toast Notifications</h1>
         <p class="subtitle">Non-blocking feedback messages that appear temporarily and auto-dismiss. Use toasts for notifications, confirmations, and reversible actions (undo).</p>

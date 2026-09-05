@@ -20,6 +20,7 @@
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-card.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
     <style>
         .sr-only {
@@ -170,6 +171,12 @@
 <body>
     <div class="container">
         <a href="../../" class="back-link">← Back to Design System</a>
+
+        <labs-breadcrumbs>
+            <labs-breadcrumb-item href="../../">Smoothie Design System</labs-breadcrumb-item>
+            <labs-breadcrumb-item href="../">2. Components</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>Card</labs-breadcrumb-item>
+        </labs-breadcrumbs>
 
         <h1>Card Component</h1>
         <p class="subtitle">Flexible container with slots for header, description, input, and actions</p>

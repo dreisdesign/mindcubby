@@ -19,6 +19,7 @@
     <script type="module">
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-container.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
     <style>
         .sr-only {
@@ -303,19 +304,18 @@
             <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
                 Hub</labs-button>
 
-            <div style="font-size: 0.85rem; color: var(--color-on-surface-variant); margin-bottom: 1rem;">
-                1. Foundations / Container
-            </div>
+            <labs-breadcrumbs>
+                <labs-breadcrumb-item href="../../">Smoothie Design System</labs-breadcrumb-item>
+                <labs-breadcrumb-item href="../">1. Foundations</labs-breadcrumb-item>
+                <labs-breadcrumb-item active>Container</labs-breadcrumb-item>
+            </labs-breadcrumbs>
 
             <h1>Container</h1>
             <p class="subtitle">Responsive width container with desktop and mobile padding</p>
 
             <div class="section">
                 <h2>Live Container Demo</h2>
-                <p style="margin-bottom: 2rem; color: var(--color-on-surface);">The entire page is wrapped in a
-                    <code>&lt;labs-container&gt;</code>. Use the toolbar to switch between sizes and watch how the
-                    layout responds.
-                </p>
+                <p style="margin-bottom: 2rem; color: var(--color-on-surface);">Use the toolbar to switch between sizes and watch how the layout responds. The entire page is wrapped in the active container size.</p>
 
                 <div class="demo-item">
                     <h3 id="demo-title" style="margin-bottom: 1.5rem;">labs-container [medium] (600px)</h3>
@@ -367,21 +367,89 @@
             </div>
 
             <div class="section">
-                <h2>Responsive Breakdown</h2>
-                <div class="demo-item">
-                    <h3>How Container Sizes Work</h3>
-                    <ul class="feature-list" style="list-style: none; padding: 0;">
-                        <li><strong>Small (400px):</strong> Narrow content layouts, blog posts</li>
-                        <li><strong>Medium (600px):</strong> Standard UI layouts, forms, cards (default)</li>
-                        <li><strong>Large (800px):</strong> Content-rich pages, dashboards</li>
-                        <li><strong>Fill (100vw):</strong> Full-page layouts, modal backgrounds</li>
-                    </ul>
+                <h2>Container Sizes</h2>
+                <p style="margin-bottom: 2rem; color: var(--color-on-surface);">Each container size has a specific use case. Switch sizes in the toolbar to see them in action.</p>
+                
+                <div class="demo-grid">
+                    <!-- Small (400px) -->
+                    <div class="demo-item">
+                        <h3>Small (400px)</h3>
+                        <div class="demo-preview" style="min-height: 200px;">
+                            <div class="container-demo-wrapper" style="max-width: 400px;">
+                                <div class="container-demo-inner">
+                                    <div class="container-demo-label">Small Container</div>
+                                    <div class="container-demo-content" style="font-size: 0.9rem;">400px max-width</div>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--color-on-surface); margin: 0;">
+                            <strong>Use for:</strong> Narrow content layouts, blog posts, focused reading experiences
+                        </p>
+                    </div>
+
+                    <!-- Medium (600px) -->
+                    <div class="demo-item">
+                        <h3>Medium (600px)</h3>
+                        <div class="demo-preview" style="min-height: 200px;">
+                            <div class="container-demo-wrapper" style="max-width: 600px;">
+                                <div class="container-demo-inner">
+                                    <div class="container-demo-label">Medium Container</div>
+                                    <div class="container-demo-content" style="font-size: 0.9rem;">600px max-width (default)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--color-on-surface); margin: 0;">
+                            <strong>Use for:</strong> Standard UI layouts, forms, cards, most applications
+                        </p>
+                    </div>
+
+                    <!-- Large (800px) -->
+                    <div class="demo-item">
+                        <h3>Large (800px)</h3>
+                        <div class="demo-preview" style="min-height: 200px;">
+                            <div class="container-demo-wrapper" style="max-width: 800px;">
+                                <div class="container-demo-inner">
+                                    <div class="container-demo-label">Large Container</div>
+                                    <div class="container-demo-content" style="font-size: 0.9rem;">800px max-width</div>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--color-on-surface); margin: 0;">
+                            <strong>Use for:</strong> Content-rich pages, dashboards with sidebars
+                        </p>
+                    </div>
+
+                    <!-- Fill (100vw) -->
+                    <div class="demo-item">
+                        <h3>Fill (100vw)</h3>
+                        <div class="demo-preview" style="min-height: 200px; background: var(--color-surface-container);">
+                            <div style="width: 100%; background: var(--color-primary); color: white; padding: 1.5rem; text-align: center; border-radius: 4px;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">Fill Container</div>
+                                <div style="font-size: 0.9rem;">100% viewport width</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--color-on-surface); margin: 0;">
+                            <strong>Use for:</strong> Full-page layouts, modal backgrounds, hero sections
+                        </p>
+                    </div>
                 </div>
-                <div class="demo-item">
-                    <h3>Mobile Behavior</h3>
-                    <p style="margin: 0; color: var(--color-on-surface);">At breakpoint 640px and below, all containers
-                        switch to <strong>100vw width with 1rem padding</strong>. Try resizing your browser to see this
-                        in action!</p>
+            </div>
+
+            <div class="section">
+                <h2>Responsive Behavior</h2>
+                <div class="demo-grid" style="gap: 1.5rem;">
+                    <div class="demo-item">
+                        <h3>Desktop (> 640px)</h3>
+                        <p style="margin: 0; color: var(--color-on-surface);">
+                            Containers respect their max-width setting and stay centered on the page. Content uses the full container space for optimal readability.
+                        </p>
+                    </div>
+                    <div class="demo-item">
+                        <h3>Mobile (≤ 640px)</h3>
+                        <p style="margin: 0; color: var(--color-on-surface);">
+                            All containers switch to <strong>100% viewport width with 1rem padding</strong>. This ensures touch-friendly layouts and proper spacing on small screens.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

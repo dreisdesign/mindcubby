@@ -19,6 +19,7 @@
     <script type="module">
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
     <style>
         .sr-only {
@@ -249,9 +250,11 @@
         <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
             Home</labs-button>
 
-        <div style="font-size: 0.85rem; color: var(--color-on-surface-variant); margin-bottom: 1rem;">
-            1. Foundations / Theme Toggle
-        </div>
+        <labs-breadcrumbs>
+            <labs-breadcrumb-item href="../../">Smoothie Design System</labs-breadcrumb-item>
+            <labs-breadcrumb-item href="../">1. Foundations</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>Theme Toggle</labs-breadcrumb-item>
+        </labs-breadcrumbs>
 
         <h1>Theme Toggle</h1>
         <p class="subtitle">Organism component: Smart theme/mode switcher with broadcasting</p>

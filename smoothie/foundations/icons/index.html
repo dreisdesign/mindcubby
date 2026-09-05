@@ -32,6 +32,7 @@
     <script type="module">
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
         // Mark page as embedded if loaded in iframe
         if (window !== window.parent) {
             document.documentElement.classList.add('in-iframe');
@@ -201,8 +202,14 @@
         <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
             Home</labs-button>
 
-        <h1 class="sr-only">Icons</h1>
-        <p class="subtitle sr-only">Complete icon set for the Smoothie Design System</p>
+        <labs-breadcrumbs>
+            <labs-breadcrumb-item href="../../">Smoothie Design System</labs-breadcrumb-item>
+            <labs-breadcrumb-item href="../">1. Foundations</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>Icons</labs-breadcrumb-item>
+        </labs-breadcrumbs>
+
+        <h1>Icons</h1>
+        <p class="subtitle">Complete icon set for the Smoothie Design System</p>
 
         <!-- Icons Section -->
         <section>

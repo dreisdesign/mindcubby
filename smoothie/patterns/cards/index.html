@@ -20,6 +20,7 @@
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-card.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
     <style>
         .sr-only {
@@ -248,6 +249,12 @@
 <body>
     <div class="container">
         <a href="../../" class="back-link">← Back to Design System</a>
+
+        <labs-breadcrumbs>
+            <labs-breadcrumb-item href="../../">Smoothie Design System</labs-breadcrumb-item>
+            <labs-breadcrumb-item href="../">3. Patterns</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>Card Patterns</labs-breadcrumb-item>
+        </labs-breadcrumbs>
 
         <h1>Card Patterns</h1>
         <p class="subtitle">Real-world card layouts used throughout the Labs apps.</p>

@@ -20,6 +20,7 @@
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-dropdown.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
     <style>
         .sr-only {
@@ -170,8 +171,14 @@
         <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
             Home</labs-button>
 
-        <h1 class="sr-only">Dropdown Component</h1>
-        <p class="subtitle sr-only">Dropdown menu states and variants</p>
+        <labs-breadcrumbs>
+            <labs-breadcrumb-item href="../../">Smoothie Design System</labs-breadcrumb-item>
+            <labs-breadcrumb-item href="../">2. Components</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>Dropdown</labs-breadcrumb-item>
+        </labs-breadcrumbs>
+
+        <h1>Dropdown Component</h1>
+        <p class="subtitle">Dropdown menu and selection states</p>
 
         <div class="section">
             <h2>Basic Dropdown</h2>
