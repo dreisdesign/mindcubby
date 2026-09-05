@@ -92,6 +92,18 @@ class LabsPageLayout extends HTMLElement {
         .container {
           max-width: 1000px;
           margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        /* Remove default margins since gap handles spacing */
+        h1 {
+          margin: 0;
+        }
+
+        .subtitle {
+          margin-bottom: 0;
         }
       </style>
 
