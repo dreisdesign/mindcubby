@@ -730,14 +730,29 @@
         updateActiveTab();
     </script>
 
-    <!-- Cache-buster: Add timestamp to all iframe src to force fresh loads -->
+    <!-- Cache-buster and breadcrumb hider for iframes -->
     <script>
+        // Add cache-busting timestamp to iframe URLs
         document.querySelectorAll('iframe').forEach(iframe => {
             const src = iframe.getAttribute('src');
             if (src) {
                 const separator = src.includes('?') ? '&' : '?';
                 iframe.setAttribute('src', `${src}${separator}cb=${Date.now()}`);
             }
+
+            // Hide breadcrumbs inside iframes after they load
+            iframe.addEventListener('load', () => {
+                try {
+                    const breadcrumbs = iframe.contentDocument?.querySelectorAll('labs-breadcrumbs');
+                    if (breadcrumbs) {
+                        breadcrumbs.forEach(bc => {
+                            bc.style.display = 'none !important';
+                        });
+                    }
+                } catch (e) {
+                    // Silently fail if we can't access iframe (cross-origin)
+                }
+            });
         });
     </script>
 </body>
