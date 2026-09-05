@@ -729,6 +729,17 @@
         // Call once on load to set initial state
         updateActiveTab();
     </script>
+
+    <!-- Cache-buster: Add timestamp to all iframe src to force fresh loads -->
+    <script>
+        document.querySelectorAll('iframe').forEach(iframe => {
+            const src = iframe.getAttribute('src');
+            if (src) {
+                const separator = src.includes('?') ? '&' : '?';
+                iframe.setAttribute('src', `${src}${separator}cb=${Date.now()}`);
+            }
+        });
+    </script>
 </body>
 
 </html>
