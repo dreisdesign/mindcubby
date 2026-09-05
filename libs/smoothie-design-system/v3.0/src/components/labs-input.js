@@ -9,7 +9,7 @@ class Input extends HTMLElement {
     this._input.setAttribute('part', 'input');
 
     const style = document.createElement('style');
-    style.textContent = `:host{display:block;font-family:var(--font-family-base, inherit)} input{display:block;width:100%;box-sizing:border-box;padding:var(--space-2,8px);border-radius:var(--radius-input, 4px);border:1px solid var(--color-outline, color-mix(in srgb, var(--color-on-surface, var(--color-on-background)) 6%, transparent));background:var(--color-surface, var(--color-background));color:var(--color-on-surface);font-size:var(--font-size-input, 1rem);line-height:var(--line-height-input, 1.4);font-family:inherit} input:focus{outline:2px solid color-mix(in srgb, var(--color-primary, var(--color-accent, var(--color-on-surface))) 20%, transparent)}`;
+    style.textContent = `:host{display:block;font-family:var(--font-family-base, inherit)} input{display:block;width:100%;box-sizing:border-box;padding:var(--space-2,8px);border-radius:var(--radius-input, 4px);border:1px solid var(--color-on-surface-variant, #999);background:var(--color-surface, var(--color-background));color:var(--color-on-surface);font-size:var(--font-size-input, 1rem);line-height:var(--line-height-input, 1.4);font-family:inherit} input:focus{outline:2px solid color-mix(in srgb, var(--color-primary, var(--color-accent, var(--color-on-surface))) 20%, transparent)}`;
 
     this._shadow.appendChild(style);
     this._shadow.appendChild(this._input);

@@ -21,7 +21,7 @@ template.innerHTML = `
       align-items: center;
       gap: 0.5em;
       padding: 0.625em 1em;
-      border: 1px solid var(--color-outline, #ddd);
+      border: 1px solid var(--color-on-surface-variant, #999);
       border-radius: 24px;
       background: var(--color-surface, #fff);
       color: var(--color-on-surface, #333);
@@ -35,7 +35,7 @@ template.innerHTML = `
 
     button:hover {
       background: var(--color-surface-container, #f5f5f5);
-      border-color: var(--color-outline-variant, #ccc);
+      border-color: var(--color-on-surface-variant, #999);
     }
 
     button:active {

@@ -7,7 +7,7 @@
   --color-surface-container: var(--palette-vanilla-100);
   --color-surface-container-high: var(--palette-vanilla-200);
   --color-surface-variant: var(--palette-vanilla-200);
-  --color-on-surface-variant: var(--palette-vanilla-700);
+  --color-on-surface-variant: var(--palette-vanilla-800);
 
   /* Status colors - inherit from global tokens in colors.css */
   /* Removed explicit values - these now inherit from colors.css for consistency and accessibility */
@@ -90,7 +90,7 @@
 :root {
   --color-primary-75: #2E2B74BF;
   --color-primary-25: #C1C1FF40;
-  --color-outline: var(--palette-vanilla-700);
+  --color-outline: var(--palette-vanilla-800);
   /* radius-sm used by a few components */
   --radius-sm: 4px;
 }

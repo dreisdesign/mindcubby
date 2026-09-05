@@ -38,12 +38,12 @@ class LabsSettingsCard extends HTMLElement {
           position: relative;
           /*
             Modular override: ensure secondary button borders match text/icon color for visual consistency
-            - --color-outline is set to var(--color-on-surface) so secondary button borders always match the text and icon color in this context.
+            - --color-on-surface-variant is set to var(--color-on-surface) so secondary button borders always match the text and icon color in this context.
             - This override is local to the settings card, preserving modularity and reusability of the button component.
             - No global override is used; other usages of secondary buttons are unaffected.
             - No box-shadow is applied to secondary buttons in this context for clarity.
           */
-          --color-outline: var(--color-on-surface);
+          --color-on-surface-variant: var(--color-on-surface);
         }
         .header-row {
           display: flex;
@@ -132,7 +132,7 @@ class LabsSettingsCard extends HTMLElement {
         }
         /*
           Modular override pattern:
-          - --color-outline is set only in the settings card context for visible secondary button borders.
+          - --color-on-surface-variant is set only in the settings card context for visible secondary button borders.
           - No global override; this ensures modularity and reusability.
           - No box-shadow for secondary buttons in this context for visual clarity.
         */

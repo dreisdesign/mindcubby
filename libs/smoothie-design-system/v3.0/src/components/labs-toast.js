@@ -66,7 +66,7 @@ class LabsToast extends HTMLElement {
 .action{background:transparent;border:0;padding:6px 10px;border-radius:var(--radius-md, 4px);color:var(--color-primary);cursor:pointer;font-weight:var(--font-weight-toast-action, 600);font-size:var(--font-size-toast-action, 0.9rem)}
 .action.primary{background:var(--color-primary);color:var(--color-on-primary);border:none;}
 .action.primary:hover{background:color-mix(in srgb, var(--color-primary) 85%, black);}
-.action.secondary{background:transparent;color:var(--color-on-surface);border:1px solid var(--color-outline, var(--color-primary));}
+.action.secondary{background:transparent;color:var(--color-on-surface);border:1px solid var(--color-on-surface-variant, var(--color-primary));}
 .action.secondary:hover{background:color-mix(in srgb, var(--color-primary) 6%, transparent);}
 .action.destructive{background:var(--color-error, #b5005a);color:var(--on-error, #fff);border:none;}
 .action.destructive:hover{background:color-mix(in srgb, var(--color-error, #b5005a) 90%, black);}

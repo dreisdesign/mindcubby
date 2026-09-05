@@ -34,7 +34,7 @@
   --color-surface-container: var(--palette-vanilla-100);
   --color-surface-container-high: var(--palette-vanilla-200);
   --color-surface-variant: var(--palette-vanilla-200);
-  --color-on-surface-variant: var(--palette-vanilla-700);
+  --color-on-surface-variant: var(--palette-vanilla-800);
   /* Outline tokens for light mode */
   --color-outline: var(--palette-base-500);
   --color-outline-variant: var(--palette-base-300);
@@ -103,7 +103,7 @@
   --color-surface-container: var(--palette-blueberry-100);
   --color-surface-container-high: var(--palette-blueberry-200);
   --color-surface-variant: var(--palette-blueberry-200);
-  --color-on-surface-variant: var(--palette-blueberry-700);
+  --color-on-surface-variant: var(--palette-blueberry-800);
   /* Outline tokens for light mode */
   --color-outline: var(--palette-base-500);
   --color-outline-variant: var(--palette-base-300);
@@ -134,12 +134,12 @@
   --color-surface-hover: #292a3a;
   /* Surface container helpers for blueberry dark */
   --color-surface-container: var(--palette-blueberry-800);
-  --color-surface-container-high: var(--palette-blueberry-700);
-  --color-surface-variant: var(--palette-blueberry-700);
+  --color-surface-container-high: var(--palette-blueberry-800);
+  --color-surface-variant: var(--palette-blueberry-800);
   --color-on-surface-variant: var(--palette-blueberry-200);
   /* Outline tokens for dark mode */
   --color-outline: var(--palette-blueberry-300);
-  --color-outline-variant: var(--palette-blueberry-700);
+  --color-outline-variant: var(--palette-blueberry-800);
   /* Status colors inherit from global tokens */
 }
 
@@ -162,13 +162,13 @@
   --color-on-primary-darker: var(--palette-white);
   --color-on-primary-lighter: var(--palette-strawberry-900);
   --color-on-background: var(--palette-strawberry-900);
-  --settings-icon-color: var(--palette-strawberry-700);
+  --settings-icon-color: var(--palette-strawberry-800);
   --color-surface-hover: #ffe3e2;
   /* Surface container helpers for strawberry */
   --color-surface-container: var(--palette-strawberry-100);
   --color-surface-container-high: var(--palette-strawberry-200);
   --color-surface-variant: var(--palette-strawberry-200);
-  --color-on-surface-variant: var(--palette-strawberry-700);
+  --color-on-surface-variant: var(--palette-strawberry-800);
   /* Outline tokens for light mode */
   --color-outline: var(--palette-base-500);
   --color-outline-variant: var(--palette-base-300);
@@ -198,11 +198,11 @@
   --color-surface-hover: #5a2322;
   /* Surface container helpers for strawberry dark */
   --color-surface-container: var(--palette-strawberry-800);
-  --color-surface-container-high: var(--palette-strawberry-700);
-  --color-surface-variant: var(--palette-strawberry-700);
+  --color-surface-container-high: var(--palette-strawberry-800);
+  --color-surface-variant: var(--palette-strawberry-800);
   --color-on-surface-variant: var(--palette-strawberry-200);
   /* Outline tokens for dark mode */
   --color-outline: var(--palette-strawberry-300);
-  --color-outline-variant: var(--palette-strawberry-700);
+  --color-outline-variant: var(--palette-strawberry-800);
   /* Status colors inherit from global tokens */
 }

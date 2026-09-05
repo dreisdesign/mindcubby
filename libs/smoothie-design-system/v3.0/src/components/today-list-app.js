@@ -86,7 +86,7 @@ if (typeof HTMLElement !== 'undefined') {
             display: flex;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--color-on-surface-variant, #f0f0f0);
             gap: 12px;
           }
           .tl-entry-content {
@@ -105,7 +105,7 @@ if (typeof HTMLElement !== 'undefined') {
           }
           .tl-entry-meta {
             font-size: var(--font-size-entry-meta, 0.75rem);
-            color: #666;
+            color: var(--color-on-surface-variant, #999);
           }
           .tl-entry-actions {
             display: flex;
@@ -135,13 +135,13 @@ if (typeof HTMLElement !== 'undefined') {
           .section-title {
             font-weight: 600;
             margin: 16px 0 8px;
-            color: #333;
+            color: var(--color-on-background, #333);
           }
           .date-label {
             font-weight: 600;
             margin-bottom: 8px;
             font-size: 18px;
-            color: #333;
+            color: var(--color-on-background, #333);
           }
           .controls {
             margin: 12px 0 18px 0;
@@ -154,7 +154,7 @@ if (typeof HTMLElement !== 'undefined') {
           }
           .empty {
             text-align: center;
-            color: #999;
+            color: var(--color-on-surface-variant, #999);
             font-style: italic;
             padding: 40px 16px;
           }

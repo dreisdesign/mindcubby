@@ -18,7 +18,7 @@ template.innerHTML = `
       display: inline-flex;
       align-items: center;
       gap: 0.5em;
-      border: 1px solid var(--color-outline, #ddd);
+      border: 1px solid var(--color-on-surface-variant, #999);
       border-radius: 9999px;
       padding: 0.5em 0.75em;
       background: var(--color-surface, #fff);

@@ -23,7 +23,7 @@ class LabsBreadcrumbs extends HTMLElement {
         :host {
           display: block;
           font-size: 0.85rem;
-          color: var(--color-outline, #ddd);
+          color: var(--color-on-surface-variant, #999);
           margin-bottom: 1.5rem;
         }
 
@@ -56,7 +56,7 @@ class LabsBreadcrumbs extends HTMLElement {
         }
 
         .separator {
-          color: var(--color-outline, #ddd);
+          color: var(--color-on-surface-variant, #999);
           margin: 0 0.25rem;
           user-select: none;
         }

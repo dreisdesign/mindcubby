@@ -40,7 +40,7 @@ class LabsBadge extends HTMLElement {
     :host([variant="secondary"]) .badge {
       background: transparent;
       color: var(--color-on-surface);
-      border: 1px solid var(--color-outline, var(--color-primary));
+      border: 1px solid var(--color-on-surface-variant, var(--color-primary));
     }
     :host([variant="success"]) .badge {
       background: var(--color-success, #28a745);
