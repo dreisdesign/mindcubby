@@ -15,7 +15,7 @@
  * @cssprop --labs-card-shadow - Card box-shadow (default: 0 6px 40px ...)
  * @cssprop --color-surface - Card background color
  * @cssprop --color-on-background - Header text color
- * @cssprop --color-on-surface-muted - Description text color
+ * @cssprop --color-on-surface-variant - Description text color
  * @cssprop --font-family-base - Font family
  * @cssprop --font-size-h3 - Header font size (from tokens)
  * @cssprop --font-size-base - Description/input font size (from tokens)
@@ -75,7 +75,7 @@ class LabsCard extends HTMLElement {
         }
         .description {
           margin-top: 8px;
-          color: var(--color-on-surface-muted, #666);
+          color: var(--color-on-surface-variant, #666);
           font-size: var(--font-size-base, 1rem);
         }
         .input-row { margin-top: 14px; }
@@ -85,7 +85,7 @@ class LabsCard extends HTMLElement {
         }
         ::slotted([slot="header"]) { font-size: inherit; font-weight: inherit; }
         ::slotted([slot="close"]) { margin-left: 8px; }
-        ::slotted([slot="description"]) { margin-top: 8px; color: var(--color-on-surface-muted, #666); font-size: var(--font-size-base, 1rem); }
+        ::slotted([slot="description"]) { margin-top: 8px; color: var(--color-on-surface-variant, #666); font-size: var(--font-size-base, 1rem); }
         ::slotted([slot="input"]) { margin-top: 14px; display: flex; flex-direction: column; flex: 1; flex-grow: 1; font-size: var(--font-size-base, 1rem); }
         ::slotted([slot="actions"]) { display: flex; gap: 10px; margin-top: 16px; justify-content: center; }
       </style>

@@ -89,7 +89,7 @@ class LabsExpandableCard extends HTMLElement {
 
         .description {
           margin-top: 8px;
-          color: var(--color-on-surface-muted, #666);
+          color: var(--color-on-surface-variant, #666);
           font-size: var(--font-size-base, 1rem);
           flex-shrink: 0;
         }
@@ -132,7 +132,7 @@ class LabsExpandableCard extends HTMLElement {
 
         ::slotted([slot="description"]) {
           margin-top: 8px;
-          color: var(--color-on-surface-muted, #666);
+          color: var(--color-on-surface-variant, #666);
           font-size: var(--font-size-base, 1rem);
           flex-shrink: 0;
         }

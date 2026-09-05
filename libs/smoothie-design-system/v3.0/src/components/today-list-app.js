@@ -86,7 +86,7 @@ if (typeof HTMLElement !== 'undefined') {
             display: flex;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid var(--color-on-surface-variant, #f0f0f0);
+            border-bottom: 1px solid var(--color-on-surface-variant, #e0e0e0);
             gap: 12px;
           }
           .tl-entry-content {
