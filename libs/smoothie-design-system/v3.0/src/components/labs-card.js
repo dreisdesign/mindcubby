@@ -41,9 +41,15 @@ class LabsCard extends HTMLElement {
           background: var(--color-surface, #fff);
           border-radius: var(--radius-card, 0.5rem);
           box-shadow: var(--labs-card-shadow, 0 6px 40px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.04));
-          padding: var(--labs-card-padding);
+          padding: 0;
           font-family: var(--font-family-base, system-ui, sans-serif);
           position: relative;
+        }
+        .card-content {
+          padding: var(--labs-card-padding);
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
         }
         :host([variant="welcome"]) {
           text-align: center;
@@ -83,13 +89,15 @@ class LabsCard extends HTMLElement {
         ::slotted([slot="input"]) { margin-top: 14px; display: flex; flex-direction: column; flex: 1; flex-grow: 1; font-size: var(--font-size-base, 1rem); }
         ::slotted([slot="actions"]) { display: flex; gap: 10px; margin-top: 16px; justify-content: center; }
       </style>
-      <div class="header-row">
-        <div class="header"><slot name="header"></slot></div>
-        <slot name="close"></slot>
+      <div class="card-content">
+        <div class="header-row">
+          <div class="header"><slot name="header"></slot></div>
+          <slot name="close"></slot>
+        </div>
+        <slot name="description"></slot>
+        <slot name="input"></slot>
+        <slot name="actions"></slot>
       </div>
-      <slot name="description"></slot>
-      <slot name="input"></slot>
-      <slot name="actions"></slot>
     `;
   }
 }

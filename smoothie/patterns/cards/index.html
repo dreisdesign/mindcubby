@@ -112,18 +112,38 @@
             border: 1px solid var(--color-outline, #ddd);
             border-radius: 6px;
             margin-bottom: 1rem;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
+            width: 100%;
+        }
+
+        .card-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .card-container > labs-card {
+            width: 100%;
         }
 
         .card-row {
             display: flex;
             gap: 1.5rem;
             flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .card-row > labs-card {
+            flex: 1;
+            min-width: 280px;
         }
 
         .pattern-code {
@@ -219,9 +239,7 @@
             flex-wrap: wrap;
         }
 
-        labs-card {
-            flex: 1;
-            min-width: 280px;
+        .pattern-demo > labs-card {
             max-width: 100%;
         }
     </style>
@@ -232,240 +250,93 @@
         <a href="../../" class="back-link">← Back to Design System</a>
 
         <h1>Card Patterns</h1>
-        <p class="subtitle">Real-world card layouts and compositions. Grid layouts, media cards, and card groups.</p>
+        <p class="subtitle">Real-world card layouts used throughout the Labs apps.</p>
 
-        <!-- Card Grid -->
+        <!-- Input Card Pattern -->
         <section class="section">
-            <h2>Card Grid</h2>
+            <h2>Input Card (Form)</h2>
 
             <div class="pattern">
-                <h3>Product Grid (3-Column)</h3>
-                <p>Common layout for displaying products, items, or content cards in a responsive grid.</p>
-                <div class="pattern-demo">
-                    <div class="card-grid">
-                        <labs-card>
-                            <span slot="header">Design Tokens</span>
-                            <span slot="description">Complete color, typography, and spacing system.</span>
-                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <labs-button variant="secondary" size="small">Learn</labs-button>
-                                <labs-button variant="primary" size="small">View</labs-button>
-                            </div>
-                        </labs-card>
-                        <labs-card>
-                            <span slot="header">Components</span>
-                            <span slot="description">Reusable UI building blocks with full documentation.</span>
-                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <labs-button variant="secondary" size="small">Learn</labs-button>
-                                <labs-button variant="primary" size="small">View</labs-button>
-                            </div>
-                        </labs-card>
-                        <labs-card>
-                            <span slot="header">Patterns</span>
-                            <span slot="description">Common UI patterns and compositional examples.</span>
-                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <labs-button variant="secondary" size="small">Learn</labs-button>
-                                <labs-button variant="primary" size="small">View</labs-button>
-                            </div>
-                        </labs-card>
-                    </div>
-                </div>
-                <div class="pattern-code">
-                    <code>&lt;div class="card-grid"&gt;<br>
-                    &nbsp;&nbsp;&lt;labs-card&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;span slot="header"&gt;Title&lt;/span&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;span slot="description"&gt;Description&lt;/span&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;div slot="actions"&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button ...&gt;&lt;/labs-button&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
-                    &nbsp;&nbsp;&lt;/labs-card&gt;<br>
-                    &lt;/div&gt;<br>
-                    <br>
-                    /* CSS */<br>
-                    .card-grid {<br>
-                    &nbsp;&nbsp;display: grid;<br>
-                    &nbsp;&nbsp;grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));<br>
-                    &nbsp;&nbsp;gap: 1.5rem;<br>
-                    }</code>
-                </div>
-            </div>
-        </section>
-
-        <!-- Card Rows/Horizontal -->
-        <section class="section">
-            <h2>Card Rows (Horizontal)</h2>
-
-            <div class="pattern">
-                <h3>Side-by-Side Cards</h3>
-                <p>Two or three cards in a horizontal row. Common for comparison, before/after, or related items.</p>
-                <div class="pattern-demo">
-                    <div class="card-row">
-                        <labs-card style="flex: 1;">
-                            <span slot="header">Option A</span>
-                            <span slot="description">Left-aligned layout with standard spacing and padding.</span>
-                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <labs-button variant="secondary" size="small">Select</labs-button>
-                            </div>
-                        </labs-card>
-                        <labs-card style="flex: 1;">
-                            <span slot="header">Option B</span>
-                            <span slot="description">Center-aligned layout with emphasis on content hierarchy.</span>
-                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <labs-button variant="primary" size="small">Select</labs-button>
-                            </div>
-                        </labs-card>
-                    </div>
-                </div>
-                <div class="pattern-code">
-                    <code>&lt;div class="card-row"&gt;<br>
-                    &nbsp;&nbsp;&lt;labs-card style="flex: 1;"&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;...<br>
-                    &nbsp;&nbsp;&lt;/labs-card&gt;<br>
-                    &nbsp;&nbsp;&lt;labs-card style="flex: 1;"&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;...<br>
-                    &nbsp;&nbsp;&lt;/labs-card&gt;<br>
-                    &lt;/div&gt;</code>
-                </div>
-            </div>
-
-            <div class="pattern">
-                <h3>Status Cards</h3>
-                <p>Inline cards showing related status or metrics. Often used in dashboards.</p>
-                <div class="pattern-demo">
-                    <div class="card-row">
-                        <labs-card>
-                            <span slot="header">● Running</span>
-                            <span slot="description">3 servers online</span>
-                        </labs-card>
-                        <labs-card>
-                            <span slot="header">○ Idle</span>
-                            <span slot="description">1 server offline</span>
-                        </labs-card>
-                        <labs-card>
-                            <span slot="header">⚠ Warning</span>
-                            <span slot="description">1 server under load</span>
-                        </labs-card>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Dialog/Overlay Cards -->
-        <section class="section">
-            <h2>Dialog & Overlay Patterns</h2>
-
-            <div class="pattern">
-                <h3>Confirmation Dialog</h3>
-                <p>Card used as a modal dialog with high-priority actions.</p>
+                <h3>Text Input Form</h3>
+                <p>Used in Today-List and Note apps for capturing user input.</p>
                 <div class="pattern-demo" style="display: flex; justify-content: center;">
-                    <labs-card style="max-width: 400px;">
-                        <span slot="header">Delete Item?</span>
-                        <labs-button slot="close" variant="icon" aria-label="Close">
-                            <labs-icon name="close" slot="icon-left"></labs-icon>
-                        </labs-button>
-                        <span slot="description">Are you sure you want to delete "Untitled Project"? This action cannot be undone.</span>
+                    <labs-card style="max-width: 450px;">
+                        <span slot="header">Add New Item</span>
+                        <input slot="input" type="text" placeholder="Type here..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--color-outline); border-radius: 4px; background: var(--color-background); color: var(--color-on-background); font-size: 0.95rem; box-sizing: border-box;">
                         <div slot="actions" style="display: flex; gap: 0.75rem; justify-content: flex-end;">
                             <labs-button variant="secondary" size="small">Cancel</labs-button>
-                            <labs-button variant="destructive" size="small">Delete</labs-button>
+                            <labs-button variant="primary" size="small">Save</labs-button>
                         </div>
                     </labs-card>
                 </div>
                 <div class="pattern-code">
-                    <code>&lt;labs-card style="max-width: 400px;"&gt;<br>
-                    &nbsp;&nbsp;&lt;span slot="header"&gt;Delete Item?&lt;/span&gt;<br>
-                    &nbsp;&nbsp;&lt;labs-button slot="close" variant="icon"&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-icon name="close"&gt;&lt;/labs-icon&gt;<br>
-                    &nbsp;&nbsp;&lt;/labs-button&gt;<br>
-                    &nbsp;&nbsp;&lt;span slot="description"&gt;Confirmation text&lt;/span&gt;<br>
+                    <code>&lt;labs-card&gt;<br>
+                    &nbsp;&nbsp;&lt;span slot="header"&gt;Add New Item&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&lt;input slot="input" type="text" placeholder="..."&gt;<br>
                     &nbsp;&nbsp;&lt;div slot="actions"&gt;<br>
                     &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button variant="secondary"&gt;Cancel&lt;/labs-button&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button variant="destructive"&gt;Delete&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button variant="primary"&gt;Save&lt;/labs-button&gt;<br>
                     &nbsp;&nbsp;&lt;/div&gt;<br>
                     &lt;/labs-card&gt;</code>
                 </div>
             </div>
+        </section>
+
+        <!-- Confirmation Dialog Pattern -->
+        <section class="section">
+            <h2>Confirmation Dialog</h2>
 
             <div class="pattern">
-                <h3>Welcome/Onboarding Card</h3>
-                <p>Full-width welcome card with centered content for onboarding flows.</p>
+                <h3>Warning/Confirmation Card</h3>
+                <p>Used in Timer app for reset confirmation and destructive actions.</p>
                 <div class="pattern-demo" style="display: flex; justify-content: center;">
-                    <labs-card variant="welcome" style="max-width: 500px;">
-                        <span slot="header">Welcome to 3D Printing</span>
-                        <span slot="description">Upload your designs, customize settings, and start printing. Let's get you set up with your first project.</span>
-                        <div slot="actions" style="display: flex; gap: 0.75rem; justify-content: center;">
-                            <labs-button variant="secondary" size="small">Learn More</labs-button>
-                            <labs-button variant="primary" size="small">Create Project</labs-button>
+                    <labs-card style="max-width: 400px;">
+                        <labs-icon name="warning" slot="icon-left" style="font-size: 1.5rem; color: var(--color-warning, #ff9800);"></labs-icon>
+                        <span slot="header">Reset Timer?</span>
+                        <span slot="description">This will reset the timer to 25:00. Are you sure?</span>
+                        <div slot="actions" style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                            <labs-button variant="secondary" size="small">Cancel</labs-button>
+                            <labs-button variant="destructive" size="small">Okay</labs-button>
                         </div>
                     </labs-card>
                 </div>
+                <div class="pattern-code">
+                    <code>&lt;labs-card&gt;<br>
+                    &nbsp;&nbsp;&lt;labs-icon name="warning" slot="icon-left"&gt;&lt;/labs-icon&gt;<br>
+                    &nbsp;&nbsp;&lt;span slot="header"&gt;Reset Timer?&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&lt;span slot="description"&gt;Confirmation message&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&lt;div slot="actions"&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button variant="secondary"&gt;Cancel&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;labs-button variant="destructive"&gt;Confirm&lt;/labs-button&gt;<br>
+                    &nbsp;&nbsp;&lt;/div&gt;<br>
+                    &lt;/labs-card&gt;</code>
+                </div>
             </div>
         </section>
 
-        <!-- Stacked Cards -->
+        <!-- Metric Card Pattern -->
         <section class="section">
-            <h2>Stacked Cards (List)</h2>
+            <h2>Metric Card (Stats)</h2>
 
             <div class="pattern">
-                <h3>Item List with Cards</h3>
-                <p>Vertical stack of similar cards. Common for task lists, inbox, activity feeds.</p>
-                <div class="pattern-demo">
-                    <div style="display: flex; flex-direction: column; gap: 1rem;">
-                        <labs-card>
-                            <span slot="header">Design System Review</span>
-                            <span slot="description">Completed components audit and pattern documentation.</span>
-                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: space-between;">
-                                <span style="font-size: 0.85rem; color: var(--color-on-surface-variant, #666);">2 days ago</span>
-                                <labs-button variant="secondary" size="small">View</labs-button>
-                            </div>
-                        </labs-card>
-                        <labs-card>
-                            <span slot="header">Button Patterns Added</span>
-                            <span slot="description">New pattern page showing button combinations and real-world usage.</span>
-                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: space-between;">
-                                <span style="font-size: 0.85rem; color: var(--color-on-surface-variant, #666);">1 week ago</span>
-                                <labs-button variant="secondary" size="small">View</labs-button>
-                            </div>
-                        </labs-card>
-                        <labs-card>
-                            <span slot="header">Component Library v3.0</span>
-                            <span slot="description">Released 15 new components with full theming support.</span>
-                            <div slot="actions" style="display: flex; gap: 0.5rem; justify-content: space-between;">
-                                <span style="font-size: 0.85rem; color: var(--color-on-surface-variant, #666);">2 weeks ago</span>
-                                <labs-button variant="secondary" size="small">View</labs-button>
-                            </div>
-                        </labs-card>
-                    </div>
+                <h3>Simple Metric Display</h3>
+                <p>Used in Today-List and Tracker apps to show counts and metrics. (See labs-metric-card component for specialized version)</p>
+                <div class="pattern-demo" style="display: flex; gap: 1rem;">
+                    <labs-card style="flex: 1; min-width: 150px; text-align: center;">
+                        <span slot="header" style="font-size: 0.9rem; color: var(--color-on-surface-variant);">Tasks</span>
+                        <div slot="description" style="font-size: 2rem; font-weight: 700; color: var(--color-on-background); margin-top: 0.5rem;">12</div>
+                    </labs-card>
+                    <labs-card style="flex: 1; min-width: 150px; text-align: center;">
+                        <span slot="header" style="font-size: 0.9rem; color: var(--color-on-surface-variant);">Completed</span>
+                        <div slot="description" style="font-size: 2rem; font-weight: 700; color: var(--color-on-background); margin-top: 0.5rem;">8</div>
+                    </labs-card>
                 </div>
                 <div class="pattern-code">
-                    <code>&lt;div style="display: flex; flex-direction: column; gap: 1rem;"&gt;<br>
-                    &nbsp;&nbsp;&lt;labs-card&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;span slot="header"&gt;Item 1&lt;/span&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;span slot="description"&gt;...&lt;/span&gt;<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;div slot="actions"&gt;...&lt;/div&gt;<br>
-                    &nbsp;&nbsp;&lt;/labs-card&gt;<br>
-                    &nbsp;&nbsp;&lt;labs-card&gt;...&lt;/labs-card&gt;<br>
-                    &lt;/div&gt;</code>
+                    <code>&lt;labs-card&gt;<br>
+                    &nbsp;&nbsp;&lt;span slot="header"&gt;Label&lt;/span&gt;<br>
+                    &nbsp;&nbsp;&lt;div slot="description"&gt;Number&lt;/div&gt;<br>
+                    &lt;/labs-card&gt;</code>
                 </div>
-            </div>
-        </section>
-
-        <!-- Usage Guidelines -->
-        <section class="section">
-            <h2>Pattern Guidelines</h2>
-            <div class="pattern">
-                <h3>Grid Layout (Products, Cards, Content)</h3>
-                <p>Use `grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))` for responsive multi-column cards. Gap depends on context: 1.5rem for spacious layouts, 1rem for compact.</p>
-            </div>
-            <div class="pattern">
-                <h3>Horizontal Row (Comparison, Status)</h3>
-                <p>Use `display: flex; gap: 1.5rem; flex-wrap: wrap;` for side-by-side cards. Add `flex: 1;` to cards for equal width distribution.</p>
-            </div>
-            <div class="pattern">
-                <h3>Stacked/List (Activity, Tasks, Items)</h3>
-                <p>Use `display: flex; flex-direction: column; gap: 1rem;` for vertical card stacks. Common in inboxes, task lists, and feeds.</p>
-            </div>
-            <div class="pattern">
-                <h3>Dialog/Modal (Confirmation, Onboarding)</h3>
-                <p>Wrap cards in a modal overlay (labs-overlay). Use `max-width: 400-500px` for focused dialogs. Center horizontally with `margin: 0 auto;`</p>
             </div>
         </section>
     </div>

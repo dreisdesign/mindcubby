@@ -288,6 +288,58 @@ labs-button {
 
 ---
 
+## Card Component
+
+The `labs-card` component is the foundation for all card-based layouts in the system. It uses a Shadow DOM wrapper to properly apply padding and spacing to slotted content.
+
+### How Card Spacing Works
+
+Cards apply padding at the component level via an internal `.card-content` wrapper:
+
+```javascript
+.card-content {
+  padding: var(--labs-card-padding);  // 2rem by default
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;  // Vertical spacing between slots
+}
+```
+
+**Key points:**
+- All slotted content (header, description, input, actions) receives 2rem padding
+- Automatic 1rem gap between sections for visual breathing room
+- Fully customizable via CSS variables
+
+### Common Patterns
+
+See [`/smoothie/patterns/cards/`](../../smoothie/patterns/cards/) for real-world examples:
+- **Input Forms** — Used in Today-List and Note apps
+- **Confirmation Dialogs** — Used in Timer app for destructive actions
+- **Metric Cards** — Used in Today-List and Tracker to show counts
+
+### Slots
+
+- `header` — Card title/heading
+- `description` — Main content/description
+- `input` — Form input (text, select, etc.)
+- `actions` — Action buttons (footer)
+- `close` — Close icon/button
+
+### Example
+
+```html
+<labs-card>
+  <span slot="header">Add New Item</span>
+  <input slot="input" type="text" placeholder="Type here...">
+  <div slot="actions">
+    <labs-button variant="secondary">Cancel</labs-button>
+    <labs-button variant="primary">Save</labs-button>
+  </div>
+</labs-card>
+```
+
+---
+
 ## Performance
 
 - ✅ Zero-build, no JavaScript compilation overhead
