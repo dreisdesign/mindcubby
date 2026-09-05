@@ -18,6 +18,7 @@
     </script>
     <script type="module">
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
     <style>
         * {
@@ -138,6 +139,10 @@
             overflow: hidden !important;
         }
 
+        html.in-iframe labs-breadcrumbs {
+            display: none !important;
+        }
+
         html.in-iframe .back-link {
             display: none !important;
         }
@@ -178,8 +183,13 @@
 
 <body>
     <div class="container">
-        <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
+        <labs-button class="back-link" onclick="window.location.href='../../#tokens';" variant="secondary">← Back to
             Home</labs-button>
+
+        <labs-breadcrumbs>
+            <labs-breadcrumb-item href="../../#tokens">0. Design Tokens</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>Typography</labs-breadcrumb-item>
+        </labs-breadcrumbs>
 
         <h1>Typography</h1>
         <p class="subtitle">Font sizes and typography scales</p>
