@@ -18,6 +18,7 @@
     </script>
     <script type="module">
         import '../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
         import '../../libs/smoothie-design-system/v3.0/src/components/labs-container.js';
     </script>
     <style>
@@ -91,6 +92,10 @@
 
         html.in-iframe body {
             overflow: hidden !important;
+        }
+
+                html.in-iframe labs-breadcrumbs {
+            display: none !important;
         }
 
         html.in-iframe .back-link {
@@ -281,8 +286,13 @@
 <body>
     <labs-container id="main-container" medium>
         <div class="container">
-            <labs-button class="back-link" onclick="window.location.href='../';" variant="secondary">← Back to
+            <labs-button class="back-link" onclick="window.location.href='../../#foundations';" variant="secondary">← Back to
                 Hub</labs-button>
+
+            <labs-breadcrumbs>
+                <labs-breadcrumb-item href="../../#foundations">1. Foundations</labs-breadcrumb-item>
+                <labs-breadcrumb-item active>Container</labs-breadcrumb-item>
+            </labs-breadcrumbs>
 
             <h1>Container Component</h1>
             <p class="subtitle">Responsive width container with desktop and mobile padding</p>
