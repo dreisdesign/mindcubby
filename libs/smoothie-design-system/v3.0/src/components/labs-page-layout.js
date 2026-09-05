@@ -82,7 +82,7 @@ class LabsPageLayout extends HTMLElement {
 
         .back-link {
           display: inline-block;
-          margin-bottom: 2rem;
+          margin-bottom: 0.5rem;
         }
 
         .back-link:hover {
