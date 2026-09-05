@@ -36,7 +36,6 @@
   --color-surface-variant: var(--palette-vanilla-200);
   --color-on-surface-variant: var(--palette-vanilla-800);
   /* Outline tokens for light mode */
-  --color-outline: var(--palette-base-500);
   --color-outline-variant: var(--palette-base-300);
   /* Status colors inherit from global tokens */
 }
@@ -69,7 +68,6 @@
   --color-surface-variant: var(--palette-vanilla-500);
   --color-on-surface-variant: var(--palette-vanilla-200);
   /* Outline tokens for dark mode */
-  --color-outline: var(--palette-vanilla-300);
   --color-outline-variant: var(--palette-vanilla-500);
   /* Status colors inherit from global tokens */
 }
@@ -105,7 +103,6 @@
   --color-surface-variant: var(--palette-blueberry-200);
   --color-on-surface-variant: var(--palette-blueberry-800);
   /* Outline tokens for light mode */
-  --color-outline: var(--palette-base-500);
   --color-outline-variant: var(--palette-base-300);
   /* Status colors inherit from global tokens */
 }
@@ -138,7 +135,6 @@
   --color-surface-variant: var(--palette-blueberry-800);
   --color-on-surface-variant: var(--palette-blueberry-200);
   /* Outline tokens for dark mode */
-  --color-outline: var(--palette-blueberry-300);
   --color-outline-variant: var(--palette-blueberry-800);
   /* Status colors inherit from global tokens */
 }
@@ -170,7 +166,6 @@
   --color-surface-variant: var(--palette-strawberry-200);
   --color-on-surface-variant: var(--palette-strawberry-800);
   /* Outline tokens for light mode */
-  --color-outline: var(--palette-base-500);
   --color-outline-variant: var(--palette-base-300);
   /* Status colors inherit from global tokens */
 }
@@ -202,7 +197,6 @@
   --color-surface-variant: var(--palette-strawberry-800);
   --color-on-surface-variant: var(--palette-strawberry-200);
   /* Outline tokens for dark mode */
-  --color-outline: var(--palette-strawberry-300);
   --color-outline-variant: var(--palette-strawberry-800);
   /* Status colors inherit from global tokens */
 }

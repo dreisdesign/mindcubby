@@ -74,7 +74,6 @@
   --color-surface-variant: #303030;
   --color-surface-container: #2A2A2A;
   --color-on-surface-variant: rgba(255, 255, 255, 0.65);
-  --color-outline: rgba(255, 255, 255, 0.12);
   --color-outline-variant: rgba(255, 255, 255, 0.08);
 
   /* Glass/glassmorphism tokens for dark theme */

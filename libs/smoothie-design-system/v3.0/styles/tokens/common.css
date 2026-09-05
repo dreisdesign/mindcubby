@@ -90,7 +90,6 @@
 :root {
   --color-primary-75: #2E2B74BF;
   --color-primary-25: #C1C1FF40;
-  --color-outline: var(--palette-vanilla-800);
   /* radius-sm used by a few components */
   --radius-sm: 4px;
 }
