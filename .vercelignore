@@ -1,0 +1,38 @@
+# Exclude large files and folders from Vercel deployments
+# This reduces deployment storage without affecting git history
+
+# 3D model files and large media
+3d/apps/spooler/Full-Sequence-Shortened.png
+3d/apps/rotater/benchy.stl
+3d/**/_IGNORE/
+3d/**/_ignore/
+3d/**/LOCAL/
+3d/**/_ARCHIVE/
+3d/**/*.stl
+3d/**/*.gcode
+
+# Build outputs
+dist/
+build/
+.next/
+
+# Node dependencies (Vercel installs these separately)
+node_modules/
+
+# Development files
+.DS_Store
+*.log
+*.swp
+*.swo
+*~
+.env*
+.vscode/
+.idea/
+
+# Documentation (not needed in production)
+DOCS/
+README.md
+SECURITY.md
+MONITORING.md
+SETUP.md
+SITEMAP.md
