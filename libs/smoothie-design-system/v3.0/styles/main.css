@@ -20,6 +20,7 @@
   --color-on-primary: var(--palette-white, #FFFFFF);
   --color-on-background: var(--palette-blueberry-900, #15122B);
   --color-on-surface: var(--palette-neutral-800, #333333);
+  --color-on-surface-variant: var(--palette-neutral-600, #999999);
   /* Status colors inherit from global tokens in colors.css */
   --color-danger: var(--palette-strawberry-500, #E53935);
 }

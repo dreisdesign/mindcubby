@@ -182,7 +182,7 @@ class LabsButton extends HTMLElement {
         :host([variant="secondary"]) button {
           background: transparent;
           color: var(--color-on-surface);
-          border: 1px solid var(--color-outline, var(--color-primary));
+          border: 1px solid var(--color-on-surface-variant, var(--color-on-surface));
         }
         :host([variant="secondary"]) button:hover {
           background: color-mix(in srgb, var(--color-primary) 6%, transparent);
@@ -192,7 +192,7 @@ class LabsButton extends HTMLElement {
         :host([variant="secondary-left"]) button {
           background: transparent;
           color: var(--color-on-surface);
-          border: 1px solid var(--color-outline, var(--color-primary));
+          border: 1px solid var(--color-on-surface-variant, var(--color-on-surface));
           justify-content: flex-start;
           padding-left: 1rem;
         }
