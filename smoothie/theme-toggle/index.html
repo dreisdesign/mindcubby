@@ -18,7 +18,8 @@
     </script>
     <script type="module">
         import '../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../libs/smoothie-design-system/v3.0/src/components/labs-container.js';
         import '../../libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js';
     </script>
     <style>
@@ -223,7 +224,7 @@
 </head>
 
 <body>
-    <div class="container">
+    <labs-container id="main-container" medium>
         <labs-button class="back-link" onclick="window.location.href='../../#foundations';" variant="secondary">← Back to
             Home</labs-button>
 
@@ -411,7 +412,7 @@
                 </ul>
             </div>
         </div>
-    </div>
+    </labs-container>
 
     <!-- Floating Theme Toolbar -->
     <div class="floating-toolbar">
