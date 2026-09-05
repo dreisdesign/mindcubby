@@ -33,6 +33,18 @@
             border-width: 0;
         }
 
+        html.in-iframe .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -47,7 +59,13 @@
             line-height: 1.6;
             transition: background-color 0.3s, color 0.3s;
             min-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        html.in-iframe body {
             overflow: hidden;
+            padding: 0;
         }
 
         .container {
@@ -231,23 +249,14 @@
         <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
             Home</labs-button>
 
-        <h1 class="sr-only">Theme Toggle Component</h1>
-        <p class="subtitle sr-only">Organism component: Smart theme/mode switcher with broadcasting</p>
-
-        <div class="section">
-            <h2>About This Component</h2>
-            <p style="margin-bottom: 1rem; color: var(--color-on-surface);">
-                <code>&lt;labs-theme-toggle&gt;</code> is an <strong>organism-level component</strong> that combines
-                theme switching logic with UI presentation. Unlike basic molecules like buttons, it includes:
-            </p>
-            <ul class="feature-list">
-                <li>Internal state management (localStorage persistence)</li>
-                <li>Event emission and postMessage broadcasting</li>
-                <li>External communication with iframes</li>
-                <li>Icon/emoji toggling based on state</li>
-            </ul>
+        <div style="font-size: 0.85rem; color: var(--color-on-surface-variant); margin-bottom: 1rem;">
+            1. Foundations / Theme Toggle
         </div>
 
+        <h1>Theme Toggle</h1>
+        <p class="subtitle">Organism component: Smart theme/mode switcher with broadcasting</p>
+
+        <!-- Live Demo Section (First) -->
         <div class="section">
             <h2>Live Demo</h2>
             <div class="demo-grid">
@@ -281,6 +290,21 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- About This Component Section (After Demo) -->
+        <div class="section">
+            <h2>About This Component</h2>
+            <p style="margin-bottom: 1rem; color: var(--color-on-surface);">
+                <code>&lt;labs-theme-toggle&gt;</code> is an <strong>organism-level component</strong> that combines
+                theme switching logic with UI presentation. Unlike basic molecules like buttons, it includes:
+            </p>
+            <ul class="feature-list">
+                <li>Internal state management (localStorage persistence)</li>
+                <li>Event emission and postMessage broadcasting</li>
+                <li>External communication with iframes</li>
+                <li>Icon/emoji toggling based on state</li>
+            </ul>
         </div>
 
         <div class="section">
