@@ -17,8 +17,7 @@
         })();
     </script>
     <script type="module">
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-toast.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';        import '../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-toast.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
     <style>
@@ -125,16 +124,17 @@
             background: var(--color-background, #fff);
             border: 1px solid var(--color-on-surface-variant, #ccc);
             border-radius: 6px;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-size: 0.8rem;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
             overflow-x: auto;
         }
 
         .code-example code {
             font-family: 'Monaco', 'Menlo', monospace;
             color: var(--color-on-surface, #333);
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .note {
@@ -228,11 +228,7 @@
             <labs-breadcrumb-item href="../">3. Patterns</labs-breadcrumb-item>
             <labs-breadcrumb-item active>Toast Notifications</labs-breadcrumb-item>
         </labs-breadcrumbs>
-
-        <h1>Toast Notifications</h1>
-        <p class="subtitle">Non-blocking feedback messages that appear temporarily and auto-dismiss. Use toasts for notifications, confirmations, and reversible actions (undo).</p>
-
-        <!-- Basic Toasts Section -->
+<!-- Basic Toasts Section -->
         <section class="section">
             <h2>Basic Toasts</h2>
             <div class="grid">

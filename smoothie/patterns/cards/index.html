@@ -17,8 +17,7 @@
         })();
     </script>
     <script type="module">
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-card.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';        import '../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-card.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
@@ -151,15 +150,16 @@
             background: var(--color-background, #fff);
             border: 1px solid var(--color-on-surface-variant, #ccc);
             border-radius: 6px;
-            padding: 1rem;
-            font-size: 0.75rem;
+            padding: 1.5rem;
+            font-size: 0.85rem;
             overflow-x: auto;
+            margin-bottom: 1.5rem;
         }
 
         .pattern-code code {
             font-family: 'Monaco', 'Menlo', monospace;
             color: var(--color-on-surface, #333);
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .floating-toolbar {
@@ -255,16 +255,11 @@
 </head>
 
 <body>
-    <div class="container">
-        <a href="../../" class="back-link">← Back to Design System</a>
-
-        <labs-breadcrumbs>
+    <labs-page-layout title="Card Patterns" subtitle="Common card patterns and layouts used across MindCubby apps. Real compositional examples." back-href="../../">
+        <labs-breadcrumbs slot="breadcrumbs">
             <labs-breadcrumb-item href="../">3. Patterns</labs-breadcrumb-item>
             <labs-breadcrumb-item active>Card Patterns</labs-breadcrumb-item>
         </labs-breadcrumbs>
-
-        <h1>Card Patterns</h1>
-        <p class="subtitle">Real-world card layouts used throughout the Labs apps.</p>
 
         <!-- Input Card Pattern -->
         <section class="section">

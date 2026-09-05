@@ -21,6 +21,7 @@
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-checkbox.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
     </script>
     <style>
         .sr-only {
@@ -182,19 +183,12 @@
 </head>
 
 <body>
-    <div class="container">
-        <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
-            Home</labs-button>
-
-        <labs-breadcrumbs>
+    <labs-page-layout title="Checkbox Component" subtitle="Checkbox states and variants" back-href="../../">
+        <labs-breadcrumbs slot="breadcrumbs">
             <labs-breadcrumb-item href="../">2. Components</labs-breadcrumb-item>
             <labs-breadcrumb-item active>Checkbox</labs-breadcrumb-item>
         </labs-breadcrumbs>
-
-        <h1>Checkbox Component</h1>
-        <p class="subtitle">Checkbox states and variants</p>
-
-        <div class="section">
+<div class="section">
             <h2>Checkbox States</h2>
             <div class="grid">
                 <div class="preview">
@@ -268,8 +262,8 @@
                 <option value="dark">Dark</option>
             </select>
         </div>
-    </div>
-
+    
+    </labs-page-layout>
     <script type="module">
         // Theme Manager
         const themeSelect = document.getElementById('theme-select');

@@ -17,8 +17,7 @@
         })();
     </script>
     <script type="module">
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-container.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';        import '../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-container.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
     </script>
     <style>
@@ -314,18 +313,11 @@
 <body>
     <labs-container id="main-container" medium>
         <div class="container">
-            <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
-                Hub</labs-button>
-
-            <labs-breadcrumbs>
+<labs-breadcrumbs>
                 <labs-breadcrumb-item href="../">1. Foundations</labs-breadcrumb-item>
                 <labs-breadcrumb-item active>Container</labs-breadcrumb-item>
             </labs-breadcrumbs>
-
-            <h1>Container</h1>
-            <p class="subtitle">Responsive width container with desktop and mobile padding</p>
-
-            <div class="section">
+<div class="section">
                 <h2>Live Container Demo</h2>
                 <p style="margin-bottom: 2rem; color: var(--color-on-surface);">Use the toolbar to switch between sizes and watch how the layout responds. The entire page is wrapped in the active container size.</p>
 
@@ -493,7 +485,7 @@
                 <option value="fill">Fill (100vw)</option>
             </select>
         </div>
-    </div>
+    </labs-page-layout>
 
     <script type="module">
         // Theme Manager

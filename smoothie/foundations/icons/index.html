@@ -206,19 +206,12 @@
 </head>
 
 <body>
-    <div class="container">
-        <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
-            Home</labs-button>
-
-        <labs-breadcrumbs>
+    <labs-page-layout title="Icons" subtitle="Complete icon set (66 icons)" back-href="../../">
+        <labs-breadcrumbs slot="breadcrumbs">
             <labs-breadcrumb-item href="../">1. Foundations</labs-breadcrumb-item>
             <labs-breadcrumb-item active>Icons</labs-breadcrumb-item>
         </labs-breadcrumbs>
-
-        <h1>Icons</h1>
-        <p class="subtitle">Complete icon set (66 icons)</p>
-
-        <!-- Icons Section -->
+<!-- Icons Section -->
         <section>
             <h2>Available Icons (66 total)</h2>
 
@@ -507,8 +500,8 @@
                 <option value="dark">Dark</option>
             </select>
         </div>
-    </div>
-
+    
+    </labs-page-layout>
     <script>
         // Initialize theme and appearance selects
         const theme = localStorage.getItem('smoothie-theme') || 'vanilla';

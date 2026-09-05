@@ -21,6 +21,7 @@
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-dropdown.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
     </script>
     <style>
         .sr-only {
@@ -175,19 +176,12 @@
 </head>
 
 <body>
-    <div class="container">
-        <labs-button class="back-link" onclick="window.location.href='../../';" variant="secondary">← Back to
-            Home</labs-button>
-
-        <labs-breadcrumbs>
+    <labs-page-layout title="Dropdown Component" subtitle="Dropdown menu and selection states" back-href="../../">
+        <labs-breadcrumbs slot="breadcrumbs">
             <labs-breadcrumb-item href="../">2. Components</labs-breadcrumb-item>
             <labs-breadcrumb-item active>Dropdown</labs-breadcrumb-item>
         </labs-breadcrumbs>
-
-        <h1>Dropdown Component</h1>
-        <p class="subtitle">Dropdown menu and selection states</p>
-
-        <div class="section">
+<div class="section">
             <h2>Basic Dropdown</h2>
             <div class="grid">
                 <div class="preview-container">
@@ -244,8 +238,8 @@
                 <option value="dark">Dark</option>
             </select>
         </div>
-    </div>
-
+    
+    </labs-page-layout>
     <script type="module">
         // Theme Manager
         const themeSelect = document.getElementById('theme-select');
