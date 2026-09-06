@@ -105,41 +105,6 @@
             align-items: center;
         }
 
-        .floating-toolbar {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--color-surface, #fff);
-            border: 1px solid var(--color-on-surface-variant, #ccc);
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            z-index: 1000;
-        }
-
-        html.in-iframe .floating-toolbar {
-            display: none !important;
-        }
-
-        html.in-iframe body {
-            overflow: hidden !important;
-        }
-
-        html.in-iframe labs-breadcrumbs {
-            display: none !important;
-        }
-
-        html.in-iframe .back-link {
-            display: none !important;
-        }
-
-        html.in-iframe h1 {
-            font-size: 1.5rem;
-        }
-
         .back-link {
             font-size: 0.9rem;
             margin-bottom: 0.5rem;

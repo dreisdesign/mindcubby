@@ -125,9 +125,37 @@ class LabsPageLayout extends HTMLElement {
   }
 
   setupIframeDetection() {
-    // Add iframe detection class to host element
+    // Check if we're in an iframe
     if (window.self !== window.top) {
+      // Add class to host element for shadow DOM styling
       this.classList.add('in-iframe');
+
+      // Add class to html element for document-level styling
+      document.documentElement.classList.add('in-iframe');
+
+      // Inject global styles for iframe behavior (only once per page)
+      if (!document.querySelector('style[data-iframe-styles]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-iframe-styles', 'true');
+        style.textContent = `
+          /* Prevent scrolling in iframe */
+          html.in-iframe body {
+            overflow: hidden !important;
+          }
+
+          /* Hide floating toolbar in iframe */
+          html.in-iframe .floating-toolbar {
+            display: none !important;
+          }
+
+          /* Hide floating toolbar select elements in iframe */
+          html.in-iframe .floating-toolbar label,
+          html.in-iframe .floating-toolbar select {
+            display: none !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
     }
   }
 
