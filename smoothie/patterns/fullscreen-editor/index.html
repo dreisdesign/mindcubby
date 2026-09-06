@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fullscreen Editor Pattern - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
+    </script>
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: auto;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        /* Only hide overflow when embedded in iframe */
+        html.in-iframe body {
+            overflow: auto;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-on-surface-variant, #ccc);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .demo {
+            padding: 0;
+            background: var(--color-background, #fff);
+            border-radius: 8px;
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            overflow: hidden;
+        }
+
+        .demo > p {
+            color: var(--color-on-surface-variant, #666);
+            font-size: 0.9rem;
+            padding: 1.5rem 1.5rem 0 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .editor-frame {
+            display: flex;
+            flex-direction: column;
+            height: 400px;
+            background: var(--color-background, #fff);
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--color-on-surface-variant, #ccc);
+            background: var(--color-surface, #f5f5f5);
+        }
+
+        .editor-header h3 {
+            font-size: 1rem;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .editor-meta {
+            font-size: 0.8rem;
+            color: var(--color-on-surface-variant, #999);
+            margin-top: 0.25rem;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .editor-body {
+            flex: 1;
+            padding: 1.5rem;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .editor-form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .editor-form-field label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--color-on-background);
+        }
+
+        .editor-form-field input,
+        .editor-form-field textarea {
+            padding: 0.75rem;
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 4px;
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.95rem;
+            color: var(--color-on-background);
+            background: var(--color-background);
+        }
+
+        .editor-form-field textarea {
+            flex: 1;
+            resize: none;
+            min-height: 150px;
+        }
+
+        .editor-form-field input:focus,
+        .editor-form-field textarea:focus {
+            outline: none;
+            border-color: var(--color-primary, #007acc);
+            box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.1);
+        }
+
+        .editor-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--color-on-surface-variant, #ccc);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            background: var(--color-surface, #f5f5f5);
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe body {
+            overflow: hidden !important;
+        }
+
+        html.in-iframe labs-breadcrumbs {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        html.in-iframe h1 {
+            font-size: 1.5rem;
+        }
+
+        .back-link {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .back-link a {
+            color: var(--color-primary, #007acc);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="../">← Patterns</a>
+        </div>
+
+        <labs-page-layout title="Fullscreen Editor Pattern" subtitle="Note-taking interface with header, body, and action footer">
+            <labs-breadcrumbs slot="breadcrumbs">
+                <a href="../../">Smoothie</a>
+                <a href="../">Patterns</a>
+                <span>Fullscreen Editor Pattern</span>
+            </labs-breadcrumbs>
+
+            <section class="section">
+                <h2>Basic Note Editor</h2>
+                <div class="demo">
+                    <p>Clean editor layout with title, content, and save/cancel actions.</p>
+                    <div class="editor-frame">
+                        <div class="editor-header">
+                            <div>
+                                <h3>Untitled Note</h3>
+                                <div class="editor-meta">Created now • Editing</div>
+                            </div>
+                            <div class="editor-actions">
+                                <labs-button variant="secondary" size="small" aria-label="More options">
+                                    <labs-icon name="more_vert" slot="icon"></labs-icon>
+                                </labs-button>
+                            </div>
+                        </div>
+                        <div class="editor-body">
+                            <div class="editor-form-field">
+                                <label>Title</label>
+                                <input type="text" placeholder="Enter note title..." value="My Note">
+                            </div>
+                            <div class="editor-form-field">
+                                <label>Content</label>
+                                <textarea placeholder="Start typing...">Write your thoughts here. Auto-saves as you type.</textarea>
+                            </div>
+                        </div>
+                        <div class="editor-footer">
+                            <labs-button variant="secondary">Cancel</labs-button>
+                            <labs-button variant="primary">Save</labs-button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Editor with Metadata</h2>
+                <div class="demo">
+                    <p>Editor with tags, categories, and additional metadata fields.</p>
+                    <div class="editor-frame">
+                        <div class="editor-header">
+                            <div>
+                                <h3>Project Roadmap 2025</h3>
+                                <div class="editor-meta">Last edited 2 hours ago • 3 minutes read</div>
+                            </div>
+                            <div class="editor-actions">
+                                <labs-button variant="secondary" size="small" aria-label="Share">
+                                    <labs-icon name="share" slot="icon"></labs-icon>
+                                </labs-button>
+                                <labs-button variant="secondary" size="small" aria-label="More options">
+                                    <labs-icon name="more_vert" slot="icon"></labs-icon>
+                                </labs-button>
+                            </div>
+                        </div>
+                        <div class="editor-body">
+                            <div class="editor-form-field">
+                                <label>Title</label>
+                                <input type="text" placeholder="Enter note title..." value="Project Roadmap 2025">
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="editor-form-field">
+                                    <label>Category</label>
+                                    <input type="text" value="Planning">
+                                </div>
+                                <div class="editor-form-field">
+                                    <label>Status</label>
+                                    <input type="text" value="In Progress">
+                                </div>
+                            </div>
+                            <div class="editor-form-field">
+                                <label>Content</label>
+                                <textarea placeholder="Start typing...">Q1: Foundation & Testing
+Q2: Feature Development
+Q3: Optimization & Polish
+Q4: Launch & Feedback</textarea>
+                            </div>
+                        </div>
+                        <div class="editor-footer">
+                            <labs-button variant="secondary">Discard</labs-button>
+                            <labs-button variant="primary">Save Changes</labs-button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Best Practices</h2>
+                <ul style="margin-left: 1.5rem; color: var(--color-on-surface-variant, #666); font-size: 0.9rem;">
+                    <li style="margin-bottom: 0.5rem;">Use flexbox column layout with flex: 1 on body for vertical fill</li>
+                    <li style="margin-bottom: 0.5rem;">Add metadata (created date, last edit) below title</li>
+                    <li style="margin-bottom: 0.5rem;">Use header for title and action buttons (share, more options)</li>
+                    <li style="margin-bottom: 0.5rem;">Place Cancel/Save buttons in fixed footer</li>
+                    <li style="margin-bottom: 0.5rem;">Auto-save content and show last-saved timestamp</li>
+                    <li style="margin-bottom: 0.5rem;">Use textarea with flex: 1 to fill available space</li>
+                </ul>
+            </section>
+        </labs-page-layout>
+    </div>
+
+    <div class="floating-toolbar">
+        <labs-theme-button id="theme-selector"></labs-theme-button>
+        <labs-appearance-toggle id="appearance-toggle"></labs-appearance-toggle>
+    </div>
+
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-appearance-toggle.js';
+
+        // Handle theme and appearance synchronization
+        document.addEventListener('theme-changed', (event) => {
+            const newTheme = event.detail.theme;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', theme: newTheme }, '*');
+            }
+        });
+
+        document.addEventListener('appearance-changed', (event) => {
+            const newAppearance = event.detail.appearance;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', appearance: newAppearance }, '*');
+            }
+        });
+
+        window.addEventListener('message', (event) => {
+            try {
+                if (event.data.type === 'smoothie-theme-update') {
+                    const root = document.documentElement;
+                    if (event.data.theme) {
+                        root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+                        root.classList.add(`theme-${event.data.theme}`);
+                        localStorage.setItem('smoothie-theme', event.data.theme);
+                    }
+                    if (event.data.appearance) {
+                        root.classList.remove('appearance-light', 'appearance-dark');
+                        root.classList.add(`appearance-${event.data.appearance}`);
+                        localStorage.setItem('smoothie-appearance', event.data.appearance);
+                    }
+                }
+            } catch (e) {
+                // Silently fail if we can't access parent (cross-origin)
+            }
+        });
+    </script>
+</body>
+
+</html>

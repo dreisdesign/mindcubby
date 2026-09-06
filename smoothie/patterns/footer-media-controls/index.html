@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer Media Controls Pattern - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
+    </script>
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: auto;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        /* Only hide overflow when embedded in iframe */
+        html.in-iframe body {
+            overflow: auto;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-on-surface-variant, #ccc);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .demo {
+            padding: 0;
+            background: var(--color-background, #fff);
+            border-radius: 8px;
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .demo > p {
+            color: var(--color-on-surface-variant, #666);
+            font-size: 0.9rem;
+            padding: 1.5rem 1.5rem 1rem 1.5rem;
+            margin-bottom: 0;
+        }
+
+        .demo-content {
+            padding: 0;
+            background: var(--color-surface, #f5f5f5);
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-on-surface-variant, #999);
+            font-size: 0.9rem;
+        }
+
+        /* Media Player Footer */
+        .media-footer {
+            background: var(--color-surface, #f5f5f5);
+            border-top: 1px solid var(--color-on-surface-variant, #ccc);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .media-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0 0.5rem;
+        }
+
+        .media-thumbnail {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            background: var(--color-on-surface-variant, #ccc);
+        }
+
+        .media-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .media-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--color-on-background);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .media-subtitle {
+            font-size: 0.85rem;
+            color: var(--color-on-surface-variant, #666);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .media-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .volume-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--color-on-surface-variant, #ddd);
+            cursor: pointer;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe body {
+            overflow: hidden !important;
+        }
+
+        html.in-iframe labs-breadcrumbs {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        html.in-iframe h1 {
+            font-size: 1.5rem;
+        }
+
+        .back-link {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .back-link a {
+            color: var(--color-primary, #007acc);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="../">← Patterns</a>
+        </div>
+
+        <labs-page-layout title="Footer Media Controls Pattern" subtitle="Media player with playback controls and volume">
+            <labs-breadcrumbs slot="breadcrumbs">
+                <a href="../../">Smoothie</a>
+                <a href="../">Patterns</a>
+                <span>Footer Media Controls Pattern</span>
+            </labs-breadcrumbs>
+
+            <section class="section">
+                <h2>Music Player Footer</h2>
+                <div class="demo">
+                    <p>Fixed footer with currently playing track and playback controls.</p>
+                    <div class="demo-content">
+                        Main content area (scrollable)
+                    </div>
+                    <div class="media-footer">
+                        <div class="media-info">
+                            <div class="media-thumbnail"></div>
+                            <div class="media-text">
+                                <div class="media-title">Summer Vibes Mix</div>
+                                <div class="media-subtitle">Artist Collective</div>
+                            </div>
+                        </div>
+                        <div class="media-controls">
+                            <labs-button variant="secondary" size="small" aria-label="Previous">
+                                <labs-icon name="skip_previous" slot="icon"></labs-icon>
+                            </labs-button>
+                            <labs-button variant="primary" size="small" aria-label="Play">
+                                <labs-icon name="play_arrow" slot="icon"></labs-icon>
+                            </labs-button>
+                            <labs-button variant="secondary" size="small" aria-label="Next">
+                                <labs-icon name="skip_next" slot="icon"></labs-icon>
+                            </labs-button>
+                            <div style="flex: 1;"></div>
+                            <div class="volume-group">
+                                <labs-button variant="secondary" size="small" aria-label="Volume">
+                                    <labs-icon name="volume_up" slot="icon"></labs-icon>
+                                </labs-button>
+                                <div class="volume-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Podcast Player Footer</h2>
+                <div class="demo">
+                    <p>Footer with episode details and playback speed controls.</p>
+                    <div class="demo-content">
+                        Main content area (scrollable)
+                    </div>
+                    <div class="media-footer">
+                        <div class="media-info">
+                            <div class="media-thumbnail"></div>
+                            <div class="media-text">
+                                <div class="media-title">Tech Talk Daily - Episode 127</div>
+                                <div class="media-subtitle">AI & Machine Learning Trends • 43:22</div>
+                            </div>
+                        </div>
+                        <div class="media-controls">
+                            <labs-button variant="secondary" size="small" aria-label="Rewind 15 seconds">
+                                <labs-icon name="replay_15" slot="icon"></labs-icon>
+                            </labs-button>
+                            <labs-button variant="primary" size="small" aria-label="Play">
+                                <labs-icon name="play_arrow" slot="icon"></labs-icon>
+                            </labs-button>
+                            <labs-button variant="secondary" size="small" aria-label="Forward 30 seconds">
+                                <labs-icon name="forward_30" slot="icon"></labs-icon>
+                            </labs-button>
+                            <div style="flex: 1;"></div>
+                            <labs-button variant="secondary" size="small">1x</labs-button>
+                            <div style="flex: 0 0 auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Video Player Footer</h2>
+                <div class="demo">
+                    <p>Compact footer with video controls and fullscreen option.</p>
+                    <div class="demo-content">
+                        Video player area
+                    </div>
+                    <div class="media-footer">
+                        <div class="media-controls" style="gap: 1rem;">
+                            <labs-button variant="secondary" size="small" aria-label="Play">
+                                <labs-icon name="play_arrow" slot="icon"></labs-icon>
+                            </labs-button>
+                            <div style="flex: 1;"></div>
+                            <span style="font-size: 0.85rem; color: var(--color-on-surface-variant, #666);">2:45 / 5:30</span>
+                            <div style="flex: 1;"></div>
+                            <labs-button variant="secondary" size="small" aria-label="Closed captions">
+                                <labs-icon name="closed_caption" slot="icon"></labs-icon>
+                            </labs-button>
+                            <labs-button variant="secondary" size="small" aria-label="Settings">
+                                <labs-icon name="settings" slot="icon"></labs-icon>
+                            </labs-button>
+                            <labs-button variant="secondary" size="small" aria-label="Fullscreen">
+                                <labs-icon name="fullscreen" slot="icon"></labs-icon>
+                            </labs-button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Best Practices</h2>
+                <ul style="margin-left: 1.5rem; color: var(--color-on-surface-variant, #666); font-size: 0.9rem;">
+                    <li style="margin-bottom: 0.5rem;">Use fixed footer to keep player accessible while scrolling</li>
+                    <li style="margin-bottom: 0.5rem;">Show thumbnail, title, and artist/creator in media info section</li>
+                    <li style="margin-bottom: 0.5rem;">Center primary playback controls (play, pause, next)</li>
+                    <li style="margin-bottom: 0.5rem;">Place secondary controls (volume, speed) on the right</li>
+                    <li style="margin-bottom: 0.5rem;">Use consistent icon sizes and spacing</li>
+                    <li style="margin-bottom: 0.5rem;">Provide compact view for narrow screens</li>
+                    <li style="margin-bottom: 0.5rem;">Add keyboard shortcuts for accessibility</li>
+                </ul>
+            </section>
+        </labs-page-layout>
+    </div>
+
+    <div class="floating-toolbar">
+        <labs-theme-button id="theme-selector"></labs-theme-button>
+        <labs-appearance-toggle id="appearance-toggle"></labs-appearance-toggle>
+    </div>
+
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-appearance-toggle.js';
+
+        // Handle theme and appearance synchronization
+        document.addEventListener('theme-changed', (event) => {
+            const newTheme = event.detail.theme;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', theme: newTheme }, '*');
+            }
+        });
+
+        document.addEventListener('appearance-changed', (event) => {
+            const newAppearance = event.detail.appearance;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', appearance: newAppearance }, '*');
+            }
+        });
+
+        window.addEventListener('message', (event) => {
+            try {
+                if (event.data.type === 'smoothie-theme-update') {
+                    const root = document.documentElement;
+                    if (event.data.theme) {
+                        root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+                        root.classList.add(`theme-${event.data.theme}`);
+                        localStorage.setItem('smoothie-theme', event.data.theme);
+                    }
+                    if (event.data.appearance) {
+                        root.classList.remove('appearance-light', 'appearance-dark');
+                        root.classList.add(`appearance-${event.data.appearance}`);
+                        localStorage.setItem('smoothie-appearance', event.data.appearance);
+                    }
+                }
+            } catch (e) {
+                // Silently fail if we can't access parent (cross-origin)
+            }
+        });
+    </script>
+</body>
+
+</html>
