@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Patterns - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
+    </script>
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: auto;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        /* Only hide overflow when embedded in iframe */
+        html.in-iframe body {
+            overflow: auto;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-on-surface-variant, #ccc);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .demo {
+            padding: 1.5rem;
+            background: var(--color-surface, #f5f5f5);
+            border-radius: 8px;
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+        }
+
+        .demo p {
+            color: var(--color-on-surface-variant, #666);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe body {
+            overflow: hidden !important;
+        }
+
+        html.in-iframe labs-breadcrumbs {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        html.in-iframe h1 {
+            font-size: 1.5rem;
+        }
+
+        .back-link {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .back-link a {
+            color: var(--color-primary, #007acc);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .code-label {
+            font-size: 0.75rem;
+            color: var(--color-on-surface-variant, #999);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="../">← Patterns</a>
+        </div>
+
+        <labs-page-layout title="Button Patterns" subtitle="Common button composition and usage patterns">
+            <labs-breadcrumbs slot="breadcrumbs">
+                <a href="../../">Smoothie</a>
+                <a href="../">Patterns</a>
+                <span>Button Patterns</span>
+            </labs-breadcrumbs>
+
+            <section class="section">
+                <h2>Icon-Only Button</h2>
+                <div class="demo">
+                    <p>Icon-only buttons for compact UI. Always include aria-label for accessibility.</p>
+                    <div class="button-group">
+                        <labs-button variant="secondary" aria-label="Settings">
+                            <labs-icon name="settings" slot="icon"></labs-icon>
+                        </labs-button>
+                        <labs-button variant="secondary" aria-label="More options">
+                            <labs-icon name="more_vert" slot="icon"></labs-icon>
+                        </labs-button>
+                        <labs-button variant="secondary" aria-label="Close">
+                            <labs-icon name="close" slot="icon"></labs-icon>
+                        </labs-button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Button with Icon and Label</h2>
+                <div class="demo">
+                    <p>Primary action buttons with leading icon and label.</p>
+                    <div class="button-group">
+                        <labs-button variant="primary">
+                            <labs-icon name="add" slot="icon"></labs-icon>
+                            Add Item
+                        </labs-button>
+                        <labs-button variant="primary">
+                            <labs-icon name="download" slot="icon"></labs-icon>
+                            Export Data
+                        </labs-button>
+                        <labs-button variant="primary">
+                            <labs-icon name="send" slot="icon"></labs-icon>
+                            Send
+                        </labs-button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Button Toggles</h2>
+                <div class="demo">
+                    <p>Buttons that toggle between states (e.g., play/pause, on/off).</p>
+                    <div class="button-group">
+                        <labs-button variant="secondary" id="play-btn">
+                            <labs-icon name="play_arrow" slot="icon"></labs-icon>
+                            Play
+                        </labs-button>
+                        <labs-button variant="secondary" id="favorite-btn" aria-label="Add to favorites">
+                            <labs-icon name="favorite_border" slot="icon"></labs-icon>
+                        </labs-button>
+                        <labs-button variant="secondary" id="theme-btn">
+                            <labs-icon name="light_mode" slot="icon"></labs-icon>
+                            Light
+                        </labs-button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Button Row</h2>
+                <div class="demo">
+                    <p>Multiple buttons in a row for related actions (filters, navigation).</p>
+                    <div class="button-group">
+                        <labs-button variant="primary" size="small">All</labs-button>
+                        <labs-button variant="secondary" size="small">Active</labs-button>
+                        <labs-button variant="secondary" size="small">Archived</labs-button>
+                        <labs-button variant="secondary" size="small">Deleted</labs-button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Button Pair</h2>
+                <div class="demo">
+                    <p>Common dialog action pattern: Cancel and Confirm buttons.</p>
+                    <div class="button-group" style="justify-content: flex-end;">
+                        <labs-button variant="secondary">Cancel</labs-button>
+                        <labs-button variant="primary">Confirm</labs-button>
+                    </div>
+                </div>
+            </section>
+        </labs-page-layout>
+    </div>
+
+    <div class="floating-toolbar">
+        <labs-theme-button id="theme-selector"></labs-theme-button>
+        <labs-appearance-toggle id="appearance-toggle"></labs-appearance-toggle>
+    </div>
+
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-appearance-toggle.js';
+
+        // Button toggle demos
+        const playBtn = document.getElementById('play-btn');
+        let isPlaying = false;
+        playBtn?.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            const icon = playBtn.querySelector('labs-icon');
+            if (isPlaying) {
+                playBtn.textContent = 'Pause';
+                icon.setAttribute('name', 'pause');
+                icon.slot = 'icon';
+            } else {
+                playBtn.textContent = 'Play';
+                icon.setAttribute('name', 'play_arrow');
+                icon.slot = 'icon';
+            }
+        });
+
+        const favoriteBtn = document.getElementById('favorite-btn');
+        let isFavorite = false;
+        favoriteBtn?.addEventListener('click', () => {
+            isFavorite = !isFavorite;
+            const icon = favoriteBtn.querySelector('labs-icon');
+            icon.setAttribute('name', isFavorite ? 'favorite' : 'favorite_border');
+        });
+
+        const themeBtn = document.getElementById('theme-btn');
+        let isDark = false;
+        themeBtn?.addEventListener('click', () => {
+            isDark = !isDark;
+            const icon = themeBtn.querySelector('labs-icon');
+            icon.setAttribute('name', isDark ? 'dark_mode' : 'light_mode');
+            themeBtn.textContent = isDark ? 'Dark' : 'Light';
+        });
+
+        // Handle theme and appearance synchronization
+        document.addEventListener('theme-changed', (event) => {
+            const newTheme = event.detail.theme;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', theme: newTheme }, '*');
+            }
+        });
+
+        document.addEventListener('appearance-changed', (event) => {
+            const newAppearance = event.detail.appearance;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', appearance: newAppearance }, '*');
+            }
+        });
+
+        window.addEventListener('message', (event) => {
+            try {
+                if (event.data.type === 'smoothie-theme-update') {
+                    const root = document.documentElement;
+                    if (event.data.theme) {
+                        root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+                        root.classList.add(`theme-${event.data.theme}`);
+                        localStorage.setItem('smoothie-theme', event.data.theme);
+                    }
+                    if (event.data.appearance) {
+                        root.classList.remove('appearance-light', 'appearance-dark');
+                        root.classList.add(`appearance-${event.data.appearance}`);
+                        localStorage.setItem('smoothie-appearance', event.data.appearance);
+                    }
+                }
+            } catch (e) {
+                // Silently fail if we can't access parent (cross-origin)
+            }
+        });
+    </script>
+</body>
+
+</html>

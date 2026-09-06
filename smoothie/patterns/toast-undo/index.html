@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toast Undo Pattern - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-toast.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
+    </script>
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: auto;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        /* Only hide overflow when embedded in iframe */
+        html.in-iframe body {
+            overflow: auto;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-on-surface-variant, #ccc);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .demo {
+            padding: 1.5rem;
+            background: var(--color-surface, #f5f5f5);
+            border-radius: 8px;
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+        }
+
+        .demo p {
+            color: var(--color-on-surface-variant, #666);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe body {
+            overflow: hidden !important;
+        }
+
+        html.in-iframe labs-breadcrumbs {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        html.in-iframe h1 {
+            font-size: 1.5rem;
+        }
+
+        .back-link {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .back-link a {
+            color: var(--color-primary, #007acc);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .code-block {
+            background: var(--color-background, #fff);
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 4px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            color: var(--color-on-surface, #666);
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="../">← Patterns</a>
+        </div>
+
+        <labs-page-layout title="Toast Undo Pattern" subtitle="Notification with reversible action">
+            <labs-breadcrumbs slot="breadcrumbs">
+                <a href="../../">Smoothie</a>
+                <a href="../">Patterns</a>
+                <span>Toast Undo Pattern</span>
+            </labs-breadcrumbs>
+
+            <section class="section">
+                <h2>Delete with Undo</h2>
+                <div class="demo">
+                    <p>Trigger a destructive action and show a toast with undo option.</p>
+                    <labs-button variant="primary" id="delete-btn">Delete Item</labs-button>
+                    <div class="code-block">
+// User deletes item, shows toast with undo
+toast.show('Item deleted', {
+  duration: 5000,
+  actionText: 'Undo',
+  onAction: () => restoreItem()
+});
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Archive with Undo</h2>
+                <div class="demo">
+                    <p>Archive action pattern with 5-second undo window.</p>
+                    <labs-button variant="secondary" id="archive-btn">Archive Task</labs-button>
+                    <div class="code-block">
+// Archive a task with quick undo
+toast.show('Task archived', {
+  duration: 5000,
+  actionText: 'Restore',
+  onAction: () => unarchiveTask()
+});
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Clear History</h2>
+                <div class="demo">
+                    <p>Clear action with confirmation toast.</p>
+                    <labs-button variant="secondary" id="clear-btn">Clear All</labs-button>
+                    <div class="code-block">
+// Clear all items with undo option
+toast.show('History cleared (15 items)', {
+  duration: 10000,
+  actionText: 'Undo',
+  onAction: () => restoreAllItems()
+});
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Best Practices</h2>
+                <ul style="margin-left: 1.5rem; color: var(--color-on-surface-variant, #666); font-size: 0.9rem;">
+                    <li style="margin-bottom: 0.5rem;">Use for destructive actions (delete, archive, clear)</li>
+                    <li style="margin-bottom: 0.5rem;">Provide 3-10 second undo window (default 5s)</li>
+                    <li style="margin-bottom: 0.5rem;">Use clear action label ("Undo", "Restore", "Recover")</li>
+                    <li style="margin-bottom: 0.5rem;">Auto-dismiss after timeout if not undone</li>
+                    <li style="margin-bottom: 0.5rem;">Dismiss immediately after action confirmed</li>
+                </ul>
+            </section>
+        </labs-page-layout>
+    </div>
+
+    <!-- Toast instance -->
+    <labs-toast id="undo-toast"></labs-toast>
+
+    <div class="floating-toolbar">
+        <labs-theme-button id="theme-selector"></labs-theme-button>
+        <labs-appearance-toggle id="appearance-toggle"></labs-appearance-toggle>
+    </div>
+
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-appearance-toggle.js';
+
+        const toast = document.getElementById('undo-toast');
+
+        document.getElementById('delete-btn')?.addEventListener('click', () => {
+            toast.show('Item deleted', {
+                duration: 5000,
+                actionText: 'Undo',
+                onAction: () => alert('Item restored!')
+            });
+        });
+
+        document.getElementById('archive-btn')?.addEventListener('click', () => {
+            toast.show('Task archived', {
+                duration: 5000,
+                actionText: 'Restore',
+                onAction: () => alert('Task restored!')
+            });
+        });
+
+        document.getElementById('clear-btn')?.addEventListener('click', () => {
+            toast.show('History cleared (15 items)', {
+                duration: 10000,
+                actionText: 'Undo',
+                onAction: () => alert('History restored!')
+            });
+        });
+
+        // Handle theme and appearance synchronization
+        document.addEventListener('theme-changed', (event) => {
+            const newTheme = event.detail.theme;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', theme: newTheme }, '*');
+            }
+        });
+
+        document.addEventListener('appearance-changed', (event) => {
+            const newAppearance = event.detail.appearance;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', appearance: newAppearance }, '*');
+            }
+        });
+
+        window.addEventListener('message', (event) => {
+            try {
+                if (event.data.type === 'smoothie-theme-update') {
+                    const root = document.documentElement;
+                    if (event.data.theme) {
+                        root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+                        root.classList.add(`theme-${event.data.theme}`);
+                        localStorage.setItem('smoothie-theme', event.data.theme);
+                    }
+                    if (event.data.appearance) {
+                        root.classList.remove('appearance-light', 'appearance-dark');
+                        root.classList.add(`appearance-${event.data.appearance}`);
+                        localStorage.setItem('smoothie-appearance', event.data.appearance);
+                    }
+                }
+            } catch (e) {
+                // Silently fail if we can't access parent (cross-origin)
+            }
+        });
+    </script>
+</body>
+
+</html>
