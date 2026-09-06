@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-footer.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
+    </script>
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: auto;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        /* Only hide overflow when embedded in iframe */
+        html.in-iframe body {
+            overflow: auto;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-on-surface-variant, #ccc);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .preview {
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--color-surface, #f5f5f5);
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe body {
+            overflow: hidden !important;
+        }
+
+        html.in-iframe labs-breadcrumbs {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        html.in-iframe h1 {
+            font-size: 1.5rem;
+        }
+
+        .back-link {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .back-link a {
+            color: var(--color-primary, #007acc);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="../">← Components</a>
+        </div>
+
+        <labs-page-layout title="Footer" subtitle="Page footer template component">
+            <labs-breadcrumbs slot="breadcrumbs">
+                <a href="../../">Smoothie</a>
+                <a href="../">Components</a>
+                <span>Footer</span>
+            </labs-breadcrumbs>
+
+            <section class="section">
+                <h2>Basic Footer</h2>
+                <div class="preview">
+                    <labs-footer>
+                        <p slot="content">© 2025 Smoothie Design System. All rights reserved.</p>
+                    </labs-footer>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Footer with Links</h2>
+                <div class="preview">
+                    <labs-footer>
+                        <div slot="content">
+                            <p style="margin-bottom: 1rem;">© 2025 Smoothie Design System</p>
+                            <div style="display: flex; gap: 2rem;">
+                                <a href="/privacy">Privacy Policy</a>
+                                <a href="/terms">Terms of Service</a>
+                                <a href="/contact">Contact</a>
+                                <a href="/status">Status</a>
+                            </div>
+                        </div>
+                    </labs-footer>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Footer with Multiple Sections</h2>
+                <div class="preview">
+                    <labs-footer>
+                        <div slot="content" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
+                            <div>
+                                <h4 style="font-weight: 600; margin-bottom: 0.75rem;">Product</h4>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li><a href="#" style="color: var(--color-on-surface);">Features</a></li>
+                                    <li><a href="#" style="color: var(--color-on-surface);">Pricing</a></li>
+                                    <li><a href="#" style="color: var(--color-on-surface);">Security</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 style="font-weight: 600; margin-bottom: 0.75rem;">Company</h4>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li><a href="#" style="color: var(--color-on-surface);">About</a></li>
+                                    <li><a href="#" style="color: var(--color-on-surface);">Blog</a></li>
+                                    <li><a href="#" style="color: var(--color-on-surface);">Careers</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 style="font-weight: 600; margin-bottom: 0.75rem;">Legal</h4>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li><a href="#" style="color: var(--color-on-surface);">Privacy</a></li>
+                                    <li><a href="#" style="color: var(--color-on-surface);">Terms</a></li>
+                                    <li><a href="#" style="color: var(--color-on-surface);">Cookies</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </labs-footer>
+                </div>
+            </section>
+        </labs-page-layout>
+    </div>
+
+    <div class="floating-toolbar">
+        <labs-theme-button id="theme-selector"></labs-theme-button>
+        <labs-appearance-toggle id="appearance-toggle"></labs-appearance-toggle>
+    </div>
+
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-appearance-toggle.js';
+
+        // Handle theme and appearance synchronization
+        document.addEventListener('theme-changed', (event) => {
+            const newTheme = event.detail.theme;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', theme: newTheme }, '*');
+            }
+        });
+
+        document.addEventListener('appearance-changed', (event) => {
+            const newAppearance = event.detail.appearance;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', appearance: newAppearance }, '*');
+            }
+        });
+
+        window.addEventListener('message', (event) => {
+            try {
+                if (event.data.type === 'smoothie-theme-update') {
+                    const root = document.documentElement;
+                    if (event.data.theme) {
+                        root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+                        root.classList.add(`theme-${event.data.theme}`);
+                        localStorage.setItem('smoothie-theme', event.data.theme);
+                    }
+                    if (event.data.appearance) {
+                        root.classList.remove('appearance-light', 'appearance-dark');
+                        root.classList.add(`appearance-${event.data.appearance}`);
+                        localStorage.setItem('smoothie-appearance', event.data.appearance);
+                    }
+                }
+            } catch (e) {
+                // Silently fail if we can't access parent (cross-origin)
+            }
+        });
+    </script>
+</body>
+
+</html>

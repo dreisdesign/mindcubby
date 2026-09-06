@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlay - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-overlay.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
+    </script>
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: auto;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        /* Only hide overflow when embedded in iframe */
+        html.in-iframe body {
+            overflow: auto;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-on-surface-variant, #ccc);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .demo-area {
+            min-height: 300px;
+            border: 2px dashed var(--color-on-surface-variant, #ccc);
+            border-radius: 8px;
+            background: var(--color-background, #fff);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        html.in-iframe .floating-toolbar {
+            display: none !important;
+        }
+
+        html.in-iframe body {
+            overflow: hidden !important;
+        }
+
+        html.in-iframe labs-breadcrumbs {
+            display: none !important;
+        }
+
+        html.in-iframe .back-link {
+            display: none !important;
+        }
+
+        html.in-iframe h1 {
+            font-size: 1.5rem;
+        }
+
+        .back-link {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .back-link a {
+            color: var(--color-primary, #007acc);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .modal-content {
+            background: var(--color-surface, #fff);
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--color-on-background);
+        }
+
+        .modal-content p {
+            color: var(--color-on-surface, #666);
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="../">← Components</a>
+        </div>
+
+        <labs-page-layout title="Overlay" subtitle="Modal backdrop and overlay component">
+            <labs-breadcrumbs slot="breadcrumbs">
+                <a href="../../">Smoothie</a>
+                <a href="../">Components</a>
+                <span>Overlay</span>
+            </labs-breadcrumbs>
+
+            <section class="section">
+                <h2>Basic Overlay</h2>
+                <p style="color: var(--color-on-surface-variant, #666); font-size: 0.9rem;">Click the button to show overlay backdrop for modal content.</p>
+                <div class="demo-area">
+                    <labs-button variant="primary" id="show-basic-overlay">Show Overlay</labs-button>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Overlay with Modal</h2>
+                <p style="color: var(--color-on-surface-variant, #666); font-size: 0.9rem;">Overlay with modal dialog content.</p>
+                <div class="demo-area">
+                    <labs-button variant="primary" id="show-modal-overlay">Show Modal</labs-button>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Usage</h2>
+                <p style="color: var(--color-on-surface-variant, #666); font-size: 0.9rem;">Overlay is typically used to dim the background when showing modals, dialogs, or dropdowns. Show/hide via JavaScript API.</p>
+            </section>
+        </labs-page-layout>
+    </div>
+
+    <!-- Overlays -->
+    <labs-overlay id="basic-overlay"></labs-overlay>
+    <labs-overlay id="modal-overlay">
+        <div class="modal-content">
+            <h3>Confirm Action</h3>
+            <p>This is an example modal dialog displayed over the overlay backdrop.</p>
+            <div class="modal-actions">
+                <labs-button variant="secondary" id="cancel-modal">Cancel</labs-button>
+                <labs-button variant="primary" id="confirm-modal">Confirm</labs-button>
+            </div>
+        </div>
+    </labs-overlay>
+
+    <div class="floating-toolbar">
+        <labs-theme-button id="theme-selector"></labs-theme-button>
+        <labs-appearance-toggle id="appearance-toggle"></labs-appearance-toggle>
+    </div>
+
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-appearance-toggle.js';
+
+        // Overlay interactions
+        const basicOverlay = document.getElementById('basic-overlay');
+        const modalOverlay = document.getElementById('modal-overlay');
+        
+        document.getElementById('show-basic-overlay').addEventListener('click', () => {
+            basicOverlay.show();
+            setTimeout(() => basicOverlay.hide(), 2000);
+        });
+
+        document.getElementById('show-modal-overlay').addEventListener('click', () => {
+            modalOverlay.show();
+        });
+
+        document.getElementById('cancel-modal').addEventListener('click', () => {
+            modalOverlay.hide();
+        });
+
+        document.getElementById('confirm-modal').addEventListener('click', () => {
+            modalOverlay.hide();
+        });
+
+        // Handle theme and appearance synchronization
+        document.addEventListener('theme-changed', (event) => {
+            const newTheme = event.detail.theme;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', theme: newTheme }, '*');
+            }
+        });
+
+        document.addEventListener('appearance-changed', (event) => {
+            const newAppearance = event.detail.appearance;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'smoothie-theme-update', appearance: newAppearance }, '*');
+            }
+        });
+
+        window.addEventListener('message', (event) => {
+            try {
+                if (event.data.type === 'smoothie-theme-update') {
+                    const root = document.documentElement;
+                    if (event.data.theme) {
+                        root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
+                        root.classList.add(`theme-${event.data.theme}`);
+                        localStorage.setItem('smoothie-theme', event.data.theme);
+                    }
+                    if (event.data.appearance) {
+                        root.classList.remove('appearance-light', 'appearance-dark');
+                        root.classList.add(`appearance-${event.data.appearance}`);
+                        localStorage.setItem('smoothie-appearance', event.data.appearance);
+                    }
+                }
+            } catch (e) {
+                // Silently fail if we can't access parent (cross-origin)
+            }
+        });
+    </script>
+</body>
+
+</html>
