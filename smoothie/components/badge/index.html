@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badge - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-badge.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        html.in-iframe body {
+            overflow: auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-on-surface-variant, #ccc);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .preview {
+            padding: 1.5rem;
+            background: var(--color-surface, #f5f5f5);
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            min-height: 120px;
+        }
+
+        .preview label {
+            font-size: 0.8rem;
+            color: var(--color-on-surface-variant, #999);
+            text-align: center;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <labs-page-layout title="Badge Component" subtitle="Small informational badge element with multiple variants" back-href="../../">
+        <labs-breadcrumbs slot="breadcrumbs">
+            <labs-breadcrumb-item href="../">2. Components</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>Badge</labs-breadcrumb-item>
+        </labs-breadcrumbs>
+
+        <div class="section">
+            <h2>Badge Variants</h2>
+            <div class="grid">
+                <div class="preview">
+                    <labs-badge variant="primary" text="Primary"></labs-badge>
+                    <label>Primary</label>
+                </div>
+                <div class="preview">
+                    <labs-badge variant="secondary" text="Secondary"></labs-badge>
+                    <label>Secondary</label>
+                </div>
+                <div class="preview">
+                    <labs-badge variant="success" text="Success"></labs-badge>
+                    <label>Success</label>
+                </div>
+                <div class="preview">
+                    <labs-badge variant="warning" text="Warning"></labs-badge>
+                    <label>Warning</label>
+                </div>
+                <div class="preview">
+                    <labs-badge variant="error" text="Error"></labs-badge>
+                    <label>Error</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Example Usage</h2>
+            <div class="grid">
+                <div class="preview">
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+                        <labs-badge variant="success" text="Active"></labs-badge>
+                        <labs-badge variant="primary" text="New"></labs-badge>
+                    </div>
+                    <label>Multiple Badges</label>
+                </div>
+                <div class="preview">
+                    <labs-badge variant="warning" text="Pending"></labs-badge>
+                    <label>In Progress</label>
+                </div>
+            </div>
+        </div>
+
+    </labs-page-layout>
+</body>
+
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Item - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-list-item.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        html.in-iframe body {
+            overflow: auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface-variant, #999);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+            font-weight: 600;
+            border-bottom: 1px solid var(--color-on-surface-variant, #ccc);
+            padding-bottom: 0.5rem;
+            color: var(--color-on-background, #333);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .preview {
+            padding: 1.5rem;
+            background: var(--color-surface, #f5f5f5);
+            border: 1px solid var(--color-on-surface-variant, #ccc);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 200px;
+        }
+
+        .preview label {
+            font-size: 0.8rem;
+            color: var(--color-on-surface-variant, #999);
+            text-align: center;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .list-container {
+            border: 1px solid var(--color-on-surface-variant, #ddd);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .list-container labs-list-item {
+            border-bottom: 1px solid var(--color-on-surface-variant, #eee);
+        }
+
+        .list-container labs-list-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+
+<body>
+    <labs-page-layout title="List Item Component" subtitle="Row-based list item with control, content, and action slots" back-href="../../">
+        <labs-breadcrumbs slot="breadcrumbs">
+            <labs-breadcrumb-item href="../">2. Components</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>List Item</labs-breadcrumb-item>
+        </labs-breadcrumbs>
+
+        <div class="section">
+            <h2>Text-Only Variant</h2>
+            <div class="grid">
+                <div class="preview">
+                    <div class="list-container">
+                        <labs-list-item variant="text-only">
+                            <div slot="content">Basic text item</div>
+                        </labs-list-item>
+                        <labs-list-item variant="text-only">
+                            <div slot="content">Another text item</div>
+                        </labs-list-item>
+                        <labs-list-item variant="text-only">
+                            <div slot="content">Third item</div>
+                        </labs-list-item>
+                    </div>
+                    <label>List of items</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>With Timestamp Variant</h2>
+            <div class="grid">
+                <div class="preview">
+                    <div class="list-container">
+                        <labs-list-item variant="timestamp" timestamp="2025-01-15T10:30:00Z">
+                            <div slot="content">Completed task</div>
+                        </labs-list-item>
+                        <labs-list-item variant="timestamp" timestamp="2025-01-14T15:45:00Z">
+                            <div slot="content">Previous action</div>
+                        </labs-list-item>
+                    </div>
+                    <label>Timeline view</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>With Control Slot (Checkbox)</h2>
+            <div class="grid">
+                <div class="preview">
+                    <div class="list-container">
+                        <labs-list-item>
+                            <input type="checkbox" slot="control" />
+                            <div slot="content">Task to complete</div>
+                        </labs-list-item>
+                        <labs-list-item>
+                            <input type="checkbox" slot="control" checked />
+                            <div slot="content">Completed task</div>
+                        </labs-list-item>
+                        <labs-list-item>
+                            <input type="checkbox" slot="control" />
+                            <div slot="content">Another unchecked task</div>
+                        </labs-list-item>
+                    </div>
+                    <label>Checklist pattern</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Example Usage with Icons</h2>
+            <div class="grid">
+                <div class="preview">
+                    <div class="list-container">
+                        <labs-list-item>
+                            <labs-icon slot="control" name="check-circle" size="small"></labs-icon>
+                            <div slot="content">Item with icon control</div>
+                        </labs-list-item>
+                        <labs-list-item>
+                            <labs-icon slot="control" name="star" size="small"></labs-icon>
+                            <div slot="content">Starred item</div>
+                        </labs-list-item>
+                    </div>
+                    <label>Icon controls</label>
+                </div>
+            </div>
+        </div>
+
+    </labs-page-layout>
+</body>
+
+</html>
