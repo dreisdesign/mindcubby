@@ -26,6 +26,9 @@
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 
+                // Resolve links relative to the directory path, not the current page
+                const baseUrl = new URL(path, window.location.href).href;
+                
                 const links = Array.from(doc.querySelectorAll('a'))
                     .filter(a => {
                         const href = a.getAttribute('href') || '';
@@ -33,7 +36,7 @@
                         return href && href.endsWith('/') && !href.includes('?') && text !== 'Parent Directory';
                     })
                     .map(a => {
-                        const href = new URL(a.getAttribute('href'), window.location.href).href;
+                        const href = new URL(a.getAttribute('href'), baseUrl).href;
                         const text = a.textContent.trim();
                         const name = text.replace(/\/$/, '').trim();
                         return { name, href };
