@@ -77,14 +77,13 @@ mindcubby.com/
 - ✅ Zero backend code
 - ✅ Printables handles hosting, images, embeds
 
-**Etsy (which we already built):**
-- ✅ OAuth PKCE flow
-- ✅ Redis caching
-- ✅ Token management
-- ✅ Daily cron refresh
-- ✅ Multiple API endpoints
+**Etsy (simple approach):**
+- ✅ Direct link to shop (https://mindcubby.etsy.com)
+- ✅ No backend code needed
+- ✅ No API complexity
+- ✅ Banner on homepage
 
-**Result**: Printables is 3 lines of HTML. Etsy is 300+ lines of backend code. For physical products, Etsy API is necessary. For free designs, Printables embeds are simpler.
+**Result**: Printables is 3 lines of HTML. Etsy is now 1 banner link. Both are simple.
 
 ---
 
