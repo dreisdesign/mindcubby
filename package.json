@@ -3,15 +3,6 @@
     "version": "1.0.0",
     "type": "module",
     "description": "MindCubby - 3D designs, creative tools, and portfolio",
-    "scripts": {
-        "test:health": "bash test-health.sh https://shop.mindcubby.com",
-        "test:health:local": "bash test-health.sh",
-        "refresh:cache": "bash refresh-cache.sh",
-        "auth:oauth": "bash authorize-oauth.sh"
-    },
-    "dependencies": {
-        "@vercel/kv": "^0.2.4",
-        "redis": "^6.2.1",
-        "resend": "^6.22.0"
-    }
+    "scripts": {},
+    "dependencies": {}
 }

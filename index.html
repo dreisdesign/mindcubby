@@ -253,11 +253,13 @@
         <!-- FEATURED PHYSICAL PRODUCTS -->
         <section id="physical-products">
             <h2>Physical Products</h2>
-            <div class="grid" id="products-grid">
-                <div class="loading">Loading products...</div>
-            </div>
-            <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;" id="products-count">
-            </div>
+            <a href="https://mindcubby.etsy.com" target="_blank" style="display: block; text-decoration: none; color: inherit;">
+                <div style="border: 1px solid var(--border); overflow: hidden; cursor: pointer; transition: all 0.3s ease;" 
+                     onmouseover="this.style.background = 'var(--text)'; this.style.color = 'var(--bg)';" 
+                     onmouseout="this.style.background = 'var(--bg)'; this.style.color = 'var(--text)';">
+                    <img src="assets/banner-etsy.png" alt="MindCubby on Etsy" style="width: 100%; height: auto; display: block;">
+                </div>
+            </a>
         </section>
 
         <!-- 3D CREATOR TOOLS -->
@@ -412,72 +414,7 @@
             applyTheme(theme);
         });
 
-        // Load products from Etsy cache
-        let allProducts = [];
-        let showingAll = false;
-
-        async function loadProducts() {
-            const gridEl = document.getElementById('products-grid');
-            const countEl = document.getElementById('products-count');
-            try {
-                const response = await fetch('/api/etsy/cache');
-                const data = await response.json();
-
-                if (data.success && data.products && data.products.length > 0) {
-                    allProducts = data.products;
-                    renderProducts();
-                } else {
-                    gridEl.innerHTML = '<div class="loading">Products unavailable</div>';
-                    countEl.innerHTML = '';
-                }
-            } catch (err) {
-                console.error('Error loading products:', err);
-                gridEl.innerHTML = '<div class="loading">Error loading products</div>';
-                countEl.innerHTML = '';
-            }
-        }
-
-        function renderProducts() {
-            const gridEl = document.getElementById('products-grid');
-            const countEl = document.getElementById('products-count');
-            const displayProducts = showingAll ? allProducts : allProducts.slice(0, 3);
-            const hasMore = allProducts.length > 3;
-
-            let html = displayProducts.map(product => {
-                // Format price - Etsy API returns { amount, divisor, currency_code }
-                let priceDisplay = 'Price on Etsy';
-                if (product.price) {
-                    if (typeof product.price === 'object' && product.price.amount && product.price.divisor) {
-                        const priceInDollars = product.price.amount / product.price.divisor;
-                        priceDisplay = `$${priceInDollars.toFixed(2)}`;
-                    } else if (typeof product.price === 'number' && product.price > 0) {
-                        priceDisplay = `$${(product.price / 100).toFixed(2)}`;
-                    }
-                }
-                return `
-                <a href="https://www.etsy.com/listing/${product.listing_id}" class="card" target="_blank">
-                    <div style="height: 150px; overflow: hidden; margin-bottom: 1rem; border: 1px solid var(--border);">
-                        ${product.images && product.images[0] ?
-                        `<img src="${product.images[0].url_170x135}" style="width: 100%; height: 100%; object-fit: cover;">` :
-                        '<div style="width: 100%; height: 100%; background: #f0f0f0;"></div>'}
-                    </div>
-                    <h3>${product.title}</h3>
-                    <p style="font-weight: 500; margin-top: auto;">${priceDisplay}</p>
-                    <div class="card-link">Buy on Etsy →</div>
-                </a>
-            `}).join('');
-
-            // Add "Show All" or "Show Less" card
-            if (hasMore) {
-                html += `
-                    <button id="toggle-all-btn" class="card" style="border: 1px solid var(--border); cursor: pointer; background: var(--bg); padding: 2rem; display: flex; flex-direction: column; gap: 1rem; min-height: 300px; text-decoration: none; color: inherit;">
-                        <div style="margin: auto; text-align: center;">
-                            <h3>${showingAll ? 'Show Less' : 'Show All'}</h3>
-                            <p>${showingAll ? `Showing all ${allProducts.length} products` : `${allProducts.length - 3} more available`}</p>
-                        </div>
-                    </button>
-                `;
-            }
+        // Etsy products section now uses direct link to shop
 
             gridEl.innerHTML = html;
 
@@ -498,8 +435,6 @@
                 countEl.innerHTML = '';
             }
         }
-
-        loadProducts();
     </script>
 </body>
 
