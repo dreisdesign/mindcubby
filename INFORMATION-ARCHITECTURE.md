@@ -25,11 +25,10 @@ mindcubby.com/
 │  ├─ Subheading: "Things I make because they bring me joy"
 │  └─ CTAs: "Buy One" (Etsy) | "Make Your Own" (anchor to tools)
 │
-├─ SECTION 1: PHYSICAL PRODUCTS (3 from Etsy API cache)
-│  ├─ Grid of 3 cards
-│  ├─ Image + Title + Price
-│  ├─ CTA: "Buy on Etsy"
-│  └─ Auto-updates daily via cron job (no user auth needed)
+├─ SECTION 1: PHYSICAL PRODUCTS (Banner link to Etsy shop)
+│  ├─ Banner image
+│  ├─ Link: "Visit Shop" → https://mindcubby.etsy.com
+│  └─ External redirect (no backend needed)
 │
 ├─ SECTION 2: 3D CREATOR TOOLS (Existing apps)
 │  ├─ Rotater (GIF/MP4/PNG export)
@@ -89,12 +88,12 @@ mindcubby.com/
 
 ## Existing Infrastructure Already Working
 
-- ✅ Etsy API integration with Redis cache
-- ✅ Daily cron refresh at 00:00 UTC
-- ✅ Shop ID hardcoded (62670465) — no user auth needed
-- ✅ `/etsy/` page displays products from cache
-- ✅ Rate limiting on all endpoints
-- ✅ Structured JSON logging
+- ✅ Shop banner links directly to Etsy
+- ✅ No backend code needed
+- ✅ No API complexity
+- ✅ `/` page displays all tools and designs
+- ✅ External shop link (no caching)
+- ✅ Simple static site (GitHub Pages)
 
 ---
 
@@ -103,7 +102,7 @@ mindcubby.com/
 ✅ **Single hub page** (mindcubby.com/)
 ✅ **Brutalist design** (borders, grid, no decoration)
 ✅ **Each Labs app as individual card** (all 6 visible)
-✅ **Physical products** (3 from Etsy API cache)
+✅ **Physical products** (Banner link to Etsy shop)
 ✅ **3D tools section** (Rotater, GCoder, Spooler)
 ✅ **Free designs** (Printables embeds)
 ✅ **Dark/light theme toggle** (localStorage persistent)
