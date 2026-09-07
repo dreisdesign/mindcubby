@@ -8,13 +8,8 @@ const ICON_BASE = (() => {
   // Strip www. prefix for consistent checking
   const cleanHostname = hostname.replace(/^www\./, '');
 
-  // GitHub Pages production (dreisdesign.github.io)
-  if (cleanHostname === 'dreisdesign.github.io') {
-    return "/labs/design-system/icons/";
-  }
-
-  // Vercel/Production (mindcubby.com, www.mindcubby.com, etc.)
-  if (cleanHostname === 'mindcubby.com' || cleanHostname.includes('mindcubby')) {
+  // GitHub Pages production
+  if (cleanHostname === 'dreisdesign.github.io' || cleanHostname === 'mindcubby.com' || cleanHostname.includes('mindcubby')) {
     return "/labs/design-system/icons/";
   }
 
