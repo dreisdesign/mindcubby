@@ -8,7 +8,7 @@
 - Brutalist design (no decorative elements)
 - Everything on one page (no separate pages to maintain)
 - Each Labs app gets its own card (not hidden in submenus)
-- Physical products from Etsy API (3 featured)
+- Physical products section → Links to Etsy shop
 - 3D creator tools (Rotater, GCoder, Spooler)
 - Free designs via Printables embeds
 - Dark/light theme toggle
