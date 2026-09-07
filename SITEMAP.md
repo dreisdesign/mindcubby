@@ -13,12 +13,9 @@ mindcubby.com/
 │  │  ├─ Subheading: "Things I make because they bring me joy"
 │  │  └─ CTAs: "Buy One" or "Make Your Own"
 │  │
-│  ├─ SECTION 1: FEATURED PHYSICAL PRODUCTS (3 from Etsy API)
-│  │  ├─ Grid of 3 product cards
-│  │  ├─ Each card: Image + Title + Price
-│  │  ├─ CTA 1: "Buy on Etsy"
-│  │  ├─ CTA 2: "Get Digital Version" (link to STL download)
-│  │  ├─ Optional: YouTube Short video below/embedded
+│  ├─ SECTION 1: FEATURED PHYSICAL PRODUCTS (Banner link to Etsy shop)
+│  │  ├─ Banner with shop image
+│  │  ├─ CTA: "Visit Shop" → https://mindcubby.etsy.com
 │  │  └─ Subheading: "Physical Products"
 │  │
 │  ├─ SECTION 2: FEATURED DIGITAL PRODUCTS (3 Free from Printables)
@@ -43,17 +40,11 @@ mindcubby.com/
 │  │  └─ Labs (experimental apps)
 │  │
 │  ├─ Footer Navigation
-│  │  ├─ "Shop" → /etsy/
+│  │  ├─ "Shop" → https://mindcubby.etsy.com (external)
 │  │  ├─ "About" → /about/
 │  │  ├─ "Labs" → /labs/
 │  │  ├─ Social links (YouTube, TikTok, Instagram)
 │  │  └─ "Design System" (quiet link)
-├─ /etsy/ (SHOP)
-│  ├─ Public product storefront
-│  ├─ Displays top products from Etsy API cache
-│  ├─ "View on Etsy" CTA
-│  ├─ "Want to make this? Download the STL" (if available)
-│  └─ Cache age display
 │
 ├─ /about/ (MAKER'S STORY)
 │  ├─ "About MindCubby"
@@ -90,15 +81,6 @@ mindcubby.com/
 ├─ /3d/apps/spooler/ (EXISTING)
 │  └─ Spooler tool (already exists)
 │
-├─ /api/etsy/* (BACKEND - NOT USER-FACING)
-│  ├─ /api/auth/etsy/ - OAuth initiator
-│  ├─ /api/auth/etsy/callback - OAuth callback handler
-│  ├─ /api/etsy/cache - Public product cache
-│  ├─ /api/etsy/refresh-cache - Manual cache refresh
-│  ├─ /api/etsy/cron-refresh - Daily auto-refresh (Vercel cron)
-│  ├─ /api/health-check - System monitoring
-│  └─ /api/middleware/* - Rate limiting, logging
-│
 └─ /robots.txt, /sitemap.xml, etc. (SEO)
 ```
 
@@ -111,7 +93,7 @@ mindcubby.com/
 mindcubby.com/ 
   → Video catches attention
   → "Buy One" 
-  → /etsy/ 
+  → https://mindcubby.etsy.com (external)
   → Purchase
 ```
 
@@ -208,14 +190,14 @@ Before we build, confirm these choices:
 ## Structure Summary
 
 **Primary (main narrative):**
-- `/` (hero) → `/etsy/` (shop) → `/3d/apps/*` (tools) → `/about/` (maker story)
+- `/` (hero with shop banner) → `/3d/apps/*` (tools) → `/about/` (maker story)
 
 **Secondary (for curious/technical):**
 - `/design-system/` (for builders)
 - `/labs/` (for productivity users)
 
-**Completely separate:**
-- API endpoints `/api/*` (hidden, backend only)
+**External shop:**
+- https://mindcubby.etsy.com (Etsy storefront)
 - Existing apps `/3d/apps/*` (already functional)
 
 ---
