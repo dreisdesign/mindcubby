@@ -31,6 +31,8 @@ _ignore/
 **/_ignore/
 _IGNORE/
 **/_IGNORE/
+_ARCHIVE/
+**/_ARCHIVE/
 LOCAL/
 **/LOCAL/
 SCRIPT TESTING/
@@ -44,3 +46,7 @@ SCRIPT TESTING/
 *.pfx
 secrets.*
 credentials.*
+
+# 3D Model files (excluding Benchy)
+*.stl
+!3d/apps/rotater/benchy.stl

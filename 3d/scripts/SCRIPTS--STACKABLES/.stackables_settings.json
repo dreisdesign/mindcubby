@@ -1,0 +1,22 @@
+{
+  "generate_flat": true,
+  "generate_tube": true,
+  "generate_ribbed": true,
+  "generate_smooth": true,
+  "generate_bulk": false,
+  "size_18": true,
+  "size_30": true,
+  "size_42": true,
+  "size_55": true,
+  "size_67": true,
+  "size_80": true,
+  "size_92": false,
+  "size_104": false,
+  "size_117": false,
+  "size_129": false,
+  "size_142": false,
+  "size_154": false,
+  "size_166": false,
+  "size_179": false,
+  "size_191": false
+}

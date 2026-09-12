@@ -1,30 +1,23 @@
-# Build artifacts and app bundles
-*.app/
-*.DS_Store
+# Ignore everything by default
+*
+*/
 
-# Demo videos
-*.mp4
-*.mov
+# Allow-list: only track script-related files
+!.gitignore
+!*.py
+!*.sh
+!*.js
+!*.json
+!*.blend
+!*.md
+!*.txt
+!LICENSE
+!CHANGELOG*
 
-# Development/ignore folders
-IGNORE/
-_originals/  # Backup scripts during refactoring
+# Keep directory structure
+!*/
 
-# macOS
-.DS_Store
-
-# IDE
-.vscode/
-*.swp
-*.swo
-*~
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.egg-info/
-dist/
-build/
+# Reject archive folders and their contents (overrides allow-list above)
+_ARCHIVE/
+*/_ARCHIVE/
+**/_ARCHIVE/**
