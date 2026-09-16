@@ -50,3 +50,5 @@ credentials.*
 # 3D Model files (excluding Benchy)
 *.stl
 !3d/apps/rotater/benchy.stl
+3d/scripts/
+3d/scripts/

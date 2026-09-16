@@ -79,6 +79,16 @@ All app logos are SVG format for responsive scaling across different screen size
 
 ---
 
+## Development
+
+### Local-Only Files
+
+The `3d/scripts/` folder contains local development scripts, Blender files, and build artifacts. This folder is **not tracked in the public repository** to keep the repo size lean. These files are preserved locally for development purposes.
+
+If cloning this repo, you'll need to recreate any project-specific scripts from the source documentation or configuration files.
+
+---
+
 ## About
 
 All tools run entirely in your browser. No data uploads, no tracking. Just utility.
