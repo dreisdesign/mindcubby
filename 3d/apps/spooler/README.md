@@ -6,6 +6,9 @@ Track filament inventory using NFC tags. Write spool info to tags, log usage, ex
 
 **Current Version:** v1.0.5
 
+**Recent Updates:**
+- PWA & Apple Touch Icon Fix: Added proper `apple-touch-icon.png` and `apple-touch-icon-precomposed` meta tags. Safari dock icon now correctly displays the logo without switching to fallback.
+
 ---
 
 ## What's New in v1.0.5

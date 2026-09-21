@@ -6,6 +6,9 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 
 🔗 **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
 
+**Recent Updates:**
+- PWA & Apple Touch Icon Fix: Added proper `apple-touch-icon.png` and `apple-touch-icon-precomposed` meta tags. Safari dock icon now correctly displays the logo without switching to fallback.
+
 ---
 
 ## Features
