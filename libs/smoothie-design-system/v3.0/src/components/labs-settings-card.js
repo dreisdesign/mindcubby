@@ -1,7 +1,7 @@
 // Labs Settings Card - matches Tracker app settings overlay
 class LabsSettingsCard extends HTMLElement {
   static get observedAttributes() {
-    return ['hide-reset'];
+    return ['hide-reset', 'hide-confirmation'];
   }
 
   constructor() {
@@ -20,6 +20,14 @@ class LabsSettingsCard extends HTMLElement {
   set hideReset(val) {
     if (val) this.setAttribute('hide-reset', '');
     else this.removeAttribute('hide-reset');
+  }
+
+  get hideConfirmation() {
+    return this.hasAttribute('hide-confirmation');
+  }
+  set hideConfirmation(val) {
+    if (val) this.setAttribute('hide-confirmation', '');
+    else this.removeAttribute('hide-confirmation');
   }
 
   render() {
@@ -153,7 +161,7 @@ class LabsSettingsCard extends HTMLElement {
         ${!hideReset ? `
         <labs-button id="reset-all-btn" variant="destructive" size="large" style="gap:10px;">
           <labs-icon name="delete" slot="icon-left" width="20" height="20" color="var(--color-on-error)"></labs-icon>
-          Reset All Data
+          Reset
         </labs-button>
         ` : ''}
       </div>
@@ -278,11 +286,18 @@ class LabsSettingsCard extends HTMLElement {
           }
 
           e.preventDefault();
-          const confirmed = window.confirm('Warning: This will delete all entries. Are you sure you want to continue?');
-          if (confirmed) {
+          // Skip confirmation if hide-confirmation attribute is set
+          if (this.hideConfirmation) {
             this.dispatchEvent(new CustomEvent('reset-all', { bubbles: true, composed: true }));
             // Close overlay after reset so the app can refresh UI
             this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
+          } else {
+            const confirmed = window.confirm('Warning: This will delete all entries. Are you sure you want to continue?');
+            if (confirmed) {
+              this.dispatchEvent(new CustomEvent('reset-all', { bubbles: true, composed: true }));
+              // Close overlay after reset so the app can refresh UI
+              this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
+            }
           }
         });
       }

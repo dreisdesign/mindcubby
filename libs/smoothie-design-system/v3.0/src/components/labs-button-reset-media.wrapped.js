@@ -18,8 +18,8 @@ template.innerHTML = `
     }
   </style>
   <labs-button fullwidth variant="secondary" size="small">
-    <labs-icon slot="icon-left" name="stop_circle"></labs-icon>
-    <span id="label">Stop</span>
+    <labs-icon slot="icon-left" name="replay"></labs-icon>
+    <span id="label">Reset</span>
   </labs-button>
 `;
 

@@ -156,7 +156,7 @@ class LabsButton extends HTMLElement {
         /* Only add gap when there are actual icon slots with content */
         button:has(::slotted([slot="icon-left"])),
         button:has(::slotted([slot="icon-right"])) {
-          gap: 0.5em;
+          gap: 0.75em;
         }
         /* Click animation - scale down slightly */
         button:active {

@@ -20,6 +20,17 @@ class FocusTimer {
         // Initialize
         this.updateDisplay();
         this.setupEvents();
+        this.configureSettings();
+    }
+
+    configureSettings() {
+        // For timer app, skip confirmation on reset
+        if (this.footer && this.footer.shadowRoot) {
+            const settingsCard = this.footer.shadowRoot.querySelector('labs-settings-card');
+            if (settingsCard) {
+                settingsCard.setAttribute('hide-confirmation', '');
+            }
+        }
     }
 
     setupEvents() {
