@@ -126,6 +126,21 @@
       background: var(--color-surface-variant);
     }
 
+    /* Settings overlay positioning */
+    #settings-card {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      top: 0;
+      z-index: 100;
+      display: none;
+    }
+
+    #settings-card[style*="display: none"] {
+      display: none !important;
+    }
+
     /* Safe area support for notched devices */
     @supports (padding: max(0px)) {
       .pad-footer {
@@ -188,7 +203,21 @@
     document.getElementById('settings-toggle').addEventListener('click', () => {
       const card = document.getElementById('settings-card');
       if (card) {
-        card.style.display = card.style.display === 'none' ? '' : 'none';
+        if (card.style.display === 'none' || !card.style.display) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      }
+    });
+
+    // Close settings on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const card = document.getElementById('settings-card');
+        if (card && card.style.display !== 'none') {
+          card.style.display = 'none';
+        }
       }
     });
   </script>
