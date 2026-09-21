@@ -24,6 +24,7 @@
 
   <!-- Components -->
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-container.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-button.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-icon.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js"></script>
@@ -95,37 +96,6 @@
       touch-action: none;
     }
 
-    .pad-footer {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-md);
-      padding: var(--space-md);
-      background: var(--color-surface);
-      border-top: 1px solid var(--color-outline);
-      flex-shrink: 0;
-      z-index: 2;
-      min-height: 60px;
-    }
-
-    .pad-footer labs-button {
-      flex-grow: 0;
-      flex-shrink: 0;
-    }
-
-    .pad-footer-settings {
-      width: 2.5em;
-      height: 2.5em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border-radius: var(--radius-full);
-      transition: background 0.15s;
-      flex-shrink: 0;
-      margin-left: auto;
-    }
-
     .pad-footer-settings:hover {
       background: var(--color-surface-variant);
     }
@@ -182,15 +152,15 @@
   </labs-container>
 
   <!-- Footer -->
-  <div class="pad-footer">
-    <labs-button id="clear-all" variant="secondary">
+  <labs-footer full-width>
+    <labs-button id="clear-all" slot="center" variant="secondary">
       <labs-icon slot="icon-left" name="delete"></labs-icon>
       <span>Clear All</span>
     </labs-button>
-    <div class="pad-footer-settings" id="settings-toggle">
+    <div id="settings-toggle" slot="right" style="width: 2.5em; height: 2.5em; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 9999px; transition: background 0.15s;" title="Settings">
       <labs-icon name="settings"></labs-icon>
     </div>
-  </div>
+  </labs-footer>
 
   <!-- Settings Overlay -->
   <labs-settings-card id="settings-card" hide-confirmation></labs-settings-card>
