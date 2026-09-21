@@ -4,7 +4,8 @@ View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapsh
 
 **Version (current workspace): 1.0.27**
 
-Documentation sync: 2026-08-02
+Documentation sync: 2026-09-21
+- **PWA & Apple Touch Icon Fix**: Added proper `apple-touch-icon.png` and `apple-touch-icon-precomposed` meta tags. Safari dock icon now correctly displays the "R" logo without switching to fallback. PNG format used instead of SVG for better Apple device compatibility.
 - Latest updates documented in `CHANGELOG.md` include persistent undo/redo history via localStorage (50-item circular buffer with deduplication), per-part opacity control for all materials (10-100% in 10% increments), matching opacity slider gradient visual feedback, and updated undo/redo buttons with consistent 52x52px circular design matching other canvas controls.
 - Opacity values persist through undo/redo via `ppo{idx}` URL parameters and page reloads. Clear materials preserve proper light transmission by multiplying opacity by 0.92.
 - Previous updates: crop UI refinements, crop toggle behavior, desktop export layout fixes.
