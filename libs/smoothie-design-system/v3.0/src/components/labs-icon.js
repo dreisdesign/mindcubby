@@ -8,7 +8,7 @@ const ICON_BASE = (() => {
 
   // GitHub Pages production
   if (cleanHostname === 'mindcubby.com' || cleanHostname.includes('mindcubby') || cleanHostname === 'dreisdesign.github.io') {
-    return "/libs/smoothie-design-system/v3.0/icons/";}
+    return "/libs/smoothie-design-system/v3.0/icons/";
   }
 
   // Local development (localhost, 127.0.0.1) and all other cases
