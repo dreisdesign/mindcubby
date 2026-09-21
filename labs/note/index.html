@@ -10,40 +10,35 @@
 
   <!-- Early Theme Injection -->
   <script type="module">
-    import { ThemeManager } from '/labs/design-system/utils/theme-manager.js';
+    import { ThemeManager } from '/libs/smoothie-design-system/v3.0/utils/theme-manager.js';
     ThemeManager.init('note');
   </script>
 
   <script>
-    // Set flavor/theme classes as early as possible for CSS tokens
     (function () {
       var root = document.documentElement;
-      var flavor = localStorage.getItem('note-flavor') || 'blueberry';
-      var theme = localStorage.getItem('note-theme') || 'light';
-      root.classList.remove('flavor-blueberry', 'flavor-strawberry', 'flavor-vanilla');
-      root.classList.remove('theme-light', 'theme-dark');
-      root.classList.add('flavor-' + flavor);
+      var theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+      var appearance = localStorage.getItem('smoothie-appearance') || 'light';
+      root.classList.remove('theme-blueberry', 'theme-strawberry', 'theme-vanilla');
+      root.classList.remove('appearance-light', 'appearance-dark');
       root.classList.add('theme-' + theme);
-      root.setAttribute('data-color-scheme', theme);
+      root.classList.add('appearance-' + appearance);
+      root.setAttribute('data-color-scheme', appearance);
     })();
   </script>
 
   <!-- Design System Tokens -->
-  <link rel="stylesheet" href="/labs/design-system/tokens/colors.css">
-  <link rel="stylesheet" href="/labs/design-system/tokens/spacing.css">
-  <link rel="stylesheet" href="/labs/design-system/tokens/typography.css">
-  <link rel="stylesheet" href="/labs/design-system/tokens/border-radius.css">
-  <link rel="stylesheet" href="/labs/design-system/tokens/shadows.css">
-  <link rel="stylesheet" href="/labs/design-system/styles/flavors.css">
+  <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/colors.css">
+  <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/typography.css">
+  <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css">
 
   <!-- Components -->
-  <script type="module" src="/labs/design-system/components/labs-container.js"></script>
-  <script type="module" src="/labs/design-system/components/labs-footer-with-settings.js"></script>
-  <script type="module" src="/labs/design-system/components/labs-template-header.wrapped.js"></script>
-  <script type="module" src="/labs/design-system/components/labs-card.js"></script>
-  <script type="module" src="/labs/design-system/components/labs-button.js"></script>
-  <script type="module" src="/labs/design-system/components/labs-icon.js"></script>
-  <script type="module" src="/labs/design-system/components/labs-toast.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-container.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-card.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-button.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-icon.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-toast.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js"></script>
 
   <!-- Note App Components -->
   <script type="module" src="./components/note-input-card.js"></script>
@@ -72,33 +67,6 @@
       overflow: auto;
     }
 
-    .note-display-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      overflow: auto;
-      padding: var(--space-md);
-      gap: var(--space-md);
-    }
-
-    .note-display-area.expanded {
-      justify-content: flex-start;
-      padding-top: var(--space-lg);
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .date-line-1,
-    .date-line-2 {
-      display: block;
-    }
-
     note-input-card {
       width: 100%;
       max-width: 600px;
@@ -111,14 +79,6 @@
       flex: 1;
     }
 
-    labs-footer-with-settings {
-      position: sticky;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 10;
-    }
-
     /* Position toast above the footer */
     labs-toast {
       --toast-bottom: 120px;
@@ -126,13 +86,24 @@
   </style>
 
   <script>
-    // Hide the add button from the footer once it's loaded
-    document.addEventListener('DOMContentLoaded', function () {
-      const footer = document.getElementById('footer');
-      if (footer && footer.shadowRoot) {
-        const addBtn = footer.shadowRoot.getElementById('add-btn');
-        if (addBtn) {
-          addBtn.style.display = 'none';
+    // Wire up settings toggle
+    document.getElementById('note-settings-toggle').addEventListener('click', () => {
+      const card = document.getElementById('note-settings-card');
+      if (card) {
+        if (card.style.display === 'none' || !card.style.display) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      }
+    });
+
+    // Close settings on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const card = document.getElementById('note-settings-card');
+        if (card && card.style.display !== 'none') {
+          card.style.display = 'none';
         }
       }
     });
@@ -159,8 +130,14 @@
   </labs-container>
 
   <!-- Footer with Settings -->
-  <labs-footer-with-settings id="footer">
-  </labs-footer-with-settings>
+  <div style="display: flex; align-items: center; justify-content: flex-end; gap: var(--space-md); padding: var(--space-md); background: var(--color-surface); border-top: 1px solid var(--color-outline); position: sticky; bottom: 0; z-index: 10;">
+    <div id="note-settings-toggle" style="width: 2.5em; height: 2.5em; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: var(--radius-full); transition: background 0.15s;" onmouseover="this.style.background='var(--color-surface-variant)'" onmouseout="this.style.background=''">
+      <labs-icon name="settings"></labs-icon>
+    </div>
+  </div>
+
+  <!-- Settings Overlay -->
+  <labs-settings-card id="note-settings-card" hide-confirmation style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 100; display: none;"></labs-settings-card>
 
   <!-- Service Worker Registration -->
   <script>
