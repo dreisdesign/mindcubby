@@ -11,26 +11,20 @@
 
   <!-- Early Theme Injection -->
   <script type="module">
-    import { ThemeManager } from '/labs/design-system/utils/theme-manager.js';
+    import { ThemeManager } from '/libs/smoothie-design-system/v3.0/utils/theme-manager.js';
     ThemeManager.init('pad');
   </script>
 
   <meta name="theme-color" content="#FBFBFD">
 
   <!-- Design System Tokens -->
-  <link rel="stylesheet" href="/labs/design-system/tokens/colors.css">
-  <link rel="stylesheet" href="/labs/design-system/tokens/spacing.css">
-  <link rel="stylesheet" href="/labs/design-system/tokens/typography.css">
-  <link rel="stylesheet" href="/labs/design-system/tokens/border-radius.css">
-  <link rel="stylesheet" href="/labs/design-system/tokens/shadows.css">
-  <link rel="stylesheet" href="/labs/design-system/styles/flavors.css">
+  <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/colors.css">
+  <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/typography.css">
+  <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css">
 
   <!-- Components -->
-  <script type="module" src="/labs/design-system/components/labs-container.js"></script>
-  <script type="module" src="/labs/design-system/components/labs-template-header.wrapped.js"></script>
-  <script type="module" src="/labs/design-system/components/labs-footer-with-settings.js"></script>
-  <script type="module" src="/labs/design-system/components/labs-button.js"></script>
-  <script type="module" src="/labs/design-system/components/labs-icon.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-container.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer-media-controls.js"></script>
 
   <!-- Pad App Logic -->
   <script type="module" src="./js/main.js"></script>
@@ -86,7 +80,7 @@
       touch-action: none;
     }
 
-    labs-footer-with-settings {
+    labs-footer-media-controls {
       position: fixed;
       bottom: 0;
       left: 0;
@@ -102,22 +96,29 @@
         padding-bottom: max(0, env(safe-area-inset-bottom));
       }
 
-      labs-footer-with-settings {
+      labs-footer-media-controls {
         padding-bottom: max(0, env(safe-area-inset-bottom));
       }
     }
   </style>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+      var appearance = localStorage.getItem('smoothie-appearance') || 'light';
+      root.classList.remove('theme-blueberry', 'theme-strawberry', 'theme-vanilla');
+      root.classList.remove('appearance-light', 'appearance-dark');
+      root.classList.add('theme-' + theme);
+      root.classList.add('appearance-' + appearance);
+      root.setAttribute('data-color-scheme', appearance);
+    })();
+  </script>
 </head>
 
 <body>
   <!-- Main App Container -->
   <labs-container fill>
-    <!-- Header -->
-    <labs-template-header-wrapped>
-      <span slot="title">Pad</span>
-      <span slot="subtitle">Drawing Canvas</span>
-    </labs-template-header-wrapped>
-
     <!-- Canvas Area -->
     <div class="pad-canvas-area">
       <canvas id="drawingCanvas"></canvas>
@@ -125,51 +126,23 @@
   </labs-container>
 
   <!-- Footer - Outside container to ensure it stays at bottom of viewport -->
-  <labs-footer-with-settings id="footer"></labs-footer-with-settings>
+  <labs-footer-media-controls id="footer" mode="generic"></labs-footer-media-controls>
 
   <script>
-    // Customize the footer Add button to be a Clear All button
+    // Customize footer for pad app - wire reset button to clear canvas
     document.addEventListener('DOMContentLoaded', () => {
       const footer = document.getElementById('footer');
       if (footer && footer.shadowRoot) {
-        // Wait for shadow DOM to be fully ready
+        // Get settings card and wire reset-all event to clear canvas
         setTimeout(() => {
-          const addBtn = footer.shadowRoot.querySelector('#add-btn');
-          if (addBtn) {
-            // Update button text
-            const btnText = addBtn.querySelector('labs-icon + span') || addBtn.textContent.replace(/add/i, '');
-            addBtn.textContent = '';
-
-            // Add icon
-            const icon = document.createElement('labs-icon');
-            icon.setAttribute('slot', 'icon-left');
-            icon.setAttribute('name', 'electric_bolt');
-            addBtn.appendChild(icon);
-
-            // Add text
-            const text = document.createTextNode('Clear All');
-            addBtn.appendChild(text);
-
-            // Update button styling if needed
-            addBtn.setAttribute('variant', 'secondary');
-
-            // Listen for the click and show confirmation
-            addBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const confirmed = confirm('Clear the entire canvas? This cannot be undone.');
-              if (confirmed) {
-                // Dispatch custom event for the drawing app to handle
-                document.dispatchEvent(new CustomEvent('pad-clear-all', { bubbles: true }));
-              }
+          const settingsCard = footer.shadowRoot.querySelector('labs-settings-card');
+          if (settingsCard) {
+            settingsCard.addEventListener('reset-all', (e) => {
+              // Dispatch custom event for the drawing app to handle
+              document.dispatchEvent(new CustomEvent('pad-clear-all', { bubbles: true }));
             });
           }
         }, 100);
-
-        // Hide the reset all data button from settings overlay since it's now in the footer
-        const settingsCard = footer.shadowRoot.querySelector('labs-settings-card');
-        if (settingsCard) {
-          settingsCard.setAttribute('hide-reset', '');
-        }
       }
     });
   </script>

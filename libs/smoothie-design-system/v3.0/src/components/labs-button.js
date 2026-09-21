@@ -139,7 +139,7 @@ class LabsButton extends HTMLElement {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 0;
+          gap: 0.75em;
           font: var(--button-font, 600 20px/1.2 system-ui, sans-serif);
           background: var(--color-primary);
           color: var(--color-on-primary);
@@ -153,11 +153,8 @@ class LabsButton extends HTMLElement {
           min-width: fit-content;
           min-height: 2.5em;
         }
-        /* Only add gap when there are actual icon slots with content */
-        button:has(::slotted([slot="icon-left"])),
-        button:has(::slotted([slot="icon-right"])) {
-          gap: 0.75em;
-        }
+        /* Gap already applied globally above; no need for conditional */
+        /* Icons will have 0.75em spacing by default */
         /* Click animation - scale down slightly */
         button:active {
           transform: scale(0.95);

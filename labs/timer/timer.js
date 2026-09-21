@@ -1,9 +1,9 @@
 // Focus Timer - Clean and Simple
 class FocusTimer {
     constructor() {
-        // Timer state
-        this.currentTime = 25 * 60; // Start at 25:00 (in seconds)
-        this.isRunning = false;
+        // Timer state - restore from localStorage if available
+        this.currentTime = this.getStoredTime() || (25 * 60); // Start at 25:00 (in seconds)
+        this.isRunning = false; // Never auto-resume on refresh
         this.interval = null;
         this.lastTime = null; // For undo
         this.mode = 'idle'; // 'idle', 'focus', 'paused', 'break'
@@ -156,6 +156,24 @@ class FocusTimer {
         this.currentTime = 25 * 60; // Reset to 25:00
         this.mode = 'idle';
         this.updateDisplay();
+        this.saveTime(); // Persist to localStorage
+    }
+
+    getStoredTime() {
+        try {
+            const stored = localStorage.getItem('timer-current-time');
+            return stored ? parseInt(stored, 10) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    saveTime() {
+        try {
+            localStorage.setItem('timer-current-time', String(this.currentTime));
+        } catch (e) {
+            // localStorage might be disabled, silently fail
+        }
     }
 
     updateDisplay() {
@@ -170,6 +188,7 @@ class FocusTimer {
         }
         this.updateHeaderAndHint();
         this.updateResetButtonVisibility();
+        this.saveTime(); // Persist to localStorage
     }
 
     updateHeaderAndHint() {
