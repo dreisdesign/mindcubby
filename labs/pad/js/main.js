@@ -1,7 +1,24 @@
-import { StorageAPI } from '../../design-system/utils/storage-api.js';
-
-// Initialize storage
-const storage = new StorageAPI('pad');
+/**
+ * Simple localStorage helper for pad app
+ */
+const storage = {
+  setJSON(key, value) {
+    try {
+      localStorage.setItem('pad-' + key, JSON.stringify(value));
+    } catch (e) {
+      console.warn('Could not save to localStorage:', e);
+    }
+  },
+  getJSON(key) {
+    try {
+      const item = localStorage.getItem('pad-' + key);
+      return item ? JSON.parse(item) : null;
+    } catch (e) {
+      console.warn('Could not read from localStorage:', e);
+      return null;
+    }
+  }
+};
 
 /**
  * Pad App - Main Drawing Canvas Logic
@@ -49,8 +66,12 @@ class PadDrawing {
         // Configure drawing context
         this.updateDrawingStyle();
 
-        // Listen for theme changes to update drawing color and redraw
-        document.addEventListener('themeChanged', () => {
+        // Listen for theme/appearance changes to update drawing color and redraw
+        document.documentElement.addEventListener('theme-changed', () => {
+            this.updateDrawingStyle();
+            this.redrawAllStrokes();
+        });
+        document.documentElement.addEventListener('appearance-changed', () => {
             this.updateDrawingStyle();
             this.redrawAllStrokes();
         });
@@ -347,11 +368,9 @@ class PadDrawing {
 export function initializeApp() {
     const pad = new PadDrawing();
 
-    // Redraw all strokes on theme change
-    document.addEventListener('theme-changed', () => pad.redrawAllStrokes());
-
-    // Note: ThemeManager handles persistence of flavor/theme automatically.
-    // We only need to listen for redraws.
+    // Redraw all strokes on theme/appearance changes
+    document.documentElement.addEventListener('theme-changed', () => pad.redrawAllStrokes());
+    document.documentElement.addEventListener('appearance-changed', () => pad.redrawAllStrokes());
 }
 
 // Auto-initialize when DOM is ready
