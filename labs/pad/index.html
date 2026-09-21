@@ -98,17 +98,19 @@
     .pad-footer {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
+      gap: var(--space-md);
       padding: var(--space-md);
-      gap: var(--space-sm);
       background: var(--color-surface);
       border-top: 1px solid var(--color-outline);
       flex-shrink: 0;
       z-index: 2;
+      min-height: 60px;
     }
 
     .pad-footer labs-button {
-      margin-left: auto;
+      flex-grow: 0;
+      flex-shrink: 0;
     }
 
     .pad-footer-settings {
@@ -120,6 +122,7 @@
       cursor: pointer;
       border-radius: var(--radius-full);
       transition: background 0.15s;
+      flex-shrink: 0;
     }
 
     .pad-footer-settings:hover {
