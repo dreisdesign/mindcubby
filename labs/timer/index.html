@@ -26,10 +26,6 @@
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-warning-card.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-warning-overlay.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-toast.js"></script>
-  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js"></script>
-  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-appearance-toggle.js"></script>
-  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-icon.js"></script>
-  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-button.js"></script>
 
   <style>
     * {
@@ -101,15 +97,6 @@
       letter-spacing: 0.01em;
       user-select: none;
     }
-    
-    .theme-controls {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      display: flex;
-      gap: 0.5rem;
-      z-index: 50;
-    }
   </style>
 
   <script>
@@ -127,11 +114,6 @@
 </head>
 
 <body>
-  <div class="theme-controls">
-    <labs-theme-button id="theme-selector"></labs-theme-button>
-    <labs-appearance-toggle id="appearance-toggle"></labs-appearance-toggle>
-  </div>
-  
   <labs-container fill>
     <div class="app">
       <div class="timer-group">
@@ -153,34 +135,6 @@
   </labs-warning-overlay>
 
   <script type="module" src="timer.js"></script>
-  
-  <script>
-    // Wire up theme controls
-    const themeSelector = document.getElementById('theme-selector');
-    const appearanceToggle = document.getElementById('appearance-toggle');
-    const root = document.documentElement;
-
-    // Handle theme changes
-    if (themeSelector) {
-      themeSelector.addEventListener('theme-changed', (e) => {
-        const theme = e.detail.theme;
-        root.classList.remove('theme-blueberry', 'theme-strawberry', 'theme-vanilla');
-        root.classList.add(`theme-${theme}`);
-        localStorage.setItem('smoothie-theme', theme);
-      });
-    }
-
-    // Handle appearance changes
-    if (appearanceToggle) {
-      appearanceToggle.addEventListener('appearance-changed', (e) => {
-        const appearance = e.detail.appearance;
-        root.classList.remove('appearance-light', 'appearance-dark');
-        root.classList.add(`appearance-${appearance}`);
-        root.setAttribute('data-color-scheme', appearance);
-        localStorage.setItem('smoothie-appearance', appearance);
-      });
-    }
-  </script>
 </body>
 
 </html>

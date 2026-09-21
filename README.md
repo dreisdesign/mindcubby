@@ -59,7 +59,7 @@ Minimalist designs encouraging mindfulness and reflection. An original collectio
 
 **Migration complete:** `postsforpause.com` now redirects to `mindcubby.com/labs/postsforpause/` via 301 redirect.
 
-#### [**Smoothie Design System**](https://mindcubby.com/labs/design-system/)
+#### [**Smoothie Design System**](https://mindcubby.com/smoothie/)
 Component library and design documentation for the Labs design system
 
 ---

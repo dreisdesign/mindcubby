@@ -21,7 +21,7 @@ class LabsAppsSelector extends HTMLElement {
             { name: 'Today List', icon: 'list_alt', path: '/labs/today-list/' },
             { name: 'Note', icon: 'description', path: '/labs/note/' },
             { name: 'Pad', icon: 'draw', path: '/labs/pad/' },
-            { name: 'Design System', icon: 'palette', path: '/labs/design-system/' },
+            { name: 'Design System', icon: 'palette', path: '/smoothie/' },
         ];
         this.render();
     }

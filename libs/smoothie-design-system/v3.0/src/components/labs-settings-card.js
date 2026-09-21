@@ -187,8 +187,9 @@ class LabsSettingsCard extends HTMLElement {
       btn.style.margin = '0';
       btn.style.position = 'static';
       btn.id = 'theme-toggle-btn';
+      
       function updateLabel() {
-        const isDark = document.documentElement.classList.contains('theme-dark');
+        const isDark = document.documentElement.classList.contains('appearance-dark');
         // Remove any existing icon and label
         while (btn.firstChild) btn.removeChild(btn.firstChild);
         // Create the icon with the correct slot
@@ -199,36 +200,32 @@ class LabsSettingsCard extends HTMLElement {
         // Add the label as a text node
         btn.appendChild(document.createTextNode(isDark ? 'Turn on light mode' : 'Turn on dark mode'));
       }
+      
       btn.onclick = () => {
-        const isDark = document.documentElement.classList.contains('theme-dark');
         const root = document.documentElement;
-        const flavorClass = Array.from(root.classList).find(c => c.startsWith('flavor-'));
-        const flavor = flavorClass ? flavorClass.replace('flavor-', '') : 'vanilla';
-        const theme = isDark ? 'light' : 'dark';
-
-        // Use ThemeManager if available (preferred), otherwise fall back to direct DOM manipulation
-        import('../utils/theme-manager.js').then(({ ThemeManager }) => {
-          if (ThemeManager.appName) {
-            ThemeManager.setTheme(theme);
-          } else {
-            // Fallback for apps not using ThemeManager yet (e.g. Tracker)
-            import('../utils/theme.js').then(({ applyTheme }) => {
-              applyTheme({ flavor, theme });
-              try {
-                localStorage.setItem('tracker-theme', theme);
-                localStorage.setItem('tracker-flavor', flavor);
-              } catch (e) { }
-            });
-          }
-          updateLabel();
-        }).catch(() => {
-          // Fallback if ThemeManager import fails
-          import('../utils/theme.js').then(({ applyTheme }) => {
-            applyTheme({ flavor, theme });
-            updateLabel();
-          });
-        });
+        const isDark = root.classList.contains('appearance-dark');
+        const newAppearance = isDark ? 'light' : 'dark';
+        
+        // Update DOM classes using Smoothie naming convention
+        root.classList.remove('appearance-dark', 'appearance-light');
+        root.classList.add(`appearance-${newAppearance}`);
+        root.setAttribute('data-color-scheme', newAppearance);
+        
+        // Persist to universal Smoothie localStorage
+        try {
+          localStorage.setItem('smoothie-appearance', newAppearance);
+        } catch (e) { }
+        
+        // Dispatch event for other listeners
+        root.dispatchEvent(new CustomEvent('appearance-changed', { 
+          detail: { appearance: newAppearance }, 
+          bubbles: true, 
+          composed: true 
+        }));
+        
+        updateLabel();
       };
+      
       // Keep the visible label in sync with external theme changes
       const observer = new MutationObserver(() => updateLabel());
       try {
@@ -243,19 +240,27 @@ class LabsSettingsCard extends HTMLElement {
           const flavorSelector = document.createElement('labs-flavor-selector');
           flavorSelector.id = 'flavor-selector';
           slot.appendChild(flavorSelector);
-          // Bubble up flavor-changed event from selector and persist via ThemeManager
+          // Bubble up flavor-changed event from selector and persist via Smoothie system
           flavorSelector.addEventListener('flavor-changed', (e) => {
-            const newFlavor = e.detail.flavor;
-            import('../utils/theme-manager.js').then(({ ThemeManager }) => {
-              if (ThemeManager.appName) {
-                ThemeManager.setFlavor(newFlavor);
-              } else {
-                // Fallback persistence for legacy apps
-                try {
-                  localStorage.setItem('tracker-flavor', newFlavor);
-                } catch (err) { }
-              }
-            });
+            const newTheme = e.detail.flavor;
+            const root = document.documentElement;
+            
+            // Update DOM classes using Smoothie naming convention (theme-* not flavor-*)
+            root.classList.remove('theme-blueberry', 'theme-strawberry', 'theme-vanilla');
+            root.classList.add(`theme-${newTheme}`);
+            
+            // Persist to universal Smoothie localStorage
+            try {
+              localStorage.setItem('smoothie-theme', newTheme);
+            } catch (err) { }
+            
+            // Dispatch event for other listeners
+            root.dispatchEvent(new CustomEvent('theme-changed', { 
+              detail: { theme: newTheme }, 
+              bubbles: true, 
+              composed: true 
+            }));
+            
             this.dispatchEvent(new CustomEvent('flavor-changed', { detail: e.detail, bubbles: true, composed: true }));
           });
         }

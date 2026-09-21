@@ -54,8 +54,8 @@ mindcubby.com/
 │  ├─ Contact / Email
 │  └─ Social links
 │
-├─ /design-system/ (or /smoothie/)
-│  ├─ Smoothie Design System documentation
+├─ /smoothie/
+│  ├─ Smoothie Design System documentation (moved from /labs/design-system/)
 │  ├─ Visual components
 │  ├─ Design principles
 │  ├─ GitHub repository
@@ -111,7 +111,7 @@ mindcubby.com/
 ```
 mindcubby.com/ 
   → Sees design system link
-  → /design-system/ 
+  → /smoothie/ 
   → GitHub repositories
   → Impressed by architecture
 ```
@@ -156,7 +156,7 @@ Before we build, confirm these choices:
 
 ### 3. Design System Visibility
 - [ ] Link on main page? (currently planning quiet link in "See the Craft")
-- [ ] Separate /design-system/ page?
+- [x] Design System now at /smoothie/ (moved from /labs/design-system/)
 - [ ] Or completely hidden from public (only for recruiters who dig)?
 
 ### 4. /labs/ Positioning
@@ -193,7 +193,7 @@ Before we build, confirm these choices:
 - `/` (hero with shop banner) → `/3d/apps/*` (tools) → `/about/` (maker story)
 
 **Secondary (for curious/technical):**
-- `/design-system/` (for builders)
+- `/smoothie/` (for builders — Smoothie Design System)
 - `/labs/` (for productivity users)
 
 **External shop:**
