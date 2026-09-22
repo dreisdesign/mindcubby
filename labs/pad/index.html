@@ -55,16 +55,17 @@
       bottom: var(--footer-height, 80px);
       z-index: 1;
       overflow: auto;
-      padding: 0;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       background: var(--color-background);
+      gap: 0;
     }
 
     /* Header positioned inside container */
     labs-header {
       flex-shrink: 0;
-      padding: var(--space-md);
+      padding: 0;
       background: var(--color-background);
     }
 
@@ -81,7 +82,7 @@
 
     /* Removed - using labs-header component instead */
 
-    /* Canvas container fills remaining space with margin */
+    /* Canvas container fills remaining space */
     .pad-canvas-area {
       flex: 1;
       position: relative;
@@ -92,7 +93,6 @@
       background: var(--base-100);
       border: 1px solid var(--color-outline);
       border-radius: var(--radius-xl);
-      margin: var(--space-md);
       box-shadow: var(--shadow-dropdown);
     }
 
