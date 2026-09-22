@@ -111,9 +111,11 @@
 
     <!-- Footer -->
     <labs-footer full-width>
-        <labs-button id="tracker-settings-toggle" slot="right" variant="tertiary" style="width: auto; padding: 0.5em;">
-            <labs-icon name="settings"></labs-icon>
-        </labs-button>
+        <div slot="right" style="display: flex; align-items: center; gap: 8px;">
+            <labs-button id="tracker-settings-toggle" variant="icon" aria-label="Settings">
+                <labs-icon slot="icon-left" name="settings"></labs-icon>
+            </labs-button>
+        </div>
     </labs-footer>
 
     <!-- Settings Modal - hidden by default -->
