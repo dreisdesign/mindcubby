@@ -33,7 +33,9 @@
   <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css">
 
   <!-- Components -->
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-header.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-container.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-card.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-button.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-icon.js"></script>
@@ -87,23 +89,35 @@
 
   <script>
     // Wire up settings toggle
-    document.getElementById('note-settings-toggle').addEventListener('click', () => {
-      const card = document.getElementById('note-settings-card');
-      if (card) {
-        if (card.style.display === 'none' || !card.style.display) {
-          card.style.display = 'block';
-        } else {
-          card.style.display = 'none';
-        }
+    const noteModal = document.getElementById('note-settings-modal');
+    const noteSettingsToggle = document.getElementById('note-settings-toggle');
+    
+    noteSettingsToggle.addEventListener('click', () => {
+      const isHidden = noteModal.style.display === 'none' || !noteModal.style.display;
+      noteModal.style.display = isHidden ? 'flex' : 'none';
+    });
+
+    // Close settings when clicking the card's close button
+    const noteCard = noteModal.querySelector('labs-settings-card');
+    if (noteCard) {
+      noteCard.addEventListener('close', () => {
+        noteModal.style.display = 'none';
+      });
+    }
+
+    // Close when clicking backdrop
+    noteModal.addEventListener('click', (e) => {
+      if (e.target === noteModal) {
+        noteModal.style.display = 'none';
       }
     });
 
     // Close settings on escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        const card = document.getElementById('note-settings-card');
-        if (card && card.style.display !== 'none') {
-          card.style.display = 'none';
+        const modal = document.getElementById('note-settings-modal');
+        if (modal && modal.style.display === 'flex') {
+          modal.style.display = 'none';
         }
       }
     });
@@ -115,12 +129,12 @@
     <!-- Note display area with header and card together -->
     <div class="note-display-area">
       <!-- Header with current date -->
-      <labs-template-header-wrapped class="header">
-        <span slot="title" id="current-date">
-          <span class="date-line-1">Today is Sunday</span>
-          <span class="date-line-2">Oct 19, 2025</span>
-        </span>
-      </labs-template-header-wrapped>
+      <labs-header id="note-header" center>
+        <div slot="title" style="text-align: center;">
+          <div class="date-line-1" id="current-date-line-1">Today is Sunday</div>
+          <div class="date-line-2" id="current-date-line-2">Oct 19, 2025</div>
+        </div>
+      </labs-header>
 
       <note-input-card id="noteInputCard"></note-input-card>
     </div>
@@ -130,14 +144,18 @@
   </labs-container>
 
   <!-- Footer with Settings -->
-  <div style="display: flex; align-items: center; justify-content: flex-end; gap: var(--space-md); padding: var(--space-md); background: var(--color-surface); border-top: 1px solid var(--color-outline); position: sticky; bottom: 0; z-index: 10;">
-    <div id="note-settings-toggle" style="width: 2.5em; height: 2.5em; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: var(--radius-full); transition: background 0.15s;" onmouseover="this.style.background='var(--color-surface-variant)'" onmouseout="this.style.background=''">
+  <labs-footer full-width>
+    <labs-button id="note-settings-toggle" slot="right" variant="tertiary" style="width: auto; padding: 0.5em;">
       <labs-icon name="settings"></labs-icon>
+    </labs-button>
+  </labs-footer>
+
+  <!-- Settings Modal - hidden by default -->
+  <div id="note-settings-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); padding: 1rem;">
+    <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+      <labs-settings-card id="note-settings-card" hide-confirmation style="width: 90%; max-width: 340px;"></labs-settings-card>
     </div>
   </div>
-
-  <!-- Settings Overlay -->
-  <labs-settings-card id="note-settings-card" hide-confirmation style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 100; display: none;"></labs-settings-card>
 
   <!-- Service Worker Registration -->
   <script>

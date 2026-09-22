@@ -3,9 +3,9 @@
  * Based on labs-input-card but without close button
  */
 
-import '../../design-system/components/labs-card.js';
-import '../../design-system/components/labs-button.js';
-import '../../design-system/components/labs-icon.js';
+import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js';
+import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
 
 class NoteInputCard extends HTMLElement {
     constructor() {

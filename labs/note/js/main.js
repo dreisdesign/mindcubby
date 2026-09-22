@@ -214,3 +214,15 @@ function restoreExpandedState() {
 function showUndoToast(message) {
   undoToast.show(message, { actionText: 'Undo', duration: 5000 });
 }
+
+// Listen for theme and appearance changes
+document.documentElement.addEventListener('theme-changed', (e) => {
+  // Theme changed - note card will handle color updates
+  if (noteInputCard) {
+    noteInputCard.updateColor();
+  }
+});
+
+document.documentElement.addEventListener('appearance-changed', (e) => {
+  // Appearance changed - components will re-render
+});
