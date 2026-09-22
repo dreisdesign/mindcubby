@@ -34,6 +34,8 @@
     <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css">
 
     <!-- Components -->
+    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-header.js"></script>
+    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-container.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-metric-card.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-list-item.js"></script>
@@ -95,7 +97,7 @@
 
 <body>
     <labs-container medium>
-        <h1 style="text-align: center; font-size: var(--font-size-display, 2rem); font-weight: var(--font-weight-heading, 800); color: var(--color-on-surface); margin: var(--space-md) 0; letter-spacing: 0.01em; user-select: none;">Tracker</h1>
+        <labs-header title="Tracker" center></labs-header>
 
         <labs-metric-card id="tracker-metric">
             <span slot="label">Entries</span>
@@ -108,37 +110,53 @@
     </labs-container>
 
     <!-- Footer -->
-    <div style="display: flex; align-items: center; justify-content: flex-end; gap: var(--space-md); padding: var(--space-md); background: var(--color-surface); border-top: 1px solid var(--color-outline); position: sticky; bottom: 0; z-index: 10;">
-        <div id="tracker-settings-toggle" style="width: 2.5em; height: 2.5em; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: var(--radius-full); transition: background 0.15s;" onmouseover="this.style.background='var(--color-surface-variant)'" onmouseout="this.style.background=''">
+    <labs-footer full-width>
+        <labs-button id="tracker-settings-toggle" slot="right" variant="tertiary" style="width: auto; padding: 0.5em;">
             <labs-icon name="settings"></labs-icon>
+        </labs-button>
+    </labs-footer>
+
+    <!-- Settings Modal - hidden by default -->
+    <div id="tracker-settings-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); padding: 1rem;">
+        <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+            <labs-settings-card id="tracker-settings-card" hide-confirmation style="width: 90%; max-width: 340px;"></labs-settings-card>
         </div>
     </div>
-
-    <!-- Settings Overlay -->
-    <labs-settings-card id="tracker-settings-card" hide-confirmation style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 100; display: none;"></labs-settings-card>
 
     <!-- Toast for feedback -->
     <labs-toast id="tracker-toast"></labs-toast>
 
     <script>
         // Wire up settings toggle
-        document.getElementById('tracker-settings-toggle').addEventListener('click', () => {
-            const card = document.getElementById('tracker-settings-card');
-            if (card) {
-                if (card.style.display === 'none' || !card.style.display) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+        const trackerModal = document.getElementById('tracker-settings-modal');
+        const trackerSettingsToggle = document.getElementById('tracker-settings-toggle');
+        
+        trackerSettingsToggle.addEventListener('click', () => {
+            const isHidden = trackerModal.style.display === 'none' || !trackerModal.style.display;
+            trackerModal.style.display = isHidden ? 'flex' : 'none';
+        });
+
+        // Close settings when clicking the card's close button
+        const trackerCard = trackerModal.querySelector('labs-settings-card');
+        if (trackerCard) {
+            trackerCard.addEventListener('close', () => {
+                trackerModal.style.display = 'none';
+            });
+        }
+
+        // Close when clicking backdrop
+        trackerModal.addEventListener('click', (e) => {
+            if (e.target === trackerModal) {
+                trackerModal.style.display = 'none';
             }
         });
 
         // Close settings on escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                const card = document.getElementById('tracker-settings-card');
-                if (card && card.style.display !== 'none') {
-                    card.style.display = 'none';
+                const modal = document.getElementById('tracker-settings-modal');
+                if (modal && modal.style.display === 'flex') {
+                    modal.style.display = 'none';
                 }
             }
         });
