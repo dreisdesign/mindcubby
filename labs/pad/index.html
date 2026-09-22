@@ -121,19 +121,29 @@
       background: var(--color-surface-variant);
     }
 
-    /* Settings overlay positioning */
-    #settings-card {
+    /* Settings Modal Styles */
+    #settings-modal {
+      display: none;
       position: fixed;
-      bottom: 0;
+      top: 0;
       left: 0;
       right: 0;
-      top: 0;
-      z-index: 100;
-      display: none;
+      bottom: 0;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      padding: 1rem;
     }
 
-    #settings-card[style*="display: none"] {
-      display: none !important;
+    #settings-modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #settings-modal labs-settings-card {
+      width: 90%;
+      max-width: 340px;
     }
 
     /* Safe area support for notched devices */
@@ -182,13 +192,15 @@
       <labs-icon slot="icon-left" name="delete"></labs-icon>
       <span>Clear All</span>
     </labs-button>
-    <div id="settings-toggle" slot="right" style="width: 2.5em; height: 2.5em; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 9999px; transition: background 0.15s;" title="Settings">
+    <div id="settings-toggle" slot="right" style="width: 2.5em; height: 2.5em; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 9999px; transition: background 0.15s; user-select: none;" title="Settings">
       <labs-icon name="settings"></labs-icon>
     </div>
   </labs-footer>
 
-  <!-- Settings Overlay -->
-  <labs-settings-card id="settings-card" hide-confirmation></labs-settings-card>
+  <!-- Settings Modal - hidden by default -->
+  <div id="settings-modal">
+    <labs-settings-card hide-confirmation></labs-settings-card>
+  </div>
 
   <script>
     // Wire up clear button
@@ -198,24 +210,35 @@
       }
     });
 
-    // Wire up settings toggle
-    document.getElementById('settings-toggle').addEventListener('click', () => {
-      const card = document.getElementById('settings-card');
-      if (card) {
-        if (card.style.display === 'none' || !card.style.display) {
-          card.style.display = 'block';
-        } else {
-          card.style.display = 'none';
-        }
+    // Settings toggle
+    const modal = document.getElementById('settings-modal');
+    const settingsToggle = document.getElementById('settings-toggle');
+    
+    settingsToggle.addEventListener('click', () => {
+      modal.classList.toggle('active');
+    });
+
+    // Close settings when clicking the card's close button
+    const card = modal.querySelector('labs-settings-card');
+    if (card) {
+      card.addEventListener('close', () => {
+        modal.classList.remove('active');
+      });
+    }
+
+    // Close when clicking backdrop
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
       }
     });
 
     // Close settings on escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        const card = document.getElementById('settings-card');
-        if (card && card.style.display !== 'none') {
-          card.style.display = 'none';
+        const modal = document.getElementById('settings-modal');
+        if (modal && modal.classList.contains('active')) {
+          modal.classList.remove('active');
         }
       }
     });
