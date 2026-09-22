@@ -697,3 +697,12 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Listen for theme and appearance changes
+document.documentElement.addEventListener('theme-changed', (e) => {
+    // Theme changed - todo items will update colors
+});
+
+document.documentElement.addEventListener('appearance-changed', (e) => {
+    // Appearance changed - components will re-render
+});

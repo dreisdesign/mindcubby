@@ -193,7 +193,7 @@
       <labs-icon slot="icon-left" name="delete"></labs-icon>
       <span>Clear All</span>
     </labs-button>
-    <labs-button id="settings-toggle" slot="right" variant="tertiary" style="width: auto; padding: 0.5em;">
+    <labs-button id="settings-toggle" slot="right" variant="secondary" style="width: auto; padding: 0.5em;">
       <labs-icon name="settings"></labs-icon>
     </labs-button>
   </labs-footer>
@@ -223,6 +223,12 @@
     const card = modal.querySelector('labs-settings-card');
     if (card) {
       card.addEventListener('close', () => {
+        modal.classList.remove('active');
+      });
+      
+      // Handle reset-all event from settings card
+      card.addEventListener('reset-all', () => {
+        document.dispatchEvent(new CustomEvent('pad-clear-all'));
         modal.classList.remove('active');
       });
     }
