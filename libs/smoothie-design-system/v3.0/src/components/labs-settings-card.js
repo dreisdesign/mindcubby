@@ -108,6 +108,8 @@ class LabsSettingsCard extends HTMLElement {
           display: flex;
           flex-direction: column;
           gap: 18px;
+          align-items: stretch;
+          width: 100%;
         }
         /* Layout for appearance slot: ensure buttons inside are stacked with spacing */
         .settings-list #appearance-btn-slot {
@@ -118,6 +120,8 @@ class LabsSettingsCard extends HTMLElement {
         .settings-list labs-button {
           width: 100%;
           box-sizing: border-box;
+          /* Ensure buttons stretch to fill container width */
+          flex-shrink: 0;
           /* Remove any box-shadow for secondary buttons in settings card context */
         }
         .settings-list labs-button[variant="secondary"] button {
