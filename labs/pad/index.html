@@ -92,7 +92,7 @@
       overflow: hidden;
       background: var(--base-100);
       border: 1px solid var(--color-outline);
-      border-radius: var(--radius-xl);
+      border-radius: 20px;
       box-shadow: var(--shadow-dropdown);
     }
 
@@ -193,9 +193,9 @@
       <labs-icon slot="icon-left" name="delete"></labs-icon>
       <span>Clear All</span>
     </labs-button>
-    <div id="settings-toggle" slot="right" style="width: 2.5em; height: 2.5em; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 9999px; transition: background 0.15s; user-select: none;" title="Settings">
+    <labs-button id="settings-toggle" slot="right" variant="tertiary" style="width: auto; padding: 0.5em;">
       <labs-icon name="settings"></labs-icon>
-    </div>
+    </labs-button>
   </labs-footer>
 
   <!-- Settings Modal - hidden by default -->
