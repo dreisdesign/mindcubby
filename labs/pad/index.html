@@ -45,11 +45,22 @@
       color: var(--color-on-surface);
       font-family: var(--font-family-base);
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
     }
 
+    labs-container[fill] {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: var(--footer-height, 80px);
+      z-index: 1;
+      overflow: auto;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header positioned inside container */
     labs-header {
       flex-shrink: 0;
       padding: var(--space-lg) var(--space-md) var(--space-md);
@@ -69,20 +80,9 @@
 
     /* Removed - using labs-header component instead */
 
-    labs-container[fill] {
-      flex: 1;
-      position: relative;
-      z-index: 1;
-      overflow: hidden;
-      padding: var(--space-md);
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Canvas container with border and margin */
+    /* Canvas container fills remaining space with margin */
     .pad-canvas-area {
       flex: 1;
-      width: 100%;
       position: relative;
       display: flex;
       align-items: stretch;
@@ -90,11 +90,12 @@
       overflow: hidden;
       background: var(--base-100);
       border: 1px solid var(--color-outline);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
+      border-radius: var(--radius-xl);
+      margin: var(--space-md);
+      box-shadow: var(--shadow-dropdown);
     }
 
-    /* Dark theme: reverse canvas background */
+    /* Dark theme: reverse canvas background and use appropriate text color */
     :root.appearance-dark .pad-canvas-area {
       background: var(--base-800);
     }
@@ -105,6 +106,14 @@
       display: block;
       cursor: crosshair;
       touch-action: none;
+    }
+
+    labs-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 2;
     }
 
     .pad-footer-settings:hover {
@@ -128,10 +137,14 @@
 
     /* Safe area support for notched devices */
     @supports (padding: max(0px)) {
-      .pad-footer {
-        padding-bottom: max(var(--space-md), env(safe-area-inset-bottom));
-        padding-left: max(var(--space-md), env(safe-area-inset-left));
-        padding-right: max(var(--space-md), env(safe-area-inset-right));
+      labs-container[fill] {
+        padding-left: max(0, env(safe-area-inset-left));
+        padding-right: max(0, env(safe-area-inset-right));
+        padding-bottom: max(0, env(safe-area-inset-bottom));
+      }
+
+      labs-footer {
+        padding-bottom: max(0, env(safe-area-inset-bottom));
       }
     }
   </style>
@@ -151,18 +164,18 @@
 </head>
 
 <body>
-  <!-- Header -->
-  <labs-header title="Pad" center></labs-header>
-
   <!-- Main App Container -->
   <labs-container fill>
+    <!-- Header -->
+    <labs-header title="Pad" center></labs-header>
+
     <!-- Canvas Area -->
     <div class="pad-canvas-area">
       <canvas id="drawingCanvas"></canvas>
     </div>
   </labs-container>
 
-  <!-- Footer -->
+  <!-- Footer - Outside container to ensure it stays at bottom of viewport -->
   <labs-footer full-width>
     <labs-button id="clear-all" slot="center" variant="secondary">
       <labs-icon slot="icon-left" name="delete"></labs-icon>
