@@ -158,6 +158,19 @@
             todayListCard.addEventListener('close', () => {
                 todayListModal.style.display = 'none';
             });
+            
+            // Handle reset-all event from settings card
+            todayListCard.addEventListener('reset-all', () => {
+                // Clear all today-list data from localStorage
+                const keys = Object.keys(localStorage);
+                keys.forEach(key => {
+                    if (key.startsWith('today-list-') || key === 'tasks') {
+                        localStorage.removeItem(key);
+                    }
+                });
+                // Reload the page to show cleared state
+                location.reload();
+            });
         }
 
         // Close when clicking backdrop

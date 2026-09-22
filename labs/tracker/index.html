@@ -142,6 +142,16 @@
             trackerCard.addEventListener('close', () => {
                 trackerModal.style.display = 'none';
             });
+            
+            // Handle reset-all event from settings card
+            trackerCard.addEventListener('reset-all', () => {
+                // Clear all tracker data from localStorage
+                localStorage.removeItem('tracker-items');
+                localStorage.removeItem('tracker-flavor');
+                localStorage.removeItem('tracker-theme');
+                // Reload the page to show cleared state
+                location.reload();
+            });
         }
 
         // Close when clicking backdrop
