@@ -42,10 +42,11 @@
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-list-section.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-checkbox.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-dropdown.js"></script>
-    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-icon.js"></script>
+    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer-settings-wrapper.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-button.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-toast.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js"></script>
+    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-overlay.js"></script>
 
     <!-- Today-List Logic -->
     <script type="module" src="./js/main.js?v=4"></script>
@@ -121,21 +122,9 @@
         </labs-list-section>
     </labs-container>
 
-    <!-- Footer -->
-    <labs-footer full-width>
-        <div slot="right" style="display: flex; align-items: center; gap: 8px;">
-            <labs-button id="today-list-settings-toggle" variant="icon" aria-label="Settings" size="large" style="--button-icon-size: 1.5em;">
-                <labs-icon slot="icon-left" name="settings"></labs-icon>
-            </labs-button>
-        </div>
-    </labs-footer>
-
-    <!-- Settings Modal - hidden by default -->
-    <div id="today-list-settings-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); padding: 1rem;">
-        <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
-            <labs-settings-card id="today-list-settings-card" hide-confirmation style="width: 90%; max-width: 340px;"></labs-settings-card>
-        </div>
-    </div>
+    <!-- Footer with Settings Modal (encapsulated in component) -->
+    <labs-footer-settings-wrapper>
+    </labs-footer-settings-wrapper>
 
     <!-- Input overlay for adding new todos -->
     <div id="input-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9998; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); padding: 1rem;">
@@ -145,24 +134,10 @@
     </div>
 
     <script>
-        // Wire up settings toggle
-        const todayListModal = document.getElementById('today-list-settings-modal');
-        const todayListSettingsToggle = document.getElementById('today-list-settings-toggle');
-        
-        todayListSettingsToggle.addEventListener('click', () => {
-            const isHidden = todayListModal.style.display === 'none' || !todayListModal.style.display;
-            todayListModal.style.display = isHidden ? 'flex' : 'none';
-        });
-
-        // Close settings when clicking the card's close button
-        const todayListCard = todayListModal.querySelector('labs-settings-card');
-        if (todayListCard) {
-            todayListCard.addEventListener('close', () => {
-                todayListModal.style.display = 'none';
-            });
-            
-            // Handle reset-all event from settings card
-            todayListCard.addEventListener('reset-all', () => {
+        // Listen for reset-all from the footer wrapper component
+        const footerWrapper = document.querySelector('labs-footer-settings-wrapper');
+        if (footerWrapper) {
+            footerWrapper.addEventListener('reset-all', () => {
                 // Clear all today-list data from localStorage
                 const keys = Object.keys(localStorage);
                 keys.forEach(key => {
@@ -174,35 +149,6 @@
                 location.reload();
             });
         }
-
-        // Close when clicking backdrop
-        todayListModal.addEventListener('click', (e) => {
-            if (e.target === todayListModal) {
-                todayListModal.style.display = 'none';
-            }
-        });
-
-        // Close settings on escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const modal = document.getElementById('today-list-settings-modal');
-                if (modal && modal.style.display === 'flex') {
-                    modal.style.display = 'none';
-                }
-            }
-        });
-    </script>
-        });
-
-        // Close settings on escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const card = document.getElementById('today-list-settings-card');
-                if (card && card.style.display !== 'none') {
-                    card.style.display = 'none';
-                }
-            }
-        });
     </script>
 </body>
 

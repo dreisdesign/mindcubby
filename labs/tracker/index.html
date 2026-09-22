@@ -35,13 +35,12 @@
 
     <!-- Components -->
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-header.js"></script>
-    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer.js"></script>
+    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer-settings-wrapper.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-container.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-metric-card.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-list-item.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-dropdown.js"></script>
-    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-icon.js"></script>
-    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-button.js"></script>
+    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-icon.js"></script>    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-overlay.js"></script>    <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-button.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-toast.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-details.js"></script>
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js"></script>
@@ -109,44 +108,18 @@
         </div>
     </labs-container>
 
-    <!-- Footer -->
-    <labs-footer full-width>
-        <div slot="right" style="display: flex; align-items: center; gap: 8px;">
-            <labs-button id="tracker-settings-toggle" variant="icon" aria-label="Settings" size="large" style="--button-icon-size: 1.5em;">
-                <labs-icon slot="icon-left" name="settings"></labs-icon>
-            </labs-button>
-        </div>
-    </labs-footer>
-
-    <!-- Settings Modal - hidden by default -->
-    <div id="tracker-settings-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); padding: 1rem;">
-        <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
-            <labs-settings-card id="tracker-settings-card" hide-confirmation style="width: 90%; max-width: 340px;"></labs-settings-card>
-        </div>
-    </div>
+    <!-- Footer with Settings Modal (encapsulated in component) -->
+    <labs-footer-settings-wrapper>
+    </labs-footer-settings-wrapper>
 
     <!-- Toast for feedback -->
     <labs-toast id="tracker-toast"></labs-toast>
 
     <script>
-        // Wire up settings toggle
-        const trackerModal = document.getElementById('tracker-settings-modal');
-        const trackerSettingsToggle = document.getElementById('tracker-settings-toggle');
-        
-        trackerSettingsToggle.addEventListener('click', () => {
-            const isHidden = trackerModal.style.display === 'none' || !trackerModal.style.display;
-            trackerModal.style.display = isHidden ? 'flex' : 'none';
-        });
-
-        // Close settings when clicking the card's close button
-        const trackerCard = trackerModal.querySelector('labs-settings-card');
-        if (trackerCard) {
-            trackerCard.addEventListener('close', () => {
-                trackerModal.style.display = 'none';
-            });
-            
-            // Handle reset-all event from settings card
-            trackerCard.addEventListener('reset-all', () => {
+        // Listen for reset-all from the footer wrapper component
+        const footerWrapper = document.querySelector('labs-footer-settings-wrapper');
+        if (footerWrapper) {
+            footerWrapper.addEventListener('reset-all', () => {
                 // Clear all tracker data from localStorage
                 localStorage.removeItem('tracker-items');
                 localStorage.removeItem('tracker-flavor');
@@ -155,23 +128,6 @@
                 location.reload();
             });
         }
-
-        // Close when clicking backdrop
-        trackerModal.addEventListener('click', (e) => {
-            if (e.target === trackerModal) {
-                trackerModal.style.display = 'none';
-            }
-        });
-
-        // Close settings on escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const modal = document.getElementById('tracker-settings-modal');
-                if (modal && modal.style.display === 'flex') {
-                    modal.style.display = 'none';
-                }
-            }
-        });
     </script>
 </body>
 

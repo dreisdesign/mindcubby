@@ -25,9 +25,10 @@
   <!-- Components -->
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-header.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-container.js"></script>
-  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer-settings-wrapper.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-button.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-icon.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-overlay.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js"></script>
 
   <!-- Pad App Logic -->
@@ -109,43 +110,6 @@
       touch-action: none;
     }
 
-    labs-footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 2;
-    }
-
-    .pad-footer-settings:hover {
-      background: var(--color-surface-variant);
-    }
-
-    /* Settings Modal Styles */
-    #settings-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 9999;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      padding: 1rem;
-    }
-
-    #settings-modal.active {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #settings-modal labs-settings-card {
-      width: 90%;
-      max-width: 340px;
-    }
-
     /* Safe area support for notched devices */
     @supports (padding: max(0px)) {
       labs-container[fill] {
@@ -153,10 +117,6 @@
         padding-left: max(16px, env(safe-area-inset-left));
         padding-right: max(16px, env(safe-area-inset-right));
         padding-bottom: max(16px, env(safe-area-inset-bottom));
-      }
-
-      labs-footer {
-        padding-bottom: max(0, env(safe-area-inset-bottom));
       }
     }
   </style>
@@ -187,23 +147,13 @@
     </div>
   </labs-container>
 
-  <!-- Footer - Outside container to ensure it stays at bottom of viewport -->
-  <labs-footer full-width>
-    <labs-button id="clear-all" slot="center" variant="secondary">
+  <!-- Footer with Settings Modal (encapsulated in component) -->
+  <labs-footer-settings-wrapper>
+    <labs-button slot="center" id="clear-all" variant="secondary">
       <labs-icon slot="icon-left" name="delete"></labs-icon>
       <span>Clear All</span>
     </labs-button>
-    <div slot="right" style="display: flex; align-items: center; gap: 8px;">
-      <labs-button id="settings-toggle" variant="icon" aria-label="Settings" size="large" style="--button-icon-size: 1.5em;">
-        <labs-icon slot="icon-left" name="settings"></labs-icon>
-      </labs-button>
-    </div>
-  </labs-footer>
-
-  <!-- Settings Modal - hidden by default -->
-  <div id="settings-modal">
-    <labs-settings-card hide-confirmation></labs-settings-card>
-  </div>
+  </labs-footer-settings-wrapper>
 
   <script>
     // Wire up clear button
@@ -213,44 +163,13 @@
       }
     });
 
-    // Settings toggle
-    const modal = document.getElementById('settings-modal');
-    const settingsToggle = document.getElementById('settings-toggle');
-    
-    settingsToggle.addEventListener('click', () => {
-      modal.classList.toggle('active');
-    });
-
-    // Close settings when clicking the card's close button
-    const card = modal.querySelector('labs-settings-card');
-    if (card) {
-      card.addEventListener('close', () => {
-        modal.classList.remove('active');
-      });
-      
-      // Handle reset-all event from settings card
-      card.addEventListener('reset-all', () => {
+    // Listen for reset-all from the footer wrapper component
+    const footerWrapper = document.querySelector('labs-footer-settings-wrapper');
+    if (footerWrapper) {
+      footerWrapper.addEventListener('reset-all', () => {
         document.dispatchEvent(new CustomEvent('pad-clear-all'));
-        modal.classList.remove('active');
       });
     }
-
-    // Close when clicking backdrop
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.classList.remove('active');
-      }
-    });
-
-    // Close settings on escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const modal = document.getElementById('settings-modal');
-        if (modal && modal.classList.contains('active')) {
-          modal.classList.remove('active');
-        }
-      }
-    });
   </script>
 </body>
 

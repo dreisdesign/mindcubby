@@ -35,10 +35,9 @@
   <!-- Components -->
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-header.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-container.js"></script>
-  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-footer-settings-wrapper.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-card.js"></script>
-  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-button.js"></script>
-  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-icon.js"></script>
+  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-button.js"></script>  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-overlay.js"></script>  <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-icon.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-toast.js"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js"></script>
 
@@ -88,24 +87,10 @@
   </style>
 
   <script>
-    // Wire up settings toggle
-    const noteModal = document.getElementById('note-settings-modal');
-    const noteSettingsToggle = document.getElementById('note-settings-toggle');
-    
-    noteSettingsToggle.addEventListener('click', () => {
-      const isHidden = noteModal.style.display === 'none' || !noteModal.style.display;
-      noteModal.style.display = isHidden ? 'flex' : 'none';
-    });
-
-    // Close settings when clicking the card's close button
-    const noteCard = noteModal.querySelector('labs-settings-card');
-    if (noteCard) {
-      noteCard.addEventListener('close', () => {
-        noteModal.style.display = 'none';
-      });
-      
-      // Handle reset-all event from settings card
-      noteCard.addEventListener('reset-all', () => {
+    // Listen for reset-all from the footer wrapper component
+    const footerWrapper = document.querySelector('labs-footer-settings-wrapper');
+    if (footerWrapper) {
+      footerWrapper.addEventListener('reset-all', () => {
         // Clear all note data from localStorage
         const keys = Object.keys(localStorage);
         keys.forEach(key => {
@@ -117,23 +102,6 @@
         location.reload();
       });
     }
-
-    // Close when clicking backdrop
-    noteModal.addEventListener('click', (e) => {
-      if (e.target === noteModal) {
-        noteModal.style.display = 'none';
-      }
-    });
-
-    // Close settings on escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const modal = document.getElementById('note-settings-modal');
-        if (modal && modal.style.display === 'flex') {
-          modal.style.display = 'none';
-        }
-      }
-    });
   </script>
 </head>
 
@@ -156,21 +124,9 @@
     <labs-toast id="undoToast"></labs-toast>
   </labs-container>
 
-  <!-- Footer with Settings -->
-  <labs-footer full-width>
-    <div slot="right" style="display: flex; align-items: center; gap: 8px;">
-      <labs-button id="note-settings-toggle" variant="icon" aria-label="Settings" size="large" style="--button-icon-size: 1.5em;">
-        <labs-icon slot="icon-left" name="settings"></labs-icon>
-      </labs-button>
-    </div>
-  </labs-footer>
-
-  <!-- Settings Modal - hidden by default -->
-  <div id="note-settings-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); padding: 1rem;">
-    <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
-      <labs-settings-card id="note-settings-card" hide-confirmation style="width: 90%; max-width: 340px;"></labs-settings-card>
-    </div>
-  </div>
+  <!-- Footer with Settings Modal (encapsulated in component) -->
+  <labs-footer-settings-wrapper>
+  </labs-footer-settings-wrapper>
 
   <!-- Service Worker Registration -->
   <script>
