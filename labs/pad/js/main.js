@@ -251,8 +251,8 @@ class PadDrawing {
     clearCanvas() {
         // Clear the entire canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        // Also clear saved drawing from localStorage
-        localStorage.removeItem('padDrawing');
+        // Also clear saved drawing from localStorage (using the prefixed key)
+        localStorage.removeItem('pad-drawing');
         this.strokes = [];
     }
 

@@ -149,9 +149,10 @@
     /* Safe area support for notched devices */
     @supports (padding: max(0px)) {
       labs-container[fill] {
-        padding-left: max(0, env(safe-area-inset-left));
-        padding-right: max(0, env(safe-area-inset-right));
-        padding-bottom: max(0, env(safe-area-inset-bottom));
+        padding-top: 16px;
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
       }
 
       labs-footer {
