@@ -633,36 +633,11 @@ window.addEventListener('DOMContentLoaded', () => {
             attributes: true,
             attributeFilter: ['class']
         });
-        // Add a simple Export CSV button (POC).
-        // This injects the button into the footer's actions slot.
-        try {
-            const footer = document.querySelector('labs-footer-with-settings');
-            if (footer) {
-                const exportBtn = document.createElement('labs-button');
-                exportBtn.setAttribute('slot', 'left');
-                exportBtn.setAttribute('variant', 'icon');
-                exportBtn.setAttribute('size', 'large');
-                exportBtn.setAttribute('aria-label', 'Export CSV');
-                exportBtn.style.paddingLeft = '12px';
-                exportBtn.innerHTML = '<labs-icon slot="icon-left" name="download" width="28" height="28"></labs-icon>';
-                exportBtn.addEventListener('click', exportAsCSV);
-                footer.appendChild(exportBtn);
-            } else {
-                // Fallback if footer not found
-                const exportBtn = document.createElement('labs-button');
-                exportBtn.setAttribute('variant', 'secondary');
-                exportBtn.setAttribute('pill', '');
-                exportBtn.textContent = 'Export CSV';
-                exportBtn.style.position = 'fixed';
-                exportBtn.style.right = '16px';
-                exportBtn.style.bottom = '84px';
-                exportBtn.style.zIndex = '9999';
-                exportBtn.style.boxShadow = 'var(--elevation-2, 0 4px 8px rgba(0,0,0,0.12))';
-                exportBtn.addEventListener('click', exportAsCSV);
-                document.body.appendChild(exportBtn);
-            }
-        } catch (err) {
-            console.warn('Export button injection failed:', err);
+
+        // Wire up Export CSV button from footer
+        const exportBtn = document.getElementById('export-csv-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', exportAsCSV);
         }
     }
 

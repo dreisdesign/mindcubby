@@ -73,7 +73,7 @@
         }
 
         labs-list-section {
-            margin-top: var(--space-md);
+            margin-top: var(--space-lg);
         }
 
         labs-list-item[data-drop-animating] {
@@ -92,9 +92,7 @@
             }
         }
 
-        labs-metric-card {
-            margin-bottom: var(--space-md);
-        }
+        labs-metric-card {\n            margin-bottom: var(--space-lg);\n        }
 
         /* Position toast above the footer */
         labs-toast {
@@ -125,6 +123,9 @@
 
     <!-- Footer with Settings Modal (encapsulated in component) -->
     <labs-footer-settings-wrapper>
+        <labs-button slot="actions" id="export-csv-btn" variant="icon" size="large" aria-label="Export CSV">
+            <labs-icon slot="icon-left" name="download"></labs-icon>
+        </labs-button>
         <labs-button slot="center" id="add-task-btn" size="large" variant="primary" pill>
             <labs-icon slot="icon-left" name="add"></labs-icon>
             <span>Add</span>
