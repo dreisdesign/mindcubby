@@ -48,7 +48,7 @@
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js?v=35"></script>
 
     <!-- Tracker Logic -->
-    <script type="module" src="./js/main.js?v=37"></script>
+    <script type="module" src="./js/main.js?v=38"></script>
 
     <!-- Register Tracker Service Worker -->
     <script>
@@ -72,7 +72,6 @@
 
         labs-container {
             flex: 1;
-            display: block;
             /* allow internal scrolling when content is taller than the viewport */
             min-height: 0;
             overflow: auto;
@@ -81,7 +80,7 @@
         .content-wrapper {
             display: flex;
             flex-direction: column;
-            gap: var(--space-xl);
+            gap: calc(var(--space-xl, 32px) * 1.5);
             padding-top: var(--space-lg);
             padding-bottom: var(--space-lg);
         }
