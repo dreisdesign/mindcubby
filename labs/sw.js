@@ -9,13 +9,15 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   const keep = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.map(k => { if (!keep.includes(k)) return caches.delete(k); return Promise.resolve(); })
-    )).then(() => self.clients.claim())
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.filter(k => !keep.includes(k)).map(k => caches.delete(k))
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
-const CACHE_NAME = 'labs-static-v33';
+const CACHE_NAME = 'labs-static-v35';
 const PRECACHE_URLS = [
   '/labs/',
   '/labs/index.html'
