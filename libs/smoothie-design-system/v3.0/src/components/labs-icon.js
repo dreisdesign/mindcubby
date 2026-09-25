@@ -240,4 +240,6 @@ class LabsIcon extends HTMLElement {
     }
   }
 }
-customElements.define("labs-icon", LabsIcon);
+if (!customElements.get('labs-icon')) {
+  customElements.define('labs-icon', LabsIcon);
+}

@@ -180,7 +180,7 @@ class LabsSettingsCard extends HTMLElement {
     // Wire All Apps selector to display dropdown menu
     const appsSlot = this.shadowRoot.getElementById('apps-selector-slot');
     if (appsSlot) {
-      import('../components/labs-apps-selector.js').then(() => {
+      import('../components/labs-apps-selector.js?v=37').then(() => {
         if (!this.shadowRoot.getElementById('apps-selector')) {
           const appsSelector = document.createElement('labs-apps-selector');
           appsSelector.id = 'apps-selector';
@@ -247,7 +247,7 @@ class LabsSettingsCard extends HTMLElement {
       slot.appendChild(btn);
 
       // Ensure a flavor selector is present — use labs-flavor-selector for dropdown UX
-      import('../components/labs-flavor-selector.js').then(() => {
+      import('../components/labs-flavor-selector.js?v=37').then(() => {
         if (!this.shadowRoot.getElementById('flavor-selector')) {
           const flavorSelector = document.createElement('labs-flavor-selector');
           flavorSelector.id = 'flavor-selector';
@@ -325,4 +325,6 @@ class LabsSettingsCard extends HTMLElement {
     }
   }
 }
-customElements.define('labs-settings-card', LabsSettingsCard);
+if (!customElements.get('labs-settings-card')) {
+  customElements.define('labs-settings-card', LabsSettingsCard);
+}

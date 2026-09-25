@@ -315,4 +315,6 @@ class LabsButton extends HTMLElement {
   }
 }
 
-customElements.define('labs-button', LabsButton);
+if (!customElements.get('labs-button')) {
+  customElements.define('labs-button', LabsButton);
+}
