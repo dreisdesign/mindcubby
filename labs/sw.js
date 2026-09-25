@@ -15,7 +15,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-const CACHE_NAME = 'labs-static-v28';
+const CACHE_NAME = 'labs-static-v30';
 const PRECACHE_URLS = [
   '/labs/',
   '/labs/index.html'
@@ -23,6 +23,10 @@ const PRECACHE_URLS = [
 
 self.addEventListener('fetch', event => {
   const req = event.request;
+  const url = new URL(req.url);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isJS = req.destination === 'script' || url.pathname.endsWith('.js');
+  const isCSS = req.destination === 'style' || url.pathname.endsWith('.css');
 
   // Always respondWith a promise that resolves to a Response.
   event.respondWith((async () => {
@@ -42,8 +46,25 @@ self.addEventListener('fetch', event => {
         return new Response('<!doctype html><title>Offline</title><h1>Offline</h1>', { headers: { 'Content-Type': 'text/html' }, status: 503 });
       }
 
-      // For same-origin requests, use cache-first for better offline behavior
-      if (new URL(req.url).origin === self.location.origin) {
+      // JavaScript and CSS: network-first to ensure fresh code/styles
+      if (isSameOrigin && (isJS || isCSS)) {
+        try {
+          const resp = await fetch(req);
+          if (resp && resp.ok) {
+            const copy = resp.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(req, copy)).catch(() => { });
+          }
+          if (resp) return resp;
+        } catch (e) {
+          // Network failed, try cache
+          const cached = await caches.match(req).catch(() => null);
+          if (cached) return cached;
+        }
+        return new Response('Service unavailable', { status: 503 });
+      }
+
+      // For same-origin requests (non-JS/CSS), use cache-first for better offline behavior
+      if (isSameOrigin) {
         const cached = await caches.match(req).catch(() => null);
         if (cached) return cached;
         try {

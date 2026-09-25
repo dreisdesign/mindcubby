@@ -158,6 +158,17 @@ function renderAll() {
     // Update reset-all button disabled state
     updateResetButtonState();
 
+    // Update Clear Archived button visibility
+    const clearArchivedBtn = document.getElementById('clear-archived-btn');
+    const archivedItems = store.items.filter(item => item.archived);
+    if (clearArchivedBtn) {
+        if (archivedItems.length > 0) {
+            clearArchivedBtn.removeAttribute('hidden');
+        } else {
+            clearArchivedBtn.setAttribute('hidden', '');
+        }
+    }
+
     // Render list
     const list = document.getElementById('entry-list');
     if (!list) return;
@@ -285,11 +296,11 @@ function renderAll() {
         detailsSection.appendChild(header);
 
         // Content section with summaries
-        const contentDiv = document.createElement('div');
-        contentDiv.setAttribute('slot', 'content');
-        contentDiv.style.display = 'flex';
-        contentDiv.style.flexDirection = 'column';
-        contentDiv.style.gap = 'var(--space-sm)';
+        const prevContentDiv = document.createElement('div');
+        prevContentDiv.setAttribute('slot', 'content');
+        prevContentDiv.style.display = 'flex';
+        prevContentDiv.style.flexDirection = 'column';
+        prevContentDiv.style.gap = 'var(--space-sm)';
 
         previousDays.forEach(dayTotal => {
             // Check if it's yesterday
@@ -308,30 +319,29 @@ function renderAll() {
             summaryItem.style.opacity = '0.7';
             summaryItem.textContent = summaryText;
 
-            contentDiv.appendChild(summaryItem);
+            prevContentDiv.appendChild(summaryItem);
         });
 
-        detailsSection.appendChild(contentDiv);
+        detailsSection.appendChild(prevContentDiv);
         list.appendChild(detailsSection);
     }
 
     // Display archived items
-    const archivedItems = store.items.filter(item => item.archived);
     if (archivedItems.length > 0) {
         const archivedSection = document.createElement('labs-details');
         archivedSection.setAttribute('archived', '');
         archivedSection.style.marginTop = 'var(--space-lg)';
 
         // Header text: "Archived"
-        const header = document.createTextNode('Archived');
-        archivedSection.appendChild(header);
+        const archivedHeader = document.createTextNode('Archived');
+        archivedSection.appendChild(archivedHeader);
 
         // Content section with archived items
-        const contentDiv = document.createElement('div');
-        contentDiv.setAttribute('slot', 'content');
-        contentDiv.style.display = 'flex';
-        contentDiv.style.flexDirection = 'column';
-        contentDiv.style.gap = 'var(--space-sm)';
+        const archivedContentDiv = document.createElement('div');
+        archivedContentDiv.setAttribute('slot', 'content');
+        archivedContentDiv.style.display = 'flex';
+        archivedContentDiv.style.flexDirection = 'column';
+        archivedContentDiv.style.gap = 'var(--space-sm)';
 
         archivedItems.forEach(item => {
             const li = document.createElement('labs-list-item');
@@ -378,10 +388,10 @@ function renderAll() {
             });
             li.appendChild(dropdown);
 
-            contentDiv.appendChild(li);
+            archivedContentDiv.appendChild(li);
         });
 
-        archivedSection.appendChild(contentDiv);
+        archivedSection.appendChild(archivedContentDiv);
         list.appendChild(archivedSection);
     }
 }

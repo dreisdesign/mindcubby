@@ -46,7 +46,7 @@
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js"></script>
 
     <!-- Tracker Logic -->
-    <script type="module" src="./js/main.js?v=27"></script>
+    <script type="module" src="./js/main.js?v=30"></script>
 
     <!-- Register Tracker Service Worker -->
     <script>
@@ -76,11 +76,17 @@
             overflow: auto;
         }
 
+        .content-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+            padding-bottom: var(--space-md);
+        }
+
         .entry-list {
             display: flex;
             flex-direction: column;
             gap: var(--space-md);
-            margin-top: var(--space-xl);
         }
 
         .entry-list labs-list-item {
@@ -104,15 +110,17 @@
 
 <body>
     <labs-container medium>
-        <labs-header title="Tracker" center></labs-header>
+        <div class="content-wrapper">
+            <labs-header title="Tracker" center></labs-header>
 
-        <labs-metric-card id="tracker-metric">
-            <span slot="label">Entries</span>
-            <span slot="value">0</span>
-        </labs-metric-card>
+            <labs-metric-card id="tracker-metric">
+                <span slot="label">Entries</span>
+                <span slot="value">0</span>
+            </labs-metric-card>
 
-        <div class="entry-list" id="entry-list">
-            <!-- Tracker entries will be inserted here -->
+            <div class="entry-list" id="entry-list">
+                <!-- Tracker entries will be inserted here -->
+            </div>
         </div>
     </labs-container>
 
@@ -122,7 +130,7 @@
             <labs-icon slot="icon-left" name="add"></labs-icon>
             <span>Add</span>
         </labs-button>
-        <labs-button slot="actions" id="clear-archived-btn" size="small" variant="secondary">
+        <labs-button slot="actions" id="clear-archived-btn" size="small" variant="secondary" hidden>
             <labs-icon slot="icon-left" name="delete_forever"></labs-icon>
             <span>Clear Archived</span>
         </labs-button>
