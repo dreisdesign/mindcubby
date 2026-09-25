@@ -1,6 +1,15 @@
 // Today-List App - Simplified with Design System
-import { applyTheme } from '../../design-system/utils/theme.js';
-import { formatHuman } from '../../design-system/utils/date-format.js';
+
+// Simple date formatter for CSV export
+function formatHuman(timestamp) {
+    if (!timestamp) return '';
+    try {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+        return '';
+    }
+}
 
 const STORAGE_KEY = 'today-list-items-v2';
 
@@ -122,11 +131,11 @@ function toggleInputOverlay(open = true) {
     if (!overlay || !inputCard) return;
 
     if (open) {
-        overlay.setAttribute('open', '');
-        inputCard.setAttribute('value', '');
+        overlay.style.display = 'flex';
+        inputCard.setValue('');
         // Use requestAnimationFrame for optimal timing after DOM update
         requestAnimationFrame(() => {
-            const inputEl = inputCard.shadowRoot?.querySelector('input, textarea');
+            const inputEl = inputCard.shadowRoot?.querySelector('input');
             if (inputEl) inputEl.value = '';
             // Second frame ensures layout is complete
             requestAnimationFrame(() => {
@@ -134,7 +143,7 @@ function toggleInputOverlay(open = true) {
             });
         });
     } else {
-        overlay.removeAttribute('open');
+        overlay.style.display = 'none';
     }
 }
 
@@ -558,21 +567,17 @@ function triggerDropAnimation() {
 
 // Initialize
 window.addEventListener('DOMContentLoaded', () => {
-    // Apply theme
-    applyTheme({
-        flavor: localStorage.getItem('today-list-flavor') || 'blueberry',
-        theme: localStorage.getItem('today-list-theme') || 'light'
-    });
+    // Theme is now handled by ThemeManager.init() in HTML
 
     // Load and render
     store.load();
     customElements.whenDefined('labs-metric-card').then(renderAll);
 
     // Wire up footer
-    const footer = document.querySelector('labs-footer-with-settings');
+    const footer = document.querySelector('labs-footer-settings-wrapper');
     if (footer) {
-        footer.addEventListener('add', () => toggleInputOverlay(true));
-
+        // Add button is wired directly in HTML
+        
         footer.addEventListener('reset-all', () => {
             // Don't reset if no items
             if (store.items.length === 0) return;

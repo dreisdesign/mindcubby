@@ -1,6 +1,15 @@
 // Tracker App - Simplified with Design System
-import { applyTheme } from '../../design-system/utils/theme.js';
-import { formatHuman } from '../../design-system/utils/date-format.js';
+
+// Simple date formatter for CSV export
+function formatHuman(timestamp) {
+    if (!timestamp) return '';
+    try {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+        return '';
+    }
+}
 
 const STORAGE_KEY = 'tracker-items';
 
@@ -296,24 +305,27 @@ function renderAll() {
 
 // Initialize
 window.addEventListener('DOMContentLoaded', () => {
-    // Apply theme
-    applyTheme({
-        flavor: localStorage.getItem('tracker-flavor') || 'blueberry',
-        theme: localStorage.getItem('tracker-theme') || 'light'
-    });
+    // Theme is now handled by ThemeManager.init() in HTML
 
     // Load and render
     store.load();
     customElements.whenDefined('labs-metric-card').then(renderAll);
 
-    // Wire up footer
-    const footer = document.querySelector('labs-footer-with-settings');
-    if (footer) {
-        footer.addEventListener('add', () => {
+    // Wire up Add button
+    const addBtn = document.getElementById('add-item-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
             store.items.unshift({ ts: Date.now(), note: '' });
             store.save();
             renderAll();
         });
+    }
+
+    // Wire up footer
+    const footer = document.querySelector('labs-footer-settings-wrapper');
+    if (footer) {
+        // Add button is wired directly in HTML
+        
         footer.addEventListener('reset-all', () => {
             // Prevent duplicate reset-all events (component fires twice)
             if (_isResetting) return;
