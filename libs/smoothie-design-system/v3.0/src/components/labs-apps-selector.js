@@ -196,7 +196,7 @@ class LabsAppsSelector extends HTMLElement {
       ${this._apps
                 .map(
                     app => `
-        <a href="${baseUrl}${app.path}" class="menu-item" target="_blank">
+        <a href="${baseUrl}${app.path}" class="menu-item">
           <labs-icon name="${app.icon}" width="20" height="20"></labs-icon>
           <span>${app.name}</span>
         </a>

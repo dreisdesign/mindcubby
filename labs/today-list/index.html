@@ -124,6 +124,10 @@
 
     <!-- Footer with Settings Modal (encapsulated in component) -->
     <labs-footer-settings-wrapper>
+        <labs-button slot="center" id="add-task-btn" size="large" variant="primary" pill>
+            <labs-icon slot="icon-left" name="add"></labs-icon>
+            <span>Add</span>
+        </labs-button>
     </labs-footer-settings-wrapper>
 
     <!-- Input overlay for adding new todos -->
@@ -134,6 +138,19 @@
     </div>
 
     <script>
+        // Wire up Add button to open input overlay
+        document.addEventListener('DOMContentLoaded', () => {
+            const addBtn = document.getElementById('add-task-btn');
+            if (addBtn) {
+                addBtn.addEventListener('click', () => {
+                    const inputOverlay = document.getElementById('input-overlay');
+                    if (inputOverlay) {
+                        inputOverlay.style.display = 'flex';
+                    }
+                });
+            }
+        });
+
         // Listen for reset-all from the footer wrapper component
         const footerWrapper = document.querySelector('labs-footer-settings-wrapper');
         if (footerWrapper) {
