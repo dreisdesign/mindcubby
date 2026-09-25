@@ -3,7 +3,9 @@ const template = document.createElement('template');
 template.innerHTML = `
   <style>
     :host {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg, 24px);
       width: 100%;
       max-width: 600px;
       box-sizing: border-box;
@@ -11,6 +13,8 @@ template.innerHTML = `
       margin-right: auto;
       padding-left: 2rem;
       padding-right: 2rem;
+      padding-top: var(--space-xl, 32px);
+      padding-bottom: var(--space-lg, 24px);
     }
     :host([small]) {
       max-width: 400px;
