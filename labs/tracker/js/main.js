@@ -242,7 +242,20 @@ function renderAll() {
 
         const dropdown = document.createElement('labs-dropdown');
         dropdown.setAttribute('slot', 'actions');
-        dropdown.setAttribute('only', 'delete');
+        dropdown.setAttribute('only', 'archive,delete');
+        
+        dropdown.addEventListener('archive', () => {
+            const archivedItem = { ...item, archived: true };
+            store.items = store.items.map(x => x.ts === item.ts ? archivedItem : x);
+            store.save();
+            renderAll();
+            showUndoToast('Entry archived', () => {
+                store.items = store.items.map(x => x.ts === item.ts ? item : x);
+                store.save();
+                renderAll();
+            });
+        });
+        
         dropdown.addEventListener('remove', () => {
             const removedItem = item;
             const removedIndex = store.items.findIndex(x => x.ts === item.ts);
@@ -301,6 +314,76 @@ function renderAll() {
         detailsSection.appendChild(contentDiv);
         list.appendChild(detailsSection);
     }
+
+    // Display archived items
+    const archivedItems = store.items.filter(item => item.archived);
+    if (archivedItems.length > 0) {
+        const archivedSection = document.createElement('labs-details');
+        archivedSection.setAttribute('archived', '');
+        archivedSection.style.marginTop = 'var(--space-lg)';
+
+        // Header text: "Archived"
+        const header = document.createTextNode('Archived');
+        archivedSection.appendChild(header);
+
+        // Content section with archived items
+        const contentDiv = document.createElement('div');
+        contentDiv.setAttribute('slot', 'content');
+        contentDiv.style.display = 'flex';
+        contentDiv.style.flexDirection = 'column';
+        contentDiv.style.gap = 'var(--space-sm)';
+
+        archivedItems.forEach(item => {
+            const li = document.createElement('labs-list-item');
+            li.setAttribute('variant', 'text-only');
+
+            const icon = document.createElement('labs-icon');
+            icon.setAttribute('slot', 'control');
+            icon.setAttribute('name', 'archive');
+            li.appendChild(icon);
+
+            const content = document.createElement('span');
+            content.setAttribute('slot', 'content');
+            content.textContent = formatHuman(item.ts);
+            li.appendChild(content);
+
+            const dropdown = document.createElement('labs-dropdown');
+            dropdown.setAttribute('slot', 'actions');
+            dropdown.setAttribute('archived', '');
+            dropdown.setAttribute('only', 'restore,delete');
+            
+            dropdown.addEventListener('restore', () => {
+                const restoredItem = { ...item, archived: false };
+                store.items = store.items.map(x => x.ts === item.ts ? restoredItem : x);
+                store.save();
+                renderAll();
+                showUndoToast('Entry restored', () => {
+                    store.items = store.items.map(x => x.ts === item.ts ? item : x);
+                    store.save();
+                    renderAll();
+                });
+            });
+            
+            dropdown.addEventListener('remove', () => {
+                const removedItem = item;
+                const removedIndex = store.items.findIndex(x => x.ts === item.ts);
+                store.items = store.items.filter(x => x.ts !== item.ts);
+                store.save();
+                renderAll();
+                showUndoToast('Entry deleted', () => {
+                    store.items.splice(removedIndex, 0, removedItem);
+                    store.save();
+                    renderAll();
+                });
+            });
+            li.appendChild(dropdown);
+
+            contentDiv.appendChild(li);
+        });
+
+        archivedSection.appendChild(contentDiv);
+        list.appendChild(archivedSection);
+    }
 }
 
 // Initialize
@@ -318,6 +401,27 @@ window.addEventListener('DOMContentLoaded', () => {
             store.items.unshift({ ts: Date.now(), note: '' });
             store.save();
             renderAll();
+        });
+    }
+
+    // Wire up Clear Archived button
+    const clearArchivedBtn = document.getElementById('clear-archived-btn');
+    if (clearArchivedBtn) {
+        clearArchivedBtn.addEventListener('click', () => {
+            const archivedCount = store.items.filter(item => item.archived).length;
+            if (archivedCount === 0) return;
+            
+            const backup = store.items.filter(item => item.archived);
+            store.items = store.items.filter(item => !item.archived);
+            store.save();
+            renderAll();
+            
+            const message = `${archivedCount} ${archivedCount === 1 ? 'entry' : 'entries'} cleared`;
+            showUndoToast(message, () => {
+                store.items = [...store.items, ...backup].sort((a, b) => b.ts - a.ts);
+                store.save();
+                renderAll();
+            });
         });
     }
 
