@@ -37,7 +37,7 @@ template.innerHTML = `
   <labs-footer id="footer" full-width elevated>
 
   <div slot="left" class="footer-left">
-  <labs-button-reset-media-wrapped id="reset-btn" fullwidth size="small" variant="transparent"></labs-button-reset-media-wrapped>
+  <labs-button-reset-media-wrapped id="reset-btn" fullwidth size="small"></labs-button-reset-media-wrapped>
     </div>
 
     <div slot="center" class="footer-center">
