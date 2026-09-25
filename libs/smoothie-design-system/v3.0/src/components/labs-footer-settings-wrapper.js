@@ -48,6 +48,10 @@ template.innerHTML = `
 `;
 
 class LabsFooterSettingsWrapper extends HTMLElement {
+  static get observedAttributes() {
+    return ['hide-reset'];
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -57,10 +61,25 @@ class LabsFooterSettingsWrapper extends HTMLElement {
     this._onResetAll = this._onResetAll.bind(this);
   }
 
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'hide-reset' && this._settingsCard) {
+      if (this.hasAttribute('hide-reset')) {
+        this._settingsCard.setAttribute('hide-reset', '');
+      } else {
+        this._settingsCard.removeAttribute('hide-reset');
+      }
+    }
+  }
+
   connectedCallback() {
     this._settingsBtn = this.shadowRoot.getElementById('settings-btn');
     this._overlay = this.shadowRoot.getElementById('settings-overlay');
     this._settingsCard = this._overlay && this._overlay.querySelector('labs-settings-card');
+    
+    // Pass hide-reset attribute to internal card if present
+    if (this._settingsCard && this.hasAttribute('hide-reset')) {
+      this._settingsCard.setAttribute('hide-reset', '');
+    }
     
     if (this._settingsBtn) {
       this._settingsBtn.addEventListener('click', () => this._onSettingsClick());

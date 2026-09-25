@@ -37,6 +37,7 @@ class LabsHeader extends HTMLElement {
           font-weight: var(--font-weight-heading, 700);
           color: var(--color-on-surface, #222);
           margin: 0;
+          padding-bottom: var(--space-md, 12px);
         }
         .subtitle {
           font-size: var(--font-size-h3, 1.125rem);
