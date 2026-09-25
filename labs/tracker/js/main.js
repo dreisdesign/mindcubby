@@ -163,9 +163,9 @@ function renderAll() {
     const archivedItems = store.items.filter(item => item.archived);
     if (clearArchivedBtn) {
         if (archivedItems.length > 0) {
-            clearArchivedBtn.removeAttribute('hidden');
+            clearArchivedBtn.style.display = 'block';
         } else {
-            clearArchivedBtn.setAttribute('hidden', '');
+            clearArchivedBtn.style.display = 'none';
         }
     }
 
@@ -417,6 +417,9 @@ window.addEventListener('DOMContentLoaded', () => {
     // Wire up Clear Archived button
     const clearArchivedBtn = document.getElementById('clear-archived-btn');
     if (clearArchivedBtn) {
+        // Start hidden
+        clearArchivedBtn.style.display = 'none';
+        
         clearArchivedBtn.addEventListener('click', () => {
             const archivedCount = store.items.filter(item => item.archived).length;
             if (archivedCount === 0) return;
