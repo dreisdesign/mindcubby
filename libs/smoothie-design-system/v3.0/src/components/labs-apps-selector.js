@@ -16,8 +16,8 @@ class LabsAppsSelector extends HTMLElement {
         this._menuId = `labs-apps-menu-${Math.random().toString(36).slice(2, 8)}`;
         this._portaledMenu = null;
         this._apps = [
-            { name: 'Timer', icon: 'schedule', path: './timer/' },
-            { name: 'Tracker', icon: 'trending_up', path: './tracker/' },
+            { name: 'Timer', icon: 'schedule', path: '/labs/timer/' },
+            { name: 'Tracker', icon: 'trending_up', path: '/labs/tracker/' },
             { name: 'Today List', icon: 'list_alt', path: '/labs/today-list/' },
             { name: 'Note', icon: 'description', path: '/labs/note/' },
             { name: 'Pad', icon: 'draw', path: '/labs/pad/' },
