@@ -68,6 +68,7 @@ class LabsFooterMediaControls extends HTMLElement {
         this._onResetClick = this._onResetClick.bind(this);
         this._onSettingsClick = this._onSettingsClick.bind(this);
         this._onCardClose = this._onCardClose.bind(this);
+        this._onCardReset = this._onCardReset.bind(this);
 
         // Check for mode attribute: 'timer' uses Start → Pause ↔ Resume pattern
         this._mode = this.getAttribute('mode') || 'cycle';
@@ -95,6 +96,7 @@ class LabsFooterMediaControls extends HTMLElement {
         if (this._settingsBtn) this._settingsBtn.addEventListener('click', this._onSettingsClick);
         if (this._settingsCard) {
             this._settingsCard.addEventListener('close', this._onCardClose);
+            this._settingsCard.addEventListener('reset-all', this._onCardReset);
         }
         // Set full-width and elevated on the internal footer
         const footer = this.shadowRoot.getElementById('footer');
@@ -109,7 +111,10 @@ class LabsFooterMediaControls extends HTMLElement {
         if (this._mediaBtn) this._mediaBtn.removeEventListener('click', this._onMediaClick);
         if (this._resetBtn) this._resetBtn.removeEventListener('click', this._onResetClick);
         if (this._settingsBtn) this._settingsBtn.removeEventListener('click', this._onSettingsClick);
-        if (this._settingsCard) this._settingsCard.removeEventListener('close', this._onCardClose);
+        if (this._settingsCard) {
+            this._settingsCard.removeEventListener('close', this._onCardClose);
+            this._settingsCard.removeEventListener('reset-all', this._onCardReset);
+        }
     }
 
     _onMediaClick() {
@@ -149,6 +154,14 @@ class LabsFooterMediaControls extends HTMLElement {
     _onCardClose() {
         if (this._overlay && typeof this._overlay.close === 'function') this._overlay.close();
         this.dispatchEvent(new CustomEvent('settings-close', { bubbles: true }));
+    }
+
+    _onCardReset() {
+        // Settings card reset button triggered - reset media state and close overlay
+        this._onResetClick();
+        if (this._overlay && typeof this._overlay.close === 'function') {
+            this._overlay.close();
+        }
     }
 
     _updateMediaButton() {
