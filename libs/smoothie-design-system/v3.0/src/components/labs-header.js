@@ -23,7 +23,7 @@ class LabsHeader extends HTMLElement {
       <style>
         :host {
           display: block;
-          margin-bottom: var(--space-md, 24px);
+          margin-bottom: var(--space-lg, 32px);
         }
         header {
           display: flex;
