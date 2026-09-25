@@ -70,14 +70,15 @@ class LabsAppsSelector extends HTMLElement {
     }
 
     _getBaseUrl() {
-        // Detect if we're on localhost or production
+        // Always use absolute paths for links - baseUrl is only used for construction
+        // The paths already include the full path from /labs/, so we just need to prepend protocol + host on localhost
         const isLocalHostPage = typeof window !== 'undefined' && (window.location &&
             (window.location.hostname.includes('localhost') || window.location.hostname === '127.0.0.1'));
 
         if (isLocalHostPage) {
             return 'http://localhost:8000';
         }
-        return '';
+        return 'https://mindcubby.com';
     }
 
     render() {
