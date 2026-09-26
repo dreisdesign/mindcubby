@@ -10,14 +10,23 @@ self.addEventListener('activate', event => {
   const keep = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(keys => {
+      console.log('[SW] Activation: Found caches:', keys);
+      const toDelete = keys.filter(k => !keep.includes(k));
+      console.log('[SW] Deleting old caches:', toDelete);
       return Promise.all(
-        keys.filter(k => !keep.includes(k)).map(k => caches.delete(k))
-      );
-    }).then(() => self.clients.claim())
+        toDelete.map(k => {
+          console.log('[SW] Deleting cache:', k);
+          return caches.delete(k);
+        })
+      ).then(() => {
+        console.log('[SW] Cache cleanup complete. Claiming clients.');
+        return self.clients.claim();
+      });
+    })
   );
 });
 
-const CACHE_NAME = 'labs-static-v40';
+const CACHE_NAME = 'labs-static-v41';
 const PRECACHE_URLS = [
   '/labs/',
   '/labs/index.html'
