@@ -52,7 +52,7 @@ let lastClearedNote = '';
 
 // Element references
 const noteInputCard = document.getElementById('noteInputCard');
-const footer = document.getElementById('footer');
+const footer = document.querySelector('labs-footer-settings-wrapper');
 const undoToast = document.getElementById('undoToast');
 
 // Initialize
