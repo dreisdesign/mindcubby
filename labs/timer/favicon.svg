@@ -1,8 +1,6 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="32" height="32" fill="#202F48" />
-
-  <!-- Timer icon - scaled from 150x150 to 32x32 -->
-  <path d="M8.53 10.45C8.53 7.51 10.9 5.12 13.87 5.12H23.47V11.95H8.53V10.45Z" fill="#ffffff"/>
-  <path d="M21.33 19.49V14.08H9.6C9.01 14.08 8.53 14.56 8.53 15.15V25.88C8.53 26.47 9.01 26.95 9.6 26.95H15.36V20.48H20.27C20.86 20.48 21.33 20.01 21.33 19.49Z" fill="#ffffff"/>
+<svg width="170" height="170" viewBox="0 0 170 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="170" height="170" fill="#DBD7FF"/>
+<circle cx="85" cy="85" r="75" fill="#202F48"/>
+<path d="M53.5 61.6001C53.5 49.1737 63.5736 39.1001 76 39.1001H116.5V67.9001H53.5V61.6001Z" fill="white"/>
+<path d="M107.5 99.6813V79.6001L58 79.6001C55.5147 79.6001 53.5 81.4889 53.5 83.8188V126.681C53.5 129.011 55.5147 130.9 58 130.9H82.3V103.9H103C105.485 103.9 107.5 102.011 107.5 99.6813Z" fill="white"/>
 </svg>
