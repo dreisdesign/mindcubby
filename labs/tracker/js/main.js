@@ -289,7 +289,7 @@ function renderAll() {
     if (previousDays.length > 0) {
         const detailsSection = document.createElement('labs-details');
         detailsSection.setAttribute('archived', '');
-        detailsSection.style.marginTop = 'var(--space-md)';
+        detailsSection.style.marginTop = 'var(--space-xl)';
 
         // Header text: "Previously tracked"
         const header = document.createTextNode('Previously tracked');
