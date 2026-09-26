@@ -165,4 +165,4 @@ class LabsThemeButton extends HTMLElement {
     }
 }
 
-customElements.define('labs-theme-button', LabsThemeButton);
+if (!customElements.get('labs-theme-button')) customElements.define('labs-theme-button', LabsThemeButton);

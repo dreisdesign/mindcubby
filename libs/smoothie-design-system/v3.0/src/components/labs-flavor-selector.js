@@ -313,4 +313,4 @@ class LabsFlavorSelector extends HTMLElement {
     }
 }
 
-customElements.define('labs-flavor-selector', LabsFlavorSelector);
+if (!customElements.get('labs-flavor-selector')) customElements.define('labs-flavor-selector', LabsFlavorSelector);

@@ -65,4 +65,4 @@ class LabsHeader extends HTMLElement {
     }
 }
 
-customElements.define('labs-header', LabsHeader);
+if (!customElements.get('labs-header')) customElements.define('labs-header', LabsHeader);

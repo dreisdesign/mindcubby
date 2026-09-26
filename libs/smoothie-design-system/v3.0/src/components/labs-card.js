@@ -101,4 +101,4 @@ class LabsCard extends HTMLElement {
     `;
   }
 }
-customElements.define('labs-card', LabsCard);
+if (!customElements.get('labs-card')) customElements.define('labs-card', LabsCard);

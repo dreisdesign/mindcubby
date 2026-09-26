@@ -171,4 +171,4 @@ class LabsPageLayout extends HTMLElement {
   }
 }
 
-customElements.define('labs-page-layout', LabsPageLayout);
+if (!customElements.get('labs-page-layout')) customElements.define('labs-page-layout', LabsPageLayout);

@@ -193,4 +193,4 @@ class LabsAppearanceToggle extends HTMLElement {
     }
 }
 
-customElements.define('labs-appearance-toggle', LabsAppearanceToggle);
+if (!customElements.get('labs-appearance-toggle')) customElements.define('labs-appearance-toggle', LabsAppearanceToggle);

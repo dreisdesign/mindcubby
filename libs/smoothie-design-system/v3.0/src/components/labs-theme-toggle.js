@@ -164,4 +164,4 @@ class LabsThemeToggle extends HTMLElement {
   }
 }
 
-customElements.define('labs-theme-toggle', LabsThemeToggle);
+if (!customElements.get('labs-theme-toggle')) customElements.define('labs-theme-toggle', LabsThemeToggle);
