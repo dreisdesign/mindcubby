@@ -28,10 +28,10 @@
   </script>
 
   <!-- Design System Tokens -->
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/colors.css?v=50">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/typography.css?v=50">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/spacing.css?v=50">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css?v=50">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/colors.css?v=51">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/typography.css?v=51">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/spacing.css?v=51">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css?v=51">
   <!-- Components -->
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=35"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=35"></script>
@@ -47,7 +47,7 @@
   <script type="module" src="./components/note-input-card.js"></script>
 
   <!-- Note App Logic -->
-  <script type="module" src="./js/main.js?v=50"></script>
+  <script type="module" src="./js/main.js?v=51"></script>
 
   <style>
     body {
@@ -149,8 +149,9 @@
 
     // Set current date in header
     document.addEventListener('DOMContentLoaded', function () {
-      var dateEl = document.getElementById('current-date');
-      if (dateEl) {
+      var line1 = document.getElementById('current-date-line-1');
+      var line2 = document.getElementById('current-date-line-2');
+      if (line1 && line2) {
         var now = new Date();
         var weekday = now.toLocaleDateString(undefined, { weekday: 'long' });
         var date = now.toLocaleDateString(undefined, {
@@ -159,11 +160,8 @@
           year: 'numeric'
         });
 
-        var line1 = dateEl.querySelector('.date-line-1');
-        var line2 = dateEl.querySelector('.date-line-2');
-
-        if (line1) line1.textContent = 'Today is ' + weekday;
-        if (line2) line2.textContent = date;
+        line1.textContent = 'Today is ' + weekday;
+        line2.textContent = date;
       }
     });
   </script>
