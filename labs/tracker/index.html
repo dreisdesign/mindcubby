@@ -29,10 +29,10 @@
     </script>
 
     <!-- Design System Tokens -->
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/colors.css?v=46">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/typography.css?v=46">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/spacing.css?v=46">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css?v=46">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/colors.css?v=47">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/typography.css?v=47">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/spacing.css?v=47">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css?v=47">
 
     <!-- Components -->
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=35"></script>
@@ -49,7 +49,7 @@
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js?v=35"></script>
 
     <!-- Tracker Logic -->
-    <script type="module" src="./js/main.js?v=46"></script>
+    <script type="module" src="./js/main.js?v=47"></script>
 
     <!-- Register Tracker Service Worker -->
     <script>
@@ -73,7 +73,6 @@
 
         labs-container {
             flex: 1;
-            /* allow internal scrolling when content is taller than the viewport */
             min-height: 0;
             overflow: auto;
         }
@@ -81,24 +80,13 @@
         .content-wrapper {
             display: flex;
             flex-direction: column;
-            gap: calc(var(--space-xl, 32px) * 1.5);
-            padding-top: var(--space-lg);
-            padding-bottom: var(--space-lg);
+            gap: var(--space-lg);
         }
 
         .entry-list {
             display: flex;
             flex-direction: column;
             gap: var(--space-md);
-            margin-top: 0;
-        }
-
-        .entry-list labs-list-item {
-            /* Component handles its own styling via shadow DOM .row */
-        }
-
-        labs-metric-card {
-            /* Gap handles spacing via flex */
         }
 
         /* Position toast above the footer */
