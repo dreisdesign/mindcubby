@@ -1,7 +1,7 @@
 // Tracker App Service Worker
 // Network-first for HTML, cache-first for assets
 
-const CACHE_NAME = 'tracker-v12';
+const CACHE_NAME = 'tracker-v41';
 const PRECACHE_URLS = [
     './js/main.js'
 ];
@@ -14,13 +14,22 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
+    const keep = [CACHE_NAME];
     event.waitUntil(
-        caches.keys().then(keys => Promise.all(
-            keys.map(k => {
-                if (!k.startsWith('tracker-')) return caches.delete(k);
-                return Promise.resolve();
-            })
-        )).then(() => self.clients.claim())
+        caches.keys().then(keys => {
+            console.log('[Tracker SW] Activation: Found caches:', keys);
+            const toDelete = keys.filter(k => !keep.includes(k));
+            console.log('[Tracker SW] Deleting old caches:', toDelete);
+            return Promise.all(
+                toDelete.map(k => {
+                    console.log('[Tracker SW] Deleting cache:', k);
+                    return caches.delete(k);
+                })
+            ).then(() => {
+                console.log('[Tracker SW] Cache cleanup complete. Claiming clients.');
+                return self.clients.claim();
+            });
+        })
     );
 });
 
