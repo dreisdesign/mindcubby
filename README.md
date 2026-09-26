@@ -81,6 +81,25 @@ All app logos are SVG format for responsive scaling across different screen size
 
 ## Development
 
+### Labs Apps Architecture
+
+All Labs apps (Timer, Note, Pad, Tracker, Today-list) have been migrated to **Smoothie Design System v3.0**, a lightweight web component library with automatic theme management, intelligent service worker caching, and git-based version control.
+
+**Quick Start:**
+- See **[SMOOTHIE-SYSTEM-GUIDE.md](labs/SMOOTHIE-SYSTEM-GUIDE.md)** for complete system documentation
+- Component registration patterns, CSS token system, service worker caching strategy, and auto-versioning workflow
+- Best practices for future feature development
+- Troubleshooting common issues
+
+**Key Features:**
+- ✅ 20+ reusable web components (buttons, cards, headers, footers, etc.)
+- ✅ CSS token system for spacing, colors, and typography consistency
+- ✅ Universal theme system with localStorage persistence (light/dark, 3 color flavors)
+- ✅ Intelligent service worker caching (network-first for code, cache-first for assets)
+- ✅ Automatic version increment on each commit (prevents manual versioning errors)
+- ✅ Component registration guards (prevents double-definition errors)
+- ✅ Query parameter-based cache busting (`?v=51` auto-incremented by git hook)
+
 ### Local-Only Files
 
 The `3d/scripts/` folder contains local development scripts, Blender files, and build artifacts. This folder is **not tracked in the public repository** to keep the repo size lean. These files are preserved locally for development purposes.
