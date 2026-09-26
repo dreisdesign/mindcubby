@@ -1,4 +1,4 @@
-const CACHE_NAME = "daily-note-v1.0.0";
+const CACHE_NAME = "daily-note-v42";
 const urlsToCache = [
   "./",
   "./index.html",
