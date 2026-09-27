@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
           allAppsBtn.innerHTML = `<labs-icon name="apps" slot="icon-left" width="20" height="20"></labs-icon> All apps`;
           allAppsBtn.addEventListener('click', async (e) => {
             e.preventDefault();
-            const localUrl = 'http://localhost:8000/';
+            const localUrl = '/';
             const publicUrl = '/labs/';
             try {
               const controller = new AbortController();
@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Listen for actions dispatched from the settings card's internal buttons
   if (settingsCardEl) {
     settingsCardEl.addEventListener('open-all-apps', () => {
-      const localUrl = 'http://localhost:8000/';
+      const localUrl = '/';
       const publicUrl = '/labs/';
       (async () => {
         try {

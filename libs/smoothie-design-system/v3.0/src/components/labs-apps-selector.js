@@ -70,14 +70,9 @@ class LabsAppsSelector extends HTMLElement {
     }
 
     _getBaseUrl() {
-        // Always use absolute paths for links - baseUrl is only used for construction
-        // The paths already include the full path from /labs/, so we just need to prepend protocol + host on localhost
-        const isLocalHostPage = typeof window !== 'undefined' && (window.location &&
-            (window.location.hostname.includes('localhost') || window.location.hostname === '127.0.0.1'));
-
-        if (isLocalHostPage) {
-            return 'http://localhost:8000';
-        }
+        // Use relative URLs for better portability across different ports/hosts
+        // Paths are already absolute (start with /), so no base URL is needed
+        return '';
         return 'https://mindcubby.com';
     }
 
