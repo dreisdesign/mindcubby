@@ -54,7 +54,7 @@
   --color-primary-lighter: var(--palette-vanilla-100);
   --color-background: var(--palette-vanilla-800);
   /* Surface mapping for vanilla dark theme */
-  --color-surface: var(--palette-vanilla-500);
+  --color-surface: var(--palette-vanilla-300);
   --color-on-primary: var(--palette-vanilla-900);
   --color-on-primary-darker: var(--palette-vanilla-100);
   --color-on-primary-lighter: var(--palette-vanilla-100);
@@ -64,11 +64,11 @@
   --color-surface-hover: #29282a;
   /* Surface container helpers for vanilla dark */
   --color-surface-container: var(--palette-vanilla-800);
-  --color-surface-container-high: var(--palette-vanilla-500);
-  --color-surface-variant: var(--palette-vanilla-500);
+  --color-surface-container-high: var(--palette-vanilla-300);
+  --color-surface-variant: var(--palette-vanilla-300);
   --color-on-surface-variant: var(--palette-vanilla-200);
   /* Outline tokens for dark mode */
-  --color-outline-variant: var(--palette-vanilla-500);
+  --color-outline-variant: var(--palette-vanilla-300);
   /* Status colors inherit from global tokens */
 }
 
@@ -119,7 +119,7 @@
   --color-primary-darker: var(--palette-blueberry-500);
   --color-primary-lighter: var(--palette-blueberry-100);
   --color-background: var(--palette-blueberry-800);
-  --color-surface: var(--palette-blueberry-500);
+  --color-surface: var(--palette-blueberry-300);
   --color-on-surface: var(--palette-white);
   /* secondary surface for badges in dark mode */
   --color-surface-secondary: color-mix(in srgb, var(--color-surface) 92%, transparent);
@@ -131,11 +131,11 @@
   --color-surface-hover: #292a3a;
   /* Surface container helpers for blueberry dark */
   --color-surface-container: var(--palette-blueberry-800);
-  --color-surface-container-high: var(--palette-blueberry-500);
-  --color-surface-variant: var(--palette-blueberry-500);
+  --color-surface-container-high: var(--palette-blueberry-300);
+  --color-surface-variant: var(--palette-blueberry-300);
   --color-on-surface-variant: var(--palette-blueberry-200);
   /* Outline tokens for dark mode */
-  --color-outline-variant: var(--palette-blueberry-500);
+  --color-outline-variant: var(--palette-blueberry-300);
   /* Status colors inherit from global tokens */
 }
 
@@ -182,21 +182,21 @@
   --color-primary-darker: var(--palette-strawberry-500);
   --color-primary-lighter: var(--palette-strawberry-100);
   --color-background: var(--palette-strawberry-800);
-  --color-surface: var(--palette-strawberry-500);
+  --color-surface: var(--palette-strawberry-300);
   --color-on-surface: var(--palette-white);
   --color-surface-secondary: color-mix(in srgb, var(--color-surface) 92%, transparent);
   --color-on-primary: var(--palette-strawberry-900);
   --color-on-primary-darker: var(--palette-white);
   --color-on-primary-lighter: var(--palette-white);
   --color-on-background: var(--palette-strawberry-100);
-  --settings-icon-color: var(--palette-strawberry-500);
+  --settings-icon-color: var(--palette-strawberry-300);
   --color-surface-hover: #5a2322;
   /* Surface container helpers for strawberry dark */
   --color-surface-container: var(--palette-strawberry-800);
-  --color-surface-container-high: var(--palette-strawberry-500);
-  --color-surface-variant: var(--palette-strawberry-500);
+  --color-surface-container-high: var(--palette-strawberry-300);
+  --color-surface-variant: var(--palette-strawberry-300);
   --color-on-surface-variant: var(--palette-strawberry-200);
   /* Outline tokens for dark mode */
-  --color-outline-variant: var(--palette-strawberry-500);
+  --color-outline-variant: var(--palette-strawberry-300);
   /* Status colors inherit from global tokens */
 }
