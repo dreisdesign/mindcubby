@@ -119,7 +119,7 @@
   --color-primary-darker: var(--palette-blueberry-800);
   --color-primary-lighter: var(--palette-blueberry-300);
   --color-background: var(--palette-blueberry-800);
-  --color-surface: var(--palette-blueberry-800);
+  --color-surface: var(--palette-blueberry-700);
   --color-on-surface: var(--palette-white);
   /* secondary surface for badges in dark mode */
   --color-surface-secondary: color-mix(in srgb, var(--color-surface) 92%, transparent);
@@ -130,9 +130,9 @@
   --settings-icon-color: #ffffff40;
   --color-surface-hover: #292a3a;
   /* Surface container helpers for blueberry dark */
-  --color-surface-container: var(--palette-blueberry-800);
-  --color-surface-container-high: var(--palette-blueberry-800);
-  --color-surface-variant: var(--palette-blueberry-800);
+  --color-surface-container: var(--palette-blueberry-700);
+  --color-surface-container-high: var(--palette-blueberry-600);
+  --color-surface-variant: var(--palette-blueberry-700);
   --color-on-surface-variant: var(--palette-blueberry-200);
   /* Outline tokens for dark mode */
   --color-outline-variant: var(--palette-blueberry-800);
