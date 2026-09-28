@@ -24,7 +24,7 @@
         import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-dropdown.js';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
     </script>
 </head>
@@ -32,22 +32,7 @@
 <body>
     <labs-header>
         <h1 slot="title">Page Title</h1>
-        <div slot="actions" id="theme-controls" style="display: flex; gap: 1rem; align-items: center;">
-            <labs-dropdown id="theme-selector">
-                <labs-button slot="trigger" variant="secondary" size="small">
-                    <span id="theme-label">Vanilla</span>
-                </labs-button>
-                <div slot="content">
-                    <button data-theme="vanilla">Vanilla</button>
-                    <button data-theme="blueberry">Blueberry</button>
-                    <button data-theme="strawberry">Strawberry</button>
-                </div>
-            </labs-dropdown>
-            <labs-button id="appearance-toggle" variant="secondary" size="small">
-                <labs-icon slot="icon-left" name="brightness"></labs-icon>
-                <span id="appearance-label">Light</span>
-            </labs-button>
-        </div>
+        <labs-theme-toggle slot="actions" icon-only></labs-theme-toggle>
     </labs-header>
 
     <main>
@@ -64,54 +49,14 @@
     </main>
 
     <script>
-        const htmlElement = document.documentElement;
-
-        // Theme management
-        const themeSelector = document.getElementById('theme-selector');
-        const themeLabel = document.getElementById('theme-label');
-        const appearanceToggle = document.getElementById('appearance-toggle');
-        const appearanceLabel = document.getElementById('appearance-label');
-
-        const savedTheme = localStorage.getItem('app-theme') || 'vanilla';
-        const savedAppearance = localStorage.getItem('app-appearance') || 'light';
-        let currentTheme = savedTheme;
-        let currentAppearance = savedAppearance;
-
-        function applyTheme(theme) {
-            htmlElement.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
-            htmlElement.classList.add(`theme-${theme}`);
-            themeLabel.textContent = theme.charAt(0).toUpperCase() + theme.slice(1);
-            localStorage.setItem('app-theme', theme);
-            currentTheme = theme;
-        }
-
-        function applyAppearance(appearance) {
-            htmlElement.classList.remove('appearance-light', 'appearance-dark');
-            htmlElement.classList.add(`appearance-${appearance}`);
-            appearanceLabel.textContent = appearance.charAt(0).toUpperCase() + appearance.slice(1);
-            localStorage.setItem('app-appearance', appearance);
-            currentAppearance = appearance;
-        }
-
-        // Initialize
-        applyTheme(savedTheme);
-        applyAppearance(savedAppearance);
-
-        // Theme dropdown
-        const themeButtons = themeSelector.querySelectorAll('button[data-theme]');
-        themeButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const theme = btn.getAttribute('data-theme');
-                applyTheme(theme);
-                themeSelector.removeAttribute('data-open');
+        // Theme toggle handles all theme management internally
+        // Just listen for theme changes if needed:
+        const themeToggle = document.querySelector('labs-theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('mode-changed', (e) => {
+                console.log('Theme changed to:', e.detail.mode);
             });
-        });
-
-        // Appearance toggle
-        appearanceToggle.addEventListener('click', () => {
-            const newAppearance = currentAppearance === 'dark' ? 'light' : 'dark';
-            applyAppearance(newAppearance);
-        });
+        }
     </script>
 </body>
 
