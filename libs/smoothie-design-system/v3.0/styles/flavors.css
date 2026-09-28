@@ -115,15 +115,15 @@
   /* #1C1B1F, 15% */
   --color-background-darkest: var(--palette-blueberry-900);
   --color-on-background-darkest: var(--palette-blueberry-100);
-  --color-primary: var(--palette-blueberry-500);
-  --color-primary-darker: var(--palette-blueberry-800);
-  --color-primary-lighter: var(--palette-blueberry-300);
+  --color-primary: var(--palette-blueberry-300);
+  --color-primary-darker: var(--palette-blueberry-500);
+  --color-primary-lighter: var(--palette-blueberry-100);
   --color-background: var(--palette-blueberry-800);
   --color-surface: var(--palette-blueberry-700);
   --color-on-surface: var(--palette-white);
   /* secondary surface for badges in dark mode */
   --color-surface-secondary: color-mix(in srgb, var(--color-surface) 92%, transparent);
-  --color-on-primary: var(--palette-white);
+  --color-on-primary: var(--palette-blueberry-900);
   --color-on-primary-darker: var(--palette-white);
   --color-on-primary-lighter: var(--palette-white);
   --color-on-background: var(--palette-blueberry-100);
