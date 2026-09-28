@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Row Layout Pattern - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-container.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js';
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        html.in-iframe body {
+            overflow: auto;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface, #666);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .section h2 {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+            border-bottom: 2px solid var(--color-on-surface);
+            padding-bottom: 0.75rem;
+        }
+
+        .demo-item {
+            background: var(--color-surface-container);
+            border: 1px solid var(--color-on-surface-variant);
+            border-radius: 8px;
+            overflow: auto;
+            padding: 1.5rem;
+        }
+
+        .demo-item h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+        }
+
+        .demo-preview {
+            background: var(--color-background);
+            border: 2px dashed var(--color-on-surface-variant);
+            border-radius: 4px;
+            position: relative;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+
+        .demo-info {
+            font-size: 0.875rem;
+            color: var(--color-on-surface);
+            line-height: 1.5;
+        }
+
+        .demo-info strong {
+            color: var(--color-on-background);
+        }
+
+        .code-block {
+            background: var(--color-surface-container);
+            border: 1px solid var(--color-on-surface-variant);
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            color: var(--color-on-background);
+            margin: 1rem 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            line-height: 1.5;
+        }
+
+        .note {
+            background: var(--color-primary, #6B5C4B);
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .use-case {
+            background: var(--color-surface-container);
+            border-left: 4px solid var(--color-primary);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .use-case strong {
+            color: var(--color-on-background);
+        }
+    </style>
+</head>
+
+<body>
+    <labs-page-layout title="Row Layout Pattern" subtitle="3-column flexible layout for headers, toolbars, and horizontal arrangements">
+        <labs-breadcrumbs slot="breadcrumbs">
+            <labs-breadcrumb-item href="../../">Smoothie</labs-breadcrumb-item>
+            <labs-breadcrumb-item href="../">3. Patterns</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>Row Layout Pattern</labs-breadcrumb-item>
+        </labs-breadcrumbs>
+
+        <div class="section">
+            <h2>Basic Row Layout</h2>
+            <div class="demo-item">
+                <h3>3-Column Layout (Start | Center | End)</h3>
+                <div class="demo-preview">
+                    <labs-row-layout>
+                        <labs-button slot="start" variant="secondary" size="small">Left</labs-button>
+                        <labs-button slot="center" variant="secondary" size="small">Center</labs-button>
+                        <labs-button slot="end" variant="secondary" size="small">Right</labs-button>
+                    </labs-row-layout>
+                </div>
+                <div class="demo-info">
+                    <strong>Layout:</strong> Start slot pulls left, center stretches, end pulls right
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Common Patterns</h2>
+
+            <div class="demo-item">
+                <h3>Toolbar with Theme Controls</h3>
+                <div class="demo-preview">
+                    <labs-row-layout>
+                        <div slot="start"></div>
+                        <div slot="center"></div>
+                        <div slot="end" style="display: flex; gap: 1rem;">
+                            <labs-theme-button></labs-theme-button>
+                            <labs-theme-toggle icon-only></labs-theme-toggle>
+                        </div>
+                    </labs-row-layout>
+                </div>
+                <div class="demo-info">
+                    <strong>Use case:</strong> Theme selector and appearance toggle in top-right
+                </div>
+            </div>
+
+            <div class="demo-item">
+                <h3>Header with Title and Actions</h3>
+                <div class="demo-preview">
+                    <labs-row-layout>
+                        <div slot="start">
+                            <labs-button variant="secondary" size="small">
+                                <labs-icon name="arrow_back_ios_new" slot="icon-left"></labs-icon>
+                                Back
+                            </labs-button>
+                        </div>
+                        <div slot="center" style="font-weight: 600;">Page Title</div>
+                        <div slot="end">
+                            <labs-button variant="secondary" size="small" aria-label="Settings">
+                                <labs-icon name="settings" slot="icon-left"></labs-icon>
+                            </labs-button>
+                        </div>
+                    </labs-row-layout>
+                </div>
+                <div class="demo-info">
+                    <strong>Use case:</strong> Navigation header with title and action buttons
+                </div>
+            </div>
+
+            <div class="demo-item">
+                <h3>Full-Width Toolbar (Start Empty)</h3>
+                <div class="demo-preview">
+                    <labs-row-layout>
+                        <div slot="start"></div>
+                        <div slot="center" style="font-weight: 600;">Center Content</div>
+                        <div slot="end">
+                            <labs-button variant="primary" size="small">Action</labs-button>
+                        </div>
+                    </labs-row-layout>
+                </div>
+                <div class="demo-info">
+                    <strong>Layout:</strong> Empty start keeps title centered, action on right
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Implementation</h2>
+            <p><strong>Basic usage:</strong></p>
+            <div class="code-block">
+&lt;labs-row-layout&gt;
+    &lt;div slot="start"&gt;...&lt;/div&gt;
+    &lt;div slot="center"&gt;...&lt;/div&gt;
+    &lt;div slot="end"&gt;...&lt;/div&gt;
+&lt;/labs-row-layout&gt;
+            </div>
+
+            <p><strong>Theme controls example:</strong></p>
+            <div class="code-block">
+&lt;labs-container fill&gt;
+    &lt;labs-row-layout&gt;
+        &lt;div slot="start"&gt;&lt;/div&gt;
+        &lt;div slot="center"&gt;&lt;/div&gt;
+        &lt;div slot="end" style="display: flex; gap: 1rem;"&gt;
+            &lt;labs-theme-button&gt;&lt;/labs-theme-button&gt;
+            &lt;labs-theme-toggle icon-only&gt;&lt;/labs-theme-toggle&gt;
+        &lt;/div&gt;
+    &lt;/labs-row-layout&gt;
+&lt;/labs-container&gt;
+            </div>
+
+            <div class="note">
+                <strong>Import:</strong> Add `import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js'` to your page script
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Slot Behavior</h2>
+            <div class="use-case">
+                <strong>start slot:</strong> Left-aligned, no flex growth (flex: 0 0 auto)
+            </div>
+            <div class="use-case">
+                <strong>center slot:</strong> Centered, flexible width (flex: 1 1 auto) — expands to fill available space
+            </div>
+            <div class="use-case">
+                <strong>end slot:</strong> Right-aligned, no flex growth (flex: 0 0 auto)
+            </div>
+            <p style="margin-top: 1rem; color: var(--color-on-surface);">All slots use internal flexbox with centered alignment for child items.</p>
+        </div>
+
+    </labs-page-layout>
+</body>
+
+</html>

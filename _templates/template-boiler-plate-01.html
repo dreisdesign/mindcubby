@@ -24,11 +24,27 @@
         import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
     </script>
 </head>
 
 <body>
+    <!-- Theme Controls Bar (full width) -->
+    <labs-container fill>
+        <labs-row-layout>
+            <div slot="start"></div>
+            <div slot="center"></div>
+            <div slot="end" style="display: flex; gap: 1rem;">
+                <labs-theme-button></labs-theme-button>
+                <labs-theme-toggle icon-only></labs-theme-toggle>
+            </div>
+        </labs-row-layout>
+    </labs-container>
+
+    <!-- Main Content (medium width) -->
     <labs-container medium>
         <labs-header center>
             <div slot="title">Page Title</div>
