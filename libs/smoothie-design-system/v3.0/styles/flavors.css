@@ -69,10 +69,6 @@
   --color-on-surface-variant: var(--palette-vanilla-200);
   /* Outline tokens for dark mode */
   --color-outline-variant: var(--palette-vanilla-500);
-  /* Button styling for dark mode: outline style */
-  --button-bg: transparent;
-  --button-border: 1px solid var(--color-on-surface-variant);
-  --button-hover-bg: var(--color-surface-container);
   /* Status colors inherit from global tokens */
 }
 
@@ -140,10 +136,6 @@
   --color-on-surface-variant: var(--palette-blueberry-200);
   /* Outline tokens for dark mode */
   --color-outline-variant: var(--palette-blueberry-800);
-  /* Button styling for dark mode: outline style */
-  --button-bg: transparent;
-  --button-border: 1px solid var(--color-on-surface-variant);
-  --button-hover-bg: var(--color-surface-container);
   /* Status colors inherit from global tokens */
 }
 
@@ -206,9 +198,15 @@
   --color-on-surface-variant: var(--palette-strawberry-200);
   /* Outline tokens for dark mode */
   --color-outline-variant: var(--palette-strawberry-800);
-  /* Button styling for dark mode: outline style */
+  /* Status colors inherit from global tokens */
+}
+
+/* === Appearance-Dark Button Styling === */
+/* All themes use outline buttons in dark mode to avoid color conflicts */
+:root.appearance-dark,
+.tokens-doc-root.appearance-dark {
+  /* Button uses outline style: transparent bg with surface-variant border */
   --button-bg: transparent;
   --button-border: 1px solid var(--color-on-surface-variant);
   --button-hover-bg: var(--color-surface-container);
-  /* Status colors inherit from global tokens */
 }
