@@ -25,6 +25,10 @@ template.innerHTML = `
     :host([large]) {
       max-width: 800px;
     }
+    :host([full-width]) {
+      max-width: 100%;
+      width: 100%;
+    }
     :host([fill]) {
       max-width: 100vw;
       height: 100vh;
