@@ -19,10 +19,10 @@
   <meta name="theme-color" content="#FBFBFD">
 
   <!-- Design System Tokens -->
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/colors.css?v=61">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/typography.css?v=61">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/spacing.css?v=61">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css?v=61">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/colors.css?v=62">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/typography.css?v=62">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/spacing.css?v=62">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css?v=62">
   <!-- Components -->
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=35"></script>
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=35"></script>
@@ -33,7 +33,7 @@
   <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js?v=35"></script>
 
   <!-- Pad App Logic -->
-  <script type="module" src="./js/main.js?v=61"></script>
+  <script type="module" src="./js/main.js?v=62"></script>
 
   <style>
     * {
@@ -140,7 +140,9 @@
   <!-- Main App Container -->
   <labs-container fill>
     <!-- Header -->
-    <labs-header title="Pad" center></labs-header>
+    <labs-header center>
+      <div slot="title">Pad</div>
+    </labs-header>
 
     <!-- Canvas Area -->
     <div class="pad-canvas-area">

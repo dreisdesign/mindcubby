@@ -29,10 +29,10 @@
     </script>
 
     <!-- Design System Tokens -->
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/colors.css?v=61">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/typography.css?v=61">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/spacing.css?v=61">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css?v=61">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/colors.css?v=62">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/typography.css?v=62">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/tokens/spacing.css?v=62">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/flavors.css?v=62">
 
     <!-- Components -->
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=35"></script>
@@ -49,7 +49,7 @@
     <script type="module" src="/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js?v=35"></script>
 
     <!-- Tracker Logic -->
-    <script type="module" src="./js/main.js?v=61"></script>
+    <script type="module" src="./js/main.js?v=62"></script>
 
     <!-- Register Tracker Service Worker -->
     <script>
@@ -99,7 +99,9 @@
 <body>
     <labs-container medium>
         <div class="content-wrapper">
-            <labs-header title="Tracker" center></labs-header>
+            <labs-header center>
+                <div slot="title">Tracker</div>
+            </labs-header>
 
             <labs-metric-card id="tracker-metric">
                 <span slot="label">Entries</span>
