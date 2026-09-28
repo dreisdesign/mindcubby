@@ -1,20 +1,5 @@
 # Smoothie Design System v3.0 - Complete System Guide
-
-## Overview
-
-The Labs apps (Timer, Pad, Note, Tracker, Today-list) have been successfully migrated from Storybook to Smoothie Design System v3.0. This document provides a complete reference for how the system works, including component registration, theming, service worker caching, and automatic versioning.
-
-**Current Version:** v51 (auto-incremented via git hook)
-
----
-
-## Table of Contents
-
-1. [Architecture Overview](#architecture-overview)
-2. [Smoothie Component System](#smoothie-component-system)
-3. [Token System (Colors, Typography, Spacing)](#token-system)
-4. [Theme & Appearance System](#theme--appearance-system)
-5. [Service Worker & Caching Strategy](#service-worker--caching-strategy)
+ http://localhost:3000/smoothie/
 6. [Git Hook Auto-Versioning](#git-hook-auto-versioning)
 7. [App Implementations](#app-implementations)
 8. [Best Practices for Future Development](#best-practices-for-future-development)
