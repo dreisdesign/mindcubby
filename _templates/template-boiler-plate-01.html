@@ -20,20 +20,18 @@
     </script>
 
     <script type="module">
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js';
     </script>
 </head>
 
 <body>
-    <header>
-        <div class="header-content">
-            <h1>Page Title</h1>
-            <div class="controls">
-                <button id="theme-toggle">Dark</button>
-            </div>
-        </div>
-    </header>
+    <labs-header>
+        <h1 slot="title">Page Title</h1>
+        <labs-button slot="actions" id="theme-toggle">Dark</labs-button>
+    </labs-header>
 
     <main>
         <labs-container size="medium">
