@@ -55,7 +55,7 @@
   --color-background: var(--palette-vanilla-800);
   /* Surface mapping for vanilla dark theme */
   --color-surface: var(--palette-vanilla-500);
-  --color-on-primary: var(--palette-vanilla-100);
+  --color-on-primary: var(--palette-vanilla-900);
   --color-on-primary-darker: var(--palette-vanilla-100);
   --color-on-primary-lighter: var(--palette-vanilla-100);
   --color-on-background: var(--palette-vanilla-100);
@@ -185,7 +185,7 @@
   --color-surface: var(--palette-strawberry-500);
   --color-on-surface: var(--palette-white);
   --color-surface-secondary: color-mix(in srgb, var(--color-surface) 92%, transparent);
-  --color-on-primary: var(--palette-white);
+  --color-on-primary: var(--palette-strawberry-900);
   --color-on-primary-darker: var(--palette-white);
   --color-on-primary-lighter: var(--palette-white);
   --color-on-background: var(--palette-strawberry-100);
