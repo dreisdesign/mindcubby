@@ -35,6 +35,11 @@ template.innerHTML = `
       display: flex;
       flex-direction: column;
     }
+    :host([compact]) {
+      padding-top: var(--space-md, 16px);
+      padding-bottom: 0;
+      gap: var(--space-md, 16px);
+    }
     @media (max-width: var(--container-mobile-breakpoint, 640px)) {
       :host,
       :host([small]),
