@@ -105,12 +105,20 @@ class LabsThemeToggle extends HTMLElement {
     const currentAppearance = localStorage.getItem('smoothie-appearance') || 'light';
     this.updateDisplay(currentAppearance);
 
+    // Ensure appearance class is applied to root
+    const root = document.documentElement;
+    root.classList.remove('appearance-light', 'appearance-dark');
+    root.classList.add(`appearance-${currentAppearance}`);
+
     // Listen for clicks
     this.button.addEventListener('click', () => this.toggle());
 
     // Listen for external changes via postMessage
     window.addEventListener('message', (event) => {
       if (event.data.type === 'smoothie-theme-update' && event.data.appearance) {
+        const root = document.documentElement;
+        root.classList.remove('appearance-light', 'appearance-dark');
+        root.classList.add(`appearance-${event.data.appearance}`);
         this.updateDisplay(event.data.appearance);
       }
     });
@@ -122,6 +130,11 @@ class LabsThemeToggle extends HTMLElement {
 
     // Update self
     this.updateDisplay(newAppearance);
+
+    // Apply appearance class to root element
+    const root = document.documentElement;
+    root.classList.remove('appearance-light', 'appearance-dark');
+    root.classList.add(`appearance-${newAppearance}`);
 
     // Persist
     localStorage.setItem('smoothie-appearance', newAppearance);
