@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme & Appearance System Guide</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=74">
+
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+
+    <script type="module">
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=74';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=74';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=74';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=74';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=74';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=74';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=74';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=74';
+    </script>
+
+    <style>
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .theme-example {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-preview {
+            min-height: 200px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .theme-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.7;
+        }
+
+        .theme-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .demo-button {
+            align-self: flex-start;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Appearance Controls Bar -->
+    <labs-container full-width>
+        <labs-row-layout>
+            <div slot="start"></div>
+            <div slot="center"></div>
+            <div slot="end" style="display: flex; gap: 1rem;">
+                <labs-theme-button icon-only></labs-theme-button>
+                <labs-theme-toggle icon-only></labs-theme-toggle>
+            </div>
+        </labs-row-layout>
+    </labs-container>
+
+    <!-- Main Content -->
+    <labs-container medium>
+        <labs-header center>
+            <div slot="title">Theme & Appearance System</div>
+        </labs-header>
+
+        <main>
+            <!-- System Overview -->
+            <labs-card>
+                <div slot="header">How It Works</div>
+                <div slot="description">
+                    <p>Smoothie uses a <strong>two-dimensional theming system</strong>:</p>
+                    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li><strong>Theme:</strong> Controls the primary color palette (Vanilla, Blueberry, Strawberry)</li>
+                        <li><strong>Appearance:</strong> Controls light/dark mode for better accessibility</li>
+                    </ul>
+                    <p>Use the controls in the top right to cycle through themes and toggle between light/dark modes. All color tokens automatically adjust based on your selection.</p>
+                </div>
+            </labs-card>
+
+            <!-- Theme Examples -->
+            <section style="margin-top: 3rem;">
+                <h2 style="margin-bottom: 0.5rem;">All Theme × Appearance Combinations</h2>
+                <p style="opacity: 0.7; margin-bottom: 2rem;">Each combination is self-contained with coordinated colors for text, backgrounds, buttons, and accents.</p>
+
+                <div class="theme-grid">
+                    <!-- Vanilla Light -->
+                    <div class="theme-example">
+                        <div class="theme-preview" style="background: var(--palette-vanilla-200); color: var(--palette-vanilla-800);">
+                            <div class="theme-label">Vanilla + Light</div>
+                            <div class="theme-title">Sample</div>
+                            <labs-button variant="primary" size="small" style="align-self: flex-start;">Try it</labs-button>
+                        </div>
+                    </div>
+
+                    <!-- Vanilla Dark -->
+                    <div class="theme-example">
+                        <div class="theme-preview" style="background: var(--palette-vanilla-800); color: var(--palette-vanilla-100);">
+                            <div class="theme-label">Vanilla + Dark</div>
+                            <div class="theme-title">Sample</div>
+                            <labs-button variant="primary" size="small" style="align-self: flex-start;">Try it</labs-button>
+                        </div>
+                    </div>
+
+                    <!-- Blueberry Light -->
+                    <div class="theme-example">
+                        <div class="theme-preview" style="background: var(--palette-blueberry-200); color: var(--palette-blueberry-900);">
+                            <div class="theme-label">Blueberry + Light</div>
+                            <div class="theme-title">Sample</div>
+                            <labs-button variant="primary" size="small" style="align-self: flex-start;">Try it</labs-button>
+                        </div>
+                    </div>
+
+                    <!-- Blueberry Dark -->
+                    <div class="theme-example">
+                        <div class="theme-preview" style="background: var(--palette-blueberry-900); color: var(--palette-blueberry-100);">
+                            <div class="theme-label">Blueberry + Dark</div>
+                            <div class="theme-title">Sample</div>
+                            <labs-button variant="primary" size="small" style="align-self: flex-start;">Try it</labs-button>
+                        </div>
+                    </div>
+
+                    <!-- Strawberry Light -->
+                    <div class="theme-example">
+                        <div class="theme-preview" style="background: var(--palette-strawberry-200); color: var(--palette-strawberry-900);">
+                            <div class="theme-label">Strawberry + Light</div>
+                            <div class="theme-title">Sample</div>
+                            <labs-button variant="primary" size="small" style="align-self: flex-start;">Try it</labs-button>
+                        </div>
+                    </div>
+
+                    <!-- Strawberry Dark -->
+                    <div class="theme-example">
+                        <div class="theme-preview" style="background: var(--palette-strawberry-800); color: var(--palette-strawberry-100);">
+                            <div class="theme-label">Strawberry + Dark</div>
+                            <div class="theme-title">Sample</div>
+                            <labs-button variant="primary" size="small" style="align-self: flex-start;">Try it</labs-button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Technical Details -->
+            <section style="margin-top: 3rem;">
+                <labs-card>
+                    <div slot="header">Technical Implementation</div>
+                    <div slot="description">
+                        <p><strong>Storage Keys:</strong></p>
+                        <ul style="margin: 1rem 0; padding-left: 1.5rem; font-family: monospace; font-size: 0.875rem;">
+                            <li><code>smoothie-theme</code>: Stores theme (vanilla, blueberry, strawberry)</li>
+                            <li><code>smoothie-appearance</code>: Stores appearance (light, dark)</li>
+                        </ul>
+                        <p><strong>CSS Variables:</strong></p>
+                        <p>All color tokens are defined in <code>flavors.css</code> as semantic variables:</p>
+                        <ul style="margin: 1rem 0; padding-left: 1.5rem; font-family: monospace; font-size: 0.875rem;">
+                            <li>--color-primary (primary action color)</li>
+                            <li>--color-surface (card/container background)</li>
+                            <li>--color-on-surface (text on surfaces)</li>
+                            <li>...and 20+ more semantic tokens</li>
+                        </ul>
+                    </div>
+                </labs-card>
+            </section>
+
+        </main>
+    </labs-container>
+</body>
+
+</html>
