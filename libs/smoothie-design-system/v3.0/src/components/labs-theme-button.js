@@ -22,7 +22,7 @@ template.innerHTML = `
       padding: 0.625em 1em;
       border: 1px solid var(--color-on-surface-variant, #999);
       border-radius: 24px;
-      background: var(--color-surface, #fff);
+      background: transparent;
       color: var(--color-on-surface, #333);
       font-family: inherit;
       font-size: 0.875rem;
@@ -35,7 +35,7 @@ template.innerHTML = `
 
     button:hover {
       background: var(--color-surface-container, #f5f5f5);
-      border-color: var(--color-on-surface-variant, #999);
+      border-color: var(--color-on-surface, #333);
     }
 
     button:active {
