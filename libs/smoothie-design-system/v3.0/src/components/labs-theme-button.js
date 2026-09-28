@@ -62,9 +62,23 @@ template.innerHTML = `
     :host([icon-only]) .theme-label {
       display: none;
     }
+
+    .icon-slot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25em;
+      line-height: 1;
+      margin-right: 0.25em;
+    }
+
+    :host([icon-only]) .icon-slot {
+      margin-right: 0;
+    }
   </style>
 
   <button aria-label="Cycle through themes" title="Click to cycle through themes">
+    <span class="icon-slot" id="icon-slot"></span>
     <span class="theme-label" id="label-slot">Vanilla</span>
   </button>
 `;
@@ -77,13 +91,17 @@ class LabsThemeButton extends HTMLElement {
         this._themes = ['vanilla', 'blueberry', 'strawberry'];
     }
 
-    connectedCallback() {
+    async connectedCallback() {
+        // Dynamic import of labs-icon
+        await import('./labs-icon.js');
+
         const button = this.shadowRoot.querySelector('button');
         const labelSlot = this.shadowRoot.getElementById('label-slot');
+        const iconSlot = this.shadowRoot.getElementById('icon-slot');
 
         // Load current theme
         const currentTheme = this.getCurrentTheme();
-        this.updateDisplay(currentTheme, labelSlot);
+        this.updateDisplay(currentTheme, labelSlot, iconSlot);
 
         // Cycle on click
         button.addEventListener('click', () => {
@@ -92,7 +110,7 @@ class LabsThemeButton extends HTMLElement {
             const nextTheme = this._themes[(currentIndex + 1) % this._themes.length];
 
             this.applyTheme(nextTheme);
-            this.updateDisplay(nextTheme, labelSlot);
+            this.updateDisplay(nextTheme, labelSlot, iconSlot);
 
             // Emit custom event
             this.dispatchEvent(new CustomEvent('theme-changed', {
@@ -121,7 +139,7 @@ class LabsThemeButton extends HTMLElement {
             if (event.data.type === 'smoothie-theme-update' && event.data.theme) {
                 const theme = event.data.theme;
                 this.applyTheme(theme);
-                this.updateDisplay(theme, labelSlot);
+                this.updateDisplay(theme, labelSlot, iconSlot);
 
                 // Also apply appearance if provided
                 if (event.data.appearance) {
@@ -136,14 +154,14 @@ class LabsThemeButton extends HTMLElement {
         // Listen for localStorage changes
         window.addEventListener('storage', (event) => {
             if (event.key === 'smoothie-theme' && event.newValue) {
-                this.updateDisplay(event.newValue, labelSlot);
+                this.updateDisplay(event.newValue, labelSlot, iconSlot);
             }
         });
 
         // Watch for class changes on root
         const observer = new MutationObserver(() => {
             const theme = this.getCurrentTheme();
-            this.updateDisplay(theme, labelSlot);
+            this.updateDisplay(theme, labelSlot, iconSlot);
         });
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     }
@@ -171,9 +189,12 @@ class LabsThemeButton extends HTMLElement {
         localStorage.setItem('smoothie-theme', theme);
     }
 
-    updateDisplay(theme, labelSlot) {
+    updateDisplay(theme, labelSlot, iconSlot) {
         const label = theme.charAt(0).toUpperCase() + theme.slice(1);
         labelSlot.textContent = label;
+        if (iconSlot) {
+            iconSlot.innerHTML = `<labs-icon name="colors"></labs-icon>`;
+        }
     }
 }
 
