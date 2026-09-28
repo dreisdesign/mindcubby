@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementation Guide - Smoothie Design System</title>
+    <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+    <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-container.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background, #fff);
+            color: var(--color-on-background, #333);
+            padding: 2rem;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        html.in-iframe body {
+            overflow: auto;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--color-on-background, #333);
+        }
+
+        .subtitle {
+            color: var(--color-on-surface, #666);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .section h2 {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+            border-bottom: 2px solid var(--color-on-surface);
+            padding-bottom: 0.75rem;
+        }
+
+        .code-block {
+            background: var(--color-surface-container);
+            border: 1px solid var(--color-on-surface-variant);
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            color: var(--color-on-background);
+            margin: 1rem 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            line-height: 1.5;
+        }
+
+        .example {
+            background: var(--color-surface-container);
+            border-left: 4px solid var(--color-primary);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .example strong {
+            color: var(--color-on-background);
+        }
+
+        .note {
+            background: var(--color-primary, #6B5C4B);
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .checklist {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .checklist li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .checklist li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--color-success, #00800C);
+            font-weight: bold;
+        }
+
+        .warning {
+            background: var(--color-warning, #ff9800);
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .warning:before {
+            content: "⚠ ";
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <labs-page-layout title="Implementation Guide" subtitle="Best practices and common patterns for building with Smoothie components">
+        <labs-breadcrumbs slot="breadcrumbs">
+            <labs-breadcrumb-item href="../../">Smoothie</labs-breadcrumb-item>
+            <labs-breadcrumb-item href="../">4. Patterns</labs-breadcrumb-item>
+            <labs-breadcrumb-item active>Implementation Guide</labs-breadcrumb-item>
+        </labs-breadcrumbs>
+
+        <div class="section">
+            <h2>Page Structure</h2>
+            <p><strong>Always nest header inside container:</strong></p>
+            <div class="code-block">
+&lt;labs-container medium&gt;
+    &lt;labs-header center&gt;
+        &lt;div slot="title"&gt;Page Title&lt;/div&gt;
+        &lt;labs-theme-toggle slot="actions" icon-only&gt;&lt;/labs-theme-toggle&gt;
+    &lt;/labs-header&gt;
+
+    &lt;main&gt;
+        &lt;!-- Your content --&gt;
+    &lt;/main&gt;
+&lt;/labs-container&gt;
+            </div>
+            <div class="note">
+                <strong>Why?</strong> Container provides layout control, header sits at top with consistent spacing. Theme toggle goes in actions slot for toolbar placement.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Header Component Usage</h2>
+            <p><strong>Correct pattern:</strong> Use div with slot="title", not h1 attribute</p>
+            <div class="code-block">
+&lt;!-- ✓ CORRECT --&gt;
+&lt;labs-header center&gt;
+    &lt;div slot="title"&gt;Page Title&lt;/div&gt;
+    &lt;labs-theme-toggle slot="actions" icon-only&gt;&lt;/labs-theme-toggle&gt;
+&lt;/labs-header&gt;
+            </div>
+
+            <p><strong>Wrong pattern:</strong> Don't use title attribute or h1 tag without slot</p>
+            <div class="code-block" style="background: var(--color-error, #ff5252); color: white;">
+&lt;!-- ✗ WRONG --&gt;
+&lt;labs-header title="Page Title" center&gt;&lt;/labs-header&gt;
+&lt;labs-header center&gt;&lt;h1&gt;Page Title&lt;/h1&gt;&lt;/labs-header&gt;
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Button Component Icons</h2>
+            <p><strong>labs-button only supports two icon slots:</strong></p>
+            <ul class="checklist">
+                <li>slot="icon-left" — Icon before text</li>
+                <li>slot="icon-right" — Icon after text</li>
+            </ul>
+
+            <div class="code-block">
+&lt;!-- ✓ CORRECT --&gt;
+&lt;labs-button&gt;
+    &lt;labs-icon name="add" slot="icon-left"&gt;&lt;/labs-icon&gt;
+    Add Item
+&lt;/labs-button&gt;
+
+&lt;!-- ✓ CORRECT (icon only) --&gt;
+&lt;labs-button aria-label="Settings"&gt;
+    &lt;labs-icon name="settings" slot="icon-left"&gt;&lt;/labs-icon&gt;
+&lt;/labs-button&gt;
+            </div>
+
+            <div class="warning">
+                ⚠ Using slot="icon" will render as empty circle placeholder (icon won't load)
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Container Attributes</h2>
+            <p><strong>Use boolean attributes, not key-value:</strong></p>
+            <div class="code-block">
+&lt;!-- ✓ CORRECT --&gt;
+&lt;labs-container medium&gt;...&lt;/labs-container&gt;
+&lt;labs-container large&gt;...&lt;/labs-container&gt;
+&lt;labs-container fill&gt;...&lt;/labs-container&gt;
+
+&lt;!-- ✗ WRONG --&gt;
+&lt;labs-container size="medium"&gt;...&lt;/labs-container&gt;
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Icon Names</h2>
+            <p><strong>Verify icon names exist in labs-icon.js mapping:</strong></p>
+            <div class="code-block">
+&lt;!-- ✓ These exist --&gt;
+&lt;labs-icon name="add"&gt;&lt;/labs-icon&gt;
+&lt;labs-icon name="settings"&gt;&lt;/labs-icon&gt;
+&lt;labs-icon name="electric_bolt"&gt;&lt;/labs-icon&gt;
+&lt;labs-icon name="play_arrow"&gt;&lt;/labs-icon&gt;
+&lt;labs-icon name="check"&gt;&lt;/labs-icon&gt;
+
+&lt;!-- ✗ These DON'T exist (will show empty circle) --&gt;
+&lt;labs-icon name="send"&gt;&lt;/labs-icon&gt;
+&lt;labs-icon name="favorite_border"&gt;&lt;/labs-icon&gt;
+&lt;labs-icon name="light_mode"&gt;&lt;/labs-icon&gt;
+            </div>
+            <div class="note">
+                For theme toggle, use &lt;labs-theme-toggle&gt; component (handles light/dark mode internally). For other icons, check <code>/libs/smoothie-design-system/v3.0/src/components/labs-icon.js</code>.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Theme Toggle Component</h2>
+            <p><strong>Use labs-theme-toggle for light/dark mode switching:</strong></p>
+            <div class="code-block">
+&lt;!-- Standard with label --&gt;
+&lt;labs-theme-toggle&gt;&lt;/labs-theme-toggle&gt;
+
+&lt;!-- Icon only (compact, for headers) --&gt;
+&lt;labs-theme-toggle icon-only&gt;&lt;/labs-theme-toggle&gt;
+            </div>
+            <div class="note">
+                <strong>Don't build custom theme selectors.</strong> The labs-theme-toggle component:
+                <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                    <li>Handles localStorage persistence</li>
+                    <li>Broadcasts theme changes to iframes</li>
+                    <li>Emits 'mode-changed' event</li>
+                    <li>Manages all internal state</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Component Initialization</h2>
+            <p><strong>Import component modules at the top of your page:</strong></p>
+            <div class="code-block">
+&lt;script type="module"&gt;
+    import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js';
+    import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js';
+    import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js';
+    import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js';
+    import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
+&lt;/script&gt;
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>CSS Classes for Theming</h2>
+            <p><strong>Apply theme classes to document root:</strong></p>
+            <div class="code-block">
+&lt;script&gt;
+    (function () {
+        const root = document.documentElement;
+        const theme = localStorage.getItem('app-theme') || 'vanilla';
+        const appearance = localStorage.getItem('app-appearance') || 'light';
+        root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+    })();
+&lt;/script&gt;
+            </div>
+            <p><strong>Available themes:</strong> vanilla, blueberry, strawberry</p>
+            <p><strong>Available appearances:</strong> light, dark</p>
+        </div>
+
+        <div class="section">
+            <h2>Common Mistakes Checklist</h2>
+            <ul class="checklist">
+                <li>Header outside container (should be inside)</li>
+                <li>Using h1 without slot in header (use &lt;div slot="title"&gt;)</li>
+                <li>Using slot="icon" with labs-button (use slot="icon-left" or "icon-right")</li>
+                <li>Using size="medium" with labs-container (use just medium attribute)</li>
+                <li>Icon names that don't exist in mapping (verify in labs-icon.js)</li>
+                <li>Custom theme logic instead of labs-theme-toggle (use the component)</li>
+                <li>CSS with escaped newlines (use actual line breaks in stylesheets)</li>
+            </ul>
+        </div>
+
+    </labs-page-layout>
+</body>
+
+</html>
