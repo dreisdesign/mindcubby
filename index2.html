@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindCubby</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta property="og:image" content="apple-touch-icon.png">
+    <link rel="stylesheet" href="libs/smoothie-design-system/v3.0/styles/main.css">
+    
+    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('mindcubby-theme') || 'vanilla';
+            const appearance = localStorage.getItem('mindcubby-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-background, #fff);
+            color: var(--color-on-background);
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--color-surface, #f5f5f5);
+            border-bottom: 1px solid var(--color-on-surface-variant, #ddd);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-on-background);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        button {
+            background: var(--color-primary, #5f7fff);
+            color: var(--color-on-primary, #fff);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: opacity 0.2s ease;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 3rem 2rem;
+            background: var(--color-surface, #f5f5f5);
+            border: 2px solid var(--color-on-surface-variant, #ddd);
+            border-radius: 12px;
+        }
+
+        .hero h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .hero p {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-bottom: 1.5rem;
+        }
+
+        section {
+            margin-bottom: 4rem;
+        }
+
+        section > h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--color-on-surface-variant, #ddd);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            border: 2px solid var(--color-on-surface-variant, #ddd);
+            border-radius: 12px;
+            padding: 1.5rem;
+            background: var(--color-surface, #f5f5f5);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .card p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            flex-grow: 1;
+        }
+
+        .card-link {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--color-primary, #5f7fff);
+            margin-top: auto;
+        }
+
+        footer {
+            border-top: 1px solid var(--color-on-surface-variant, #ddd);
+            padding: 2rem;
+            margin-top: 4rem;
+            text-align: center;
+            font-size: 0.875rem;
+            opacity: 0.7;
+        }
+
+        footer a {
+            color: inherit;
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .hero {
+                padding: 2rem 1rem;
+            }
+
+            .hero h2 {
+                font-size: 1.5rem;
+            }
+
+            .main {
+                padding: 1rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <h1>MindCubby</h1>
+            <div class="controls">
+                <button id="theme-toggle">Dark</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <!-- HERO SECTION -->
+        <div class="hero">
+            <h2>MindCubby</h2>
+            <p>Things I make because they bring me joy</p>
+        </div>
+
+        <!-- PHYSICAL PRODUCTS -->
+        <section id="physical-products">
+            <h2>Physical Products</h2>
+            <a href="https://mindcubby.etsy.com" target="_blank" style="display: block; text-decoration: none; color: inherit;">
+                <div style="border: 2px solid var(--color-on-surface-variant, #ddd); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.2s ease;">
+                    <img src="assets/banner-etsy.png" alt="MindCubby on Etsy" style="width: 100%; height: auto; display: block;">
+                </div>
+            </a>
+        </section>
+
+        <!-- 3D CREATOR TOOLS -->
+        <section id="make-your-own">
+            <h2>3D Creator Tools</h2>
+            <div class="grid">
+                <a href="3d/apps/rotater/" class="card">
+                    <div class="card-icon">
+                        <img src="assets/logos/mindcubby--3d-apps--rotater.svg" alt="Rotater">
+                    </div>
+                    <h3>Rotater</h3>
+                    <p>Export rotating 3D models as GIF, MP4, or PNG in your browser</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="3d/apps/gcoder/" class="card">
+                    <div class="card-icon">
+                        <img src="assets/logos/mindcubby--3d-apps--gcoder.svg" alt="G-coder">
+                    </div>
+                    <h3>G-coder</h3>
+                    <p>Generate specifications from G-code files</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="3d/apps/spooler/" class="card">
+                    <div class="card-icon">
+                        <img src="assets/logos/mindcubby--3d-apps--spooler.svg" alt="Spooler">
+                    </div>
+                    <h3>Spooler</h3>
+                    <p>Track 3D printer filament inventory with NFC tags</p>
+                    <div class="card-link">Open →</div>
+                </a>
+            </div>
+        </section>
+
+        <!-- FREE DESIGNS -->
+        <section id="free-designs">
+            <h2>Free Designs</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
+                <iframe src="https://www.printables.com/embed/1813667" scrolling="no" frameborder="0"
+                    style="height: 400px; border: 2px solid var(--color-on-surface-variant, #ddd); border-radius: 12px;"></iframe>
+                <iframe src="https://www.printables.com/embed/1752263" scrolling="no" frameborder="0"
+                    style="height: 400px; border: 2px solid var(--color-on-surface-variant, #ddd); border-radius: 12px;"></iframe>
+                <iframe src="https://www.printables.com/embed/1737909" scrolling="no" frameborder="0"
+                    style="height: 400px; border: 2px solid var(--color-on-surface-variant, #ddd); border-radius: 12px;"></iframe>
+            </div>
+        </section>
+
+        <!-- LABS APPS -->
+        <section id="labs">
+            <h2>Labs</h2>
+            <div class="grid">
+                <a href="labs/" class="card">
+                    <div class="card-icon">
+                        <img src="assets/logos/mindcubby--labs-apps--labs-home.svg" alt="Labs">
+                    </div>
+                    <h3>Labs</h3>
+                    <p>Explore all web applications and experiments</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="labs/timer/" class="card">
+                    <div class="card-icon">
+                        <img src="assets/logos/mindcubby--labs-apps--focus-timer.svg" alt="Timer">
+                    </div>
+                    <h3>Timer</h3>
+                    <p>Simple, elegant interval timer for focused work</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="labs/note/" class="card">
+                    <div class="card-icon">
+                        <img src="assets/logos/mindcubby--labs-apps--daily-note.svg" alt="Note">
+                    </div>
+                    <h3>Note</h3>
+                    <p>Quick notes that sync to your browser</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="labs/pad/" class="card">
+                    <div class="card-icon">
+                        <img src="assets/logos/mindcubby--labs-apps--pad.svg" alt="Pad">
+                    </div>
+                    <h3>Pad</h3>
+                    <p>Minimalist text editor for distraction-free writing</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="labs/tracker/" class="card">
+                    <div class="card-icon">
+                        <img src="assets/logos/mindcubby--labs-apps--tracker.svg" alt="Tracker">
+                    </div>
+                    <h3>Tracker</h3>
+                    <p>Track habits and patterns over time</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="labs/today-list/" class="card">
+                    <div class="card-icon">
+                        <img src="assets/logos/mindcubby--labs-apps--today-list.svg" alt="Today List">
+                    </div>
+                    <h3>Today List</h3>
+                    <p>Daily task list that resets each morning</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="labs/postsforpause/" class="card">
+                    <div class="card-icon">
+                        <img src="labs/postsforpause/favicon.svg" alt="Posts for Pause">
+                    </div>
+                    <h3>Posts for Pause</h3>
+                    <p>Minimalist designs encouraging mindfulness and reflection</p>
+                    <div class="card-link">Open →</div>
+                </a>
+                <a href="smoothie/" class="card">
+                    <div class="card-icon">
+                        <img src="assets/logos/mindcubby--design--smoothie.svg" alt="Smoothie Design System">
+                    </div>
+                    <h3>Smoothie Design System</h3>
+                    <p>Component library and design documentation</p>
+                    <div class="card-link">Open →</div>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <a href="https://www.etsy.com/shop/mindcubby" target="_blank">Shop</a>
+        <a href="https://www.youtube.com/@MindCubby" target="_blank">YouTube</a>
+        <a href="https://www.tiktok.com/@mindcubby" target="_blank">TikTok</a>
+    </footer>
+
+    <script>
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+
+        const savedTheme = localStorage.getItem('mindcubby-theme') || 'vanilla';
+        const savedAppearance = localStorage.getItem('mindcubby-appearance') || 'light';
+        let currentTheme = savedTheme;
+        let currentAppearance = savedAppearance;
+
+        function applyTheme(theme, appearance) {
+            htmlElement.classList.remove(`theme-${currentTheme}`, `appearance-${currentAppearance}`);
+            htmlElement.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+            themeToggle.textContent = appearance === 'dark' ? 'Light' : 'Dark';
+            localStorage.setItem('mindcubby-theme', theme);
+            localStorage.setItem('mindcubby-appearance', appearance);
+            currentTheme = theme;
+            currentAppearance = appearance;
+        }
+
+        applyTheme(savedTheme, savedAppearance);
+
+        themeToggle.addEventListener('click', () => {
+            const newAppearance = currentAppearance === 'dark' ? 'light' : 'dark';
+            applyTheme(currentTheme, newAppearance);
+        });
+    </script>
+</body>
+
+</html>
