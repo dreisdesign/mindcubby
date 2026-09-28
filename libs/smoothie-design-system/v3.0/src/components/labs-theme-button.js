@@ -50,6 +50,18 @@ template.innerHTML = `
     .theme-label {
       font-size: 0.9em;
     }
+
+    :host([icon-only]) button {
+      min-width: 44px;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    :host([icon-only]) .theme-label {
+      display: none;
+    }
   </style>
 
   <button aria-label="Cycle through themes" title="Click to cycle through themes">
