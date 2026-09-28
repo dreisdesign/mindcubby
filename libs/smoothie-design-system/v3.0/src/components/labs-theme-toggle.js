@@ -18,10 +18,10 @@ template.innerHTML = `
       display: inline-flex;
       align-items: center;
       gap: 0.5em;
-      border: 1px solid var(--color-on-surface-variant, #999);
+      border: var(--button-border, 1px solid var(--color-on-surface-variant, #999));
       border-radius: 9999px;
       padding: 0.5em 0.75em;
-      background: var(--color-surface, #fff);
+      background: var(--button-bg, var(--color-surface, #fff));
     }
 
     .icon {
@@ -55,7 +55,7 @@ template.innerHTML = `
     }
 
     button:hover {
-      background: var(--color-surface-container, #f5f5f5);
+      background: var(--button-hover-bg, var(--color-surface-container, #f5f5f5));
     }
 
     button:focus-visible {
