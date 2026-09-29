@@ -70,6 +70,15 @@ class LabsFooter extends HTMLElement {
           z-index: 10;
         }
 
+        /* Support for fixed positioning */
+        :host([fixed]) .footer {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 10;
+        }
+
         /* Dark mode: adjust border for footer */
         :host-context(.dark-mode) .footer,
         :host-context([data-theme="dark"]) .footer {

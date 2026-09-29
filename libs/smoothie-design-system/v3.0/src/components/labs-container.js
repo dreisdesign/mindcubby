@@ -40,6 +40,9 @@ template.innerHTML = `
       padding-bottom: 0;
       gap: var(--space-md, 16px);
     }
+    :host([bottom-pad]) {
+      padding-bottom: 100px;
+    }
     @media (max-width: var(--container-mobile-breakpoint, 640px)) {
       :host,
       :host([small]),
