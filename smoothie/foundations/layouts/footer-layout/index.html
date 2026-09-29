@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer Layout - Smoothie Design System</title>
+    <link rel="icon" href="../../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../../../../libs/smoothie-design-system/v3.0/styles/main.css?v=80">
+    
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+
+    <script type="module">
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-footer-layout.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=80';
+        import '../../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js?v=80';
+    </script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--color-background);
+        }
+
+        .documentation {
+            display: flex;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .description {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .description h2 {
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-on-background);
+        }
+
+        .description h2:first-child {
+            margin-top: 0;
+        }
+
+        .description p {
+            color: var(--color-on-surface);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .description code {
+            background: var(--color-surface-container);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: var(--color-on-surface);
+        }
+
+        .description pre {
+            background: var(--color-surface-container);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .description pre code {
+            background: none;
+            padding: 0;
+            color: var(--color-on-surface);
+        }
+
+        .slots-list {
+            background: var(--color-surface-container);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .slots-list dt {
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-top: 0.5rem;
+        }
+
+        .slots-list dd {
+            margin-left: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-on-surface);
+        }
+
+        .demo-section {
+            flex: 1;
+            min-width: 400px;
+            border: 1px solid var(--color-surface-variant);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--color-surface);
+        }
+
+        .demo-label {
+            padding: 1rem;
+            background: var(--color-surface-container);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-on-surface-variant);
+            border-bottom: 1px solid var(--color-surface-variant);
+        }
+
+        .demo-content {
+            height: 500px;
+            overflow: hidden;
+        }
+
+        @media (max-width: 900px) {
+            .documentation {
+                flex-direction: column;
+            }
+
+            .demo-section {
+                min-width: 100%;
+                height: 600px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <labs-page-layout title="Footer Layout" subtitle="Structural foundation for apps with header, scrollable content, and sticky footer" back-href="../../">
+        <labs-breadcrumbs slot="breadcrumbs">
+            <a href="../../../">Smoothie</a>
+            <a href="../../">Foundations</a>
+            <span>Footer Layout</span>
+        </labs-breadcrumbs>
+
+        <div class="documentation">
+            <div class="description">
+                <h2>Overview</h2>
+                <p><code>labs-footer-layout</code> is a structural foundation component that manages a full-page layout pattern: header bar at top, scrollable content in the middle, and sticky footer at the bottom.</p>
+
+                <h2>Use Cases</h2>
+                <ul>
+                    <li>App dashboards (Tracker, Analytics)</li>
+                    <li>Content-heavy pages with persistent controls</li>
+                    <li>Mobile-friendly layouts with fixed header and footer</li>
+                    <li>Any app needing header + scrollable content + sticky actions</li>
+                </ul>
+
+                <h2>Structure</h2>
+                <p>The component uses three named slots to organize content:</p>
+                <dl class="slots-list">
+                    <dt>slot="header"</dt>
+                    <dd>Fixed at top. Use for control bars, navigation, theme toggles. Does not scroll.</dd>
+
+                    <dt>slot="content"</dt>
+                    <dd>Scrollable middle area. Fills available space. Use for main page content, grids, lists.</dd>
+
+                    <dt>slot="footer"</dt>
+                    <dd>Sticky at bottom of viewport. Use for persistent controls, settings, footer info.</dd>
+                </dl>
+
+                <h2>Key Features</h2>
+                <ul>
+                    <li><strong>No dual scrollbars</strong> — Uses flexbox with proper min-height constraints</li>
+                    <li><strong>Sticky footer</strong> — Always visible, content scrolls behind it</li>
+                    <li><strong>Full viewport</strong> — Takes 100vh height by default</li>
+                    <li><strong>Semantic slots</strong> — Clear content organization</li>
+                </ul>
+
+                <h2>Implementation</h2>
+                <p>Wrap your page structure with named slots:</p>
+                <pre><code>&lt;labs-footer-layout&gt;
+  &lt;labs-container slot="header"&gt;
+    &lt;!-- Control bar, theme toggles --&gt;
+  &lt;/labs-container&gt;
+
+  &lt;labs-container slot="content"&gt;
+    &lt;!-- Main page content --&gt;
+  &lt;/labs-container&gt;
+
+  &lt;labs-footer slot="footer"&gt;
+    &lt;!-- Footer content --&gt;
+  &lt;/labs-footer&gt;
+&lt;/labs-footer-layout&gt;</code></pre>
+
+                <h2>Templates</h2>
+                <p>See <a href="../../../../_templates/template-boiler-plate-02.html">template-boiler-plate-02.html</a> for a complete working example with grid cards, theme controls, and sticky footer.</p>
+            </div>
+
+            <div class="demo-section">
+                <div class="demo-label">Live Demo (Interactive)</div>
+                <div class="demo-content">
+                    <labs-footer-layout>
+                        <!-- Header -->
+                        <labs-container full-width compact slot="header">
+                            <labs-row-layout>
+                                <div slot="start"></div>
+                                <div slot="center"></div>
+                                <div slot="end" style="display: flex; gap: 1rem;">
+                                    <labs-theme-button icon-only></labs-theme-button>
+                                    <labs-theme-toggle icon-only></labs-theme-toggle>
+                                </div>
+                            </labs-row-layout>
+                        </labs-container>
+
+                        <!-- Content -->
+                        <labs-container medium slot="content">
+                            <labs-header center>
+                                <div slot="title">Demo Content</div>
+                                <div slot="description">Scroll to see sticky footer behavior</div>
+                            </labs-header>
+
+                            <main>
+                                <labs-grid columns="auto">
+                                    <labs-card>
+                                        <div slot="header">Card 1</div>
+                                        <div slot="description">Content scrolls freely while header and footer stay in place.</div>
+                                    </labs-card>
+                                    <labs-card>
+                                        <div slot="header">Card 2</div>
+                                        <div slot="description">Try resizing your browser to see responsive behavior.</div>
+                                    </labs-card>
+                                    <labs-card>
+                                        <div slot="header">Card 3</div>
+                                        <div slot="description">Scroll down to see footer stick to viewport bottom.</div>
+                                    </labs-card>
+                                    <labs-card>
+                                        <div slot="header">Card 4</div>
+                                        <div slot="description">No dual scrollbars or layout shift on scroll.</div>
+                                    </labs-card>
+                                </labs-grid>
+                            </main>
+                        </labs-container>
+
+                        <!-- Footer -->
+                        <labs-footer slot="footer">
+                            <div slot="content">© 2026 Smoothie Design System. Sticky footer demonstration.</div>
+                        </labs-footer>
+                    </labs-footer-layout>
+                </div>
+            </div>
+        </div>
+    </labs-page-layout>
+</body>
+
+</html>
