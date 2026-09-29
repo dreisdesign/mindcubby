@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <meta property="og:image" content="/apple-touch-icon.png">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=77">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=79">
     
     <script>
         (function () {
@@ -20,102 +20,105 @@
     </script>
 
     <script type="module">
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=77';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=77';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=77';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=77';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=77';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=77';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=77';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=77';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=77';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=77';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer-layout.js?v=79';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=79';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=79';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=79';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=79';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=79';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=79';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=79';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=79';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=79';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=79';
     </script>
 </head>
 
 <body>
-    <!-- Appearance Controls Bar (full width: Theme + Appearance) -->
-    <labs-container full-width compact>
-        <labs-row-layout>
-            <div slot="start"></div>
-            <div slot="center"></div>
-            <div slot="end" style="display: flex; gap: 1rem;">
-                <labs-theme-button icon-only></labs-theme-button>
-                <labs-theme-toggle icon-only></labs-theme-toggle>
-            </div>
-        </labs-row-layout>
-    </labs-container>
+    <labs-footer-layout>
+        <!-- Header: Appearance Controls Bar -->
+        <labs-container full-width compact slot="header">
+            <labs-row-layout>
+                <div slot="start"></div>
+                <div slot="center"></div>
+                <div slot="end" style="display: flex; gap: 1rem;">
+                    <labs-theme-button icon-only></labs-theme-button>
+                    <labs-theme-toggle icon-only></labs-theme-toggle>
+                </div>
+            </labs-row-layout>
+        </labs-container>
 
-    <!-- Main Content -->
-    <labs-container fill bottom-pad>
-        <labs-header center>
-            <div slot="title">Card Grid</div>
-            <div slot="description">Responsive grid layout with labs-grid component</div>
-        </labs-header>
+        <!-- Content: Main scrollable area -->
+        <labs-container medium slot="content">
+            <labs-header center>
+                <div slot="title">Card Grid</div>
+                <div slot="description">Responsive grid layout with labs-grid component</div>
+            </labs-header>
 
-        <main>
-            <labs-grid columns="auto">
-                <labs-card>
-                    <div slot="header">Card One</div>
-                    <div slot="description">Sample card in a responsive grid layout.</div>
-                    <labs-button slot="actions" variant="primary">
-                        <labs-icon slot="icon-left" name="add"></labs-icon>
-                        Action
-                    </labs-button>
-                </labs-card>
+            <main>
+                <labs-grid columns="auto">
+                    <labs-card>
+                        <div slot="header">Card One</div>
+                        <div slot="description">Sample card in a responsive grid layout.</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Action
+                        </labs-button>
+                    </labs-card>
 
-                <labs-card>
-                    <div slot="header">Card Two</div>
-                    <div slot="description">This card flows naturally in the grid.</div>
-                    <labs-button slot="actions" variant="primary">
-                        <labs-icon slot="icon-left" name="add"></labs-icon>
-                        Action
-                    </labs-button>
-                </labs-card>
+                    <labs-card>
+                        <div slot="header">Card Two</div>
+                        <div slot="description">This card flows naturally in the grid.</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Action
+                        </labs-button>
+                    </labs-card>
 
-                <labs-card>
-                    <div slot="header">Card Three</div>
-                    <div slot="description">Adjusts automatically on mobile to single column.</div>
-                    <labs-button slot="actions" variant="primary">
-                        <labs-icon slot="icon-left" name="add"></labs-icon>
-                        Action
-                    </labs-button>
-                </labs-card>
+                    <labs-card>
+                        <div slot="header">Card Three</div>
+                        <div slot="description">Adjusts automatically on mobile to single column.</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Action
+                        </labs-button>
+                    </labs-card>
 
-                <labs-card>
-                    <div slot="header">Card Four</div>
-                    <div slot="description">All cards share the same responsive behavior.</div>
-                    <labs-button slot="actions" variant="primary">
-                        <labs-icon slot="icon-left" name="add"></labs-icon>
-                        Action
-                    </labs-button>
-                </labs-card>
+                    <labs-card>
+                        <div slot="header">Card Four</div>
+                        <div slot="description">All cards share the same responsive behavior.</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Action
+                        </labs-button>
+                    </labs-card>
 
-                <labs-card>
-                    <div slot="header">Card Five</div>
-                    <div slot="description">Grid layout powered by labs-grid component.</div>
-                    <labs-button slot="actions" variant="primary">
-                        <labs-icon slot="icon-left" name="add"></labs-icon>
-                        Action
-                    </labs-button>
-                </labs-card>
+                    <labs-card>
+                        <div slot="header">Card Five</div>
+                        <div slot="description">Grid layout powered by labs-grid component.</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Action
+                        </labs-button>
+                    </labs-card>
 
-                <labs-card>
-                    <div slot="header">Card Six</div>
-                    <div slot="description">Scale your layouts with a single component.</div>
-                    <labs-button slot="actions" variant="primary">
-                        <labs-icon slot="icon-left" name="add"></labs-icon>
-                        Action
-                    </labs-button>
-                </labs-card>
-            </labs-grid>
-        </main>
-    </labs-container>
+                    <labs-card>
+                        <div slot="header">Card Six</div>
+                        <div slot="description">Scale your layouts with a single component.</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Action
+                        </labs-button>
+                    </labs-card>
+                </labs-grid>
+            </main>
+        </labs-container>
 
-    <!-- Footer -->
-    <labs-footer fixed>
-        <div slot="content">© 2026 Smoothie Design System. All rights reserved.</div>
-    </labs-footer>
+        <!-- Footer: Sticky footer -->
+        <labs-footer slot="footer">
+            <div slot="content">© 2026 Smoothie Design System. All rights reserved.</div>
+        </labs-footer>
+    </labs-footer-layout>
 
     <script>
         // Theme toggle handles all theme management internally

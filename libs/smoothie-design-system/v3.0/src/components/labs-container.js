@@ -34,6 +34,9 @@ template.innerHTML = `
       height: 100vh;
       display: flex;
       flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
     }
     :host([compact]) {
       padding-top: var(--space-md, 16px);
