@@ -14,6 +14,12 @@ template.innerHTML = `
       gap: 0.5em;
     }
 
+    :host([icon-only]) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .toggle-container {
       display: inline-flex;
       align-items: center;
@@ -40,15 +46,15 @@ template.innerHTML = `
     }
 
     button {
-      background: none;
-      border: none;
-      color: inherit;
-      cursor: pointer;
-      padding: 0.25em 0.5em;
-      border-radius: 6px;
+      all: unset;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      padding: 0.25em 0.5em;
+      border-radius: 6px;
+      background: var(--color-surface, #fff);
+      color: var(--color-on-surface, #333);
+      cursor: pointer;
       transition: background 0.15s, color 0.15s;
       font-size: 1em;
       line-height: 1;
@@ -68,24 +74,31 @@ template.innerHTML = `
       display: none;
     }
 
+    :host([icon-only]) button:hover {
+      background: none;
+    }
+
     :host([icon-only]) .toggle-container {
+      width: 44px;
+      height: 44px;
       padding: 0;
-      gap: 0;
-      border: none;
+      border-radius: 50%;
+    }
+
+    :host([icon-only]) .toggle-container:hover {
+      background: var(--color-surface-container, #f5f5f5);
     }
 
     :host([icon-only]) button {
-      width: 44px;
-      height: 44px;
+      width: 100%;
+      height: 100%;
       padding: 0;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    :host([icon-only]) button:hover {
-      background: var(--color-surface-container, #f5f5f5);
+      background: none;
+      border: none;
     }
   </style>
 
@@ -165,7 +178,9 @@ class LabsThemeToggle extends HTMLElement {
 
   updateDisplay(mode) {
     const isDark = mode === 'dark';
-    this.label.textContent = isDark ? 'Dark' : 'Light';
+    if (this.label) {
+      this.label.textContent = isDark ? 'Dark' : 'Light';
+    }
     this.button.setAttribute('title', isDark ? 'Turn on light mode' : 'Turn on dark mode');
 
     // Use labs-icon component
