@@ -5,6 +5,12 @@
 @import "./tokens/grid.css";
 @import "./flavors.css";
 
+/* Prevent Flash of Unstyled Content (FOUC)
+   Hide undefined custom elements until Web Components are registered */
+:not(:defined) {
+  visibility: hidden;
+}
+
 /* Labs Design System - Main CSS */
 
 /* Root/global tokens that are not duplicated live in tokens/common.css;
