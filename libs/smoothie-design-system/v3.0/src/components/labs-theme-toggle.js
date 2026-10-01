@@ -83,6 +83,10 @@ template.innerHTML = `
       align-items: center;
       justify-content: center;
     }
+
+    :host([icon-only]) button:hover {
+      background: var(--color-surface-container, #f5f5f5);
+    }
   </style>
 
   <div class="toggle-container">
