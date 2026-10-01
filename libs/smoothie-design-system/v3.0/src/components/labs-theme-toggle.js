@@ -69,12 +69,16 @@ template.innerHTML = `
     }
 
     :host([icon-only]) .toggle-container {
-      padding: 0.5em;
+      padding: 0;
       gap: 0;
+      border: none;
     }
 
     :host([icon-only]) button {
-      padding: 0.25em;
+      padding: 0.5em;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
     }
   </style>
 
