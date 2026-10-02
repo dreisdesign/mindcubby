@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Title</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta property="og:image" content="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=85">
+    
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+
+    <script type="module">
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer-layout.js?v=85';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=85';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=85';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=85';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=85';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=85';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=85';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=85';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=85';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=85';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=85';
+    </script>
+</head>
+
+<body>
+    <labs-footer-layout>
+        <!-- Header: Appearance Controls Bar -->
+        <labs-container full-width compact slot="header">
+            <labs-row-layout>
+                <div slot="start"></div>
+                <div slot="center"></div>
+                <div slot="end" style="display: flex; gap: 1rem;">
+                    <labs-theme-button icon-only></labs-theme-button>
+                    <labs-theme-toggle icon-only></labs-theme-toggle>
+                </div>
+            </labs-row-layout>
+        </labs-container>
+
+        <!-- Content: Main scrollable area -->
+        <labs-container full-width slot="content">
+            <labs-header center>
+                <div slot="title">Card Grid</div>
+                <div slot="description">Responsive grid layout with labs-grid component</div>
+            </labs-header>
+
+            <main>
+                <labs-grid columns="auto">
+                    <labs-card>
+                        <div slot="header">Deliciously Realistic Ice Cream Cone - 3D Printer STL Files - Tea light - Two Sizes</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Buy on Etsy
+                        </labs-button>
+                    </labs-card>
+
+                    <labs-card>
+                        <div slot="header">Card Two</div>
+                        <div slot="description">This card flows naturally in the grid.</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Action
+                        </labs-button>
+                    </labs-card>
+
+                    <labs-card>
+                        <div slot="header">Card Three</div>
+                        <div slot="description">Adjusts automatically on mobile to single column.</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Action
+                        </labs-button>
+                    </labs-card>
+
+                    <labs-card>
+                        <img slot="image" src="https://i.etsystatic.com/62670465/r/il/dcaedf/8180960141/il_fullxfull.8180960141_rxii.jpg" alt="Deliciously Realistic Ice Cream Cone - 3D Printer STL Files">
+                        <div slot="header">Deliciously Realistic Ice Cream Cone - 3D Printer STL Files - Tea light - Two Sizes</div>
+                        <labs-button slot="actions" variant="primary" onclick="window.open('https://mindcubby.etsy.com/listing/4399585322/deliciously-realistic-ice-cream-cone-3d')">
+                            <labs-icon slot="icon-left" name="open"></labs-icon>
+                            View on Etsy
+                        </labs-button>
+                    </labs-card>
+
+                    <labs-card>
+                        <div slot="header">Card Five</div>
+                        <div slot="description">Grid layout powered by labs-grid component.</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Action
+                        </labs-button>
+                    </labs-card>
+
+                    <labs-card>
+                        <div slot="header">Card Six</div>
+                        <div slot="description">Scale your layouts with a single component.</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Action
+                        </labs-button>
+                    </labs-card>
+                </labs-grid>
+            </main>
+        </labs-container>
+
+        <!-- Footer: Sticky footer -->
+        <labs-footer slot="footer">
+            <div slot="start">© 2026 Smoothie Design System</div>
+            <div slot="center">
+                <labs-button variant="primary">Save Changes</labs-button>
+            </div>
+            <div slot="end">All rights reserved</div>
+        </labs-footer>
+    </labs-footer-layout>
+
+    <script>
+        // Theme toggle handles all theme management internally
+        // Just listen for theme changes if needed:
+        const themeToggle = document.querySelector('labs-theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('mode-changed', (e) => {
+                console.log('Theme changed to:', e.detail.mode);
+            });
+        }
+    </script>
+</body>
+
+</html>

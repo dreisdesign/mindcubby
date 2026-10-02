@@ -2,6 +2,7 @@
 /**
  * Canonical slot-driven Labs Card
  *
+ * @slot image - Card cover image (aspect-ratio 1:1, centered crop)
  * @slot header - Card title/header
  * @slot close - Close icon/button
  * @slot description - Card description text
@@ -44,6 +45,22 @@ class LabsCard extends HTMLElement {
           padding: 0;
           font-family: var(--font-family-base, system-ui, sans-serif);
           position: relative;
+          overflow: hidden;
+        }
+        .card-image {
+          width: 100%;
+          aspect-ratio: 1;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-surface-container, #f5f5f5);
+        }
+        .card-image ::slotted(img) {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
         }
         .card-content {
           padding: var(--labs-card-padding);
@@ -89,6 +106,9 @@ class LabsCard extends HTMLElement {
         ::slotted([slot="input"]) { margin-top: 14px; display: flex; flex-direction: column; flex: 1; flex-grow: 1; font-size: var(--font-size-base, 1rem); }
         ::slotted([slot="actions"]) { display: flex; gap: 10px; margin-top: 16px; justify-content: center; }
       </style>
+      <div class="card-image">
+        <slot name="image"></slot>
+      </div>
       <div class="card-content">
         <div class="header-row">
           <div class="header"><slot name="header"></slot></div>
