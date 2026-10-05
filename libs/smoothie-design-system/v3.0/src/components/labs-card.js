@@ -102,7 +102,7 @@ class LabsCard extends HTMLElement {
           font-size: var(--font-size-base, 1rem);
         }
         .input-row { margin-top: 14px; }
-        .actions { display: flex; gap: 10px; margin-top: 16px; justify-content: center; flex-direction: column; }
+        .actions { display: flex; gap: 10px; margin-top: 16px; justify-content: center; flex-wrap: wrap; }
         :host([variant="welcome"]) .actions {
           justify-content: flex-end;
         }
