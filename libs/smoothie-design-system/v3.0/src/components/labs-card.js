@@ -75,7 +75,7 @@ class LabsCard extends HTMLElement {
           flex: 0 0 auto;
         }
         /* Compact layout: image left, content right - ONLY on mobile */
-        @media (max-width: 700px), (max-height: 600px) {
+        @media (max-width: 700px), (max-height: 650px) {
           :host([compact]) {
             flex-direction: row;
           }
