@@ -62,7 +62,7 @@ class LabsCard extends HTMLElement {
           align-items: center;
           justify-content: center;
           background: var(--color-surface-container, #f5f5f5);
-          flex: 0 1 auto;
+          flex: 1 1 auto;
           min-height: 0;
         }
         .card-image ::slotted(img) {
@@ -76,7 +76,9 @@ class LabsCard extends HTMLElement {
           display: flex;
           flex-direction: column;
           gap: 1rem;
-          flex: 0 0 auto;
+          flex: 1;
+          min-height: 0;
+          overflow: auto;
         }
         /* Compact layout: image left, content right - ONLY on mobile */
         @media (max-width: 700px) {
