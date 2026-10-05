@@ -36,6 +36,7 @@ class LabsCard extends HTMLElement {
       <style>
         :host {
           --labs-card-padding: 2rem;
+          --labs-card-header-clamp: 999;
           display: block;
           width: 100%;
           box-sizing: border-box;
@@ -87,9 +88,6 @@ class LabsCard extends HTMLElement {
           line-height: var(--line-height-card-header, 1.2);
           color: var(--color-on-background, inherit);
           flex: 1;
-          /* Clamping: set --labs-card-header-clamp to desired line count to enable (e.g., 2) */
-          /* Default 999 = no clamping, set to 2-3 to clamp lines */
-          --labs-card-header-clamp: 999;
           display: -webkit-box;
           -webkit-line-clamp: var(--labs-card-header-clamp);
           -webkit-box-orient: vertical;
