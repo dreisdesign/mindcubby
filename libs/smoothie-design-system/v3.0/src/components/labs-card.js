@@ -12,6 +12,7 @@
  * @cssprop --labs-card-max-width - Maximum width of the card (default: 520px)
  * @cssprop --labs-card-min-width - Minimum width of the card (default: 280px)
  * @cssprop --labs-card-padding - Card padding (default: 20px 18px)
+ * @cssprop --labs-card-max-height - Maximum height of card (default: 80vh, prevents cards from exceeding viewport height on mobile)
  * @cssprop --labs-card-header-clamp - Number of lines to clamp header to (default: 999 = no clamp, set to 2-3 to enable)
  * @cssprop --radius-card - Card border radius (default: 0.5rem/8px)
  * @cssprop --labs-card-shadow - Card box-shadow (default: 0 6px 40px ...)
@@ -37,6 +38,7 @@ class LabsCard extends HTMLElement {
         :host {
           --labs-card-padding: 2rem;
           --labs-card-header-clamp: 999;
+          --labs-card-max-height: 80vh;
           display: block;
           width: 100%;
           box-sizing: border-box;
@@ -47,7 +49,8 @@ class LabsCard extends HTMLElement {
           padding: 0;
           font-family: var(--font-family-base, system-ui, sans-serif);
           position: relative;
-          overflow: hidden;
+          max-height: var(--labs-card-max-height);
+          overflow: auto;
         }
         .card-image {
           width: 100%;
