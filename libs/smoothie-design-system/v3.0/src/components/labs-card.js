@@ -41,7 +41,7 @@ class LabsCard extends HTMLElement {
           --labs-card-max-height: none;
           display: grid;
           grid-template-columns: 1fr;
-          grid-template-rows: auto 1fr auto;
+          grid-template-rows: auto minmax(0, 1fr) auto;
           width: 100%;
           height: 100%;
           max-height: var(--labs-card-max-height);
