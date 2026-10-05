@@ -38,9 +38,11 @@ class LabsCard extends HTMLElement {
         :host {
           --labs-card-padding: 2rem;
           --labs-card-header-clamp: 999;
+          --labs-card-max-height: none;
           display: flex;
           flex-direction: column;
           width: 100%;
+          max-height: var(--labs-card-max-height);
           box-sizing: border-box;
           margin: 0 auto;
           background: var(--color-surface, #fff);
@@ -72,7 +74,9 @@ class LabsCard extends HTMLElement {
           display: flex;
           flex-direction: column;
           gap: 1rem;
-          flex: 0 0 auto;
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
         }
         /* Compact layout: image left, content right - ONLY on mobile */
         @media (max-width: 750px), (max-height: 650px) {
