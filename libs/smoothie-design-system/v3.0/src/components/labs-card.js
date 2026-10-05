@@ -57,7 +57,7 @@ class LabsCard extends HTMLElement {
         }
         .card-image {
           width: 100%;
-          aspect-ratio: 1;
+          aspect-ratio: 1 / 1;
           overflow: hidden;
           display: flex;
           align-items: center;
@@ -65,6 +65,7 @@ class LabsCard extends HTMLElement {
           background: var(--color-surface-container, #f5f5f5);
           grid-row: 1;
           grid-column: 1;
+          flex-shrink: 0;
         }
         .card-image ::slotted(img) {
           width: 100%;

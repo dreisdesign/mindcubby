@@ -11,13 +11,14 @@
     <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=113">
 
     <style> /* page level component overrides */
-        /* Grid with subgrid cards - responds to viewport height */
+        /* Grid with uniform row heights - responds to viewport height */
         labs-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            grid-auto-rows: auto;
+            grid-auto-rows: 1fr;
             gap: 1.5rem;
             height: 100%;
+            align-items: stretch;
         }
         
         labs-card {
