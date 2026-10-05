@@ -78,6 +78,7 @@ const icons = {
   "rate_review": ICON_BASE + 'rate_review--labs-icons.svg',
   "replay": ICON_BASE + 'replay--labs-icons.svg',
   "settings": ICON_BASE + 'settings--labs-icons.svg',
+  "shopping_cart": ICON_BASE + 'shopping_cart.svg',
   "stop_circle": ICON_BASE + 'stop_circle--labs-icons.svg',
   "undo": ICON_BASE + 'undo--labs-icons.svg',
   "volume_down_alt": ICON_BASE + 'volume_down_alt--labs-icons.svg',
