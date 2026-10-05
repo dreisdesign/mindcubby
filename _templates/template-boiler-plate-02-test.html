@@ -11,16 +11,18 @@
     <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=113">
 
     <style> /* page level component overrides */
-        /* CSS Grid auto-fit - fills screen, responsive columns */
+        /* Pure CSS Grid - fills width, wraps naturally, no breakpoints */
         labs-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
         }
+        
         labs-card {
             --labs-card-header-clamp: 3;
             --font-size-h3: 1.1rem;
         }
+        
         /* Wrap action buttons in a div with slot="actions" and this will flex them */
         div[slot="actions"] {
             display: flex;
@@ -286,27 +288,7 @@
     </labs-footer-layout> -->
 
     <script>
-        // Apply compact attribute to cards on small viewports
-        function updateCompactMode() {
-            const cards = document.querySelectorAll('labs-card');
-            const isNarrow = window.innerWidth <= 600;
-            const isShort = window.innerHeight <= 700;
-            
-            cards.forEach(card => {
-                if (isNarrow || isShort) {
-                    card.setAttribute('compact', '');
-                } else {
-                    card.removeAttribute('compact');
-                }
-            });
-        }
-        
-        // Run on load and resize
-        updateCompactMode();
-        window.addEventListener('resize', updateCompactMode);
-        
         // Theme toggle handles all theme management internally
-        // Just listen for theme changes if needed:
         const themeToggle = document.querySelector('labs-theme-toggle');
         if (themeToggle) {
             themeToggle.addEventListener('mode-changed', (e) => {
