@@ -80,8 +80,7 @@ class LabsCard extends HTMLElement {
           gap: 1rem;
           grid-row: 2;
           grid-column: 1;
-          height: 100%;
-          min-height: min-content;
+          align-self: stretch;
           background: var(--color-surface, #fff);
         }
         /* Compact layout: image left, content right - ONLY on mobile */
@@ -109,7 +108,6 @@ class LabsCard extends HTMLElement {
           display:flex;
           align-items:center;
           justify-content:space-between;
-          flex: 0 0 auto;
         }
         :host([variant="welcome"]) .header-row {
           justify-content: center;
@@ -149,10 +147,9 @@ class LabsCard extends HTMLElement {
         :host([variant="welcome"]) .actions {
           justify-content: flex-end;
         }
-        ::slotted([slot="header"]) { font-size: inherit; font-weight: inherit; flex: 0 0 auto; }
+        ::slotted([slot="header"]) { font-size: inherit; font-weight: inherit; }
         ::slotted([slot="close"]) { margin-left: 8px; }
         ::slotted([slot="description"]) { 
-          flex: 0 0 auto;
           margin-top: 8px; 
           color: var(--color-on-surface-variant, #666); 
           font-size: var(--font-size-base, 1rem);
