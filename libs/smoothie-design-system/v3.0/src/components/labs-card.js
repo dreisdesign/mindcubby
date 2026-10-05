@@ -39,7 +39,8 @@ class LabsCard extends HTMLElement {
           --labs-card-padding: 2rem;
           --labs-card-header-clamp: 999;
           --labs-card-max-height: 80vh;
-          display: block;
+          display: flex;
+          flex-direction: column;
           width: 100%;
           box-sizing: border-box;
           margin: 0 auto;
@@ -50,7 +51,7 @@ class LabsCard extends HTMLElement {
           font-family: var(--font-family-base, system-ui, sans-serif);
           position: relative;
           max-height: var(--labs-card-max-height);
-          overflow-y: auto;
+          overflow: hidden;
         }
         .card-image {
           width: 100%;
@@ -60,7 +61,8 @@ class LabsCard extends HTMLElement {
           align-items: center;
           justify-content: center;
           background: var(--color-surface-container, #f5f5f5);
-          flex-shrink: 0;
+          flex: 0 1 auto;
+          min-height: 0;
         }
         .card-image ::slotted(img) {
           width: 100%;
@@ -73,7 +75,7 @@ class LabsCard extends HTMLElement {
           display: flex;
           flex-direction: column;
           gap: 1rem;
-          flex-shrink: 0;
+          flex: 0 0 auto;
         }
         :host([variant="welcome"]) {
           text-align: center;
