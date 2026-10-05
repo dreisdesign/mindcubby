@@ -80,7 +80,8 @@ class LabsCard extends HTMLElement {
           gap: 1rem;
           grid-row: 2;
           grid-column: 1;
-          align-self: stretch;
+          height: 100%;
+          align-items: flex-start;
           background: var(--color-surface, #fff);
         }
         /* Compact layout: image left, content right - ONLY on mobile */
