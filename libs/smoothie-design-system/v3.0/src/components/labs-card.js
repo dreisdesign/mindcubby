@@ -78,21 +78,23 @@ class LabsCard extends HTMLElement {
           gap: 1rem;
           flex: 0 0 auto;
         }
-        /* Compact layout: image left, content right */
-        :host([compact]) {
-          flex-direction: row;
-        }
-        :host([compact]) .card-image {
-          width: 120px;
-          min-width: 120px;
-          aspect-ratio: 1;
-          flex-shrink: 0;
-        }
-        :host([compact]) .card-content {
-          flex: 1;
-          min-width: 0;
-          padding: 1rem;
-          justify-content: space-between;
+        /* Compact layout: image left, content right - ONLY on mobile */
+        @media (max-width: 480px) {
+          :host([compact]) {
+            flex-direction: row;
+          }
+          :host([compact]) .card-image {
+            width: 120px;
+            min-width: 120px;
+            aspect-ratio: 1;
+            flex-shrink: 0;
+          }
+          :host([compact]) .card-content {
+            flex: 1;
+            min-width: 0;
+            padding: 1rem;
+            justify-content: space-between;
+          }
         }
         :host([variant="welcome"]) {
           text-align: center;
