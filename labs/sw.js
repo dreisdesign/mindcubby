@@ -26,7 +26,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-const CACHE_NAME = 'labs-static-v97';
+const CACHE_NAME = 'labs-static-v98';
 const PRECACHE_URLS = [
   '/labs/',
   '/labs/index.html'
