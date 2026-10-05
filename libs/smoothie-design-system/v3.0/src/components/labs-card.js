@@ -39,8 +39,9 @@ class LabsCard extends HTMLElement {
           --labs-card-padding: 2rem;
           --labs-card-header-clamp: 999;
           --labs-card-max-height: none;
-          display: flex;
-          flex-direction: column;
+          display: grid;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr auto;
           width: 100%;
           max-height: var(--labs-card-max-height);
           box-sizing: border-box;
@@ -61,8 +62,9 @@ class LabsCard extends HTMLElement {
           align-items: center;
           justify-content: center;
           background: var(--color-surface-container, #f5f5f5);
-          flex-shrink: 1;
-          min-height: 0;
+          flex-shrink: 0;
+          grid-row: 1;
+          grid-column: 1;
         }
         .card-image ::slotted(img) {
           width: 100%;
@@ -78,6 +80,9 @@ class LabsCard extends HTMLElement {
           flex: 1;
           min-height: 0;
           justify-content: flex-end;
+          grid-row: 2;
+          grid-column: 1;
+          background: var(--color-surface, #fff);
         }
         /* Compact layout: image left, content right - ONLY on mobile */
         @media (max-width: 750px), (max-height: 650px) {
@@ -135,6 +140,10 @@ class LabsCard extends HTMLElement {
           margin-top: 16px; 
           justify-content: center; 
           flex-wrap: wrap;
+          padding: var(--labs-card-padding);
+          background: var(--color-surface, #fff);
+          grid-row: 3;
+          grid-column: 1;
         }
         :host([variant="welcome"]) .actions {
           justify-content: flex-end;
@@ -158,6 +167,8 @@ class LabsCard extends HTMLElement {
         </div>
         <slot name="description"></slot>
         <slot name="input"></slot>
+      </div>
+      <div class="actions">
         <slot name="actions"></slot>
       </div>
     `;

@@ -11,17 +11,22 @@
     <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=113">
 
     <style> /* page level component overrides */
-        /* Pure CSS Grid - fills width, wraps naturally, no breakpoints */
+        /* Grid with subgrid cards - no media queries, purely viewport responsive */
         labs-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-auto-rows: auto;
             gap: 1.5rem;
         }
         
         labs-card {
             --labs-card-header-clamp: 3;
             --font-size-h3: 1.1rem;
-            --labs-card-max-height: 70vh;
+            --labs-card-max-height: none;
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr auto;
+            gap: 0;
         }
         
         /* Wrap action buttons in a div with slot="actions" and this will flex them */
