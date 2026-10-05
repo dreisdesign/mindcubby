@@ -20,7 +20,6 @@
         labs-card {
             --labs-card-header-clamp: 3;
             --font-size-h3: 1.1rem;
-            max-height: 80vh;
         }
         /* Wrap action buttons in a div with slot="actions" and this will flex them */
         div[slot="actions"] {
@@ -287,6 +286,25 @@
     </labs-footer-layout> -->
 
     <script>
+        // Apply compact attribute to cards on small viewports
+        function updateCompactMode() {
+            const cards = document.querySelectorAll('labs-card');
+            const isNarrow = window.innerWidth <= 600;
+            const isShort = window.innerHeight <= 700;
+            
+            cards.forEach(card => {
+                if (isNarrow || isShort) {
+                    card.setAttribute('compact', '');
+                } else {
+                    card.removeAttribute('compact');
+                }
+            });
+        }
+        
+        // Run on load and resize
+        updateCompactMode();
+        window.addEventListener('resize', updateCompactMode);
+        
         // Theme toggle handles all theme management internally
         // Just listen for theme changes if needed:
         const themeToggle = document.querySelector('labs-theme-toggle');
