@@ -104,11 +104,10 @@ class LabsCard extends HTMLElement {
         ::slotted([slot="close"]) { margin-left: 8px; }
         ::slotted([slot="description"]) { margin-top: 8px; color: var(--color-on-surface-variant, #666); font-size: var(--font-size-base, 1rem); }
         ::slotted([slot="input"]) { margin-top: 14px; display: flex; flex-direction: column; flex: 1; flex-grow: 1; font-size: var(--font-size-base, 1rem); }
-        ::slotted([slot="actions"]) { display: flex; gap: 10px; margin-top: 16px; justify-content: center; flex-wrap: wrap; flex-basis: 100%; }
         
         @media (max-width: 480px) {
           .actions { flex-direction: column; }
-          ::slotted([slot="actions"]) { flex-direction: column; width: 100%; }
+          ::slotted([slot="actions"]) { width: 100%; }
         }
       </style>
       <div class="card-image">
