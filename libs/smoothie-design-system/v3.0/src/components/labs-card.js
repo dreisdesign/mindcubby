@@ -38,8 +38,6 @@ class LabsCard extends HTMLElement {
         :host {
           --labs-card-padding: 2rem;
           --labs-card-header-clamp: 999;
-          --labs-card-max-height: 80vh;
-          --labs-card-compact-breakpoint: 480px;
           display: flex;
           flex-direction: column;
           width: 100%;
@@ -51,7 +49,6 @@ class LabsCard extends HTMLElement {
           padding: 0;
           font-family: var(--font-family-base, system-ui, sans-serif);
           position: relative;
-          max-height: var(--labs-card-max-height);
           overflow: hidden;
         }
         .card-image {
@@ -62,8 +59,7 @@ class LabsCard extends HTMLElement {
           align-items: center;
           justify-content: center;
           background: var(--color-surface-container, #f5f5f5);
-          flex: 0 1 auto;
-          min-height: 0;
+          flex-shrink: 0;
         }
         .card-image ::slotted(img) {
           width: 100%;
@@ -76,8 +72,7 @@ class LabsCard extends HTMLElement {
           display: flex;
           flex-direction: column;
           gap: 1rem;
-          flex: 0 1 auto;
-          min-height: 0;
+          flex: 0 0 auto;
         }
         /* Compact layout: image left, content right - ONLY on mobile */
         @media (max-width: 700px) {
@@ -135,7 +130,6 @@ class LabsCard extends HTMLElement {
           margin-top: 16px; 
           justify-content: center; 
           flex-wrap: wrap;
-          flex-shrink: 0;
         }
         :host([variant="welcome"]) .actions {
           justify-content: flex-end;
@@ -146,12 +140,6 @@ class LabsCard extends HTMLElement {
           margin-top: 8px; 
           color: var(--color-on-surface-variant, #666); 
           font-size: var(--font-size-base, 1rem);
-          flex: 1;
-          min-height: 0;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
         }
         ::slotted([slot="input"]) { margin-top: 14px; display: flex; flex-direction: column; flex: 1; flex-grow: 1; font-size: var(--font-size-base, 1rem); }
       </style>
