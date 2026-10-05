@@ -338,6 +338,30 @@ See [`/smoothie/patterns/cards/`](../../smoothie/patterns/cards/) for real-world
 </labs-card>
 ```
 
+### Header Line Clamping
+
+Truncate card titles to a maximum number of lines using the `--labs-card-header-clamp` CSS custom property:
+
+**Page-level (all cards):**
+```css
+labs-card {
+  --labs-card-header-clamp: 2;  /* Clamp all headers to 2 lines */
+}
+```
+
+**Inline (single card):**
+```html
+<labs-card style="--labs-card-header-clamp: 2;">
+  <span slot="header">Very long title that spans multiple lines will be truncated</span>
+</labs-card>
+```
+
+**How it works:**
+- Default: `999` (no clamping)
+- Set to any number (1, 2, 3, etc.) to enable line truncation
+- Uses native CSS `-webkit-line-clamp` with `overflow: hidden` and `text-overflow: ellipsis`
+- **Important**: CSS custom properties must be defined at `:host` (component root) to cascade to child Shadow DOM elements. If defined in a child selector (like `.header`), it blocks inheritance from external CSS.
+
 ---
 
 ## Performance

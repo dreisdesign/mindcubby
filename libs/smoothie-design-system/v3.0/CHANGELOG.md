@@ -5,6 +5,7 @@ All notable changes to Smoothie Design System v3.0 are documented here.
 ## [Unreleased]
 
 ### Fixed
+- **labs-card header line clamping** - Added configurable CSS custom property `--labs-card-header-clamp` to truncate card titles to a specific number of lines. **Why it works**: CSS custom properties must be defined at the `:host` level (component root) to be inherited by child elements within the Shadow DOM. Previous attempts failed because the variable was duplicated in both `:host` and `.header` rules—the `.header` rule took precedence and blocked inheritance from external CSS. Solution: Define the default in `:host` only, allowing page-level or component-level CSS to override via `labs-card { --labs-card-header-clamp: 2; }`. The value uses `-webkit-line-clamp` which requires a number (999 = no clamp by default).
 - **labs-card padding issue** - Card content (header, description, input, actions) was rendered without proper padding applied. Fixed by wrapping slots in a `.card-content` container with padding and flex gap spacing. Issue occurred because padding on `:host` doesn't apply to slotted light DOM content. Now cards have consistent 2rem padding around content and 1rem gap between slots.
 - **labs-card spacing between elements** - Added `gap: 1rem` to `.card-content` flex container to ensure proper vertical spacing between header, description, input, and action slots.
 
