@@ -15,6 +15,13 @@
             --labs-card-header-clamp: 3;
             --font-size-h3: 1.1rem;
         }
+        /* Wrap action buttons in a div with slot="actions" and this will flex them */
+        div[slot="actions"] {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
     </style>
 
     <script>
@@ -71,16 +78,18 @@
                             alt="3D Printed Ice Cream Cone - Hidden Compartment - Fits LED Tea Light Candle (not included)">
                         <div slot="header">3D Printed Ice Cream Cone - Hidden Compartment - Fits LED Tea Light Candle
                             (not included)</div>
-                        <labs-button slot="actions" variant="primary"
-                            onclick="window.open('https://mindcubby.etsy.com/listing/4476572864/3d-printed-ice-cream-cone-hidden')">
-                            <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
-                            Order on Etsy
-                        </labs-button>
-                        <labs-button slot="actions" variant="secondary"
-                            onclick="window.open('https://mindcubby.etsy.com/listing/4399585322/deliciously-realistic-ice-cream-cone-3d')">
-                            <labs-icon slot="icon-left" name="download"></labs-icon>
-                            Buy the files
-                        </labs-button>
+                        <div slot="actions">
+                            <labs-button variant="primary"
+                                onclick="window.open('https://mindcubby.etsy.com/listing/4476572864/3d-printed-ice-cream-cone-hidden')">
+                                <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
+                                Order on Etsy
+                            </labs-button>
+                            <labs-button variant="secondary"
+                                onclick="window.open('https://mindcubby.etsy.com/listing/4399585322/deliciously-realistic-ice-cream-cone-3d')">
+                                <labs-icon slot="icon-left" name="download"></labs-icon>
+                                Buy the files
+                            </labs-button>
+                        </div>
                     </labs-card>
 
                     <labs-card>
