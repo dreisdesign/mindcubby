@@ -86,6 +86,11 @@ class LabsCard extends HTMLElement {
           line-height: var(--line-height-card-header, 1.2);
           color: var(--color-on-background, inherit);
           flex: 1;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         :host([variant="welcome"]) .header {
           width: 100%;
@@ -96,7 +101,7 @@ class LabsCard extends HTMLElement {
           font-size: var(--font-size-base, 1rem);
         }
         .input-row { margin-top: 14px; }
-        .actions { display: flex; gap: 10px; margin-top: 16px; justify-content: center; flex-wrap: wrap; }
+        .actions { display: flex; gap: 10px; margin-top: 16px; justify-content: center; flex-direction: column; }
         :host([variant="welcome"]) .actions {
           justify-content: flex-end;
         }
@@ -104,11 +109,6 @@ class LabsCard extends HTMLElement {
         ::slotted([slot="close"]) { margin-left: 8px; }
         ::slotted([slot="description"]) { margin-top: 8px; color: var(--color-on-surface-variant, #666); font-size: var(--font-size-base, 1rem); }
         ::slotted([slot="input"]) { margin-top: 14px; display: flex; flex-direction: column; flex: 1; flex-grow: 1; font-size: var(--font-size-base, 1rem); }
-        
-        @media (max-width: 480px) {
-          .actions { flex-direction: column; }
-          ::slotted([slot="actions"]) { width: 100%; }
-        }
       </style>
       <div class="card-image">
         <slot name="image"></slot>
