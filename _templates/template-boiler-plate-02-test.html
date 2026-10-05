@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <meta property="og:image" content="/apple-touch-icon.png">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=98">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=99">
 
     <style> /* page level component overrides */
         labs-card {
@@ -34,17 +34,17 @@
     </script>
 
     <script type="module">
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer-layout.js?v=98';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=98';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=98';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=98';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=98';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=98';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=98';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=98';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=98';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=98';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=98';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer-layout.js?v=99';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=99';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=99';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=99';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=99';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=99';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=99';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=99';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=99';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=99';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=99';
     </script>
 </head>
 
@@ -150,16 +150,18 @@
                             alt="Stackables Modular Container Set - 8 Pieces - Matte Finish - Original Design - 3D Printed">
                         <div slot="header">Stackables Modular Container Set - 8 Pieces - Matte Finish - Original Design
                             - 3D Printed</div>
-                        <labs-button slot="actions" variant="primary"
-                            onclick="window.open('https://mindcubby.etsy.com/listing/4533913208/stackables-modular-container-set-8')">
-                            <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
-                            Order on Etsy
-                        </labs-button>
-                        <labs-button slot="actions" variant="secondary"
-                            onclick="window.open('https://mindcubby.etsy.com/listing/4535159862/stackables-starter-set-3d-printable')">
-                            <labs-icon slot="icon-left" name="download"></labs-icon>
-                            Buy the files
-                        </labs-button>
+                        <div slot="actions">
+                            <labs-button variant="primary"
+                                onclick="window.open('https://mindcubby.etsy.com/listing/4533913208/stackables-modular-container-set-8')">
+                                <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
+                                Order on Etsy
+                            </labs-button>
+                            <labs-button variant="secondary"
+                                onclick="window.open('https://mindcubby.etsy.com/listing/4535159862/stackables-starter-set-3d-printable')">
+                                <labs-icon slot="icon-left" name="download"></labs-icon>
+                                Buy the files
+                            </labs-button>
+                        </div>
                     </labs-card>
 
                     <labs-card>
