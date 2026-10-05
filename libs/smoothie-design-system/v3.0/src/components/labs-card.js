@@ -38,7 +38,6 @@ class LabsCard extends HTMLElement {
         :host {
           --labs-card-padding: 2rem;
           --labs-card-header-clamp: 999;
-          --labs-card-max-height: 80vh;
           display: block;
           width: 100%;
           box-sizing: border-box;
@@ -49,7 +48,6 @@ class LabsCard extends HTMLElement {
           padding: 0;
           font-family: var(--font-family-base, system-ui, sans-serif);
           position: relative;
-          max-height: var(--labs-card-max-height);
           overflow: hidden;
         }
         .card-image {
