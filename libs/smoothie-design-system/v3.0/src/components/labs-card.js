@@ -50,7 +50,7 @@ class LabsCard extends HTMLElement {
           font-family: var(--font-family-base, system-ui, sans-serif);
           position: relative;
           max-height: var(--labs-card-max-height);
-          overflow: auto;
+          overflow: hidden;
         }
         .card-image {
           width: 100%;
