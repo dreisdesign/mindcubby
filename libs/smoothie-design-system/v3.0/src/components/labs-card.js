@@ -43,6 +43,7 @@ class LabsCard extends HTMLElement {
           grid-template-columns: 1fr;
           grid-template-rows: auto 1fr auto;
           width: 100%;
+          height: 100%;
           max-height: var(--labs-card-max-height);
           box-sizing: border-box;
           margin: 0 auto;
@@ -62,7 +63,6 @@ class LabsCard extends HTMLElement {
           align-items: center;
           justify-content: center;
           background: var(--color-surface-container, #f5f5f5);
-          flex-shrink: 0;
           grid-row: 1;
           grid-column: 1;
         }
@@ -77,12 +77,10 @@ class LabsCard extends HTMLElement {
           display: flex;
           flex-direction: column;
           gap: 1rem;
-          flex: 1;
-          min-height: 0;
-          justify-content: flex-end;
           grid-row: 2;
           grid-column: 1;
           background: var(--color-surface, #fff);
+          min-height: 0;
         }
         /* Compact layout: image left, content right - ONLY on mobile */
         @media (max-width: 750px), (max-height: 650px) {
