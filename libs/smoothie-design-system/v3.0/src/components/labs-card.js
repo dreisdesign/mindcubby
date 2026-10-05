@@ -12,6 +12,7 @@
  * @cssprop --labs-card-max-width - Maximum width of the card (default: 520px)
  * @cssprop --labs-card-min-width - Minimum width of the card (default: 280px)
  * @cssprop --labs-card-padding - Card padding (default: 20px 18px)
+ * @cssprop --labs-card-header-clamp - Number of lines to clamp header to (default: none, set to 2+ to enable)
  * @cssprop --radius-card - Card border radius (default: 0.5rem/8px)
  * @cssprop --labs-card-shadow - Card box-shadow (default: 0 6px 40px ...)
  * @cssprop --color-surface - Card background color
@@ -86,11 +87,12 @@ class LabsCard extends HTMLElement {
           line-height: var(--line-height-card-header, 1.2);
           color: var(--color-on-background, inherit);
           flex: 1;
+          /* Clamping: set --labs-card-header-clamp to a number to enable (e.g., 2) */
+          --labs-card-header-clamp: none;
           display: -webkit-box;
-          -webkit-line-clamp: 2;
+          -webkit-line-clamp: var(--labs-card-header-clamp);
           -webkit-box-orient: vertical;
           overflow: hidden;
-          text-overflow: ellipsis;
         }
         :host([variant="welcome"]) .header {
           width: 100%;
