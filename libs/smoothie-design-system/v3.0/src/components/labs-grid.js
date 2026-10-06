@@ -5,6 +5,7 @@ template.innerHTML = `
     :host {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-auto-flow: dense;
       gap: var(--space-lg, 24px);
       width: 100%;
       height: auto;
