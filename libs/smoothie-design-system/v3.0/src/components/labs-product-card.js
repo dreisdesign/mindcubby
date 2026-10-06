@@ -36,8 +36,8 @@ class LabsProductCard extends HTMLElement {
           --product-image-size: 120px;
           
           display: grid;
-          grid-template-columns: var(--product-image-size) 1fr;
-          grid-template-rows: auto 1fr;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto 1fr;
           gap: var(--product-card-gap);
           background: var(--color-surface, #fff);
           border-radius: var(--product-card-radius);
@@ -51,8 +51,8 @@ class LabsProductCard extends HTMLElement {
 
         .product-image {
           grid-column: 1;
-          grid-row: 1 / 3;
-          width: var(--product-image-size);
+          grid-row: 1;
+          width: 100%;
           aspect-ratio: 1;
           overflow: hidden;
           background: var(--color-surface-variant, #f5f5f5);
@@ -75,8 +75,8 @@ class LabsProductCard extends HTMLElement {
         }
 
         .product-title {
-          grid-column: 2;
-          grid-row: 1;
+          grid-column: 1;
+          grid-row: 2;
           font-size: var(--font-size-h4, 1rem);
           font-weight: 600;
           line-height: 1.3;
@@ -91,8 +91,8 @@ class LabsProductCard extends HTMLElement {
         }
 
         .product-actions {
-          grid-column: 2;
-          grid-row: 2;
+          grid-column: 1;
+          grid-row: 3;
           display: flex;
           gap: calc(var(--product-card-gap) * 0.5);
           flex-wrap: wrap;
@@ -105,29 +105,27 @@ class LabsProductCard extends HTMLElement {
           min-width: 100px;
         }
 
-        /* Progressive enhancement: wider cards get full-width image on top */
-        @container (min-width: 280px) {
+        /* Progressive enhancement: wider cards (>320px) use compact layout with image on left */
+        @container (min-width: 320px) {
           :host {
-            grid-template-columns: 1fr;
-            grid-template-rows: auto auto 1fr;
+            grid-template-columns: var(--product-image-size) 1fr;
+            grid-template-rows: auto 1fr;
           }
 
           .product-image {
             grid-column: 1;
-            grid-row: 1;
-            width: 100%;
+            grid-row: 1 / 3;
+            width: var(--product-image-size);
           }
 
           .product-title {
-            grid-column: 1;
-            grid-row: 2;
+            grid-column: 2;
+            grid-row: 1;
           }
 
           .product-actions {
-            grid-column: 1;
-            grid-row: 3;
-            margin-top: 0;
-            align-content: flex-end;
+            grid-column: 2;
+            grid-row: 2;
           }
         }
       </style>
