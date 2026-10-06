@@ -2,11 +2,14 @@
 /**
  * Canonical slot-driven Labs Card
  *
+ * @slot image - Card cover image (optional, only when [with-image] attribute present)
  * @slot header - Card title/header
  * @slot close - Close icon/button
  * @slot description - Card description text
  * @slot input - Input field or custom input
  * @slot actions - Action buttons (footer)
+ *
+ * @attr [with-image] - Enable image slot and grid layout (optional)
  *
  * @cssprop --labs-card-max-width - Maximum width of the card (default: 520px)
  * @cssprop --labs-card-min-width - Minimum width of the card (default: 280px)
@@ -88,7 +91,53 @@ class LabsCard extends HTMLElement {
         ::slotted([slot="description"]) { margin-top: 8px; color: var(--color-on-surface-variant, #666); font-size: var(--font-size-base, 1rem); }
         ::slotted([slot="input"]) { margin-top: 14px; display: flex; flex-direction: column; flex: 1; flex-grow: 1; font-size: var(--font-size-base, 1rem); }
         ::slotted([slot="actions"]) { display: flex; gap: 10px; margin-top: 16px; justify-content: center; }
+
+        /* Image slot support - only when [with-image] attribute present */
+        :host([with-image]) {
+          display: grid;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto minmax(0, auto) auto;
+        }
+        .card-image {
+          display: none;
+        }
+        :host([with-image]) .card-image {
+          display: flex;
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          overflow: hidden;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-surface-container, #f5f5f5);
+          grid-row: 1;
+          grid-column: 1;
+          flex-shrink: 0;
+        }
+        .card-image ::slotted(img) {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        :host([with-image]) .card-content {
+          grid-row: 2;
+          grid-column: 1;
+        }
+        :host([with-image]) .actions {
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          flex-wrap: wrap;
+          padding: var(--labs-card-padding);
+          background: var(--color-surface, #fff);
+          grid-row: 3;
+          grid-column: 1;
+          margin-top: 0;
+        }
       </style>
+      <div class="card-image">
+        <slot name="image"></slot>
+      </div>
       <div class="card-content">
         <div class="header-row">
           <div class="header"><slot name="header"></slot></div>
@@ -96,6 +145,9 @@ class LabsCard extends HTMLElement {
         </div>
         <slot name="description"></slot>
         <slot name="input"></slot>
+        <slot name="actions"></slot>
+      </div>
+      <div class="actions">
         <slot name="actions"></slot>
       </div>
     `;
