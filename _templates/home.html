@@ -10,13 +10,6 @@
     <meta property="og:image" content="/apple-touch-icon.png">
     <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=87">
     
-    <style>
-        labs-grid {
-            --font-size-h3: 0.95rem;
-            --font-size-base: 0.875rem;
-        }
-    </style>
-    
     <script>
         (function () {
             const root = document.documentElement;
@@ -31,20 +24,20 @@
         import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=87';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-product-card.js?v=87';
     </script>
 </head>
 
 <body>
     <labs-footer-layout>
         <!-- Header: Appearance Controls Bar -->
-        <labs-container full-width compact slot="header">
+        <labs-container full-width compact slot="title">
             <labs-row-layout>
                 <div slot="start"></div>
                 <div slot="center"></div>
@@ -65,199 +58,199 @@
             <main>
                 <labs-grid>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/4348a2/8259263446/il_fullxfull.8259263446_gvq9.jpg"
                             alt="3D Printed Ice Cream Cone - Hidden Compartment - Fits LED Tea Light Candle (not included)">
-                        <div slot="header">3D Printed Ice Cream Cone - Hidden Compartment - Fits LED Tea Light Candle
+                        <div slot="title">3D Printed Ice Cream Cone - Hidden Compartment - Fits LED Tea Light Candle
                             (not included)</div>
                         <div slot="actions">
-                            <labs-button size="small" variant="primary"
+                            <labs-button variant="primary"
                                 onclick="window.open('https://mindcubby.etsy.com/listing/4476572864/3d-printed-ice-cream-cone-hidden')">
                                 <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
                                 Order on Etsy
                             </labs-button>
-                            <labs-button size="small" variant="secondary"
+                            <labs-button variant="secondary"
                                 onclick="window.open('https://mindcubby.etsy.com/listing/4399585322/deliciously-realistic-ice-cream-cone-3d')">
                                 <labs-icon slot="icon-left" name="download"></labs-icon>
                                 Buy the files
                             </labs-button>
                         </div>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/a3b9be/8590617041/il_fullxfull.8590617041_9yxj.jpg"
                             alt="3D Printed Hostess Cupcake Novelty Desk Toy - 3 Pack - Classic - Bite - Stash">
-                        <div slot="header">3D Printed Hostess Cupcake Novelty Desk Toy - 3 Pack - Classic - Bite - Stash
+                        <div slot="title">3D Printed Hostess Cupcake Novelty Desk Toy - 3 Pack - Classic - Bite - Stash
                         </div>
                         <labs-button slot="actions" variant="primary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4578162945/3d-printed-hostess-cupcake-novelty-desk')">
                             <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
                             Order on Etsy
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/183345/7599182107/il_fullxfull.7599182107_1h2z.jpg"
                             alt="Deliciously Realistic 3D Cupcake Kit - 4 Piece - Mix and Match - Secret Compartment - STL Files">
-                        <div slot="header">Deliciously Realistic 3D Cupcake Kit - 4 Piece - Mix and Match - Secret
+                        <div slot="title">Deliciously Realistic 3D Cupcake Kit - 4 Piece - Mix and Match - Secret
                             Compartment - STL Files</div>
                         <labs-button slot="actions" variant="secondary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4432010657/deliciously-realistic-3d-cupcake-kit-4')">
                             <labs-icon slot="icon-left" name="download"></labs-icon>
                             Buy the files
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/71527f/8153760792/il_fullxfull.8153760792_h06i.jpg"
                             alt="3D Printable Ice Cream Collection - 42 STL Files - Soft Serve, Popsicles, Novelties & Keychains">
-                        <div slot="header">3D Printable Ice Cream Collection - 42 STL Files - Soft Serve, Popsicles,
+                        <div slot="title">3D Printable Ice Cream Collection - 42 STL Files - Soft Serve, Popsicles,
                             Novelties & Keychains</div>
                         <labs-button slot="actions" variant="secondary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4456026351/swappable-ice-cream-cones-3d-printer-stl')">
                             <labs-icon slot="icon-left" name="download"></labs-icon>
                             Buy the files
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/68f020/8255220216/il_fullxfull.8255220216_tag7.jpg"
                             alt="Personalized Container - 9 Text Colors – Stackables Modular Storage - Ribbed Texture - 3D Printed">
-                        <div slot="header">Personalized Container - 9 Text Colors – Stackables Modular Storage - Ribbed
+                        <div slot="title">Personalized Container - 9 Text Colors – Stackables Modular Storage - Ribbed
                             Texture - 3D Printed</div>
                         <labs-button slot="actions" variant="primary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4537957362/container-with-personalized-lid')">
                             <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
                             Personalize on Etsy
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/1de534/8259671780/il_fullxfull.8259671780_8wyr.jpg"
                             alt="Stackables Modular Container Set - 8 Pieces - Matte Finish - Original Design - 3D Printed">
-                        <div slot="header">Stackables Modular Container Set - 8 Pieces - Matte Finish - Original Design
+                        <div slot="title">Stackables Modular Container Set - 8 Pieces - Matte Finish - Original Design
                             - 3D Printed</div>
                         <div slot="actions">
-                            <labs-button size="small" variant="primary"
+                            <labs-button variant="primary"
                                 onclick="window.open('https://mindcubby.etsy.com/listing/4533913208/stackables-modular-container-set-8')">
                                 <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
                                 Order on Etsy
                             </labs-button>
-                            <labs-button size="small" variant="secondary"
+                            <labs-button variant="secondary"
                                 onclick="window.open('https://mindcubby.etsy.com/listing/4535159862/stackables-starter-set-3d-printable')">
                                 <labs-icon slot="icon-left" name="download"></labs-icon>
                                 Buy the files
                             </labs-button>
                         </div>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/ede391/7765586640/il_fullxfull.7765586640_js7i.jpg"
                             alt="3D Printable Breakfast Set - 9 STL Files - Miniatures - Coffee Mug, Eggs, Waffle, Plate, & Bacon">
-                        <div slot="header">3D Printable Breakfast Set - 9 STL Files - Miniatures - Coffee Mug, Eggs,
+                        <div slot="title">3D Printable Breakfast Set - 9 STL Files - Miniatures - Coffee Mug, Eggs,
                             Waffle, Plate, & Bacon</div>
                         <labs-button slot="actions" variant="secondary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4465386888/3d-printable-breakfast-set-9-stl-files')">
                             <labs-icon slot="icon-left" name="download"></labs-icon>
                             Buy the files
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/65df7b/7973881230/il_fullxfull.7973881230_pwqa.jpg"
                             alt="Deliciously Tiny Ice Cream Keychains - 3D Printer STL Files - Original Design - Easy Print">
-                        <div slot="header">Deliciously Tiny Ice Cream Keychains - 3D Printer STL Files - Original Design
+                        <div slot="title">Deliciously Tiny Ice Cream Keychains - 3D Printer STL Files - Original Design
                             - Easy Print</div>
                         <labs-button slot="actions" variant="secondary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4495022164/deliciously-tiny-ice-cream-keychains-3d')">
                             <labs-icon slot="icon-left" name="download"></labs-icon>
                             Buy the files
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/a4c7e4/7647317838/il_fullxfull.7647317838_da2w.jpg"
                             alt="Deliciously Realistic Popsicles (Single + Double) - 3D Printer STL File - Fun - Snug Fit">
-                        <div slot="header">Deliciously Realistic Popsicles (Single + Double) - 3D Printer STL File - Fun
+                        <div slot="title">Deliciously Realistic Popsicles (Single + Double) - 3D Printer STL File - Fun
                             - Snug Fit</div>
                         <labs-button slot="actions" variant="secondary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4446937676/deliciously-realistic-popsicles-single')">
                             <labs-icon slot="icon-left" name="download"></labs-icon>
                             Buy the files
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/b95757/8265559527/il_fullxfull.8265559527_f8v6.jpg"
                             alt="Stackables Modular 3D Printable Container System | 72 STL Files | No Supports | Endlessly Customizable">
-                        <div slot="header">Stackables Modular 3D Printable Container System | 72 STL Files | No Supports
+                        <div slot="title">Stackables Modular 3D Printable Container System | 72 STL Files | No Supports
                             | Endlessly Customizable</div>
                         <labs-button slot="actions" variant="secondary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4527274790/3d-print-models-stackable-container')">
                             <labs-icon slot="icon-left" name="download"></labs-icon>
                             Buy the files
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/bc043f/7718703710/il_fullxfull.7718703710_ftbi.jpg"
                             alt="Deliciously Realistic Ice Cream Cone Scoop - 3D Printer STL File - Original Design - Modular">
-                        <div slot="header">Deliciously Realistic Ice Cream Cone Scoop - 3D Printer STL File - Original
+                        <div slot="title">Deliciously Realistic Ice Cream Cone Scoop - 3D Printer STL File - Original
                             Design - Modular</div>
                         <labs-button slot="actions" variant="secondary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4421014584/deliciously-realistic-ice-cream-cone')">
                             <labs-icon slot="icon-left" name="download"></labs-icon>
                             Buy the files
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/45757d/8303242062/il_fullxfull.8303242062_8in4.jpg"
                             alt="Mini Pumpkin - Stackable - 3D Print STLs - Original Design - Tea Light">
-                        <div slot="header">Mini Pumpkin - Stackable - 3D Print STLs - Original Design - Tea Light</div>
+                        <div slot="title">Mini Pumpkin - Stackable - 3D Print STLs - Original Design - Tea Light</div>
                         <labs-button slot="actions" variant="secondary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4544806233/mini-pumpkin-stackable-3d-print-stls')">
                             <labs-icon slot="icon-left" name="download"></labs-icon>
                             Buy the files
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/e8aa5a/7833968235/il_fullxfull.7833968235_9vtm.jpg"
                             alt="Ice Cream Sandwich Storage Box - 3D Models - Ready to Print | 5 Unique Designs">
-                        <div slot="header">Ice Cream Sandwich Storage Box - 3D Models - Ready to Print | 5 Unique
+                        <div slot="title">Ice Cream Sandwich Storage Box - 3D Models - Ready to Print | 5 Unique
                             Designs</div>
                         <labs-button slot="actions" variant="secondary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4468742574/ice-cream-sandwich-storage-box-3d')">
                             <labs-icon slot="icon-left" name="download"></labs-icon>
                             Buy the files
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
 
-                    <labs-card with-image>
+                    <labs-product-card>
                         <img slot="image"
                             src="https://i.etsystatic.com/62670465/r/il/64c759/7559365836/il_fullxfull.7559365836_jkf9.jpg"
                             alt="Realistic Miniature Waffle Fidget Spinner 3D Print STL">
-                        <div slot="header">Realistic Miniature Waffle Fidget Spinner 3D Print STL</div>
+                        <div slot="title">Realistic Miniature Waffle Fidget Spinner 3D Print STL</div>
                         <labs-button slot="actions" variant="secondary"
                             onclick="window.open('https://mindcubby.etsy.com/listing/4418956912/realistic-miniature-waffle-fidget')">
                             <labs-icon slot="icon-left" name="download"></labs-icon>
                             Buy the files
                         </labs-button>
-                    </labs-card>
+                    </labs-product-card>
                 </labs-grid>
             </main>
         </labs-container>
@@ -266,7 +259,7 @@
         <labs-footer slot="footer">
             <div slot="start">© 2026 Smoothie Design System</div>
             <div slot="center">
-                <labs-button size="small" variant="primary">Save Changes</labs-button>
+                <labs-button variant="primary">Save Changes</labs-button>
             </div>
             <div slot="end">All rights reserved</div>
         </labs-footer>

@@ -32,6 +32,13 @@ template.innerHTML = `
     :host([loose]) {
       gap: var(--space-xl, 32px);
     }
+    @media (max-width: var(--container-mobile-breakpoint, 640px)) {
+      :host([columns="2"]),
+      :host([columns="3"]),
+      :host([columns="4"]) {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
   <slot></slot>
 `;
