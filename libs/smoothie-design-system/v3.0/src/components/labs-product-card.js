@@ -24,6 +24,26 @@ class LabsProductCard extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this.render();
+    this.setupVideoDetection();
+  }
+
+  setupVideoDetection() {
+    const videoSlot = this.shadowRoot.querySelector('slot[name="video"]');
+    if (videoSlot) {
+      videoSlot.addEventListener('slotchange', () => {
+        const hasVideo = this.querySelector('[slot="video"]') !== null;
+        if (hasVideo) {
+          this.setAttribute('has-video', '');
+        } else {
+          this.removeAttribute('has-video');
+        }
+      });
+      // Check on initial load
+      const hasVideo = this.querySelector('[slot="video"]') !== null;
+      if (hasVideo) {
+        this.setAttribute('has-video', '');
+      }
+    }
   }
 
   render() {
@@ -72,6 +92,38 @@ class LabsProductCard extends HTMLElement {
 
         :host([no-image]) {
           grid-template-columns: 1fr;
+        }
+
+        .product-video {
+          grid-column: 1;
+          grid-row: 1 / 4;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background: var(--color-surface-variant, #f5f5f5);
+          border-radius: calc(var(--product-card-radius) * 0.5);
+        }
+
+        .product-video ::slotted(*) {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        :host([has-video]) {
+          padding: 0;
+          grid-template-rows: 1fr;
+        }
+
+        :host([has-video]) .product-image,
+        :host([has-video]) .product-title,
+        :host([has-video]) .product-actions {
+          display: none;
+        }
+
+        :host([has-video]) .product-video {
+          grid-column: 1;
+          grid-row: 1;
         }
 
         .product-title {
@@ -143,6 +195,10 @@ class LabsProductCard extends HTMLElement {
 
       <div class="product-image">
         <slot name="image"></slot>
+      </div>
+
+      <div class="product-video">
+        <slot name="video"></slot>
       </div>
 
       <div class="product-title">
