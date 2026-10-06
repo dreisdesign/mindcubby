@@ -250,6 +250,7 @@ class LabsButton extends HTMLElement {
           font-size: var(--button-icon-size, 1.25em);
           margin: 0 !important;
           vertical-align: middle !important;
+          flex-shrink: 0;
         }
         /* Make slotted icons inherit the host/button color so they follow tokens/currentColor */
         ::slotted([slot="icon-left"]) labs-icon,

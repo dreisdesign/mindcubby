@@ -125,14 +125,19 @@ class LabsCard extends HTMLElement {
         }
         :host([with-image]) .actions {
           display: flex;
+          flex-wrap: wrap;
           gap: 10px;
           justify-content: center;
-          flex-wrap: wrap;
+          align-items: center;
           padding: var(--labs-card-padding);
           background: var(--color-surface, #fff);
           grid-row: 3;
           grid-column: 1;
           margin-top: 0;
+        }
+        :host([with-image]) .actions ::slotted([slot="actions"]) {
+          min-width: 140px;
+          flex: 0 1 auto;
         }
       </style>
       <div class="card-image">
