@@ -53,11 +53,11 @@
 
 <body>
     <labs-footer-layout>
-        <!-- Header: Appearance Controls Bar -->
+        <!-- Header: Logo, Headline, and Theme Controls in One Row -->
         <labs-container full-width compact slot="header">
             <labs-row-layout>
-                <div slot="start"></div>
-                <div slot="center"></div>
+                <img slot="start" src="/libs/smoothie-design-system/v3.0/icons/MindCubby-Logo-Official.png" alt="MindCubby Logo" style="width: 60px; height: 60px; object-fit: contain;">
+                <div slot="center" class="page-title">MindCubby</div>
                 <div slot="end" style="display: flex; gap: 1rem;">
                     <labs-theme-button icon-only></labs-theme-button>
                     <labs-theme-toggle icon-only></labs-theme-toggle>
@@ -67,11 +67,6 @@
 
         <!-- Content: Main scrollable area -->
         <labs-container full-width slot="content">
-            <labs-row-layout>
-                <img slot="start" src="/libs/smoothie-design-system/v3.0/icons/MindCubby-Logo-Official.png" alt="MindCubby Logo" style="width: 60px; height: 60px; object-fit: contain;">
-                <div slot="center" class="page-title">MindCubby</div>
-                <div slot="end"></div>
-            </labs-row-layout>
 
             <main>
                 <labs-grid>
