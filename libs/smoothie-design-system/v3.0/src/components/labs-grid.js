@@ -7,6 +7,8 @@ template.innerHTML = `
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: var(--space-lg, 24px);
       width: 100%;
+      height: auto;
+      align-content: start;
       box-sizing: border-box;
     }
     :host([columns="1"]) {

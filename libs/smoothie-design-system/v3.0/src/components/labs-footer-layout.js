@@ -9,7 +9,8 @@ template.innerHTML = `
       display: flex;
       flex-direction: column;
       width: 100%;
-      height: 100vh;
+      min-height: 100dvh;
+      height: auto;
       margin: 0;
       padding: 0;
     }
@@ -20,11 +21,11 @@ template.innerHTML = `
       width: 100%;
     }
 
-    /* Content area: scrollable, fills remaining space */
+    /* Content area: let the page flow naturally so cards are not clipped when the viewport shrinks */
     .content-slot {
-      flex: 1;
+      flex: 1 1 auto;
       min-height: 0;
-      overflow-y: auto;
+      overflow: visible;
       width: 100%;
     }
 
