@@ -37,7 +37,7 @@ class LabsProductCard extends HTMLElement {
           
           display: grid;
           grid-template-columns: var(--product-image-size) 1fr;
-          grid-template-rows: auto auto;
+          grid-template-rows: auto 1fr;
           gap: var(--product-card-gap);
           background: var(--color-surface, #fff);
           border-radius: var(--product-card-radius);
@@ -47,6 +47,7 @@ class LabsProductCard extends HTMLElement {
           box-sizing: border-box;
           padding: var(--product-card-gap);
           container-type: inline-size;
+          height: 100%;
         }
 
         .product-image {
@@ -96,7 +97,8 @@ class LabsProductCard extends HTMLElement {
           display: flex;
           gap: calc(var(--product-card-gap) * 0.5);
           flex-wrap: wrap;
-          align-content: flex-start;
+          align-content: flex-end;
+          margin-top: auto;
         }
 
         .product-actions ::slotted(*) {
@@ -108,7 +110,7 @@ class LabsProductCard extends HTMLElement {
         @container (min-width: 280px) {
           :host {
             grid-template-columns: 1fr;
-            grid-template-rows: auto auto auto;
+            grid-template-rows: auto auto 1fr;
           }
 
           .product-image {
@@ -125,6 +127,8 @@ class LabsProductCard extends HTMLElement {
           .product-actions {
             grid-column: 1;
             grid-row: 3;
+            margin-top: 0;
+            align-content: flex-end;
           }
         }
       </style>
