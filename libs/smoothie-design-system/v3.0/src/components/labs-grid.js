@@ -10,7 +10,7 @@ template.innerHTML = `
       width: 100%;
       height: auto;
       align-content: start;
-      align-items: start;
+      align-items: stretch;
       box-sizing: border-box;
     }
     :host([columns="1"]) {
