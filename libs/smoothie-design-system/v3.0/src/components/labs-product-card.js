@@ -96,12 +96,13 @@ class LabsProductCard extends HTMLElement {
 
         .product-video {
           grid-column: 1;
-          grid-row: 1 / 4;
+          grid-row: 1;
           width: 100%;
           height: 100%;
           overflow: hidden;
           background: var(--color-surface-variant, #f5f5f5);
           border-radius: calc(var(--product-card-radius) * 0.5);
+          display: none;
         }
 
         .product-video ::slotted(*) {
@@ -124,6 +125,7 @@ class LabsProductCard extends HTMLElement {
         :host([has-video]) .product-video {
           grid-column: 1;
           grid-row: 1;
+          display: block;
         }
 
         .product-title {
