@@ -4,7 +4,7 @@ template.innerHTML = `
   <style>
     :host {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: var(--space-lg, 24px);
       width: 100%;
       height: auto;
@@ -32,11 +32,9 @@ template.innerHTML = `
     :host([loose]) {
       gap: var(--space-xl, 32px);
     }
-    @media (max-width: var(--container-mobile-breakpoint, 640px)) {
-      :host([columns="2"]),
-      :host([columns="3"]),
-      :host([columns="4"]) {
-        grid-template-columns: 1fr;
+    @media (min-width: 641px) {
+      :host {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       }
     }
   </style>
