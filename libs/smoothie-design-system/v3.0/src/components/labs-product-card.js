@@ -70,24 +70,18 @@ class LabsProductCard extends HTMLElement {
 
         :host([no-image]) {
           grid-template-columns: 1fr;
-          grid-template-rows: auto auto;
-        }
-
-        .product-content {
-          grid-column: 2;
-          grid-row: 1;
-          display: flex;
-          flex-direction: column;
-          gap: calc(var(--product-card-gap) * 0.5);
-          min-width: 0;
         }
 
         .product-title {
+          grid-column: 2;
+          grid-row: 1;
           font-size: var(--font-size-h4, 1rem);
           font-weight: 600;
           line-height: 1.3;
           color: var(--color-on-surface, #000);
           margin: 0;
+          display: flex;
+          flex-direction: column;
         }
 
         .product-title ::slotted(*) {
@@ -95,11 +89,12 @@ class LabsProductCard extends HTMLElement {
         }
 
         .product-actions {
-          grid-column: 1 / -1;
+          grid-column: 2;
           grid-row: 2;
           display: flex;
           gap: calc(var(--product-card-gap) * 0.5);
           flex-wrap: wrap;
+          align-content: flex-start;
         }
 
         .product-actions ::slotted(*) {
@@ -107,7 +102,7 @@ class LabsProductCard extends HTMLElement {
           min-width: 100px;
         }
 
-        /* Small screens: stack vertically */
+        /* Small screens: stack vertically, full width */
         @media (max-width: 480px) {
           :host {
             grid-template-columns: 1fr;
@@ -118,10 +113,9 @@ class LabsProductCard extends HTMLElement {
             grid-column: 1;
             grid-row: 1;
             width: 100%;
-            aspect-ratio: 1;
           }
 
-          .product-content {
+          .product-title {
             grid-column: 1;
             grid-row: 2;
           }
@@ -137,10 +131,8 @@ class LabsProductCard extends HTMLElement {
         <slot name="image"></slot>
       </div>
 
-      <div class="product-content">
-        <div class="product-title">
-          <slot name="title"></slot>
-        </div>
+      <div class="product-title">
+        <slot name="title"></slot>
       </div>
 
       <div class="product-actions">
