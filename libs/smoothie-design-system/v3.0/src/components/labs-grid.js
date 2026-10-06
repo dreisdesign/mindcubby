@@ -4,7 +4,7 @@ template.innerHTML = `
   <style>
     :host {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: var(--space-lg, 24px);
       width: 100%;
       height: auto;
@@ -24,18 +24,13 @@ template.innerHTML = `
       grid-template-columns: repeat(4, 1fr);
     }
     :host([columns="auto"]) {
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
     :host([compact]) {
       gap: var(--space-md, 16px);
     }
     :host([loose]) {
       gap: var(--space-xl, 32px);
-    }
-    @media (min-width: 641px) {
-      :host {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      }
     }
   </style>
   <slot></slot>
