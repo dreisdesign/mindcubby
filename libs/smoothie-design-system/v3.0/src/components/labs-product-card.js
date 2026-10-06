@@ -1,9 +1,10 @@
 /**
  * Product Card Component
- * Purpose-built for product showcases (e.g., Etsy listings)
+ * Purpose-built for product showcases (Etsy-style listings)
  * 
- * Composition: image + title + actions
- * Responsive: single component, no internal breakpoints
+ * Container query responsive:
+ * - Narrow cards (<280px): image left, content right
+ * - Wide cards (≥280px): image full-width top
  * 
  * @slot image - Product image (optional)
  * @slot title - Product title/name
@@ -45,6 +46,7 @@ class LabsProductCard extends HTMLElement {
           width: 100%;
           box-sizing: border-box;
           padding: var(--product-card-gap);
+          container-type: inline-size;
         }
 
         .product-image {
@@ -102,8 +104,8 @@ class LabsProductCard extends HTMLElement {
           min-width: 100px;
         }
 
-        /* Small screens: stack vertically, full width */
-        @media (max-width: 480px) {
+        /* Progressive enhancement: wider cards get full-width image on top */
+        @container (min-width: 280px) {
           :host {
             grid-template-columns: 1fr;
             grid-template-rows: auto auto auto;
