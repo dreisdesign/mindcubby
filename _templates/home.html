@@ -92,7 +92,15 @@
                     <labs-card>
                         <div slot="header">Featured Video</div>
                         <div style="padding: 1rem; display: flex; justify-content: center;">
-                            <iframe width="100%" height="400" src="https://www.youtube.com/embed/VGaAT1ZxSCc" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="max-width: 600px; border-radius: 8px;"></iframe>
+                            <div style="position: relative; width: 100%; max-width: 400px; aspect-ratio: 9/16; overflow: hidden; border-radius: 8px;">
+                                <iframe 
+                                    src="https://www.youtube.com/embed/VGaAT1ZxSCc?rel=0"
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
                         </div>
                     </labs-card>
 
