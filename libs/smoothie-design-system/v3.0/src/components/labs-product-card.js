@@ -32,9 +32,11 @@ class LabsProductCard extends HTMLElement {
           --product-card-gap: 1rem;
           --product-card-radius: 0.5rem;
           --product-card-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          --product-image-size: 120px;
           
-          display: flex;
-          flex-direction: column;
+          display: grid;
+          grid-template-columns: var(--product-image-size) 1fr;
+          grid-template-rows: auto auto;
           gap: var(--product-card-gap);
           background: var(--color-surface, #fff);
           border-radius: var(--product-card-radius);
@@ -42,13 +44,17 @@ class LabsProductCard extends HTMLElement {
           overflow: hidden;
           width: 100%;
           box-sizing: border-box;
+          padding: var(--product-card-gap);
         }
 
         .product-image {
-          width: 100%;
+          grid-column: 1;
+          grid-row: 1 / 3;
+          width: var(--product-image-size);
           aspect-ratio: 1;
           overflow: hidden;
           background: var(--color-surface-variant, #f5f5f5);
+          border-radius: calc(var(--product-card-radius) * 0.5);
         }
 
         .product-image ::slotted(*) {
@@ -62,12 +68,18 @@ class LabsProductCard extends HTMLElement {
           display: none;
         }
 
+        :host([no-image]) {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto;
+        }
+
         .product-content {
+          grid-column: 2;
+          grid-row: 1;
           display: flex;
           flex-direction: column;
-          gap: calc(var(--product-card-gap) * 0.75);
-          padding: var(--product-card-gap);
-          flex: 1;
+          gap: calc(var(--product-card-gap) * 0.5);
+          min-width: 0;
         }
 
         .product-title {
@@ -83,15 +95,41 @@ class LabsProductCard extends HTMLElement {
         }
 
         .product-actions {
+          grid-column: 1 / -1;
+          grid-row: 2;
           display: flex;
           gap: calc(var(--product-card-gap) * 0.5);
           flex-wrap: wrap;
-          margin-top: auto;
         }
 
         .product-actions ::slotted(*) {
           flex: 1;
-          min-width: 120px;
+          min-width: 100px;
+        }
+
+        /* Small screens: stack vertically */
+        @media (max-width: 480px) {
+          :host {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto auto;
+          }
+
+          .product-image {
+            grid-column: 1;
+            grid-row: 1;
+            width: 100%;
+            aspect-ratio: 1;
+          }
+
+          .product-content {
+            grid-column: 1;
+            grid-row: 2;
+          }
+
+          .product-actions {
+            grid-column: 1;
+            grid-row: 3;
+          }
         }
       </style>
 
@@ -103,10 +141,10 @@ class LabsProductCard extends HTMLElement {
         <div class="product-title">
           <slot name="title"></slot>
         </div>
-        
-        <div class="product-actions">
-          <slot name="actions"></slot>
-        </div>
+      </div>
+
+      <div class="product-actions">
+        <slot name="actions"></slot>
       </div>
     `;
   }
