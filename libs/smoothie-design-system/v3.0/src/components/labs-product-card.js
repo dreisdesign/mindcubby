@@ -94,7 +94,7 @@ class LabsProductCard extends HTMLElement {
           grid-column: 1;
           grid-row: 3;
           display: flex;
-          gap: calc(var(--product-card-gap) * 0.5);
+          gap: 1rem;
           flex-wrap: wrap;
           align-content: flex-end;
           margin-top: auto;
@@ -103,6 +103,16 @@ class LabsProductCard extends HTMLElement {
         .product-actions ::slotted(*) {
           flex: 1;
           min-width: 100px;
+        }
+
+        /* If the slotted content is a wrapper div with multiple buttons, make it flex */
+        .product-actions ::slotted(div) {
+          display: flex !important;
+          flex-direction: column;
+          gap: calc(1rem * 1.2);
+          width: 100%;
+          flex: none;
+          min-width: auto;
         }
 
         /* Progressive enhancement: wider cards (>320px) use compact layout with image on left */
@@ -126,6 +136,7 @@ class LabsProductCard extends HTMLElement {
           .product-actions {
             grid-column: 2;
             grid-row: 2;
+            row-gap: calc(var(--product-card-gap) * 0.5);
           }
         }
       </style>
@@ -145,4 +156,6 @@ class LabsProductCard extends HTMLElement {
   }
 }
 
-customElements.define('labs-product-card', LabsProductCard);
+if (!customElements.get('labs-product-card')) {
+  customElements.define('labs-product-card', LabsProductCard);
+}

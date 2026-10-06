@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labs Product Card Component</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta property="og:image" content="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=87">
+    
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+
+    <script type="module">
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-product-card.js?v=87';
+    </script>
+</head>
+
+<body>
+    <!-- Appearance Controls Bar -->
+    <labs-container full-width compact>
+        <labs-row-layout>
+            <div slot="start"></div>
+            <div slot="center"></div>
+            <div slot="end" style="display: flex; gap: 1rem;">
+                <labs-theme-button icon-only></labs-theme-button>
+                <labs-theme-toggle icon-only></labs-theme-toggle>
+            </div>
+        </labs-row-layout>
+    </labs-container>
+
+    <!-- Main Content -->
+    <labs-container medium>
+        <labs-header center>
+            <div slot="title">Product Card Component</div>
+            <div slot="subtitle">Purpose-built for product showcases with responsive container queries</div>
+        </labs-header>
+
+        <main>
+            <section>
+                <h2>Single Button Example</h2>
+                <labs-grid>
+                    <labs-product-card>
+                        <img slot="image" src="https://i.etsystatic.com/62670465/r/il/a3b9be/8590617041/il_fullxfull.8590617041_9yxj.jpg" alt="Sample product">
+                        <div slot="title">Product Title</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
+                            Order Now
+                        </labs-button>
+                    </labs-product-card>
+                </labs-grid>
+            </section>
+
+            <section>
+                <h2>Multiple Buttons Example</h2>
+                <labs-grid>
+                    <labs-product-card>
+                        <img slot="image" src="https://i.etsystatic.com/62670465/r/il/183345/7599182107/il_fullxfull.7599182107_1h2z.jpg" alt="Sample product">
+                        <div slot="title">Product with Options</div>
+                        <div slot="actions">
+                            <labs-button variant="primary">
+                                <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
+                                Order
+                            </labs-button>
+                            <labs-button variant="secondary">
+                                <labs-icon slot="icon-left" name="download"></labs-icon>
+                                Files
+                            </labs-button>
+                        </div>
+                    </labs-product-card>
+                </labs-grid>
+            </section>
+
+            <section>
+                <h2>No Image Example</h2>
+                <labs-grid>
+                    <labs-product-card no-image>
+                        <div slot="title">Text-Only Product</div>
+                        <labs-button slot="actions" variant="primary">
+                            <labs-icon slot="icon-left" name="add"></labs-icon>
+                            Add to Cart
+                        </labs-button>
+                    </labs-product-card>
+                </labs-grid>
+            </section>
+        </main>
+    </labs-container>
+</body>
+
+</html>

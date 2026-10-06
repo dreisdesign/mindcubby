@@ -10,6 +10,20 @@
     <meta property="og:image" content="/apple-touch-icon.png">
     <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=87">
     
+    <style>
+        @font-face {
+            font-family: 'Commissioner';
+            src: url('/libs/smoothie-design-system/v3.0/fonts/Commissioner-Black.ttf') format('truetype');
+            font-weight: 900;
+        }
+
+        .page-title {
+            font-family: 'Commissioner', sans-serif;
+            font-weight: 900;
+            font-size: clamp(1.5rem, 8vw, 3.5rem);
+        }
+    </style>
+    
     <script>
         (function () {
             const root = document.documentElement;
@@ -23,6 +37,7 @@
         import '/libs/smoothie-design-system/v3.0/src/components/labs-footer-layout.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=87';
@@ -32,12 +47,14 @@
         import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-product-card.js?v=87';
     </script>
+
+    <script async src="https://www.tiktok.com/embed.js"></script>
 </head>
 
 <body>
     <labs-footer-layout>
         <!-- Header: Appearance Controls Bar -->
-        <labs-container full-width compact slot="title">
+        <labs-container full-width compact slot="header">
             <labs-row-layout>
                 <div slot="start"></div>
                 <div slot="center"></div>
@@ -50,10 +67,11 @@
 
         <!-- Content: Main scrollable area -->
         <labs-container full-width slot="content">
-            <labs-header center>
-                <div slot="title">MindCubby</div>
-                <div slot="description">Responsive grid layout with labs-grid component</div>
-            </labs-header>
+            <labs-row-layout>
+                <img slot="start" src="/libs/smoothie-design-system/v3.0/icons/MindCubby-Logo-Official.png" alt="MindCubby Logo" style="width: 60px; height: 60px; object-fit: contain;">
+                <div slot="center" class="page-title">MindCubby</div>
+                <div slot="end"></div>
+            </labs-row-layout>
 
             <main>
                 <labs-grid>
@@ -77,6 +95,22 @@
                             </labs-button>
                         </div>
                     </labs-product-card>
+
+                    <labs-card>
+                        <div slot="header">Featured Video</div>
+                        <div style="padding: 1rem;">
+                            <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@mindcubby/video/7686293499439828254" data-video-id="7686293499439828254" style="max-width: 605px; min-width: 325px; margin: 0 auto;">
+                                <section>
+                                    <a target="_blank" title="@mindcubby" href="https://www.tiktok.com/@mindcubby?refer=embed">@mindcubby</a>
+                                    I printed a Hostess Cupcake | Filling Snaps into place |
+                                    <a title="3dprinting" target="_blank" href="https://www.tiktok.com/tag/3dprinting?refer=embed">#3dprinting</a>
+                                    <a title="cupcake" target="_blank" href="https://www.tiktok.com/tag/cupcake?refer=embed">#cupcake</a>
+                                    <a title="satisfying" target="_blank" href="https://www.tiktok.com/tag/satisfying?refer=embed">#satisfying</a>
+                                    <a target="_blank" title="♬ original sound  - MindCubby" href="https://www.tiktok.com/music/original-sound-MindCubby-7686293549302401822?refer=embed">♬ original sound  - MindCubby</a>
+                                </section>
+                            </blockquote>
+                        </div>
+                    </labs-card>
 
                     <labs-product-card>
                         <img slot="image"
