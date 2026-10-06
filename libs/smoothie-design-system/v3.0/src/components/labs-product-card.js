@@ -47,7 +47,6 @@ class LabsProductCard extends HTMLElement {
           box-sizing: border-box;
           padding: var(--product-card-gap);
           container-type: inline-size;
-          height: 100%;
         }
 
         .product-image {
