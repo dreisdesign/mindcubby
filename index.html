@@ -21,6 +21,12 @@
             overflow-y: scroll;
         }
 
+        .mindcubby-logo {
+            width: 60px;
+            height: 60px;
+            color: var(--color-primary);
+        }
+
         .page-title {
             font-family: 'Commissioner', sans-serif;
             font-weight: 900;
@@ -70,7 +76,13 @@
         <!-- Header: Logo, Headline, and Theme Controls in One Row -->
         <labs-container full-width compact slot="header">
             <labs-row-layout>
-                <img slot="start" src="/libs/smoothie-design-system/v3.0/icons/MindCubby-Logo-Official.png" alt="MindCubby Logo" style="width: 60px; height: 60px; object-fit: contain;">
+                <svg slot="start" class="mindcubby-logo" width="60" height="60" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                    <!-- Dynamic circle background that inherits color from parent -->
+                    <circle cx="256" cy="256" r="254" fill="currentColor"/>
+                    
+                    <!-- Ice cream cone image centered -->
+                    <image x="143" y="0" width="226" height="512" xlink:href="/assets/logos/mindcubby--official-icecream-logo.png"/>
+                </svg>
                 <div slot="center" class="page-title">
                     MindCubby
                     <svg class="page-title-3d-svg" width="222" height="141" viewBox="0 0 222 141" fill="none" xmlns="http://www.w3.org/2000/svg">
