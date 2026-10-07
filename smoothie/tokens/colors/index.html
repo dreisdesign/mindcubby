@@ -121,6 +121,84 @@
             word-break: break-all;
         }
 
+        .all-variants-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 3px solid var(--color-on-surface-variant);
+        }
+
+        .variants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .variant-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-on-surface-variant);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .variant-header {
+            padding: 1rem;
+            border-bottom: 2px solid var(--color-on-surface-variant);
+            background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface) 90%);
+        }
+
+        .variant-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--color-on-background);
+            margin-bottom: 0.25rem;
+        }
+
+        .variant-subtitle {
+            font-size: 0.8rem;
+            color: var(--color-on-surface);
+        }
+
+        .variant-colors {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .variant-mini-card {
+            border: 1px solid var(--color-on-surface-variant);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .variant-mini-swatch {
+            width: 100%;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .variant-mini-info {
+            padding: 0.5rem;
+            font-size: 0.7rem;
+        }
+
+        .variant-mini-name {
+            font-weight: 600;
+            color: var(--color-on-background);
+        }
+
+        .variant-mini-hex {
+            color: var(--color-on-surface);
+            font-family: 'Monaco', monospace;
+            font-size: 0.65rem;
+        }
+
         .floating-toolbar {
             position: fixed;
             bottom: 2rem;
@@ -495,6 +573,242 @@
                     <div class="color-info">
                         <div class="color-name">Warning</div>
                         <div class="color-value">--color-warning</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- All Variants Reference Section -->
+        <section class="all-variants-section">
+            <h2>All Variants Reference</h2>
+            <p class="subtitle">Complete color palette across all themes and appearances at a glance</p>
+            
+            <div class="variants-grid">
+                <!-- Vanilla Light -->
+                <div class="variant-card">
+                    <div class="variant-header">
+                        <div class="variant-title">Vanilla</div>
+                        <div class="variant-subtitle">Light Mode</div>
+                    </div>
+                    <div class="variant-colors">
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #6B5C4B; color: white;">Primary</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary</div>
+                                <div class="variant-mini-hex">#6B5C4B</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #3A2F25; color: white;">Dark</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary Dark</div>
+                                <div class="variant-mini-hex">#3A2F25</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #F5F1E7; color: #333;">BG</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Background</div>
+                                <div class="variant-mini-hex">#F5F1E7</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #FBFBFD; color: #333; border: 1px solid #ddd;">Surface</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Surface</div>
+                                <div class="variant-mini-hex">#FBFBFD</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blueberry Light -->
+                <div class="variant-card">
+                    <div class="variant-header">
+                        <div class="variant-title">Blueberry</div>
+                        <div class="variant-subtitle">Light Mode</div>
+                    </div>
+                    <div class="variant-colors">
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #2E2B74; color: white;">Primary</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary</div>
+                                <div class="variant-mini-hex">#2E2B74</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #1E193E; color: white;">Dark</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary Dark</div>
+                                <div class="variant-mini-hex">#1E193E</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #F0EEFF; color: #333;">BG</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Background</div>
+                                <div class="variant-mini-hex">#F0EEFF</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #FBFBFD; color: #333; border: 1px solid #ddd;">Surface</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Surface</div>
+                                <div class="variant-mini-hex">#FBFBFD</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strawberry Light -->
+                <div class="variant-card">
+                    <div class="variant-header">
+                        <div class="variant-title">Strawberry</div>
+                        <div class="variant-subtitle">Light Mode</div>
+                    </div>
+                    <div class="variant-colors">
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #800800; color: white;">Primary</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary</div>
+                                <div class="variant-mini-hex">#800800</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #5C1A18; color: white;">Dark</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary Dark</div>
+                                <div class="variant-mini-hex">#5C1A18</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #FFF2F1; color: #333;">BG</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Background</div>
+                                <div class="variant-mini-hex">#FFF2F1</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #FBFBFD; color: #333; border: 1px solid #ddd;">Surface</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Surface</div>
+                                <div class="variant-mini-hex">#FBFBFD</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vanilla Dark -->
+                <div class="variant-card">
+                    <div class="variant-header">
+                        <div class="variant-title">Vanilla</div>
+                        <div class="variant-subtitle">Dark Mode</div>
+                    </div>
+                    <div class="variant-colors">
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #6B5C4B; color: white;">Primary</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary</div>
+                                <div class="variant-mini-hex">#6B5C4B</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #3A2F25; color: white;">Dark</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary Dark</div>
+                                <div class="variant-mini-hex">#3A2F25</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #1B1C1F; color: white;">BG</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Background</div>
+                                <div class="variant-mini-hex">#1B1C1F</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #2A2A30; color: white;">Surface</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Surface</div>
+                                <div class="variant-mini-hex">#2A2A30</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blueberry Dark -->
+                <div class="variant-card">
+                    <div class="variant-header">
+                        <div class="variant-title">Blueberry</div>
+                        <div class="variant-subtitle">Dark Mode</div>
+                    </div>
+                    <div class="variant-colors">
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #2E2B74; color: white;">Primary</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary</div>
+                                <div class="variant-mini-hex">#2E2B74</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #1E193E; color: white;">Dark</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary Dark</div>
+                                <div class="variant-mini-hex">#1E193E</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #1B1C1F; color: white;">BG</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Background</div>
+                                <div class="variant-mini-hex">#1B1C1F</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #2A2A30; color: white;">Surface</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Surface</div>
+                                <div class="variant-mini-hex">#2A2A30</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strawberry Dark -->
+                <div class="variant-card">
+                    <div class="variant-header">
+                        <div class="variant-title">Strawberry</div>
+                        <div class="variant-subtitle">Dark Mode</div>
+                    </div>
+                    <div class="variant-colors">
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #800800; color: white;">Primary</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary</div>
+                                <div class="variant-mini-hex">#800800</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #5C1A18; color: white;">Dark</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Primary Dark</div>
+                                <div class="variant-mini-hex">#5C1A18</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #1B1C1F; color: white;">BG</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Background</div>
+                                <div class="variant-mini-hex">#1B1C1F</div>
+                            </div>
+                        </div>
+                        <div class="variant-mini-card">
+                            <div class="variant-mini-swatch" style="background-color: #2A2A30; color: white;">Surface</div>
+                            <div class="variant-mini-info">
+                                <div class="variant-mini-name">Surface</div>
+                                <div class="variant-mini-hex">#2A2A30</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
