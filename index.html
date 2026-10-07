@@ -2,454 +2,320 @@
 <html lang="en">
 
 <head>
-    <script>
-        // Redirect www to non-www
-        if (window.location.hostname === 'www.mindcubby.com') {
-            window.location.replace('https://mindcubby.com' + window.location.pathname + window.location.search);
-        }
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MindCubby</title>
+    <title>MindCubby 3D Design | Product Showcase</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta property="og:image" content="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=87">
+    
     <style>
-        :root {
-            --bg: #fff;
-            --text: #000;
-            --border: #000;
-        }
-
-        [data-theme="dark"] {
-            --bg: #1a1a1a;
-            --text: #fff;
-            --border: #666;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            height: 100%;
+        @font-face {
+            font-family: 'Commissioner';
+            src: url('/libs/smoothie-design-system/v3.0/fonts/Commissioner-Black.ttf') format('truetype');
+            font-weight: 900;
         }
 
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            font-size: 14px;
+            overflow-y: scroll;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-
-        header {
+        .page-title {
+            font-family: 'Commissioner', sans-serif;
+            font-weight: 900;
+            font-size: clamp(1.5rem, 8vw, 3.5rem);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 4rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        h1 {
-            font-size: 2rem;
-            font-weight: 400;
-            letter-spacing: 0.02em;
-        }
-
-        .theme-toggle {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .theme-toggle:hover {
-            background: var(--text);
-            color: var(--bg);
-        }
-
-        section {
-            margin-bottom: 5rem;
-        }
-
-        section>h2 {
-            font-size: 1rem;
-            font-weight: 400;
+            gap: 0.5rem;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 2rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border);
+            color: var(--white, #ffffff);
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 0;
-            margin-bottom: 2rem;
-            grid-auto-flow: dense;
-        }
-
-        .card {
-            background: var(--bg);
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            min-height: 300px;
-            text-decoration: none;
-            color: inherit;
-            border: 1px solid var(--border);
-        }
-
-        .card:hover {
-            background: var(--text);
-            color: var(--bg);
-        }
-
-        .card-icon {
-            width: 40px;
-            height: 40px;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .card-icon img {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-        }
-
-        .card-icon svg {
-            width: 40px;
-            height: 40px;
-        }
-
-        .card h3 {
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-
-        .card p {
-            font-size: 0.9rem;
-            flex-grow: 1;
-        }
-
-        .card-link {
-            font-size: 0.9rem;
-            text-decoration: underline;
-            margin-top: auto;
-        }
-
-        .hero {
-            border: 1px solid var(--border);
-            padding: 3rem 2rem;
-            text-align: center;
-            margin-bottom: 5rem;
-        }
-
-        .hero h2 {
-            font-size: 2.5rem;
-            font-weight: 400;
-            margin-bottom: 1rem;
-            letter-spacing: 0.02em;
-        }
-
-        .hero p {
-            font-size: 1rem;
-            margin-bottom: 2rem;
-            opacity: 0.8;
-        }
-
-        .hero-cta {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            border: 1px solid var(--border);
-            background: transparent;
-            color: var(--text);
-            padding: 0.75rem 1.5rem;
-            cursor: pointer;
-            font-size: 0.9rem;
-            text-decoration: none;
+        .page-title-3d-svg {
+            height: 1em;
+            width: auto;
             display: inline-block;
-        }
-
-        .btn:hover {
-            background: var(--text);
-            color: var(--bg);
-        }
-
-        footer {
-            border-top: 1px solid var(--border);
-            padding-top: 2rem;
-            display: flex;
-            gap: 2rem;
-            flex-wrap: wrap;
-            font-size: 0.9rem;
-        }
-
-        footer a {
-            color: inherit;
-            text-decoration: underline;
-        }
-
-        footer a:hover {
-            text-decoration: none;
-        }
-
-        .loading {
-            text-align: center;
-            opacity: 0.6;
-            padding: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 1.5rem 1rem;
-            }
-
-            header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            h1 {
-                font-size: 1.75rem;
-            }
+            filter: drop-shadow(0 0 0);
         }
     </style>
+    
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+
+    <script type="module">
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer-layout.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-product-card.js?v=87';
+    </script>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <h1>MindCubby</h1>
-            <button class="theme-toggle" id="theme-toggle">Dark</button>
-        </header>
-
-        <!-- HERO SECTION -->
-        <div class="hero">
-            <div style="margin-bottom: 2rem;">
-                <img src="logo.png" alt="MindCubby Logo" style="width: 120px; height: 120px; object-fit: contain;">
-            </div>
-            <h2>MindCubby</h2>
-            <p>Things I make because they bring me joy</p>
-            <p style="font-size: 0.85rem; opacity: 0.6; font-style: italic; margin-top: 1rem;">🚧 Site under
-                construction</p>
-        </div>
-
-        <!-- FEATURED PHYSICAL PRODUCTS -->
-        <section id="physical-products">
-            <h2>Physical Products</h2>
-            <a href="https://mindcubby.etsy.com" target="_blank" style="display: block; text-decoration: none; color: inherit;">
-                <div style="border: 1px solid var(--border); overflow: hidden; cursor: pointer; transition: all 0.3s ease;" 
-                     onmouseover="this.style.background = 'var(--text)'; this.style.color = 'var(--bg)';" 
-                     onmouseout="this.style.background = 'var(--bg)'; this.style.color = 'var(--text)';">
-                    <img src="assets/banner-etsy.png" alt="MindCubby on Etsy" style="width: 100%; height: auto; display: block;">
+    <labs-footer-layout>
+        <!-- Header: Logo, Headline, and Theme Controls in One Row -->
+        <labs-container full-width compact slot="header">
+            <labs-row-layout>
+                <img slot="start" src="/libs/smoothie-design-system/v3.0/icons/MindCubby-Logo-Official.png" alt="MindCubby Logo" style="width: 60px; height: 60px; object-fit: contain;">
+                <div slot="center" class="page-title">
+                    MindCubby
+                    <img src="/assets/logos/3D.svg" alt="3D" class="page-title-3d-svg">
                 </div>
-            </a>
-        </section>
+                <div slot="end" style="display: flex; gap: 1rem;">
+                    <labs-theme-button icon-only></labs-theme-button>
+                    <labs-theme-toggle icon-only></labs-theme-toggle>
+                </div>
+            </labs-row-layout>
+        </labs-container>
 
-        <!-- 3D CREATOR TOOLS -->
-        <section id="make-your-own">
-            <h2>3D Creator Tools</h2>
-            <div class="grid">
-                <a href="3d/apps/rotater/" class="card">
-                    <div class="card-icon">
-                        <img src="assets/logos/mindcubby--3d-apps--rotater.svg" alt="Rotater"
-                            style="width: 48px; height: 48px;">
-                    </div>
-                    <h3>Rotater</h3>
-                    <p>Export rotating 3D models as GIF, MP4, or PNG in your browser</p>
-                    <div class="card-link">Open →</div>
-                </a>
-                <a href="3d/apps/gcoder/" class="card">
-                    <div class="card-icon">
-                        <img src="assets/logos/mindcubby--3d-apps--gcoder.svg" alt="G-coder"
-                            style="width: 48px; height: 48px;">
-                    </div>
-                    <h3>G-coder</h3>
-                    <p>Generate specifications from G-code files</p>
-                    <div class="card-link">Open →</div>
-                </a>
-                <a href="3d/apps/spooler/" class="card">
-                    <div class="card-icon">
-                        <img src="assets/logos/mindcubby--3d-apps--spooler.svg" alt="Spooler"
-                            style="width: 48px; height: 48px;">
-                    </div>
-                    <h3>Spooler</h3>
-                    <p>Track 3D printer filament inventory with NFC tags</p>
-                    <div class="card-link">Open →</div>
-                </a>
+        <!-- Content: Main scrollable area -->
+        <labs-container full-width slot="content">
+
+            <main style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
+                <!-- Products Grid (left ~2/3) -->
+                <div style="flex: 2; min-width: 280px;">
+                    <labs-grid>
+
+                        <labs-product-card>
+                            <img slot="image"
+                                src="https://i.etsystatic.com/62670465/r/il/4348a2/8259263446/il_fullxfull.8259263446_gvq9.jpg"
+                                alt="3D Printed Ice Cream Cone - Hidden Compartment - Fits LED Tea Light Candle (not included)">
+                            <div slot="title">3D Printed Ice Cream Cone - Hidden Compartment - Fits LED Tea Light Candle
+                                (not included)</div>
+                            <div slot="actions">
+                                <labs-button variant="primary"
+                                    onclick="window.open('https://mindcubby.etsy.com/listing/4476572864/3d-printed-ice-cream-cone-hidden')">
+                                    <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
+                                    Order on Etsy
+                                </labs-button>
+                                <labs-button variant="secondary"
+                                    onclick="window.open('https://mindcubby.etsy.com/listing/4399585322/deliciously-realistic-ice-cream-cone-3d')">
+                                    <labs-icon slot="icon-left" name="download"></labs-icon>
+                                    Buy the files
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/a3b9be/8590617041/il_fullxfull.8590617041_9yxj.jpg"
+                            alt="3D Printed Hostess Cupcake Novelty Desk Toy - 3 Pack - Classic - Bite - Stash">
+                        <div slot="title">3D Printed Hostess Cupcake Novelty Desk Toy - 3 Pack - Classic - Bite - Stash
+                        </div>
+                        <labs-button slot="actions" variant="primary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4578162945/3d-printed-hostess-cupcake-novelty-desk')">
+                            <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
+                            Order on Etsy
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/183345/7599182107/il_fullxfull.7599182107_1h2z.jpg"
+                            alt="Deliciously Realistic 3D Cupcake Kit - 4 Piece - Mix and Match - Secret Compartment - STL Files">
+                        <div slot="title">Deliciously Realistic 3D Cupcake Kit - 4 Piece - Mix and Match - Secret
+                            Compartment - STL Files</div>
+                        <labs-button slot="actions" variant="secondary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4432010657/deliciously-realistic-3d-cupcake-kit-4')">
+                            <labs-icon slot="icon-left" name="download"></labs-icon>
+                            Buy the files
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/71527f/8153760792/il_fullxfull.8153760792_h06i.jpg"
+                            alt="3D Printable Ice Cream Collection - 42 STL Files - Soft Serve, Popsicles, Novelties & Keychains">
+                        <div slot="title">3D Printable Ice Cream Collection - 42 STL Files - Soft Serve, Popsicles,
+                            Novelties & Keychains</div>
+                        <labs-button slot="actions" variant="secondary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4456026351/swappable-ice-cream-cones-3d-printer-stl')">
+                            <labs-icon slot="icon-left" name="download"></labs-icon>
+                            Buy the files
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/68f020/8255220216/il_fullxfull.8255220216_tag7.jpg"
+                            alt="Personalized Container - 9 Text Colors – Stackables Modular Storage - Ribbed Texture - 3D Printed">
+                        <div slot="title">Personalized Container - 9 Text Colors – Stackables Modular Storage - Ribbed
+                            Texture - 3D Printed</div>
+                        <labs-button slot="actions" variant="primary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4537957362/container-with-personalized-lid')">
+                            <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
+                            Personalize on Etsy
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/1de534/8259671780/il_fullxfull.8259671780_8wyr.jpg"
+                            alt="Stackables Modular Container Set - 8 Pieces - Matte Finish - Original Design - 3D Printed">
+                        <div slot="title">Stackables Modular Container Set - 8 Pieces - Matte Finish - Original Design
+                            - 3D Printed</div>
+                        <div slot="actions">
+                            <labs-button variant="primary"
+                                onclick="window.open('https://mindcubby.etsy.com/listing/4533913208/stackables-modular-container-set-8')">
+                                <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
+                                Order on Etsy
+                            </labs-button>
+                            <labs-button variant="secondary"
+                                onclick="window.open('https://mindcubby.etsy.com/listing/4535159862/stackables-starter-set-3d-printable')">
+                                <labs-icon slot="icon-left" name="download"></labs-icon>
+                                Buy the files
+                            </labs-button>
+                        </div>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/ede391/7765586640/il_fullxfull.7765586640_js7i.jpg"
+                            alt="3D Printable Breakfast Set - 9 STL Files - Miniatures - Coffee Mug, Eggs, Waffle, Plate, & Bacon">
+                        <div slot="title">3D Printable Breakfast Set - 9 STL Files - Miniatures - Coffee Mug, Eggs,
+                            Waffle, Plate, & Bacon</div>
+                        <labs-button slot="actions" variant="secondary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4465386888/3d-printable-breakfast-set-9-stl-files')">
+                            <labs-icon slot="icon-left" name="download"></labs-icon>
+                            Buy the files
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/65df7b/7973881230/il_fullxfull.7973881230_pwqa.jpg"
+                            alt="Deliciously Tiny Ice Cream Keychains - 3D Printer STL Files - Original Design - Easy Print">
+                        <div slot="title">Deliciously Tiny Ice Cream Keychains - 3D Printer STL Files - Original Design
+                            - Easy Print</div>
+                        <labs-button slot="actions" variant="secondary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4495022164/deliciously-tiny-ice-cream-keychains-3d')">
+                            <labs-icon slot="icon-left" name="download"></labs-icon>
+                            Buy the files
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/a4c7e4/7647317838/il_fullxfull.7647317838_da2w.jpg"
+                            alt="Deliciously Realistic Popsicles (Single + Double) - 3D Printer STL File - Fun - Snug Fit">
+                        <div slot="title">Deliciously Realistic Popsicles (Single + Double) - 3D Printer STL File - Fun
+                            - Snug Fit</div>
+                        <labs-button slot="actions" variant="secondary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4446937676/deliciously-realistic-popsicles-single')">
+                            <labs-icon slot="icon-left" name="download"></labs-icon>
+                            Buy the files
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/b95757/8265559527/il_fullxfull.8265559527_f8v6.jpg"
+                            alt="Stackables Modular 3D Printable Container System | 72 STL Files | No Supports | Endlessly Customizable">
+                        <div slot="title">Stackables Modular 3D Printable Container System | 72 STL Files | No Supports
+                            | Endlessly Customizable</div>
+                        <labs-button slot="actions" variant="secondary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4527274790/3d-print-models-stackable-container')">
+                            <labs-icon slot="icon-left" name="download"></labs-icon>
+                            Buy the files
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/bc043f/7718703710/il_fullxfull.7718703710_ftbi.jpg"
+                            alt="Deliciously Realistic Ice Cream Cone Scoop - 3D Printer STL File - Original Design - Modular">
+                        <div slot="title">Deliciously Realistic Ice Cream Cone Scoop - 3D Printer STL File - Original
+                            Design - Modular</div>
+                        <labs-button slot="actions" variant="secondary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4421014584/deliciously-realistic-ice-cream-cone')">
+                            <labs-icon slot="icon-left" name="download"></labs-icon>
+                            Buy the files
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/45757d/8303242062/il_fullxfull.8303242062_8in4.jpg"
+                            alt="Mini Pumpkin - Stackable - 3D Print STLs - Original Design - Tea Light">
+                        <div slot="title">Mini Pumpkin - Stackable - 3D Print STLs - Original Design - Tea Light</div>
+                        <labs-button slot="actions" variant="secondary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4544806233/mini-pumpkin-stackable-3d-print-stls')">
+                            <labs-icon slot="icon-left" name="download"></labs-icon>
+                            Buy the files
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/e8aa5a/7833968235/il_fullxfull.7833968235_9vtm.jpg"
+                            alt="Ice Cream Sandwich Storage Box - 3D Models - Ready to Print | 5 Unique Designs">
+                        <div slot="title">Ice Cream Sandwich Storage Box - 3D Models - Ready to Print | 5 Unique
+                            Designs</div>
+                        <labs-button slot="actions" variant="secondary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4468742574/ice-cream-sandwich-storage-box-3d')">
+                            <labs-icon slot="icon-left" name="download"></labs-icon>
+                            Buy the files
+                        </labs-button>
+                    </labs-product-card>
+
+                    <labs-product-card>
+                        <img slot="image"
+                            src="https://i.etsystatic.com/62670465/r/il/64c759/7559365836/il_fullxfull.7559365836_jkf9.jpg"
+                            alt="Realistic Miniature Waffle Fidget Spinner 3D Print STL">
+                        <div slot="title">Realistic Miniature Waffle Fidget Spinner 3D Print STL</div>
+                        <labs-button slot="actions" variant="secondary"
+                            onclick="window.open('https://mindcubby.etsy.com/listing/4418956912/realistic-miniature-waffle-fidget')">
+                            <labs-icon slot="icon-left" name="download"></labs-icon>
+                            Buy the files
+                        </labs-button>
+                    </labs-product-card>
+
+                    </labs-grid>
+                </div>
+
+                <!-- Video Container (right ~1/3) -->
+                <div style="flex: 1; min-width: 280px; position: sticky; top: 2rem;">
+                    <labs-product-card>
+                        <div slot="video" style="width: 100%; aspect-ratio: 9/16; border-radius: 8px; overflow: hidden; display: flex;">
+                            <iframe 
+                                src="https://www.youtube.com/embed/VGaAT1ZxSCc"
+                                style="width: 100%; height: 100%; flex: 1; border: none;"
+                                frameborder="0" 
+                                allow="autoplay"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                    </labs-product-card>
+                </div>
+            </main>
+
+            <!-- Footer: Simple copyright text -->
+            <div style="text-align: center; margin-top: 10px; margin-bottom: 10px; font-size: 0.875rem;">
+                © 2026 MindCubby. All rights reserved.
             </div>
-        </section>
-
-        <!-- FREE DESIGNS FROM PRINTABLES -->
-        <section id="free-designs">
-            <h2>Free Designs</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
-                <iframe src="https://www.printables.com/embed/1813667" scrolling="no" frameborder="0"
-                    style="height: 400px; border: 1px solid var(--border);"></iframe>
-                <iframe src="https://www.printables.com/embed/1752263" scrolling="no" frameborder="0"
-                    style="height: 400px; border: 1px solid var(--border);"></iframe>
-                <iframe src="https://www.printables.com/embed/1737909" scrolling="no" frameborder="0"
-                    style="height: 400px; border: 1px solid var(--border);"></iframe>
-            </div>
-        </section>
-
-        <!-- LABS APPS -->
-        <section id="labs">
-            <h2>Labs</h2>
-            <div class="grid">
-                <a href="labs/" class="card">
-                    <div class="card-icon">
-                        <img src="assets/logos/mindcubby--labs-apps--labs-home.svg" alt="Labs"
-                            style="width: 40px; height: 40px;">
-                    </div>
-                    <h3>Labs</h3>
-                    <p>Explore all web applications and experiments</p>
-                    <div class="card-link">Open →</div>
-                </a>
-                <a href="labs/timer/" class="card">
-                    <div class="card-icon">
-                        <img src="assets/logos/mindcubby--labs-apps--focus-timer.svg" alt="Timer"
-                            style="width: 40px; height: 40px;">
-                    </div>
-                    <h3>Timer</h3>
-                    <p>Simple, elegant interval timer for focused work</p>
-                    <div class="card-link">Open →</div>
-                </a>
-                <a href="labs/note/" class="card">
-                    <div class="card-icon">
-                        <img src="assets/logos/mindcubby--labs-apps--daily-note.svg" alt="Note"
-                            style="width: 40px; height: 40px;">
-                    </div>
-                    <h3>Note</h3>
-                    <p>Quick notes that sync to your browser</p>
-                    <div class="card-link">Open →</div>
-                </a>
-                <a href="labs/pad/" class="card">
-                    <div class="card-icon">
-                        <img src="assets/logos/mindcubby--labs-apps--pad.svg" alt="Pad"
-                            style="width: 40px; height: 40px;">
-                    </div>
-                    <h3>Pad</h3>
-                    <p>Minimalist text editor for distraction-free writing</p>
-                    <div class="card-link">Open →</div>
-                </a>
-                <a href="labs/tracker/" class="card">
-                    <div class="card-icon">
-                        <img src="assets/logos/mindcubby--labs-apps--tracker.svg" alt="Tracker"
-                            style="width: 40px; height: 40px;">
-                    </div>
-                    <h3>Tracker</h3>
-                    <p>Track habits and patterns over time</p>
-                    <div class="card-link">Open →</div>
-                </a>
-                <a href="labs/today-list/" class="card">
-                    <div class="card-icon">
-                        <img src="assets/logos/mindcubby--labs-apps--today-list.svg" alt="Today List"
-                            style="width: 40px; height: 40px;">
-                    </div>
-                    <h3>Today List</h3>
-                    <p>Daily task list that resets each morning</p>
-                    <div class="card-link">Open →</div>
-                </a>
-                <a href="labs/postsforpause/" class="card">
-                    <div class="card-icon">
-                        <img src="labs/postsforpause/favicon.svg" alt="Posts for Pause"
-                            style="width: 40px; height: 40px;">
-                    </div>
-                    <h3>Posts for Pause</h3>
-                    <p>Minimalist designs encouraging mindfulness and reflection</p>
-                    <div class="card-link">Open →</div>
-                </a>
-                <a href="smoothie/" class="card">
-                    <div class="card-icon">
-                        <img src="assets/logos/mindcubby--design--smoothie.svg" alt="Smoothie Design System"
-                            style="width: 40px; height: 40px;">
-                    </div>
-                    <h3>Smoothie Design System</h3>
-                    <p>Component library and design documentation</p>
-                    <div class="card-link">Open →</div>
-                </a>
-            </div>
-        </section>
-
-        <!-- FOOTER -->
-        <footer>
-            <div><a href="https://www.etsy.com/shop/mindcubby" target="_blank">Shop</a></div>
-            <div><a href="https://www.youtube.com/@MindCubby" target="_blank">YouTube</a></div>
-            <div><a href="https://www.tiktok.com/@mindcubby" target="_blank">TikTok</a></div>
-        </footer>
-    </div>
+        </labs-container>
+    </labs-footer-layout>
 
     <script>
-        // Theme toggle
-        const themeToggle = document.getElementById('theme-toggle');
-        const htmlElement = document.documentElement;
-
-        const saved = localStorage.getItem('mindcubby-theme');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        let theme = saved || (prefersDark ? 'dark' : 'light');
-
-        function applyTheme(t) {
-            if (t === 'dark') {
-                htmlElement.setAttribute('data-theme', 'dark');
-                themeToggle.textContent = 'Light';
-            } else {
-                htmlElement.removeAttribute('data-theme');
-                themeToggle.textContent = 'Dark';
-            }
-            localStorage.setItem('mindcubby-theme', t);
+        // Theme toggle handles all theme management internally
+        const themeToggle = document.querySelector('labs-theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('mode-changed', (e) => {
+                console.log('Theme changed to:', e.detail.mode);
+            });
         }
-
-        applyTheme(theme);
-
-        themeToggle.addEventListener('click', () => {
-            theme = theme === 'dark' ? 'light' : 'dark';
-            applyTheme(theme);
-        });
-
-        // Etsy products section now uses direct link to shop
-
-            gridEl.innerHTML = html;
-
-            // Attach event listener to toggle button
-            const toggleBtn = document.getElementById('toggle-all-btn');
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    showingAll = !showingAll;
-                    renderProducts();
-                });
-            }
-
-            // Update count text
-            if (showingAll) {
-                countEl.innerHTML = `Showing all ${allProducts.length} products`;
-            } else if (hasMore) {
-                countEl.innerHTML = '';
-            }
-        
     </script>
 </body>
 
