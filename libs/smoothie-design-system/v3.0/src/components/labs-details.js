@@ -27,7 +27,7 @@ class LabsDetails extends HTMLElement {
             align-items: center;
             justify-content: center;
             gap: var(--space-md, 16px);
-            padding: var(--space-md, 1rem) 12px;
+            padding: var(--space-sm, 0.5rem) 12px;
             font-weight: 600;
           }
           summary labs-icon {
