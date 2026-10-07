@@ -13,7 +13,7 @@ template.innerHTML = `
       margin-right: auto;
       padding-left: 2rem;
       padding-right: 2rem;
-      padding-top: var(--space-xl, 32px);
+      padding-top: var(--space-md, 16px);
       padding-bottom: var(--space-lg, 24px);
     }
     :host([small]) {

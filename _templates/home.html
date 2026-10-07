@@ -25,6 +25,18 @@
             font-family: 'Commissioner', sans-serif;
             font-weight: 900;
             font-size: clamp(1.5rem, 8vw, 3.5rem);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            color: var(--white, #ffffff);
+        }
+
+        .page-title-3d-svg {
+            height: 1em;
+            width: auto;
+            display: inline-block;
+            filter: drop-shadow(0 0 0);
         }
     </style>
     
@@ -59,7 +71,10 @@
         <labs-container full-width compact slot="header">
             <labs-row-layout>
                 <img slot="start" src="/libs/smoothie-design-system/v3.0/icons/MindCubby-Logo-Official.png" alt="MindCubby Logo" style="width: 60px; height: 60px; object-fit: contain;">
-                <div slot="center" class="page-title">MindCubby</div>
+                <div slot="center" class="page-title">
+                    MindCubby
+                    <img src="/assets/logos/3D.svg" alt="3D" class="page-title-3d-svg">
+                </div>
                 <div slot="end" style="display: flex; gap: 1rem;">
                     <labs-theme-button icon-only></labs-theme-button>
                     <labs-theme-toggle icon-only></labs-theme-toggle>
