@@ -79,6 +79,25 @@ All app logos are SVG format for responsive scaling across different screen size
 
 ---
 
+## Home Page
+
+The MindCubby home page (`index.html`) showcases the product lineup with a responsive header design:
+
+**Features:**
+- ✅ Responsive header with dynamic layout control
+- ✅ Desktop layout: Full button controls visible (theme button + appearance toggle)
+- ✅ Mobile layout: 3-dot menu toggle at ≤700px viewport width
+- ✅ Adaptive title compression to prevent button overflow
+- ✅ Smooth transitions between desktop and mobile layouts
+
+**Design System Integration:**
+- Uses Smoothie Design System v3.0 components
+- Theme-aware styling (light/dark mode automatic)
+- Ice cream cone logo with dynamic primary color
+- "3D" badge next to title using SVG with stroke styling
+
+---
+
 ## Development
 
 ### Labs Apps Architecture

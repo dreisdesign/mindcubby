@@ -36,6 +36,8 @@
             gap: 0.5rem;
             text-transform: uppercase;
             color: var(--color-primary);
+            min-width: 0;
+            flex-shrink: 1;
         }
 
         .page-title-3d-svg {
@@ -47,6 +49,7 @@
 
         .header-controls {
             position: relative;
+            flex-shrink: 0;
         }
 
         .header-controls-desktop {
@@ -73,7 +76,7 @@
             justify-content: center;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 700px) {
             .header-controls-desktop {
                 display: none;
             }
@@ -157,7 +160,7 @@
             <labs-row-layout>
                 <svg slot="start" class="mindcubby-logo" width="60" height="60" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                     <!-- Dynamic circle background that inherits color from parent -->
-                    <circle cx="256" cy="256" r="254" fill="currentColor"/>
+                    <circle cx="256" cy="256" r="203" fill="currentColor"/>
                     
                     <!-- Ice cream cone image centered -->
                     <image x="143" y="0" width="226" height="512" xlink:href="/assets/logos/mindcubby--official-icecream-logo.png"/>
