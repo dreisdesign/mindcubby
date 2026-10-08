@@ -148,7 +148,7 @@ class LabsMobileMenu extends HTMLElement {
           }
 
           ::slotted([slot="menu-item"]) {
-            display: none;
+            display: flex !important;
           }
         }
 
