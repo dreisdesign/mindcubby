@@ -93,12 +93,13 @@ class LabsMobileMenu extends HTMLElement {
       <style>
         :host {
           --breakpoint: ${this._breakpoint};
-          display: contents;
         }
 
         .menu-container {
           position: relative;
           flex-shrink: 0;
+          display: flex;
+          align-items: center;
         }
 
         .menu-toggle {
@@ -107,8 +108,6 @@ class LabsMobileMenu extends HTMLElement {
           border: none;
           cursor: pointer;
           padding: 0.5rem;
-          min-width: 40px;
-          min-height: 40px;
           width: 40px;
           height: 40px;
           border-radius: 50%;
