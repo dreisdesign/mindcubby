@@ -81,21 +81,6 @@
             display: none;
         }
 
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-            min-width: 40px;
-            min-height: 40px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            align-items: center;
-            justify-content: center;
-        }
-
         @media (max-width: 700px) {
             .header-controls-desktop {
                 display: none;
@@ -104,31 +89,6 @@
             .header-controls-mobile {
                 display: block;
             }
-
-            .mobile-menu-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-        }
-
-        .mobile-menu {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: var(--color-surface);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            padding: 0.5rem;
-            display: none;
-            gap: 0.5rem;
-            flex-direction: column;
-            margin-top: 0.5rem;
-            z-index: 1000;
-        }
-
-        .mobile-menu.open {
-            display: flex;
         }
     </style>
     
@@ -154,23 +114,10 @@
         import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-product-card.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-mobile-menu.js?v=87';
 
         document.addEventListener('DOMContentLoaded', () => {
-            const mobileMenu = document.querySelector('.mobile-menu');
-            const toggleBtn = document.querySelector('.mobile-menu-toggle');
-
-            if (toggleBtn && mobileMenu) {
-                toggleBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const isOpen = mobileMenu.classList.toggle('open');
-                    toggleBtn.setAttribute('aria-expanded', isOpen);
-                });
-
-                document.addEventListener('click', () => {
-                    mobileMenu.classList.remove('open');
-                    toggleBtn.setAttribute('aria-expanded', 'false');
-                });
-            }
+            // Mobile menu is now handled by labs-mobile-menu component
         });
     </script>
 </head>
@@ -201,22 +148,12 @@
                         <labs-theme-toggle icon-only></labs-theme-toggle>
                     </div>
 
-                    <!-- Mobile: Show 3-dot menu toggle -->
+                    <!-- Mobile: Show responsive menu -->
                     <div class="header-controls-mobile">
-                        <labs-button 
-                            class="mobile-menu-toggle" 
-                            variant="transparent"
-                            aria-label="Navigation menu"
-                            aria-expanded="false"
-                            aria-controls="mobile-menu">
-                            <labs-icon name="more_vert" size="small"></labs-icon>
-                        </labs-button>
-
-                        <!-- Dropdown menu for mobile (hidden by default) -->
-                        <div class="mobile-menu" id="mobile-menu" role="navigation">
-                            <labs-theme-button icon-only></labs-theme-button>
-                            <labs-theme-toggle icon-only></labs-theme-toggle>
-                        </div>
+                        <labs-mobile-menu breakpoint="700px">
+                            <labs-theme-button icon-only slot="menu-item"></labs-theme-button>
+                            <labs-theme-toggle icon-only slot="menu-item"></labs-theme-toggle>
+                        </labs-mobile-menu>
                     </div>
                 </div>
             </labs-row-layout>
