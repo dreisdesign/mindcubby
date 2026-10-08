@@ -76,20 +76,6 @@
             display: flex;
             gap: 1rem;
         }
-
-        .header-controls-mobile {
-            display: none;
-        }
-
-        @media (max-width: 700px) {
-            .header-controls-desktop {
-                display: none;
-            }
-
-            .header-controls-mobile {
-                display: block;
-            }
-        }
     </style>
     
     <script>
@@ -115,10 +101,6 @@
         import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-product-card.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-mobile-menu.js?v=87';
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Mobile menu is now handled by labs-mobile-menu component
-        });
     </script>
 </head>
 
@@ -142,19 +124,11 @@
                     </svg>
                 </h1>
                 <div class="header-controls" slot="end">
-                    <!-- Desktop: Show buttons directly -->
-                    <div class="header-controls-desktop">
-                        <labs-theme-button icon-only></labs-theme-button>
-                        <labs-theme-toggle icon-only></labs-theme-toggle>
-                    </div>
-
-                    <!-- Mobile: Show responsive menu -->
-                    <div class="header-controls-mobile">
-                        <labs-mobile-menu breakpoint="700px">
-                            <labs-theme-button icon-only slot="menu-item"></labs-theme-button>
-                            <labs-theme-toggle icon-only slot="menu-item"></labs-theme-toggle>
-                        </labs-mobile-menu>
-                    </div>
+                    <!-- Desktop + Mobile responsive menu (component handles breakpoint) -->
+                    <labs-mobile-menu breakpoint="700px">
+                        <labs-theme-button icon-only slot="menu-item"></labs-theme-button>
+                        <labs-theme-toggle icon-only slot="menu-item"></labs-theme-toggle>
+                    </labs-mobile-menu>
                 </div>
             </labs-row-layout>
         </labs-container>
