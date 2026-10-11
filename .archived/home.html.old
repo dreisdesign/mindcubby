@@ -161,17 +161,7 @@
                                 </labs-button>
                             </div>
                         </labs-product-card>
-                        <img slot="image"
-                            src="https://i.etsystatic.com/62670465/r/il/a3b9be/8590617041/il_fullxfull.8590617041_9yxj.jpg"
-                            alt="3D printed Hostess cupcake desk toy three-pack">
-                        <div slot="title">3D Printed Hostess Cupcake Novelty Desk Toy - 3 Pack - Classic - Bite - Stash
-                        </div>
-                        <labs-button slot="actions" variant="primary"
-                            onclick="window.open('https://mindcubby.etsy.com/listing/4578162945/3d-printed-hostess-cupcake-novelty-desk')">
-                            <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
-                            Order on Etsy
-                        </labs-button>
-                    </labs-product-card>
+
 
                     <labs-product-card>
                         <img slot="image"
