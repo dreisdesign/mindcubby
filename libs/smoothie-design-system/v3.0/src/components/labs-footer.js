@@ -29,7 +29,7 @@ class LabsFooter extends HTMLElement {
           -webkit-backdrop-filter: blur(16px);
           border-top: 0.75px solid rgba(255, 255, 255, 0.5);
           border-radius: var(--radius-full, 9999px) var(--radius-full, 9999px) var(--radius-none, 0) var(--radius-none, 0);
-          color: var(--color-on-surface, #1b1c1f);
+          color: var(--color-on-surface, #1C1307);
           font-family: var(--font-family-base, system-ui, sans-serif);
           font-size: var(--font-size-footer, 0.9rem);
           line-height: var(--line-height-footer, 1.4);

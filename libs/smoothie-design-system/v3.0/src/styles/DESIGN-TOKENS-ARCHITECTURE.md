@@ -16,10 +16,10 @@ Raw color values organized by flavor families and purposes:
 
 ```css
 /* Vanilla Palette */
---palette-vanilla-100: #F5F1E7;    /* Light backgrounds */
---palette-vanilla-200: #E8E2D6;    /* Theme backgrounds */
---palette-vanilla-500: #6B5C4B;    /* Primary colors */
---palette-vanilla-800: #1B1C1F;    /* Dark colors */
+--palette-vanilla-100: #FFF4E5;    /* Light backgrounds */
+--palette-vanilla-200: #FFF0DB;    /* Theme backgrounds */
+--palette-vanilla-500: #4D3C27;    /* Primary colors */
+--palette-vanilla-800: #1C1307;    /* Dark colors */
 
 /* Blueberry Palette */
 --palette-blueberry-100: #F0EEFF;
@@ -80,7 +80,7 @@ Semantic tokens that components consume:
 
 /* ❌ BAD: Don't redefine palette tokens in themes */
 .flavor-vanilla.theme-light {
-  --palette-vanilla-500: #6B5C4B;  /* Wrong - palette is global */
+  --palette-vanilla-500: #4D3C27;  /* Wrong - palette is global */
   --color-primary: var(--palette-vanilla-500);
 }
 ```

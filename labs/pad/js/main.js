@@ -81,7 +81,7 @@ class PadDrawing {
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
         this.ctx.strokeStyle = getComputedStyle(document.documentElement)
-            .getPropertyValue('--color-on-background').trim() || '#1B1C1F';
+            .getPropertyValue('--color-on-background').trim() || '#1C1307';
         this.ctx.lineWidth = 2;
     }
 
@@ -98,7 +98,7 @@ class PadDrawing {
 
         // Redraw all strokes with current color
         const color = getComputedStyle(document.documentElement)
-            .getPropertyValue('--color-on-background').trim() || '#1B1C1F';
+            .getPropertyValue('--color-on-background').trim() || '#1C1307';
         for (const stroke of this.strokes) {
             if (stroke.length < 1) continue;
             this.ctx.beginPath();

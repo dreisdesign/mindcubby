@@ -49,7 +49,7 @@ class LabsBadge extends HTMLElement {
     }
     :host([variant="warning"]) .badge {
       background: var(--color-warning, #ffc107);
-      color: var(--color-warning-text, #1B1C1F);
+      color: var(--color-warning-text, #1C1307);
       border: none;
     }
     :host([variant="error"]) .badge {

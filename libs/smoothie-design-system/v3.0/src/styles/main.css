@@ -52,7 +52,7 @@
   --color-on-background: var(--palette-blueberry-100, #C1C1FF);
   --color-primary: #9575CD;
   --color-secondary: #7E57C2;
-  --color-primary-darker: #1B1C1F;
+  --color-primary-darker: #1C1307;
   /* Status colors inherit from global tokens */
   --color-danger: #CF6679;
   --color-on-primary: #000000;

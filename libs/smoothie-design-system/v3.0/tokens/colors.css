@@ -33,17 +33,17 @@
   --color-on-background: var(--base-800);
   /* On Background: text for page background (themes customize this) */
   /* On Background: default text for backgrounds (themes override this) */
-  --palette-vanilla-100: #F5F1E7;
+  --palette-vanilla-100: #FFF4E5;
   /* Vanilla palette — for Vanilla theme and as a base for other flavors */
-  --palette-vanilla-100: #F5F1E7;
+  --palette-vanilla-100: #FFF4E5;
   /* background */
-  --palette-vanilla-200: #E8E2D6;
-  --palette-vanilla-300: #D6C6A8;
+  --palette-vanilla-200: #FFF0DB;
+  --palette-vanilla-300: #F5DCBB;
   /* TODO: Adjust value for Vanilla 300 */
-  --palette-vanilla-500: #6B5C4B;
+  --palette-vanilla-500: #4D3C27;
   /* was 700, now 500 */
-  --palette-vanilla-800: #3A2F25;
-  --palette-vanilla-900: #1B1C1F;
+  --palette-vanilla-800: #332512;
+  --palette-vanilla-900: #1C1307;
   --palette-vanilla-1000: #000000;
   /* primary */
   --color-primary: var(--palette-blueberry-500);
@@ -109,7 +109,7 @@
   --color-warning: var(--palette-yellow-500);
   --color-on-warning: var(--color-on-surface);
   /* On Warning: use surface text color for high contrast on yellow #FFB300 background */
-  --color-warning-text: #1B1C1F;
+  --color-warning-text: #1C1307;
   /* Warning Text: dark text for accessibility on yellow badges */
   --color-error: var(--palette-red-500);
   --color-on-error: #fff;

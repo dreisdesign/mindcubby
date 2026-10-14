@@ -33,18 +33,15 @@
   --color-on-background: var(--base-800);
   /* On Background: text for page background (themes customize this) */
   /* On Background: default text for backgrounds (themes override this) */
-  --palette-vanilla-100: #F5F1E7;
-  /* Vanilla palette — for Vanilla theme and as a base for other flavors */
-  --palette-vanilla-100: #F5F1E7;
-  /* background */
-  --palette-vanilla-200: #E8E2D6;
-  --palette-vanilla-300: #D6C6A8;
+  --palette-vanilla-100: #FFF4E5;
+  /* Vanilla palette — 6 core colors */
+  --palette-vanilla-200: #FFF0DB;
+  --palette-vanilla-300: #F5DCBB;
   /* TODO: Adjust value for Vanilla 300 */
-  --palette-vanilla-500: #6B5C4B;
-  /* was 700, now 500 */
-  --palette-vanilla-800: #3A2F25;
-  --palette-vanilla-900: #1B1C1F;
-  --palette-vanilla-1000: #000000;
+  --palette-vanilla-500: #4D3C27;
+  /* primary color */
+  --palette-vanilla-800: #332512;
+  --palette-vanilla-900: #1C1307;
   /* primary */
   --color-primary: var(--palette-blueberry-500);
   /* Primary: main brand color (Blueberry 500 by default) */
@@ -54,27 +51,20 @@
   /* Primary Darker: darker variant of primary color */
   --color-on-primary-darker: #fff;
   /* On Primary Darker: text color for primary-darker backgrounds */
-  /* Blueberry (5 stops) — canonical anchors */
+  /* Blueberry (6 stops) — canonical anchors */
   --palette-blueberry-100: #F0EEFF;
-  /* intermediate 200 stop (added back for theme pages) */
   --palette-blueberry-200: #DBD7FF;
   --palette-blueberry-300: #B3A8F7;
-  /* Made Blueberry 300 lighter for better visual appeal */
   --palette-blueberry-500: #2E2B74;
-  --palette-blueberry-700: #26225A;
-  /* generated 800 stop (midpoint between 700 #26225A and 900 #15122B) */
   --palette-blueberry-800: #1E193E;
   --palette-blueberry-900: #15122B;
 
-  /* Strawberry (5 stops) — canonical anchors */
+  /* Strawberry (6 stops) — canonical anchors */
   --palette-strawberry-100: #FFF2F1;
-  /* intermediate 200 stop (added back for theme pages) */
   --palette-strawberry-200: #FFD3D2;
   --palette-strawberry-300: #FFB3B0;
   /* TODO: Adjust value for Strawberry 300 */
   --palette-strawberry-500: #800800;
-  --palette-strawberry-700: #9B2F2B;
-  /* made darker to match other 800 variants */
   --palette-strawberry-800: #5C1A18;
   --palette-strawberry-900: #2A0B0A;
 
@@ -109,7 +99,7 @@
   --color-warning: var(--palette-yellow-500);
   --color-on-warning: var(--color-on-surface);
   /* On Warning: use surface text color for high contrast on yellow #FFB300 background */
-  --color-warning-text: #1B1C1F;
+  --color-warning-text: #1C1307;
   /* Warning Text: dark text for accessibility on yellow badges */
   --color-error: var(--palette-red-500);
   --color-on-error: #fff;

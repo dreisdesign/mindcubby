@@ -15,13 +15,13 @@
   --color-background-darkest: var(--palette-vanilla-900);
   --color-on-background-darkest: var(--palette-vanilla-100);
   --color-primary: var(--palette-vanilla-500);
-  /* Use 500 (#6B5C4B) as primary */
+  /* Use 500 (#4D3C27) as primary */
   --color-primary-darker: var(--palette-vanilla-800);
-  /* Use 800 (#1B1C1F) as primary-darker */
+  /* Use 800 (#1C1307) as primary-darker */
   --color-primary-lighter: var(--palette-vanilla-300);
   /* Use 300 as primary-lighter */
   --color-background: var(--palette-vanilla-200);
-  /* #E8E2D6 */
+  /* #FFF0DB */
   /* Surface mapping for vanilla light theme */
   --color-surface: var(--palette-vanilla-100);
   --color-on-surface: var(--palette-vanilla-800);
@@ -45,7 +45,7 @@
 .tokens-doc-root.theme-vanilla.appearance-dark {
   --color-footer-bg: rgba(27, 28, 31, 0.15);
   --footer-shadow: none;
-  /* #1B1C1F, 15% */
+  /* #1C1307, 15% */
   --color-background-darkest: var(--palette-vanilla-900);
   --color-on-background-darkest: var(--palette-vanilla-100);
   --color-primary: var(--palette-vanilla-300);

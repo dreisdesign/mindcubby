@@ -46,7 +46,7 @@ Defined in `globals.css`, available across all themes:
   --palette-vanilla-100: #F5EFE7;
   --palette-vanilla-200: #DFD3C7;
   --palette-vanilla-300: #C7B8A8;
-  --palette-vanilla-500: #6B5C4B;  /* Primary */
+  --palette-vanilla-500: #4D3C27;  /* Primary */
   --palette-vanilla-700: #5C5047;
   --palette-vanilla-800: #3C3230;
   --palette-vanilla-900: #342F2A;
