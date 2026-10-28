@@ -16,21 +16,22 @@ template.innerHTML = `
 
     button {
       all: unset;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 0.5em;
-      padding: 0.625em 1em;
+      padding: 0.75em 1.5em;
       border: 1px solid var(--color-on-surface-variant, #999);
       border-radius: 24px;
       background: var(--color-surface, #fff);
       color: var(--color-on-surface, #333);
       font-family: inherit;
-      font-size: 0.875rem;
-      font-weight: 500;
+      font-size: 1.125rem;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease-out;
-      min-width: 100px;
-      justify-content: center;
+      width: 100%;
+      justify-content: flex-start;
+      box-sizing: border-box;
     }
 
     button:hover {
@@ -48,15 +49,17 @@ template.innerHTML = `
     }
 
     .theme-label {
-      font-size: 0.9em;
+      font-size: 1.125rem;
+      font-weight: 600;
     }
 
     :host([icon-only]) button {
-      min-width: 44px;
       width: 44px;
       height: 44px;
+      min-width: 44px;
       padding: 0;
       border-radius: 50%;
+      justify-content: center;
     }
 
     :host([icon-only]) .theme-label {

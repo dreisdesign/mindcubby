@@ -17,20 +17,22 @@ template.innerHTML = `
 
     button {
       all: unset;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 0.5em;
-      padding: 0.625em 1em;
+      padding: 0.75em 1.5em;
       border: 1px solid var(--color-on-surface-variant, #999);
       border-radius: 24px;
       background: var(--color-surface, #fff);
       color: var(--color-on-surface, #333);
       font-family: inherit;
-      font-size: 0.875rem;
-      font-weight: 500;
+      font-size: 1.125rem;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease-out;
-      white-space: nowrap;
+      width: 100%;
+      justify-content: flex-start;
+      box-sizing: border-box;
     }
 
     button:hover {
@@ -57,7 +59,8 @@ template.innerHTML = `
     }
 
     .label {
-      font-size: 0.9em;
+      font-size: 1.125rem;
+      font-weight: 600;
     }
   </style>
 
@@ -188,8 +191,8 @@ class LabsAppearanceToggle extends HTMLElement {
         icon.setAttribute('name', isDark ? 'bedtime_off' : 'bedtime');
         iconSlot.appendChild(icon);
 
-        // Update label
-        labelSlot.textContent = isDark ? 'Dark' : 'Light';
+        // Update label to match settings card text
+        labelSlot.textContent = isDark ? 'Turn off Dark Mode' : 'Turn on Dark Mode';
     }
 }
 
