@@ -23,7 +23,7 @@ class LabsFooter extends HTMLElement {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 20px 16px;
+          padding: 20px 32px;
           background: var(--color-footer-bg, var(--color-surface, #fff));
           backdrop-filter: blur(25px);
           -webkit-backdrop-filter: blur(16px);

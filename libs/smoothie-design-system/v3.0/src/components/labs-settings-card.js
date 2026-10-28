@@ -11,7 +11,9 @@ class LabsSettingsCard extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'hide-reset') this.render();
+    if (name === 'hide-reset') {
+      this._updateResetButton();
+    }
   }
 
   get hideReset() {
@@ -170,13 +172,6 @@ class LabsSettingsCard extends HTMLElement {
         ` : ''}
       </div>
     `;
-    // Add close event for icon button (dispatches a custom event for overlay to handle)
-    const iconCloseBtn = this.shadowRoot.getElementById('icon-close-btn');
-    if (iconCloseBtn) {
-      iconCloseBtn.addEventListener('click', () => {
-        this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
-      });
-    }
     // Wire All Apps selector to display dropdown menu
     const appsSlot = this.shadowRoot.getElementById('apps-selector-slot');
     if (appsSlot) {
@@ -278,33 +273,6 @@ class LabsSettingsCard extends HTMLElement {
         }
       }).catch(() => { });
 
-      // Wire reset button to dispatch a confirmed reset event
-      const resetBtn = this.shadowRoot.getElementById('reset-all-btn');
-      if (resetBtn) {
-        resetBtn.addEventListener('click', (e) => {
-          // Check if button is disabled and prevent action if so
-          if (resetBtn.hasAttribute('disabled')) {
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-          }
-
-          e.preventDefault();
-          // Skip confirmation if hide-confirmation attribute is set
-          if (this.hideConfirmation) {
-            this.dispatchEvent(new CustomEvent('reset-all', { bubbles: true, composed: true }));
-            // Close overlay after reset so the app can refresh UI
-            this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
-          } else {
-            const confirmed = window.confirm('Warning: This will delete all entries. Are you sure you want to continue?');
-            if (confirmed) {
-              this.dispatchEvent(new CustomEvent('reset-all', { bubbles: true, composed: true }));
-              // Close overlay after reset so the app can refresh UI
-              this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
-            }
-          }
-        });
-      }
       // Wire simulate next day button to dispatch a simulate event so apps can handle the behavior
       const simulateBtn = this.shadowRoot.getElementById('simulate-next-btn');
       if (simulateBtn) {
@@ -321,6 +289,60 @@ class LabsSettingsCard extends HTMLElement {
           // Also emit a close event so overlays listening for 'close' will close automatically
           this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
         });
+      }
+    }
+  }
+
+  connectedCallback() {
+    // Use requestAnimationFrame to ensure button is fully rendered before attaching listeners
+    requestAnimationFrame(() => this._attachEventListeners());
+  }
+
+  _attachEventListeners() {
+    // Attach close button event listener
+    const iconCloseBtn = this.shadowRoot.getElementById('icon-close-btn');
+    if (iconCloseBtn) {
+      iconCloseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
+      });
+    }
+
+    // Attach reset button event listener with confirmation
+    const resetBtn = this.shadowRoot.getElementById('reset-all-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', (e) => {
+        if (resetBtn.hasAttribute('disabled')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+
+        e.preventDefault();
+        // Skip confirmation if hide-confirmation attribute is set
+        if (this.hideConfirmation) {
+          this.dispatchEvent(new CustomEvent('reset-all', { bubbles: true, composed: true }));
+          this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
+        } else {
+          const confirmed = window.confirm('Warning: This will delete all entries. Are you sure you want to continue?');
+          if (confirmed) {
+            this.dispatchEvent(new CustomEvent('reset-all', { bubbles: true, composed: true }));
+            this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
+          }
+        }
+      });
+    }
+  }
+
+  _updateResetButton() {
+    // Toggle reset button visibility based on hide-reset attribute
+    const resetBtn = this.shadowRoot.getElementById('reset-all-btn');
+    if (resetBtn) {
+      if (this.hideReset) {
+        resetBtn.style.display = 'none';
+      } else {
+        resetBtn.style.display = '';
       }
     }
   }

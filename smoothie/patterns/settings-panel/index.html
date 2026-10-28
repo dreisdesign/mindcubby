@@ -4,10 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings Panel Pattern - Smoothie Design System</title>
+    <title>Settings Modal Pattern - Smoothie Design System</title>
     <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
-    <!-- Prevent FOUC by applying theme classes synchronously before CSS renders -->
     <script>
         (function () {
             const root = document.documentElement;
@@ -17,29 +16,20 @@
         })();
     </script>
     <script type="module">
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js';
+        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-overlay.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-dropdown.js';
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-checkbox.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
     </script>
     <style>
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
+        body, h1, h2, h3, p {
+            margin: 0;
             padding: 0;
-            margin: -1px;
-            overflow: auto;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border-width: 0;
         }
 
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
 
@@ -58,272 +48,66 @@
             margin: 0 auto;
         }
 
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--color-on-background, #333);
-        }
-
-        .subtitle {
-            color: var(--color-on-surface-variant, #999);
-            margin-bottom: 2rem;
-            font-size: 0.9rem;
-        }
-
-        .section {
-            margin-bottom: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .section h2 {
-            font-size: 1.25rem;
-            margin-bottom: 0;
-            font-weight: 600;
-            border-bottom: 1px solid var(--color-on-surface-variant, #ccc);
-            padding-bottom: 0.5rem;
-            color: var(--color-on-background, #333);
-        }
-
         .demo {
-            padding: 1.5rem;
+            padding: 1rem;
             background: var(--color-surface, #f5f5f5);
             border-radius: 8px;
             border: 1px solid var(--color-on-surface-variant, #ccc);
-        }
-
-        .demo p {
-            color: var(--color-on-surface-variant, #666);
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .settings-panel {
             display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            background: var(--color-background, #fff);
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid var(--color-on-surface-variant, #ccc);
-        }
-
-        .settings-row {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--color-on-surface-variant, #eee);
+            justify-content: center;
+            min-height: 100px;
+            position: relative;
         }
 
-        .settings-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .settings-label {
-            flex: 1;
-        }
-
-        .settings-label > div:first-child {
-            font-weight: 600;
-            color: var(--color-on-background);
-            margin-bottom: 0.25rem;
-        }
-
-        .settings-label > div:last-child {
-            font-size: 0.85rem;
-            color: var(--color-on-surface-variant, #999);
-        }
-
-        .settings-control {
-            flex: 0 0 auto;
-        }
-
-        .back-link {
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .back-link a {
-            color: var(--color-primary, #007acc);
-            text-decoration: none;
-        }
-
-        .back-link a:hover {
-            text-decoration: underline;
+        .demo labs-button {
+            position: static;
+            margin-left: auto;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <div class="back-link">
-            <a href="../">← Patterns</a>
-        </div>
-
-        <labs-page-layout title="Settings Panel Pattern" subtitle="Configuration and preference controls">
+        <labs-page-layout title="Settings Modal" subtitle="Pre-styled settings overlay component">
             <labs-breadcrumbs slot="breadcrumbs">
                 <a href="../../">Smoothie</a>
                 <a href="../">Patterns</a>
-                <span>Settings Panel Pattern</span>
+                <span>Settings Modal</span>
             </labs-breadcrumbs>
 
-            <section class="section">
-                <h2>Basic Settings</h2>
+            <section style="margin-top: 2rem;">
+                <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Component: labs-settings-card</h2>
+                <p style="color: var(--color-on-surface-variant, #999); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                    Standalone settings modal with theme selector, appearance toggle, and reset button. 
+                    Used inside <code>labs-overlay</code> or <code>labs-footer-settings-wrapper</code>.
+                    <br><br>
+                    <strong>Click "Open Settings" to see it in action</strong> — spacing and padding are part of the component.
+                </p>
                 <div class="demo">
-                    <p>Settings with labels and control (dropdown, checkbox, button).</p>
-                    <div class="settings-panel">
-                        <div class="settings-row">
-                            <div class="settings-label">
-                                <div>Theme</div>
-                                <div>Choose your preferred theme</div>
-                            </div>
-                            <div class="settings-control">
-                                <labs-dropdown>
-                                    <option>Vanilla</option>
-                                    <option>Blueberry</option>
-                                    <option>Strawberry</option>
-                                </labs-dropdown>
-                            </div>
-                        </div>
-
-                        <div class="settings-row">
-                            <div class="settings-label">
-                                <div>Notifications</div>
-                                <div>Receive push notifications</div>
-                            </div>
-                            <div class="settings-control">
-                                <labs-checkbox checked></labs-checkbox>
-                            </div>
-                        </div>
-
-                        <div class="settings-row">
-                            <div class="settings-label">
-                                <div>Auto-save</div>
-                                <div>Automatically save your changes</div>
-                            </div>
-                            <div class="settings-control">
-                                <labs-checkbox checked></labs-checkbox>
-                            </div>
-                        </div>
-
-                        <div class="settings-row">
-                            <div class="settings-label">
-                                <div>Language</div>
-                                <div>Select your language</div>
-                            </div>
-                            <div class="settings-control">
-                                <labs-dropdown>
-                                    <option>English</option>
-                                    <option>Spanish</option>
-                                    <option>French</option>
-                                    <option>German</option>
-                                </labs-dropdown>
-                            </div>
-                        </div>
-                    </div>
+                    <labs-overlay id="demo-overlay" size="medium" transparent>
+                        <labs-settings-card id="demo-card"></labs-settings-card>
+                    </labs-overlay>
+                    <labs-button id="demo-btn" variant="icon" size="large">
+                        <labs-icon slot="icon-left" name="settings" width="24" height="24"></labs-icon>
+                    </labs-button>
                 </div>
-            </section>
-
-            <section class="section">
-                <h2>Settings with Actions</h2>
-                <div class="demo">
-                    <p>Settings panel with action buttons at the bottom.</p>
-                    <div class="settings-panel">
-                        <div class="settings-row">
-                            <div class="settings-label">
-                                <div>Data & Privacy</div>
-                                <div>Manage your personal information</div>
-                            </div>
-                            <div class="settings-control">
-                                <labs-button variant="secondary" size="small">Manage</labs-button>
-                            </div>
-                        </div>
-
-                        <div class="settings-row">
-                            <div class="settings-label">
-                                <div>Connected Apps</div>
-                                <div>Apps with access to your account</div>
-                            </div>
-                            <div class="settings-control">
-                                <labs-button variant="secondary" size="small">View</labs-button>
-                            </div>
-                        </div>
-
-                        <div class="settings-row">
-                            <div class="settings-label">
-                                <div>Delete Account</div>
-                                <div>Permanently delete your account</div>
-                            </div>
-                            <div class="settings-control">
-                                <labs-button variant="secondary" size="small">Delete</labs-button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="section">
-                <h2>Best Practices</h2>
-                <ul style="margin-left: 1.5rem; color: var(--color-on-surface-variant, #666); font-size: 0.9rem;">
-                    <li style="margin-bottom: 0.5rem;">Group related settings together</li>
-                    <li style="margin-bottom: 0.5rem;">Provide clear labels and descriptions</li>
-                    <li style="margin-bottom: 0.5rem;">Use appropriate controls (dropdown, checkbox, button)</li>
-                    <li style="margin-bottom: 0.5rem;">Show current state clearly</li>
-                    <li style="margin-bottom: 0.5rem;">Provide clear action buttons for destructive operations</li>
-                </ul>
             </section>
         </labs-page-layout>
     </div>
 
-    <div class="floating-toolbar">
-        <labs-theme-button id="theme-selector"></labs-theme-button>
-        <labs-appearance-toggle id="appearance-toggle"></labs-appearance-toggle>
-    </div>
-
-    <script type="module">
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js';
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-appearance-toggle.js';
-
-        // Handle theme and appearance synchronization
-        document.addEventListener('theme-changed', (event) => {
-            const newTheme = event.detail.theme;
-            if (window.parent !== window) {
-                window.parent.postMessage({ type: 'smoothie-theme-update', theme: newTheme }, '*');
-            }
-        });
-
-        document.addEventListener('appearance-changed', (event) => {
-            const newAppearance = event.detail.appearance;
-            if (window.parent !== window) {
-                window.parent.postMessage({ type: 'smoothie-theme-update', appearance: newAppearance }, '*');
-            }
-        });
-
-        window.addEventListener('message', (event) => {
-            try {
-                if (event.data.type === 'smoothie-theme-update') {
-                    const root = document.documentElement;
-                    if (event.data.theme) {
-                        root.classList.remove('theme-vanilla', 'theme-blueberry', 'theme-strawberry');
-                        root.classList.add(`theme-${event.data.theme}`);
-                        localStorage.setItem('smoothie-theme', event.data.theme);
-                    }
-                    if (event.data.appearance) {
-                        root.classList.remove('appearance-light', 'appearance-dark');
-                        root.classList.add(`appearance-${event.data.appearance}`);
-                        localStorage.setItem('smoothie-appearance', event.data.appearance);
-                    }
-                }
-            } catch (e) {
-                // Silently fail if we can't access parent (cross-origin)
-            }
-        });
+    <script>
+        const demoBtn = document.getElementById('demo-btn');
+        const demoOverlay = document.getElementById('demo-overlay');
+        const demoCard = document.getElementById('demo-card');
+        
+        // Open overlay when button clicked
+        demoBtn.addEventListener('click', () => demoOverlay.toggle());
+        
+        // Close overlay when card close is triggered
+        if (demoCard && demoOverlay) {
+            demoCard.addEventListener('close', () => demoOverlay.close());
+        }
     </script>
-</body>
 
 </html>

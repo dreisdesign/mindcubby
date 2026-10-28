@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <meta property="og:image" content="/apple-touch-icon.png">
-    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=68">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=87">
     
     <script>
         (function () {
@@ -20,58 +20,22 @@
     </script>
 
     <script type="module">
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=68';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=68';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=68';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-card.js?v=68';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=68';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=68';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=68';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=68';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer-settings-wrapper.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=87';
     </script>
 </head>
 
 <body>
-    <!-- Appearance Controls Bar (full width: Theme + Appearance) -->
-    <labs-container full-width compact>
-        <labs-row-layout>
-            <div slot="start"></div>
-            <div slot="center"></div>
-            <div slot="end" style="display: flex; gap: 1rem;">
-                <labs-theme-button icon-only></labs-theme-button>
-                <labs-theme-toggle icon-only></labs-theme-toggle>
-            </div>
-        </labs-row-layout>
-    </labs-container>
+    <!-- Settings Modal in Footer -->
+    <labs-footer-settings-wrapper>
+        <div slot="left"></div>
+    </labs-footer-settings-wrapper>
 
-    <!-- Main Content (medium width) -->
+    <!-- Main Content -->
     <labs-container medium>
-        <labs-header center>
-            <div slot="title">Page Title</div>
-        </labs-header>
-
-        <main>
-            <labs-card>
-                <div slot="header">Sample Card</div>
-                <div slot="description">Welcome to the boilerplate template. This card demonstrates Smoothie components.</div>
-                <labs-button slot="actions" variant="primary">
-                    <labs-icon slot="icon-left" name="add"></labs-icon>
-                    Action
-                </labs-button>
-            </labs-card>
-        </main>
+        <h1>Page Title</h1>
+        <p>Your content here.</p>
     </labs-container>
-
-    <script>
-        // Theme toggle handles all theme management internally
-        // Just listen for theme changes if needed:
-        const themeToggle = document.querySelector('labs-theme-toggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('mode-changed', (e) => {
-                console.log('Theme changed to:', e.detail.mode);
-            });
-        }
-    </script>
 </body>
 
 </html>
