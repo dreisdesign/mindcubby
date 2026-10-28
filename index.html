@@ -88,6 +88,27 @@
             .social-label {
                 display: none;
             }
+            
+            /* Reduce heading size on mobile */
+            #social-buttons-heading {
+                font-size: 1.2rem !important;
+            }
+            
+            /* Remove button styling for icon-only compact view */
+            .social-btn {
+                --button-padding-inline: 0 !important;
+                --button-padding-block: 0 !important;
+                border: none !important;
+                background: transparent !important;
+                min-width: 36px !important;
+                height: 36px !important;
+            }
+            
+            /* Enlarge icons without button padding */
+            .social-btn img {
+                width: 28px !important;
+                height: 28px !important;
+            }
         }
     </style>
 
@@ -172,7 +193,7 @@
         <!-- Social Links Section with heading (right-aligned) -->
         <labs-container full-width compact slot="header">
             <labs-row-layout>
-                <h2 slot="start" style="font-size: 1.5rem; color: var(--color-primary); margin: 0; flex-shrink: 0;">
+                <h2 id="social-buttons-heading" slot="start" style="font-size: 1.5rem; color: var(--color-primary); margin: 0; flex-shrink: 0;">
                     From My Etsy Shop
                 </h2>
                 <div slot="end" id="social-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
