@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings Modal Pattern - Smoothie Design System</title>
+    <title>Modal Pattern - Smoothie Design System</title>
     <link rel="icon" href="../../../libs/smoothie-design-system/v3.0/labs_logo--smoothie.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../../../libs/smoothie-design-system/v3.0/styles/main.css">
     <script>
@@ -16,10 +16,8 @@
         })();
     </script>
     <script type="module">
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-overlay.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-button.js';
-        import '../../../libs/smoothie-design-system/v3.0/src/components/labs-icon.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-breadcrumbs.js';
         import '../../../libs/smoothie-design-system/v3.0/src/components/labs-page-layout.js';
     </script>
@@ -56,42 +54,76 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 0.5rem;
             min-height: 100px;
             position: relative;
         }
 
         .demo labs-button {
             position: static;
-            margin-left: auto;
+        }
+
+        .modal-content {
+            padding: 1.5rem;
+            color: var(--color-on-surface, #333);
+        }
+
+        .modal-content h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
+        }
+
+        .modal-content p {
+            margin: 0 0 1rem 0;
+            font-size: 0.9rem;
+            color: var(--color-on-surface-variant, #666);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <labs-page-layout title="Settings Modal" subtitle="Pre-styled settings overlay component">
+        <labs-page-layout title="Modal" subtitle="Generic overlay component for dialogs and content">
             <labs-breadcrumbs slot="breadcrumbs">
                 <a href="../../">Smoothie</a>
                 <a href="../">Patterns</a>
-                <span>Settings Modal</span>
+                <span>Modal</span>
             </labs-breadcrumbs>
 
             <section style="margin-top: 2rem;">
-                <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Component: labs-settings-card</h2>
+                <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Component: labs-overlay</h2>
                 <p style="color: var(--color-on-surface-variant, #999); margin-bottom: 1.5rem; font-size: 0.9rem;">
-                    Standalone settings modal with theme selector, appearance toggle, and reset button. 
-                    Used inside <code>labs-overlay</code> or <code>labs-footer-settings-wrapper</code>.
+                    Flexible overlay component for modal dialogs. Supports any content inside and can be sized to fit your needs.
                     <br><br>
-                    <strong>Click "Open Settings" to see it in action</strong> — spacing and padding are part of the component.
+                    <strong>Click "Open Modal" to see it in action</strong> — positioning and backdrop are handled by the component.
                 </p>
                 <div class="demo">
                     <labs-overlay id="demo-overlay" size="medium" transparent>
-                        <labs-settings-card id="demo-card"></labs-settings-card>
+                        <div class="modal-content">
+                            <h3>Modal Dialog</h3>
+                            <p>This is example content inside a modal overlay. Use it for any type of dialog or notification.</p>
+                            <div class="button-group">
+                                <labs-button variant="secondary" id="cancel-btn">Cancel</labs-button>
+                                <labs-button variant="primary" id="confirm-btn">Confirm</labs-button>
+                            </div>
+                        </div>
                     </labs-overlay>
-                    <labs-button id="demo-btn" variant="icon" size="large">
-                        <labs-icon slot="icon-left" name="settings" width="24" height="24"></labs-icon>
-                    </labs-button>
+                    <labs-button id="demo-btn" variant="primary">Open Modal</labs-button>
                 </div>
+            </section>
+
+            <section style="margin-top: 3rem;">
+                <h3 style="font-size: 1rem; margin-bottom: 1rem;">Related Patterns</h3>
+                <p style="color: var(--color-on-surface-variant, #999); font-size: 0.9rem;">
+                    <a href="../settings-modal/" style="color: var(--color-primary, #007bff); text-decoration: none;">Settings Modal</a> — 
+                    Modal configured with theme selector and appearance toggle
+                </p>
             </section>
         </labs-page-layout>
     </div>
@@ -99,15 +131,18 @@
     <script>
         const demoBtn = document.getElementById('demo-btn');
         const demoOverlay = document.getElementById('demo-overlay');
-        const demoCard = document.getElementById('demo-card');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const confirmBtn = document.getElementById('confirm-btn');
         
         // Open overlay when button clicked
         demoBtn.addEventListener('click', () => demoOverlay.toggle());
         
-        // Close overlay when card close is triggered
-        if (demoCard && demoOverlay) {
-            demoCard.addEventListener('close', () => demoOverlay.close());
-        }
+        // Close overlay when cancel or confirm clicked
+        cancelBtn.addEventListener('click', () => demoOverlay.close());
+        confirmBtn.addEventListener('click', () => {
+            console.log('Confirmed');
+            demoOverlay.close();
+        });
     </script>
 
 </html>
