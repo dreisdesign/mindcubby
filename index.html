@@ -141,17 +141,14 @@
 
         /* Very small screens: stack heading and buttons vertically */
         @media (max-width: 450px) {
-            labs-row-layout[id*="social"] {
+            /* Hide desktop version */
+            #social-desktop {
+                display: none !important;
+            }
+
+            /* Show mobile version */
+            #social-mobile {
                 display: flex !important;
-                flex-direction: column !important;
-            }
-
-            #social-buttons-heading {
-                margin-bottom: 0.5rem !important;
-            }
-
-            #social-buttons {
-                justify-content: flex-start !important;
             }
         }
     </style>
@@ -234,8 +231,8 @@
             </labs-row-layout>
         </labs-container>
 
-        <!-- Social Links Section with heading (right-aligned) -->
-        <labs-container full-width compact slot="header">
+        <!-- Social Links Section with heading (right-aligned) - DESKTOP -->
+        <labs-container id="social-desktop" full-width compact slot="header">
             <labs-row-layout>
                 <h2 id="social-buttons-heading" slot="start" style="font-size: 1.5rem; color: var(--color-primary); margin: 0; flex-shrink: 0;">
                     From My Etsy Shop
@@ -259,6 +256,25 @@
                     </labs-button>
                 </div>
             </labs-row-layout>
+        </labs-container>
+
+        <!-- Social Links Section - MOBILE -->
+        <labs-container id="social-mobile" full-width compact slot="header" style="display: none; flex-direction: column; gap: 0.5rem;">
+            <h2 style="font-size: 1rem; color: var(--color-primary); margin: 0;">From My Etsy Shop</h2>
+            <div style="display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: flex-start;">
+                <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.etsy.com/shop/MindCubby', '_blank')">
+                    <img slot="icon-left" src="/assets/logos/logos_Etsy--icon-circle.svg" alt="Etsy" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
+                </labs-button>
+                <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.tiktok.com/@mindcubby', '_blank')">
+                    <img slot="icon-left" src="/assets/logos/logos_TikTok--icon-circle.svg" alt="TikTok" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
+                </labs-button>
+                <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.youtube.com/@MindCubby', '_blank')">
+                    <img slot="icon-left" src="/assets/logos/logos_YouTube--icon-circle.svg" alt="YouTube" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
+                </labs-button>
+                <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.printables.com/@MindCubby/models', '_blank')">
+                    <img slot="icon-left" src="/assets/logos/logos_Printables--icon-circle.svg" alt="Printables" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
+                </labs-button>
+            </div>
         </labs-container>
 
         <!-- Content: Main scrollable area -->
