@@ -83,6 +83,74 @@
         .social-label {
             display: inline;
         }
+
+        /* Mindcubby Social Links Component Styles */
+        mindcubby-social-links {
+            display: block;
+        }
+
+        .mindcubby-social-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0;
+        }
+
+        .mindcubby-social-heading {
+            font-size: 1.5rem;
+            color: var(--color-primary);
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .mindcubby-social-buttons {
+            display: flex;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            flex: 1;
+        }
+
+        .mindcubby-social-buttons .social-btn {
+            min-width: 48px;
+            width: 48px;
+            height: 48px;
+            --button-padding-inline: 0 !important;
+            --button-padding-block: 0 !important;
+            --button-stroke-width: 0 !important;
+            border: none !important;
+            background: transparent !important;
+        }
+
+        .mindcubby-social-buttons .social-btn img {
+            width: 36px !important;
+            height: 36px !important;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        /* Tablet: hide labels */
+        @media (max-width: 800px) {
+            .mindcubby-social-buttons .social-label {
+                display: none;
+            }
+        }
+
+        /* Mobile: stack vertically */
+        @media (max-width: 500px) {
+            .mindcubby-social-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+                width: 100%;
+            }
+
+            .mindcubby-social-buttons {
+                justify-content: flex-start;
+                width: 100%;
+            }
+        }
     </style>
 
     <script>
@@ -429,7 +497,7 @@
         class MindCubbySocialLinks extends HTMLElement {
             constructor() {
                 super();
-                this.attachShadow({ mode: 'open' });
+                // Using light DOM to allow Smoothie styles to reach labs-button components
             }
 
             connectedCallback() {
@@ -458,86 +526,10 @@
                     </labs-button>
                 `).join('');
 
-                this.shadowRoot.innerHTML = `
-                    <style>
-                        :host {
-                            display: block;
-                        }
-
-                        .container {
-                            display: flex;
-                            align-items: center;
-                            justify-content: space-between;
-                            gap: 1rem;
-                            padding: 0;
-                        }
-
-                        .heading {
-                            font-size: 1.5rem;
-                            color: var(--color-primary, #2E2B74);
-                            margin: 0;
-                            flex-shrink: 0;
-                        }
-
-                        .buttons-wrapper {
-                            display: flex;
-                            gap: 0.25rem;
-                            flex-wrap: wrap;
-                            justify-content: flex-end;
-                            flex: 1;
-                        }
-
-                        .social-btn {
-                            min-width: 48px;
-                            width: 48px;
-                            height: 48px;
-                            --button-padding-inline: 0;
-                            --button-padding-block: 0;
-                            --button-stroke-width: 0;
-                            border: none;
-                            background: transparent;
-                        }
-
-                        .social-btn img {
-                            width: 36px;
-                            height: 36px;
-                            object-fit: contain;
-                            flex-shrink: 0;
-                        }
-
-                        .social-label {
-                            display: inline;
-                        }
-
-                        /* Tablet: hide labels */
-                        @media (max-width: 800px) {
-                            .social-label {
-                                display: none;
-                            }
-                        }
-
-                        /* Mobile: stack vertically */
-                        @media (max-width: 500px) {
-                            :host {
-                                width: 100%;
-                            }
-
-                            .container {
-                                flex-direction: column;
-                                align-items: flex-start;
-                                gap: 0.5rem;
-                            }
-
-                            .buttons-wrapper {
-                                justify-content: flex-start;
-                                width: 100%;
-                            }
-                        }
-                    </style>
-
-                    <div class="container">
-                        <h2 class="heading">${this.heading}</h2>
-                        <div class="buttons-wrapper">
+                this.innerHTML = `
+                    <div class="mindcubby-social-container">
+                        <h2 class="mindcubby-social-heading">${this.heading}</h2>
+                        <div class="mindcubby-social-buttons">
                             ${linksHTML}
                         </div>
                     </div>
@@ -545,7 +537,7 @@
 
                 // Add click handlers to all buttons after render
                 setTimeout(() => {
-                    this.shadowRoot.querySelectorAll('.social-btn').forEach((btn, idx) => {
+                    this.querySelectorAll('.social-btn').forEach((btn, idx) => {
                         if (links[idx]) {
                             btn.addEventListener('click', () => {
                                 window.open(links[idx].url, '_blank');
