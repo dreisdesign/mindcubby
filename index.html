@@ -535,16 +535,17 @@
                     </div>
                 `;
 
-                // Add click handlers to all buttons after render
-                setTimeout(() => {
-                    this.querySelectorAll('.social-btn').forEach((btn, idx) => {
-                        if (links[idx]) {
-                            btn.addEventListener('click', () => {
-                                window.open(links[idx].url, '_blank');
-                            });
-                        }
+                // Wait for labs-button web components to upgrade, then add click handlers
+                Promise.all([...this.querySelectorAll('labs-button')].map(btn => customElements.whenDefined('labs-button')))
+                    .then(() => {
+                        this.querySelectorAll('.social-btn').forEach((btn, idx) => {
+                            if (links[idx]) {
+                                btn.addEventListener('click', () => {
+                                    window.open(links[idx].url, '_blank');
+                                });
+                            }
+                        });
                     });
-                }, 0);
             }
         }
 
