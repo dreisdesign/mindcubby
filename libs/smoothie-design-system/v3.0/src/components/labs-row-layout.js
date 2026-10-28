@@ -47,10 +47,10 @@ class LabsRowLayout extends HTMLElement {
       <div class="slot-start">
         <slot name="start"></slot>
       </div>
-      <div class="slot-center">
+      <div class="slot-center" part="slot-center">
         <slot name="center"></slot>
       </div>
-      <div class="slot-end">
+      <div class="slot-end" part="slot-end">
         <slot name="end"></slot>
       </div>
     `;
