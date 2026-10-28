@@ -83,69 +83,6 @@
         .social-label {
             display: inline;
         }
-
-        /* Desktop social buttons: large icons */
-        .social-btn {
-            min-width: 48px !important;
-            width: 48px !important;
-            height: 48px !important;
-        }
-
-        .social-btn img {
-            width: 36px !important;
-            height: 36px !important;
-        }
-
-        /* Reduce gap between buttons */
-        #social-buttons {
-            gap: 0.25rem !important;
-        }
-
-        /* Responsive social buttons: hide text labels on tablet and smaller */
-        @media (max-width: 800px) {
-            .social-label {
-                display: none;
-            }
-            
-            /* Make buttons container flexible to use available space */
-            #social-buttons {
-                gap: 0.25rem !important;
-                flex: 1 1 auto !important;
-                justify-content: flex-end !important;
-                padding: 0 !important;
-            }
-            
-            /* Remove button styling for icon-only compact view */
-            .social-btn {
-                --button-padding-inline: 0 !important;
-                --button-padding-block: 0 !important;
-                --button-stroke-width: 0 !important;
-                border: none !important;
-                background: transparent !important;
-                min-width: 48px !important;
-                width: 48px !important;
-                height: 48px !important;
-            }
-            
-            /* Enlarge icons without button padding */
-            .social-btn img {
-                width: 36px !important;
-                height: 36px !important;
-            }
-        }
-
-        /* Very small screens: stack heading and buttons vertically */
-        @media (max-width: 500px) {
-            /* Hide desktop version */
-            #social-desktop {
-                display: none !important;
-            }
-
-            /* Show mobile version */
-            #social-mobile {
-                display: flex !important;
-            }
-        }
     </style>
 
     <script>
@@ -226,51 +163,17 @@
             </labs-row-layout>
         </labs-container>
 
-        <!-- Social Links Section with heading (right-aligned) - DESKTOP -->
-        <labs-container id="social-desktop" full-width compact slot="header">
-            <labs-row-layout>
-                <h2 id="social-buttons-heading" slot="start" style="font-size: 1.5rem; color: var(--color-primary); margin: 0; flex-shrink: 0;">
-                    From My Etsy Shop
-                </h2>
-                <div slot="end" id="social-buttons" style="display: flex; flex-wrap: wrap; justify-content: flex-end;">
-                    <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.etsy.com/shop/MindCubby', '_blank')">
-                        <img slot="icon-left" src="/assets/logos/logos_Etsy--icon-circle.svg" alt="Etsy" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                        <span class="social-label">Etsy</span>
-                    </labs-button>
-                    <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.tiktok.com/@mindcubby', '_blank')">
-                        <img slot="icon-left" src="/assets/logos/logos_TikTok--icon-circle.svg" alt="TikTok" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                        <span class="social-label">TikTok</span>
-                    </labs-button>
-                    <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.youtube.com/@MindCubby', '_blank')">
-                        <img slot="icon-left" src="/assets/logos/logos_YouTube--icon-circle.svg" alt="YouTube" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                        <span class="social-label">YouTube</span>
-                    </labs-button>
-                    <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.printables.com/@MindCubby/models', '_blank')">
-                        <img slot="icon-left" src="/assets/logos/logos_Printables--icon-circle.svg" alt="Printables" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                        <span class="social-label">Printables</span>
-                    </labs-button>
-                </div>
-            </labs-row-layout>
-        </labs-container>
-
-        <!-- Social Links Section - MOBILE -->
-        <labs-container id="social-mobile" full-width compact slot="header" style="display: none; flex-direction: column; gap: 0.5rem;">
-            <div style="display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: flex-start;">
-                <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.etsy.com/shop/MindCubby', '_blank')">
-                    <img slot="icon-left" src="/assets/logos/logos_Etsy--icon-circle.svg" alt="Etsy" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                </labs-button>
-                <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.tiktok.com/@mindcubby', '_blank')">
-                    <img slot="icon-left" src="/assets/logos/logos_TikTok--icon-circle.svg" alt="TikTok" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                </labs-button>
-                <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.youtube.com/@MindCubby', '_blank')">
-                    <img slot="icon-left" src="/assets/logos/logos_YouTube--icon-circle.svg" alt="YouTube" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                </labs-button>
-                <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.printables.com/@MindCubby/models', '_blank')">
-                    <img slot="icon-left" src="/assets/logos/logos_Printables--icon-circle.svg" alt="Printables" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                </labs-button>
-            </div>
-            <h2 style="font-size: 1.5rem; color: var(--color-primary); margin: 0;">From My Etsy Shop</h2>
-        </labs-container>
+        <!-- Social Links Component (responsive, encapsulated) -->
+        <mindcubby-social-links 
+            slot="header"
+            heading="From My Etsy Shop"
+            social-links='[
+                {"name": "Etsy", "url": "https://www.etsy.com/shop/MindCubby", "icon": "/assets/logos/logos_Etsy--icon-circle.svg"},
+                {"name": "TikTok", "url": "https://www.tiktok.com/@mindcubby", "icon": "/assets/logos/logos_TikTok--icon-circle.svg"},
+                {"name": "YouTube", "url": "https://www.youtube.com/@MindCubby", "icon": "/assets/logos/logos_YouTube--icon-circle.svg"},
+                {"name": "Printables", "url": "https://www.printables.com/@MindCubby/models", "icon": "/assets/logos/logos_Printables--icon-circle.svg"}
+            ]'>
+        </mindcubby-social-links>
 
         <!-- Content: Main scrollable area -->
         <labs-container full-width slot="content">
@@ -511,6 +414,151 @@
     </labs-footer-layout>
 
     <script>
+        /**
+         * MindCubby Social Links Component
+         * 
+         * NOTE: This component will be extracted to the Smoothie design system
+         * at /libs/smoothie-design-system/v3.0/components/social-links/
+         * 
+         * Encapsulates responsive social media button layout with:
+         * - Automatic desktop/mobile layout switching
+         * - All styling internal (no inline styles needed)
+         * - Configurable social networks
+         * - Icon-only at mobile, text+icons at desktop
+         */
+        class MindCubbySocialLinks extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
+            }
+
+            connectedCallback() {
+                this.render();
+            }
+
+            get heading() {
+                return this.getAttribute('heading') || 'From My Etsy Shop';
+            }
+
+            get socialLinks() {
+                try {
+                    return JSON.parse(this.getAttribute('social-links') || '[]');
+                } catch {
+                    return [];
+                }
+            }
+
+            render() {
+                const links = this.socialLinks;
+                
+                const linksHTML = links.map(link => `
+                    <labs-button variant="icon" size="small" class="social-btn" aria-label="${link.name}">
+                        <img slot="icon-left" src="${link.icon}" alt="${link.name}" />
+                        <span class="social-label">${link.name}</span>
+                    </labs-button>
+                `).join('');
+
+                this.shadowRoot.innerHTML = `
+                    <style>
+                        :host {
+                            display: block;
+                        }
+
+                        .container {
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            gap: 1rem;
+                            padding: 0;
+                        }
+
+                        .heading {
+                            font-size: 1.5rem;
+                            color: var(--color-primary, #2E2B74);
+                            margin: 0;
+                            flex-shrink: 0;
+                        }
+
+                        .buttons-wrapper {
+                            display: flex;
+                            gap: 0.25rem;
+                            flex-wrap: wrap;
+                            justify-content: flex-end;
+                            flex: 1;
+                        }
+
+                        .social-btn {
+                            min-width: 48px;
+                            width: 48px;
+                            height: 48px;
+                            --button-padding-inline: 0;
+                            --button-padding-block: 0;
+                            --button-stroke-width: 0;
+                            border: none;
+                            background: transparent;
+                        }
+
+                        .social-btn img {
+                            width: 36px;
+                            height: 36px;
+                            object-fit: contain;
+                            flex-shrink: 0;
+                        }
+
+                        .social-label {
+                            display: inline;
+                        }
+
+                        /* Tablet: hide labels */
+                        @media (max-width: 800px) {
+                            .social-label {
+                                display: none;
+                            }
+                        }
+
+                        /* Mobile: stack vertically */
+                        @media (max-width: 500px) {
+                            :host {
+                                width: 100%;
+                            }
+
+                            .container {
+                                flex-direction: column;
+                                align-items: flex-start;
+                                gap: 0.5rem;
+                            }
+
+                            .buttons-wrapper {
+                                justify-content: flex-start;
+                                width: 100%;
+                            }
+                        }
+                    </style>
+
+                    <div class="container">
+                        <h2 class="heading">${this.heading}</h2>
+                        <div class="buttons-wrapper">
+                            ${linksHTML}
+                        </div>
+                    </div>
+                `;
+
+                // Add click handlers to all buttons after render
+                setTimeout(() => {
+                    this.shadowRoot.querySelectorAll('.social-btn').forEach((btn, idx) => {
+                        if (links[idx]) {
+                            btn.addEventListener('click', () => {
+                                window.open(links[idx].url, '_blank');
+                            });
+                        }
+                    });
+                }, 0);
+            }
+        }
+
+        // Register the component
+        customElements.define('mindcubby-social-links', MindCubbySocialLinks);
+
         // Navigation menu wiring
         const navBtn = document.getElementById('nav-menu-btn');
         const navModal = document.getElementById('nav-modal');
