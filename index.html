@@ -138,6 +138,22 @@
                 height: 36px !important;
             }
         }
+
+        /* Very small screens: stack heading and buttons vertically */
+        @media (max-width: 450px) {
+            labs-row-layout[id*="social"] {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            #social-buttons-heading {
+                margin-bottom: 0.5rem !important;
+            }
+
+            #social-buttons {
+                justify-content: flex-start !important;
+            }
+        }
     </style>
 
     <script>
