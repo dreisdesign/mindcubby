@@ -84,6 +84,23 @@
             display: inline;
         }
 
+        /* Desktop social buttons: large icons */
+        .social-btn {
+            min-width: 48px !important;
+            width: 48px !important;
+            height: 48px !important;
+        }
+
+        .social-btn img {
+            width: 36px !important;
+            height: 36px !important;
+        }
+
+        /* Reduce gap between buttons */
+        #social-buttons {
+            gap: 0.25rem !important;
+        }
+
         /* Responsive social buttons: hide text labels on tablet and smaller */
         @media (max-width: 800px) {
             .social-label {
@@ -207,7 +224,7 @@
                 <h2 id="social-buttons-heading" slot="start" style="font-size: 1.5rem; color: var(--color-primary); margin: 0; flex-shrink: 0;">
                     From My Etsy Shop
                 </h2>
-                <div slot="end" id="social-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
+                <div slot="end" id="social-buttons" style="display: flex; flex-wrap: wrap; justify-content: flex-end;">
                     <labs-button variant="icon" size="small" class="social-btn" onclick="window.open('https://www.etsy.com/shop/MindCubby', '_blank')">
                         <img slot="icon-left" src="/assets/logos/logos_Etsy--icon-circle.svg" alt="Etsy" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
                         <span class="social-label">Etsy</span>
