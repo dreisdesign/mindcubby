@@ -1,12 +1,18 @@
-# Settings Modal Usage Guide
+# Modal & Settings Modal Usage Guide
 
 ## Overview
-The Smoothie settings modal is a production-ready component for theme and appearance management. It can be used in three different integration patterns depending on your app's layout.
+Smoothie provides overlay components for dialogs and modals. The `labs-overlay` component is flexible and can contain any content. For theme and appearance management, use `labs-settings-card` inside the overlay.
 
 ## Components
 
+### `labs-overlay`
+The core overlay/modal component that positions content centered on screen with a backdrop.
+- Customizable sizing (small, medium, large)
+- Transparent or opaque backdrop options
+- Flexible content support (any HTML/Web Components)
+
 ### `labs-settings-card`
-The core settings component with:
+Pre-built settings component containing:
 - Theme selector ("All Apps" - affects all Smoothie apps)
 - Appearance toggle (Light/Dark mode)
 - Reset button (optional, can be hidden with `hide-reset` attribute)
@@ -15,12 +21,13 @@ The core settings component with:
 Choose based on your layout:
 
 1. **`labs-footer-settings-wrapper`** - Complete footer + overlay + settings
-2. **`labs-overlay` + `labs-settings-card`** - Just modal, positioned anywhere
-3. **Manual overlay wiring** - Maximum control
+2. **`labs-overlay` + `labs-settings-card`** - Settings modal positioned anywhere
+3. **`labs-overlay` + custom content** - Generic modal for any content
+4. **Manual overlay wiring** - Maximum control
 
 ## Usage Patterns
 
-### Pattern A: Top-Right Icon Button (Recommended for modal UX)
+### Pattern A: Top-Right Modal Button (Recommended for MindCubby)
 Perfect for app headers/top bars. Settings icon opens modal overlay.
 
 ```html
@@ -49,7 +56,27 @@ Perfect for app headers/top bars. Settings icon opens modal overlay.
 </script>
 ```
 
-### Pattern B: Footer Integration (Full layout apps)
+### Pattern B: Generic Modal Dialog
+Use for any custom content - forms, confirmation dialogs, notifications, etc.
+
+```html
+<labs-overlay id="my-modal" size="medium" transparent>
+  <div style="padding: 1.5rem;">
+    <h2>Dialog Title</h2>
+    <p>Your content here</p>
+    <button>Close</button>
+  </div>
+</labs-overlay>
+
+<button id="open-btn">Open Modal</button>
+
+<script>
+  document.getElementById('open-btn').addEventListener('click', 
+    () => document.getElementById('my-modal').toggle());
+</script>
+```
+
+### Pattern C: Footer Integration (Full layout apps)
 Use when your app has a sticky footer.
 
 ```html
@@ -68,15 +95,6 @@ Use when your app has a sticky footer.
 </labs-footer-layout>
 ```
 
-### Pattern C: Minimal Boilerplate
-Simplest footer setup without full layout.
-
-```html
-<labs-footer-settings-wrapper>
-  <div slot="left"></div>
-</labs-footer-settings-wrapper>
-```
-
 ## Features
 
 ### Theme Persistence
@@ -91,13 +109,20 @@ Hide the reset button:
 ```
 
 ### Events
-The card dispatches events for app-level handling:
+The settings card dispatches events for app-level handling:
 - `close` - User clicked X or overlay backdrop
 - `reset-all` - User confirmed reset (listen at app level if needed)
 
+## Showcase Pages
+
+- **Modal:** `/smoothie/patterns/modal/` - Generic overlay component
+- **Settings Modal:** `/smoothie/patterns/settings-modal/` - Overlay with settings card
+- **Footer Pattern:** `/smoothie/patterns/footer/` - Demonstrates footer integration
+- **Footer with Settings:** `/smoothie/patterns/footer-with-settings/` - Complete footer example
+
 ## MindCubby Implementation
 
-Replace the separate theme + appearance buttons with the unified settings modal:
+Replace the separate theme + appearance buttons with a unified settings modal:
 
 **Before:**
 ```html
@@ -112,22 +137,18 @@ Replace the separate theme + appearance buttons with the unified settings modal:
 </labs-button>
 
 <labs-overlay id="settings-overlay" size="medium" transparent>
-  <labs-settings-card></labs-settings-card>
+  <labs-settings-card id="settings-card"></labs-settings-card>
 </labs-overlay>
 
 <script>
-  document.getElementById('settings-btn').addEventListener('click', 
-    () => document.getElementById('settings-overlay').toggle());
-  document.getElementById('settings-card').addEventListener('close',
-    () => document.getElementById('settings-overlay').close());
+  const btn = document.getElementById('settings-btn');
+  const overlay = document.getElementById('settings-overlay');
+  const card = document.getElementById('settings-card');
+  
+  btn.addEventListener('click', () => overlay.toggle());
+  card.addEventListener('close', () => overlay.close());
 </script>
 ```
-
-## Showcase Pages
-
-- **Settings Modal:** `/smoothie/patterns/settings-panel/`
-- **Footer Pattern:** `/smoothie/patterns/footer/`
-- **Footer with Settings:** `/smoothie/patterns/footer-with-settings/`
 
 ## Browser Support
 Works in all modern browsers supporting:
