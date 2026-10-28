@@ -96,12 +96,13 @@
         import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=87';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=87';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-toggle.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-footer.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-product-card.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-mobile-menu.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-overlay.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js?v=87';
     </script>
 </head>
 
@@ -132,12 +133,15 @@
                     </svg>
                 </h1>
                 <div class="header-controls" slot="end">
-                    <!-- Desktop + Mobile responsive menu (component handles breakpoint) -->
-                    <labs-mobile-menu breakpoint="700px">
-                        <labs-theme-button icon-only slot="menu-item"></labs-theme-button>
-                        <labs-theme-toggle icon-only slot="menu-item"></labs-theme-toggle>
-                    </labs-mobile-menu>
+                    <labs-button id="nav-menu-btn" variant="icon" size="large">
+                        <labs-icon slot="icon-left" name="menu"></labs-icon>
+                    </labs-button>
                 </div>
+
+                <!-- Navigation Modal -->
+                <labs-overlay id="nav-modal" size="medium" transparent>
+                    <labs-settings-card id="nav-settings-card"></labs-settings-card>
+                </labs-overlay>
             </labs-row-layout>
         </labs-container>
 
@@ -381,13 +385,13 @@
     </labs-footer-layout>
 
     <script>
-        // Theme toggle handles all theme management internally
-        const themeToggle = document.querySelector('labs-theme-toggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('mode-changed', (e) => {
-                console.log('Theme changed to:', e.detail.mode);
-            });
-        }
+        // Navigation menu wiring
+        const navBtn = document.getElementById('nav-menu-btn');
+        const navModal = document.getElementById('nav-modal');
+        const settingsCard = document.getElementById('nav-settings-card');
+        
+        navBtn.addEventListener('click', () => navModal.toggle());
+        settingsCard.addEventListener('close', () => navModal.close());
     </script>
 </body>
 
