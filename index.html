@@ -139,7 +139,30 @@
                 <div class="header-controls" slot="end">
                     <labs-overlay id="nav-modal" size="medium" transparent>
                         <labs-modal-card id="nav-modal-card">
-                            <labs-settings-card id="nav-settings-card"></labs-settings-card>
+                            <!-- Header -->
+                            <div slot="header" style="text-align: left;">
+                                <h2 style="margin: 0; font-size: 1.25rem; color: var(--color-on-surface);">Settings</h2>
+                            </div>
+                            
+                            <!-- Content: Recreate settings buttons via slots -->
+                            <div slot="content" style="display: flex; flex-direction: column; gap: 1rem;">
+                                <labs-button variant="secondary" style="width: 100%;">
+                                    <labs-icon slot="icon-left" name="apps"></labs-icon>
+                                    All Apps
+                                </labs-button>
+                                <labs-button variant="secondary" style="width: 100%;">
+                                    <labs-icon slot="icon-left" name="bedtime"></labs-icon>
+                                    Turn on dark mode
+                                </labs-button>
+                                <labs-button variant="secondary" style="width: 100%;">
+                                    <labs-icon slot="icon-left" name="colors"></labs-icon>
+                                    Vanilla
+                                </labs-button>
+                                <labs-button variant="destructive" style="width: 100%;">
+                                    <labs-icon slot="icon-left" name="delete"></labs-icon>
+                                    Reset
+                                </labs-button>
+                            </div>
                         </labs-modal-card>
                     </labs-overlay>
                     <labs-button id="nav-menu-btn" variant="icon" size="large" aria-label="Open menu">
@@ -392,13 +415,12 @@
         // Navigation menu wiring
         const navBtn = document.getElementById('nav-menu-btn');
         const navModal = document.getElementById('nav-modal');
-        const settingsCard = document.getElementById('nav-settings-card');
         
         // Open overlay when button clicked
         navBtn.addEventListener('click', () => navModal.toggle());
         
-        // Close overlay when settings card close is triggered
-        settingsCard.addEventListener('close', () => navModal.close());
+        // Close on backdrop click (handled by labs-overlay)
+        // Settings card close event no longer needed since we're using custom buttons
     </script>
 </body>
 
