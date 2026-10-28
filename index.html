@@ -140,13 +140,13 @@
                         <labs-icon slot="icon-left" name="more_vert"></labs-icon>
                     </labs-button>
                 </div>
-
-                <!-- Navigation Modal -->
-                <labs-overlay id="nav-modal" size="medium" transparent>
-                    <labs-settings-card id="nav-settings-card"></labs-settings-card>
-                </labs-overlay>
             </labs-row-layout>
         </labs-container>
+
+        <!-- Navigation Modal (outside layout for proper z-index) -->
+        <labs-overlay id="nav-modal" size="medium" transparent>
+            <labs-settings-card id="nav-settings-card"></labs-settings-card>
+        </labs-overlay>
 
         <!-- Content: Main scrollable area -->
         <labs-container full-width slot="content">
