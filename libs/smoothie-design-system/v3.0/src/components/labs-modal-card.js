@@ -1,5 +1,5 @@
-// Labs Modal Card - flexible modal content wrapper with slots
-// Allows custom content injection while maintaining consistent styling
+// Labs Modal Card - flexible modal content wrapper with named slots
+// Allows custom content injection (header, content, footer) while maintaining consistent styling
 class LabsModalCard extends HTMLElement {
   constructor() {
     super();
@@ -22,17 +22,42 @@ class LabsModalCard extends HTMLElement {
           position: relative;
         }
 
-        /* Default slot for main content */
-        ::slotted(*) {
-          all: initial;
+        .modal-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
         }
 
+        /* Header slot */
+        ::slotted([slot="header"]) {
+          margin: 0 0 1rem 0;
+          padding: 0 0 1rem 0;
+          border-bottom: 1px solid var(--color-on-surface-variant, #ddd);
+        }
+
+        /* Content slot (default) - main content area */
+        ::slotted([slot="content"]),
         ::slotted(labs-settings-card) {
-          all: revert;
+          flex: 1;
+        }
+
+        /* Footer slot */
+        ::slotted([slot="footer"]) {
+          margin: 1rem 0 0 0;
+          padding: 1rem 0 0 0;
+          border-top: 1px solid var(--color-on-surface-variant, #ddd);
+          font-size: 0.875rem;
         }
       </style>
 
-      <slot></slot>
+      <div class="modal-container">
+        <slot name="header"></slot>
+        <slot name="content">
+          <!-- Default slot for main content (e.g., labs-settings-card) -->
+          <slot></slot>
+        </slot>
+        <slot name="footer"></slot>
+      </div>
     `;
   }
 }
