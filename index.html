@@ -105,8 +105,9 @@
         import '/libs/smoothie-design-system/v3.0/src/components/labs-mobile-menu.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-overlay.js?v=87';
-        import '/libs/smoothie-design-system/v3.0/src/components/labs-settings-card.js?v=87';
         import '/libs/smoothie-design-system/v3.0/src/components/labs-modal-card.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-appearance-toggle.js?v=87';
     </script>
 </head>
 
@@ -144,24 +145,10 @@
                                 <h2 style="margin: 0; font-size: 1.25rem; color: var(--color-on-surface);">Settings</h2>
                             </div>
                             
-                            <!-- Content: Recreate settings buttons via slots -->
+                            <!-- Content: Use Smoothie components for theme and appearance -->
                             <div slot="content" style="display: flex; flex-direction: column; gap: 1rem;">
-                                <labs-button variant="secondary" style="width: 100%;">
-                                    <labs-icon slot="icon-left" name="apps"></labs-icon>
-                                    All Apps
-                                </labs-button>
-                                <labs-button variant="secondary" style="width: 100%;">
-                                    <labs-icon slot="icon-left" name="bedtime"></labs-icon>
-                                    Turn on dark mode
-                                </labs-button>
-                                <labs-button variant="secondary" style="width: 100%;">
-                                    <labs-icon slot="icon-left" name="colors"></labs-icon>
-                                    Vanilla
-                                </labs-button>
-                                <labs-button variant="destructive" style="width: 100%;">
-                                    <labs-icon slot="icon-left" name="delete"></labs-icon>
-                                    Reset
-                                </labs-button>
+                                <labs-theme-button style="width: 100%;"></labs-theme-button>
+                                <labs-appearance-toggle style="width: 100%;"></labs-appearance-toggle>
                             </div>
                         </labs-modal-card>
                     </labs-overlay>
