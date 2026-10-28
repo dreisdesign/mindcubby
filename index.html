@@ -82,6 +82,13 @@
         .social-label {
             display: inline;
         }
+
+        /* Responsive social buttons: hide text labels on tablet and smaller */
+        @media (max-width: 800px) {
+            .social-label {
+                display: none;
+            }
+        }
     </style>
 
     <script>
@@ -162,26 +169,31 @@
             </labs-row-layout>
         </labs-container>
 
-        <!-- Social Links Section (below header, left-aligned) -->
-        <labs-container full-width compact slot="header" style="padding-top: 1rem;">
-            <div id="social-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <labs-button variant="secondary" size="small" class="social-btn" onclick="window.open('https://www.etsy.com/shop/MindCubby', '_blank')">
-                    <img slot="icon-left" src="/assets/logos/logos_Etsy--icon-circle.svg" alt="Etsy" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                    <span class="social-label">Etsy</span>
-                </labs-button>
-                <labs-button variant="secondary" size="small" class="social-btn" onclick="window.open('https://www.tiktok.com/@mindcubby', '_blank')">
-                    <img slot="icon-left" src="/assets/logos/logos_TikTok--icon-circle.svg" alt="TikTok" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                    <span class="social-label">TikTok</span>
-                </labs-button>
-                <labs-button variant="secondary" size="small" class="social-btn" onclick="window.open('https://www.youtube.com/@MindCubby', '_blank')">
-                    <img slot="icon-left" src="/assets/logos/logos_YouTube--icon-circle.svg" alt="YouTube" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                    <span class="social-label">YouTube</span>
-                </labs-button>
-                <labs-button variant="secondary" size="small" class="social-btn" onclick="window.open('https://www.printables.com/@MindCubby/models', '_blank')">
-                    <img slot="icon-left" src="/assets/logos/logos_Printables--icon-circle.svg" alt="Printables" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
-                    <span class="social-label">Printables</span>
-                </labs-button>
-            </div>
+        <!-- Social Links Section with heading (right-aligned) -->
+        <labs-container full-width compact slot="header">
+            <labs-row-layout>
+                <h2 slot="start" style="font-size: 1.5rem; color: var(--color-primary); margin: 0; flex-shrink: 0;">
+                    From My Etsy Shop
+                </h2>
+                <div slot="end" id="social-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
+                    <labs-button variant="secondary" size="small" class="social-btn" onclick="window.open('https://www.etsy.com/shop/MindCubby', '_blank')">
+                        <img slot="icon-left" src="/assets/logos/logos_Etsy--icon-circle.svg" alt="Etsy" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
+                        <span class="social-label">Etsy</span>
+                    </labs-button>
+                    <labs-button variant="secondary" size="small" class="social-btn" onclick="window.open('https://www.tiktok.com/@mindcubby', '_blank')">
+                        <img slot="icon-left" src="/assets/logos/logos_TikTok--icon-circle.svg" alt="TikTok" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
+                        <span class="social-label">TikTok</span>
+                    </labs-button>
+                    <labs-button variant="secondary" size="small" class="social-btn" onclick="window.open('https://www.youtube.com/@MindCubby', '_blank')">
+                        <img slot="icon-left" src="/assets/logos/logos_YouTube--icon-circle.svg" alt="YouTube" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
+                        <span class="social-label">YouTube</span>
+                    </labs-button>
+                    <labs-button variant="secondary" size="small" class="social-btn" onclick="window.open('https://www.printables.com/@MindCubby/models', '_blank')">
+                        <img slot="icon-left" src="/assets/logos/logos_Printables--icon-circle.svg" alt="Printables" style="width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;">
+                        <span class="social-label">Printables</span>
+                    </labs-button>
+                </div>
+            </labs-row-layout>
         </labs-container>
 
         <!-- Content: Main scrollable area -->
@@ -190,8 +202,6 @@
             <main style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
                 <!-- Products Grid (left ~2/3) -->
                 <div style="flex: 2; min-width: 280px;">
-                    <h2 style="font-size: 1.5rem; color: var(--color-primary); margin-bottom: 1.5rem; margin-top: 0;">
-                        From My Etsy Shop</h2>
                     <labs-grid>
 
 
