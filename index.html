@@ -393,8 +393,23 @@
         const navModal = document.getElementById('nav-modal');
         const settingsCard = document.getElementById('nav-settings-card');
         
-        navBtn.addEventListener('click', () => navModal.toggle());
-        settingsCard.addEventListener('close', () => navModal.close());
+        console.log('navBtn:', navBtn);
+        console.log('navModal:', navModal);
+        console.log('settingsCard:', settingsCard);
+        
+        if (navBtn && navModal) {
+            navBtn.addEventListener('click', () => {
+                console.log('Menu button clicked');
+                navModal.toggle();
+            });
+        }
+        
+        if (settingsCard && navModal) {
+            settingsCard.addEventListener('close', () => {
+                console.log('Settings card close event');
+                navModal.close();
+            });
+        }
     </script>
 </body>
 
