@@ -1,0 +1,17 @@
+/* ── Theme transition ────────────────────────────────────────────────────────── */
+
+html {
+    transition: background-color 0.25s, color 0.25s;
+}
+
+.container,
+.controls-bar,
+.settings-panel,
+.radio-option,
+.color-option,
+select {
+    transition: background 0.25s, border-color 0.25s, color 0.2s;
+}
+
+
+

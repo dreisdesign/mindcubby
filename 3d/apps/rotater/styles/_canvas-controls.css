@@ -1,0 +1,44 @@
+/* ── Controls bar reset camera button ── */
+
+.reset-cam-btn {
+    margin-left: auto;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: var(--text-md);
+    font-weight: 600;
+    background: transparent;
+    border: 1px solid #ccc;
+    color: #666;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.reset-cam-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* ── Controls bar (loaded) ── */
+
+html.loaded .controls-bar {
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+    position: relative;
+    gap: 16px;
+    border-top: none;
+    padding: 20px;
+    background: var(--color-surface);
+    transition: background 0.2s, border-color 0.2s;
+}
+
+html.loaded .controls-bar.hidden {
+    display: none !important;
+}
+

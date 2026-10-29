@@ -1,0 +1,73 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+:root {
+    /* ── Blueberry palette ── */
+    --palette-blueberry-100: #F0EEFF;
+    --palette-blueberry-200: #DBD7FF;
+    --palette-blueberry-300: #B3A8F7;
+    --palette-blueberry-500: #2E2B74;
+    --palette-blueberry-800: #1E193E;
+    --palette-blueberry-900: #15122B;
+
+    /* ── Global palette ── */
+    --palette-base-100: #FBFBFD;
+    --palette-base-800: #2A2A30;
+    --palette-green-500: #00800C;
+    --palette-yellow-500: #FFB300;
+    --palette-red-500: #D32F2F;
+
+    /* ── Semantic — Blueberry theme ── */
+    --color-primary: var(--palette-blueberry-500);
+    --color-primary-darker: var(--palette-blueberry-800);
+    --color-primary-lighter: var(--palette-blueberry-300);
+    --color-background-darkest: var(--palette-blueberry-900);
+    --color-surface: var(--palette-blueberry-100);
+    --color-background: var(--palette-blueberry-200);
+
+    /* ── Semantic — Global ── */
+    --color-text: var(--palette-base-800);
+    --color-surface-alt: var(--palette-base-800);
+    --color-success: var(--palette-green-500);
+    --color-warning: var(--palette-yellow-500);
+    --color-error: var(--palette-red-500);
+
+    /* ── Export accent (orange) ── */
+    --color-export: #EA580C;
+    --color-export-hover: #C44A08;
+
+    /* ── Surface ── */
+    --color-surface-raised: #ffffff;
+    /* panel/card surfaces above background */
+    --color-on-surface: var(--palette-blueberry-900);
+    --color-label: #666;
+    /* muted section labels */
+    --color-hint: #aaa;
+    /* hints and estimates */
+
+    /* ── App aliases (used throughout existing CSS) ── */
+    --primary-color: var(--color-primary);
+    --text-color: var(--color-text);
+    --bg-color: var(--color-surface);
+    --card-bg: var(--palette-base-100);
+    --border-color: #d8d5ee;
+
+    /* ── Type scale ── */
+    --text-xs: 0.625rem;
+    /* 10px — micro labels: ticks, card names */
+    --text-sm: 0.6875rem;
+    /* 11px — small UI: section headers, meta, hints */
+    --text-md: 0.8125rem;
+    /* 13px — interface: buttons, radio, controls */
+    --dropdown-chevron-size: 20px;
+    --radius-card: 16px;
+    --radius-control: 14px;
+    --radius-control-sm: 10px;
+    --control-height: 40px;
+    --shadow-soft: 0 10px 24px rgba(21, 18, 43, 0.12);
+    --shadow-card: 0 12px 28px rgba(30, 25, 62, 0.16);
+}
+

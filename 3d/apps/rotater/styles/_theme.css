@@ -1,0 +1,42 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   DEFAULT (empty) STATE — normal page layout like GCoder
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+html,
+body {
+    margin: 0;
+}
+
+body {
+    font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Compact select button shown only in loaded state */
+.compact-btn {
+    display: none;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+/* Hidden file inputs used for programmatic .click() must not be display:none */
+#partReplaceInput {
+    display: block;
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+

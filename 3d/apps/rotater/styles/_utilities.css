@@ -1,0 +1,826 @@
+/* ── Viewer + controls: hidden in default state ── */
+
+.viewer-section {
+    display: none;
+}
+
+.controls-bar {
+    display: none;
+}
+
+/* ── Footer (default) ── */
+
+footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+footer p {
+    margin: 0;
+}
+
+/* ── Shared utilities ── */
+
+.hidden {
+    display: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   LOADED STATE — full-viewport flex layout (set via html.loaded class)
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+html.loaded,
+html.loaded body {
+    height: 100%;
+    overflow: hidden;
+}
+
+html.loaded body {
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html.loaded .container {
+    height: 100%;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+html.loaded .app-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+html.loaded main {
+    flex: 0 0 45vh;
+    min-height: 200px;
+    overflow: hidden;
+}
+
+html.loaded .sidebar {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    /* On narrow viewports, prevent sidebar from becoming too cramped */
+    min-width: 280px;
+}
+
+@media (max-width: 899px) {
+    html.loaded .app-body {
+        flex-direction: column;
+    }
+
+    html.loaded main {
+        order: 1;
+        flex: 0 0 48vh;
+        min-height: 220px;
+    }
+
+    html.loaded .sidebar {
+        order: 0;
+        flex: 1;
+        min-height: 150px;
+        min-width: auto;
+        max-width: none;
+    }
+
+    html.loaded .sidebar-header {
+        display: none;
+    }
+
+    html.loaded .sidebar-brand-row {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 12px 8px;
+        background: var(--color-surface);
+    }
+
+    html.loaded .sidebar-brand-actions {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    html.loaded .sidebar-brand-actions .sidebar-upload-btn,
+    html.loaded .sidebar-brand-actions .copy-link-btn--export,
+    html.loaded .sidebar-brand-actions .info-icon-btn {
+        width: 100%;
+        min-width: 0;
+        justify-content: center;
+    }
+
+    /* On mobile/tablet, hide the floating button and show the persistent dock */
+    #btnAppSettingsCanvas {
+        display: none !important;
+    }
+
+    #appSettingsDock {
+        display: block !important;
+    }
+
+    #appSettingsOverlay[hidden] {
+        display: none !important;
+    }
+
+    #appSettingsOverlay:not([hidden]) {
+        display: block !important;
+    }
+}
+
+@media (max-width: 640px) {
+    html.loaded .app-body {
+        flex-direction: column;
+    }
+
+    html.loaded main {
+        flex: 0 0 40vh;
+        min-height: 200px;
+    }
+
+    html.loaded .sidebar {
+        flex: 1;
+        min-height: 150px;
+        min-width: auto;
+        max-width: none;
+    }
+
+    /* Shrink logo on small screens to save space */
+    html.loaded .logo {
+        height: 24px;
+    }
+
+    /* Make export panel narrower on mobile */
+    .settings-panel {
+        width: calc(100vw - 24px);
+        max-width: calc(100vw - 24px);
+    }
+
+    /* Reduce padding in export modal body on mobile */
+    .export-modal-body {
+        padding: 4px;
+        row-gap: 8px;
+    }
+
+    /* Reduce export modal header padding */
+    .export-modal-panel .settings-panel-header {
+        padding: 12px 16px 10px;
+    }
+}
+
+@media (max-width: 899px) and (min-width: 641px) {
+    html.loaded main {
+        /* Constrain height to give sidebar more breathing room */
+        flex: 0 0 auto;
+        max-height: 50vh;
+    }
+
+    html.loaded .sidebar {
+        min-width: 300px;
+    }
+}
+
+@media (min-width: 900px) {
+    html.loaded .app-body {
+        flex-direction: row;
+    }
+
+    html.loaded main {
+        order: 1;
+        flex: 1;
+        min-height: 0;
+    }
+
+    html.loaded .sidebar {
+        order: 0;
+        flex: none;
+        width: 385px;
+        border-right: 1px solid var(--border-color);
+        overflow: hidden;
+        transition: width 0.2s ease;
+    }
+
+    /* On desktop, show the floating settings button and hide the persistent dock */
+    #btnAppSettingsCanvas {
+        display: inline-flex !important;
+    }
+
+    #appSettingsDock {
+        display: none !important;
+    }
+
+    #appSettingsOverlay:not([hidden]) {
+        display: block !important;
+    }
+
+    #appSettingsOverlay[hidden] {
+        display: none !important;
+    }
+
+    html.loaded.sidebar-collapsed .sidebar,
+    html.loaded.sidepanels-hidden .sidebar {
+        width: 0;
+        min-width: 0;
+        max-width: 0;
+        flex-basis: 0;
+        border-left: none;
+    }
+
+    /* Collapsed: tab flips to point left (expand) */
+    html.loaded.sidebar-collapsed .sidebar-edge-tab svg,
+    html.loaded.sidepanels-hidden .sidebar-edge-tab svg {
+        transform: rotate(180deg);
+    }
+
+    html.loaded .controls-bar {
+        border-top: none;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        /* Allow min-height: 100% on the bar to push info btn to bottom */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .controls-row {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+    }
+
+    .controls-row--motion {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .range-label {
+        min-width: 0;
+    }
+}
+
+/* ── Export quality settings (legacy; no longer in DOM) ── */
+
+.export-quality-settings {
+    display: none;
+}
+
+.export-quality-item {
+    display: none;
+}
+
+.quality-label {
+    display: none;
+}
+
+/* ── Controls bar footer (Reset settings) ── */
+
+.controls-bar-footer {
+    height: 0;
+    padding: 0;
+    overflow: visible;
+}
+
+#btnResetSettings {
+    color: var(--color-label);
+    border-color: var(--color-primary);
+}
+
+#btnResetSettings:hover {
+    color: var(--palette-red-500);
+    border-color: var(--palette-red-500);
+}
+
+.canvas-bottom-center {
+    position: absolute;
+    bottom: 16px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    padding: 0 16px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.canvas-bottom-center .ruler-hud {
+    max-width: min(44vw, 430px);
+}
+
+.canvas-bottom-center .cam-nav-row {
+    width: min(860px, calc(100vw - 200px));
+    max-width: calc(100% - 24px);
+}
+
+.orbit-hint-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 8px 8px 16px;
+    background: var(--palette-blueberry-100);
+    border-radius: 9999px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.08);
+    pointer-events: auto;
+}
+
+.orbit-hint-bar.visible {
+    display: inline-flex;
+    position: absolute;
+    left: 16px;
+    pointer-events: auto;
+}
+
+@media (min-width: 900px) {
+    .orbit-hint-bar.visible {
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 10px);
+        transform: translateX(-50%);
+        max-width: min(78vw, 720px);
+        z-index: 7;
+    }
+}
+
+.orbit-hint {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--palette-blueberry-800);
+    font-family: "Source Sans 3", system-ui, sans-serif;
+}
+
+.orbit-hint-dismiss {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: rgba(30, 25, 62, 0.1);
+    color: var(--palette-blueberry-800);
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.orbit-hint-dismiss:hover {
+    background: rgba(30, 25, 62, 0.2);
+}
+
+@media (max-width: 899px) {
+    .canvas-bottom-center {
+        bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        align-items: end;
+        padding: 0 10px;
+    }
+
+    .orbit-hint-bar.visible {
+        position: static;
+        left: auto;
+        max-width: calc(100vw - 32px);
+    }
+
+    .orbit-hint-bar {
+        padding: 7px 10px;
+        border-radius: 16px;
+    }
+
+    .orbit-hint {
+        white-space: normal;
+        text-align: center;
+        line-height: 1.25;
+    }
+
+    .orbit-hint-bar.visible+.cam-nav {
+        margin-top: 12px;
+    }
+
+    .orbit-hint-bar.visible+.cam-nav-row {
+        margin-top: 12px;
+    }
+
+    .canvas-bottom-center .cam-nav-row {
+        width: 100%;
+        max-width: calc(100vw - 24px);
+    }
+}
+
+@media (min-width: 900px) and (max-width: 1180px),
+(min-width: 900px) and (max-height: 820px) {
+    .canvas-bottom-center {
+        bottom: 72px;
+    }
+
+    .cam-nav {
+        transform: none;
+    }
+
+    .cam-nav-row {
+        transform: none;
+    }
+
+    .ruler-hud {
+        max-width: min(44vw, 340px);
+        gap: 5px;
+        padding: 5px 8px;
+    }
+
+    .ruler-lines-text {
+        display: none;
+    }
+
+    .ruler-lines-switch {
+        margin-left: 2px;
+    }
+
+    .ruler-lines-ui {
+        width: 46px;
+        height: 28px;
+    }
+
+    .ruler-lines-ui::after {
+        width: 22px;
+        height: 22px;
+    }
+
+    .ruler-lines-input:checked+.ruler-lines-ui::after {
+        transform: translateX(18px);
+    }
+}
+
+.copy-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0.55em 1em;
+    min-height: var(--control-height);
+    font-size: var(--text-md);
+    font-weight: 600;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    line-height: 1.2;
+    color: var(--color-primary);
+    background: transparent;
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-soft);
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.copy-link-btn:hover {
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
+}
+
+.copy-link-btn:active {
+    transform: scale(0.95);
+}
+
+.copy-link-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
+}
+
+.copy-link-btn--secondary {
+    color: var(--color-label, #666);
+    border-color: var(--color-primary);
+}
+
+.copy-link-btn--secondary:hover {
+    background: color-mix(in srgb, var(--color-label, #666) 6%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
+}
+
+.copy-link-btn--text-link {
+    display: inline-block;
+    min-height: 0;
+    padding: 6px 12px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: var(--color-primary);
+    text-decoration: underline;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.copy-link-btn--text-link:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    color: var(--color-primary-darker);
+}
+
+.copy-link-btn--danger {
+    color: #fff;
+    background: var(--palette-red-500);
+    border-color: color-mix(in srgb, var(--palette-red-500) 72%, #fff 28%);
+}
+
+.copy-link-btn--danger:hover {
+    background: color-mix(in srgb, var(--palette-red-500) 92%, #000 8%);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
+}
+
+.copy-link-btn--danger:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-red-500) 38%, transparent);
+}
+
+#btnResetEverything {
+    color: #fff;
+    background: var(--palette-red-500);
+    border-color: color-mix(in srgb, var(--palette-red-500) 72%, #fff 28%);
+}
+
+#btnResetEverything:hover {
+    background: color-mix(in srgb, var(--palette-red-500) 92%, #000 8%);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
+}
+
+#btnResetEverything:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-red-500) 38%, transparent);
+}
+
+.copy-link-btn--export {
+    color: #fff;
+    background: var(--color-export);
+    border-color: color-mix(in srgb, var(--color-export) 70%, #fff 30%);
+    font-size: var(--text-lg);
+    min-height: var(--control-height);
+    padding: 0.55em 1.05em;
+}
+
+.copy-link-btn--export:hover {
+    background: var(--color-export-hover);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
+}
+
+html.none-mode .range-label {
+    opacity: 0.38;
+    pointer-events: none;
+}
+
+html.none-mode .loop-toggle-label {
+    opacity: 0.38;
+    pointer-events: none;
+}
+
+html.none-mode .rotation-group {
+    opacity: 0.38;
+    pointer-events: none;
+}
+
+/* ── Box headings (Model / Environment cards) ── */
+.box-heading {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-on-surface);
+    letter-spacing: -0.3px;
+    margin-bottom: 14px;
+}
+
+.box-heading-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.box-heading-row .box-heading {
+    margin-bottom: 0;
+}
+
+.copy-link-btn--compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0.35em 0.8em;
+    font-size: var(--text-sm);
+}
+
+.copy-link-btn--compact svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+.sidebar-footer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+
+.card-reset-btn {
+    width: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    font-size: 0;
+    gap: 0;
+    border: none;
+    background: transparent;
+    color: color-mix(in srgb, var(--color-on-surface) 72%, transparent);
+    opacity: 0.58;
+}
+
+.card-reset-btn.is-active {
+    opacity: 1;
+    color: var(--color-on-surface);
+}
+
+.card-reset-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+.card-reset-btn:hover {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    color: var(--color-on-surface);
+}
+
+.card-reset-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 38%, transparent);
+}
+
+.card-reset-btn:disabled {
+    opacity: 0.34;
+    color: color-mix(in srgb, var(--color-on-surface) 42%, transparent);
+    cursor: default;
+    pointer-events: none;
+}
+
+.card-header-toggle {
+    cursor: pointer;
+}
+
+.card-header-toggle>* {
+    cursor: auto;
+}
+
+.card-collapse-btn {
+    margin-left: auto;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    padding: 0;
+    flex-shrink: 0;
+    border-radius: 9px;
+    border: 1px solid var(--border-color);
+    background: color-mix(in srgb, var(--surface-elev) 88%, #fff 12%);
+    color: var(--color-on-surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.card-collapse-btn span {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 160ms ease;
+}
+
+.card-collapse-btn span svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.controls-section-box.is-collapsed .card-collapse-btn span {
+    transform: rotate(-90deg);
+}
+
+.controls-section-box.is-collapsed> :not(.box-heading-row):not(.controls-row--section-header) {
+    display: none !important;
+}
+
+.controls-row--section-header {
+    margin-bottom: 10px;
+}
+
+.controls-row--section-header .card-reset-btn {
+    margin-left: 0;
+}
+
+.bg-toggle-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+@keyframes shade-row-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(3px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.control-label.shade-row-reveal {
+    animation: shade-row-reveal 220ms ease-out;
+}
+
+.bg-toggle-row .gif-option-check {
+    margin-top: 0 !important;
+    white-space: nowrap;
+}
+
+.build-plate-controls {
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent 18%);
+    background: color-mix(in srgb, var(--surface-elev) 86%, #fff 14%);
+}
+
+.build-plate-controls[hidden] {
+    display: none !important;
+}
+
+#buildPlateConfigBody[hidden] {
+    display: none !important;
+}
+
+.box-sub-heading {
+    font-size: var(--text-sm, 12px);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    opacity: 0.7;
+}
+
+/* ── Preset group inside new cards (no extra margin needed) ── */
+#modelBox .preset-group,
+#environmentBox .preset-group,
+#buildPlateBox .preset-group {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#modelBox .preset-group {
+    gap: 12px;
+}
+
+#modelBox .shading-option {
+    padding: 6px 8px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    box-shadow: 0 0 0 2px transparent;
+}
+
+#modelBox .shading-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(46, 43, 116, 0.15);
+}
+
+#modelBox .shading-option.is-selected {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+#modelBox .preset-group .thumb-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-on-surface);
+}

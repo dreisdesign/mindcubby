@@ -1,0 +1,64 @@
+/* ── Dark theme overrides ─────────────────────────────────────────────────── */
+
+html.theme-dark {
+    --palette-base-100: var(--palette-blueberry-800);
+    --bg-color: var(--palette-blueberry-900);
+    --card-bg: var(--palette-blueberry-800);
+    --color-surface: var(--palette-blueberry-800);
+    --color-surface-raised: var(--palette-blueberry-800);
+    --color-background: var(--palette-blueberry-900);
+    --color-background-darkest: var(--palette-blueberry-900);
+    --text-color: var(--palette-blueberry-100);
+    --color-text: var(--palette-blueberry-100);
+    --color-on-surface: var(--palette-blueberry-100);
+    --color-label: var(--palette-blueberry-300);
+    --color-hint: var(--palette-blueberry-300);
+    --border-color: rgba(179, 168, 247, 0.18);
+    /* Interactive elements need a lighter primary so they're visible on dark surfaces */
+    --color-primary: var(--palette-blueberry-300);
+    --primary-color: var(--palette-blueberry-300);
+}
+
+/* Filled buttons: dark text on light-primary bg for contrast */
+/* (export buttons use --color-export, not --color-primary, so no override needed) */
+
+/* Radio active: border + subtle tint for visibility in both light and dark */
+html.theme-dark .radio-option:has(input:checked) {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--palette-blueberry-200);
+    border-color: var(--palette-blueberry-300);
+}
+
+/* Section boxes: subtly differentiated in dark mode */
+html.theme-dark .controls-section-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+/* Orbit hint toast: invert for dark mode */
+html.theme-dark .orbit-hint-bar {
+    background: var(--palette-blueberry-200);
+}
+
+html.theme-dark .orbit-hint {
+    color: var(--palette-blueberry-900);
+}
+
+html.theme-dark .orbit-hint-dismiss {
+    background: rgba(30, 25, 62, 0.15);
+    color: var(--palette-blueberry-900);
+}
+
+/* Thumb card visible borders in dark mode */
+html.theme-dark .color-option,
+html.theme-dark .shading-option,
+html.theme-dark .rotation-option,
+html.theme-dark .dimension-option {
+    border-color: rgba(179, 168, 247, 0.4);
+}
+
+html.theme-dark .loop-toggle-track {
+    background: rgba(255, 255, 255, 0.2);
+}
+

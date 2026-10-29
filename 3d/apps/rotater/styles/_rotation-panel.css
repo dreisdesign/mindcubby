@@ -1,0 +1,209 @@
+/* ── Rotation thumbnail cards ── */
+
+.rotation-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ── Section header row (label + power toggle) ── */
+
+.section-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+/* ── Rotation power toggle (macOS-style) ── */
+
+.rotation-power-toggle {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.rotation-power-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.rotation-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--palette-blueberry-200);
+    cursor: pointer;
+    box-shadow: 0 0 0 2px transparent;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.rotation-option input[type="radio"] {
+    display: none;
+}
+
+.rotation-option:has(input:checked) {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.rotation-option:hover {
+    border-color: var(--color-primary-lighter);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(46, 43, 116, 0.15);
+}
+
+.rotation-option:has(input:checked):hover {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--primary-color), 0 4px 10px rgba(46, 43, 116, 0.15);
+    transform: translateY(-1px);
+}
+
+.rotation-thumb {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--palette-blueberry-500);
+}
+
+.rotation-thumb .rot-icon {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.rotation-thumb-icon {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    display: block;
+}
+
+.rot-icon-svg {
+    fill: currentColor;
+    stroke: none;
+}
+
+/* ── Rotation hover demo animations ── */
+
+@keyframes rot-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes rot-tilt {
+    0% {
+        transform: rotateX(0deg);
+    }
+
+    25% {
+        transform: rotateX(-12deg);
+    }
+
+    75% {
+        transform: rotateX(12deg);
+    }
+
+    100% {
+        transform: rotateX(0deg);
+    }
+}
+
+.rotation-option:hover .rotation-thumb--spin .rot-icon {
+    animation: rot-spin 2.4s linear 3;
+}
+
+/* Keep hover preview direction aligned with runtime spin direction. */
+html.spin-ccw .rotation-option:hover .rotation-thumb--spin .rot-icon {
+    animation: rot-spin-ccw 2.4s linear 3;
+}
+
+html:not(.spin-ccw) .rotation-option:hover .rotation-thumb--spin .rot-icon {
+    animation: rot-spin 2.4s linear 3;
+}
+
+@keyframes rot-spin-ccw {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+.rotation-option:hover .rotation-thumb--tilt .rot-icon {
+    animation: rot-tilt 1.4s ease-in-out 3;
+}
+
+@keyframes rot-wobble {
+    0% {
+        transform: rotateX(0deg) rotateY(0deg);
+    }
+
+    25% {
+        transform: rotateX(-8deg) rotateY(90deg);
+    }
+
+    50% {
+        transform: rotateX(0deg) rotateY(180deg);
+    }
+
+    75% {
+        transform: rotateX(8deg) rotateY(270deg);
+    }
+
+    100% {
+        transform: rotateX(0deg) rotateY(360deg);
+    }
+}
+
+.rotation-option:hover .rotation-thumb--wobble .rot-icon {
+    animation: rot-wobble 1.6s ease-in-out 3;
+}
+
+/* ── Rotation re-click pause hint ── */
+
+.preset-group .thumb-card-wrap {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.preset-group .thumb-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: color-mix(in srgb, var(--color-on-surface) 80%, #000 20%);
+}
+
+.preset-add-slot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px dashed var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.preset-add-slot:hover {
+    border-color: var(--palette-blueberry-400);
+    color: var(--palette-blueberry-500);
+}
+

@@ -1,0 +1,673 @@
+/* ── Settings overlay panel ── */
+
+.settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 12px;
+}
+
+.settings-overlay[hidden] {
+    display: none;
+}
+
+/* ── Mobile export layout (split card, preview stays visible) ── */
+@media (max-width: 640px) {
+    .settings-overlay.export-overlay {
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0 8px 8px;
+        background: transparent;
+        pointer-events: none;
+    }
+
+    .export-modal-panel {
+        position: relative;
+        width: 100% !important;
+        max-width: 680px !important;
+        height: auto;
+        max-height: 46svh;
+        border-radius: 16px 16px 14px 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        pointer-events: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .export-modal-body {
+        max-height: calc(46svh - 110px);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    /* Make export options more compact on mobile */
+    .export-quick-options,
+    .export-format-opts,
+    .export-motion-controls {
+        padding: 8px;
+        row-gap: 6px;
+    }
+
+    .export-motion-controls-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .export-select {
+        font-size: var(--text-sm);
+        padding: 4px 28px 4px 8px;
+    }
+
+    .export-btn--main {
+        width: 100%;
+        padding: 0.4em 1em;
+        margin: 4px 0;
+        font-size: var(--text-sm);
+    }
+
+    .export-primary-row .export-close-inline,
+    .export-primary-row .export-copy-inline {
+        flex: 1 1 calc(50% - 4px);
+    }
+
+    /* Hide download package button on mobile to save space */
+    .sidebar-footer-actions.export-panel-package-row {
+        display: none !important;
+    }
+
+    /* Further reduce padding in export modal body on mobile */
+    .export-modal-body {
+        padding: 2px;
+    }
+
+    .export-modal-panel .settings-panel-header {
+        padding: 10px 14px 8px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    /* Reduce all export row gaps for compact mobile layout */
+    .export-selects-row,
+    .gif-options-row.export-quick-options {
+        gap: 4px;
+    }
+
+    .export-quick-options .gif-option-check {
+        padding: 0;
+    }
+
+    #modelPartSelectorMenu {
+        max-height: min(58vh, 520px);
+    }
+
+    #modelPartSelectorMenu.model-selector-view--grid {
+        gap: 6px;
+    }
+
+    #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option {
+        padding: 7px;
+        min-height: 0;
+    }
+
+    #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-main {
+        gap: 4px;
+        padding-top: 10px;
+    }
+
+    #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-canvas {
+        aspect-ratio: 1 / 1;
+        max-height: 86px;
+    }
+
+    #modelPartSelectorMenu.model-selector-view--grid .thumb-select-option-text {
+        min-height: 0;
+        font-size: 10px;
+        line-height: 1.16;
+    }
+}
+
+.settings-panel {
+    background: color-mix(in srgb, var(--color-surface-raised, white) 90%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.18), 0 1.5px 4px rgba(0, 0, 0, 0.06);
+    width: 280px;
+    max-width: calc(100vw - 24px);
+    overflow: hidden;
+    transition: background 0.2s;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.settings-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 10px;
+    column-gap: 8px;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-panel-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-on-surface, #222);
+}
+
+.export-modal-panel .settings-panel-header {
+    justify-content: flex-start;
+    position: relative;
+    padding-top: 26px;
+    cursor: grab;
+}
+
+.export-modal-panel .settings-panel-header h3 {
+    flex: 1;
+}
+
+.export-modal-panel .settings-panel-header button,
+.export-modal-panel .settings-panel-header a {
+    cursor: pointer;
+}
+
+.export-modal-panel .settings-panel-header.is-dragging {
+    cursor: grabbing;
+}
+
+.export-drag-indicator {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: color-mix(in srgb, var(--color-on-surface, #2e2b74) 55%, transparent);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.export-drag-indicator svg {
+    display: block;
+}
+
+.export-header-link {
+    border: none;
+    background: transparent;
+    color: var(--palette-blueberry-600);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    padding: 4px 6px;
+    border-radius: 8px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.export-header-link:hover {
+    color: var(--palette-blueberry-800);
+    background: color-mix(in srgb, var(--palette-blueberry-100) 58%, transparent);
+}
+
+.export-header-link:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.export-panel-toggle {
+    flex: 1;
+    min-height: 34px;
+    border: none;
+    background: transparent;
+    color: var(--color-on-surface, #222);
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-align: left;
+    cursor: pointer;
+}
+
+.export-panel-toggle-chevron {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.16s ease;
+}
+
+.export-panel-toggle-chevron svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.export-panel-collapsed-bar {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(110px, 1fr) minmax(132px, auto);
+    gap: 12px;
+    align-items: center;
+}
+
+.export-panel-collapsed-bar[hidden] {
+    display: none !important;
+}
+
+.export-select-group--compact {
+    min-width: 0;
+}
+
+.export-select--compact {
+    min-height: 44px;
+    font-weight: 700;
+}
+
+.export-btn--compact {
+    width: 100%;
+    min-width: 0;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.export-modal-panel.is-collapsed .export-panel-toggle-chevron {
+    transform: rotate(-90deg);
+}
+
+.export-modal-body[hidden] {
+    display: none !important;
+}
+
+.settings-close-btn {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--border-color, rgba(0, 0, 0, 0.12));
+    background: var(--color-surface-raised, rgba(255, 255, 255, 0.9));
+    color: var(--color-on-surface, #555);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow: var(--shadow-soft);
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, transform 0.1s;
+}
+
+.settings-close-btn:hover {
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
+    box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
+}
+
+.settings-close-btn:active {
+    transform: scale(0.95);
+}
+
+.settings-close-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
+}
+
+/* Keep preview action buttons aligned with the existing D-pad style. */
+.canvas-overlay-br .cam-nav-action-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--palette-blueberry-600);
+    border: 2px solid rgba(74, 67, 145, 0.14);
+    box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
+}
+
+.canvas-overlay-br .cam-nav-action-btn:hover {
+    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
+    color: var(--palette-blueberry-500);
+    background: #fff;
+}
+
+.canvas-overlay-br .cam-nav-action-btn.is-active {
+    background: var(--palette-blueberry-200);
+    border-color: var(--palette-blueberry-500);
+    color: var(--palette-blueberry-500);
+}
+
+#btnExportPause {
+    display: flex;
+}
+
+#btnExportPause.is-paused {
+    border-color: var(--palette-blueberry-500);
+}
+
+.settings-panel-body {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.settings-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 14px;
+    background: transparent;
+    color: var(--color-on-surface, #2E2B74);
+    border: none;
+    border-radius: 10px;
+    font-size: var(--text-md);
+    font-weight: 600;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s;
+    box-sizing: border-box;
+}
+
+.settings-action-btn:hover {
+    background: var(--palette-blueberry-100);
+}
+
+.settings-action-btn:active {
+    transform: scale(0.98);
+}
+
+.settings-action-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blueberry-300);
+}
+
+.settings-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 14px;
+}
+
+html.theme-dark .settings-action-btn:hover {
+    background: rgba(179, 168, 247, 0.1);
+}
+
+html.theme-dark .settings-close-btn:hover {
+    background: color-mix(in srgb, var(--palette-blueberry-400) 12%, transparent);
+    border-color: rgba(179, 168, 247, 0.48);
+}
+
+/* ── Color picker cards ── */
+
+.color-group {
+    display: flex;
+    gap: 6px;
+}
+
+.color-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.color-option:focus-within {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.color-option input[type="color"] {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+
+.color-swatch {
+    width: 44px;
+    height: 44px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.color-name {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-label);
+    line-height: 1;
+}
+
+.color-option:hover {
+    border-color: var(--color-primary-lighter);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(46, 43, 116, 0.15);
+}
+
+.color-edit-icon {
+    position: absolute;
+    top: 6px;
+    /* aligns with .color-option padding-top */
+    left: 8px;
+    /* aligns with .color-option padding-left */
+    width: 44px;
+    /* matches .color-swatch width */
+    height: 44px;
+    /* matches .color-swatch height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.48);
+    border-radius: 4px;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+}
+
+.color-edit-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.color-option:hover .color-edit-icon {
+    opacity: 1;
+}
+
+/* ── Unified Styles group (colors + shading) ── */
+
+.styles-group {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.colors-sub {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.shading-sub {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+}
+
+.shading-sub-label {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-label, #666);
+    line-height: 1;
+}
+
+.shading-items {
+    display: flex;
+    gap: 10px;
+}
+
+/* ── Export frame overlay canvas ── */
+
+#exportFrameCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3;
+    display: block;
+}
+
+.crop-dimensions-dock {
+    position: relative;
+    z-index: 1;
+    pointer-events: auto;
+    width: 100%;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+}
+
+.crop-dimensions-dock[hidden] {
+    display: none !important;
+}
+
+.export-crop-segmented {
+    --export-tab-columns: 4;
+}
+
+.export-crop-tab {
+    min-height: 74px;
+    display: grid;
+    grid-template-rows: 38px auto;
+    align-content: center;
+    justify-items: center;
+    gap: 6px;
+    padding: 8px 8px 7px;
+    position: relative;
+}
+
+.export-crop-tab input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.export-crop-tab__shape {
+    display: block;
+    align-self: center;
+    border: 2px solid currentColor;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--palette-blueberry-200) 42%, #fff 58%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--palette-blueberry-700) 20%, transparent);
+}
+
+.export-crop-tab__shape--square {
+    width: 22px;
+    height: 22px;
+}
+
+.export-crop-tab__shape--portrait12 {
+    width: 12px;
+    height: 25px;
+}
+
+.export-crop-tab__shape--landscape21 {
+    width: 26px;
+    height: 13px;
+}
+
+.export-crop-tab__shape--landscape43 {
+    width: 24px;
+    height: 18px;
+}
+
+.export-crop-tab__ratio {
+    font-size: var(--export-type-body-size);
+    font-weight: 600;
+    color: inherit;
+    line-height: 1;
+    align-self: center;
+}
+
+.export-crop-tab:has(input:checked) {
+    background: #fff;
+    color: var(--color-on-surface);
+    box-shadow: 0 1px 2px rgba(20, 18, 43, 0.12);
+}
+
+.export-crop-tab:has(input:checked) .export-crop-tab__shape {
+    background: color-mix(in srgb, var(--color-primary) 30%, #fff 70%);
+    border-color: color-mix(in srgb, var(--color-primary) 72%, transparent);
+}
+
+.crop-dimensions-dock .export-dimensions-row {
+    margin: 0;
+    gap: 6px;
+}
+
+.crop-dimensions-dock .export-select-label {
+    display: none;
+}
+
+.crop-dimensions-dock .dimension-group {
+    flex-direction: row;
+    gap: 8px;
+    justify-content: flex-start;
+}
+
+
+html.crop-mode #btnFrameOverlay,
+html.crop-mode .canvas-overlay-br,
+html.crop-mode .canvas-overlay-bl,
+html.crop-mode .orbit-hint-bar {
+    display: none;
+}
+
+html.crop-mode.export-workspace-active .canvas-bottom-center {
+    display: flex !important;
+}
+
+html.crop-mode.export-workspace-active .orbit-hint-bar {
+    display: none;
+}
+
+html.crop-mode.export-workspace-active .canvas-overlay-bl {
+    display: flex;
+}
+
+html.export-workspace-active .canvas-overlay-br,
+html.crop-mode.export-workspace-active .canvas-overlay-br {
+    display: flex !important;
+}
+
+html.dpad-hidden.export-workspace-active .canvas-overlay-br,
+html.dpad-hidden.crop-mode.export-workspace-active .canvas-overlay-br {
+    display: flex !important;
+}
+
