@@ -155,8 +155,9 @@
             }
 
             /* Reduce labs-container padding on mobile */
-            labs-container[full-width] {
-                --labs-container-padding-inline: 1rem;
+            labs-container[full-width][compact] {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
             }
         }
     </style>
