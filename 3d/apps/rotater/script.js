@@ -2440,34 +2440,12 @@ function createBuildPlateTexture(hexColor = null, finish = BUILD_PLATE_DEFAULTS.
 
 function openAnchoredColorPicker(inputEl, anchorEl) {
     if (!inputEl) return;
-    const rect = anchorEl?.getBoundingClientRect?.();
-    const prevInlineStyles = inputEl.style.cssText;
-    if (rect) {
-        Object.assign(inputEl.style, {
-            position: 'fixed',
-            left: `${rect.left}px`,
-            top: `${rect.top}px`,
-            width: `${Math.max(1, Math.floor(rect.width))}px`,
-            height: `${Math.max(1, Math.floor(rect.height))}px`,
-            clip: 'auto',
-            pointerEvents: 'auto',
-            opacity: '0',
-            zIndex: '9999',
-        });
-    } else {
-        Object.assign(inputEl.style, {
-            width: '1px',
-            height: '1px',
-            pointerEvents: 'auto',
-            opacity: '0',
-        });
+
+    try { 
+        inputEl.showPicker(); 
+    } catch (e) { 
+        inputEl.click(); 
     }
-
-    try { inputEl.showPicker(); } catch (_) { inputEl.click(); }
-
-    setTimeout(() => {
-        inputEl.style.cssText = prevInlineStyles;
-    }, 260);
 }
 
 function updateBuildPlateMaterial(options = {}) {
@@ -15747,7 +15725,7 @@ function renderBgPresets() {
         wrap.style.alignItems = 'center';
 
         const swatchInner = preset.id === 'modelcolor'
-            ? `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:#f6f5ff;border:1.5px solid color-mix(in srgb, var(--palette-blueberry-300) 64%, white 36%);display:flex;align-items:center;justify-content:center;"><canvas id="bg-preset-modelcolor-canvas" class="js-part-thumb-preview" data-part-index="${previewPartIdx}" width="56" height="56" aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:block;"></canvas></span>`
+            ? `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:#f6f5ff;border:1.5px solid color-mix(in srgb, var(--palette-blueberry-300) 64%, white 36%);display:flex;align-items:center;justify-content:center;"><canvas id="bg-preset-modelcolor-canvas" class="js-part-thumb-preview" data-part-index="${previewPartIdx}" width="56" height="56" aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:block;pointer-events:none;"></canvas></span>`
             : `<span class="shading-thumb" id="bg-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? PALETTE.preset.bgBorderLight : (preset.id === 'black' ? PALETTE.preset.bgBorderDark : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
@@ -15809,8 +15787,7 @@ function renderBgPresets() {
 
     const labelEl = customWrap.querySelector('.shading-option');
     if (labelEl) {
-        labelEl.addEventListener('click', (ev) => {
-            ev.preventDefault();
+        labelEl.addEventListener('click', () => {
             // Keep custom background aligned with the visible auto-adjust toggle.
             const autoBg = document.getElementById('autoBgCheck');
             isDynamicBg = autoBg ? autoBg.checked : false;
@@ -15855,7 +15832,7 @@ function renderBuildPlatePresets() {
         wrap.style.alignItems = 'center';
 
         const swatchInner = preset.id === 'modelcolor'
-            ? `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:#f6f5ff;border:1.5px solid color-mix(in srgb, var(--palette-blueberry-300) 64%, white 36%);display:flex;align-items:center;justify-content:center;"><canvas id="build-plate-preset-modelcolor-canvas" class="js-part-thumb-preview" data-part-index="${previewPartIdx}" width="56" height="56" aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:block;"></canvas></span>`
+            ? `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:#f6f5ff;border:1.5px solid color-mix(in srgb, var(--palette-blueberry-300) 64%, white 36%);display:flex;align-items:center;justify-content:center;"><canvas id="build-plate-preset-modelcolor-canvas" class="js-part-thumb-preview" data-part-index="${previewPartIdx}" width="56" height="56" aria-hidden="true" style="width:44px;height:44px;border-radius:50%;display:block;pointer-events:none;"></canvas></span>`
             : `<span class="shading-thumb" id="build-plate-preset-${preset.id}" style="border-radius:50%;width:44px;height:44px;position:relative;overflow:hidden;cursor:pointer;background-color:${preset.color};border:1.5px solid ${preset.id === 'white' ? PALETTE.preset.bgBorderLight : (preset.id === 'black' ? PALETTE.preset.bgBorderDark : 'transparent')};"></span>`;
 
         wrap.innerHTML = `
