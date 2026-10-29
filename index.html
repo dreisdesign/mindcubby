@@ -94,7 +94,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            padding: 0 0 0 1rem;
+            padding: 0;
         }
 
         .mindcubby-social-heading {
@@ -235,16 +235,17 @@
         </labs-container>
 
         <!-- Social Links Component (responsive, encapsulated) -->
-        <mindcubby-social-links 
-            slot="header"
-            heading="From My Etsy Shop"
-            social-links='[
-                {"name": "Etsy", "url": "https://www.etsy.com/shop/MindCubby", "icon": "/assets/logos/logos_Etsy--icon-circle.svg"},
-                {"name": "TikTok", "url": "https://www.tiktok.com/@mindcubby", "icon": "/assets/logos/logos_TikTok--icon-circle.svg"},
-                {"name": "YouTube", "url": "https://www.youtube.com/@MindCubby", "icon": "/assets/logos/logos_YouTube--icon-circle.svg"},
-                {"name": "Printables", "url": "https://www.printables.com/@MindCubby/models", "icon": "/assets/logos/logos_Printables--icon-circle.svg"}
-            ]'>
-        </mindcubby-social-links>
+        <labs-container full-width compact slot="header">
+            <mindcubby-social-links 
+                heading="From My Etsy Shop"
+                social-links='[
+                    {"name": "Etsy", "url": "https://www.etsy.com/shop/MindCubby", "icon": "/assets/logos/logos_Etsy--icon-circle.svg"},
+                    {"name": "TikTok", "url": "https://www.tiktok.com/@mindcubby", "icon": "/assets/logos/logos_TikTok--icon-circle.svg"},
+                    {"name": "YouTube", "url": "https://www.youtube.com/@MindCubby", "icon": "/assets/logos/logos_YouTube--icon-circle.svg"},
+                    {"name": "Printables", "url": "https://www.printables.com/@MindCubby/models", "icon": "/assets/logos/logos_Printables--icon-circle.svg"}
+                ]'>
+            </mindcubby-social-links>
+        </labs-container>
 
         <!-- Content: Main scrollable area -->
         <labs-container full-width slot="content">
