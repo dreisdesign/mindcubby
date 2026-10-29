@@ -263,13 +263,13 @@ html.loaded .sidebar {
     }
 
     html.loaded main {
-        order: 0;
+        order: 1;
         flex: 0 0 48vh;
         min-height: 220px;
     }
 
     html.loaded .sidebar {
-        order: 1;
+        order: 0;
         flex: 1;
         min-height: 150px;
         min-width: auto;
@@ -381,14 +381,16 @@ html.loaded .sidebar {
     }
 
     html.loaded main {
+        order: 1;
         flex: 1;
         min-height: 0;
     }
 
     html.loaded .sidebar {
+        order: 0;
         flex: none;
         width: 385px;
-        border-left: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
         overflow: hidden;
         transition: width 0.2s ease;
     }
@@ -4782,8 +4784,8 @@ html.loaded .sidebar-header {
 .sidebar-edge-tab {
     display: none;
     position: fixed;
-    right: 385px;
-    /* flush with sidebar left edge when open */
+    left: 385px;
+    /* flush with sidebar right edge when open */
     top: 50%;
     transform: translate(0, -50%);
     z-index: 30;
@@ -4791,12 +4793,12 @@ html.loaded .sidebar-header {
     height: 64px;
     padding: 0;
     border: 1px solid var(--palette-blueberry-300);
-    border-right: none;
-    border-radius: 6px 0 0 6px;
+    border-left: none;
+    border-radius: 0 6px 6px 0;
     background: var(--palette-blueberry-200);
     color: var(--palette-blueberry-500);
     cursor: pointer;
-    transition: right 0.2s ease, background 0.12s, color 0.12s;
+    transition: left 0.2s ease, background 0.12s, color 0.12s;
     align-items: center;
     justify-content: center;
 }
@@ -4804,6 +4806,7 @@ html.loaded .sidebar-header {
 .sidebar-edge-tab svg {
     transition: transform 0.2s ease;
     flex-shrink: 0;
+    transform: scaleX(-1);
 }
 
 .sidebar-edge-tab:hover {
@@ -4819,7 +4822,7 @@ html.loaded .sidebar-header {
 
     html.loaded.sidebar-collapsed .sidebar-edge-tab,
     html.loaded.sidepanels-hidden .sidebar-edge-tab {
-        right: 0;
+        left: 0;
     }
 }
 
