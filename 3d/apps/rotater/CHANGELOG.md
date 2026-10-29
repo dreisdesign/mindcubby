@@ -1,3 +1,8 @@
+## [Unreleased] - 2026-10-29
+
+### Fixed
+- **Color picker positioning and sidebar layout**: Moved sidebar from right to left side of desktop viewport (≥900px width) to improve color picker positioning. Safari's native color picker positioning is now more consistent across model, background, and surface pickers. Sidebar also stacks to the left when consolidating to responsive layout (<900px width). Updated sidebar toggle button positioning and arrow direction to match new left-side layout.
+
 ## [Unreleased] - 2026-08-06
 
 ### Fixed

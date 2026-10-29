@@ -230,6 +230,7 @@ Sidebar tabs: **Theme → Effects**
 - **Export** is now a modal opened from the header button
 - **Copy Link** and **Save Project** live inside the Export modal for shareable URLs and reusable ZIP packages
 - The Theme sidebar uses unified slider styling and shared snap behavior across Shade, Sheen, Contrast, and Highlights
+- **Sidebar positioning**: On desktop (≥900px width), the sidebar appears on the left side of the viewport. On tablet/mobile (<900px width), it stacks below the canvas. The sidebar can be toggled with the arrow button at its edge.
 
 When a multi-part model is loaded:
 
