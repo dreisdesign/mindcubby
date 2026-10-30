@@ -45,7 +45,7 @@
     "Contrast": {
       "description": "Overall contrast effect",
       "snap_count": 7,
-      "range_multiplier": 80,
+      "range_multiplier": 70,
       "params": {
         "keyMultiplier": { "min": 5, "max": 15 },
         "ambientPower": { "min": 3, "max": 8 },

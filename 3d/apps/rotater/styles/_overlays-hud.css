@@ -798,7 +798,8 @@ html.crop-mode .crop-corner {
 }
 
 .crop-pill__option:hover {
-    background: var(--palette-blueberry-50);
+    background: var(--palette-blueberry-100);
+    color: var(--palette-blueberry-800);
 }
 
 .crop-pill__option,
@@ -917,7 +918,7 @@ html.preview-ui-hidden .canvas-bottom-center {
 }
 
 .crop-pill__chevron:hover {
-    background: rgba(0, 0, 0, 0.10);
+    background: rgba(0, 0, 0, 0.15);
 }
 
 .crop-pill__cancel {
