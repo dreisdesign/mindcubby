@@ -2594,6 +2594,12 @@ html.theme-dark .app-settings-segmented-btn.is-active {
 }
 
 @media (max-width: 560px) {
+    .fps-readout {
+        font-size: 11px;
+        padding: 4px 8px;
+        min-width: 70px;
+    }
+
     .thumb-select-btn {
         grid-template-columns: 76px minmax(0, 1fr) auto;
         gap: 10px;

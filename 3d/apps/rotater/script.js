@@ -3938,11 +3938,15 @@ let modelPartThumbRenderQueue = []; // Indices to render incrementally
 let modelPartThumbRenderInProgress = false;
 let thumbRenderDebounceTimer = null; // Debounce rapid queue requests
 let thumbRenderDirtyAfterComplete = false; // Flag: changes came in while rendering
-let thumbHighResUpgradeTimer = null; // Timer to upgrade from low-res to high-res
+let thumbHighResUpgradeTimer = null; // Timer to upgrade from low-res to mid-res
+let thumbMidResUpgradeTimer = null; // Timer to upgrade from mid-res to high-res
+let thumbsNeedingMidRes = new Set(); // Parts that need mid-res upgrade
 let thumbsNeedingHighRes = new Set(); // Parts that need high-res upgrade
 const THUMB_RENDER_DEBOUNCE_MS = 30; // Faster response
-const THUMB_HIGH_RES_DELAY_MS = 200; // Faster upgrade
-const THUMB_LOW_RES_DPR = 0.4; // Initial low-res pass with better quality
+const THUMB_LOW_RES_DPR = 0.4; // Initial low-res pass
+const THUMB_MID_RES_DPR = 0.8; // Mid-res pass (improved quality, was 0.65)
+const THUMB_MID_RES_DELAY_MS = 300; // Upgrade to mid-res after delay
+const THUMB_HIGH_RES_DELAY_MS = 700; // Upgrade to high-res after longer delay
 let THUMB_DEBUG_LOGGING = false;
 
 function queueModelPartThumbsRender(partIndices = null) {
@@ -4028,12 +4032,24 @@ function renderModelPartThumbnailsIncremental() {
         // Final viewport render after all thumbs done
         if (scene && camera && !isExporting) renderer.render(scene, camera);
 
-        // Schedule high-res (actual 3D) upgrade after delay (if anything is still visible)
-        if (thumbsNeedingHighRes.size > 0 && !modelPartThumbsWrap?.hidden) {
+        // Schedule mid-res upgrade first, then high-res upgrade
+        if ((thumbsNeedingMidRes.size > 0 || thumbsNeedingHighRes.size > 0) && !modelPartThumbsWrap?.hidden) {
+            // Mid-res upgrade
             if (thumbHighResUpgradeTimer) clearTimeout(thumbHighResUpgradeTimer);
             thumbHighResUpgradeTimer = setTimeout(() => {
                 thumbHighResUpgradeTimer = null;
-                upgradeThumbsToHighRes();
+                if (thumbsNeedingMidRes.size > 0) {
+                    upgradeThumbsToMidRes();
+                }
+            }, THUMB_MID_RES_DELAY_MS);
+            
+            // High-res upgrade (if parts still need it after mid-res)
+            if (thumbMidResUpgradeTimer) clearTimeout(thumbMidResUpgradeTimer);
+            thumbMidResUpgradeTimer = setTimeout(() => {
+                thumbMidResUpgradeTimer = null;
+                if (thumbsNeedingHighRes.size > 0) {
+                    upgradeThumbsToHighRes();
+                }
             }, THUMB_HIGH_RES_DELAY_MS);
         }
 
@@ -4072,11 +4088,15 @@ function renderModelPartThumbnailsFramework() {
     modelPartThumbsWrap.hidden = !visible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!visible));
 
-    // Cancel high-res upgrade if selector becomes hidden
+    // Cancel quality upgrades if selector becomes hidden
     if (!visible) {
         if (thumbHighResUpgradeTimer) {
             clearTimeout(thumbHighResUpgradeTimer);
             thumbHighResUpgradeTimer = null;
+        }
+        if (thumbMidResUpgradeTimer) {
+            clearTimeout(thumbMidResUpgradeTimer);
+            thumbMidResUpgradeTimer = null;
         }
         return;
     }
@@ -4320,13 +4340,45 @@ function renderThumbnailSkeleton(canvasEl, partIdx) {
     ctx.fillText('•••', cssW / 2, cssH / 2);
 }
 
+function upgradeThumbsToMidRes() {
+    // Skip if nothing needs upgrade
+    if (thumbsNeedingMidRes.size === 0) {
+        return;
+    }
+
+    // Re-render the low-res thumbnails at mid-res quality
+    const toUpgrade = Array.from(thumbsNeedingMidRes);
+    thumbsNeedingMidRes.clear();
+
+    function upgradeNextBatch() {
+        if (toUpgrade.length === 0) return;
+
+        const idx = toUpgrade.shift();
+        // Upgrade ALL canvases showing this part (e.g. selector + sync previews)
+        const canvases = document.querySelectorAll(`.js-part-thumb-preview[data-part-index="${idx}"]`);
+
+        canvases.forEach(canvasEl => {
+            // Only upgrade if actually visible in DOM/layout
+            if (canvasEl.offsetParent !== null) {
+                renderSinglePartThumbnail(canvasEl, idx, 'mid-res');
+            }
+        });
+
+        if (toUpgrade.length > 0) {
+            requestAnimationFrame(upgradeNextBatch);
+        }
+    }
+
+    upgradeNextBatch();
+}
+
 function upgradeThumbsToHighRes() {
     // Skip if nothing needs upgrade
     if (thumbsNeedingHighRes.size === 0) {
         return;
     }
 
-    // Re-render the low-res thumbnails at high-res quality
+    // Re-render the low-res/mid-res thumbnails at high-res quality
     const toUpgrade = Array.from(thumbsNeedingHighRes);
     thumbsNeedingHighRes.clear();
 
@@ -4372,22 +4424,22 @@ function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
     ) {
         cssH = cssW;
     }
-    // Apply quality multiplier: low-res = THUMB_LOW_RES_DPR, high-res = 1.0
-    const qualityMultiplier = quality === 'low-res' ? THUMB_LOW_RES_DPR : 1.0;
+    // Apply quality multiplier: low-res = 0.4, mid-res = 0.8, high-res = 1.0
+    let qualityMultiplier;
+    if (quality === 'low-res') {
+        qualityMultiplier = THUMB_LOW_RES_DPR;
+        thumbsNeedingMidRes.add(resolvedPartIdx);
+    } else if (quality === 'mid-res') {
+        qualityMultiplier = THUMB_MID_RES_DPR;
+        thumbsNeedingHighRes.add(resolvedPartIdx);
+    } else {
+        // high-res: full quality
+        qualityMultiplier = 1.0;
+    }
     // Limit thumbnail resolution to 1.0x DPR even on high-DPI screens
     // This reduces GPU readback time significantly (4x smaller buffer than 2.0x)
     const baseDpr = Math.max(1, Math.min(1.2, window.devicePixelRatio || 1));
     const dpr = baseDpr * qualityMultiplier;
-
-    if (quality === 'low-res') {
-        thumbsNeedingHighRes.add(resolvedPartIdx);
-        if (!thumbHighResUpgradeTimer) {
-            thumbHighResUpgradeTimer = setTimeout(() => {
-                thumbHighResUpgradeTimer = null;
-                upgradeThumbsToHighRes();
-            }, THUMB_HIGH_RES_DELAY_MS);
-        }
-    }
 
     const targetW = Math.max(1, Math.round(cssW * dpr));
     const targetH = Math.max(1, Math.round(cssH * dpr));
@@ -5611,11 +5663,15 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     modelPartThumbsWrap.hidden = !isVisible;
     modelPartThumbsWrap.setAttribute('aria-hidden', String(!isVisible));
 
-    // Cancel high-res upgrade if selector becomes hidden
+    // Cancel quality upgrades if selector becomes hidden
     if (!isVisible) {
         if (thumbHighResUpgradeTimer) {
             clearTimeout(thumbHighResUpgradeTimer);
             thumbHighResUpgradeTimer = null;
+        }
+        if (thumbMidResUpgradeTimer) {
+            clearTimeout(thumbMidResUpgradeTimer);
+            thumbMidResUpgradeTimer = null;
         }
         bulkSelectedPartIndices.clear();
         if (modelPartSelectorEl) modelPartSelectorEl.hidden = true;
