@@ -987,21 +987,6 @@ html.theme-dark .crop-pill__cancel {
     }
 }
 
-/* Mobile settings / desktop theme toggle swap */
-.mobile-settings-btn {
-    display: none;
-}
-
-@media (max-width: 899px) {
-    #btnThemeToggle {
-        display: none !important;
-    }
-
-    .mobile-settings-btn {
-        display: none !important;
-    }
-}
-
 .export-format-tab:hover:not(.is-active) {
     background: color-mix(in srgb, var(--palette-blueberry-100) 58%, transparent);
     color: var(--color-on-surface);

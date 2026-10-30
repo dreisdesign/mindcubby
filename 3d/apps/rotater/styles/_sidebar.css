@@ -915,7 +915,26 @@ html.loaded.layout-mobile-accordion .tab-panel {
 }
 
 html.loaded.layout-tablet-tabs .canvas-top-right {
+    display: flex !important;
+    left: auto;
+    right: 12px;
+    top: 12px;
+    max-width: none;
+    z-index: 44;
+}
+
+html.loaded.layout-tablet-tabs .canvas-top-right> :not(.canvas-utility-icons) {
     display: none !important;
+}
+
+html.loaded.layout-tablet-tabs .canvas-top-right .canvas-utility-icons {
+    display: inline-flex !important;
+}
+
+html.loaded.layout-tablet-tabs .canvas-top-right .canvas-utility-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
 }
 
 html.loaded.layout-mobile-accordion .canvas-top-right {
@@ -939,6 +958,13 @@ html.loaded.layout-mobile-accordion .canvas-top-right .canvas-utility-icons {
 html.loaded.layout-mobile-accordion .canvas-top-right .canvas-utility-btn {
     width: 36px;
     height: 36px;
+}
+
+html.loaded.layout-mobile-accordion #btnThemeToggle,
+html.loaded.layout-tablet-tabs #btnThemeToggle {
+    display: none !important;
+}
+    display: inline-flex;
 }
 
 html.loaded.layout-mobile-accordion .canvas-top-right .canvas-utility-btn.sidepanel-toggle-btn,
@@ -1159,11 +1185,16 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
     html.loaded.layout-v2-desktop .canvas-top-right .canvas-utility-btn {
         width: 36px;
         height: 36px;
+        display: inline-flex;
     }
 
     html.loaded.layout-v2-desktop .canvas-top-right .canvas-utility-btn.sidepanel-toggle-btn,
     html.loaded.layout-v2-desktop .canvas-top-right .canvas-utility-btn#btnAppSettingsCanvas {
         display: inline-flex;
+    }
+
+    html.loaded.layout-v2-desktop #btnThemeToggle {
+        display: none !important;
     }
 
     html.loaded.layout-v2-desktop #desktopRightRailBg {
@@ -1391,10 +1422,6 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
 
     html.loaded.layout-v2-desktop .canvas-overlay-br {
         right: 16px;
-    }
-
-    html.loaded.layout-v2-desktop .canvas-overlay-bl {
-        display: none;
     }
 }
 

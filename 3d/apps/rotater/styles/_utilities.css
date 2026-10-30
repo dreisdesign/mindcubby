@@ -126,15 +126,6 @@ html.loaded .sidebar {
         justify-content: center;
     }
 
-    /* On mobile/tablet, hide the floating button and show the persistent dock */
-    #btnAppSettingsCanvas {
-        display: none !important;
-    }
-
-    #appSettingsDock {
-        display: block !important;
-    }
-
     #appSettingsOverlay[hidden] {
         display: none !important;
     }
