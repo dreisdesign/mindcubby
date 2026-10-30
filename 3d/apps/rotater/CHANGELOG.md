@@ -1,14 +1,17 @@
 ## [Unreleased] - 2026-10-30
 
 ### Added
+- **Progressive 3-stage thumbnail quality system**: Implemented multi-stage thumbnail rendering that starts at ultra-low resolution (0.4 DPR) for instant interactivity, upgrades to mid-resolution (0.8 DPR) after 300ms, and reaches high-resolution (1.2 DPR) after 700ms. Each stage is individually timed and automatically resets when user interacts. Final DPR is capped at 1.2 with supersampling for optimal balance of quality and performance. Maintains 60 FPS with healthy garbage collection.
 - **Lighting configuration system with JSON organization**: Created dedicated `lighting-effects.js` module containing `LightingEffects` class for centralized lighting calculations. All lighting parameters now configured via `lighting-config.json` with global ranges (min/max/neutral/default) for each slider. Implemented normalized value system (0-1 mapping) to allow per-preset lighting customization while keeping global limits centralized in JSON.
 - **Per-preset lighting customization**: Added lighting configuration sections to `presets.json` with normalized values for each preset (ambientPower, keyMultiplier, fillDivisor, etc.). Lighting adjustments now persist as part of preset selection.
 - **Crop mode persistence across page reloads**: Crop mode active state now persists via localStorage and restores on hard refresh. Radio button selections properly clear when exiting crop mode to prevent stale UI state.
 
 ### Fixed
+- **Logo display regression**: Changed icon logo from favicon.svg to rotater.svg to maintain consistent circular branding with background throughout UI (canvas logo and sidebar logo). Ensures proper visual identity across all breakpoints.
 - **Settings and utility buttons now visible on all screen sizes**: Fixed display of settings gear (⚙️), fullscreen (⛶), and help (?) buttons across desktop, tablet, and mobile layouts. Removed CSS rules hiding buttons and redundant mobile button duplicate. Settings buttons now consistently visible without duplication.
 - **Dark mode button no longer duplicated**: Hid standalone dark mode toggle on all mobile/tablet/desktop layouts since theme control is already available in settings panel.
 - **Performance: Removed excessive console logging**: Removed all `console.log()` statements from performance-critical code paths (undo/redo handlers, profile reporters, CSS validation). Logging in frequently-called functions was causing noticeable lag.
+- **Fixed two critical memory leaks in thumbnail rendering**: Removed event listeners that were accumulating without cleanup in model-part action menus and selector cards. Implemented event delegation pattern to prevent listener duplication. Proper cleanup in timer management for mid-res and high-res upgrade phases.
 
 ### Changed
 - **Improved lighting architecture**: Refactored hardcoded lighting calculations into configurable module methods. Shadow intensity now smoothly fades instead of binary on/off toggle. Model shadow uses hardcoded constants while build plate shadow opacity uses configurable multiplier (0.4-0.8).
