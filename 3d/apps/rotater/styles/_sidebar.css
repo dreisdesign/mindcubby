@@ -343,6 +343,7 @@ html.loaded .sidebar-tabs {
     display: grid;
     gap: 6px;
     padding: 2px 2px 4px;
+    margin-bottom: 16px;
 }
 
 .app-settings-unit-row {

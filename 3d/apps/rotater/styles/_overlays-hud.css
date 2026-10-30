@@ -789,7 +789,7 @@ html.crop-mode .crop-corner {
     border-radius: 999px;
     cursor: pointer;
     color: var(--palette-blueberry-600);
-    transition: background 120ms;
+    transition: background 120ms, color 120ms;
     min-width: 42px;
     min-height: 42px;
 }
