@@ -712,6 +712,7 @@ html.theme-light .undo-redo-btn {
 }
 
 html.theme-light .undo-redo-btn:hover {
+    border-color: var(--palette-blueberry-700);
     color: #fff;
     background: var(--palette-blueberry-700);
 }
