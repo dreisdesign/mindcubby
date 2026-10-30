@@ -299,8 +299,8 @@ html.loaded .sidebar-tabs {
 }
 
 .app-settings-top-row {
-    margin-bottom: 12px;
-    padding-bottom: 12px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
     border-bottom: 1px solid var(--palette-blueberry-100);
 }
 
