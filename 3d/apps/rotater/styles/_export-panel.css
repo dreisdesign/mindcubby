@@ -604,7 +604,7 @@ html.loaded .canvas-replace-btn {
     justify-content: center;
     border-radius: 999px;
     border: 2px solid rgba(74, 67, 145, 0.14);
-    background: #fff;
+    background: var(--color-surface);
     color: var(--palette-blueberry-500);
     cursor: pointer;
     box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);

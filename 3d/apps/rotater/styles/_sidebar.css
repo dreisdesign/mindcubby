@@ -162,8 +162,8 @@ html.loaded .sidebar-tabs {
 
 .sidebar-tab.is-active {
     color: #fff;
-    border-color: color-mix(in srgb, var(--color-primary) 70%, #fff 30%);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 86%, #fff 14%), color-mix(in srgb, var(--color-primary) 94%, #000 6%));
+    border-color: color-mix(in srgb, var(--color-primary) 70%, transparent 30%);
+    background: linear-gradient(180deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 120%, #000 20%));
     box-shadow: var(--shadow-soft);
 }
 

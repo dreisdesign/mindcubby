@@ -7223,8 +7223,8 @@ function updateRulerHUD() {
 
     const hud = document.getElementById('rulerHUD');
     if (!hud) return;
-    hud.hidden = true;
-    document.documentElement.classList.toggle('ruler-visible', false);
+    hud.hidden = !rulerEnabled || !modelDims;
+    document.documentElement.classList.toggle('ruler-visible', rulerEnabled && !!modelDims);
     if (!modelDims) return;
 
     const dims = getRulerDisplayedDims();

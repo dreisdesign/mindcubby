@@ -417,7 +417,7 @@ html.loaded .sidebar {
 @media (min-width: 900px) and (max-width: 1180px),
 (min-width: 900px) and (max-height: 820px) {
     .canvas-bottom-center {
-        bottom: 72px;
+        bottom: 24px;
     }
 
     .cam-nav {

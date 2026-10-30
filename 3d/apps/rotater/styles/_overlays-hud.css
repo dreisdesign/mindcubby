@@ -115,7 +115,7 @@
     width: 52px;
     height: 52px;
     border-radius: 999px;
-    background: #fff;
+    background: var(--color-surface);
     color: var(--palette-blueberry-500);
     border: 2px solid rgba(74, 67, 145, 0.14);
     box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
@@ -128,7 +128,7 @@
 
 .info-icon-btn.canvas-utility-btn:hover {
     color: var(--palette-blueberry-500);
-    background: #fff;
+    background: var(--color-surface);
     border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
     box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
 }
@@ -739,7 +739,7 @@ html.crop-mode .crop-corner {
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    background: #fff;
+    background: var(--color-surface);
     border-radius: 999px;
     box-shadow: 0 2px 12px rgba(18, 16, 48, 0.16);
     padding: 5px 5px 5px 5px;
