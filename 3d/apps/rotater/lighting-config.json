@@ -2,6 +2,7 @@
   "lighting_sliders": {
     "Shadow Intensity": {
       "description": "Model shadow + build plate shadow darkness",
+      "slider_default": 50,
       "snap_count": 5,
       "range_multiplier": 50,
       "params": {
@@ -16,6 +17,7 @@
     },
     "Light Position": {
       "description": "Light direction around object (azimuth) and view frustum",
+      "slider_default": 180,
       "snap_count": 5,
       "range_multiplier": 180,
       "params": {
@@ -29,6 +31,7 @@
     },
     "Brightness": {
       "description": "Overall light intensity and falloff",
+      "slider_default": 120,
       "snap_count": 5,
       "range_multiplier": 80,
       "params": {
@@ -38,12 +41,14 @@
     },
     "Light Height": {
       "description": "Light height above object",
+      "slider_default": 130,
       "snap_count": 5,
       "range_multiplier": 90,
       "params": {}
     },
     "Contrast": {
       "description": "Overall contrast effect",
+      "slider_default": 200,
       "snap_count": 7,
       "range_multiplier": 70,
       "params": {
@@ -56,6 +61,7 @@
     },
     "Highlights": {
       "description": "Specular highlight intensity",
+      "slider_default": 100,
       "snap_count": 9,
       "range_multiplier": 100,
       "params": {}
