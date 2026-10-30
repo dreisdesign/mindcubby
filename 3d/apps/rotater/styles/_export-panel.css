@@ -1956,6 +1956,7 @@ html.dpad-hidden .canvas-overlay-br {
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 85%, white 15%);
     background: transparent;
     display: block;
+    image-rendering: -webkit-optimize-contrast;
 }
 
 .thumb-select-option-text {
