@@ -813,6 +813,38 @@ const TEXTURE_TUNE_DEFAULTS = {
     matteReflection: 10,
     lightLock: true,
 };
+// Note: light, contrast, highlights, shadows, shadowAzimuth, shadowHeight are overridden by lighting-config.json on load
+
+// Load lighting config (defaults and ranges) from JSON
+fetch('lighting-config.json')
+    .then(r => r.json())
+    .then(data => {
+        if (data.defaults) {
+            for (const [key, value] of Object.entries(data.defaults)) {
+                TEXTURE_TUNE_DEFAULTS[key] = value;
+            }
+        }
+        
+        // Parse lighting_sliders section
+        if (data.lighting_sliders) {
+            for (const [sliderName, sliderConfig] of Object.entries(data.lighting_sliders)) {
+                // Load params for this slider
+                if (sliderConfig.params) {
+                    for (const [paramName, paramConfig] of Object.entries(sliderConfig.params)) {
+                        if (paramConfig.min !== undefined && paramConfig.max !== undefined) {
+                            LIGHTING_RANGES[paramName] = { 
+                                min: paramConfig.min, 
+                                max: paramConfig.max 
+                            };
+                        }
+                    }
+                }
+            }
+        }
+        
+        lightingEffects.calculateActualValues();
+    })
+    .catch(err => console.warn('Could not load lighting-config.json, using defaults:', err));
 
 const BUILD_PLATE_SIZE_PRESETS = {
     '180x180': { w: 180, d: 180 },
@@ -1115,9 +1147,7 @@ let suppressSave = false;
 let suppressUndoSnapshot = true; // Start true to prevent snapshots during initialization
 let isUndoRedoInProgress = false; // Flag to prevent snapshots during undo/redo navigation
 let undoRedoNavigationInFlight = false; // Guard against rapid undo/redo clicks during page navigation
-console.log('[Init] Page load started, suppressUndoSnapshot initialized to true');
 const pageLoadId = Math.random().toString(36).substr(2, 9);
-console.log('[Init] Page load ID:', pageLoadId);
 // Declared early so restoreSettings() (called before these would otherwise be
 // initialized by their let declarations later in the file) can safely read/write them.
 let activeModelPreset = 'custom';
@@ -1169,14 +1199,11 @@ class FrameProfiler {
 
     toggle() {
         this.enabled = !this.enabled;
-        console.log(`[Profiler] ${this.enabled ? 'ENABLED' : 'DISABLED'}`);
-        if (this.enabled) console.log('[Profiler] Use profiler.setLoggingThreshold(ms) to adjust frame drop threshold');
         return this.enabled;
     }
 
     setLoggingThreshold(ms) {
         this.loggingThreshold = Math.max(1, ms);
-        console.log(`[Profiler] Logging threshold set to ${ms.toFixed(2)}ms`);
     }
 
     markStart(label) {
@@ -1215,20 +1242,13 @@ class FrameProfiler {
             const breakdown = this.frameSegments
                 .map(s => `${s.label}:${s.duration.toFixed(2)}ms`)
                 .join(' | ');
-            console.log(
-                `[Frame ${this.frameCount} SLOW ${totalFrameTimeMs.toFixed(2)}ms] ${breakdown}`
-            );
         }
 
         // Report periodic stats
         if (now - this.lastReport > this.reportInterval) {
             const slowRate = ((this.slowFrameCount / this.frameCount) * 100).toFixed(1);
-            console.log(
-                `[Profiler Report] ${this.frameCount} frames | ${this.slowFrameCount} slow (${slowRate}%) | threshold ${this.loggingThreshold.toFixed(2)}ms`
-            );
 
             // Show segment averages
-            console.log('[Profiler Segments - Average ms per frame]');
             const sorted = Object.entries(this.segmentStats)
                 .map(([label, stats]) => ({
                     label,
@@ -1236,7 +1256,6 @@ class FrameProfiler {
                 }))
                 .sort((a, b) => b.avg - a.avg);
             sorted.forEach(({ label, avg }) => {
-                console.log(`  ${label}: ${avg.toFixed(2)}ms`);
             });
 
             this.frameCount = 0;
@@ -1288,9 +1307,6 @@ class GlobalRAFMonitor {
                 } finally {
                     const duration = performance.now() - start;
                     if (self.enabled && duration > self.threshold) {
-                        console.log(
-                            `[GlobalRAF SLOW ${duration.toFixed(2)}ms] Callback exceeded ${self.threshold}ms`
-                        );
                     }
                 }
             });
@@ -1298,7 +1314,6 @@ class GlobalRAFMonitor {
 
         window.requestAnimationFrame = this.wrappedRAF;
         this.enabled = true;
-        console.log('[GlobalRAF Monitor] ENABLED — all RAF handlers tracked');
     }
 
     disable() {
@@ -1306,13 +1321,11 @@ class GlobalRAFMonitor {
             window.requestAnimationFrame = this.originalRAF;
             this.wrappedRAF = null;
             this.enabled = false;
-            console.log('[GlobalRAF Monitor] DISABLED');
         }
     }
 
     setThreshold(ms) {
         this.threshold = Math.max(1, ms);
-        console.log(`[GlobalRAF Monitor] Threshold set to ${ms.toFixed(2)}ms`);
     }
 }
 
@@ -2654,55 +2667,60 @@ function updateShadowCatcherPlacement() {
 
 function applyTextureLighting() {
     const gain = Math.max(0.4, Math.min(2, textureTuneState.light / 100));
-    const contrast = Math.max(0.5, Math.min(4, textureTuneState.contrast / 100));
+    const contrast = Math.max(0.5, Math.min(50, textureTuneState.contrast / 100));
     const highlights = Math.max(0.4, Math.min(4, textureTuneState.highlights / 100));
     const inv = 1 / Math.sqrt(contrast);
     const fwd = Math.sqrt(contrast);
     const shadowsAmt = Math.max(0, Math.min(1, textureTuneState.shadows / 100));
-    const shadowsOn = shadowsAmt > 0.001;
     const shadowBodyFactor = 1 - 0.78 * shadowsAmt;
     const shadowRimFactor = 1 - 0.62 * shadowsAmt;
 
-    if (ambientLight) ambientLight.intensity = LIGHT_BASE.ambient * gain * inv * shadowBodyFactor;
-    if (keyLight) keyLight.intensity = LIGHT_BASE.key * gain * contrast;
-    if (fillLight) fillLight.intensity = LIGHT_BASE.fill * gain * inv * shadowBodyFactor * 0.92;
-    if (rimLight) rimLight.intensity = LIGHT_BASE.rim * gain * fwd * Math.pow(highlights, 1.5) * shadowRimFactor;
+    // Use lighting effects module
+    lightingEffects.applyLighting(contrast, shadowsAmt * 100, gain, {
+        ambientLight,
+        keyLight,
+        fillLight,
+        rimLight
+    }, {
+        highlights,
+        fwd,
+        shadowBodyFactor,
+        shadowRimFactor
+    });
+
+    // Apply exposure using lighting effects module
+    lightingEffects.applyExposure(renderer, contrast, gain);
+
     if (renderer) {
-        renderer.toneMappingExposure = Math.max(0.2, Math.min(2.8,
-            LIGHT_BASE.exposure * Math.pow(gain, 0.92)
-        ));
-        renderer.shadowMap.enabled = shadowsOn;
+        renderer.shadowMap.enabled = true;
         renderer.shadowMap.needsUpdate = true;
     }
-    if (keyLight) keyLight.castShadow = shadowsOn;
+    
+    if (keyLight) keyLight.castShadow = true;
     if (keyLight?.shadow) {
-        keyLight.shadow.intensity = shadowsOn ? (0.18 + shadowsAmt * 0.82) : 0;
+        keyLight.shadow.intensity = 0.18 + shadowsAmt * 0.82;
         keyLight.shadow.needsUpdate = true;
     }
     if (mesh) {
         const mats = getMeshMaterials();
         const allTransmissive = mats.length > 0 && mats.every(m => m && 'transmission' in m && m.transmission > 0);
-        mesh.castShadow = shadowsOn && !allTransmissive;
+        mesh.castShadow = !allTransmissive;
         // Avoid shadow acne/banding artifacts on broad flat STL faces.
         mesh.receiveShadow = false;
     }
     if (shadowCatcher) {
         // Keep projected shadows visible regardless of build plate toggle.
-        shadowCatcher.visible = shadowsOn;
+        shadowCatcher.visible = shadowsAmt > 0;
         if (shadowCatcher.material && shadowCatcher.material.isShadowMaterial) {
             const usingBuildPlateSurface = !!(buildPlateEnabled && buildPlateMesh?.visible);
             const surfaceColor = usingBuildPlateSurface
                 ? getActiveRulerSurfaceColor()
                 : (renderer ? renderer.getClearColor(new THREE.Color()) : getActiveRulerSurfaceColor());
             const lum = getColorRelativeLuminance(surfaceColor);
-            // Keep receiver visually invisible (no third band), and only render
-            // neutral shadow darkening that adapts to surface brightness.
-            shadowCatcher.material.color.set(0x000000);
             const lumScale = THREE.MathUtils.lerp(0.45, 1.05, lum);
-            shadowCatcher.material.opacity = shadowsOn
-                ? (0.02 + shadowsAmt * 0.16 * lumScale)
-                : 0.02;
-            shadowCatcher.material.needsUpdate = true;
+            
+            // Use lighting effects module for shadow calculation
+            lightingEffects.updateShadowMaterial(shadowCatcher, shadowsAmt * 100, lumScale);
         }
     }
     if (buildPlateMesh) {
@@ -3873,7 +3891,6 @@ let THUMB_DEBUG_LOGGING = false;
 function queueModelPartThumbsRender(partIndices = null) {
     if (!modelPartSelectorBtn && !bgModelSyncSelectorBtn && !buildPlateModelSyncSelectorBtn) return;
 
-    if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Queue requested:', partIndices, 'inProgress:', modelPartThumbRenderInProgress, 'queued:', modelPartThumbsQueued);
 
     // Clear any pending debounce timer
     if (thumbRenderDebounceTimer) {
@@ -3907,13 +3924,11 @@ function queueModelPartThumbsRender(partIndices = null) {
     // Debounce: wait 80ms after last change to batch rapid updates
     thumbRenderDebounceTimer = setTimeout(() => {
         thumbRenderDebounceTimer = null;
-        if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Debounce timer fired, inProgress:', modelPartThumbRenderInProgress);
         // Double-check: if rendering started or already queued, don't re-queue
         if (!modelPartThumbRenderInProgress && !modelPartThumbsQueued) {
             modelPartThumbsQueued = true;
             requestAnimationFrame(() => {
                 modelPartThumbsQueued = false;
-                if (THUMB_DEBUG_LOGGING) console.log('[THUMB] RAF callback firing for incremental render');
                 renderModelPartThumbnailsIncremental();
             });
         }
@@ -3931,12 +3946,10 @@ function renderModelPartThumbnailsIncremental() {
 
     // Render thumbnail framework (summaries, menus) once
     if (!modelPartThumbRenderInProgress) {
-        if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Starting incremental render, queue size:', modelPartThumbRenderQueue.length);
         renderModelPartThumbnailsFramework();
         modelPartThumbRenderInProgress = true;
         modelPartThumbRenderQueue = buildPartThumbRenderQueue();
         thumbsNeedingHighRes.clear();
-        if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Built queue:', modelPartThumbRenderQueue.length, 'parts');
     }
 
     // Render low-res 3D for each thumbnail
@@ -3948,7 +3961,6 @@ function renderModelPartThumbnailsIncremental() {
         renderSinglePartThumbnail(canvasEl, idx, 'low-res'); // Low-res 3D
         const renderTime = performance.now() - renderStart;
         thumbsNeedingHighRes.add(idx); // Mark for high-res upgrade
-        if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Low-res 3D rendered for part', idx, 'in', renderTime.toFixed(1), 'ms');
     }
 
     // If queue still has items, schedule next batch
@@ -4261,7 +4273,6 @@ function upgradeThumbsToHighRes() {
     const toUpgrade = Array.from(thumbsNeedingHighRes);
     thumbsNeedingHighRes.clear();
 
-    if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Upgrade to high-res started, parts:', toUpgrade.length);
 
     function upgradeNextBatch() {
         if (toUpgrade.length === 0) return;
@@ -4422,12 +4433,10 @@ function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
     const renderStart = performance.now();
     renderer.render(scene, partThumbCamera);
     const renderTime = performance.now() - renderStart;
-    if (THUMB_DEBUG_LOGGING) console.log('[THUMB] WebGL render took', renderTime.toFixed(1), 'ms');
 
     const readStart = performance.now();
     renderer.readRenderTargetPixels(partThumbRenderTarget, 0, 0, rtW, rtH, pixelBuf);
     const readTime = performance.now() - readStart;
-    if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Pixel readback took', readTime.toFixed(1), 'ms');
 
     renderer.setRenderTarget(savedTarget);
 
@@ -4500,7 +4509,6 @@ function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
     }
 
     const canvasTime = performance.now() - canvasStart;
-    if (THUMB_DEBUG_LOGGING) console.log('[THUMB] Canvas drawing took', canvasTime.toFixed(1), 'ms');
 
     saved.forEach((s) => {
         if (!s?.mat) return;
@@ -4548,7 +4556,6 @@ function renderMultipartSummaryThumbnail(canvasEl) {
 
     const selected = getUiSelectedPartIndices();
     if (selected.length === 1) {
-        console.log('📌 [THUMB] Rendering single part thumbnail:', selected[0]);
         renderSinglePartThumbnail(canvasEl, selected[0], 'low-res');
         return;
     }
@@ -6777,6 +6784,7 @@ function updateExportWorkspaceTransparencyPattern() {
 function enterCropMode(forceReframe = false) {
     if (exportFrameEnabled) return;
     exportFrameEnabled = true;
+    try { localStorage.setItem(CROP_MODE_ACTIVE_KEY, '1'); } catch (e) { }
     document.documentElement.classList.add('crop-mode');
     _cropBackupDist = exportCamDist;
     _cropBackupElev = exportCamElev;
@@ -8280,6 +8288,7 @@ async function clearIDB() {
 }
 
 const SETTINGS_KEY = 'rotater_settings';
+const CROP_MODE_ACTIVE_KEY = 'rotater_cropModeActive';
 
 const settingsUrlSyncController = createSettingsUrlSyncController({
     onSync: () => settingsToURL(),
@@ -8294,30 +8303,21 @@ function scheduleSettingsToURL(delayMs = 120) {
 }
 
 function restoreSettingsUndo() {
-    // Guard against rapid undo clicks during page navigation
     if (undoRedoNavigationInFlight) {
-        console.log('[UNDO] Undo/redo navigation already in flight, ignoring');
         return;
     }
 
-    console.log('[UNDO] restoreSettingsUndo() CALLED');
     const undoUrl = settingsUndoController.undo();
     if (!undoUrl) {
-        console.warn('[UNDO] No undo snapshot available');
         return;
     }
 
-    console.log('[UNDO] About to navigate to:', undoUrl);
     try {
-        // Set flags to prevent snapshots during navigation and restoration
         undoRedoNavigationInFlight = true;
         isUndoRedoInProgress = true;
-        // Ensure suppression is enabled during the navigation
         suppressUndoSnapshot = true;
-        // Navigate to the saved URL to restore settings
         window.location.href = undoUrl;
     } catch (e) {
-        console.error('[UNDO] Failed to restore URL:', e);
         undoRedoNavigationInFlight = false;
         isUndoRedoInProgress = false;
     }
@@ -8326,9 +8326,7 @@ function restoreSettingsUndo() {
 function saveSettings() {
     const options = arguments[0] || {};
     const immediateUrlSync = !!options?.immediateUrlSync;
-    if (DEV_LOG) console.log(`[rotater] saveSettings called at ${Date.now()}`);
     if (suppressSave) {
-        if (DEV_LOG) console.log(`[rotater] saveSettings suppressed at ${Date.now()}`);
         return;
     }
 
@@ -8421,19 +8419,6 @@ function saveSettings() {
             bgSyncFollowSelected: bgSyncFollowSelected ? '1' : '0',
         }));
     } catch (e) { }
-    if (DEV_LOG) {
-        try {
-            console.log('[rotater] saveSettings ->', {
-                color: colorPick?.value,
-                shading: shadingEl?.value,
-                activeModelPreset,
-                activeBgPreset,
-                textureTuneState,
-                url: location.search,
-                localStorage: localStorage.getItem(SETTINGS_KEY)
-            });
-        } catch (e) { }
-    }
     if (immediateUrlSync) flushSettingsToURL();
     else scheduleSettingsToURL();
     updateUndoButtonState();
@@ -8443,7 +8428,6 @@ function restoreSettings() {
     suppressSave = true;
     pendingViewportOrbitRestore = null;
     _deferPostRestoreSaveUntilViewportOrbitApplied = false;
-    if (DEV_LOG) console.log(`[rotater] restoreSettings start at ${Date.now()}`);
     try {
         const urlS = getURLSettings(location.search);
         const urlParams = new URLSearchParams(location.search);
@@ -8479,7 +8463,6 @@ function restoreSettings() {
                 }
             });
         }
-        if (DEV_LOG) console.log('[rotater] merged settings', s);
 
         const clamp = (v, min, max, fallback) => {
             const n = parseFloat(v);
@@ -8563,7 +8546,7 @@ function restoreSettings() {
             }
 
             if (s.textureTuneLight != null) textureTuneState.light = clamp(s.textureTuneLight, 40, 200, TEXTURE_TUNE_DEFAULTS.light);
-            if (s.textureTuneContrast != null) textureTuneState.contrast = clamp(s.textureTuneContrast, 0, 200, TEXTURE_TUNE_DEFAULTS.contrast);
+            if (s.textureTuneContrast != null) textureTuneState.contrast = clamp(s.textureTuneContrast, 0, 400, TEXTURE_TUNE_DEFAULTS.contrast);
             if (s.textureTuneHighlights != null) textureTuneState.highlights = clamp(s.textureTuneHighlights, 0, 200, TEXTURE_TUNE_DEFAULTS.highlights);
             if (s.textureTuneShadowStrength != null) {
                 textureTuneState.shadows = clamp(s.textureTuneShadowStrength, 0, 100, TEXTURE_TUNE_DEFAULTS.shadows);
@@ -8955,28 +8938,30 @@ function restoreSettings() {
         if (!exportFormatEl?.value || !document.getElementById(`exportOpts-${exportFormatEl.value}`)) {
             applyExportFormat('gif');
         }
-        syncCropModeFromSelectedExportDimensions();
+        // Do NOT call syncCropModeFromSelectedExportDimensions() here - it enters crop mode on page load
+        // Crop mode should only be entered when the user explicitly chooses it
         updateCardResetButtonStates();
     } catch (e) { }
     // Done applying restored settings; re-enable saves and persist final state
     try {
         suppressSave = false;
-        if (DEV_LOG) console.log(`[rotater] restoreSettings applied, final state at ${Date.now()}`,
-            {
-                activeModelPreset,
-                activeBgPreset,
-                shading: shadingEl?.value,
-                color: colorPick?.value,
-                textureTuneState,
-                url: location.search,
-                localStorage: localStorage.getItem(SETTINGS_KEY)
-            });
         if (_deferPostRestoreSaveUntilViewportOrbitApplied && pendingViewportOrbitRestore) {
             // Avoid persisting a pre-restore camera state; save after orbit restore runs.
         } else {
             saveSettings();
         }
         updateUndoButtonState();
+        
+        // Restore crop mode if it was active before the page reload
+        try {
+            if (localStorage.getItem(CROP_MODE_ACTIVE_KEY) === '1') {
+                enterCropMode(false);
+            } else {
+                // If not in crop mode, ensure no export dimensions are selected
+                // (browser form state restoration might have re-checked them)
+                clearSelectedCropDimensions();
+            }
+        } catch (_) { }
     } catch (e) { /* non-fatal */ }
 }
 
@@ -9115,13 +9100,11 @@ function getUndoSnapshotURL(baseURL) {
                     partSettings.tone ?? '0'
                 ].join(',');
                 if (tuneStr !== ',,,,,,0') { // Only store if non-default
-                    console.log(`[getUndoSnapshotURL] Part ${idx} capturing texture tune: ${tuneStr}`);
                     params.set(`pt${idx}`, tuneStr);
                 }
 
                 // Capture per-part opacity (ppo = part per-opacity)
                 if (partSettings.partOpacity != null && partSettings.partOpacity !== 100) {
-                    console.log(`[getUndoSnapshotURL] Part ${idx} capturing opacity: ${partSettings.partOpacity}`);
                     params.set(`ppo${idx}`, String(partSettings.partOpacity));
                 }
             }
@@ -9162,7 +9145,6 @@ function applyMultipartColorsFromURL() {
             // Use explicit material family if provided, otherwise derive from shading
             if (materialFamilyParam) {
                 modelPartSettings[i].materialFamily = materialFamilyParam;
-                console.log(`[applyMultipartColorsFromURL] Part ${i} restored material family: ${materialFamilyParam}`);
             } else if (shadingParam) {
                 modelPartSettings[i].materialFamily = getMaterialFamilyFromShading(shadingParam);
             }
@@ -9183,7 +9165,6 @@ function applyMultipartColorsFromURL() {
                 const matteReflection = parseFloat(parts[6]);
                 const tone = parseInt(parts[7], 10);
 
-                console.log(`[applyMultipartColorsFromURL] Part ${i} texture tune: roughness=${metallicRoughness}, metalness=${metallicMetalness}, reflection=${metallicReflection}`);
 
                 if (!isNaN(metallicRoughness)) modelPartSettings[i].metallicRoughness = metallicRoughness;
                 if (!isNaN(metallicMetalness)) modelPartSettings[i].metallicMetalness = metallicMetalness;
@@ -9204,7 +9185,6 @@ function applyMultipartColorsFromURL() {
             const opacity = parseInt(opacityParam, 10);
             if (!isNaN(opacity)) {
                 modelPartSettings[i].partOpacity = opacity;
-                console.log(`[applyMultipartColorsFromURL] Part ${i} restored opacity: ${opacity}%`);
                 foundChanges = true;
             }
         }
@@ -9212,17 +9192,13 @@ function applyMultipartColorsFromURL() {
 
     // If we found multipart changes, apply them to mesh
     if (foundChanges && mesh) {
-        console.log('[applyMultipartColorsFromURL] Found changes, applying to mesh');
         if (typeof applyPartColorsToMesh === 'function') {
-            console.log('[applyMultipartColorsFromURL] Calling applyPartColorsToMesh()');
             applyPartColorsToMesh();
         }
         if (typeof rebuildMeshMaterialsForCurrentShading === 'function') {
-            console.log('[applyMultipartColorsFromURL] Calling rebuildMeshMaterialsForCurrentShading()');
             rebuildMeshMaterialsForCurrentShading();
         }
     } else {
-        console.log(`[applyMultipartColorsFromURL] No changes to apply (foundChanges=${foundChanges}, mesh=${!!mesh})`);
     }
 }
 
@@ -9317,11 +9293,8 @@ function settingsToURL() {
     // Capture this URL as a potential undo point (but not during page restoration or undo/redo operations)
     const colorHex = colorPick.value.replace('#', '').toUpperCase();
     if (suppressUndoSnapshot || isUndoRedoInProgress) {
-        console.log('[settingsToURL] SKIPPING snapshot - suppress=' + suppressUndoSnapshot + ', undoRedoInProgress=' + isUndoRedoInProgress);
     } else if (!settingsUndoController) {
-        console.log('[settingsToURL] SKIPPING snapshot - no controller');
     } else {
-        console.log('[settingsToURL] CAPTURING snapshot - c=' + colorHex);
         // For multipart models, capture all part colors in the snapshot URL
         // Pass the freshly-built URL (before history.replaceState) to ensure accuracy
         const freshURL = window.location.origin + window.location.pathname + '?' + p.toString();
@@ -9346,7 +9319,6 @@ async function restoreSession() {
     if (compactBtnLabel) compactBtnLabel.textContent = 'Upload';
     updateCropHintUI();
 
-    if (DEV_LOG) console.log(`[rotater] restoreSession: calling restoreSettings at ${Date.now()}`);
     restoreSettings();
     // Do not keep the splash up while heavy saved-model restore/parsing continues.
     dismissStartupSplash();
@@ -9359,7 +9331,6 @@ async function restoreSession() {
             suppressUndoSnapshot = false;
             isUndoRedoInProgress = false;
             undoRedoNavigationInFlight = false;
-            console.log('[restoreSession] Re-enabled undo snapshots (no saved file) after 300ms delay');
             // Ensure preset thumbnails are updated to show correct active preset
             if (typeof updateShadingThumbs === 'function') {
                 updateShadingThumbs();
@@ -9377,7 +9348,6 @@ async function restoreSession() {
         : stemFromFileName(saved.name);
     if (!renderer) initThree();
     controls.autoRotateSpeed = BASE_ROTATE_SPEED * getSpeed() * spinDir;
-    if (DEV_LOG) console.log(`[rotater] restoreSession: calling loadSTLBuffer for user file at ${Date.now()}`);
     try {
         if (isMultipart) {
             modelPartFiles = saved.parts.map(p => ({ name: p.name, buffer: p.buffer }));
@@ -9413,7 +9383,6 @@ async function restoreSession() {
         suppressUndoSnapshot = false;
         isUndoRedoInProgress = false;
         undoRedoNavigationInFlight = false;
-        console.log('[restoreSession] Re-enabled undo snapshots after 300ms delay');
         // Ensure preset thumbnails are updated to show correct active preset
         if (typeof updateShadingThumbs === 'function') {
             updateShadingThumbs();
@@ -9436,7 +9405,6 @@ function runWhenBrowserIdle(task, timeoutMs = AUTO_LOAD_BENCHY_IDLE_TIMEOUT_MS) 
 function scheduleAutoDemoModelLoad() {
     if (autoDemoLoadScheduled || autoDemoLoadSuppressed) return;
     autoDemoLoadScheduled = true;
-    if (DEV_LOG) console.log(`[rotater] restoreSession: scheduling demo model load at ${Date.now()}`);
     const runLoad = async () => {
         const hasExplicitModelName = !!currentFileName && currentFileName !== 'model' && currentFileName !== '3dbenchy';
         if (autoDemoLoadSuppressed || mesh || hasExplicitModelName) {
@@ -10260,13 +10228,11 @@ btnSettingsUndo?.addEventListener('click', restoreSettingsUndo);
 btnSettingsRedo?.addEventListener('click', () => {
     // Guard against rapid redo clicks during page navigation
     if (undoRedoNavigationInFlight) {
-        console.log('[REDO] Undo/redo navigation already in flight, ignoring');
         return;
     }
 
     const redoUrl = settingsUndoController.redo();
     if (redoUrl) {
-        console.log('[REDO] Navigating to:', redoUrl);
         // Set flags to prevent snapshots during navigation and restoration
         undoRedoNavigationInFlight = true;
         isUndoRedoInProgress = true;
@@ -11235,8 +11201,9 @@ syncExportQualitySliderFromSelect();
 syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
 syncExportQualityUiForFormat(exportFormatEl?.value ?? 'gif');
 syncExportDurationFromMain();
-syncCropModeFromSelectedExportDimensions();
 // Initialize which ratio is currently selected (for crop toggle logic) - update this on every restore
+// Do NOT call syncCropModeFromSelectedExportDimensions() here - it would enter crop mode on page load
+// if a radio button was previously checked. Crop mode should only be entered when the user explicitly chooses it.
 const checkedRatio = Array.from(exportDimensionInputs).find(i => i.checked);
 if (checkedRatio) lastSelectedExportCropRatio = checkedRatio.value;
 else lastSelectedExportCropRatio = null;
@@ -11811,19 +11778,15 @@ document.getElementById('exportBgColor')?.addEventListener('change', (e) => {
 
 // Debug: Verify CSS rules are loaded
 function validateExportPreviewStyles() {
-    console.log('[CSS Debug] ========== Validating Export Preview Styles ==========');
 
     const wrap = document.querySelector('.canvas-wrap');
-    console.log('[CSS Debug] Preview wrap element exists:', !!wrap);
 
     if (!wrap) {
-        console.warn('[CSS Debug] Preview wrap not found in DOM');
         return;
     }
 
     // Check if CSS rule is loaded
     const stylesheets = Array.from(document.styleSheets);
-    console.log('[CSS Debug] Total stylesheets loaded:', stylesheets.length);
 
     let foundRule = false;
     stylesheets.forEach((sheet, idx) => {
@@ -11831,36 +11794,18 @@ function validateExportPreviewStyles() {
             const rules = Array.from(sheet.cssRules || sheet.rules || []);
             rules.forEach(rule => {
                 if (rule.selectorText && rule.selectorText.includes('is-transparent')) {
-                    console.log('[CSS Debug] Found is-transparent rule in stylesheet', idx);
-                    console.log('[CSS Debug]   Selector:', rule.selectorText);
-                    console.log('[CSS Debug]   Background-image:', rule.style.backgroundImage?.substring(0, 80));
-                    console.log('[CSS Debug]   Background-size:', rule.style.backgroundSize);
                     foundRule = true;
                 }
             });
         } catch (e) {
-            console.log('[CSS Debug] Stylesheet', idx, 'is cross-origin or protected');
         }
     });
 
-    if (!foundRule) {
-        console.warn('[CSS Debug] WARNING: is-transparent CSS rule NOT found!');
-    }
-
     // Test the class
-    console.log('[CSS Debug] Testing class application...');
     wrap.classList.add('is-transparent');
     const computedAfterAdd = window.getComputedStyle(wrap);
-    console.log('[CSS Debug] After adding is-transparent class:');
-    console.log('[CSS Debug]   Computed backgroundImage:', computedAfterAdd.backgroundImage?.substring(0, 100));
-    console.log('[CSS Debug]   Computed backgroundSize:', computedAfterAdd.backgroundSize);
-    console.log('[CSS Debug]   Computed display:', computedAfterAdd.display);
-    console.log('[CSS Debug]   Computed visibility:', computedAfterAdd.visibility);
-    console.log('[CSS Debug]   offsetHeight:', wrap.offsetHeight);
-    console.log('[CSS Debug]   offsetWidth:', wrap.offsetWidth);
 
     wrap.classList.remove('is-transparent');
-    console.log('[CSS Debug] ========== Validation Complete ==========');
 }
 
 // Expose for debugging
@@ -12844,7 +12789,8 @@ try {
     const shouldRestoreExportWorkspace = isDesktopV2Layout() && localStorage.getItem('rotater_exportWorkspaceActive') === '1';
     if (shouldRestoreExportWorkspace) openExportWorkspace();
 } catch (_) { }
-syncCropModeFromSelectedExportDimensions();
+// Do NOT call syncCropModeFromSelectedExportDimensions() here - it enters crop mode on page load
+// Crop mode should only be entered when the user explicitly chooses it
 window.addEventListener('resize', () => {
     applyDesktopV2Layout();
     syncCropModeFromSelectedExportDimensions();
@@ -13493,15 +13439,15 @@ syncBuildUpdateBadge();
 const appSettingsOverlayEl = document.getElementById('appSettingsOverlay');
 const appSettingsPanelEl = appSettingsOverlayEl?.querySelector('.app-settings-panel') || null;
 const btnAppSettingsCanvasEl = document.getElementById('btnAppSettingsCanvas');
-const btnAppSettingsCanvasMobileEl = document.getElementById('btnAppSettingsCanvasMobile');
+const btnAppSettingsCanvasMobileEl = null;
 
 function getAppSettingsAnchorButton() {
-    const candidates = [btnAppSettingsCanvasEl, btnAppSettingsCanvasMobileEl].filter(Boolean);
+    const candidates = [btnAppSettingsCanvasEl].filter(Boolean);
     for (const btn of candidates) {
         const style = window.getComputedStyle(btn);
         if (style.display !== 'none' && style.visibility !== 'hidden') return btn;
     }
-    return btnAppSettingsCanvasEl || btnAppSettingsCanvasMobileEl || null;
+    return btnAppSettingsCanvasEl || null;
 }
 
 function positionAppSettingsOverlay() {
@@ -13533,10 +13479,6 @@ btnAppSettingsCanvasEl?.addEventListener('click', (e) => {
     toggleAppSettingsOverlay();
 });
 
-btnAppSettingsCanvasMobileEl?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleAppSettingsOverlay();
-});
 document.getElementById('btnAppSettingsClose')?.addEventListener('click', (e) => {
     e.stopPropagation();
     if (appSettingsOverlayEl) appSettingsOverlayEl.hidden = true;
@@ -13547,7 +13489,6 @@ document.addEventListener('click', (e) => {
     if (!(target instanceof Node)) return;
     if (appSettingsPanelEl?.contains(target)) return;
     if (btnAppSettingsCanvasEl?.contains(target)) return;
-    if (btnAppSettingsCanvasMobileEl?.contains(target)) return;
     appSettingsOverlayEl.hidden = true;
 });
 window.addEventListener('resize', () => {
@@ -13576,6 +13517,7 @@ document.addEventListener('keydown', (e) => {
 
 function cancelCropMode() {
     if (!exportFrameEnabled) return;
+    try { localStorage.removeItem(CROP_MODE_ACTIVE_KEY); } catch (e) { }
     const selected = document.querySelector('input[name="exportDimensions"]:checked');
     if (selected) lastSelectedExportCropRatio = selected.value;
     // Restore saved export framing and pop viewport back to standard scale
@@ -13607,6 +13549,7 @@ function cancelCropMode() {
 
 function confirmCropMode() {
     if (!exportFrameEnabled) return;
+    try { localStorage.removeItem(CROP_MODE_ACTIVE_KEY); } catch (e) { }
     // Commit current live crop framing.
     // Keep the camera zoom from the reframing operation (which set it to 1)
     // Do NOT restore the pre-crop zoom backup when confirming.
@@ -14974,6 +14917,19 @@ if (opacitySlider) {
     opacitySlider.addEventListener('input', setModelPresetCustomFromManualEdit);
 }
 
+/**
+ * Apply lighting configuration from preset if available
+ * @param {Object} preset - Preset object from presets.json
+ */
+function applyPresetLighting(preset) {
+    if (!preset?.lighting) return;
+    try {
+        lightingEffects.updateConfig(preset.lighting);
+        if (mesh) applyCurrentTextureTuning();
+    } catch (e) {
+    }
+}
+
 function applyModelPresetOnly(preset) {
     if (!preset?.url) return;
     const p = getURLSettings(preset.url);
@@ -14989,7 +14945,6 @@ function applyModelPresetOnly(preset) {
         const snapshotURL = getUndoSnapshotURL();
         settingsUndoController.captureSnapshot(snapshotURL);
     } catch (e) {
-        console.warn('[Settings Undo] Failed to capture URL:', e);
     }
 
     syncUIFromSelectedPart();
@@ -14998,6 +14953,10 @@ function applyModelPresetOnly(preset) {
         applyPartColorsToMesh();
         applyCurrentTextureTuning(targets);
     }
+    
+    // Apply lighting configuration from preset if available
+    applyPresetLighting(preset);
+    
     // Keep each part's custom baseline aligned to its latest preset-applied state.
     targets.forEach((idx) => {
         customModelSettingsByPart[idx] = { ...getPartSettings(idx) };
@@ -16047,7 +16006,6 @@ function makeRecipeCardDraggable(container) {
 
 // ── Recipe Card: Extract current app state and generate card ──────────────────
 function generateRecipeCardFromCurrentState() {
-    console.log('=== Generating Recipe Card from Current State ===\n');
 
     // Get filenames and colors from app state
     if (!modelPartNames || modelPartNames.length === 0) {
@@ -16056,12 +16014,9 @@ function generateRecipeCardFromCurrentState() {
         return null;
     }
 
-    console.log('Current files:', modelPartNames);
-    console.log('Current colors:', modelPartBaseColors);
 
     // Parse filenames
     const parsed = parseStackablesFilenames(modelPartNames);
-    console.log(`Parsed ${parsed.length} of ${modelPartNames.length} files`);
 
     if (parsed.length === 0) {
         console.error('Could not parse any filenames. They may not follow the Stackables format.');
@@ -16084,15 +16039,12 @@ function generateRecipeCardFromCurrentState() {
         return { name: colorName, hex: hex || '#808080' };
     });
 
-    console.log('Colors:', colorObjects);
 
     // Create part indices array (0, 1, 2, ... for each part)
     const partIndices = Array.from({ length: modelPartNames.length }, (_, i) => i);
 
     // Aggregate
     const aggregated = aggregateRecipeIngredients(parsed, colorObjects, partIndices);
-    console.log(`Aggregated into ${aggregated.length} unique ingredients`);
-    console.log('Ingredients:', aggregated);
 
     // Generate HTML
     const html = generateRecipeCardHTML(aggregated, {
@@ -16150,13 +16102,11 @@ function generateRecipeCardFromCurrentState() {
     container.style.top = '50%';
     container.style.display = 'block'; // Ensure it's visible
 
-    console.log('✓ Recipe card displayed immediately (without thumbnails for performance)\n');
 
     // IMPORTANT: Generate thumbnails AFTER displaying the card
     // This ensures the UI is responsive and doesn't freeze during thumbnail rendering
     // We use async/await within the RAF to process incrementally without blocking
     requestAnimationFrame(async () => {
-        console.log('Generating thumbnails asynchronously...');
 
         try {
             const thumbnails = await generateRecipeCardThumbnails(aggregated, {
@@ -16165,12 +16115,10 @@ function generateRecipeCardFromCurrentState() {
                 batchSize: 1, // Render 1 per frame to be safe
                 onProgress: (current, total) => {
                     if (current % 5 === 0 || current === total) {
-                        console.log(`  Thumbnails: ${current}/${total} rendered`);
                     }
                 }
             });
 
-            console.log(`✓ ${thumbnails.size} thumbnails generated\n`);
 
             // Inject thumbnails into the card (if container still exists)
             if (container && container.parentElement) {
