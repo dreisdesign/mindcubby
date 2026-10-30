@@ -9,12 +9,6 @@ html.loaded .logo {
     margin: 0;
 }
 
-@media (max-width: 640px) {
-    html.loaded .logo {
-        height: 40px;
-    }
-}
-
 html.loaded header>p {
     display: none;
 }

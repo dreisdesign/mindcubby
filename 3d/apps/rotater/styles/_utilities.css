@@ -154,7 +154,7 @@ html.loaded .sidebar {
 
     /* Shrink logo on small screens to save space */
     html.loaded .logo {
-        height: 24px;
+        height: 40px;
     }
 
     /* Make export panel narrower on mobile */
