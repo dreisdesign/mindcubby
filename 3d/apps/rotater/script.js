@@ -813,6 +813,10 @@ const TEXTURE_TUNE_DEFAULTS = {
     matteReflection: 10,
     lightLock: true,
 };
+
+// Maps slider element IDs to their neutral/default values for readout calculation
+const SLIDER_NEUTRAL_VALUES = {};
+
 // Note: light, contrast, highlights, shadows, shadowAzimuth, shadowHeight are overridden by lighting-config.json on load
 
 // Load lighting config (defaults and ranges) from JSON
@@ -825,9 +829,25 @@ fetch('lighting-config.json')
             }
         }
         
-        // Parse lighting_sliders section
+// Parse lighting_sliders section
         if (data.lighting_sliders) {
             for (const [sliderName, sliderConfig] of Object.entries(data.lighting_sliders)) {
+                // Map slider config name to HTML element ID and store neutral value
+                // Config names: "Shadow Intensity", "Light Position", "Brightness", "Light Height", "Contrast", "Highlights"
+                // HTML IDs: textureTuneShadows, textureTuneLightSource, textureTuneLight, textureTuneLightHeight, textureTuneContrast, textureTuneHighlights
+                const htmlIdMap = {
+                    'Shadow Intensity': 'textureTuneShadows',
+                    'Light Position': 'textureTuneLightSource',
+                    'Brightness': 'textureTuneLight',
+                    'Light Height': 'textureTuneLightHeight',
+                    'Contrast': 'textureTuneContrast',
+                    'Highlights': 'textureTuneHighlights'
+                };
+                const htmlId = htmlIdMap[sliderName];
+                if (htmlId && sliderConfig.slider_default !== undefined) {
+                    SLIDER_NEUTRAL_VALUES[htmlId] = sliderConfig.slider_default;
+                }
+                
                 // Load params for this slider
                 if (sliderConfig.params) {
                     for (const [paramName, paramConfig] of Object.entries(sliderConfig.params)) {
@@ -10637,17 +10657,14 @@ function getCenteredLightingReadout(slider) {
     
     const value = getSliderEffectiveValue(slider);
     
-    // For lighting sliders, the neutral point is the default value (which equals the initial value attribute)
-    const defaultStr = slider.getAttribute('value');
-    if (defaultStr) {
-        const neutral = parseFloat(defaultStr);
-        if (Number.isFinite(neutral)) {
-            // Calculate offset from neutral in percentage of the range
-            const rangeFromNeutral = Math.max(neutral - min, max - neutral);
-            const offset = value - neutral;
-            const percentFromNeutral = rangeFromNeutral > 0 ? Math.round((offset / rangeFromNeutral) * 100) : 0;
-            return `${percentFromNeutral >= 0 ? '+' : ''}${percentFromNeutral}`;
-        }
+    // Get the neutral point from the stored map
+    const neutral = SLIDER_NEUTRAL_VALUES[slider.id];
+    if (neutral !== undefined && Number.isFinite(neutral)) {
+        // Calculate offset from neutral in percentage of the range
+        const rangeFromNeutral = Math.max(neutral - min, max - neutral);
+        const offset = value - neutral;
+        const percentFromNeutral = rangeFromNeutral > 0 ? Math.round((offset / rangeFromNeutral) * 100) : 0;
+        return `${percentFromNeutral >= 0 ? '+' : ''}${percentFromNeutral}`;
     }
     
     // Fallback: use snap-count-based calculation
