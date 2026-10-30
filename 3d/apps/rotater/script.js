@@ -847,37 +847,45 @@ fetch('lighting-config.json')
                 
         const htmlId = mapping.id;
         const defaultKey = mapping.key;
-        const defaultValue = TEXTURE_TUNE_DEFAULTS[defaultKey];
+        
+// Use slider_default from config if available, otherwise fall back to TEXTURE_TUNE_DEFAULTS
+let defaultValue = sliderConfig.slider_default;
+if (defaultValue === undefined) {
+    defaultValue = TEXTURE_TUNE_DEFAULTS[defaultKey];
+} else {
+    // Update TEXTURE_TUNE_DEFAULTS with config value so effects use the right value
+    TEXTURE_TUNE_DEFAULTS[defaultKey] = defaultValue;
+}
+        
+// Store neutral value
+SLIDER_NEUTRAL_VALUES[htmlId] = defaultValue;
                 
-        // Store neutral value
-        SLIDER_NEUTRAL_VALUES[htmlId] = defaultValue;
-                
-        // Calculate min/max from range_multiplier
-        if (sliderConfig.range_multiplier !== undefined && Number.isFinite(defaultValue)) {
-            const multiplier = sliderConfig.range_multiplier;
-            const minValue = defaultValue - multiplier;
-            const maxValue = defaultValue + multiplier;
-            const snapCount = sliderConfig.snap_count || 5;
-            const step = (maxValue - minValue) / Math.max(1, snapCount - 1);
+// Calculate min/max from range_multiplier
+if (sliderConfig.range_multiplier !== undefined && Number.isFinite(defaultValue)) {
+    const multiplier = sliderConfig.range_multiplier;
+    const minValue = defaultValue - multiplier;
+    const maxValue = defaultValue + multiplier;
+    const snapCount = sliderConfig.snap_count || 5;
+    const step = (maxValue - minValue) / Math.max(1, snapCount - 1);
                     
-            // Update HTML slider element
-            const sliderEl = document.getElementById(htmlId);
-            if (sliderEl) {
-                sliderEl.min = String(minValue);
-                sliderEl.max = String(maxValue);
-                sliderEl.step = String(step);
-                sliderEl.value = String(defaultValue);
-                sliderEl.dataset.snapCount = String(snapCount);
-            }
-        }
+    // Update HTML slider element
+    const sliderEl = document.getElementById(htmlId);
+    if (sliderEl) {
+        sliderEl.min = String(minValue);
+        sliderEl.max = String(maxValue);
+        sliderEl.step = String(step);
+        sliderEl.value = String(defaultValue);
+        sliderEl.dataset.snapCount = String(snapCount);
+    }
+}
                 
-        // Load params for this slider
-        if (sliderConfig.params) {
-            for (const [paramName, paramConfig] of Object.entries(sliderConfig.params)) {
-                if (paramConfig.min !== undefined && paramConfig.max !== undefined) {
-                    LIGHTING_RANGES[paramName] = { 
-                        min: paramConfig.min, 
-                        max: paramConfig.max 
+// Load params for this slider
+if (sliderConfig.params) {
+    for (const [paramName, paramConfig] of Object.entries(sliderConfig.params)) {
+        if (paramConfig.min !== undefined && paramConfig.max !== undefined) {
+            LIGHTING_RANGES[paramName] = { 
+                min: paramConfig.min, 
+                max: paramConfig.max 
                     };
                 }
             }

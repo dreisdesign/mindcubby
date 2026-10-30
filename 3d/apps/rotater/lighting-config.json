@@ -48,7 +48,7 @@
     },
     "Contrast": {
       "description": "Overall contrast effect",
-      "slider_default": 200,
+      "slider_default": 300,
       "snap_count": 7,
       "range_multiplier": 70,
       "params": {
