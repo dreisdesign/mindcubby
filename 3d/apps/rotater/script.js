@@ -799,7 +799,7 @@ const PALETTE = {
 };
 const TEXTURE_TUNE_DEFAULTS = {
     light: 120,
-    contrast: 100,
+    contrast: 200,
     highlights: 100,
     shadows: 50,
     shadowAzimuth: 180,
@@ -8546,7 +8546,7 @@ function restoreSettings() {
             }
 
             if (s.textureTuneLight != null) textureTuneState.light = clamp(s.textureTuneLight, 40, 200, TEXTURE_TUNE_DEFAULTS.light);
-            if (s.textureTuneContrast != null) textureTuneState.contrast = clamp(s.textureTuneContrast, 0, 400, TEXTURE_TUNE_DEFAULTS.contrast);
+            if (s.textureTuneContrast != null) textureTuneState.contrast = clamp(s.textureTuneContrast, 0, 300, TEXTURE_TUNE_DEFAULTS.contrast);
             if (s.textureTuneHighlights != null) textureTuneState.highlights = clamp(s.textureTuneHighlights, 0, 200, TEXTURE_TUNE_DEFAULTS.highlights);
             if (s.textureTuneShadowStrength != null) {
                 textureTuneState.shadows = clamp(s.textureTuneShadowStrength, 0, 100, TEXTURE_TUNE_DEFAULTS.shadows);
@@ -10637,10 +10637,10 @@ function getCenteredLightingReadout(slider) {
     
     const value = getSliderEffectiveValue(slider);
     
-    // For lighting sliders, try to get the neutral point from the data attribute
-    const neutralStr = slider.getAttribute('data-neutral');
-    if (neutralStr) {
-        const neutral = parseFloat(neutralStr);
+    // For lighting sliders, the neutral point is the default value (which equals the initial value attribute)
+    const defaultStr = slider.getAttribute('value');
+    if (defaultStr) {
+        const neutral = parseFloat(defaultStr);
         if (Number.isFinite(neutral)) {
             // Calculate offset from neutral in percentage of the range
             const rangeFromNeutral = Math.max(neutral - min, max - neutral);
