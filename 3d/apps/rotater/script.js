@@ -3942,7 +3942,7 @@ let thumbHighResUpgradeTimer = null; // Timer to upgrade from low-res to high-re
 let thumbsNeedingHighRes = new Set(); // Parts that need high-res upgrade
 const THUMB_RENDER_DEBOUNCE_MS = 30; // Faster response
 const THUMB_HIGH_RES_DELAY_MS = 200; // Faster upgrade
-const THUMB_LOW_RES_DPR = 0.3; // Initial low-res pass with better quality
+const THUMB_LOW_RES_DPR = 0.4; // Initial low-res pass with better quality
 let THUMB_DEBUG_LOGGING = false;
 
 function queueModelPartThumbsRender(partIndices = null) {
