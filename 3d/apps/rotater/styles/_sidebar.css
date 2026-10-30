@@ -136,8 +136,8 @@ html.loaded .sidebar-tabs {
     justify-content: center;
     gap: 8px;
     min-height: 42px;
-    background: color-mix(in srgb, var(--palette-blueberry-100) 76%, #fff 24%);
-    border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 56%, transparent);
+    background: transparent;
+    border: 1px solid rgba(179, 168, 247, 0.3);
     border-radius: 12px;
     padding: 10px 10px;
     font-size: var(--text-sm, 12px);
@@ -146,7 +146,7 @@ html.loaded .sidebar-tabs {
     cursor: pointer;
     font-family: inherit;
     letter-spacing: 0.01em;
-    transition: color 0.12s, border-color 0.12s;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
 }
 
 .sidebar-tab-icon {
@@ -161,9 +161,9 @@ html.loaded .sidebar-tabs {
 }
 
 .sidebar-tab.is-active {
-    color: #fff;
-    border-color: color-mix(in srgb, var(--color-primary) 70%, transparent 30%);
-    background: var(--color-primary);
+    color: var(--palette-blueberry-900);
+    border-color: rgba(179, 168, 247, 0.6);
+    background: rgba(242, 240, 255, 0.95);
     box-shadow: var(--shadow-soft);
 }
 
