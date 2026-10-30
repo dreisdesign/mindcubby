@@ -585,61 +585,34 @@ html.loaded .canvas-replace-btn {
     justify-content: center;
     border-radius: 999px;
     border: 2px solid rgba(74, 67, 145, 0.14);
-    background: var(--color-surface);
-    color: #fff;
+    background: #fff;
+    color: var(--palette-blueberry-500);
     cursor: pointer;
     box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
     transition: border-color 0.15s, color 0.15s, opacity 0.15s, background 0.15s;
     font-size: 0;
     font-family: "Source Sans 3", system-ui, sans-serif;
+}
+
+html.theme-dark .pause-btn {
+    background: var(--palette-blueberry-500);
+    color: #fff;
 }
 
 html.theme-light .pause-btn {
-    color: var(--palette-blueberry-900);
+    color: var(--palette-blueberry-500);
 }
 
-.undo-redo-btn {
-    z-index: 1;
-    width: 52px;
-    height: 52px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    border: 2px solid rgba(74, 67, 145, 0.14);
-    background: var(--palette-blueberry-500);
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
-    transition: border-color 0.15s, color 0.15s, opacity 0.15s, background 0.15s;
-    font-size: 0;
-    font-family: "Source Sans 3", system-ui, sans-serif;
-}
-
-html.theme-light .undo-redo-btn {
-    color: #fff;
-}
-
-.undo-redo-btn:hover:not(:disabled) {
+.pause-btn:hover {
     border-color: var(--palette-blueberry-700);
     color: #fff;
     background: var(--palette-blueberry-700);
     box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
 }
 
-.undo-redo-btn:active:not(:disabled) {
-    transform: scale(0.95);
-}
-
-.undo-redo-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.undo-redo-btn:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-300) 75%, transparent);
+html.theme-light .pause-btn:hover {
+    color: #fff;
+    background: var(--palette-blueberry-700);
 }
 
 #btnFrameOverlay {
@@ -679,12 +652,6 @@ html.theme-light .undo-redo-btn {
     border-color: color-mix(in srgb, var(--color-export-hover) 70%, #fff);
 }
 
-.pause-btn:hover {
-    border-color: color-mix(in srgb, var(--palette-blueberry-500) 45%, transparent);
-    color: var(--palette-blueberry-500);
-    background: #fff;
-}
-
 .pause-btn:active {
     transform: scale(0.95);
 }
@@ -695,10 +662,65 @@ html.theme-light .undo-redo-btn {
 }
 
 .pause-btn.is-playing {
-    background: #fff;
+    background: var(--palette-blueberry-500);
     border-color: var(--palette-blueberry-500);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
+}
+
+html.theme-light .pause-btn.is-playing {
+    background: var(--palette-blueberry-500);
+    border-color: var(--palette-blueberry-500);
+    color: #fff;
+}
+
+.undo-redo-btn {
+    z-index: 1;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 2px solid rgba(74, 67, 145, 0.14);
+    background: #fff;
     color: var(--palette-blueberry-500);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-500) 15%, transparent);
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
+    transition: border-color 0.15s, color 0.15s, opacity 0.15s, background 0.15s;
+    font-size: 0;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+}
+
+html.theme-dark .undo-redo-btn {
+    background: var(--palette-blueberry-500);
+    color: #fff;
+}
+
+html.theme-light .undo-redo-btn {
+    color: var(--palette-blueberry-500);
+}
+
+.undo-redo-btn:hover:not(:disabled) {
+    border-color: var(--palette-blueberry-700);
+    color: #fff;
+    background: var(--palette-blueberry-700);
+    box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
+}
+
+.undo-redo-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.undo-redo-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.undo-redo-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blueberry-300) 75%, transparent);
 }
 
 .pause-btn.is-locked,

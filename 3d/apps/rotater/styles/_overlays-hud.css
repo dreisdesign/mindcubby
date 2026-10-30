@@ -115,14 +115,19 @@
     width: 52px;
     height: 52px;
     border-radius: 999px;
-    background: var(--palette-blueberry-500);
-    color: #fff;
+    background: #fff;
+    color: var(--palette-blueberry-500);
     border: 2px solid rgba(74, 67, 145, 0.14);
     box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
 }
 
-html.theme-light .info-icon-btn.canvas-utility-btn {
+html.theme-dark .info-icon-btn.canvas-utility-btn {
+    background: var(--palette-blueberry-500);
     color: #fff;
+}
+
+html.theme-light .info-icon-btn.canvas-utility-btn {
+    color: var(--palette-blueberry-500);
 }
 
 .info-icon-btn.canvas-utility-btn svg {
@@ -939,9 +944,17 @@ html.theme-dark .crop-pill__option:has(input:checked) {
     color: rgba(232, 227, 255, 0.95);
 }
 
+html.theme-dark .crop-pill__option:hover {
+    background: rgba(100, 90, 180, 0.15);
+}
+
 html.theme-dark .crop-pill__chevron {
     background: rgba(255, 255, 255, 0.08);
     color: rgba(200, 194, 255, 0.8);
+}
+
+html.theme-dark .crop-pill__chevron:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 html.theme-dark .crop-pill__cancel {
