@@ -800,8 +800,8 @@ html.crop-mode .crop-corner {
 }
 
 .crop-pill__option:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: var(--palette-blueberry-600);
+    background: var(--palette-blueberry-200);
+    color: var(--palette-blueberry-800);
 }
 
 .crop-pill__option,
@@ -948,7 +948,8 @@ html.theme-dark .crop-pill__option:has(input:checked) {
 }
 
 html.theme-dark .crop-pill__option:hover {
-    background: rgba(100, 90, 180, 0.15);
+    background: rgba(100, 90, 180, 0.3);
+    color: rgba(232, 227, 255, 0.95);
 }
 
 html.theme-dark .crop-pill__chevron {
