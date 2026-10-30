@@ -3419,8 +3419,13 @@ function openSelectedPartsActionMenu(anchorEl) {
         modelPartSelectedActionsMenuEl.innerHTML = `<button type="button" class="part-option-action part-option-action--toggle" data-part-action="visibility-toggle" data-part-index="${selected[0]}" data-part-action-scope="selected"><span>${visibilityLabel}</span><span class="option-switch${allHidden ? '' : ' is-on'}" aria-hidden="true"></span></button><button type="button" class="part-option-action" data-part-action="hide-others" data-part-index="${selected[0]}" data-part-action-scope="selected">Hide others</button><button type="button" class="part-option-action part-option-action--danger" data-part-action="remove" data-part-index="${selected[0]}" data-part-action-scope="selected">${deleteLabel}</button>`;
     }
 
-    modelPartSelectedActionsMenuEl.querySelectorAll('.part-option-action').forEach((actionBtn) => {
-        actionBtn.addEventListener('click', async (ev) => {
+    // Use event delegation on the parent to avoid adding duplicate listeners
+    // to newly created buttons every time innerHTML is updated
+    if (!modelPartSelectedActionsMenuEl.dataset.listenerAttached) {
+        modelPartSelectedActionsMenuEl.addEventListener('click', async (ev) => {
+            const actionBtn = ev.target.closest('.part-option-action');
+            if (!actionBtn) return;
+            
             ev.stopPropagation();
             const action = actionBtn.dataset.partAction;
             const partIdx = parseInt(actionBtn.dataset.partIndex || '-1', 10);
@@ -3480,7 +3485,8 @@ function openSelectedPartsActionMenu(anchorEl) {
                 closeModelPartActionMenus();
             }
         });
-    });
+        modelPartSelectedActionsMenuEl.dataset.listenerAttached = '1';
+    }
 
     closeModelPartActionMenus();
     modelPartSelectedActionsMenuEl.hidden = false;

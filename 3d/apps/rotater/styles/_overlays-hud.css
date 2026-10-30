@@ -800,7 +800,7 @@ html.crop-mode .crop-corner {
 }
 
 .crop-pill__option:hover {
-    background: var(--palette-blueberry-50);
+    background: rgba(0, 0, 0, 0.05);
     color: var(--palette-blueberry-600);
 }
 
