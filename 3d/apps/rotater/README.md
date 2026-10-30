@@ -2,13 +2,13 @@
 
 View and export rotating 3D STL models as animated GIF, MP4 video, or PNG snapshot — entirely in the browser. Made by [Mind Cubby](https://www.printables.com/@MindCubby_3731028/models).
 
-**Version (current workspace): 1.0.27**
+**Version (current workspace): 1.0.28**
 
-Documentation sync: 2026-09-21
-- **PWA & Apple Touch Icon Fix**: Added proper `apple-touch-icon.png` and `apple-touch-icon-precomposed` meta tags. Safari dock icon now correctly displays the "R" logo without switching to fallback. PNG format used instead of SVG for better Apple device compatibility.
-- Latest updates documented in `CHANGELOG.md` include persistent undo/redo history via localStorage (50-item circular buffer with deduplication), per-part opacity control for all materials (10-100% in 10% increments), matching opacity slider gradient visual feedback, and updated undo/redo buttons with consistent 52x52px circular design matching other canvas controls.
-- Opacity values persist through undo/redo via `ppo{idx}` URL parameters and page reloads. Clear materials preserve proper light transmission by multiplying opacity by 0.92.
-- Previous updates: crop UI refinements, crop toggle behavior, desktop export layout fixes.
+Documentation sync: 2026-10-30
+- **Lighting configuration system**: All lighting parameters now configurable via `lighting-config.json` with global ranges (min/max/neutral/default) for each slider. Normalized value system (0-1 mapping) allows per-preset lighting customization via `presets.json`. New `lighting-effects.js` module provides centralized calculations with methods for exposure, shadow updates, and normalized conversions. See [LIGHTING_CONFIG.md](LIGHTING_CONFIG.md) for details.
+- **Crop mode persistence**: Crop mode state now persists via localStorage across hard refreshes. Radio button selections properly clear when exiting crop mode.
+- **UI improvements**: Settings gear, fullscreen, and help buttons now consistently visible on all screen sizes (desktop, tablet, mobile). Removed redundant dark mode button duplicate (already in settings panel). Fixed performance by removing excessive console logging from critical code paths.
+- **Previous update (2026-10-29)**: Color picker positioning improved by moving sidebar to left side of desktop viewport. Better multi-touch support.
 
 Current development note: Model quick presets now use authoritative config-driven tone defaults via `presetShadeDefaults.model` in `color-rules.json`, so model preset shade positions can be controlled centrally (overriding preset URL `op` when configured). See [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md) and [_IGNORE/Cleanup V3 - May 7 2026/cleanup-v3](_IGNORE/Cleanup%20V3%20-%20May%207%202026/cleanup-v3).
 
@@ -24,6 +24,7 @@ Current extracted modules:
 
 | Module | Responsibility | Status |
 |---|---|---|
+| [lighting-effects.js](lighting-effects.js) | Lighting calculations with normalized value system, shadow opacity, and exposure control | Active |
 | [modules/menu-positioning.js](modules/menu-positioning.js) | Shared menu placement math for viewport/panel-aware positioning | Active |
 | [modules/model-part-action-menus.js](modules/model-part-action-menus.js) | Model-part action menu close/reset and placement behavior | Active |
 | [modules/orbit-frame-state.js](modules/orbit-frame-state.js) | Orbit frame-state helpers and camera orbit transform math | Active |

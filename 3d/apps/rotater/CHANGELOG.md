@@ -1,3 +1,25 @@
+## [Unreleased] - 2026-10-30
+
+### Added
+- **Lighting configuration system with JSON organization**: Created dedicated `lighting-effects.js` module containing `LightingEffects` class for centralized lighting calculations. All lighting parameters now configured via `lighting-config.json` with global ranges (min/max/neutral/default) for each slider. Implemented normalized value system (0-1 mapping) to allow per-preset lighting customization while keeping global limits centralized in JSON.
+- **Per-preset lighting customization**: Added lighting configuration sections to `presets.json` with normalized values for each preset (ambientPower, keyMultiplier, fillDivisor, etc.). Lighting adjustments now persist as part of preset selection.
+- **Crop mode persistence across page reloads**: Crop mode active state now persists via localStorage and restores on hard refresh. Radio button selections properly clear when exiting crop mode to prevent stale UI state.
+
+### Fixed
+- **Settings and utility buttons now visible on all screen sizes**: Fixed display of settings gear (⚙️), fullscreen (⛶), and help (?) buttons across desktop, tablet, and mobile layouts. Removed CSS rules hiding buttons and redundant mobile button duplicate. Settings buttons now consistently visible without duplication.
+- **Dark mode button no longer duplicated**: Hid standalone dark mode toggle on all mobile/tablet/desktop layouts since theme control is already available in settings panel.
+- **Performance: Removed excessive console logging**: Removed all `console.log()` statements from performance-critical code paths (undo/redo handlers, profile reporters, CSS validation). Logging in frequently-called functions was causing noticeable lag.
+
+### Changed
+- **Improved lighting architecture**: Refactored hardcoded lighting calculations into configurable module methods. Shadow intensity now smoothly fades instead of binary on/off toggle. Model shadow uses hardcoded constants while build plate shadow opacity uses configurable multiplier (0.4-0.8).
+- **Unified UI button styling**: All canvas utility buttons (settings, fullscreen, help) now 36×36px on tablet/mobile and display consistently using flexbox layout across all viewport sizes.
+
+### Technical Details
+- `lighting-effects.js`: 162 lines, LightingEffects class with methods for exposure, shadow updates, and normalized value calculations
+- `lighting-config.json`: Organized by slider (Shadow Intensity, Light Position, Brightness, Light Height, Contrast, Highlights) with Three.js property mappings
+- Crop mode: Uses `CROP_MODE_ACTIVE_KEY` localStorage key for persistence; restored during `restoreSettings()` on page load
+- Console removal: Removed formatted debug logs from profiler, RAF monitor, and CSS validation routines
+
 ## [Unreleased] - 2026-10-29
 
 ### Fixed
