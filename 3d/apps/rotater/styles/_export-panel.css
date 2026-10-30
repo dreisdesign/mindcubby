@@ -611,11 +611,6 @@ html.theme-light .pause-btn {
     box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
 }
 
-html.theme-light .pause-btn:hover {
-    color: #fff;
-    background: var(--palette-blueberry-700);
-}
-
 #btnFrameOverlay {
     gap: 0;
 }
