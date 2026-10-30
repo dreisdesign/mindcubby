@@ -1473,21 +1473,6 @@ html.loaded.layout-tablet-tabs .sidebar-brand-actions .info-icon-btn {
     }
 }
 
-@media (min-width: 1200px) and (max-width: 1320px) {
-    html.loaded.layout-v2-desktop .sidebar-logo--wordmark {
-        display: none;
-    }
-
-    html.loaded.layout-v2-desktop .sidebar-logo--icon {
-        display: block;
-        width: 40px;
-        min-width: 40px;
-        height: 40px;
-        object-fit: contain;
-        flex: 0 0 40px;
-    }
-}
-
 @media (max-width: 1399px) {
     #btnAppSettingsCanvas {
         display: inline-flex !important;
