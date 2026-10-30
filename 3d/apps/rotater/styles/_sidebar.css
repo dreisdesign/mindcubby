@@ -294,6 +294,12 @@ html.loaded .sidebar-tabs {
     flex-wrap: nowrap;
 }
 
+.app-settings-top-row {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--palette-blueberry-100);
+}
+
 .sidebar-brand-row {
     display: none;
 }
@@ -335,7 +341,7 @@ html.loaded .sidebar-tabs {
 
 .app-settings-inline-group {
     display: grid;
-    gap: 12px;
+    gap: 6px;
     padding: 2px 2px 4px;
 }
 

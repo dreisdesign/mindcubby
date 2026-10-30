@@ -932,6 +932,17 @@
                                 </svg></span>
                         </button>
                         <div id="appSettingsDockBody" class="app-settings-dock-body" hidden>
+                            <div class="app-settings-actions-row app-settings-top-row">
+                                <button id="btnThemeToggleRail" class="copy-link-btn copy-link-btn--secondary"
+                                    type="button" aria-label="Toggle dark mode">
+                                    <svg id="themeToggleRailIcon" width="16" height="16" viewBox="0 0 24 24"
+                                        fill="currentColor" aria-hidden="true">
+                                        <path id="themeToggleRailIconPath"
+                                            d="M12.0998 22.325C10.6665 22.325 9.31647 22.05 8.0498 21.5C6.78314 20.95 5.67897 20.2041 4.7373 19.2625C3.79564 18.3208 3.0498 17.2166 2.4998 15.95C1.9498 14.6833 1.6748 13.3333 1.6748 11.9C1.6748 9.76664 2.25814 7.81664 3.4248 6.04997C4.59147 4.28331 6.16647 3.01664 8.1498 2.24997C8.68314 2.03331 9.1873 2.07081 9.6623 2.36247C10.1373 2.65414 10.3831 3.06664 10.3998 3.59997C10.4331 4.94997 10.679 6.24164 11.1373 7.47498C11.5956 8.70831 12.2998 9.79998 13.2498 10.75C14.1998 11.7 15.2915 12.4083 16.5248 12.875C17.7581 13.3416 19.0498 13.575 20.3998 13.575C20.9331 13.575 21.3498 13.7875 21.6498 14.2125C21.9498 14.6375 22.0081 15.1 21.8248 15.6C21.0915 17.65 19.8331 19.2833 18.0498 20.5C16.2665 21.7166 14.2831 22.325 12.0998 22.325Z" />
+                                    </svg>
+                                    <span id="themeToggleRailLabel">Dark Mode</span>
+                                </button>
+                            </div>
                             <div class="fine-tuning-row fine-tuning-row--dock">
                                 <label class="gif-option-check adv-section-check" title="Remove snap points">
                                     <input type="checkbox" id="fineTuningCheck"> Fine tuning for precise control
@@ -1010,20 +1021,21 @@
                             <div class="app-settings-actions-row">
                                 <button id="btnClearBuildPlate" class="copy-link-btn copy-link-btn--secondary"
                                     title="Remove all loaded STL models without changing settings">
-                                    Clear Plate
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                    <span>Clear Plate</span>
                                 </button>
                                 <button id="btnLoadBenchy" class="copy-link-btn copy-link-btn--secondary"
                                     title="Load the default 3D Benchy test model">
-                                    Load Benchy
-                                </button>
-                                <button id="btnThemeToggleRail" class="copy-link-btn copy-link-btn--secondary"
-                                    type="button" aria-label="Toggle dark mode">
-                                    <svg id="themeToggleRailIcon" width="16" height="16" viewBox="0 0 24 24"
-                                        fill="currentColor" aria-hidden="true">
-                                        <path id="themeToggleRailIconPath"
-                                            d="M12.0998 22.325C10.6665 22.325 9.31647 22.05 8.0498 21.5C6.78314 20.95 5.67897 20.2041 4.7373 19.2625C3.79564 18.3208 3.0498 17.2166 2.4998 15.95C1.9498 14.6833 1.6748 13.3333 1.6748 11.9C1.6748 9.76664 2.25814 7.81664 3.4248 6.04997C4.59147 4.28331 6.16647 3.01664 8.1498 2.24997C8.68314 2.03331 9.1873 2.07081 9.6623 2.36247C10.1373 2.65414 10.3831 3.06664 10.3998 3.59997C10.4331 4.94997 10.679 6.24164 11.1373 7.47498C11.5956 8.70831 12.2998 9.79998 13.2498 10.75C14.1998 11.7 15.2915 12.4083 16.5248 12.875C17.7581 13.3416 19.0498 13.575 20.3998 13.575C20.9331 13.575 21.3498 13.7875 21.6498 14.2125C21.9498 14.6375 22.0081 15.1 21.8248 15.6C21.0915 17.65 19.8331 19.2833 18.0498 20.5C16.2665 21.7166 14.2831 22.325 12.0998 22.325Z" />
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
+                                        <polyline points="10 17 14 13 10 9"></polyline>
                                     </svg>
-                                    <span id="themeToggleRailLabel">Dark Mode</span>
+                                    <span>Load Benchy</span>
                                 </button>
                             </div>
                             <div class="app-settings-danger-row">
@@ -1445,6 +1457,17 @@
                     </button>
                 </div>
                 <div class="settings-panel-body app-settings-panel-body">
+                    <div class="app-settings-actions-row app-settings-top-row">
+                        <button id="btnThemeToggleRail-modal" class="copy-link-btn copy-link-btn--secondary"
+                            type="button" aria-label="Toggle dark mode">
+                            <svg id="themeToggleRailIcon-modal" width="16" height="16" viewBox="0 0 24 24"
+                                fill="currentColor" aria-hidden="true">
+                                <path id="themeToggleRailIconPath-modal"
+                                    d="M12.0998 22.325C10.6665 22.325 9.31647 22.05 8.0498 21.5C6.78314 20.95 5.67897 20.2041 4.7373 19.2625C3.79564 18.3208 3.0498 17.2166 2.4998 15.95C1.9498 14.6833 1.6748 13.3333 1.6748 11.9C1.6748 9.76664 2.25814 7.81664 3.4248 6.04997C4.59147 4.28331 6.16647 3.01664 8.1498 2.24997C8.68314 2.03331 9.1873 2.07081 9.6623 2.36247C10.1373 2.65414 10.3831 3.06664 10.3998 3.59997C10.4331 4.94997 10.679 6.24164 11.1373 7.47498C11.5956 8.70831 12.2998 9.79998 13.2498 10.75C14.1998 11.7 15.2915 12.4083 16.5248 12.875C17.7581 13.3416 19.0498 13.575 20.3998 13.575C20.9331 13.575 21.3498 13.7875 21.6498 14.2125C21.9498 14.6375 22.0081 15.1 21.8248 15.6C21.0915 17.65 19.8331 19.2833 18.0498 20.5C16.2665 21.7166 14.2831 22.325 12.0998 22.325Z" />
+                            </svg>
+                            <span id="themeToggleRailLabel-modal">Dark Mode</span>
+                        </button>
+                    </div>
                     <div class="fine-tuning-row fine-tuning-row--dock">
                         <label class="gif-option-check adv-section-check" title="Remove snap points">
                             <input type="checkbox" id="fineTuningCheck-modal"> Fine tuning for precise control
@@ -1521,20 +1544,21 @@
                     <div class="app-settings-actions-row">
                         <button id="btnClearBuildPlate-modal" class="copy-link-btn copy-link-btn--secondary"
                             title="Remove all loaded STL models without changing settings">
-                            Clear Plate
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                            <span>Clear Plate</span>
                         </button>
                         <button id="btnLoadBenchy-modal" class="copy-link-btn copy-link-btn--secondary"
                             title="Load the default 3D Benchy test model">
-                            Load Benchy
-                        </button>
-                        <button id="btnThemeToggleRail-modal" class="copy-link-btn copy-link-btn--secondary"
-                            type="button" aria-label="Toggle dark mode">
-                            <svg id="themeToggleRailIcon-modal" width="16" height="16" viewBox="0 0 24 24"
-                                fill="currentColor" aria-hidden="true">
-                                <path id="themeToggleRailIconPath-modal"
-                                    d="M12.0998 22.325C10.6665 22.325 9.31647 22.05 8.0498 21.5C6.78314 20.95 5.67897 20.2041 4.7373 19.2625C3.79564 18.3208 3.0498 17.2166 2.4998 15.95C1.9498 14.6833 1.6748 13.3333 1.6748 11.9C1.6748 9.76664 2.25814 7.81664 3.4248 6.04997C4.59147 4.28331 6.16647 3.01664 8.1498 2.24997C8.68314 2.03331 9.1873 2.07081 9.6623 2.36247C10.1373 2.65414 10.3831 3.06664 10.3998 3.59997C10.4331 4.94997 10.679 6.24164 11.1373 7.47498C11.5956 8.70831 12.2998 9.79998 13.2498 10.75C14.1998 11.7 15.2915 12.4083 16.5248 12.875C17.7581 13.3416 19.0498 13.575 20.3998 13.575C20.9331 13.575 21.3498 13.7875 21.6498 14.2125C21.9498 14.6375 22.0081 15.1 21.8248 15.6C21.0915 17.65 19.8331 19.2833 18.0498 20.5C16.2665 21.7166 14.2831 22.325 12.0998 22.325Z" />
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
+                                <polyline points="10 17 14 13 10 9"></polyline>
                             </svg>
-                            <span id="themeToggleRailLabel-modal">Dark Mode</span>
+                            <span>Load Benchy</span>
                         </button>
                     </div>
                     <div class="app-settings-danger-row">

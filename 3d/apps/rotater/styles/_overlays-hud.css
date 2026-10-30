@@ -800,8 +800,8 @@ html.crop-mode .crop-corner {
 }
 
 .crop-pill__option:hover {
-    background: var(--palette-blueberry-100);
-    color: var(--palette-blueberry-800);
+    background: var(--palette-blueberry-50);
+    color: var(--palette-blueberry-600);
 }
 
 .crop-pill__option,
