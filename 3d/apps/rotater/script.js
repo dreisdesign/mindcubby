@@ -5877,8 +5877,11 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 positionModelPartActionMenu(menu, ev.currentTarget);
             });
 
-            opt.querySelectorAll('.part-option-action').forEach((actionBtn) => {
-                actionBtn.addEventListener('click', async (ev) => {
+            // Use event delegation for part option actions to avoid memory leaks
+            if (!opt.dataset.partOptionActionsListenerAttached) {
+                opt.addEventListener('click', async (ev) => {
+                    const actionBtn = ev.target.closest('.part-option-action');
+                    if (!actionBtn) return;
                     ev.stopPropagation();
                     const action = actionBtn.dataset.partAction;
                     const partIdx = parseInt(actionBtn.dataset.partIndex || '-1', 10);
@@ -5973,7 +5976,8 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                         await removeMultipartPart(partIdx);
                     }
                 });
-            });
+                opt.dataset.partOptionActionsListenerAttached = '1';
+            }
 
             modelSelectorItems.appendChild(opt);
         });
