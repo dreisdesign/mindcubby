@@ -829,40 +829,63 @@ fetch('lighting-config.json')
             }
         }
         
-// Parse lighting_sliders section
+// Parse lighting_sliders section and calculate ranges dynamically
         if (data.lighting_sliders) {
             for (const [sliderName, sliderConfig] of Object.entries(data.lighting_sliders)) {
-                // Map slider config name to HTML element ID and store neutral value
-                // Config names: "Shadow Intensity", "Light Position", "Brightness", "Light Height", "Contrast", "Highlights"
-                // HTML IDs: textureTuneShadows, textureTuneLightSource, textureTuneLight, textureTuneLightHeight, textureTuneContrast, textureTuneHighlights
-                const htmlIdMap = {
-                    'Shadow Intensity': 'textureTuneShadows',
-                    'Light Position': 'textureTuneLightSource',
-                    'Brightness': 'textureTuneLight',
-                    'Light Height': 'textureTuneLightHeight',
-                    'Contrast': 'textureTuneContrast',
-                    'Highlights': 'textureTuneHighlights'
-                };
-                const htmlId = htmlIdMap[sliderName];
-                if (htmlId && sliderConfig.slider_default !== undefined) {
-                    SLIDER_NEUTRAL_VALUES[htmlId] = sliderConfig.slider_default;
-                }
+        // Map slider config name to HTML element ID and key in TEXTURE_TUNE_DEFAULTS
+        const htmlIdMap = {
+            'Shadow Intensity': { id: 'textureTuneShadows', key: 'shadows' },
+            'Light Position': { id: 'textureTuneLightSource', key: 'shadowAzimuth' },
+            'Brightness': { id: 'textureTuneLight', key: 'light' },
+            'Light Height': { id: 'textureTuneLightHeight', key: 'shadowHeight' },
+            'Contrast': { id: 'textureTuneContrast', key: 'contrast' },
+            'Highlights': { id: 'textureTuneHighlights', key: 'highlights' }
+        };
                 
-                // Load params for this slider
-                if (sliderConfig.params) {
-                    for (const [paramName, paramConfig] of Object.entries(sliderConfig.params)) {
-                        if (paramConfig.min !== undefined && paramConfig.max !== undefined) {
-                            LIGHTING_RANGES[paramName] = { 
-                                min: paramConfig.min, 
-                                max: paramConfig.max 
-                            };
-                        }
-                    }
+        const mapping = htmlIdMap[sliderName];
+        if (!mapping) continue;
+                
+        const htmlId = mapping.id;
+        const defaultKey = mapping.key;
+        const defaultValue = TEXTURE_TUNE_DEFAULTS[defaultKey];
+                
+        // Store neutral value
+        SLIDER_NEUTRAL_VALUES[htmlId] = defaultValue;
+                
+        // Calculate min/max from range_multiplier
+        if (sliderConfig.range_multiplier !== undefined && Number.isFinite(defaultValue)) {
+            const multiplier = sliderConfig.range_multiplier;
+            const minValue = defaultValue - multiplier;
+            const maxValue = defaultValue + multiplier;
+            const snapCount = sliderConfig.snap_count || 5;
+            const step = (maxValue - minValue) / Math.max(1, snapCount - 1);
+                    
+            // Update HTML slider element
+            const sliderEl = document.getElementById(htmlId);
+            if (sliderEl) {
+                sliderEl.min = String(minValue);
+                sliderEl.max = String(maxValue);
+                sliderEl.step = String(step);
+                sliderEl.value = String(defaultValue);
+                sliderEl.dataset.snapCount = String(snapCount);
+            }
+        }
+                
+        // Load params for this slider
+        if (sliderConfig.params) {
+            for (const [paramName, paramConfig] of Object.entries(sliderConfig.params)) {
+                if (paramConfig.min !== undefined && paramConfig.max !== undefined) {
+                    LIGHTING_RANGES[paramName] = { 
+                        min: paramConfig.min, 
+                        max: paramConfig.max 
+                    };
                 }
             }
         }
+    }
+}
         
-        lightingEffects.calculateActualValues();
+lightingEffects.calculateActualValues();
     })
     .catch(err => console.warn('Could not load lighting-config.json, using defaults:', err));
 

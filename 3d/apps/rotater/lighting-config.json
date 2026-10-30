@@ -2,10 +2,8 @@
   "lighting_sliders": {
     "Shadow Intensity": {
       "description": "Model shadow + build plate shadow darkness",
-      "slider_min": 0,
-      "slider_max": 100,
-      "slider_snap_count": 5,
-      "slider_default": 50,
+      "snap_count": 5,
+      "range_multiplier": 50,
       "params": {
         "shadowIntensityMultiplier": { "min": 0.4, "max": 0.8 },
         "shadowBaseOpacity": { "min": 0.06, "max": 0.12 },
@@ -18,10 +16,8 @@
     },
     "Light Position": {
       "description": "Light direction around object (azimuth) and view frustum",
-      "slider_min": 0,
-      "slider_max": 360,
-      "slider_snap_count": 5,
-      "slider_default": 180,
+      "snap_count": 5,
+      "range_multiplier": 180,
       "params": {
         "shadowCameraNear": { "min": 0.1, "max": 10, "three_property": "shadow.camera.near", "description": "Near plane of shadow camera frustum" },
         "shadowCameraFar": { "min": 100, "max": 1000, "three_property": "shadow.camera.far", "description": "Far plane of shadow camera frustum" },
@@ -33,10 +29,8 @@
     },
     "Brightness": {
       "description": "Overall light intensity and falloff",
-      "slider_min": 40,
-      "slider_max": 200,
-      "slider_snap_count": 5,
-      "slider_default": 120,
+      "snap_count": 5,
+      "range_multiplier": 80,
       "params": {
         "keyLightIntensity": { "min": 0.5, "max": 3.0, "three_property": "keyLight.intensity", "description": "Key light intensity multiplier" },
         "decayRate": { "min": 0.1, "max": 2.0, "three_property": "keyLight.decay", "description": "Light falloff decay (for distance attenuation)" }
@@ -44,18 +38,14 @@
     },
     "Light Height": {
       "description": "Light height above object",
-      "slider_min": 40,
-      "slider_max": 220,
-      "slider_snap_count": 5,
-      "slider_default": 130,
+      "snap_count": 5,
+      "range_multiplier": 90,
       "params": {}
     },
     "Contrast": {
       "description": "Overall contrast effect",
-      "slider_min": 0,
-      "slider_max": 300,
-      "slider_snap_count": 7,
-      "slider_default": 200,
+      "snap_count": 7,
+      "range_multiplier": 150,
       "params": {
         "keyMultiplier": { "min": 5, "max": 15 },
         "ambientPower": { "min": 3, "max": 8 },
@@ -66,10 +56,8 @@
     },
     "Highlights": {
       "description": "Specular highlight intensity",
-      "slider_min": 0,
-      "slider_max": 200,
-      "slider_snap_count": 9,
-      "slider_default": 100,
+      "snap_count": 9,
+      "range_multiplier": 100,
       "params": {}
     }
   }
