@@ -4424,7 +4424,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
     ) {
         cssH = cssW;
     }
-    // Apply quality multiplier: low-res = 0.4, mid-res = 0.8, high-res = 1.0
+    // Apply quality multiplier: low-res = 0.4, mid-res = 0.8, high-res = 1.2
     let qualityMultiplier;
     if (quality === 'low-res') {
         qualityMultiplier = THUMB_LOW_RES_DPR;
@@ -4433,8 +4433,8 @@ function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
         qualityMultiplier = THUMB_MID_RES_DPR;
         thumbsNeedingHighRes.add(resolvedPartIdx);
     } else {
-        // high-res: full quality
-        qualityMultiplier = 1.0;
+        // high-res: super-sample for anti-aliased edges
+        qualityMultiplier = 1.2;
     }
     // Limit thumbnail resolution to 1.0x DPR even on high-DPI screens
     // This reduces GPU readback time significantly (4x smaller buffer than 2.0x)
