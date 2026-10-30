@@ -584,7 +584,7 @@ html.loaded .canvas-replace-btn {
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    border: 2px solid rgba(74, 67, 145, 0.14);
+    border: 2px solid var(--palette-blueberry-500);
     background: #fff;
     color: var(--palette-blueberry-500);
     cursor: pointer;
@@ -597,6 +597,7 @@ html.loaded .canvas-replace-btn {
 html.theme-dark .pause-btn {
     background: var(--palette-blueberry-500);
     color: #fff;
+    border-color: var(--palette-blueberry-500);
 }
 
 html.theme-light .pause-btn {
@@ -683,7 +684,7 @@ html.theme-light .pause-btn.is-playing {
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    border: 2px solid rgba(74, 67, 145, 0.14);
+    border: 2px solid var(--palette-blueberry-500);
     background: #fff;
     color: var(--palette-blueberry-500);
     cursor: pointer;
@@ -696,6 +697,7 @@ html.theme-light .pause-btn.is-playing {
 html.theme-dark .undo-redo-btn {
     background: var(--palette-blueberry-500);
     color: #fff;
+    border-color: var(--palette-blueberry-500);
 }
 
 html.theme-light .undo-redo-btn {

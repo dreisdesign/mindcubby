@@ -117,13 +117,15 @@
     border-radius: 999px;
     background: #fff;
     color: var(--palette-blueberry-500);
-    border: 2px solid rgba(74, 67, 145, 0.14);
+    border: 2px solid var(--palette-blueberry-500);
     box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
+    transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
 html.theme-dark .info-icon-btn.canvas-utility-btn {
     background: var(--palette-blueberry-500);
     color: #fff;
+    border-color: var(--palette-blueberry-500);
 }
 
 html.theme-light .info-icon-btn.canvas-utility-btn {
