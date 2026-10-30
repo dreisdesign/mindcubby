@@ -3885,7 +3885,7 @@ let thumbHighResUpgradeTimer = null; // Timer to upgrade from low-res to high-re
 let thumbsNeedingHighRes = new Set(); // Parts that need high-res upgrade
 const THUMB_RENDER_DEBOUNCE_MS = 30; // Faster response
 const THUMB_HIGH_RES_DELAY_MS = 200; // Faster upgrade
-const THUMB_LOW_RES_DPR = 0.3; // Much faster initial low-res pass (blurry but model accurate)
+const THUMB_LOW_RES_DPR = 0.6; // Initial low-res pass with better quality
 let THUMB_DEBUG_LOGGING = false;
 
 function queueModelPartThumbsRender(partIndices = null) {
@@ -10634,10 +10634,26 @@ function getCenteredLightingReadout(slider) {
     const rawMax = parseFloat(slider.max);
     const min = Number.isFinite(rawMin) ? rawMin : 0;
     const max = Number.isFinite(rawMax) ? rawMax : 100;
+    
+    const value = getSliderEffectiveValue(slider);
+    
+    // For lighting sliders, try to get the neutral point from the data attribute
+    const neutralStr = slider.getAttribute('data-neutral');
+    if (neutralStr) {
+        const neutral = parseFloat(neutralStr);
+        if (Number.isFinite(neutral)) {
+            // Calculate offset from neutral in percentage of the range
+            const rangeFromNeutral = Math.max(neutral - min, max - neutral);
+            const offset = value - neutral;
+            const percentFromNeutral = rangeFromNeutral > 0 ? Math.round((offset / rangeFromNeutral) * 100) : 0;
+            return `${percentFromNeutral >= 0 ? '+' : ''}${percentFromNeutral}`;
+        }
+    }
+    
+    // Fallback: use snap-count-based calculation
     const snapCountRaw = parseInt(slider.dataset.snapCount, 10);
     const snapCount = Number.isInteger(snapCountRaw) && snapCountRaw >= 3 ? snapCountRaw : 5;
     const step = (max - min) / Math.max(1, snapCount - 1);
-    const value = getSliderEffectiveValue(slider);
     const index = Math.max(0, Math.min(snapCount - 1, Math.round((value - min) / Math.max(1e-9, step))));
     const midpoint = (snapCount - 1) / 2;
     const normalized = (index - midpoint) / Math.max(1, midpoint);

@@ -585,13 +585,17 @@ html.loaded .canvas-replace-btn {
     justify-content: center;
     border-radius: 999px;
     border: 2px solid rgba(74, 67, 145, 0.14);
-    background: #fff;
-    color: var(--palette-blueberry-500);
+    background: var(--color-surface);
+    color: #fff;
     cursor: pointer;
     box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
     transition: border-color 0.15s, color 0.15s, opacity 0.15s, background 0.15s;
     font-size: 0;
     font-family: "Source Sans 3", system-ui, sans-serif;
+}
+
+html.theme-light .pause-btn {
+    color: var(--palette-blueberry-900);
 }
 
 .undo-redo-btn {
@@ -611,6 +615,10 @@ html.loaded .canvas-replace-btn {
     transition: border-color 0.15s, color 0.15s, opacity 0.15s, background 0.15s;
     font-size: 0;
     font-family: "Source Sans 3", system-ui, sans-serif;
+}
+
+html.theme-light .undo-redo-btn {
+    color: var(--palette-blueberry-900);
 }
 
 .undo-redo-btn:hover:not(:disabled) {

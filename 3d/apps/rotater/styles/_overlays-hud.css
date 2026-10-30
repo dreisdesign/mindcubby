@@ -121,6 +121,10 @@
     box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
 }
 
+html.theme-light .info-icon-btn.canvas-utility-btn {
+    color: var(--palette-blueberry-900);
+}
+
 .info-icon-btn.canvas-utility-btn svg {
     fill: currentColor;
     color: inherit;
