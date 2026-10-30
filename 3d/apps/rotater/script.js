@@ -7260,9 +7260,10 @@ function updateRulerHUD() {
         btnInspectMode.title = label;
         btnInspectMode.setAttribute('aria-label', label);
     }
-    if (rulerModePickerEl) rulerModePickerEl.hidden = !hasParts;
-    if (rulerHoverToggleEl) rulerHoverToggleEl.hidden = !hasParts;
-    if (rulerSelectToggleEl) rulerSelectToggleEl.hidden = !isMultipartModel();
+    // Keep ruler mode toggles always hidden - they're redundant with the dedicated inspect button
+    if (rulerModePickerEl) rulerModePickerEl.hidden = true;
+    if (rulerHoverToggleEl) rulerHoverToggleEl.hidden = true;
+    if (rulerSelectToggleEl) rulerSelectToggleEl.hidden = true;
 
     const hud = document.getElementById('rulerHUD');
     if (!hud) return;

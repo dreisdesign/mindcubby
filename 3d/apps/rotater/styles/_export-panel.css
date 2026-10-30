@@ -608,7 +608,7 @@ html.theme-light .pause-btn {
     justify-content: center;
     border-radius: 999px;
     border: 2px solid rgba(74, 67, 145, 0.14);
-    background: var(--color-surface);
+    background: var(--palette-blueberry-500);
     color: #fff;
     cursor: pointer;
     box-shadow: 0 8px 20px rgba(18, 16, 48, 0.16);
@@ -618,13 +618,13 @@ html.theme-light .pause-btn {
 }
 
 html.theme-light .undo-redo-btn {
-    color: var(--palette-blueberry-900);
+    color: #fff;
 }
 
 .undo-redo-btn:hover:not(:disabled) {
-    border-color: color-mix(in srgb, var(--palette-blueberry-300) 80%, white 20%);
+    border-color: var(--palette-blueberry-700);
     color: #fff;
-    background: var(--color-surface);
+    background: var(--palette-blueberry-700);
     box-shadow: 0 10px 24px rgba(18, 16, 48, 0.2);
 }
 
