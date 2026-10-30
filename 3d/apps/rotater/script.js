@@ -4152,9 +4152,10 @@ function shouldRenderThumbCanvas(canvasEl) {
 }
 
 function ensurePartThumbRenderResources() {
-    // 256 keeps thumb quality visually crisp while significantly reducing the
-    // per-frame GPU+readback cost that can trip long rAF handlers.
-    const size = 256;
+    // 512 provides excellent anti-aliasing when downsampled to small display sizes
+    // while keeping readback cost reasonable. Downsampling from 512 to 72-144px display
+    // size creates natural anti-aliasing that eliminates aliasing artifacts.
+    const size = 512;
     if (!partThumbRenderTarget || partThumbRenderTarget.width !== size || partThumbRenderTarget.height !== size) {
         if (partThumbRenderTarget) partThumbRenderTarget.dispose();
         partThumbRenderTarget = new THREE.WebGLRenderTarget(size, size, {
