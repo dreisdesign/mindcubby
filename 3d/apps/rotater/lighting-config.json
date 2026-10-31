@@ -42,7 +42,7 @@
     "Light Height": {
       "description": "Light height above object",
       "slider_default": 130,
-      "snap_count": 5,
+      "snap_count": 8,
       "range_multiplier": 90,
       "params": {}
     },
@@ -63,7 +63,7 @@
       "description": "Specular highlight intensity",
       "slider_default": 100,
       "snap_count": 9,
-      "range_multiplier": 100,
+      "range_multiplier": 50,
       "params": {}
     }
   }

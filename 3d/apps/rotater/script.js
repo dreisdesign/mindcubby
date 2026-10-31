@@ -876,6 +876,21 @@ if (sliderConfig.range_multiplier !== undefined && Number.isFinite(defaultValue)
         sliderEl.step = String(step);
         sliderEl.value = String(defaultValue);
         sliderEl.dataset.snapCount = String(snapCount);
+        
+        // Sync state for this slider to match the default value
+        if (defaultKey === 'highlights') {
+            textureTuneState.highlights = defaultValue;
+        } else if (defaultKey === 'light') {
+            textureTuneState.light = defaultValue;
+        } else if (defaultKey === 'shadows') {
+            textureTuneState.shadows = defaultValue;
+        } else if (defaultKey === 'shadowAzimuth') {
+            textureTuneState.shadowAzimuth = defaultValue;
+        } else if (defaultKey === 'shadowHeight') {
+            textureTuneState.shadowHeight = defaultValue;
+        } else if (defaultKey === 'contrast') {
+            textureTuneState.contrast = defaultValue;
+        }
     }
 }
                 
@@ -893,7 +908,15 @@ if (sliderConfig.params) {
     }
 }
         
-lightingEffects.calculateActualValues();
+        lightingEffects.calculateActualValues();
+        
+        // Apply the loaded config values to UI and rendering
+        if (typeof updateTextureTuneUI === 'function') {
+            updateTextureTuneUI();
+        }
+        if (typeof applyCurrentTextureTuning === 'function') {
+            applyCurrentTextureTuning();
+        }
     })
     .catch(err => console.warn('Could not load lighting-config.json, using defaults:', err));
 
