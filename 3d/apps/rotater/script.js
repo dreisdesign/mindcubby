@@ -799,7 +799,7 @@ const PALETTE = {
 };
 const TEXTURE_TUNE_DEFAULTS = {
     light: 120,
-    contrast: 150,
+    contrast: 0,
     highlights: 100,
     shadows: 50,
     shadowAzimuth: 180,
@@ -2752,7 +2752,12 @@ function updateShadowCatcherPlacement() {
 
 function applyTextureLighting() {
     const gain = Math.max(0.4, Math.min(2, textureTuneState.light / 100));
-    const contrast = Math.max(0.7, Math.min(4, textureTuneState.contrast / 100));
+    // Map contrast from -100 to +100 centered range to 0.5 to 3.0 multiplier
+    // -100 → 0.5, 0 → 1.0, +100 → 3.0
+    const contrastValue = textureTuneState.contrast;
+    const contrast = contrastValue >= 0 
+        ? 1.0 + (contrastValue / 100) * 2.0  // 0 to +100 → 1.0 to 3.0
+        : 1.0 + (contrastValue / 100) * 0.5; // -100 to 0 → 0.5 to 1.0
     const highlights = Math.max(0.4, Math.min(4, textureTuneState.highlights / 100));
     const inv = 1 / Math.sqrt(contrast);
     const fwd = Math.sqrt(contrast);
@@ -10756,9 +10761,8 @@ function updateTextureTuneUI() {
     if (textureTuneLightSourceRow) textureTuneLightSourceRow.hidden = false;
     if (textureTuneLightLockBox) textureTuneLightLockBox.checked = textureTuneState.lightLock;
     if (textureTuneLightHeightRow) textureTuneLightHeightRow.hidden = false;
-    const showFinishSlider = isStandard && fineTuningMode;
     if (finishControlGroupEl) finishControlGroupEl.hidden = !isStandard;
-    if (textureTuneRoughnessRow) textureTuneRoughnessRow.hidden = !showFinishSlider;
+    if (textureTuneRoughnessRow) textureTuneRoughnessRow.hidden = !isStandard;
     if (textureTuneMetalnessRow) textureTuneMetalnessRow.hidden = mode !== 'metallic';
 
     if (textureTuneLightSlider) {

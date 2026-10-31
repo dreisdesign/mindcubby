@@ -6,13 +6,42 @@
       "snap_count": 5,
       "range_multiplier": 50,
       "params": {
-        "shadowIntensityMultiplier": { "min": 0.4, "max": 0.8 },
-        "shadowBaseOpacity": { "min": 0.06, "max": 0.12 },
-        "shadowMaxOpacity": { "min": 0.65, "max": 0.85 },
-        "shadowBias": { "min": -0.005, "max": 0.005, "three_property": "shadow.bias", "description": "Reduces shadow acne (negative) or peter panning (positive)" },
-        "shadowRadius": { "min": 0.5, "max": 3.0, "three_property": "shadow.radius", "description": "Soft shadow edge blur" },
-        "shadowMapWidth": { "min": 256, "max": 2048, "three_property": "shadow.mapSize.width", "description": "Shadow resolution width" },
-        "shadowMapHeight": { "min": 256, "max": 2048, "three_property": "shadow.mapSize.height", "description": "Shadow resolution height" }
+        "shadowIntensityMultiplier": {
+          "min": 0.4,
+          "max": 0.8
+        },
+        "shadowBaseOpacity": {
+          "min": 0.06,
+          "max": 0.12
+        },
+        "shadowMaxOpacity": {
+          "min": 0.65,
+          "max": 0.85
+        },
+        "shadowBias": {
+          "min": -0.005,
+          "max": 0.005,
+          "three_property": "shadow.bias",
+          "description": "Reduces shadow acne (negative) or peter panning (positive)"
+        },
+        "shadowRadius": {
+          "min": 0.5,
+          "max": 3.0,
+          "three_property": "shadow.radius",
+          "description": "Soft shadow edge blur"
+        },
+        "shadowMapWidth": {
+          "min": 256,
+          "max": 2048,
+          "three_property": "shadow.mapSize.width",
+          "description": "Shadow resolution width"
+        },
+        "shadowMapHeight": {
+          "min": 256,
+          "max": 2048,
+          "three_property": "shadow.mapSize.height",
+          "description": "Shadow resolution height"
+        }
       }
     },
     "Light Position": {
@@ -22,12 +51,42 @@
       "slider_snap_count": 9,
       "slider_default": 180,
       "params": {
-        "shadowCameraNear": { "min": 0.1, "max": 10, "three_property": "shadow.camera.near", "description": "Near plane of shadow camera frustum" },
-        "shadowCameraFar": { "min": 100, "max": 1000, "three_property": "shadow.camera.far", "description": "Far plane of shadow camera frustum" },
-        "shadowCameraLeft": { "min": -500, "max": 500, "three_property": "shadow.camera.left", "description": "Left boundary of shadow frustum" },
-        "shadowCameraRight": { "min": -500, "max": 500, "three_property": "shadow.camera.right", "description": "Right boundary of shadow frustum" },
-        "shadowCameraTop": { "min": -500, "max": 500, "three_property": "shadow.camera.top", "description": "Top boundary of shadow frustum" },
-        "shadowCameraBottom": { "min": -500, "max": 500, "three_property": "shadow.camera.bottom", "description": "Bottom boundary of shadow frustum" }
+        "shadowCameraNear": {
+          "min": 0.1,
+          "max": 10,
+          "three_property": "shadow.camera.near",
+          "description": "Near plane of shadow camera frustum"
+        },
+        "shadowCameraFar": {
+          "min": 100,
+          "max": 1000,
+          "three_property": "shadow.camera.far",
+          "description": "Far plane of shadow camera frustum"
+        },
+        "shadowCameraLeft": {
+          "min": -500,
+          "max": 500,
+          "three_property": "shadow.camera.left",
+          "description": "Left boundary of shadow frustum"
+        },
+        "shadowCameraRight": {
+          "min": -500,
+          "max": 500,
+          "three_property": "shadow.camera.right",
+          "description": "Right boundary of shadow frustum"
+        },
+        "shadowCameraTop": {
+          "min": -500,
+          "max": 500,
+          "three_property": "shadow.camera.top",
+          "description": "Top boundary of shadow frustum"
+        },
+        "shadowCameraBottom": {
+          "min": -500,
+          "max": 500,
+          "three_property": "shadow.camera.bottom",
+          "description": "Bottom boundary of shadow frustum"
+        }
       }
     },
     "Brightness": {
@@ -36,8 +95,18 @@
       "snap_count": 5,
       "range_multiplier": 80,
       "params": {
-        "keyLightIntensity": { "min": 0.5, "max": 3.0, "three_property": "keyLight.intensity", "description": "Key light intensity multiplier" },
-        "decayRate": { "min": 0.1, "max": 2.0, "three_property": "keyLight.decay", "description": "Light falloff decay (for distance attenuation)" }
+        "keyLightIntensity": {
+          "min": 0.5,
+          "max": 3.0,
+          "three_property": "keyLight.intensity",
+          "description": "Key light intensity multiplier"
+        },
+        "decayRate": {
+          "min": 0.1,
+          "max": 2.0,
+          "three_property": "keyLight.decay",
+          "description": "Light falloff decay (for distance attenuation)"
+        }
       }
     },
     "Light Height": {
@@ -48,16 +117,36 @@
       "params": {}
     },
     "Contrast": {
-      "description": "Overall contrast effect",
-      "slider_default": 150,
-      "snap_count": 7,
-      "range_multiplier": 120,
+      "description": "Overall contrast effect - centered at 0 for neutral",
+      "slider_min": -100,
+      "slider_max": 100,
+      "slider_snap_count": 9,
+      "slider_default": 0,
       "params": {
-        "keyMultiplier": { "min": 5, "max": 15 },
-        "ambientPower": { "min": 3, "max": 8 },
-        "exposureDivisor": { "min": 0.5, "max": 0.8 },
-        "fillDivisor": { "min": 2.0, "max": 3.5 },
-        "fillBase": { "min": 0.015, "max": 0.035 }
+        "keyMultiplier": {
+          "min": 5,
+          "max": 15
+        },
+        "ambientPower": {
+          "min": 3,
+          "max": 8
+        },
+        "exposureDivisor": {
+          "min": 0.5,
+          "max": 0.8
+        },
+        "fillDivisor": {
+          "min": 2.0,
+          "max": 3.5
+        },
+        "fillBase": {
+          "min": 0.015,
+          "max": 0.035
+        },
+        "ambientLight": {
+          "min": 0.1,
+          "max": 0.5
+        }
       }
     },
     "Highlights": {

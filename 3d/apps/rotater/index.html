@@ -85,7 +85,7 @@
         } else {
             syncBuildInfoMeta();
         }
-        const ROTATER_DEFAULT_QUERY = 'c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=30&ed=square&et=0&gd=1&jq=90&tto=1&tl=120&tc=150&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1';
+        const ROTATER_DEFAULT_QUERY = 'c=b4aed6&b=8d8ab7&mf=standard&rm=spin&sp=1&tr=360&wsr=360&sd=1&gl=1&ef=gif&eq=30&ed=square&et=0&gd=1&jq=90&tto=1&tl=120&tc=0&thi=100&ts=50&tsa=180&tsh=130&tpr=62&tpe=40&tcr=88&tce=10&ecd=106.4679&ece=0.0000&rv=1&rg=1';
         try {
             document.documentElement.classList.add('booting');
             const _desktopV2 = window.matchMedia('(min-width: 1200px)').matches;
@@ -909,7 +909,7 @@
                                     <span>Contrast<span class="slider-tooltip"
                                             id="textureTuneContrastVal">100%</span></span>
                                     <div class="range-wrap">
-                                        <input type="range" id="textureTuneContrast" min="30" max="270" step="10" data-snap-count="7" data-fine-step="5" value="150" data-group="scene">
+                                        <input type="range" id="textureTuneContrast" min="-100" max="100" step="5" data-snap-count="9" data-fine-step="1" value="0" data-group="scene">
                                     </div>
                                 </label>
                                 <label class="control-label range-label" id="textureTuneHighlightsRow">
