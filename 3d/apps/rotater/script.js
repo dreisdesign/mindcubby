@@ -4033,26 +4033,25 @@ function renderModelPartThumbnailsIncremental() {
         if (scene && camera && !isExporting) renderer.render(scene, camera);
 
         // Schedule mid-res upgrade first, then high-res upgrade
-        // Note: Even if thumbsNeedingHighRes is empty, we still have parts from the render that added to thumbsNeedingMidRes
-        if (!modelPartThumbsWrap?.hidden) {
-            // Mid-res upgrade
-            if (thumbHighResUpgradeTimer) clearTimeout(thumbHighResUpgradeTimer);
-            thumbHighResUpgradeTimer = setTimeout(() => {
-                thumbHighResUpgradeTimer = null;
-                if (thumbsNeedingMidRes.size > 0) {
-                    upgradeThumbsToMidRes();
-                }
-            }, THUMB_MID_RES_DELAY_MS);
-            
-            // High-res upgrade (if parts still need it after mid-res)
-            if (thumbMidResUpgradeTimer) clearTimeout(thumbMidResUpgradeTimer);
-            thumbMidResUpgradeTimer = setTimeout(() => {
-                thumbMidResUpgradeTimer = null;
-                if (thumbsNeedingHighRes.size > 0) {
-                    upgradeThumbsToHighRes();
-                }
-            }, THUMB_HIGH_RES_DELAY_MS);
-        }
+        // Always schedule timers if there's work to do, even if panel is currently hidden
+        // The upgrade functions check offsetParent to skip invisible canvases
+        // Mid-res upgrade
+        if (thumbHighResUpgradeTimer) clearTimeout(thumbHighResUpgradeTimer);
+        thumbHighResUpgradeTimer = setTimeout(() => {
+            thumbHighResUpgradeTimer = null;
+            if (thumbsNeedingMidRes.size > 0) {
+                upgradeThumbsToMidRes();
+            }
+        }, THUMB_MID_RES_DELAY_MS);
+        
+        // High-res upgrade (if parts still need it after mid-res)
+        if (thumbMidResUpgradeTimer) clearTimeout(thumbMidResUpgradeTimer);
+        thumbMidResUpgradeTimer = setTimeout(() => {
+            thumbMidResUpgradeTimer = null;
+            if (thumbsNeedingHighRes.size > 0) {
+                upgradeThumbsToHighRes();
+            }
+        }, THUMB_HIGH_RES_DELAY_MS);
 
         // If changes came in while rendering, re-queue to render them
         if (thumbRenderDirtyAfterComplete) {
@@ -6336,7 +6335,9 @@ function syncBgModelSyncSourceUI() {
         if (bgPresetThumb) bgPresetThumb.title = `Model Sync: ${selectedName}`;
     }
     updateBgShadeSliderVisual();
-    queueModelPartThumbsRender();
+    // Only queue rendering for parts shown in this menu
+    const menuPartIndices = Array.from({ length: modelPartNames.length }, (_, i) => i);
+    queueModelPartThumbsRender(menuPartIndices);
 }
 
 function applyPresetHoverPreview(preset) {
@@ -15349,7 +15350,9 @@ function syncBuildPlateModelSyncSourceUI() {
         if (buildPresetThumb) buildPresetThumb.title = `Model Sync: ${selectedName}`;
     }
     updateBuildPlateShadeControlVisibility();
-    queueModelPartThumbsRender();
+    // Only queue rendering for parts shown in this menu
+    const menuPartIndices = Array.from({ length: modelPartNames.length }, (_, i) => i);
+    queueModelPartThumbsRender(menuPartIndices);
 }
 
 // Hook manual color-picker changes to switch to custom (only real user interaction, not preset dispatch)
