@@ -5812,7 +5812,6 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             const enable = !rulerPartSelectMultiEnabled;
             setRulerPartSelectMultiEnabled(enable, true);
             syncModelPartBulkUIState();
-            queueModelPartThumbsRender();
         });
         modelPartSelectorMenu.appendChild(bulkBar);
         const modelSelectorItems = document.createElement('div');
@@ -5857,7 +5856,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     // Re-sync all states to ensure consistency
                     syncModelPartCheckboxStates();
                     syncModelPartBulkUIState();
-                    queueModelPartThumbsRender();
+                    queueModelPartThumbsRender([idx]);
                     saveSettings();
                 }, false);
             }
