@@ -1010,10 +1010,11 @@ html.dpad-hidden .canvas-overlay-br {
 .thumb-select-btn {
     width: 100%;
     display: grid;
-    grid-template-columns: 96px minmax(0, 1fr) auto;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
     gap: 12px;
-    align-items: center;
-    min-height: 120px;
+    align-items: start;
+    min-height: 140px;
     padding: 12px 14px;
     border-radius: var(--radius-card);
     border: 1px solid color-mix(in srgb, var(--palette-blueberry-300) 78%, white 22%);
@@ -1023,12 +1024,14 @@ html.dpad-hidden .canvas-overlay-br {
 }
 
 .thumb-select-btn.is-multipart-summary {
-    grid-template-columns: 88px minmax(0, 1fr) auto;
-    min-height: 96px;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    min-height: 120px;
 }
 
 .thumb-select-btn.is-multipart-summary.is-empty-selection {
     grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto;
 }
 
 .thumb-select-btn.is-multipart-summary.is-empty-selection .thumb-select-canvas {
@@ -1064,6 +1067,9 @@ html.dpad-hidden .canvas-overlay-br {
     border: none;
     background: transparent;
     display: block;
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: center;
 }
 
 .thumb-select-btn.is-multipart-summary .thumb-select-canvas {
@@ -1071,22 +1077,14 @@ html.dpad-hidden .canvas-overlay-br {
     height: 88px;
 }
 
-.thumb-select-text {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--color-on-surface);
-    text-align: left;
-    line-height: 1.24;
-    overflow-wrap: anywhere;
-}
-
 .thumb-select-btn.is-multipart-summary .thumb-select-text {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     gap: 4px;
     min-height: 0;
+    text-align: center;
 }
 
 .thumb-select-summary-title {
@@ -1164,12 +1162,15 @@ html.dpad-hidden .canvas-overlay-br {
     width: 20px;
     height: 20px;
     color: var(--color-on-surface);
-    margin-right: 4px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     transform: rotate(-90deg);
     transition: transform 0.16s ease;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    margin-top: 4px;
 }
 
 .thumb-select-chevron svg {

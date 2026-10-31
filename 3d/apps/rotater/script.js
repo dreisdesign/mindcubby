@@ -10751,7 +10751,7 @@ function updateTextureTuneUI() {
     const mode = getActiveShadingMode();
     const isStandard = mode === 'metallic' || mode === 'phong' || mode === 'matte';
     if (textureTuneContrastRow) textureTuneContrastRow.hidden = false;
-    if (textureTuneHighlightsRow) textureTuneHighlightsRow.hidden = false;
+    if (textureTuneHighlightsRow) textureTuneHighlightsRow.hidden = true;
     if (textureTuneShadowRow) textureTuneShadowRow.hidden = false;
     if (textureTuneLightSourceRow) textureTuneLightSourceRow.hidden = false;
     if (textureTuneLightLockBox) textureTuneLightLockBox.checked = textureTuneState.lightLock;
