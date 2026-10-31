@@ -40,11 +40,13 @@
       }
     },
     "Light Height": {
-      "description": "Light height above object",
-      "slider_default": 130,
-      "snap_count": 8,
-      "range_multiplier": 90,
-      "params": {}
+      "description": "Light elevation angle (0°-360°)",
+      "slider_default": 360,
+      "snap_count": 13,
+      "range_multiplier": 180,
+      "params": {
+        "lightElevation": { "min": 15, "max": 85, "description": "Light height angle in degrees" }
+      }
     },
     "Contrast": {
       "description": "Overall contrast effect",
@@ -60,11 +62,14 @@
       }
     },
     "Highlights": {
-      "description": "Specular highlight intensity",
+      "description": "Specular highlight intensity and glossiness",
       "slider_default": 100,
       "snap_count": 9,
       "range_multiplier": 50,
-      "params": {}
+      "params": {
+        "highlightScale": { "min": 0.3, "max": 2.0, "description": "Overall specular highlight intensity multiplier" },
+        "highlightSharpness": { "min": 10, "max": 100, "description": "Specular highlight edge sharpness" }
+      }
     }
   }
 }

@@ -134,10 +134,19 @@ class LightingEffects {
     }
     
     /**
-     * Get current normalized config (0-1 values)
+     * Get highlight intensity scale for material specularity
+     * @returns {number} Highlight scale multiplier (0.3 to 2.0)
      */
-    getConfig() {
-        return { ...this.config };
+    getHighlightScale() {
+        return this.actualValues.highlightScale ?? 1.0;
+    }
+    
+    /**
+     * Get highlight sharpness for material shininess
+     * @returns {number} Highlight sharpness (10 to 100)
+     */
+    getHighlightSharpness() {
+        return this.actualValues.highlightSharpness ?? 32;
     }
     
     /**

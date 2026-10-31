@@ -2810,6 +2810,10 @@ function applyCurrentTextureTuning(targetIndices = null) {
     const targetSet = Array.isArray(targetIndices)
         ? new Set(targetIndices.filter((idx) => Number.isInteger(idx) && idx >= 0))
         : null;
+    
+    // Calculate highlight intensity with lighting effects scale
+    const highlightIntensity = (textureTuneState.highlights / 100) * lightingEffects.getHighlightScale();
+    
     mats.forEach((mat, idx) => {
         if (!mat || !mat.isMeshStandardMaterial) return;
         if (targetSet && !targetSet.has(idx)) return;
@@ -2819,11 +2823,11 @@ function applyCurrentTextureTuning(targetIndices = null) {
         if (mode === 'metallic') {
             mat.metalness = s.metallicMetalness / 100;
             mat.roughness = (100 - s.metallicRoughness) / 100;
-            mat.envMapIntensity = (s.metallicReflection / 100) * (textureTuneState.highlights / 100);
+            mat.envMapIntensity = (s.metallicReflection / 100) * highlightIntensity;
         } else if (mode === 'clear' || mode === 'glass') {
             mat.metalness = 0;
             mat.roughness = Math.max(0.03, Math.min(0.35, (100 - s.phongRoughness) / 100));
-            mat.envMapIntensity = Math.max(0.6, (s.phongReflection / 100) * (textureTuneState.highlights / 100));
+            mat.envMapIntensity = Math.max(0.6, (s.phongReflection / 100) * highlightIntensity);
             if ('transmission' in mat) mat.transmission = 0.88;
             if ('ior' in mat) mat.ior = 1.45;
             if ('thickness' in mat) mat.thickness = 0.65;
@@ -2833,7 +2837,7 @@ function applyCurrentTextureTuning(targetIndices = null) {
         } else if (mode === 'phong') {
             mat.metalness = 0;
             mat.roughness = (100 - s.phongRoughness) / 100;
-            mat.envMapIntensity = (s.phongReflection / 100) * (textureTuneState.highlights / 100);
+            mat.envMapIntensity = (s.phongReflection / 100) * highlightIntensity;
             if (materialFamily === 'ceramic') {
                 if ('clearcoat' in mat) mat.clearcoat = 0.26;
                 if ('clearcoatRoughness' in mat) mat.clearcoatRoughness = 0.34;
@@ -2844,16 +2848,19 @@ function applyCurrentTextureTuning(targetIndices = null) {
             // Clay: matte non-metal baseline with faint environment response.
             mat.metalness = 0;
             mat.roughness = (100 - s.matteRoughness) / 100;
-            mat.envMapIntensity = (s.matteReflection / 100) * (textureTuneState.highlights / 100);
+            mat.envMapIntensity = (s.matteReflection / 100) * highlightIntensity;
         }
         // Optimization: Removing mat.needsUpdate = true. 
         // Uniforms (metalness, roughness, etc) do not require shader recompilation.
     });
 }
 
-function getMaterial(shading, baseColor, partSettings) {
+function getMaterial(shading, baseColor, partSettings, highlightIntensity = null) {
     if (shading === "flat" || shading === "toon") shading = "matte"; // legacy value
-
+    
+    // Use provided highlight intensity or calculate default
+    const highlights = highlightIntensity ?? (textureTuneState.highlights / 100) * lightingEffects.getHighlightScale();
+    
     // Use per-part tone if available, otherwise fall back to the UI slider.
     const ps = partSettings || null;
     const toneVal = ps != null && ps.tone != null ? ps.tone : parseInt(opacitySlider ? opacitySlider.value : 0, 10);
@@ -2894,7 +2901,7 @@ function getMaterial(shading, baseColor, partSettings) {
             ...base,
             metalness: 0,
             roughness: Math.max(0.03, Math.min(0.35, (100 - phongRoughness) / 100)),
-            envMapIntensity: Math.max(0.6, (phongReflection / 100) * (textureTuneState.highlights / 100)),
+            envMapIntensity: Math.max(0.6, (phongReflection / 100) * highlights),
             transmission: 0.88,
             ior: 1.45,
             thickness: 0.65,
@@ -2909,7 +2916,7 @@ function getMaterial(shading, baseColor, partSettings) {
             ...base,
             metalness: 0,
             roughness: (100 - matteRoughness) / 100,
-            envMapIntensity: ((matteReflection || 0) / 100) * (textureTuneState.highlights / 100),
+            envMapIntensity: ((matteReflection || 0) / 100) * highlights,
         });
     }
     if (shading === "phong" || shading === "clear" || shading === "glass") {
@@ -2918,7 +2925,7 @@ function getMaterial(shading, baseColor, partSettings) {
                 ...base,
                 metalness: 0,
                 roughness: Math.max(0.18, Math.min(0.72, (100 - phongRoughness) / 100)),
-                envMapIntensity: (phongReflection / 100) * (textureTuneState.highlights / 100) * 0.9,
+                envMapIntensity: (phongReflection / 100) * highlights * 0.9,
                 clearcoat: 0.26,
                 clearcoatRoughness: 0.34,
             });
@@ -2927,14 +2934,14 @@ function getMaterial(shading, baseColor, partSettings) {
             ...base,
             metalness: 0,
             roughness: (100 - phongRoughness) / 100,
-            envMapIntensity: (phongReflection / 100) * (textureTuneState.highlights / 100),
+            envMapIntensity: (phongReflection / 100) * highlights,
         });
     }
     return new THREE.MeshStandardMaterial({
         ...base,
         metalness: metallicMetalness / 100,
         roughness: (100 - metallicRoughness) / 100,
-        envMapIntensity: (metallicReflection / 100) * (textureTuneState.highlights / 100),
+        envMapIntensity: (metallicReflection / 100) * highlights,
     });
 }
 
