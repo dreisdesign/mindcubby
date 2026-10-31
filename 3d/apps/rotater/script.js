@@ -6050,9 +6050,11 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                             for (const idx of descending) {
                                 await removeMultipartPart(idx, { confirmRemoval: false });
                             }
+                            closeModelPartActionMenus();
                             return;
                         }
                         await removeMultipartPart(partIdx);
+                        closeModelPartActionMenus();
                     }
                 });
                 opt.dataset.partOptionActionsListenerAttached = '1';
