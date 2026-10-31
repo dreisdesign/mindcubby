@@ -860,12 +860,23 @@ if (defaultValue === undefined) {
 // Store neutral value
 SLIDER_NEUTRAL_VALUES[htmlId] = defaultValue;
                 
-// Calculate min/max from range_multiplier
-if (sliderConfig.range_multiplier !== undefined && Number.isFinite(defaultValue)) {
+// Calculate min/max from either explicit format or range_multiplier format
+let minValue, maxValue, snapCount;
+
+if (sliderConfig.slider_min !== undefined && sliderConfig.slider_max !== undefined) {
+    // New explicit format: slider_min, slider_max, slider_snap_count
+    minValue = sliderConfig.slider_min;
+    maxValue = sliderConfig.slider_max;
+    snapCount = sliderConfig.slider_snap_count || 5;
+} else if (sliderConfig.range_multiplier !== undefined && Number.isFinite(defaultValue)) {
+    // Old format: calculate from range_multiplier
     const multiplier = sliderConfig.range_multiplier;
-    const minValue = defaultValue - multiplier;
-    const maxValue = defaultValue + multiplier;
-    const snapCount = sliderConfig.snap_count || 5;
+    minValue = defaultValue - multiplier;
+    maxValue = defaultValue + multiplier;
+    snapCount = sliderConfig.snap_count || 5;
+}
+
+if (minValue !== undefined && maxValue !== undefined) {
     const step = (maxValue - minValue) / Math.max(1, snapCount - 1);
                     
     // Update HTML slider element
