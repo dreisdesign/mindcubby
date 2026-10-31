@@ -5121,7 +5121,7 @@ modelPartSelectorBtn?.addEventListener('click', (ev) => {
         applyPartInteractionVisualsToMeshMaterials();
         syncRulerHoverSelectorState();
         updateRulerHUD();
-        queueModelPartThumbsRender();
+        // Menu canvases will render lazily when they become visible and dirty
     }
 });
 
