@@ -4366,6 +4366,14 @@ function upgradeThumbsToMidRes() {
             }
         });
 
+        // Also re-render the multipart summary if it contains this part
+        if (modelPartSelectorThumb && isMultipartModel() && modelPartSelectorThumb.offsetParent !== null) {
+            const selected = getUiSelectedPartIndices();
+            if (selected.includes(idx)) {
+                renderMultipartSummaryThumbnail(modelPartSelectorThumb);
+            }
+        }
+
         if (toUpgrade.length > 0) {
             requestAnimationFrame(upgradeNextBatch);
         }
@@ -4398,6 +4406,14 @@ function upgradeThumbsToHighRes() {
                 renderSinglePartThumbnail(canvasEl, idx, 'high-res');
             }
         });
+
+        // Also re-render the multipart summary if it contains this part
+        if (modelPartSelectorThumb && isMultipartModel() && modelPartSelectorThumb.offsetParent !== null) {
+            const selected = getUiSelectedPartIndices();
+            if (selected.includes(idx)) {
+                renderMultipartSummaryThumbnail(modelPartSelectorThumb);
+            }
+        }
 
         if (toUpgrade.length > 0) {
             requestAnimationFrame(upgradeNextBatch);
