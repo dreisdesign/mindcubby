@@ -791,6 +791,8 @@ html.loaded .sidebar-tabs {
     height: 42px;
     justify-content: center;
     padding: 10px 20px;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .upload-choice-actions-right {
