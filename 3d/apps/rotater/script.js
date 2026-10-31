@@ -5915,6 +5915,11 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 applyPartColorsToMesh();
                 if (!isModelPartFloatingCardOpen()) closeThumbSelectMenus();
                 syncModelPartBulkUIState();
+                // Queue only the selected parts for re-render
+                const selectedForRender = getUiSelectedPartIndices();
+                if (selectedForRender.length > 0) {
+                    queueModelPartThumbsRender(selectedForRender);
+                }
                 saveSettings();
 
                 // In the floating 3D Models window, clicking a model row should
@@ -5925,14 +5930,16 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
             };
 
             opt.querySelector('[data-part-select]')?.addEventListener('click', (ev) => {
-                applyPartCardSelectionClick({ openColorPicker: true, pickerAnchorEl: ev.currentTarget });
+                // Don't open color picker in the floating card picker modal - just select the part
+                applyPartCardSelectionClick({ openColorPicker: false, pickerAnchorEl: ev.currentTarget });
             });
 
             opt.addEventListener('click', (ev) => {
                 if (!(ev.target instanceof Element)) return;
                 if (ev.target.closest('button,input,label,a,.part-option-actions')) return;
                 clearPresetHoverPreview();
-                applyPartCardSelectionClick({ openColorPicker: true });
+                // Don't open color picker in the floating card picker modal - just select the part
+                applyPartCardSelectionClick({ openColorPicker: false });
             });
 
             opt.querySelector('[data-part-more]')?.addEventListener('click', (ev) => {
