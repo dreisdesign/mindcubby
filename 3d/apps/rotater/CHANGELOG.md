@@ -1,5 +1,8 @@
 ## [Unreleased] - 2026-10-30
 
+### Fixed
+- **Upload modal layout and styling**: Reduced modal width from 800px to 520px for better proportions on desktop. Increased content padding from 14px 16px 16px to 20px 20px 24px for better spacing. Fixed button sizing by overriding `export-btn--main` width constraint (was forcing 470px width), added flex-shrink and white-space properties. Standardized "Create New Plate" button border-radius to 14px (var(--radius-control)) to match Cancel and Add to Plate buttons. Removed extra margin-bottom that was causing vertical misalignment. All action buttons now appear compact, properly aligned on same row, and visually consistent.
+
 ### Added
 - **Progressive 3-stage thumbnail quality system**: Implemented multi-stage thumbnail rendering that starts at ultra-low resolution (0.4 DPR) for instant interactivity, upgrades to mid-resolution (0.8 DPR) after 300ms, and reaches high-resolution (1.2 DPR) after 700ms. Each stage is individually timed and automatically resets when user interacts. Final DPR is capped at 1.2 with supersampling for optimal balance of quality and performance. Maintains 60 FPS with healthy garbage collection.
 - **Lighting configuration system with JSON organization**: Created dedicated `lighting-effects.js` module containing `LightingEffects` class for centralized lighting calculations. All lighting parameters now configured via `lighting-config.json` with global ranges (min/max/neutral/default) for each slider. Implemented normalized value system (0-1 mapping) to allow per-preset lighting customization while keeping global limits centralized in JSON.
