@@ -809,6 +809,12 @@ html.loaded .sidebar-tabs {
     display: none !important;
 }
 
+.upload-choice-actions .export-btn--main {
+    width: auto;
+    margin-left: 0;
+    margin-right: 0;
+}
+
 .upload-choice-action-btn--add {
     border-color: color-mix(in srgb, var(--palette-blueberry-600) 72%, transparent 28%);
     color: var(--palette-blueberry-700);
