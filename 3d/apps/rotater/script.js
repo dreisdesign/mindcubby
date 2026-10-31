@@ -919,6 +919,8 @@ if (sliderConfig.params) {
     }
 }
         
+        // Create or reinitialize lightingEffects instance with loaded config
+        lightingEffects = new LightingEffects();
         lightingEffects.calculateActualValues();
         
         // Apply the loaded config values to UI and rendering
@@ -1265,6 +1267,9 @@ const RULER_DYNAMIC_LINES_ENABLED = false;
 const RULER_FOOTPRINT_ENABLED = false;
 let fpsSampleAccumMs = 0;
 let fpsSampleFrames = 0;
+
+// Lighting effects instance - initialized with default config, updated when lighting-config.json loads
+let lightingEffects = new LightingEffects();
 
 // ── Performance Profiler ──────────────────────────────────────────────────────
 // Track detailed frame timing to identify lag spots. Enable via devConsole:
