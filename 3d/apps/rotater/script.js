@@ -4018,8 +4018,8 @@ function renderModelPartThumbnailsIncremental() {
     const thumbsPerFrame = 1;
     for (let i = 0; i < thumbsPerFrame && modelPartThumbRenderQueue.length > 0; i++) {
         const { canvasEl, idx } = modelPartThumbRenderQueue.shift();
-        renderSinglePartThumbnail(canvasEl, idx, 'low-res'); // Low-res 3D
-        // renderSinglePartThumbnail automatically adds to thumbsNeedingMidRes when quality='low-res'
+        // Render at high-res directly instead of progressive low->mid->high
+        renderSinglePartThumbnail(canvasEl, idx, 'high-res');
     }
 
     // If queue still has items, schedule next batch
@@ -4030,26 +4030,18 @@ function renderModelPartThumbnailsIncremental() {
         // Final viewport render after all thumbs done
         if (scene && camera && !isExporting) renderer.render(scene, camera);
 
-        // Schedule mid-res upgrade first, then high-res upgrade
-        // Always schedule timers if there's work to do, even if panel is currently hidden
-        // The upgrade functions check offsetParent to skip invisible canvases
-        // Mid-res upgrade
-        if (thumbMidResUpgradeTimer) clearTimeout(thumbMidResUpgradeTimer);
-        thumbMidResUpgradeTimer = setTimeout(() => {
+        // Disabled progressive quality upgrades - render at high-res immediately
+        // Clear any pending upgrade timers
+        if (thumbMidResUpgradeTimer) {
+            clearTimeout(thumbMidResUpgradeTimer);
             thumbMidResUpgradeTimer = null;
-            if (thumbsNeedingMidRes.size > 0) {
-                upgradeThumbsToMidRes();
-            }
-        }, THUMB_MID_RES_DELAY_MS);
-        
-        // High-res upgrade (if parts still need it after mid-res)
-        if (thumbHighResUpgradeTimer) clearTimeout(thumbHighResUpgradeTimer);
-        thumbHighResUpgradeTimer = setTimeout(() => {
+        }
+        if (thumbHighResUpgradeTimer) {
+            clearTimeout(thumbHighResUpgradeTimer);
             thumbHighResUpgradeTimer = null;
-            if (thumbsNeedingHighRes.size > 0) {
-                upgradeThumbsToHighRes();
-            }
-        }, THUMB_HIGH_RES_DELAY_MS);
+        }
+        thumbsNeedingMidRes.clear();
+        thumbsNeedingHighRes.clear();
 
         // If changes came in while rendering, re-queue to render them
         if (thumbRenderDirtyAfterComplete) {
