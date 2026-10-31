@@ -10789,7 +10789,7 @@ function updateTextureTuneUI() {
         textureTuneLightSourceSlider.value = String(textureTuneState.shadowAzimuth);
         syncSliderTooltip(textureTuneLightSourceSlider);
     }
-    if (textureTuneLightSourceVal) textureTuneLightSourceVal.textContent = getCenteredLightingReadout(textureTuneLightSourceSlider);
+    if (textureTuneLightSourceVal) textureTuneLightSourceVal.textContent = Math.round(textureTuneState.shadowAzimuth) + '°';
 
     if (textureTuneLightLockBox) {
         textureTuneLightLockBox.checked = textureTuneState.lightLock;
