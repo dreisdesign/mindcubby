@@ -2482,6 +2482,30 @@ function syncBuildPlateShapeMesh() {
     if (oldGeometry?.dispose) oldGeometry.dispose();
 }
 
+function syncShadowCatcherShape() {
+    if (!shadowCatcher) return;
+    const targetShape = normalizeBuildPlateShape(buildPlateShape);
+    const activeShape = normalizeBuildPlateShape(shadowCatcher.userData.shape || 'rectangle');
+    if (activeShape === targetShape) return;
+    
+    // Create appropriate geometry for shadow catcher based on build plate shape
+    let newGeometry;
+    if (targetShape === 'circle') {
+        newGeometry = new THREE.CircleGeometry(0.5, 56);
+    } else if (targetShape === 'rounded') {
+        // Use a slightly smaller circle for rounded rectangles to approximate shadow shape
+        const rectGeo = createBuildPlateGeometry('rounded');
+        newGeometry = rectGeo;
+    } else {
+        newGeometry = new THREE.PlaneGeometry(1, 1);
+    }
+    
+    const oldGeometry = shadowCatcher.geometry;
+    shadowCatcher.geometry = newGeometry;
+    shadowCatcher.userData.shape = targetShape;
+    if (oldGeometry?.dispose) oldGeometry.dispose();
+}
+
 function createBuildPlateTexture(hexColor = null, finish = BUILD_PLATE_DEFAULTS.finish) {
     const c = document.createElement('canvas');
     c.width = 128;
@@ -15754,6 +15778,7 @@ if (buildPlateShapeWrapEl) {
         if (shape !== 'rectangle' && shape !== 'rounded' && shape !== 'circle') return;
         buildPlateShape = shape;
         updateBuildPlateMaterial();
+        syncShadowCatcherShape();
         updateShadowCatcherPlacement();
         refreshExportPreviewNow();
         saveSettings();
