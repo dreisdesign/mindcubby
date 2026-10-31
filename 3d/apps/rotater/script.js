@@ -6143,7 +6143,12 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     syncBuildPlateModelSyncSourceUI();
     syncRulerHoverSelectorState();
     syncModelSyncPreviewThumbTargets();
-    queueModelPartThumbsRender();
+    // Only queue the currently selected part(s) for re-render, not all parts
+    // This prevents all thumbnails from resetting to low-res when selecting a different part
+    const selected = getUiSelectedPartIndices();
+    if (selected.length > 0) {
+        queueModelPartThumbsRender(selected);
+    }
 }
 
 function getModelSyncSourceColor() {
@@ -7209,7 +7214,8 @@ function setRulerPartSelectMultiEnabled(enabled, persist = true) {
     if (rulerPartSelectMultiEnabled === next) {
         syncModelPartCheckboxStates();
         syncModelPartBulkUIState();
-        queueModelPartThumbsRender();
+        const selected = getUiSelectedPartIndices();
+        queueModelPartThumbsRender(selected.length > 0 ? selected : null);
         updateRulerHUD();
         return;
     }
@@ -7222,7 +7228,8 @@ function setRulerPartSelectMultiEnabled(enabled, persist = true) {
     ensurePausedForInteractionMode();
     syncModelPartCheckboxStates();
     syncModelPartBulkUIState();
-    queueModelPartThumbsRender();
+    const selected = getUiSelectedPartIndices();
+    queueModelPartThumbsRender(selected.length > 0 ? selected : null);
     updateRulerHUD();
     if (persist) saveSettings();
 }
@@ -13062,7 +13069,8 @@ if (fineTuningCheckEl) {
         }
         updateTextureTuneUI();
         persistCurrentMultipartParts();
-        queueModelPartThumbsRender();
+        const selected = getUiSelectedPartIndices();
+        queueModelPartThumbsRender(selected.length > 0 ? selected : null);
         saveSettings();
     };
     fineTuningCheckEl.addEventListener('change', fineTuningHandler);
@@ -15220,7 +15228,7 @@ function renderModelPresets() {
         activeModelPreset = 'custom';
         syncUIFromSelectedPart();
         persistCurrentMultipartParts();
-        queueModelPartThumbsRender();
+        queueModelPartThumbsRender([idx]);
         updateModelSelection();
         // Open picker near the clicked swatch so browser anchoring is stable.
         const swatch = customWrap.querySelector('.shading-option');

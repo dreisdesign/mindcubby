@@ -614,7 +614,7 @@ html.loaded .sidebar-tabs {
 }
 
 .upload-choice-panel {
-    width: min(680px, calc(100vw - 28px));
+    width: min(750px, calc(100vw - 28px));
 }
 
 .upload-choice-body {
