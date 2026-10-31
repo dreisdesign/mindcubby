@@ -4036,18 +4036,18 @@ function renderModelPartThumbnailsIncremental() {
         // Always schedule timers if there's work to do, even if panel is currently hidden
         // The upgrade functions check offsetParent to skip invisible canvases
         // Mid-res upgrade
-        if (thumbHighResUpgradeTimer) clearTimeout(thumbHighResUpgradeTimer);
-        thumbHighResUpgradeTimer = setTimeout(() => {
-            thumbHighResUpgradeTimer = null;
+        if (thumbMidResUpgradeTimer) clearTimeout(thumbMidResUpgradeTimer);
+        thumbMidResUpgradeTimer = setTimeout(() => {
+            thumbMidResUpgradeTimer = null;
             if (thumbsNeedingMidRes.size > 0) {
                 upgradeThumbsToMidRes();
             }
         }, THUMB_MID_RES_DELAY_MS);
         
         // High-res upgrade (if parts still need it after mid-res)
-        if (thumbMidResUpgradeTimer) clearTimeout(thumbMidResUpgradeTimer);
-        thumbMidResUpgradeTimer = setTimeout(() => {
-            thumbMidResUpgradeTimer = null;
+        if (thumbHighResUpgradeTimer) clearTimeout(thumbHighResUpgradeTimer);
+        thumbHighResUpgradeTimer = setTimeout(() => {
+            thumbHighResUpgradeTimer = null;
             if (thumbsNeedingHighRes.size > 0) {
                 upgradeThumbsToHighRes();
             }
