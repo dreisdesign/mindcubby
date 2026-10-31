@@ -799,7 +799,7 @@ const PALETTE = {
 };
 const TEXTURE_TUNE_DEFAULTS = {
     light: 120,
-    contrast: 165,
+    contrast: 150,
     highlights: 100,
     shadows: 50,
     shadowAzimuth: 180,
@@ -2752,7 +2752,7 @@ function updateShadowCatcherPlacement() {
 
 function applyTextureLighting() {
     const gain = Math.max(0.4, Math.min(2, textureTuneState.light / 100));
-    const contrast = Math.max(0.5, Math.min(50, textureTuneState.contrast / 100));
+    const contrast = Math.max(0.7, Math.min(4, textureTuneState.contrast / 100));
     const highlights = Math.max(0.4, Math.min(4, textureTuneState.highlights / 100));
     const inv = 1 / Math.sqrt(contrast);
     const fwd = Math.sqrt(contrast);

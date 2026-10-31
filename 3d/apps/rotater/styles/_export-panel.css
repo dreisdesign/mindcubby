@@ -1012,7 +1012,7 @@ html.dpad-hidden .canvas-overlay-br {
     display: grid;
     grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
-    gap: 12px;
+    gap: 0;
     align-items: start;
     min-height: 140px;
     padding: 12px 14px;
@@ -1067,9 +1067,10 @@ html.dpad-hidden .canvas-overlay-br {
     border: none;
     background: transparent;
     display: block;
-    grid-column: 1;
+    grid-column: 1 / -1;
     grid-row: 1;
     justify-self: center;
+    margin-bottom: 12px;
 }
 
 .thumb-select-btn.is-multipart-summary .thumb-select-canvas {
@@ -1168,9 +1169,9 @@ html.dpad-hidden .canvas-overlay-br {
     transform: rotate(-90deg);
     transition: transform 0.16s ease;
     grid-column: 2;
-    grid-row: 1;
-    align-self: start;
-    margin-top: 4px;
+    grid-row: 2;
+    align-self: center;
+    justify-self: center;
 }
 
 .thumb-select-chevron svg {
