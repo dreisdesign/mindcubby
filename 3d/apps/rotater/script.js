@@ -5917,7 +5917,6 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 applyPartColorsToMesh();
                 if (!isModelPartFloatingCardOpen()) closeThumbSelectMenus();
                 syncModelPartBulkUIState();
-                queueModelPartThumbsRender([prevSelected, modelPartSelected]);
                 saveSettings();
 
                 // In the floating 3D Models window, clicking a model row should
