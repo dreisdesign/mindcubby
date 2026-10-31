@@ -50,9 +50,9 @@
     },
     "Contrast": {
       "description": "Overall contrast effect",
-      "slider_default": 100,
+      "slider_default": 165,
       "snap_count": 7,
-      "range_multiplier": 300,
+      "range_multiplier": 135,
       "params": {
         "keyMultiplier": { "min": 5, "max": 15 },
         "ambientPower": { "min": 3, "max": 8 },

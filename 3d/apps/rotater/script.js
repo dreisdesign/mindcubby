@@ -799,7 +799,7 @@ const PALETTE = {
 };
 const TEXTURE_TUNE_DEFAULTS = {
     light: 120,
-    contrast: 200,
+    contrast: 165,
     highlights: 100,
     shadows: 50,
     shadowAzimuth: 180,
