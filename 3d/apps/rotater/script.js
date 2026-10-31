@@ -4018,10 +4018,8 @@ function renderModelPartThumbnailsIncremental() {
     const thumbsPerFrame = 1;
     for (let i = 0; i < thumbsPerFrame && modelPartThumbRenderQueue.length > 0; i++) {
         const { canvasEl, idx } = modelPartThumbRenderQueue.shift();
-        const renderStart = performance.now();
         renderSinglePartThumbnail(canvasEl, idx, 'low-res'); // Low-res 3D
-        const renderTime = performance.now() - renderStart;
-        thumbsNeedingHighRes.add(idx); // Mark for high-res upgrade
+        // renderSinglePartThumbnail automatically adds to thumbsNeedingMidRes when quality='low-res'
     }
 
     // If queue still has items, schedule next batch
@@ -4148,7 +4146,8 @@ function shouldRenderThumbCanvas(canvasEl) {
     if (canvasEl === modelPartSelectorThumb || canvasEl === bgModelSyncSelectorThumb || canvasEl === buildPlateModelSyncSelectorThumb) {
         return true;
     }
-    return canvasEl.offsetParent !== null;
+    // Always render part canvases so they're ready when needed, even if currently hidden
+    return !!canvasEl;
 }
 
 function ensurePartThumbRenderResources() {
