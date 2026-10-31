@@ -4655,12 +4655,24 @@ function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
     // one full-scene render per part (22 renders for 22 parts).
 }
 
-function renderMultipartSummaryThumbnail(canvasEl, quality = 'low-res') {
+function renderMultipartSummaryThumbnail(canvasEl, quality = 'high-res') {
     if (!canvasEl || !isMultipartModel()) return;
     const rect = canvasEl.getBoundingClientRect();
     const cssW = Math.max(1, Math.round(rect.width || canvasEl.clientWidth || canvasEl.width || 1));
     const cssH = Math.max(1, Math.round(rect.height || canvasEl.clientHeight || canvasEl.height || 1));
-    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    
+    // Apply quality multiplier: low-res = 0.4, mid-res = 0.8, high-res = 1.2
+    let qualityMultiplier;
+    if (quality === 'low-res') {
+        qualityMultiplier = THUMB_LOW_RES_DPR;
+    } else if (quality === 'mid-res') {
+        qualityMultiplier = THUMB_MID_RES_DPR;
+    } else {
+        qualityMultiplier = 1.2;  // high-res
+    }
+    
+    const baseDpr = Math.max(1, Math.min(1.2, window.devicePixelRatio || 1));
+    const dpr = baseDpr * qualityMultiplier;
     const targetW = Math.max(1, Math.round(cssW * dpr));
     const targetH = Math.max(1, Math.round(cssH * dpr));
     if (canvasEl.width !== targetW || canvasEl.height !== targetH) {
@@ -6204,9 +6216,9 @@ function syncModelSyncPreviewThumbTargets() {
         canvasEl.classList.add('js-part-thumb-preview');
         canvasEl.dataset.partIndex = String(partIdx);
 
-        // Use low-res 3D instead of skeleton for instant model-accurate feedback
+        // Use high-res 3D for accurate model preview
         if (shouldRenderThumbCanvas(canvasEl)) {
-            renderSinglePartThumbnail(canvasEl, partIdx, 'low-res');
+            renderSinglePartThumbnail(canvasEl, partIdx, 'high-res');
         }
     };
 
@@ -12367,7 +12379,7 @@ btnResetBackgroundCard?.addEventListener('click', () => {
     updateBgSelection();
     syncBgModelSyncSourceUI();
     if (bgModelSyncSelectorThumb) {
-        renderSinglePartThumbnail(bgModelSyncSelectorThumb, bgSyncPartIndex, 'low-res');
+        renderSinglePartThumbnail(bgModelSyncSelectorThumb, bgSyncPartIndex, 'high-res');
     }
     queueModelPartThumbsRender([bgSyncPartIndex]);
     saveSettings();
