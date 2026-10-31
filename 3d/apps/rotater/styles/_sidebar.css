@@ -615,6 +615,14 @@ html.loaded .sidebar-tabs {
 
 .upload-choice-panel {
     width: min(800px, calc(100vw - 28px));
+    background: color-mix(in srgb, var(--color-surface-raised, white) 90%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.18), 0 1.5px 4px rgba(0, 0, 0, 0.06);
+    max-width: calc(100vw - 24px);
+    overflow: hidden;
+    transition: background 0.2s;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 }
 
 .upload-choice-body {
