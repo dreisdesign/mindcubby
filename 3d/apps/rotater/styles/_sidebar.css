@@ -627,7 +627,7 @@ html.loaded .sidebar-tabs {
 
 .upload-choice-body {
     gap: 14px;
-    padding: 14px 16px 16px;
+    padding: 20px 20px 24px;
 }
 
 .upload-choice-text {
@@ -783,13 +783,14 @@ html.loaded .sidebar-tabs {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+    margin-top: 16px;
 }
 
 .upload-choice-action-btn {
-    min-width: 136px;
+    min-width: auto;
     height: 42px;
     justify-content: center;
-    padding: 10px 16px;
+    padding: 10px 20px;
 }
 
 .upload-choice-actions-right {
