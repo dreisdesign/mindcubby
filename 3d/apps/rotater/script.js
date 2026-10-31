@@ -4033,7 +4033,8 @@ function renderModelPartThumbnailsIncremental() {
         if (scene && camera && !isExporting) renderer.render(scene, camera);
 
         // Schedule mid-res upgrade first, then high-res upgrade
-        if ((thumbsNeedingMidRes.size > 0 || thumbsNeedingHighRes.size > 0) && !modelPartThumbsWrap?.hidden) {
+        // Note: Even if thumbsNeedingHighRes is empty, we still have parts from the render that added to thumbsNeedingMidRes
+        if (!modelPartThumbsWrap?.hidden) {
             // Mid-res upgrade
             if (thumbHighResUpgradeTimer) clearTimeout(thumbHighResUpgradeTimer);
             thumbHighResUpgradeTimer = setTimeout(() => {
@@ -4667,6 +4668,7 @@ function renderMultipartSummaryThumbnail(canvasEl) {
     const selected = getUiSelectedPartIndices();
     if (selected.length === 1) {
         renderSinglePartThumbnail(canvasEl, selected[0], 'low-res');
+        thumbsNeedingMidRes.add(selected[0]); // Mark for mid-res upgrade
         return;
     }
 
@@ -4713,6 +4715,7 @@ function renderMultipartSummaryThumbnail(canvasEl) {
 
         if (typeof tile === 'number') {
             renderSinglePartThumbnail(tempCanvas, tile, 'low-res');
+            thumbsNeedingMidRes.add(tile); // Mark for mid-res upgrade
             ctx.drawImage(tempCanvas, drawX, drawY, tileSide, tileSide);
         } else {
             ctx.fillStyle = PALETTE.text.partThumb;
