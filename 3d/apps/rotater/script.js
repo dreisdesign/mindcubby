@@ -4020,8 +4020,8 @@ function renderModelPartThumbnailsIncremental() {
         const { canvasEl, idx } = modelPartThumbRenderQueue.shift();
         const renderStart = performance.now();
         renderSinglePartThumbnail(canvasEl, idx, 'low-res'); // Low-res 3D
-        // renderSinglePartThumbnail already adds to thumbsNeedingMidRes when quality='low-res'
-        // No need to add here - it's redundant and was adding to the wrong set
+        const renderTime = performance.now() - renderStart;
+        thumbsNeedingHighRes.add(idx); // Mark for high-res upgrade
     }
 
     // If queue still has items, schedule next batch
@@ -9595,6 +9595,12 @@ function openUploadFilePicker(action = null) {
 async function requestUploadFlowFromButtons() {
     suppressAutoDemoModelLoad();
     dismissStartupSplash();
+
+    if (isDefaultBenchyOnlyPlate()) {
+        uploadActionController.setPendingAction('newplate');
+        fileInput?.click();
+        return;
+    }
 
     if (mesh && uploadChoiceOverlayEl) {
         setUploadChoiceFiles([]);
