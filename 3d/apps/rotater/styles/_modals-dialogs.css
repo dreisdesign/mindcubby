@@ -15,6 +15,13 @@
     display: none;
 }
 
+/* ── Upload choice overlay centered ── */
+.upload-choice-overlay {
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+}
+
 /* ── Mobile export layout (split card, preview stays visible) ── */
 @media (max-width: 640px) {
     .settings-overlay.export-overlay {

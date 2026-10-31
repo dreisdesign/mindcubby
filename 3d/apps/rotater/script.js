@@ -4370,7 +4370,7 @@ function upgradeThumbsToMidRes() {
         if (modelPartSelectorThumb && isMultipartModel() && modelPartSelectorThumb.offsetParent !== null) {
             const selected = getUiSelectedPartIndices();
             if (selected.includes(idx)) {
-                renderMultipartSummaryThumbnail(modelPartSelectorThumb);
+                renderMultipartSummaryThumbnail(modelPartSelectorThumb, 'mid-res');
             }
         }
 
@@ -4411,7 +4411,7 @@ function upgradeThumbsToHighRes() {
         if (modelPartSelectorThumb && isMultipartModel() && modelPartSelectorThumb.offsetParent !== null) {
             const selected = getUiSelectedPartIndices();
             if (selected.includes(idx)) {
-                renderMultipartSummaryThumbnail(modelPartSelectorThumb);
+                renderMultipartSummaryThumbnail(modelPartSelectorThumb, 'high-res');
             }
         }
 
@@ -4665,7 +4665,7 @@ function renderSinglePartThumbnail(canvasEl, partIdx, quality = 'high-res') {
     // one full-scene render per part (22 renders for 22 parts).
 }
 
-function renderMultipartSummaryThumbnail(canvasEl) {
+function renderMultipartSummaryThumbnail(canvasEl, quality = 'low-res') {
     if (!canvasEl || !isMultipartModel()) return;
     const rect = canvasEl.getBoundingClientRect();
     const cssW = Math.max(1, Math.round(rect.width || canvasEl.clientWidth || canvasEl.width || 1));
@@ -4683,8 +4683,10 @@ function renderMultipartSummaryThumbnail(canvasEl) {
 
     const selected = getUiSelectedPartIndices();
     if (selected.length === 1) {
-        renderSinglePartThumbnail(canvasEl, selected[0], 'low-res');
-        thumbsNeedingMidRes.add(selected[0]); // Mark for mid-res upgrade
+        renderSinglePartThumbnail(canvasEl, selected[0], quality);
+        if (quality === 'low-res') {
+            thumbsNeedingMidRes.add(selected[0]); // Mark for mid-res upgrade
+        }
         return;
     }
 
@@ -4730,8 +4732,10 @@ function renderMultipartSummaryThumbnail(canvasEl) {
         const drawY = y + Math.floor((cellH - tileSide) / 2);
 
         if (typeof tile === 'number') {
-            renderSinglePartThumbnail(tempCanvas, tile, 'low-res');
-            thumbsNeedingMidRes.add(tile); // Mark for mid-res upgrade
+            renderSinglePartThumbnail(tempCanvas, tile, quality);
+            if (quality === 'low-res') {
+                thumbsNeedingMidRes.add(tile); // Mark for mid-res upgrade
+            }
             ctx.drawImage(tempCanvas, drawX, drawY, tileSide, tileSide);
         } else {
             ctx.fillStyle = PALETTE.text.partThumb;
