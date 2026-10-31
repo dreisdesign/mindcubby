@@ -1,3 +1,12 @@
+## [Unreleased] - 2026-10-31
+
+### Fixed
+- **Contrast slider redesigned with symmetric -100 to +100 range**: Changed from asymmetric 30-270 range centered at 150 to true symmetric -100 to +100 centered at 0. Mapping: -100 → 0.5x contrast multiplier, 0 → 1.0x (neutral), +100 → 3.0x multiplier. Result: -100 now visually distinct from 0, and +100 is correctly intense. Updated HTML slider, JavaScript calculation, and `lighting-config.json` with explicit `slider_min/slider_max` format.
+- **Surface Finish slider visibility restored**: Changed visibility logic from `hidden = !(isStandard && fineTuningMode)` to `hidden = !isStandard`. Slider now always visible in standard shading modes, not just when fine-tuning is enabled.
+- **Highlights slider properly hidden from Lighting Effects panel**: Added global CSS rule `[hidden] { display: none !important; }` to ensure Highlights row (and all elements with hidden attribute) are properly hidden. Previously visible due to specificity conflict with `.texture-tune-row[hidden]` selector.
+- **Circle build plate shadow cropping restored**: Implemented `syncShadowCatcherShape()` function that updates shadow catcher geometry to match build plate shape (Circle → CircleGeometry, Rounded → rounded geometry, Square → PlaneGeometry). Added calls at three critical initialization points: (1) when mesh is first loaded, (2) when settings restored from URL/localStorage, (3) when user changes shape via UI. Shadow catcher now properly clipped to circular geometry on initial load and settings restore.
+- **Light Position slider displays degrees correctly**: Updated HTML from 0-100 normalized range to 0-360 degrees. Default value changed from 50 to 180°, step from 1 to 10. Configuration updated with explicit `slider_min: 0, slider_max: 360, slider_snap_count: 9`. Light position now displays and functions as actual degree values instead of normalized percentages.
+
 ## [Unreleased] - 2026-10-30
 
 ### Fixed
