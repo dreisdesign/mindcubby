@@ -614,7 +614,7 @@ html.loaded .sidebar-tabs {
 }
 
 .upload-choice-panel {
-    width: min(520px, calc(100vw - 28px));
+    width: min(680px, calc(100vw - 28px));
 }
 
 .upload-choice-body {
@@ -786,11 +786,12 @@ html.loaded .sidebar-tabs {
 
 .upload-choice-actions-right {
     margin-left: auto;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .upload-choice-actions-right[hidden] {
