@@ -6335,9 +6335,8 @@ function syncBgModelSyncSourceUI() {
         if (bgPresetThumb) bgPresetThumb.title = `Model Sync: ${selectedName}`;
     }
     updateBgShadeSliderVisual();
-    // Only queue rendering for parts shown in this menu
-    const menuPartIndices = Array.from({ length: modelPartNames.length }, (_, i) => i);
-    queueModelPartThumbsRender(menuPartIndices);
+    // Note: Don't queue render here - menus are hidden by default and created fresh when opened
+    // The menu will be populated with fallback thumbnails, then rendered when user opens it
 }
 
 function applyPresetHoverPreview(preset) {
@@ -15350,9 +15349,7 @@ function syncBuildPlateModelSyncSourceUI() {
         if (buildPresetThumb) buildPresetThumb.title = `Model Sync: ${selectedName}`;
     }
     updateBuildPlateShadeControlVisibility();
-    // Only queue rendering for parts shown in this menu
-    const menuPartIndices = Array.from({ length: modelPartNames.length }, (_, i) => i);
-    queueModelPartThumbsRender(menuPartIndices);
+    // Note: Don't queue render here - menus are hidden by default and created fresh when opened
 }
 
 // Hook manual color-picker changes to switch to custom (only real user interaction, not preset dispatch)
