@@ -6489,6 +6489,7 @@ function loadPreparedGeometry(geo, name) {
     tiltPhase = 0;
     scene.add(mesh);
     applyPartColorsToMesh();
+    syncShadowCatcherShape();
     updateShadowCatcherPlacement();
     applyCurrentTextureTuning();
 
@@ -8996,6 +8997,7 @@ function restoreSettings() {
         buildPlateFinish = BUILD_PLATE_DEFAULTS.finish;
         if (s.buildPlateShape === 'rounded' || s.buildPlateShape === 'rectangle' || s.buildPlateShape === 'circle') {
             buildPlateShape = s.buildPlateShape;
+            syncShadowCatcherShape();
         }
         if (s.buildPlateSizePreset != null) {
             const preset = String(s.buildPlateSizePreset);
