@@ -5915,11 +5915,6 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                 applyPartColorsToMesh();
                 if (!isModelPartFloatingCardOpen()) closeThumbSelectMenus();
                 syncModelPartBulkUIState();
-                // Queue only the selected parts for re-render
-                const selectedForRender = getUiSelectedPartIndices();
-                if (selectedForRender.length > 0) {
-                    queueModelPartThumbsRender(selectedForRender);
-                }
                 saveSettings();
 
                 // In the floating 3D Models window, clicking a model row should
@@ -6149,12 +6144,8 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
     syncBuildPlateModelSyncSourceUI();
     syncRulerHoverSelectorState();
     syncModelSyncPreviewThumbTargets();
-    // Only queue the currently selected part(s) for re-render, not all parts
-    // This prevents all thumbnails from resetting to low-res when selecting a different part
-    const selected = getUiSelectedPartIndices();
-    if (selected.length > 0) {
-        queueModelPartThumbsRender(selected);
-    }
+    // Mark all parts as needing render since we just rebuilt the UI with new canvases
+    queueModelPartThumbsRender(null);
 }
 
 function getModelSyncSourceColor() {
