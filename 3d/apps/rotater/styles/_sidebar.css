@@ -813,6 +813,7 @@ html.loaded .sidebar-tabs {
     width: auto;
     margin-left: 0;
     margin-right: 0;
+    border-radius: var(--radius-control);
 }
 
 .upload-choice-action-btn--add {
