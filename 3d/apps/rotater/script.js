@@ -14651,7 +14651,12 @@ const exportMp4EncoderQueueController = createExportMp4EncoderQueueController({
 });
 const exportMp4CodecConfigController = createExportMp4CodecConfigController();
 const exportMp4ScenePrepController = createExportMp4ScenePrepController({
-    createCanvas: () => document.createElement('canvas'),
+    createCanvas: ({ width, height } = {}) => {
+        if (typeof OffscreenCanvas !== 'undefined' && width && height) {
+            return new OffscreenCanvas(width, height);
+        }
+        return document.createElement('canvas');
+    },
     applyExportSceneForRender,
 });
 const exportMp4RuntimeController = createExportMp4RuntimeController({
@@ -14742,22 +14747,35 @@ btnVideo.addEventListener('click', async () => {
                 target: new ArrayBufferTarget(),
                 video: { codec: 'avc', width: W, height: H },
                 fastStart: 'in-memory',
+                firstTimestampBehavior: 'offset',
             });
 
             let encoderError = null;
+            let encodedChunksCount = 0;
+            let totalEncodedBytes = 0;
             const encoder = new VideoEncoder({
-                output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+                output: (chunk, meta) => {
+                    encodedChunksCount++;
+                    totalEncodedBytes += chunk.byteLength || 0;
+                    muxer.addVideoChunk(chunk, meta);
+                },
                 error: e => { encoderError = e; },
             });
-            // avc1.4200XX — Baseline profile
-            // level 3.1 (0x1f) up to 720p, level 4.0 (0x28) up to 1080p, level 5.1 (0x33) up to 4K/2048x2048
-            exportMp4CodecConfigController.configureMp4Encoder({
+            // Automatically probe for the highest supported H.264 profile (High -> Main -> Baseline)
+            // matching the target resolution and framerate to prevent encoder failures.
+            await exportMp4CodecConfigController.configureMp4Encoder({
                 encoder,
                 width: W,
                 height: H,
                 bitrate,
                 fps,
             });
+            // Yield a microtask so any async configure-rejection error callback can fire
+            // before we start submitting frames. This surfaces bad-config errors early
+            // rather than silently running with an unconfigured encoder.
+            await new Promise(r => setTimeout(r, 0));
+            if (encoderError) throw encoderError;
+            if (encoder.state === 'closed') throw new Error('VideoEncoder closed during configure — try a lower resolution or frame rate.');
 
             const { target, dist, elev, az } = getOrbitFrameState();
             // Use stored export framing only in crop mode; otherwise mirror the live viewport.
@@ -14836,10 +14854,15 @@ btnVideo.addEventListener('click', async () => {
                         frameIndex: f,
                         total: totalFrames,
                     });
+                    const frameDuration = Math.round(1_000_000 / fps);
                     const timestamp = Math.round(f * (1_000_000 / fps));
                     let frame = null;
                     try {
-                        frame = new VideoFrame(out, { timestamp });
+                        frame = new VideoFrame(out, {
+                            timestamp,
+                            duration: frameDuration,
+                            alpha: 'discard',
+                        });
                         if (encoderError) throw encoderError;
                         if (encoder.state === 'closed') throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.');
                         encoder.encode(frame, { keyFrame: f % 30 === 0 });
@@ -14858,6 +14881,10 @@ btnVideo.addEventListener('click', async () => {
                     total: totalFrames,
                 });
                 if (encoderError) throw encoderError;
+                if (encodedChunksCount === 0 || totalEncodedBytes === 0) {
+                    throw new Error('Video encoder produced no video frames. Please check your browser WebCodecs support or try a different resolution.');
+                }
+                try { encoder.close(); } catch (_) { }
                 muxer.finalize();
                 exportSucceeded = true;
             } finally {
