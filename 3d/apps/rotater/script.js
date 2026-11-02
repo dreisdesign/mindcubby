@@ -11558,6 +11558,14 @@ cropPillOptions.forEach(label => {
             return;
         }
 
+        // If clicking the same button again while NOT in crop mode, re-enter crop mode
+        if (wasAlreadySelected && !exportFrameEnabled) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            syncCropModeFromSelectedExportDimensions({ forceReframe: false });
+            return;
+        }
+
         // Normal selection - let the browser handle it
         // The radio will be checked and change event will fire
     }, { capture: true });
