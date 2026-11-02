@@ -14893,7 +14893,11 @@ btnVideo.addEventListener('click', async () => {
                         outCtx.getImageData(0, 0, 1, 1);
                         console.log(`[Frame ${f + 1}/${totalFrames}] GPU flush complete, creating frame...`);
                         
-                        frame = new VideoFrame(out, {
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Creating VideoFrame via ImageBitmap...`);
+                        // On macOS, VideoFrame cannot be created directly from OffscreenCanvas with 2D context.
+                        // We must convert to ImageBitmap first to ensure GPU compatibility with the encoder.
+                        const bitmap = await createImageBitmap(out);
+                        frame = new VideoFrame(bitmap, {
                             timestamp,
                             duration: frameDuration,
                             alpha: 'discard',
