@@ -11559,6 +11559,7 @@ cropPillOptions.forEach(label => {
             e.preventDefault();
             e.stopImmediatePropagation();
             cancelCropMode();
+            label.blur();
             return;
         }
 
