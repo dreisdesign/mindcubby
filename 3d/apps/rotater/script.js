@@ -14842,9 +14842,15 @@ btnVideo.addEventListener('click', async () => {
 
                     syncLightRig();
                     renderer.render(scene, camera);
-                    outCtx.clearRect(0, 0, W, H);
-                    outCtx.drawImage(canvas, 0, 0, W, H);
-                    drawRulerOverlay(outCtx, W, H, camera);
+                    try {
+                        outCtx.clearRect(0, 0, W, H);
+                        outCtx.drawImage(canvas, 0, 0, W, H);
+                        drawRulerOverlay(outCtx, W, H, camera);
+                    } catch (err) {
+                        throw new Error(`Canvas access failed at frame ${f + 1}/${totalFrames}. ` +
+                            'This may be caused by screen recording or system resource constraints. ' +
+                            `Details: ${err.message}`);
+                    }
 
                     await exportMp4EncoderQueueController.waitForEncoderQueue({
                         encoder,
