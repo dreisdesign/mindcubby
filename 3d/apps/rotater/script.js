@@ -14932,6 +14932,17 @@ btnVideo.addEventListener('click', async () => {
                 await new Promise(r => setTimeout(r, 0));
                 console.log(`[MP4 Export] Frame loop complete. Encoded ${encodedChunksCount} chunks so far, flushing encoder queue...`);
                 console.log(`[MP4 Export] Encoder state: ${encoder.state}, error: ${encoderError ? encoderError.message : 'none'}`);
+                
+                // Check if encoder is producing output at all
+                if (encodedChunksCount === 0 && encoder.encodeQueueSize > 200) {
+                    console.error(`[MP4 Export] CRITICAL: Submitted ${totalFrames} frames but got 0 output chunks with queue depth ${encoder.encodeQueueSize}`);
+                    console.error(`[MP4 Export] This indicates the encoder is not processing frames (likely due to GPU monopoly from screen recording)`);
+                    throw new Error(
+                        `Video encoder is not producing output. This usually means screen recording is blocking GPU access. `
+                        + `Please stop screen recording and try again.`
+                    );
+                }
+                
                 await exportMp4EncoderQueueController.waitForEncoderFlush({
                     encoder,
                     getEncoderError: () => encoderError,
