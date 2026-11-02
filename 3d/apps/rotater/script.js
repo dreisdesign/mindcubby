@@ -14770,6 +14770,7 @@ btnVideo.addEventListener('click', async () => {
             console.log('[MP4 Export] Creating VideoEncoder...');
             const encoder = new VideoEncoder({
                 output: (chunk, meta) => {
+                    console.log(`[Encoder Output] Chunk ${encodedChunksCount + 1}, ${chunk.byteLength} bytes`);
                     encodedChunksCount++;
                     totalEncodedBytes += chunk.byteLength || 0;
                     muxer.addVideoChunk(chunk, meta);
@@ -14916,6 +14917,9 @@ btnVideo.addEventListener('click', async () => {
                         console.log(`[Frame ${f + 1}/${totalFrames}] Calling encode()...`);
                         encoder.encode(frame, { keyFrame: f % 30 === 0 });
                         console.log(`[Frame ${f + 1}/${totalFrames}] Encode submitted, queue now=${encoder.encodeQueueSize}`);
+                        
+                        // Give encoder a tiny bit of time to start processing
+                        await new Promise(r => setTimeout(r, 2));
                     } catch (frameErr) {
                         console.error(`[Frame ${f + 1}/${totalFrames}] ERROR:`, frameErr);
                         throw new Error(`Failed to encode frame ${f + 1}/${totalFrames}: ${frameErr?.message || 'Unknown error'}`);
@@ -14928,6 +14932,7 @@ btnVideo.addEventListener('click', async () => {
 
                 setAnimStatus('Finishing video... preparing your download.', totalFrames, totalFrames);
                 await new Promise(r => setTimeout(r, 0));
+                console.log(`[MP4 Export] Frame loop complete. Encoded ${encodedChunksCount} chunks so far.`);
                 await exportMp4EncoderQueueController.waitForEncoderFlush({
                     encoder,
                     getEncoderError: () => encoderError,
