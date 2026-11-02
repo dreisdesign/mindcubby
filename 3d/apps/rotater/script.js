@@ -14879,19 +14879,13 @@ btnVideo.addEventListener('click', async () => {
                             `Details: ${err.message}`);
                     }
 
-                    console.log(`[Frame ${f + 1}/${totalFrames}] Queue before wait: ${encoder.encodeQueueSize}`);
-                    await exportMp4EncoderQueueController.waitForEncoderQueue({
-                        encoder,
-                        getEncoderError: () => encoderError,
-                        // Higher thresholds to tolerate screen recording interference
-                        maxQueue: 60,
-                        hardQueue: 120,
-                        frameIndex: f,
-                        total: totalFrames,
-                        // Increase timeout to 5 minutes to handle screen recording delays
-                        maxBusyMs: 300000,
-                    });
-                    console.log(`[Frame ${f + 1}/${totalFrames}] Queue after wait: ${encoder.encodeQueueSize}`);
+                    // Don't wait for queue to drain - screen recording may be blocking it.
+                    // Just check if there's an error and submit frames as fast as possible.
+                    // The queue will flush when screen recording pauses or stops.
+                    if (encoderError) {
+                        throw encoderError;
+                    }
+
                     const frameDuration = Math.round(1_000_000 / fps);
                     const timestamp = Math.round(f * (1_000_000 / fps));
                     let frame = null;
@@ -14919,22 +14913,11 @@ btnVideo.addEventListener('click', async () => {
                             throw new Error(`Encoder state is '${encoder.state}', expected 'configured'`);
                         }
                         
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Calling encode()...`);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Submitting (queue=${encoder.encodeQueueSize})...`);
                         encoder.encode(frame, { keyFrame: f % 30 === 0 });
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Encode submitted, queue now=${encoder.encodeQueueSize}`);
                         
-                        // Adaptive delay: if queue is building up, add more delay to let encoder catch up
-                        // This handles screen recording interference where GPU is busy with recording
-                        const queueDepth = encoder.encodeQueueSize || 0;
-                        let delayMs = 2;
-                        if (queueDepth > 50) delayMs = 20;
-                        else if (queueDepth > 30) delayMs = 10;
-                        else if (queueDepth > 10) delayMs = 5;
-                        
-                        if (delayMs > 2) {
-                            console.log(`[Frame ${f + 1}/${totalFrames}] High queue depth (${queueDepth}), waiting ${delayMs}ms for encoder to catch up...`);
-                        }
-                        await new Promise(r => setTimeout(r, delayMs));
+                        // Don't delay - submit frames as fast as possible.
+                        // The encoder will queue them and process them when GPU becomes available.
                     } catch (frameErr) {
                         console.error(`[Frame ${f + 1}/${totalFrames}] ERROR:`, frameErr);
                         throw new Error(`Failed to encode frame ${f + 1}/${totalFrames}: ${frameErr?.message || 'Unknown error'}`);
@@ -14947,7 +14930,7 @@ btnVideo.addEventListener('click', async () => {
 
                 setAnimStatus('Finishing video... preparing your download.', totalFrames, totalFrames);
                 await new Promise(r => setTimeout(r, 0));
-                console.log(`[MP4 Export] Frame loop complete. Encoded ${encodedChunksCount} chunks so far.`);
+                console.log(`[MP4 Export] Frame loop complete. Encoded ${encodedChunksCount} chunks so far, flushing encoder queue...`);
                 await exportMp4EncoderQueueController.waitForEncoderFlush({
                     encoder,
                     getEncoderError: () => encoderError,

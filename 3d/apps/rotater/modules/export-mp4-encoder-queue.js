@@ -104,7 +104,7 @@ export function createExportMp4EncoderQueueController({
         encoder,
         getEncoderError,
         total = 0,
-        timeoutMs = 90000,
+        timeoutMs = 600000,
     } = {}) {
         if (!encoder || encoder.state === 'closed') return;
 
