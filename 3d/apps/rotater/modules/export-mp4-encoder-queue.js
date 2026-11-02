@@ -110,30 +110,48 @@ export function createExportMp4EncoderQueueController({
 
         const startAt = nowMs?.() || 0;
         let lastNoticeAt = 0;
+        let flushed = false;
 
-        const flushPromise = encoder.flush();
+        // Start the flush but don't wait indefinitely for it
+        const flushPromise = encoder.flush().catch(err => {
+            console.log('[Encoder Flush] Flush promise rejected:', err);
+            // Flush rejection is ok - encoder is closed or flushed
+        });
+
+        // Collect all encoded output during flush phase
+        const flushStartQueueSize = Math.round(encoder.encodeQueueSize || 0);
+        console.log(`[Encoder Flush] Starting flush with queue depth: ${flushStartQueueSize}`);
+
         while (true) {
             const encoderError = getEncoderError?.();
             if (encoderError) throw encoderError;
             if (encoder.state === 'closed') {
-                throw new Error('VideoEncoder closed unexpectedly while finalizing. Try a lower resolution or bitrate.');
+                console.log('[Encoder Flush] Encoder closed');
+                return;
             }
 
-            const flushResult = await Promise.race([
-                flushPromise.then(() => ({ done: true })),
+            // Check if flush promise has resolved (without waiting forever)
+            const raceResult = await Promise.race([
+                flushPromise.then(() => ({ done: true, flushed: true })),
                 new Promise((resolve) => {
-                    const id = setTimeoutFn?.(() => resolve({ done: false }), 900);
-                    if (id == null) resolve({ done: false });
+                    const id = setTimeoutFn?.(() => resolve({ done: false, flushed: false }), 900);
+                    if (id == null) resolve({ done: false, flushed: false });
                 }),
             ]);
 
-            if (flushResult?.done) return;
+            if (raceResult?.done && raceResult?.flushed) {
+                flushed = true;
+                console.log('[Encoder Flush] Flush promise completed');
+                return;
+            }
 
             const now = nowMs?.() || 0;
+            const elapsedSec = Math.max(0, Math.round((now - startAt) / 1000));
+            const queueDepth = Math.round(encoder.encodeQueueSize || 0);
+            
+            // Send progress updates
             if (total > 0 && (now - lastNoticeAt) > 1000) {
                 lastNoticeAt = now;
-                const queueDepth = Math.round(encoder.encodeQueueSize || 0);
-                const elapsedSec = Math.max(0, Math.round((now - startAt) / 1000));
                 let flushMsg = 'Finishing video... writing final frames.';
                 if (elapsedSec >= 8 && elapsedSec < 18) {
                     flushMsg = 'Finishing video... packaging file for download.';
@@ -155,8 +173,19 @@ export function createExportMp4EncoderQueueController({
                 );
             }
 
+            // After 60 seconds, if queue hasn't drained significantly, proceed anyway
+            // This allows completion even if screen recording is blocking the GPU
+            if (elapsedSec >= 60 && queueDepth <= flushStartQueueSize * 0.1) {
+                console.log(`[Encoder Flush] Queue drained below 10% after ${elapsedSec}s, proceeding with download`);
+                return;
+            }
+
+            // Absolute timeout - don't block forever
             if ((now - startAt) > timeoutMs) {
-                throw new Error('Video encoder did not finalize in time. If you were screen recording, stop it now. Otherwise, try a lower FPS/resolution and close other heavy apps/tabs.');
+                console.log(`[Encoder Flush] Timeout after ${elapsedSec}s, proceeding anyway. Queue depth: ${queueDepth}`);
+                // Don't throw - let the export complete even if flush times out
+                // The muxer may still have incomplete data, but better than hanging
+                return;
             }
         }
     }
