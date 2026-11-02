@@ -797,14 +797,12 @@ html.crop-mode .crop-corner {
 }
 
 /* Base styling: always show when checked */
-.crop-pill__option:has(input:checked),
 .crop-pill__option.is-checked {
     background: var(--palette-blueberry-100);
     color: var(--palette-blueberry-800);
 }
 
 /* Indicator: border ring only in crop mode */
-html.crop-mode .crop-pill__option:has(input:checked),
 html.crop-mode .crop-pill__option.is-checked {
     border: 2px solid var(--palette-blueberry-600) !important;
     border-radius: 999px !important;
@@ -958,14 +956,12 @@ html.theme-dark .crop-pill__option {
 }
 
 /* Base styling: always show when checked */
-html.theme-dark .crop-pill__option:has(input:checked),
 html.theme-dark .crop-pill__option.is-checked {
     background: rgba(100, 90, 180, 0.3);
     color: rgba(232, 227, 255, 0.95);
 }
 
 /* Indicator: border ring only in crop mode */
-html.theme-dark.crop-mode .crop-pill__option:has(input:checked),
 html.theme-dark.crop-mode .crop-pill__option.is-checked {
     border: 2px solid rgba(232, 227, 255, 0.6) !important;
     border-radius: 999px !important;
