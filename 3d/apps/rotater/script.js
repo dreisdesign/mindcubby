@@ -11579,6 +11579,9 @@ exportDimensionInputs.forEach(input => {
         lastSelectedExportCropRatio = input.value;
         syncCropModeFromSelectedExportDimensions({ forceReframe: false });
 
+        // Sync the visual checked state to all crop pill options
+        syncCropPillCheckedState();
+
         // Mobile: auto-collapse pill after selecting a ratio
         if (window.innerWidth < 900) {
             footerCropControlsEl?.classList.add('is-collapsed');
@@ -11593,7 +11596,24 @@ exportDimensionInputs.forEach(input => {
     });
 });
 
+// Sync the initial checked state for all crop pills
+syncCropPillCheckedState();
+
 // ── Footer crop controls ──────────────────────────────────────────────────────
+function syncCropPillCheckedState() {
+    const cropPillOptions = document.querySelectorAll('.crop-pill__option');
+    cropPillOptions.forEach(label => {
+        const input = label.querySelector('input[name="exportDimensions"]');
+        if (input) {
+            if (input.checked) {
+                label.classList.add('is-checked');
+            } else {
+                label.classList.remove('is-checked');
+            }
+        }
+    });
+}
+
 function syncCropPillChevron(expanded) {
     const path = document.getElementById('cropChevronPath');
     if (!path) return;
