@@ -793,18 +793,22 @@ html.crop-mode .crop-corner {
     min-width: 42px;
     min-height: 42px;
     position: relative;
+    border: none;
 }
 
 .crop-pill__option:has(input:checked),
 .crop-pill__option.is-checked {
-    background: var(--palette-blueberry-100) !important;
-    color: var(--palette-blueberry-800);
     border: 2px solid var(--palette-blueberry-600) !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: var(--palette-blueberry-600) !important;
     border-radius: 999px !important;
+    background: var(--palette-blueberry-100) !important;
+    color: var(--palette-blueberry-800) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 4px 8px !important;
+    padding: 4px 12px !important;
 }
 
 .crop-pill__option:hover {
@@ -953,14 +957,17 @@ html.theme-dark .crop-pill__option {
 
 html.theme-dark .crop-pill__option:has(input:checked),
 html.theme-dark .crop-pill__option.is-checked {
-    background: rgba(100, 90, 180, 0.3) !important;
-    color: rgba(232, 227, 255, 0.95);
     border: 2px solid rgba(232, 227, 255, 0.6) !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: rgba(232, 227, 255, 0.6) !important;
     border-radius: 999px !important;
+    background: rgba(100, 90, 180, 0.3) !important;
+    color: rgba(232, 227, 255, 0.95) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 4px 8px !important;
+    padding: 4px 12px !important;
 }
 
 
