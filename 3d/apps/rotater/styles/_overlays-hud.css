@@ -796,8 +796,8 @@ html.crop-mode .crop-corner {
     border: none;
 }
 
-.crop-pill__option:has(input:checked),
-.crop-pill__option.is-checked {
+html.crop-mode .crop-pill__option:has(input:checked),
+html.crop-mode .crop-pill__option.is-checked {
     border: 2px solid var(--palette-blueberry-600) !important;
     border-width: 2px !important;
     border-style: solid !important;
@@ -955,8 +955,8 @@ html.theme-dark .crop-pill__option {
     color: rgba(200, 194, 255, 0.8);
 }
 
-html.theme-dark .crop-pill__option:has(input:checked),
-html.theme-dark .crop-pill__option.is-checked {
+html.theme-dark.crop-mode .crop-pill__option:has(input:checked),
+html.theme-dark.crop-mode .crop-pill__option.is-checked {
     border: 2px solid rgba(232, 227, 255, 0.6) !important;
     border-width: 2px !important;
     border-style: solid !important;
