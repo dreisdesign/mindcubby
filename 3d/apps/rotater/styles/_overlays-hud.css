@@ -823,11 +823,12 @@ html.crop-mode .crop-corner {
     flex-shrink: 0;
     cursor: inherit;
     pointer-events: none;
-    transition: box-shadow 120ms;
+    transition: box-shadow 120ms, outline 120ms;
 }
 
 .crop-pill__option:has(input:checked) .crop-pill__shape {
-    box-shadow: 0 0 0 6px rgba(100, 90, 180, 0.15);
+    outline: 2px solid rgba(100, 90, 180, 0.3);
+    outline-offset: 2px;
 }
 
 .crop-pill__shape--square {
@@ -954,7 +955,7 @@ html.theme-dark .crop-pill__option:has(input:checked) {
 }
 
 html.theme-dark .crop-pill__option:has(input:checked) .crop-pill__shape {
-    box-shadow: 0 0 0 6px rgba(232, 227, 255, 0.1);
+    outline-color: rgba(232, 227, 255, 0.2);
 }
 
 html.theme-dark .crop-pill__option:hover {
