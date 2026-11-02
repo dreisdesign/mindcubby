@@ -14729,6 +14729,16 @@ btnGif.addEventListener('click', async () => {
 
 // ── Video export (H.264 MP4 via WebCodecs + mp4-muxer) ───────────────────────
 btnVideo.addEventListener('click', async () => {
+    // Save crop state before export in case of early failure
+    const cropStateBeforeExport = {
+        selected: document.querySelector('input[name="exportDimensions"]:checked')?.value,
+        lastSelectedRatio: lastSelectedExportCropRatio,
+        exportFrameEnabled: exportFrameEnabled,
+        exportCamDist: exportCamDist,
+        exportCamElev: exportCamElev,
+        exportCamZoom: exportCamZoom,
+    };
+
     await exportMp4RuntimeController.runMp4Export({
         runEncodeFlow: async ({ fps, bitrate, W, H, n, totalFrames }) => {
 
@@ -14919,6 +14929,16 @@ btnVideo.addEventListener('click', async () => {
             if (exportSucceeded) {
                 download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
                 setAnimStatus('MP4 saved ✓');
+            } else {
+                // Export failed - restore crop state so user doesn't lose their selection
+                if (cropStateBeforeExport.selected) {
+                    setSelectedExportDimensionsId(cropStateBeforeExport.selected);
+                }
+                lastSelectedExportCropRatio = cropStateBeforeExport.lastSelectedRatio;
+                if (!exportFrameEnabled && cropStateBeforeExport.exportFrameEnabled) {
+                    // If crop was previously enabled, try to restore it
+                    // But don't force re-entry if it failed during export
+                }
             }
         },
     });
