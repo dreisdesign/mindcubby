@@ -137,8 +137,10 @@ export function createExportMp4EncoderQueueController({
                 let flushMsg = 'Finishing video... writing final frames.';
                 if (elapsedSec >= 8 && elapsedSec < 18) {
                     flushMsg = 'Finishing video... packaging file for download.';
-                } else if (elapsedSec >= 18) {
+                } else if (elapsedSec >= 18 && elapsedSec < 45) {
                     flushMsg = 'Still finishing your video... high-resolution exports can take a little longer.';
+                } else if (elapsedSec >= 45) {
+                    flushMsg = '⏳ If you were screen recording, stop it now to complete the export. (Waiting for encoder to finish...)';
                 }
 
                 // Keep the bar near-complete and let it creep forward as queued
@@ -154,7 +156,7 @@ export function createExportMp4EncoderQueueController({
             }
 
             if ((now - startAt) > timeoutMs) {
-                throw new Error('Video encoder did not finalize in time. Try a lower FPS/resolution and close other heavy apps/tabs.');
+                throw new Error('Video encoder did not finalize in time. If you were screen recording, stop it now. Otherwise, try a lower FPS/resolution and close other heavy apps/tabs.');
             }
         }
     }
