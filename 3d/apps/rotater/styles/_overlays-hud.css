@@ -826,9 +826,6 @@ html.crop-mode .crop-corner {
     pointer-events: none;
 }
 
-.crop-pill__option.is-checked .crop-pill__shape {
-    box-shadow: 0 0 0 6px rgba(100, 90, 180, 0.15);
-}
 
 .crop-pill__shape--square {
     width: 15px;
@@ -954,9 +951,6 @@ html.theme-dark .crop-pill__option.is-checked {
     border: 2px solid rgba(232, 227, 255, 0.6);
 }
 
-html.theme-dark .crop-pill__option.is-checked .crop-pill__shape {
-    box-shadow: 0 0 0 6px rgba(232, 227, 255, 0.1);
-}
 
 html.theme-dark .crop-pill__option:hover {
     background: rgba(100, 90, 180, 0.3);
