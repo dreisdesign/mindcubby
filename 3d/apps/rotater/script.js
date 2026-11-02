@@ -7037,6 +7037,7 @@ function openExportWorkspace() {
 }
 
 function closeExportWorkspace() {
+    clearSelectedCropDimensions();
     exportWorkspaceRuntimeController.closeExportWorkspace();
 }
 
@@ -13773,7 +13774,8 @@ function cancelCropMode() {
         camera.zoom = _cropBackupCameraZoom;
         camera.updateProjectionMatrix();
     }
-    clearSelectedCropDimensions();
+    // Keep the radio button checked so the UI shows which crop is still selected
+    // (only clear when fully exiting the export workspace)
     syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
     updateCropDimensionsDock();
     exportFrameEnabled = false;
