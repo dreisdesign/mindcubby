@@ -14945,8 +14945,15 @@ btnVideo.addEventListener('click', async () => {
                 try { encoder.close(); } catch (_) { }
                 
                 console.log(`[MP4 Export] Finalizing MP4 muxer...`);
-                muxer.finalize();
-                console.log(`[MP4 Export] Muxer finalized! Buffer size: ${muxer.target.buffer.byteLength} bytes`);
+                try {
+                    muxer.finalize();
+                    console.log(`[MP4 Export] Muxer finalized! Buffer size: ${muxer.target.buffer.byteLength} bytes`);
+                } catch (finalizeErr) {
+                    console.error(`[MP4 Export] ERROR during muxer.finalize():`, finalizeErr);
+                    // Alert as well since console might not be visible
+                    alert(`[MP4 Export Finalize Error]: ${finalizeErr.message}`);
+                    throw finalizeErr;
+                }
                 
                 exportSucceeded = true;
             } finally {
@@ -14972,8 +14979,14 @@ btnVideo.addEventListener('click', async () => {
 
             if (exportSucceeded) {
                 console.log(`[MP4 Export] SUCCESS! Downloading ${muxer.target.buffer.byteLength} byte file...`);
-                download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
-                console.log(`[MP4 Export] Download initiated!`);
+                try {
+                    download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
+                    console.log(`[MP4 Export] Download initiated!`);
+                } catch (dlErr) {
+                    console.error(`[MP4 Export] ERROR during download:`, dlErr);
+                    alert(`[MP4 Export Download Error]: ${dlErr.message}`);
+                    throw dlErr;
+                }
                 setAnimStatus('MP4 saved ✓');
             } else {
                 // Export failed - restore crop state so user doesn't lose their selection
