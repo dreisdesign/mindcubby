@@ -14788,6 +14788,10 @@ btnVideo.addEventListener('click', async () => {
             await new Promise(r => setTimeout(r, 0));
             if (encoderError) throw encoderError;
             if (encoder.state === 'closed') throw new Error('VideoEncoder closed during configure — try a lower resolution or frame rate.');
+            
+            console.log(`[MP4 Export] Starting encode: ${W}×${H} @ ${fps}fps, bitrate ${bitrate} bps`);
+            console.log(`[MP4 Export] Total frames: ${totalFrames}, loops: ${n}`);
+
 
             const { target, dist, elev, az } = getOrbitFrameState();
             // Use stored export framing only in crop mode; otherwise mirror the live viewport.
@@ -14876,6 +14880,9 @@ btnVideo.addEventListener('click', async () => {
                     const timestamp = Math.round(f * (1_000_000 / fps));
                     let frame = null;
                     try {
+                        // Force GPU flush before creating VideoFrame to ensure data is ready
+                        outCtx.getImageData(0, 0, 1, 1);
+                        
                         frame = new VideoFrame(out, {
                             timestamp,
                             duration: frameDuration,
@@ -14884,6 +14891,8 @@ btnVideo.addEventListener('click', async () => {
                         if (encoderError) throw encoderError;
                         if (encoder.state === 'closed') throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.');
                         encoder.encode(frame, { keyFrame: f % 30 === 0 });
+                    } catch (frameErr) {
+                        throw new Error(`Failed to encode frame ${f + 1}/${totalFrames}: ${frameErr?.message || 'Unknown error'}`);
                     } finally {
                         try { frame?.close(); } catch (_) { }
                     }
