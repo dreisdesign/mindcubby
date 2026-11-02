@@ -14926,22 +14926,31 @@ btnVideo.addEventListener('click', async () => {
                     }
 
                     await maybePaintExportProgress(`Encoding… ${f + 1} / ${totalFrames}`, f + 1, totalFrames);
+                    
+                    // Early detection: if we're 10% through and still have zero output, something is wrong
+                    if (f === Math.floor(totalFrames * 0.1) && encodedChunksCount === 0) {
+                        const queueDepth = encoder.encodeQueueSize || 0;
+                        if (queueDepth > 50) {
+                            console.warn(`[MP4 Export] WARNING: At 10% of frames (${f + 1}/${totalFrames}) but encoder has produced 0 chunks with queue depth ${queueDepth}`);
+                            console.warn(`[MP4 Export] This indicates GPU is blocked. If screen recording is active, it's likely the cause.`);
+                        }
+                    }
+                    
+                    // Final check at end: if queue is huge and output is zero, fail fast
+                    if (f === totalFrames - 1 && encodedChunksCount === 0 && encoder.encodeQueueSize > 200) {
+                        console.error(`[MP4 Export] CRITICAL: Submitted all ${totalFrames} frames but got 0 output chunks with queue=${encoder.encodeQueueSize}`);
+                        throw new Error(
+                            `Video encoder is not producing output. This is caused by the GPU being monopolized by screen recording. `
+                            + `Screen recording blocks GPU access needed for H.264 encoding. `
+                            + `Please stop screen recording and try again.`
+                        );
+                    }
                 }
 
                 setAnimStatus('Finishing video... preparing your download.', totalFrames, totalFrames);
                 await new Promise(r => setTimeout(r, 0));
                 console.log(`[MP4 Export] Frame loop complete. Encoded ${encodedChunksCount} chunks so far, flushing encoder queue...`);
                 console.log(`[MP4 Export] Encoder state: ${encoder.state}, error: ${encoderError ? encoderError.message : 'none'}`);
-                
-                // Check if encoder is producing output at all
-                if (encodedChunksCount === 0 && encoder.encodeQueueSize > 200) {
-                    console.error(`[MP4 Export] CRITICAL: Submitted ${totalFrames} frames but got 0 output chunks with queue depth ${encoder.encodeQueueSize}`);
-                    console.error(`[MP4 Export] This indicates the encoder is not processing frames (likely due to GPU monopoly from screen recording)`);
-                    throw new Error(
-                        `Video encoder is not producing output. This usually means screen recording is blocking GPU access. `
-                        + `Please stop screen recording and try again.`
-                    );
-                }
                 
                 await exportMp4EncoderQueueController.waitForEncoderFlush({
                     encoder,
