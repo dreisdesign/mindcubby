@@ -14875,15 +14875,17 @@ btnVideo.addEventListener('click', async () => {
                             `Details: ${err.message}`);
                     }
 
+                    console.log(`[Frame ${f + 1}/${totalFrames}] Queue before wait: ${encoder.encodeQueueSize}`);
                     await exportMp4EncoderQueueController.waitForEncoderQueue({
                         encoder,
                         getEncoderError: () => encoderError,
-                        // Very conservative: wait for queue to drain below 4 before submitting
-                        maxQueue: 4,
-                        hardQueue: 8,
+                        // Moderate thresholds: encoder is working, so allow some queue depth
+                        maxQueue: 30,
+                        hardQueue: 60,
                         frameIndex: f,
                         total: totalFrames,
                     });
+                    console.log(`[Frame ${f + 1}/${totalFrames}] Queue after wait: ${encoder.encodeQueueSize}`);
                     const frameDuration = Math.round(1_000_000 / fps);
                     const timestamp = Math.round(f * (1_000_000 / fps));
                     let frame = null;
