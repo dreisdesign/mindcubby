@@ -14729,6 +14729,10 @@ btnGif.addEventListener('click', async () => {
 
 // ── Video export (H.264 MP4 via WebCodecs + mp4-muxer) ───────────────────────
 btnVideo.addEventListener('click', async () => {
+    // Show tip about screen recording compatibility
+    setStatus('💡 You can screen record while exporting. Export will slow down but complete when recording stops.');
+    setTimeout(() => setStatus(''), 6000);
+
     // Save crop state before export in case of early failure
     const cropStateBeforeExport = {
         selected: document.querySelector('input[name="exportDimensions"]:checked')?.value,
@@ -14879,11 +14883,13 @@ btnVideo.addEventListener('click', async () => {
                     await exportMp4EncoderQueueController.waitForEncoderQueue({
                         encoder,
                         getEncoderError: () => encoderError,
-                        // Moderate thresholds: encoder is working, so allow some queue depth
-                        maxQueue: 30,
-                        hardQueue: 60,
+                        // Higher thresholds to tolerate screen recording interference
+                        maxQueue: 60,
+                        hardQueue: 120,
                         frameIndex: f,
                         total: totalFrames,
+                        // Increase timeout to 5 minutes to handle screen recording delays
+                        maxBusyMs: 300000,
                     });
                     console.log(`[Frame ${f + 1}/${totalFrames}] Queue after wait: ${encoder.encodeQueueSize}`);
                     const frameDuration = Math.round(1_000_000 / fps);
@@ -14917,8 +14923,18 @@ btnVideo.addEventListener('click', async () => {
                         encoder.encode(frame, { keyFrame: f % 30 === 0 });
                         console.log(`[Frame ${f + 1}/${totalFrames}] Encode submitted, queue now=${encoder.encodeQueueSize}`);
                         
-                        // Give encoder a tiny bit of time to start processing
-                        await new Promise(r => setTimeout(r, 2));
+                        // Adaptive delay: if queue is building up, add more delay to let encoder catch up
+                        // This handles screen recording interference where GPU is busy with recording
+                        const queueDepth = encoder.encodeQueueSize || 0;
+                        let delayMs = 2;
+                        if (queueDepth > 50) delayMs = 20;
+                        else if (queueDepth > 30) delayMs = 10;
+                        else if (queueDepth > 10) delayMs = 5;
+                        
+                        if (delayMs > 2) {
+                            console.log(`[Frame ${f + 1}/${totalFrames}] High queue depth (${queueDepth}), waiting ${delayMs}ms for encoder to catch up...`);
+                        }
+                        await new Promise(r => setTimeout(r, delayMs));
                     } catch (frameErr) {
                         console.error(`[Frame ${f + 1}/${totalFrames}] ERROR:`, frameErr);
                         throw new Error(`Failed to encode frame ${f + 1}/${totalFrames}: ${frameErr?.message || 'Unknown error'}`);

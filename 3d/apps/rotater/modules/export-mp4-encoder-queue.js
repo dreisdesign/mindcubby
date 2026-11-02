@@ -92,7 +92,8 @@ export function createExportMp4EncoderQueueController({
 
             if ((now - lastQueueChangeAt) > maxBusyMs) {
                 throw new Error(
-                    `Video encoder stalled while processing frame ${frameIndex + 1}/${total || '?'} `
+                    `Video encoder stalled while processing frame ${frameIndex + 1}/${total || '?'}. `
+                    + `If you were screen recording, please stop it and try again. Screen recording can block GPU access needed for encoding.`
                     + `(queue=${queueDepth}). Try lower FPS/resolution and close heavy apps/tabs.`
                 );
             }
