@@ -319,10 +319,14 @@ function setSelectedExportDimensionsId(id) {
     const target = document.querySelector(`input[name="exportDimensions"][value="${id}"]`);
     if (target) {
         target.checked = true;
+        syncCropPillCheckedState();
         return;
     }
     const fallback = document.querySelector('input[name="exportDimensions"][value="square"]');
-    if (fallback) fallback.checked = true;
+    if (fallback) {
+        fallback.checked = true;
+        syncCropPillCheckedState();
+    }
 }
 
 function getImageDimensionPreset() {
