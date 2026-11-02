@@ -13806,8 +13806,12 @@ function cancelCropMode() {
         camera.zoom = _cropBackupCameraZoom;
         camera.updateProjectionMatrix();
     }
-    // Keep the radio button checked so the UI shows which crop is still selected
-    // (only clear when fully exiting the export workspace)
+    // Uncheck the radio button since crop mode is exited
+    const exportDimensionInputs = document.querySelectorAll('input[name="exportDimensions"]');
+    exportDimensionInputs.forEach(input => {
+        input.checked = false;
+    });
+    syncCropPillCheckedState();
     syncExportSizeSelectForFormat(exportFormatEl?.value ?? 'gif');
     updateCropDimensionsDock();
     exportFrameEnabled = false;
