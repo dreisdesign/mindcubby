@@ -14771,7 +14771,10 @@ btnVideo.addEventListener('click', async () => {
                     totalEncodedBytes += chunk.byteLength || 0;
                     muxer.addVideoChunk(chunk, meta);
                 },
-                error: e => { encoderError = e; },
+                error: e => { 
+                    console.error('[VideoEncoder Error Callback]', e);
+                    encoderError = e;
+                },
             });
             // Automatically probe for the highest supported H.264 profile (High -> Main -> Baseline)
             // matching the target resolution and framerate to prevent encoder failures.
@@ -14880,18 +14883,24 @@ btnVideo.addEventListener('click', async () => {
                     const timestamp = Math.round(f * (1_000_000 / fps));
                     let frame = null;
                     try {
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Creating VideoFrame at timestamp ${timestamp}μs, duration ${frameDuration}μs`);
                         // Force GPU flush before creating VideoFrame to ensure data is ready
                         outCtx.getImageData(0, 0, 1, 1);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] GPU flush complete, creating frame...`);
                         
                         frame = new VideoFrame(out, {
                             timestamp,
                             duration: frameDuration,
                             alpha: 'discard',
                         });
+                        console.log(`[Frame ${f + 1}/${totalFrames}] VideoFrame created successfully`);
                         if (encoderError) throw encoderError;
                         if (encoder.state === 'closed') throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.');
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Submitting to encoder, keyFrame=${f % 30 === 0}`);
                         encoder.encode(frame, { keyFrame: f % 30 === 0 });
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Encode submitted`);
                     } catch (frameErr) {
+                        console.error(`[Frame ${f + 1}/${totalFrames}] ERROR:`, frameErr);
                         throw new Error(`Failed to encode frame ${f + 1}/${totalFrames}: ${frameErr?.message || 'Unknown error'}`);
                     } finally {
                         try { frame?.close(); } catch (_) { }
