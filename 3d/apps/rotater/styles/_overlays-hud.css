@@ -789,7 +789,7 @@ html.crop-mode .crop-corner {
     border-radius: 999px;
     cursor: pointer;
     color: var(--palette-blueberry-600);
-    transition: background 120ms, color 120ms, outline 120ms;
+    transition: background 120ms, color 120ms;
     min-width: 42px;
     min-height: 42px;
     position: relative;
@@ -798,8 +798,6 @@ html.crop-mode .crop-corner {
 .crop-pill__option:has(input:checked) {
     background: var(--palette-blueberry-100);
     color: var(--palette-blueberry-800);
-    outline: 2px solid var(--palette-blueberry-700);
-    outline-offset: 2px;
 }
 
 .crop-pill__option:hover {
@@ -825,7 +823,6 @@ html.crop-mode .crop-corner {
     flex-shrink: 0;
     cursor: inherit;
     pointer-events: none;
-    transition: box-shadow 120ms;
 }
 
 .crop-pill__shape--square {
@@ -949,7 +946,6 @@ html.theme-dark .crop-pill__option {
 html.theme-dark .crop-pill__option:has(input:checked) {
     background: rgba(100, 90, 180, 0.3);
     color: rgba(232, 227, 255, 0.95);
-    outline-color: rgba(232, 227, 255, 0.4);
 }
 
 html.theme-dark .crop-pill__option:hover {
