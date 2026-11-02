@@ -795,6 +795,7 @@ html.crop-mode .crop-corner {
     position: relative;
 }
 
+.crop-pill__option:has(input:checked),
 .crop-pill__option.is-checked {
     background: var(--palette-blueberry-100);
     color: var(--palette-blueberry-800);
@@ -945,6 +946,7 @@ html.theme-dark .crop-pill__option {
     color: rgba(200, 194, 255, 0.8);
 }
 
+html.theme-dark .crop-pill__option:has(input:checked),
 html.theme-dark .crop-pill__option.is-checked {
     background: rgba(100, 90, 180, 0.3);
     color: rgba(232, 227, 255, 0.95);
