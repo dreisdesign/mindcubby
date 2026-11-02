@@ -799,9 +799,6 @@ html.crop-mode .crop-corner {
 html.crop-mode .crop-pill__option:has(input:checked),
 html.crop-mode .crop-pill__option.is-checked {
     border: 2px solid var(--palette-blueberry-600) !important;
-    border-width: 2px !important;
-    border-style: solid !important;
-    border-color: var(--palette-blueberry-600) !important;
     border-radius: 999px !important;
     background: var(--palette-blueberry-100) !important;
     color: var(--palette-blueberry-800) !important;
@@ -958,9 +955,6 @@ html.theme-dark .crop-pill__option {
 html.theme-dark.crop-mode .crop-pill__option:has(input:checked),
 html.theme-dark.crop-mode .crop-pill__option.is-checked {
     border: 2px solid rgba(232, 227, 255, 0.6) !important;
-    border-width: 2px !important;
-    border-style: solid !important;
-    border-color: rgba(232, 227, 255, 0.6) !important;
     border-radius: 999px !important;
     background: rgba(100, 90, 180, 0.3) !important;
     color: rgba(232, 227, 255, 0.95) !important;
