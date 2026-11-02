@@ -14936,12 +14936,18 @@ btnVideo.addEventListener('click', async () => {
                     getEncoderError: () => encoderError,
                     total: totalFrames,
                 });
+                console.log(`[MP4 Export] Encoder flush complete!`);
                 if (encoderError) throw encoderError;
                 if (encodedChunksCount === 0 || totalEncodedBytes === 0) {
                     throw new Error('Video encoder produced no video frames. Please check your browser WebCodecs support or try a different resolution.');
                 }
+                console.log(`[MP4 Export] Closing encoder and finalizing muxer...`);
                 try { encoder.close(); } catch (_) { }
+                
+                console.log(`[MP4 Export] Finalizing MP4 muxer...`);
                 muxer.finalize();
+                console.log(`[MP4 Export] Muxer finalized! Buffer size: ${muxer.target.buffer.byteLength} bytes`);
+                
                 exportSucceeded = true;
             } finally {
                 restoreExportScene();
@@ -14965,7 +14971,9 @@ btnVideo.addEventListener('click', async () => {
             renderer.render(scene, camera); // Refresh visible canvas before download
 
             if (exportSucceeded) {
+                console.log(`[MP4 Export] SUCCESS! Downloading ${muxer.target.buffer.byteLength} byte file...`);
                 download(muxer.target.buffer, buildExportFilename('mp4'), 'video/mp4');
+                console.log(`[MP4 Export] Download initiated!`);
                 setAnimStatus('MP4 saved ✓');
             } else {
                 // Export failed - restore crop state so user doesn't lose their selection
