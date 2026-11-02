@@ -113,14 +113,18 @@ export function createExportMp4CodecConfigController() {
     } = {}) {
         if (!encoder) return null;
 
+        console.log(`[Codec Config] Validating ${width}×${height} resolution...`);
         // Validate resolution before encoding
         const validation = validateResolutionForEncoding({ width, height });
         if (!validation.valid) {
             throw new Error(validation.reason);
         }
+        console.log(`[Codec Config] Resolution valid, probing supported codecs...`);
 
         const config = await findSupportedEncoderConfig({ width, height, bitrate, fps });
+        console.log(`[Codec Config] Selected codec: ${config.codec}`);
         encoder.configure(config);
+        console.log(`[Codec Config] configure() called successfully`);
         return config;
     }
 

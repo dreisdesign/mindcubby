@@ -14741,6 +14741,7 @@ btnVideo.addEventListener('click', async () => {
 
     await exportMp4RuntimeController.runMp4Export({
         runEncodeFlow: async ({ fps, bitrate, W, H, n, totalFrames }) => {
+            console.log(`[MP4 Export] Initializing: ${W}×${H} @ ${fps}fps, bitrate ${bitrate} bps, ${totalFrames} frames`);
 
             // Render directly to the main canvas at 2x resolution for SSAA
             const SSAA = 2;
@@ -14755,6 +14756,7 @@ btnVideo.addEventListener('click', async () => {
             const savedZoom = camera.zoom;
             camera.aspect = W / H;
 
+            console.log('[MP4 Export] Creating muxer...');
             const muxer = new Muxer({
                 target: new ArrayBufferTarget(),
                 video: { codec: 'avc', width: W, height: H },
@@ -14765,6 +14767,7 @@ btnVideo.addEventListener('click', async () => {
             let encoderError = null;
             let encodedChunksCount = 0;
             let totalEncodedBytes = 0;
+            console.log('[MP4 Export] Creating VideoEncoder...');
             const encoder = new VideoEncoder({
                 output: (chunk, meta) => {
                     encodedChunksCount++;
@@ -14776,6 +14779,7 @@ btnVideo.addEventListener('click', async () => {
                     encoderError = e;
                 },
             });
+            console.log('[MP4 Export] VideoEncoder created, configuring...');
             // Automatically probe for the highest supported H.264 profile (High -> Main -> Baseline)
             // matching the target resolution and framerate to prevent encoder failures.
             await exportMp4CodecConfigController.configureMp4Encoder({
@@ -14785,6 +14789,7 @@ btnVideo.addEventListener('click', async () => {
                 bitrate,
                 fps,
             });
+            console.log('[MP4 Export] Codec configuration complete');
             // Yield a microtask so any async configure-rejection error callback can fire
             // before we start submitting frames. This surfaces bad-config errors early
             // rather than silently running with an unconfigured encoder.
@@ -14792,7 +14797,7 @@ btnVideo.addEventListener('click', async () => {
             if (encoderError) throw encoderError;
             if (encoder.state === 'closed') throw new Error('VideoEncoder closed during configure — try a lower resolution or frame rate.');
             
-            console.log(`[MP4 Export] Starting encode: ${W}×${H} @ ${fps}fps, bitrate ${bitrate} bps`);
+            console.log(`[MP4 Export] Starting frame loop: ${W}×${H} @ ${fps}fps, bitrate ${bitrate} bps`);
             console.log(`[MP4 Export] Total frames: ${totalFrames}, loops: ${n}`);
 
 
