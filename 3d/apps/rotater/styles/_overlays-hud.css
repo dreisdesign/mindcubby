@@ -799,7 +799,7 @@ html.crop-mode .crop-corner {
 .crop-pill__option.is-checked {
     background: var(--palette-blueberry-100);
     color: var(--palette-blueberry-800);
-    border: 2px solid var(--palette-blueberry-600);
+    box-shadow: inset 0 0 0 2px var(--palette-blueberry-600);
 }
 
 .crop-pill__option:hover {
@@ -950,7 +950,7 @@ html.theme-dark .crop-pill__option:has(input:checked),
 html.theme-dark .crop-pill__option.is-checked {
     background: rgba(100, 90, 180, 0.3);
     color: rgba(232, 227, 255, 0.95);
-    border: 2px solid rgba(232, 227, 255, 0.6);
+    box-shadow: inset 0 0 0 2px rgba(232, 227, 255, 0.6);
 }
 
 
