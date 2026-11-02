@@ -113,10 +113,16 @@ export function createExportMp4EncoderQueueController({
         let flushed = false;
 
         // Start the flush but don't wait indefinitely for it
-        const flushPromise = encoder.flush().catch(err => {
-            console.log('[Encoder Flush] Flush promise rejected:', err);
-            // Flush rejection is ok - encoder is closed or flushed
-        });
+        const flushPromise = encoder.flush()
+            .then(result => {
+                console.log('[Encoder Flush] Flush promise RESOLVED successfully!');
+                return { done: true, flushed: true };
+            })
+            .catch(err => {
+                console.log('[Encoder Flush] Flush promise REJECTED:', err?.message || err);
+                // Flush rejection is ok - encoder is closed or flushed
+                return { done: false, flushed: false };
+            });
 
         // Collect all encoded output during flush phase
         const flushStartQueueSize = Math.round(encoder.encodeQueueSize || 0);
@@ -132,7 +138,7 @@ export function createExportMp4EncoderQueueController({
 
             // Check if flush promise has resolved (without waiting forever)
             const raceResult = await Promise.race([
-                flushPromise.then(() => ({ done: true, flushed: true })),
+                flushPromise,
                 new Promise((resolve) => {
                     const id = setTimeoutFn?.(() => resolve({ done: false, flushed: false }), 900);
                     if (id == null) resolve({ done: false, flushed: false });

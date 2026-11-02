@@ -14931,6 +14931,7 @@ btnVideo.addEventListener('click', async () => {
                 setAnimStatus('Finishing video... preparing your download.', totalFrames, totalFrames);
                 await new Promise(r => setTimeout(r, 0));
                 console.log(`[MP4 Export] Frame loop complete. Encoded ${encodedChunksCount} chunks so far, flushing encoder queue...`);
+                console.log(`[MP4 Export] Encoder state: ${encoder.state}, error: ${encoderError ? encoderError.message : 'none'}`);
                 await exportMp4EncoderQueueController.waitForEncoderFlush({
                     encoder,
                     getEncoderError: () => encoderError,
