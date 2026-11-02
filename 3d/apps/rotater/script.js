@@ -14890,15 +14890,12 @@ btnVideo.addEventListener('click', async () => {
                     try {
                         console.log(`[Frame ${f + 1}/${totalFrames}] Starting encode, queue=${encoder.encodeQueueSize}`);
                         
-                        // Convert OffscreenCanvas to blob, then to ImageBitmap
-                        // This avoids issues with 2D context VideoFrame creation on macOS
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Converting canvas to blob...`);
-                        const blob = await out.convertToBlob({ type: 'image/png' });
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Creating ImageBitmap from blob...`);
-                        const bitmap = await createImageBitmap(blob);
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Creating VideoFrame from bitmap...`);
+                        // Use the main WebGL canvas directly for VideoFrame creation.
+                        // WebGL canvases are GPU-backed and properly formatted for the encoder.
+                        // The 2D canvas copy (out) is only needed for drawing overlays.
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Creating VideoFrame from WebGL canvas directly...`);
                         
-                        frame = new VideoFrame(bitmap, {
+                        frame = new VideoFrame(canvas, {
                             timestamp,
                             duration: frameDuration,
                             alpha: 'discard',
