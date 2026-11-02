@@ -14877,10 +14877,9 @@ btnVideo.addEventListener('click', async () => {
                     await exportMp4EncoderQueueController.waitForEncoderQueue({
                         encoder,
                         getEncoderError: () => encoderError,
-                        // Soft/hard queue thresholds smooth pacing and avoid
-                        // abrupt mid-export stop/start behavior under load.
-                        maxQueue: 160,
-                        hardQueue: 320,
+                        // More conservative queue thresholds to prevent overflow
+                        maxQueue: 60,
+                        hardQueue: 120,
                         frameIndex: f,
                         total: totalFrames,
                     });
@@ -14888,26 +14887,33 @@ btnVideo.addEventListener('click', async () => {
                     const timestamp = Math.round(f * (1_000_000 / fps));
                     let frame = null;
                     try {
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Creating VideoFrame at timestamp ${timestamp}μs, duration ${frameDuration}μs`);
-                        // Force GPU flush before creating VideoFrame to ensure data is ready
-                        outCtx.getImageData(0, 0, 1, 1);
-                        console.log(`[Frame ${f + 1}/${totalFrames}] GPU flush complete, creating frame...`);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] encoder.state=${encoder.state}, queue=${encoder.encodeQueueSize}`);
                         
                         console.log(`[Frame ${f + 1}/${totalFrames}] Creating VideoFrame via ImageBitmap...`);
                         // On macOS, VideoFrame cannot be created directly from OffscreenCanvas with 2D context.
                         // We must convert to ImageBitmap first to ensure GPU compatibility with the encoder.
                         const bitmap = await createImageBitmap(out);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] ImageBitmap created`);
+                        
                         frame = new VideoFrame(bitmap, {
                             timestamp,
                             duration: frameDuration,
                             alpha: 'discard',
                         });
-                        console.log(`[Frame ${f + 1}/${totalFrames}] VideoFrame created successfully`);
-                        if (encoderError) throw encoderError;
-                        if (encoder.state === 'closed') throw new Error('VideoEncoder closed unexpectedly — try a lower resolution or bitrate.');
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Submitting to encoder, keyFrame=${f % 30 === 0}`);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] VideoFrame created`);
+                        
+                        if (encoderError) {
+                            console.error(`[Frame ${f + 1}/${totalFrames}] Encoder error already set:`, encoderError);
+                            throw encoderError;
+                        }
+                        if (encoder.state !== 'configured') {
+                            console.error(`[Frame ${f + 1}/${totalFrames}] Bad encoder state: ${encoder.state}`);
+                            throw new Error(`Encoder state is '${encoder.state}', expected 'configured'`);
+                        }
+                        
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Encoding (keyFrame=${f % 30 === 0})...`);
                         encoder.encode(frame, { keyFrame: f % 30 === 0 });
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Encode submitted`);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Encode() called, queue now=${encoder.encodeQueueSize}`);
                     } catch (frameErr) {
                         console.error(`[Frame ${f + 1}/${totalFrames}] ERROR:`, frameErr);
                         throw new Error(`Failed to encode frame ${f + 1}/${totalFrames}: ${frameErr?.message || 'Unknown error'}`);
