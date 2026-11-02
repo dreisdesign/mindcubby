@@ -14877,9 +14877,9 @@ btnVideo.addEventListener('click', async () => {
                     await exportMp4EncoderQueueController.waitForEncoderQueue({
                         encoder,
                         getEncoderError: () => encoderError,
-                        // More conservative queue thresholds to prevent overflow
-                        maxQueue: 60,
-                        hardQueue: 120,
+                        // Very conservative: wait for queue to drain below 4 before submitting
+                        maxQueue: 4,
+                        hardQueue: 8,
                         frameIndex: f,
                         total: totalFrames,
                     });
@@ -14887,20 +14887,22 @@ btnVideo.addEventListener('click', async () => {
                     const timestamp = Math.round(f * (1_000_000 / fps));
                     let frame = null;
                     try {
-                        console.log(`[Frame ${f + 1}/${totalFrames}] encoder.state=${encoder.state}, queue=${encoder.encodeQueueSize}`);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Starting encode, queue=${encoder.encodeQueueSize}`);
                         
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Creating VideoFrame via ImageBitmap...`);
-                        // On macOS, VideoFrame cannot be created directly from OffscreenCanvas with 2D context.
-                        // We must convert to ImageBitmap first to ensure GPU compatibility with the encoder.
-                        const bitmap = await createImageBitmap(out);
-                        console.log(`[Frame ${f + 1}/${totalFrames}] ImageBitmap created`);
+                        // Convert OffscreenCanvas to blob, then to ImageBitmap
+                        // This avoids issues with 2D context VideoFrame creation on macOS
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Converting canvas to blob...`);
+                        const blob = await out.convertToBlob({ type: 'image/png' });
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Creating ImageBitmap from blob...`);
+                        const bitmap = await createImageBitmap(blob);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Creating VideoFrame from bitmap...`);
                         
                         frame = new VideoFrame(bitmap, {
                             timestamp,
                             duration: frameDuration,
                             alpha: 'discard',
                         });
-                        console.log(`[Frame ${f + 1}/${totalFrames}] VideoFrame created`);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] VideoFrame created successfully`);
                         
                         if (encoderError) {
                             console.error(`[Frame ${f + 1}/${totalFrames}] Encoder error already set:`, encoderError);
@@ -14911,9 +14913,9 @@ btnVideo.addEventListener('click', async () => {
                             throw new Error(`Encoder state is '${encoder.state}', expected 'configured'`);
                         }
                         
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Encoding (keyFrame=${f % 30 === 0})...`);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Calling encode()...`);
                         encoder.encode(frame, { keyFrame: f % 30 === 0 });
-                        console.log(`[Frame ${f + 1}/${totalFrames}] Encode() called, queue now=${encoder.encodeQueueSize}`);
+                        console.log(`[Frame ${f + 1}/${totalFrames}] Encode submitted, queue now=${encoder.encodeQueueSize}`);
                     } catch (frameErr) {
                         console.error(`[Frame ${f + 1}/${totalFrames}] ERROR:`, frameErr);
                         throw new Error(`Failed to encode frame ${f + 1}/${totalFrames}: ${frameErr?.message || 'Unknown error'}`);
