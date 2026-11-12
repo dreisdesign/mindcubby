@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-10-31
 
 ### Fixed
+- **Hover model outline readability improved with white-back / dark-front dual stroke**: The dashed hover outline now uses a subtle white backing line behind a dark primary line, making it consistently legible across model colors and backgrounds without switching based on luminance.
 - **MP4 export empty 581-byte output and codec crash fixes**:
   - **Dynamic hardware codec negotiation (`isConfigSupported`)**: Instead of hardcoding legacy Baseline Profile (`avc1.4200..`) which hardware encoders (such as Apple VideoToolbox on macOS) reject or silently fail on for HD/4K resolutions, `configureMp4Encoder` now probes support via `VideoEncoder.isConfigSupported()` in priority order (High Profile `avc1.6400..` -> Main Profile `avc1.4d00..` -> Baseline `avc1.4200..`) to select an accelerated profile supported by the user's GPU.
   - **AVCC format enforcement**: Added explicit `avc: { format: 'avc' }` to the encoder configuration so WebCodecs outputs length-prefixed NAL units (AVCC) with SPS/PPS configuration descriptions expected by `mp4-muxer`, avoiding unparsable Annex-B output.

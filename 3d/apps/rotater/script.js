@@ -7170,10 +7170,12 @@ function clearExportFrame() {
 function disposeRulerHoveredPartVisual() {
     if (!rulerHoveredPartBoxWire) return;
     if (rulerHoveredPartBoxWire.parent) rulerHoveredPartBoxWire.parent.remove(rulerHoveredPartBoxWire);
-    if (rulerHoveredPartBoxWire.geometry?.dispose) rulerHoveredPartBoxWire.geometry.dispose();
-    const mat = rulerHoveredPartBoxWire.material;
-    if (Array.isArray(mat)) mat.forEach((entry) => entry?.dispose?.());
-    else mat?.dispose?.();
+    rulerHoveredPartBoxWire.traverse((node) => {
+        if (node.geometry?.dispose) node.geometry.dispose();
+        const mat = node.material;
+        if (Array.isArray(mat)) mat.forEach((entry) => entry?.dispose?.());
+        else mat?.dispose?.();
+    });
     rulerHoveredPartBoxWire = null;
 }
 
@@ -7184,8 +7186,17 @@ function ensureRulerHoveredPartVisual() {
     }
     if (!rulerHoveredPartBoxWire) {
         const boxEdges = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1));
-        const boxMat = new THREE.LineDashedMaterial({
-            color: '#f4f3ff',
+        const glowMat = new THREE.LineDashedMaterial({
+            color: '#ffffff',
+            transparent: true,
+            opacity: 0.9,
+            dashSize: 0.08,
+            gapSize: 0.05,
+            depthTest: false,
+            depthWrite: false,
+        });
+        const mainMat = new THREE.LineDashedMaterial({
+            color: '#111827',
             transparent: true,
             opacity: 1,
             dashSize: 0.08,
@@ -7193,13 +7204,28 @@ function ensureRulerHoveredPartVisual() {
             depthTest: false,
             depthWrite: false,
         });
-        rulerHoveredPartBoxWire = new THREE.LineSegments(boxEdges, boxMat);
-        rulerHoveredPartBoxWire.computeLineDistances();
-        rulerHoveredPartBoxWire.name = 'rulerHoveredPartBoxWire';
-        rulerHoveredPartBoxWire.visible = false;
-        rulerHoveredPartBoxWire.renderOrder = 40;
-        rulerHoveredPartBoxWire.frustumCulled = false;
-        mesh.add(rulerHoveredPartBoxWire);
+
+        const group = new THREE.Group();
+        const glow = new THREE.LineSegments(boxEdges, glowMat);
+        glow.computeLineDistances();
+        glow.scale.setScalar(1.01);
+        glow.renderOrder = 39;
+        const rim = new THREE.LineSegments(boxEdges, mainMat);
+        rim.computeLineDistances();
+        rim.renderOrder = 40;
+
+        group.add(glow);
+        group.add(rim);
+        group.name = 'rulerHoveredPartBoxWire';
+        group.visible = false;
+        group.frustumCulled = false;
+        group.renderOrder = 40;
+        group.material = mainMat;
+        group.userData.backdrop = glow;
+        group.userData.front = rim;
+
+        mesh.add(group);
+        rulerHoveredPartBoxWire = group;
     }
     return rulerHoveredPartBoxWire;
 }
@@ -7231,11 +7257,15 @@ function updateRulerHoveredPartVisual() {
     const hoverBox = ensureRulerHoveredPartVisual();
     if (!hoverBox) return;
 
-    const contrastTheme = getRulerContrastTheme();
-    const hoverMat = hoverBox.material;
-    if (hoverMat?.color && contrastTheme?.labelText) {
-        hoverMat.color.set(contrastTheme.labelText);
-        hoverMat.opacity = 1;
+    const backdropMat = hoverBox.userData.backdrop?.material;
+    const mainMat = hoverBox.userData.front?.material || hoverBox.material;
+    if (backdropMat?.color) {
+        backdropMat.color.set('#ffffff');
+        backdropMat.opacity = 0.9;
+    }
+    if (mainMat?.color) {
+        mainMat.color.set('#111827');
+        mainMat.opacity = 1;
     }
 
     const box = modelPartBoundsBoxes[rulerHoveredPartIndex];
