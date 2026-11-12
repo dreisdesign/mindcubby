@@ -1867,7 +1867,7 @@ html.loaded.export-workspace-active .canvas-wrap {
 
 .export-workspace-active .gif-options-row.export-quick-options {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     column-gap: 12px;
     row-gap: 6px;
     padding: 0;
@@ -1902,7 +1902,7 @@ html.loaded.export-workspace-active .canvas-wrap {
 @media (max-width: 520px) {
     .export-workspace-active .gif-options-row.export-quick-options {
         display: flex;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
     }
 }
 

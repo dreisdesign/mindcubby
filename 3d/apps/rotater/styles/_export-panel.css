@@ -2854,7 +2854,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 
 .export-quick-options {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 10px 12px;
     margin: 0;
 }
@@ -2871,7 +2871,7 @@ html.spin-ccw .rotation-thumb--spin .rot-icon {
 
 .gif-options-row.export-quick-options {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 10px 12px;
     align-items: stretch;
 }
