@@ -1053,6 +1053,7 @@ const bgPick = document.getElementById('bgPicker');
 const bgOpacitySlider = document.getElementById('bgOpacitySlider');
 const bgOpacitySliderLabel = bgOpacitySlider?.closest('.control-label');
 const buildPlateToggleEl = document.getElementById('buildPlateToggle');
+const outlineToggleEl = document.getElementById('outlineToggle');
 const rulerSurfaceToggleEl = document.getElementById('rulerSurfaceToggle');
 const rulerSurfaceToggleWrapEl = document.getElementById('rulerSurfaceToggleWrap');
 const buildPlateControlsEl = document.getElementById('buildPlateControls');
@@ -1094,6 +1095,7 @@ const exportQualitySliderEl = document.getElementById('exportQualitySlider');
 const exportQualityValEl = document.getElementById('exportQualityVal');
 const exportGridEl = document.getElementById('exportGrid');
 const exportBuildPlateEl = document.getElementById('exportBuildPlate');
+const exportOutlineEl = document.getElementById('exportOutline');
 const exportRulerEl = document.getElementById('exportRuler');
 const exportBgColorEl = document.getElementById('exportBgColor');
 const exportDimensionInputs = Array.from(document.querySelectorAll('input[name="exportDimensions"]'));
@@ -1247,6 +1249,7 @@ let activeBuildPlatePreset = 'modelcolor';
 let shadeBlendMode = 'hsl';
 let isDynamicBg = true;
 let buildPlateAutoBrightnessEnabled = true;
+let modelOutlineAlwaysVisible = false;
 let rulerEnabled = true;
 let rulerUnit = 'metric';
 let rulerLinesVisible = true;
@@ -7241,12 +7244,20 @@ function syncRulerHoverSelectorState() {
 }
 
 function updateRulerHoveredPartVisual() {
+    const fallbackTargetIndex = (() => {
+        if (!hasModelParts()) return -1;
+        if (rulerHoveredPartIndex >= 0 && rulerHoveredPartIndex < modelPartBoundsBoxes.length) return rulerHoveredPartIndex;
+        if (!modelOutlineAlwaysVisible) return -1;
+        const selected = getUiSelectedPartIndices();
+        if (selected.length > 0) return selected[0];
+        return 0;
+    })();
+
     const canShowHoverBox = !!(
         mesh
-        && hasModelParts()
-        && rulerHoveredPartIndex >= 0
-        && rulerHoveredPartIndex < modelPartBoundsBoxes.length
-        && modelPartBoundsBoxes[rulerHoveredPartIndex]
+        && fallbackTargetIndex >= 0
+        && fallbackTargetIndex < modelPartBoundsBoxes.length
+        && modelPartBoundsBoxes[fallbackTargetIndex]
     );
 
     if (!canShowHoverBox) {
@@ -7268,7 +7279,7 @@ function updateRulerHoveredPartVisual() {
         mainMat.opacity = 1;
     }
 
-    const box = modelPartBoundsBoxes[rulerHoveredPartIndex];
+    const box = modelPartBoundsBoxes[fallbackTargetIndex];
     const size = box.getSize(rulerHoveredPartBoxSizeTmp);
     const center = box.getCenter(rulerHoveredPartBoxCenterTmp);
     hoverBox.position.copy(center);
@@ -8652,6 +8663,7 @@ function saveSettings() {
             rulerUnit: rulerUnit,
             rulerGridVisible: rulerLinesVisible ? '1' : '0',
             rulerPartSelectMulti: rulerPartSelectMultiEnabled ? '1' : '0',
+            outlineVisible: modelOutlineAlwaysVisible ? '1' : '0',
             buildPlate: buildPlateEnabled ? '1' : '0',
             buildPlatePreset: activeBuildPlatePreset,
             buildPlateSyncPartIndex: String(buildPlateSyncPartIndex || 0),
@@ -8974,6 +8986,12 @@ function restoreSettings() {
         } else if (s.rulerLinesVisible != null) {
             rulerLinesVisible = (s.rulerLinesVisible === '1' || s.rulerLinesVisible === true || s.rulerLinesVisible === 1);
         }
+        if (s.outlineVisible != null) {
+            modelOutlineAlwaysVisible = (s.outlineVisible === '1' || s.outlineVisible === true || s.outlineVisible === 1);
+        } else if (s.modelOutlineVisible != null) {
+            modelOutlineAlwaysVisible = (s.modelOutlineVisible === '1' || s.modelOutlineVisible === true || s.modelOutlineVisible === 1);
+        }
+        syncOutlineToggleState();
         if (s.buildPlate != null) {
             buildPlateEnabled = (s.buildPlate === '1' || s.buildPlate === true || s.buildPlate === 1);
         }
@@ -11488,6 +11506,9 @@ if (exportGridEl) {
 if (exportBuildPlateEl) {
     exportBuildPlateEl.checked = buildPlateEnabled;
 }
+if (exportOutlineEl) {
+    exportOutlineEl.checked = modelOutlineAlwaysVisible;
+}
 
 document.getElementById('exportQuality')?.addEventListener('change', () => {
     syncExportQualitySliderFromSelect();
@@ -11563,6 +11584,14 @@ exportBuildPlateEl?.addEventListener('change', () => {
     updateShadowCatcherPlacement();
     refreshExportPreviewNow();
     saveSettings();
+});
+exportOutlineEl?.addEventListener('change', () => {
+    modelOutlineAlwaysVisible = !!exportOutlineEl.checked;
+    syncOutlineToggleState();
+    updateRulerHoveredPartVisual();
+    refreshExportPreviewNow();
+    saveSettings();
+    scheduleCardResetButtonStatesUpdate();
 });
 // Toggle logic for crop radio buttons
 // Intercept at the label level to prevent browser's default radio behavior
@@ -15816,6 +15845,35 @@ if (buildPlateToggleEl) {
         updateShadowCatcherPlacement();
         refreshExportPreviewNow();
         saveSettings();
+    });
+}
+
+function syncOutlineToggleState() {
+    if (outlineToggleEl) outlineToggleEl.checked = modelOutlineAlwaysVisible;
+    if (exportOutlineEl) exportOutlineEl.checked = modelOutlineAlwaysVisible;
+}
+
+if (outlineToggleEl) {
+    outlineToggleEl.checked = modelOutlineAlwaysVisible;
+    outlineToggleEl.addEventListener('change', () => {
+        modelOutlineAlwaysVisible = !!outlineToggleEl.checked;
+        syncOutlineToggleState();
+        updateRulerHoveredPartVisual();
+        refreshExportPreviewNow();
+        saveSettings();
+        scheduleCardResetButtonStatesUpdate();
+    });
+}
+
+if (exportOutlineEl) {
+    exportOutlineEl.checked = modelOutlineAlwaysVisible;
+    exportOutlineEl.addEventListener('change', () => {
+        modelOutlineAlwaysVisible = !!exportOutlineEl.checked;
+        syncOutlineToggleState();
+        updateRulerHoveredPartVisual();
+        refreshExportPreviewNow();
+        saveSettings();
+        scheduleCardResetButtonStatesUpdate();
     });
 }
 
