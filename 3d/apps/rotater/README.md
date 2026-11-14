@@ -210,7 +210,7 @@ See also: [_IGNORE/ROADMAP.md](_IGNORE/ROADMAP.md)
 - **D-pad** (bottom-center of viewer) — orbit the camera in 45° snapped increments
   - Arrow keys (←↑↓→) do the same thing from the keyboard
   - Center button of the D-pad pauses / resumes (⏸/▶)
-  - Export quick options (`Background`, `Grid`, `Build Plate`) apply directly to the live export workspace viewport while framing
+  - Export quick options (`Background`, `Grid`, `Build Plate`, `Outline`) apply directly to the live export workspace viewport while framing
   - When `Background` is off, the export workspace viewport shows a white/gray checkerboard to indicate transparency
   - Clicking outside the crop frame closes Export workspace
   - Dimension presets appear beside the viewer for one-click framing changes
@@ -335,6 +335,7 @@ The Preview thumbnail and estimate label update immediately when you change form
 | Background | Toggle background color on/off for export preview and compatible outputs (off state shows checkerboard transparency in export workspace) |
 | Grid | Toggle ruler grid visibility in export preview/output (visible even when Build Plate is off) |
 | Build Plate | Toggle build plate visibility in export preview/output |
+| Outline | Toggle the model hover outline visibility in export preview/output and keep it synchronized with the main Surface panel |
 
 #### GIF options
 
