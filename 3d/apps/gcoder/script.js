@@ -1,6 +1,34 @@
 // Helper function to format setting values (handle arrays with context)
 // usedExtruders parameter filters array values to only used indices
 function formatSettingValue(value, usedExtruders = null) {
+    // First, handle string values that contain commas (they represent arrays)
+    if (typeof value === 'string' && value.includes(',') && usedExtruders && usedExtruders.length > 0) {
+        const parts = value.split(',').map(v => v.trim());
+        
+        // Only filter if array has multiple elements (likely multi-extruder setting)
+        if (parts.length > 1) {
+            const beforeFilter = JSON.stringify(parts);
+            const filtered = parts.filter((_, idx) => usedExtruders.includes(idx));
+            
+            if (filtered.length !== parts.length) {
+                console.log(`[G-CODER] Filtered string array from [${beforeFilter}] to [${JSON.stringify(filtered)}] using extruders [${usedExtruders}]`);
+            }
+            
+            // If only one value remains after filtering, return it directly
+            if (filtered.length === 1) {
+                return formatSettingValue(filtered[0], usedExtruders);
+            }
+            
+            // If nothing matched (error case), use original
+            if (filtered.length === 0) {
+                return value;
+            }
+            
+            // Multiple values - return as comma-separated
+            return filtered.join(', ');
+        }
+    }
+    
     if (Array.isArray(value)) {
         if (value.length === 0) return '';
         
