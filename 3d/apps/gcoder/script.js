@@ -1,10 +1,30 @@
-// Helper function to format setting values (handle arrays without JSON brackets)
+// Helper function to format setting values (handle arrays with context)
 function formatSettingValue(value) {
     if (Array.isArray(value)) {
-        // Extract first element if array has items, otherwise return empty string
         if (value.length === 0) return '';
-        // Recursively format the first element in case it's also nested
-        return formatSettingValue(value[0]);
+        
+        // For single-element arrays, just return the element
+        if (value.length === 1) {
+            return formatSettingValue(value[0]);
+        }
+        
+        // For multi-element arrays, format as readable list
+        // Check if all elements are numbers (common for temperature/speed arrays)
+        const allNumbers = value.every(v => !isNaN(parseFloat(v)));
+        
+        if (allNumbers) {
+            // Format as comma-separated values with units context
+            const formatted = value.map(v => {
+                // Check if it's already a number or string
+                const num = parseFloat(v);
+                return isNaN(num) ? v : num;
+            }).join(', ');
+            
+            return formatted;
+        }
+        
+        // For mixed content, format as JSON array for clarity
+        return '[' + value.map(v => formatSettingValue(v)).join(', ') + ']';
     }
     if (typeof value === 'object' && value !== null) {
         // Only stringify complex objects, not simple values
@@ -1106,6 +1126,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="font-family: monospace; font-size: 0.9em; line-height: 1.6; color: #333;">
                 <strong>Global:</strong> ${globalCount} | <strong>Profiles:</strong> ${objectCount} | <strong>Ranges:</strong> ${rangeCount} | <strong>Total:</strong> ${totalSettings}
             </div>
+            <p style="margin: 1rem 0 0 0; font-size: 0.85em; color: #666; padding: 8px; background: #f9f9f9; border-left: 3px solid #ddd;">
+                💡 <strong>Array values:</strong> When you see comma-separated values like "220, 200, 220", this represents multiple settings for different profiles or layers (e.g., different filament types, colors, or layer ranges).
+            </p>
         </div>`;
 
         // === CATEGORIZED PROFILE SETTINGS (HIERARCHICAL) ===
