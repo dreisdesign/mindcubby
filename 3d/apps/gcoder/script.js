@@ -9,7 +9,12 @@ function formatSettingValue(value, usedExtruders = null) {
         if (usedExtruders && usedExtruders.length > 0 && value.length > 1) {
             // Only filter if we have more array elements than used extruders
             // (suggests array is indexed by extruder number)
+            const beforeFilter = JSON.stringify(value);
             displayValues = value.filter((_, idx) => usedExtruders.includes(idx));
+            
+            if (displayValues.length !== value.length) {
+                console.log(`[G-CODER] Filtered array from [${beforeFilter}] to [${JSON.stringify(displayValues)}] using extruders [${usedExtruders}]`);
+            }
             
             // If filtering resulted in a single value, use it
             if (displayValues.length === 1) {
@@ -520,6 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
             usedExtruders.add(parseInt(toolMatch[1]));
         }
         specs.usedExtruders = Array.from(usedExtruders).sort((a, b) => a - b);
+        console.log('[G-CODER] Detected used extruders:', specs.usedExtruders);
 
         // Extract ALL settings from G-code comments dynamically
         const settingsRegex = /; ([\w_]+) = (.+?)(?=\n|$)/g;
