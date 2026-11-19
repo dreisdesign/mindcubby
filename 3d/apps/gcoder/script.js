@@ -806,63 +806,69 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // === BUILD 3-LEVEL SETTINGS HIERARCHY (from .3mf config and layer ranges) ===
-        if (configContent || layerRangesContent) {
-            specs.hierarchy = {
-                global_settings: {},
-                object_level_settings: {},
-                layer_ranges: []
-            };
+        // === BUILD 3-LEVEL SETTINGS HIERARCHY ===
+        // Always initialize hierarchy, regardless of whether we have config/layer ranges
+        specs.hierarchy = {
+            global_settings: {},
+            object_level_settings: {},
+            layer_ranges: []
+        };
 
-            // Parse global settings from project_settings.config JSON
-            if (configContent) {
-                try {
-                    const config = JSON.parse(configContent);
-                    // Filter out null/empty values for cleaner display
-                    for (const [key, value] of Object.entries(config)) {
-                        if (value !== null && value !== undefined && value !== '' && value !== []) {
-                            specs.hierarchy.global_settings[key] = value;
-                        }
+        // Parse global settings from project_settings.config JSON
+        if (configContent) {
+            try {
+                const config = JSON.parse(configContent);
+                // Filter out null/empty values for cleaner display
+                for (const [key, value] of Object.entries(config)) {
+                    if (value !== null && value !== undefined && value !== '' && value !== []) {
+                        specs.hierarchy.global_settings[key] = value;
                     }
-                } catch (e) {
-                    console.warn('Failed to parse project_settings.config:', e);
+                }
+            } catch (e) {
+                console.warn('Failed to parse project_settings.config:', e);
+            }
+        } else {
+            // For plain .gcode files, populate global_settings from allSettings
+            for (const [key, value] of Object.entries(allSettings)) {
+                if (!key.startsWith('OBJECT_') && value !== null && value !== undefined && value !== '') {
+                    specs.hierarchy.global_settings[key] = value;
                 }
             }
+        }
 
-            // Extract object-level overrides from gcode
-            specs.hierarchy.object_level_settings = objectLevelSettings;
+        // Extract object-level overrides from gcode
+        specs.hierarchy.object_level_settings = objectLevelSettings;
 
-            // Parse layer ranges from XML if available
-            if (layerRangesContent) {
-                try {
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(layerRangesContent, 'text/xml');
-                    const ranges = xmlDoc.querySelectorAll('range');
+        // Parse layer ranges from XML if available
+        if (layerRangesContent) {
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(layerRangesContent, 'text/xml');
+                const ranges = xmlDoc.querySelectorAll('range');
 
-                    ranges.forEach(rangeEl => {
-                        const rangeData = {
-                            z_range: {
-                                min: parseFloat(rangeEl.getAttribute('min_z')),
-                                max: parseFloat(rangeEl.getAttribute('max_z'))
-                            },
-                            merged_effective: {}
-                        };
+                ranges.forEach(rangeEl => {
+                    const rangeData = {
+                        z_range: {
+                            min: parseFloat(rangeEl.getAttribute('min_z')),
+                            max: parseFloat(rangeEl.getAttribute('max_z'))
+                        },
+                        merged_effective: {}
+                    };
 
-                        // Parse settings within this range (stored as option elements with opt_key and text content)
-                        const options = rangeEl.querySelectorAll('option');
-                        options.forEach(optEl => {
-                            const key = optEl.getAttribute('opt_key');
-                            const value = optEl.textContent.trim();
-                            if (key && value) {
-                                rangeData.merged_effective[key] = value;
-                            }
-                        });
-
-                        specs.hierarchy.layer_ranges.push(rangeData);
+                    // Parse settings within this range (stored as option elements with opt_key and text content)
+                    const options = rangeEl.querySelectorAll('option');
+                    options.forEach(optEl => {
+                        const key = optEl.getAttribute('opt_key');
+                        const value = optEl.textContent.trim();
+                        if (key && value) {
+                            rangeData.merged_effective[key] = value;
+                        }
                     });
-                } catch (e) {
-                    console.warn('Failed to parse layer_config_ranges.xml:', e);
-                }
+
+                    specs.hierarchy.layer_ranges.push(rangeData);
+                });
+            } catch (e) {
+                console.warn('Failed to parse layer_config_ranges.xml:', e);
             }
         }
 
