@@ -7,6 +7,7 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 🔗 **Live App:** https://dreisdesign.github.io/mindcubby/3d/apps/gcoder/
 
 **Recent Updates:**
+- Multi-Extruder Filtering: G-coder now automatically detects which extruders are actually used in your print and filters multi-extruder settings to show only relevant values. For example, if your printer is configured with 3 extruders but your print only uses extruder 1, nozzle_temperature now shows just `200°C` instead of `220, 200, 220`. This makes settings clearer for sharing with humans and AI for troubleshooting.
 - PWA & Apple Touch Icon Fix: Added proper `apple-touch-icon.png` and `apple-touch-icon-precomposed` meta tags. Safari dock icon now correctly displays the logo without switching to fallback.
 
 ---
@@ -17,6 +18,7 @@ A lightweight, browser-based tool that automatically extracts print specificatio
 ✅ **Fast Processing** – Parse G-code files instantly  
 ✅ **Multi-Slicer Support** – Works with Cura, PrusaSlicer, SuperSlicer, and OrcaSlicer  
 ✅ **Hierarchical Settings Tables** – View Global, Profile, and Layer Range settings with consistent column formatting  
+✅ **Multi-Extruder Filtering** – Automatically detects used extruders and shows only relevant settings for cleaner output  
 ✅ **Multiple Export Formats** – JSON, CSV, and Markdown table exports  
 ✅ **Object-Level Overrides** – Correctly handles per-object settings from post-processing scripts  
 ✅ **No Data Upload** – All processing happens locally in your browser  
@@ -97,6 +99,21 @@ G-coder correctly handles **object-level settings overrides** from post-processi
 - Thickness calculations never override object-level settings
 
 This is especially useful when working with **OrcaSlicer's model-specific settings**.
+
+### Multi-Extruder Filtering
+
+Modern 3D printers and slicers often configure multiple extruders by default, but most prints only use one or two. G-coder automatically:
+
+1. **Detects Used Extruders** – Scans the G-code for tool-change commands (T0, T1, T2, etc.) to determine which extruders are actually used in your print
+2. **Filters Settings Automatically** – Multi-extruder array settings (like `nozzle_temperature`, `filament_type`, `filament_weight`) are filtered to show only values for used extruders
+3. **Simplifies Output** – Instead of seeing `220, 200, 220` for three configured extruders, you see only `200` if extruder 1 is the only one used
+
+**Example:**
+- **Printer Config:** 3 extruders configured with nozzle temperatures [220°C, 200°C, 220°C]
+- **Print Uses:** Only extruder 1 (extruder index 1 = 200°C)
+- **G-coder Shows:** `nozzle_temperature: 200°C`
+
+This makes it much clearer when sharing settings with other humans or AI for troubleshooting, eliminating confusion about which settings actually apply to your print.
 
 ### Extraction Verification & Cross-Checking
 
