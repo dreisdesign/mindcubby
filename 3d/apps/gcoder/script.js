@@ -1,21 +1,38 @@
 // Helper function to format setting values (handle arrays with context)
-function formatSettingValue(value) {
+// usedExtruders parameter filters array values to only used indices
+function formatSettingValue(value, usedExtruders = null) {
     if (Array.isArray(value)) {
         if (value.length === 0) return '';
         
+        // Filter to only used extruders if applicable (for multi-extruder settings)
+        let displayValues = value;
+        if (usedExtruders && usedExtruders.length > 0 && value.length > 1) {
+            // Only filter if we have more array elements than used extruders
+            // (suggests array is indexed by extruder number)
+            displayValues = value.filter((_, idx) => usedExtruders.includes(idx));
+            
+            // If filtering resulted in a single value, use it
+            if (displayValues.length === 1) {
+                return formatSettingValue(displayValues[0], usedExtruders);
+            }
+            // If filtering removed everything, fall back to original
+            if (displayValues.length === 0) {
+                displayValues = value;
+            }
+        }
+        
         // For single-element arrays, just return the element
-        if (value.length === 1) {
-            return formatSettingValue(value[0]);
+        if (displayValues.length === 1) {
+            return formatSettingValue(displayValues[0], usedExtruders);
         }
         
         // For multi-element arrays, format as readable list
         // Check if all elements are numbers (common for temperature/speed arrays)
-        const allNumbers = value.every(v => !isNaN(parseFloat(v)));
+        const allNumbers = displayValues.every(v => !isNaN(parseFloat(v)));
         
         if (allNumbers) {
-            // Format as comma-separated values with units context
-            const formatted = value.map(v => {
-                // Check if it's already a number or string
+            // Format as comma-separated values
+            const formatted = displayValues.map(v => {
                 const num = parseFloat(v);
                 return isNaN(num) ? v : num;
             }).join(', ');
@@ -24,7 +41,7 @@ function formatSettingValue(value) {
         }
         
         // For mixed content, format as JSON array for clarity
-        return '[' + value.map(v => formatSettingValue(v)).join(', ') + ']';
+        return '[' + displayValues.map(v => formatSettingValue(v, usedExtruders)).join(', ') + ']';
     }
     if (typeof value === 'object' && value !== null) {
         // Only stringify complex objects, not simple values
@@ -285,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         for (const setting of settingsList) {
                             if (objectSettings.hasOwnProperty(setting)) {
                                 const val = objectSettings[setting];
-                                const displayValue = formatSettingValue(val);
+                                const displayValue = formatSettingValue(val, currentSpecs.usedExtruders);
                                 categorizedSettings[category][subcategory].push({ setting, value: displayValue });
                             }
                         }
@@ -324,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const max_z = range.z_range.max;
                 rows.push({ type: 'range_header', label: `Layer Range ${min_z}–${max_z}mm` });
                 for (const [key, value] of Object.entries(range.merged_effective || {})) {
-                    const displayValue = formatSettingValue(value);
+                    const displayValue = formatSettingValue(value, currentSpecs.usedExtruders);
                     rows.push({ type: 'setting', key, value: displayValue, section: `Layer Range ${min_z}–${max_z}mm` });
                 }
             }
@@ -336,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (Object.keys(globalSettings).length > 0) {
                 rows.push({ type: 'section_header', label: 'Global Settings' });
                 for (const [key, value] of Object.entries(globalSettings)) {
-                    const displayValue = formatSettingValue(value);
+                    const displayValue = formatSettingValue(value, currentSpecs.usedExtruders);
                     rows.push({ type: 'setting', key, value: displayValue, section: 'Global' });
                 }
             }
@@ -494,6 +511,15 @@ document.addEventListener('DOMContentLoaded', () => {
             print_sequence: null,
             ironing_type: null
         };
+
+        // === DETECT WHICH EXTRUDERS ARE ACTUALLY USED ===
+        const usedExtruders = new Set();
+        const toolChangeRegex = /^T(\d+)/gm;
+        let toolMatch;
+        while ((toolMatch = toolChangeRegex.exec(content)) !== null) {
+            usedExtruders.add(parseInt(toolMatch[1]));
+        }
+        specs.usedExtruders = Array.from(usedExtruders).sort((a, b) => a - b);
 
         // Extract ALL settings from G-code comments dynamically
         const settingsRegex = /; ([\w_]+) = (.+?)(?=\n|$)/g;
@@ -1142,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         for (const setting of settingsList) {
                             if (objectSettings.hasOwnProperty(setting)) {
                                 const val = objectSettings[setting];
-                                const displayValue = formatSettingValue(val);
+                                const displayValue = formatSettingValue(val, specs.usedExtruders);
                                 categorizedSettings[category][subcategory].push({ setting, value: displayValue });
                             }
                         }
@@ -1207,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="padding: 8px; font-weight: 600; background: #f0f0f0; border-bottom: 2px solid #333; text-align: left;">Value</div>`;
 
                 for (const [key, value] of Object.entries(range.merged_effective || {})) {
-                    const displayValue = formatSettingValue(value);
+                    const displayValue = formatSettingValue(value, specs.usedExtruders);
                     html += `<div style="padding: 6px 8px; font-family: monospace; color: #333; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #eee; text-align: left;">${key}</div>
                     <div style="padding: 6px 8px; font-family: monospace; color: #666; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #eee; text-align: left;">${displayValue}</div>`;
                 }
@@ -1226,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="padding: 8px; font-weight: 600; background: #f0f0f0; border-bottom: 2px solid #333; text-align: left;">Value</div>`;
 
                 for (const [key, value] of Object.entries(globalSettings)) {
-                    const displayValue = formatSettingValue(value);
+                    const displayValue = formatSettingValue(value, specs.usedExtruders);
                     html += `<div style="padding: 6px 8px; font-family: monospace; color: #333; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #eee; text-align: left;">${key}</div>
                     <div style="padding: 6px 8px; font-family: monospace; color: #666; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #eee; text-align: left;">${displayValue}</div>`;
                 }
