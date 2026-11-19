@@ -1126,9 +1126,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="font-family: monospace; font-size: 0.9em; line-height: 1.6; color: #333;">
                 <strong>Global:</strong> ${globalCount} | <strong>Profiles:</strong> ${objectCount} | <strong>Ranges:</strong> ${rangeCount} | <strong>Total:</strong> ${totalSettings}
             </div>
-            <p style="margin: 1rem 0 0 0; font-size: 0.85em; color: #666; padding: 8px; background: #f9f9f9; border-left: 3px solid #ddd;">
-                💡 <strong>Array values:</strong> When you see comma-separated values like "220, 200, 220", this represents multiple settings for different profiles or layers (e.g., different filament types, colors, or layer ranges).
-            </p>
         </div>`;
 
         // === CATEGORIZED PROFILE SETTINGS (HIERARCHICAL) ===
