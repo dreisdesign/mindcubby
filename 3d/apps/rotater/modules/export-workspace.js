@@ -43,12 +43,13 @@ export function setExportWorkspaceActiveController(active, {
     if (typeof persistWorkspaceActive === 'function') persistWorkspaceActive(nextActive);
     if (typeof syncCanvasSize === 'function') {
         syncCanvasSize();
-        // Redraw the export frame overlay after canvas sync to prevent visual flicker
-        if (typeof drawExportFrame === 'function') drawExportFrame();
-        requestAnimationFrame(() => {
-            syncCanvasSize();
-            if (typeof drawExportFrame === 'function') drawExportFrame();
-        });
+        if (!nextActive && typeof drawExportFrame === 'function') {
+            drawExportFrame();
+            requestAnimationFrame(() => {
+                syncCanvasSize();
+                if (typeof drawExportFrame === 'function') drawExportFrame();
+            });
+        }
     }
 }
 
