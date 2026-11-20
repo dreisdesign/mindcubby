@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-10-31
 
 ### Fixed
+- **3D Models dropdown Replace STL fixed**: The multipart model row menu now uses the standard Replace upload flow for the selected model part instead of invoking a separate hidden file input.
 - **Crop ratio switching and Replace STL fixed**: Switching crop ratios now invalidates cached crop-frame dimensions so the overlay recalculates immediately instead of only changing the selected UI toggle. The Replace upload-choice button now resolves with the correct `replace` action instead of incorrectly resolving as `append`.
 - **Export crop camera framing preserved across workspace resize**: Export preview camera distance, elevation, and zoom now reuse the already-committed export crop state instead of recalculating it after the crop viewport changes size.
 - **Crop mode preserved when pressing Export**: Export entry controls are now excluded from the global outside-crop pointer-down dismissal. Pressing or briefly interacting with an Export button no longer cancels an active crop mode before the Export workspace opens.

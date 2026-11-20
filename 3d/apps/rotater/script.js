@@ -6056,8 +6056,8 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     const targetPartIndices = getPartActionTargetIndices(partIdx, scope);
 
                     if (action === 'replace') {
-                        pendingReplacePartIndex = partIdx;
-                        partReplaceInput?.click();
+                        closeModelPartActionMenus();
+                        openUploadFilePicker('replace');
                         return;
                     }
 
