@@ -59,12 +59,17 @@ export function openExportWorkspaceController({
     setExportWorkspaceActive,
     restoreExportPanelPosition,
     enterCropMode,
+    drawExportFrame,
 } = {}) {
     if (typeof setExportWorkspaceActive === 'function') setExportWorkspaceActive(true);
     if (typeof restoreExportPanelPosition === 'function') {
         requestAnimationFrame(() => restoreExportPanelPosition());
     }
     if (typeof enterCropMode === 'function') enterCropMode();
+    // Ensure overlay is drawn after crop mode is activated (even if already in crop mode)
+    if (typeof drawExportFrame === 'function') {
+        requestAnimationFrame(() => drawExportFrame());
+    }
 }
 
 export function closeExportWorkspaceController({
