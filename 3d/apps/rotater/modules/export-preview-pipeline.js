@@ -132,6 +132,7 @@ export function runExportPreviewPipelineController({
         createRenderTarget,
         createPerspectiveCamera,
         srgbColorSpace,
+        exportCamState: cameraState,
     });
 
     renderPassController({

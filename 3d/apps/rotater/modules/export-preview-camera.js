@@ -7,6 +7,7 @@ export function ensureAndConfigureExportPreviewCameraController({
     exportFrameEnabled,
     getOrbitFrameState,
     setCameraFromOrbitState,
+    exportCamState,
 } = {}) {
     let cam = previewCam;
     if (!cam) {
@@ -25,7 +26,8 @@ export function ensureAndConfigureExportPreviewCameraController({
     if (exportFrameEnabled) {
         const { target, dist, elev, az } = getOrbitFrameState();
         setCameraFromOrbitState(cam, target, dist, elev, az);
-        cam.zoom = sourceCamera.zoom || 1; // Uncropped zoom
+        // Use the exported camera zoom when in crop mode to maintain consistent framing
+        cam.zoom = exportCamState?.exportCamZoom || (sourceCamera.zoom || 1);
         cam.updateProjectionMatrix();
     } else {
         const { target, dist: liveDist, elev: liveElev, az } = getOrbitFrameState();

@@ -14,6 +14,7 @@ export function prepareExportPreviewResourcesController({
     createRenderTarget,
     createPerspectiveCamera,
     srgbColorSpace,
+    exportCamState,
 } = {}) {
     const nextRenderTargetState = ensureRenderTarget({
         previewRt,
@@ -34,6 +35,7 @@ export function prepareExportPreviewResourcesController({
         exportFrameEnabled,
         getOrbitFrameState,
         setCameraFromOrbitState,
+        exportCamState,
     });
 
     return {
