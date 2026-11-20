@@ -11741,6 +11741,9 @@ function syncCropModeFromSelectedExportDimensions({ forceReframe = false } = {})
     if (forceReframe) {
         applyLevelAndReframeToCamera();
     }
+    _cropFrameCached = false;
+    _cropSwCached = 0;
+    _cropShCached = 0;
     drawExportFrame();
 }
 
@@ -13436,7 +13439,7 @@ exportCollapsedConfirmOverlayEl?.addEventListener('click', (e) => {
 
 btnUploadChoiceClose?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
 btnUploadChoiceCancel?.addEventListener('click', () => closeUploadChoicePrompt('cancel'));
-btnUploadChoiceReplace?.addEventListener('click', () => closeUploadChoicePrompt('append'));
+btnUploadChoiceReplace?.addEventListener('click', () => closeUploadChoicePrompt('replace'));
 btnUploadChoiceNewPlate?.addEventListener('click', () => closeUploadChoicePrompt('newplate'));
 btnUploadChoiceShowMore?.addEventListener('click', () => {
     uploadChoiceUiController.toggleShowAll();
