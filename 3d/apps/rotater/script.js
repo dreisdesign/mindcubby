@@ -13559,6 +13559,10 @@ document.getElementById('btnOpenExportModalCanvas')?.addEventListener('click', (
     openExportWorkspace();
 });
 
+document.getElementById('btnOpenExportModalCanvas')?.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+});
+
 if (!window.__rotaterExportDragBound) {
     window.__rotaterExportDragBound = true;
     let liveExportDrag = null;
