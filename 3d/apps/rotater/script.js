@@ -1949,6 +1949,8 @@ let _cropBackupZoom = 1;
 let _cropBackupCameraZoom = 1;
 let _shiftPanActive = false;
 let _cropSx = 0, _cropSy = 0, _cropSw = 0, _cropSh = 0; // crop box pixel rect, updated each frame
+let _cropSxCached = 0, _cropSyCached = 0, _cropSwCached = 0, _cropShCached = 0; // cached crop frame dimensions from crop-mode entry
+let _cropFrameCached = false; // whether crop frame has been cached
 let _cropLiveSyncArmed = false; // becomes true only after user adjusts camera during crop mode
 let _hasRestoredExportFrame = false; // startup-only flag for applying persisted export framing
 let pendingViewportOrbitRestore = null;
@@ -2059,10 +2061,10 @@ function getCropFrameRect(w, h) {
 function getCropFrameVerticalScale() {
     const wrap = canvas?.parentElement;
     if (!wrap) return CROP_FRAME_UI_SCALE;
-    const w = wrap.clientWidth;
     const h = wrap.clientHeight;
-    if (!w || !h) return CROP_FRAME_UI_SCALE;
-    const sh = _cropSh > 0 ? _cropSh : getCropFrameRect(w, h).sh;
+    if (!h) return CROP_FRAME_UI_SCALE;
+    // Use cached crop frame height if available, otherwise calculate from viewport
+    const sh = _cropFrameCached ? _cropShCached : (_cropSh > 0 ? _cropSh : getCropFrameRect(wrap.clientWidth, h).sh);
     return Math.max(1e-6, sh / h);
 }
 
@@ -7022,6 +7024,7 @@ function enterCropMode(forceReframe = false) {
     _cropAppliedCameraZoomScale = false;
     if (camera) _cropBackupCameraZoom = camera.zoom || 1;
     _cropLiveSyncArmed = true;
+    _cropFrameCached = false; // reset cache flag
     if (forceReframe) applyLevelAndReframeToCamera();
     if (btnCropCancelEl) btnCropCancelEl.hidden = false;
     updateCropHintUI();
@@ -7032,6 +7035,14 @@ function enterCropMode(forceReframe = false) {
     drawExportFrame();
     requestAnimationFrame(() => {
         drawExportFrame();
+        // Cache the crop frame dimensions after first render
+        if (!_cropFrameCached && _cropSw > 0 && _cropSh > 0) {
+            _cropSxCached = _cropSx;
+            _cropSyCached = _cropSy;
+            _cropSwCached = _cropSw;
+            _cropShCached = _cropSh;
+            _cropFrameCached = true;
+        }
     });
 }
 
@@ -7094,7 +7105,17 @@ function drawExportFrame() {
     if (w === 0 || h === 0) return;
     if (fc.width !== w || fc.height !== h) { fc.width = w; fc.height = h; }
 
-    const { sx, sy, sw, sh } = getCropFrameRect(w, h);
+    // Use cached crop frame if available, otherwise calculate fresh
+    let sx, sy, sw, sh;
+    if (_cropFrameCached && _cropSwCached > 0 && _cropShCached > 0) {
+        sx = _cropSxCached;
+        sy = _cropSyCached;
+        sw = _cropSwCached;
+        sh = _cropShCached;
+    } else {
+        ({ sx, sy, sw, sh } = getCropFrameRect(w, h));
+    }
+    
     // Store crop frame rect for click-outside detection (in viewport coordinates)
     if (exportFrameEnabled) {
         const canvasRect = fc.getBoundingClientRect();
@@ -13880,6 +13901,7 @@ function cancelCropMode() {
     updateFrameOverlayButtonUI();
     _cropLiveSyncArmed = false;
     _cropAppliedCameraZoomScale = false;
+    _cropFrameCached = false;
     clearExportFrame();
     updateRulerHUD();
     saveSettings();
@@ -13898,6 +13920,7 @@ function confirmCropMode() {
     updateFrameOverlayButtonUI();
     _cropLiveSyncArmed = false;
     _cropAppliedCameraZoomScale = false;
+    _cropFrameCached = false;
     clearExportFrame();
     updateRulerHUD();
     saveSettings();
