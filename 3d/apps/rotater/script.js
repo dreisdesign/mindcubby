@@ -7030,9 +7030,11 @@ function enterCropMode(forceReframe = false) {
     updateCropHintUI();
     updateFrameOverlayButtonUI();
     updateRulerHUD();
-    refreshExportPreviewNow();
-    // Force immediate crop frame rendering to ensure overlay appears on first load
+    // Draw the overlay immediately (synchronously) before any preview updates
+    // to prevent visual flicker when entering crop mode
     drawExportFrame();
+    refreshExportPreviewNow();
+    // Force additional crop frame rendering on next frame to ensure overlay is stable
     requestAnimationFrame(() => {
         drawExportFrame();
         // Cache the crop frame dimensions after first render
