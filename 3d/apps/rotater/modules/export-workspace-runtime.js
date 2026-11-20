@@ -19,6 +19,7 @@ export function createExportWorkspaceRuntimeController({
     getWorkspaceActive,
     updateExportPauseButtonUI,
     syncCanvasSize,
+    drawExportFrame,
     restoreExportPanelPosition,
     enterCropMode,
     confirmCropMode,
@@ -49,6 +50,7 @@ export function createExportWorkspaceRuntimeController({
             updateExportWorkspaceTransparencyPattern,
             updateExportPauseButtonUI,
             syncCanvasSize,
+            drawExportFrame,
             persistWorkspaceActive: (nextActive) => {
                 try { localStorage.setItem(EXPORT_WORKSPACE_ACTIVE_KEY, nextActive ? '1' : '0'); } catch (_) { }
             },

@@ -6986,6 +6986,7 @@ const exportWorkspaceRuntimeController = createExportWorkspaceRuntimeController(
     getWorkspaceActive: () => exportWorkspaceActive,
     updateExportPauseButtonUI,
     syncCanvasSize,
+    drawExportFrame,
     restoreExportPanelPosition,
     enterCropMode,
     confirmCropMode,
