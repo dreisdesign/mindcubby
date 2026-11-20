@@ -43,15 +43,12 @@ export function setExportWorkspaceActiveController(active, {
     if (typeof persistWorkspaceActive === 'function') persistWorkspaceActive(nextActive);
     if (typeof syncCanvasSize === 'function') {
         syncCanvasSize();
-        // Only redraw overlay if deactivating (cleanup). When activating, enterCropMode
-        // will handle the overlay drawing to prevent flicker from clearing before tint is applied.
-        if (!nextActive && typeof drawExportFrame === 'function') {
-            drawExportFrame();
-            requestAnimationFrame(() => {
-                syncCanvasSize();
-                if (typeof drawExportFrame === 'function') drawExportFrame();
-            });
-        }
+        // Redraw the export frame overlay after canvas sync to prevent visual flicker
+        if (typeof drawExportFrame === 'function') drawExportFrame();
+        requestAnimationFrame(() => {
+            syncCanvasSize();
+            if (typeof drawExportFrame === 'function') drawExportFrame();
+        });
     }
 }
 
@@ -59,17 +56,12 @@ export function openExportWorkspaceController({
     setExportWorkspaceActive,
     restoreExportPanelPosition,
     enterCropMode,
-    drawExportFrame,
 } = {}) {
     if (typeof setExportWorkspaceActive === 'function') setExportWorkspaceActive(true);
     if (typeof restoreExportPanelPosition === 'function') {
         requestAnimationFrame(() => restoreExportPanelPosition());
     }
     if (typeof enterCropMode === 'function') enterCropMode();
-    // Ensure overlay is drawn after crop mode is activated (even if already in crop mode)
-    if (typeof drawExportFrame === 'function') {
-        requestAnimationFrame(() => drawExportFrame());
-    }
 }
 
 export function closeExportWorkspaceController({

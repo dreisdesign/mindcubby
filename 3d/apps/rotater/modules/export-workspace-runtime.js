@@ -62,7 +62,6 @@ export function createExportWorkspaceRuntimeController({
             setExportWorkspaceActive,
             restoreExportPanelPosition,
             enterCropMode,
-            drawExportFrame,
         });
     }
 
