@@ -105,6 +105,9 @@ export function runExportPreviewPipelineController({
         getOrbitFrameState,
         getCropFrameVerticalScale,
         sourceCameraZoom: sourceCamera?.zoom || 1,
+        existingExportCamDist: exportCamDist,
+        existingExportCamElev: exportCamElev,
+        existingExportCamZoom: exportCamZoom,
     });
 
     let nextExportCamDist = exportCamDist;
