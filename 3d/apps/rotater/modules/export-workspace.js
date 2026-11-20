@@ -43,12 +43,15 @@ export function setExportWorkspaceActiveController(active, {
     if (typeof persistWorkspaceActive === 'function') persistWorkspaceActive(nextActive);
     if (typeof syncCanvasSize === 'function') {
         syncCanvasSize();
-        // Redraw the export frame overlay after canvas sync to prevent visual flicker
-        if (typeof drawExportFrame === 'function') drawExportFrame();
-        requestAnimationFrame(() => {
-            syncCanvasSize();
-            if (typeof drawExportFrame === 'function') drawExportFrame();
-        });
+        // Only redraw overlay if deactivating (cleanup). When activating, enterCropMode
+        // will handle the overlay drawing to prevent flicker from clearing before tint is applied.
+        if (!nextActive && typeof drawExportFrame === 'function') {
+            drawExportFrame();
+            requestAnimationFrame(() => {
+                syncCanvasSize();
+                if (typeof drawExportFrame === 'function') drawExportFrame();
+            });
+        }
     }
 }
 
