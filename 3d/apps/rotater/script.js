@@ -4956,6 +4956,16 @@ function positionModelPartActionMenu(menuEl, anchorEl) {
         _modelPartActionMenuOriginalParent = menuEl.parentElement || null;
         document.body.appendChild(menuEl);
     }
+    if (menuEl && !menuEl.dataset.rowActionListenerAttached) {
+        menuEl.dataset.rowActionListenerAttached = '1';
+        menuEl.addEventListener('click', async (ev) => {
+            const actionBtn = ev.target?.closest?.('.part-option-action[data-part-action][data-part-action-scope="row"]');
+            if (!actionBtn) return;
+            ev.preventDefault();
+            ev.stopPropagation();
+            await handleModelPartRowAction(actionBtn);
+        });
+    }
     positionModelPartActionMenuModule({
         menuEl,
         anchorEl,
@@ -5767,6 +5777,94 @@ function rebuildMeshMaterialsForCurrentShading() {
     applyCurrentTextureTuning();
 }
 
+async function handleModelPartRowAction(actionBtn) {
+    if (!actionBtn) return;
+    const action = actionBtn.dataset.partAction;
+    const partIdx = parseInt(actionBtn.dataset.partIndex || '-1', 10);
+    const scope = actionBtn.dataset.partActionScope || 'row';
+    if (!Number.isFinite(partIdx) || partIdx < 0) return;
+    const targetPartIndices = getPartActionTargetIndices(partIdx, scope);
+
+    if (action === 'replace') {
+        closeModelPartActionMenus();
+        openUploadFilePicker('replace');
+        return;
+    }
+
+    if (action === 'visibility-toggle') {
+        const allTargetsHidden = targetPartIndices.every((idx) => !!getPartSettings(idx).hidden);
+        targetPartIndices.forEach((idx) => {
+            getPartSettings(idx).hidden = !allTargetsHidden;
+        });
+        rebuildMeshMaterialsForCurrentShading();
+        syncModelPartSelectorUI(true);
+        saveSettings();
+        closeModelPartActionMenus();
+        return;
+    }
+
+    if (action === 'hide-others') {
+        modelPartNames.forEach((_, idx) => {
+            getPartSettings(idx).hidden = targetPartIndices.includes(idx) ? false : true;
+        });
+        rebuildMeshMaterialsForCurrentShading();
+        syncModelPartCheckboxStates();
+        syncModelPartBulkUIState();
+        renderMultipartSummaryThumbnail(modelPartSelectorBtn);
+        persistCurrentMultipartParts({ immediate: true });
+        saveSettings();
+        closeModelPartActionMenus();
+        return;
+    }
+
+    if (action === 'bg-sync-toggle') {
+        const isActiveSource = activeBgPreset === 'modelcolor' && bgSyncPartIndex === partIdx;
+        if (isActiveSource) {
+            if (!window.confirm('Turn off background color sync?')) return;
+            const fallbackPreset = BG_PRESETS.find((preset) => preset.id === lastNonModelBgPreset) || BG_PRESETS[0];
+            activeBgPreset = fallbackPreset?.id || 'white';
+            bgSyncFollowSelected = false;
+            bgSyncPartIndex = null;
+            if (fallbackPreset?.color) {
+                if (isDynamicBg) applyBgPresetDefaultTone(fallbackPreset.id);
+                bgPick.value = fallbackPreset.color;
+                bgPick.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            closeModelPartActionMenus();
+            syncModelPartSelectorUI(true);
+            saveSettings();
+            return;
+        }
+        if (!maybeConfirmBgSyncChange(partIdx)) return;
+        activeBgPreset = 'modelcolor';
+        bgSyncFollowSelected = false;
+        bgSyncPartIndex = partIdx;
+        const syncColor = getModelSyncSourceColor();
+        bgPick.value = syncColor;
+        if (isDynamicBg) updateDynamicBg();
+        else applyBackgroundFromBaseColor(syncColor);
+        renderBgPresets();
+        updateBgSelection();
+        closeModelPartActionMenus();
+        syncModelPartSelectorUI(true);
+        saveSettings();
+        return;
+    }
+
+    if (action === 'remove') {
+        if (targetPartIndices.length > 1) {
+            if (!confirm(`Remove ${targetPartIndices.length} selected models?`)) return;
+            const descending = [...targetPartIndices].sort((a, b) => b - a);
+            for (const idx of descending) {
+                await removeMultipartPart(idx, { confirmRemoval: false });
+            }
+        } else {
+            await removeMultipartPart(partIdx);
+        }
+        closeModelPartActionMenus();
+    }
+}
+
 function syncModelPartSelectorUI(keepMenuOpen = false) {
     if (!modelPartThumbsWrap || !modelPartSelectorMenu || !modelPartSelectorBtn) return;
     const isVisible = hasModelParts();
@@ -6049,100 +6147,7 @@ function syncModelPartSelectorUI(keepMenuOpen = false) {
                     const actionBtn = ev.target.closest('.part-option-action');
                     if (!actionBtn) return;
                     ev.stopPropagation();
-                    const action = actionBtn.dataset.partAction;
-                    const partIdx = parseInt(actionBtn.dataset.partIndex || '-1', 10);
-                    const scope = actionBtn.dataset.partActionScope || 'row';
-                    if (!Number.isFinite(partIdx) || partIdx < 0) return;
-                    const targetPartIndices = getPartActionTargetIndices(partIdx, scope);
-
-                    if (action === 'replace') {
-                        closeModelPartActionMenus();
-                        openUploadFilePicker('replace');
-                        return;
-                    }
-
-                    if (action === 'visibility-toggle') {
-                        const allTargetsHidden = targetPartIndices.every((idx) => !!getPartSettings(idx).hidden);
-                        targetPartIndices.forEach((targetIdx) => {
-                            getPartSettings(targetIdx).hidden = !allTargetsHidden;
-                        });
-                        rebuildMeshMaterialsForCurrentShading();
-                        syncModelPartSelectorUI(true);
-                        saveSettings();
-                        closeModelPartActionMenus();
-                        return;
-                    }
-
-                    if (action === 'hide-others') {
-                        modelPartNames.forEach((_, i) => {
-                            if (i !== partIdx) {
-                                getPartSettings(i).hidden = true;
-                            } else {
-                                getPartSettings(i).hidden = false;
-                            }
-                        });
-
-                        // Part is already selected from 3-dot menu click
-                        // Just rebuild and persist
-                        rebuildMeshMaterialsForCurrentShading();
-                        applyPartColorsToMesh();
-                        queueModelPartThumbsRender();
-                        persistCurrentMultipartParts({ immediate: true });
-                        saveSettings();
-
-                        // Sync UI to reflect hidden state changes
-                        syncModelPartCheckboxStates();
-                        syncModelPartBulkUIState();
-                        renderMultipartSummaryThumbnail(modelPartSelectorBtn);
-
-                        closeModelPartActionMenus();
-                        return;
-                    }
-
-                    if (action === 'bg-sync-toggle') {
-                        const isActiveSource = activeBgPreset === 'modelcolor' && bgSyncPartIndex === partIdx;
-                        if (isActiveSource) {
-                            if (!window.confirm('Turn off background color sync?')) return;
-                            const fallbackPreset = BG_PRESETS.find((preset) => preset.id === lastNonModelBgPreset) || BG_PRESETS[0];
-                            activeBgPreset = fallbackPreset?.id || 'white';
-                            if (fallbackPreset?.color) {
-                                if (isDynamicBg) applyBgPresetDefaultTone(fallbackPreset.id);
-                                bgPick.value = fallbackPreset.color;
-                                bgPick.dispatchEvent(new Event('input', { bubbles: true }));
-                            }
-                            updateBgSelection();
-                            syncModelPartSelectorUI(true);
-                            saveSettings();
-                            return;
-                        }
-                        if (!maybeConfirmBgSyncChange(partIdx)) return;
-                        activeBgPreset = 'modelcolor';
-                        bgSyncFollowSelected = false;
-                        bgSyncPartIndex = partIdx;
-                        const syncColor = getModelSyncSourceColor();
-                        bgPick.value = syncColor;
-                        if (isDynamicBg) updateDynamicBg();
-                        else applyBackgroundFromBaseColor(syncColor);
-                        renderBgPresets();
-                        updateBgSelection();
-                        syncModelPartSelectorUI(true);
-                        saveSettings();
-                        return;
-                    }
-
-                    if (action === 'remove') {
-                        if (targetPartIndices.length > 1) {
-                            if (!confirm(`Remove ${targetPartIndices.length} selected models?`)) return;
-                            const descending = [...targetPartIndices].sort((a, b) => b - a);
-                            for (const idx of descending) {
-                                await removeMultipartPart(idx, { confirmRemoval: false });
-                            }
-                            closeModelPartActionMenus();
-                            return;
-                        }
-                        await removeMultipartPart(partIdx);
-                        closeModelPartActionMenus();
-                    }
+                    await handleModelPartRowAction(actionBtn);
                 });
                 opt.dataset.partOptionActionsListenerAttached = '1';
             }
