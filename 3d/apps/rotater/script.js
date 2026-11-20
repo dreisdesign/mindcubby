@@ -14037,10 +14037,11 @@ document.addEventListener('pointerdown', (e) => {
     // DO NOT close crop/export if dragging or clicking the recipe card
     if (recipeCardDragInProgress) return;
 
-    // Opening Export is a workspace transition, not an outside-crop dismissal.
-    // Check this before outside-frame cancellation so pressing the button
-    // leaves crop state unchanged until the export workspace actually opens.
-    if (e.target?.closest?.('#btnOpenExportModalCanvas, #btnOpenExportModal, #btnOpenExportModalMobile, #btnOpenExportModalMini')) return;
+    // Export entry controls open a workspace; they are not outside-crop dismissals.
+    const exportEntryButton = e.target?.closest?.(
+        '#btnOpenExportModalCanvas, #btnOpenExportModal, #btnOpenExportModalMobile, #btnOpenExportModalMini'
+    );
+    if (exportEntryButton) return;
 
     // If the recipe card is open, we want to allow interacting with the app 
     // without clicking outside the crop frame closing the export workspace.

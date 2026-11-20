@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-10-31
 
 ### Fixed
+- **Crop mode preserved when pressing Export**: Export entry controls are now excluded from the global outside-crop pointer-down dismissal. Pressing or briefly interacting with an Export button no longer cancels an active crop mode before the Export workspace opens.
 - **Crop frame preview bounds consistency fixed**: The crop frame preview shown in crop mode was recalculating bounds based on the current viewport size, causing the preview to misrepresent the actual export framing when viewport dimensions changed. Implemented dimension caching mechanism: crop frame dimensions are captured on crop mode entry and cached, ensuring consistent preview rendering regardless of viewport changes (window resize, layout shift, or preview/export mode switch). Cache is cleared on crop mode exit for fresh calculations in subsequent sessions.
 - **Hover model outline readability improved with white-back / dark-front dual stroke**: The dashed hover outline now uses a subtle white backing line behind a dark primary line, making it consistently legible across model colors and backgrounds without switching based on luminance.
 - **MP4 export empty 581-byte output and codec crash fixes**:
