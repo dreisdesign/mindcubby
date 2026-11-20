@@ -14064,6 +14064,8 @@ document.addEventListener('pointerdown', (e) => {
     if (!exportFrameEnabled || !exportCropFrameRect) return;
     if (!(e.target instanceof Node)) return;
     if (footerCropControlsEl?.contains(e.target)) return;
+    // Model editor menus are interactive controls, not outside-crop dismissals.
+    if (e.target?.closest?.('#modelPartSelectorMenu, .part-option-actions, #modelPartSingleActions')) return;
     if (e.target?.closest?.('.export-modal-panel')) return;
     // Skip if clicking inside any settings/control panel (prevents accidental crop exit)
     if (e.target?.closest?.('.controls-section-box')) return;

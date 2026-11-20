@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-10-31
 
 ### Fixed
+- **Crop mode preserved when using Replace STL**: 3D model picker menus and multipart row action menus are now excluded from the outside-crop `pointerdown` dismissal, so opening Replace STL while crop mode is active leaves the crop enabled.
 - **3D Models dropdown actions fixed**: Multipart model row menus are now portaled and directly listen for clicks, because portal placement moved the menu outside the original row listener hierarchy. Replace STL now opens the standard Replace upload flow for the selected part, and the other row actions remain usable.
 - **Crop ratio switching and Replace STL fixed**: Switching crop ratios now invalidates cached crop-frame dimensions so the overlay recalculates immediately instead of only changing the selected UI toggle. The Replace upload-choice button now resolves with the correct `replace` action instead of incorrectly resolving as `append`.
 - **Export crop camera framing preserved across workspace resize**: Export preview camera distance, elevation, and zoom now reuse the already-committed export crop state instead of recalculating it after the crop viewport changes size.
