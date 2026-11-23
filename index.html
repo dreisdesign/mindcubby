@@ -242,9 +242,7 @@
 
         <!-- Social Links Component (responsive, encapsulated) -->
         <labs-container full-width compact slot="header">
-            <mindcubby-social-links 
-                heading="From My Etsy Shop"
-                social-links='[
+            <mindcubby-social-links heading="From My Etsy Shop" social-links='[
                     {"name": "Etsy", "url": "https://www.etsy.com/shop/MindCubby", "icon": "/assets/logos/logos_Etsy--icon-circle.svg"},
                     {"name": "TikTok", "url": "https://www.tiktok.com/@mindcubby", "icon": "/assets/logos/logos_TikTok--icon-circle.svg"},
                     {"name": "YouTube", "url": "https://www.youtube.com/@MindCubby", "icon": "/assets/logos/logos_YouTube--icon-circle.svg"},
@@ -261,6 +259,21 @@
                 <div style="flex: 2; min-width: 280px;">
                     <labs-grid>
 
+
+
+                        <labs-product-card>
+                            <img slot="image"
+                                src="https://i.etsystatic.com/62670465/r/il/21d851/8953334413/il_fullxfull.8953334413_sl96.jpg"
+                                alt="Chocolate Cake Slice NEW">
+                            <div slot="title">Mystery Ice Cream Cone Keychain | 3D Printed Bag Charm (Blind Bag) | Stocking Stuffer</div>
+                            <div slot="actions">
+                                <labs-button variant="primary"
+                                    onclick="window.open('https://www.etsy.com/listing/4623062139/mystery-ice-cream-cone-keychain-3d')">
+                                    <labs-icon slot="icon-left" name="shopping_cart"></labs-icon>
+                                    Order on Etsy
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
 
                         <labs-product-card>
                             <img slot="image"
@@ -528,7 +541,7 @@
 
             render() {
                 const links = this.socialLinks;
-                
+
                 const linksHTML = links.map(link => `
                     <labs-button variant="icon" size="small" class="social-btn" aria-label="${link.name}">
                         <img slot="icon-left" src="${link.icon}" alt="${link.name}" />
