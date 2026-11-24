@@ -830,7 +830,7 @@
             });
         }
 
-        // Etsy Grid Accordion ("Load More") wiring
+        // Etsy Grid Accordion ("Load More") wiring with dynamic row calculation
         const etsyGrid = document.getElementById('etsy-product-grid');
         const loadMoreBtn = document.getElementById('etsy-load-more-btn');
         const loadMoreText = document.getElementById('etsy-load-more-text');
@@ -838,18 +838,33 @@
 
         if (etsyGrid && loadMoreBtn) {
             const productCards = Array.from(etsyGrid.querySelectorAll('labs-product-card'));
-            const INITIAL_VISIBLE_COUNT = 6;
             let isExpanded = false;
 
+            function calculateColumnsPerRow() {
+                const gridStyle = window.getComputedStyle(etsyGrid);
+                const gridTemplateColumns = gridStyle.gridTemplateColumns;
+                // Count number of columns by splitting on space
+                const columnCount = gridTemplateColumns.split(' ').length;
+                return Math.max(1, columnCount);
+            }
+
+            function calculateInitialVisibleCount() {
+                const colsPerRow = calculateColumnsPerRow();
+                // Show 2 full rows maximum
+                return colsPerRow * 2;
+            }
+
             function renderAccordionState() {
+                const visibleCount = calculateInitialVisibleCount();
                 productCards.forEach((card, idx) => {
-                    if (idx >= INITIAL_VISIBLE_COUNT) {
+                    if (idx >= visibleCount) {
                         card.style.display = isExpanded ? '' : 'none';
                     }
                 });
 
                 if (loadMoreText) {
-                    const remaining = Math.max(0, productCards.length - INITIAL_VISIBLE_COUNT);
+                    const visibleCount = calculateInitialVisibleCount();
+                    const remaining = Math.max(0, productCards.length - visibleCount);
                     loadMoreText.textContent = isExpanded ? 'Show Less' : `Show More (${remaining})`;
                 }
 
@@ -860,6 +875,15 @@
 
             // Set initial collapsed state
             renderAccordionState();
+
+            // Recalculate on window resize for responsive behavior
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    renderAccordionState();
+                }, 100);
+            });
 
             // Toggle on click
             loadMoreBtn.addEventListener('click', () => {
