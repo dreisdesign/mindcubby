@@ -1,3 +1,8 @@
+> [!WARNING]
+> **ARCHIVED / SUPERSEDED**
+> This architecture document has been archived and superseded by [Phase 1 Website Update — Execution Plan](_ARCHIVE/Phase%201%20Website%20Update%20%E2%80%94%20Execution%20Plan.md).
+> Please refer to the Phase 1 plan for the active site structure and component system.
+
 # MindCubby Hub — Sitemap & Architecture
 
 ## Why This Structure

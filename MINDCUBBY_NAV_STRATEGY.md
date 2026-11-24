@@ -1,3 +1,8 @@
+> [!WARNING]
+> **ARCHIVED / SUPERSEDED**
+> This navigation strategy has been archived and superseded by [Phase 1 Website Update — Execution Plan](_ARCHIVE/Phase%201%20Website%20Update%20%E2%80%94%20Execution%20Plan.md).
+> Please refer to the Phase 1 plan for the active navigation and layout architecture.
+
 # MindCubby.com Navigation Strategy
 
 ## Current Challenge

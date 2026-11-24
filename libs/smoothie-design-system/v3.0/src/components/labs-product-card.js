@@ -162,11 +162,11 @@ class LabsProductCard extends HTMLElement {
         /* If the slotted content is a wrapper div with multiple buttons, make it flex */
         .product-actions ::slotted(div) {
           display: flex !important;
-          flex-direction: column;
-          gap: calc(1rem * 1.2);
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: var(--space-xs, 0.5rem);
           width: 100%;
-          flex: none;
-          min-width: auto;
+          align-items: center;
         }
 
         /* Progressive enhancement: wider cards (>320px) use compact layout with image on left */
