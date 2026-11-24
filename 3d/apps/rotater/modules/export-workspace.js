@@ -21,7 +21,6 @@ export function setExportWorkspaceActiveController(active, {
     updateExportWorkspaceTransparencyPattern,
     updateExportPauseButtonUI,
     syncCanvasSize,
-    drawExportFrame,
     persistWorkspaceActive,
 } = {}) {
     if (typeof setExportWorkspaceActive !== 'function') return;
@@ -43,13 +42,7 @@ export function setExportWorkspaceActiveController(active, {
     if (typeof persistWorkspaceActive === 'function') persistWorkspaceActive(nextActive);
     if (typeof syncCanvasSize === 'function') {
         syncCanvasSize();
-        if (!nextActive && typeof drawExportFrame === 'function') {
-            drawExportFrame();
-            requestAnimationFrame(() => {
-                syncCanvasSize();
-                if (typeof drawExportFrame === 'function') drawExportFrame();
-            });
-        }
+        requestAnimationFrame(() => syncCanvasSize());
     }
 }
 

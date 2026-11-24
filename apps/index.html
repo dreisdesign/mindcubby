@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindCubby Apps | 3D Tools & Labs Applications</title>
+    <meta name="description"
+        content="Consolidated directory of all MindCubby 3D tools and Labs web applications. Local, private, browser-based creations.">
+    <!-- Favicon variants -->
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#2E2B74">
+    <link rel="canonical" href="https://mindcubby.com/apps/">
+    <link rel="stylesheet" href="/libs/smoothie-design-system/v3.0/styles/main.css?v=87">
+
+    <style>
+        @font-face {
+            font-family: 'Commissioner';
+            src: url('/libs/smoothie-design-system/v3.0/fonts/Commissioner-Black.ttf') format('truetype');
+            font-weight: 900;
+        }
+
+        body {
+            overflow-y: scroll;
+            scrollbar-gutter: stable;
+        }
+
+        .mindcubby-logo-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            flex-shrink: 0;
+        }
+
+        .mindcubby-logo {
+            width: clamp(50px, 12vw, 100px);
+            height: clamp(50px, 12vw, 100px);
+            color: var(--color-primary);
+            flex-shrink: 0;
+        }
+
+        .page-title {
+            font-family: 'Commissioner', sans-serif;
+            font-weight: 900;
+            font-size: clamp(1rem, 6vw, 3.5rem);
+            display: flex;
+            align-items: center;
+            gap: clamp(0.25rem, 1vw, 0.5rem);
+            text-transform: uppercase;
+            color: var(--color-primary);
+            margin: 0;
+            text-decoration: none;
+        }
+
+        .page-title a {
+            text-decoration: none;
+            color: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: inherit;
+        }
+
+        .page-title-sub {
+            font-size: 0.6em;
+            opacity: 0.85;
+            font-weight: 700;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-btn-link {
+            text-decoration: none;
+        }
+
+        .settings-header {
+            text-align: left;
+        }
+
+        .settings-title {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--color-on-surface);
+        }
+
+        .settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md, 1rem);
+        }
+
+        .apps-section {
+            width: 100%;
+        }
+
+        .section-title {
+            font-family: 'Commissioner', sans-serif;
+            font-weight: 900;
+            font-size: clamp(1.25rem, 4vw, 2rem);
+            text-transform: uppercase;
+            color: var(--color-primary);
+            margin: 0 0 var(--space-md) 0;
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+        }
+
+        .page-section {
+            margin-top: var(--space-xl);
+            padding-top: var(--space-lg);
+            border-top: 2px solid var(--color-primary);
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+            gap: var(--space-lg);
+            width: 100%;
+        }
+
+        @media (max-width: 800px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: var(--space-xl);
+            margin-bottom: var(--space-lg);
+            font-size: 0.875rem;
+            color: var(--color-on-surface-variant);
+        }
+
+        .footer-link {
+            color: var(--color-primary);
+            text-decoration: underline;
+        }
+    </style>
+
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const theme = localStorage.getItem('smoothie-theme') || 'vanilla';
+            const appearance = localStorage.getItem('smoothie-appearance') || 'light';
+            root.classList.add(`theme-${theme}`, `appearance-${appearance}`);
+        })();
+    </script>
+
+    <script type="module">
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-footer-layout.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-header.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-button.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-container.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-grid.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-row-layout.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-icon.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-product-card.js?v=88';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-overlay.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-modal-card.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-theme-button.js?v=87';
+        import '/libs/smoothie-design-system/v3.0/src/components/labs-appearance-toggle.js?v=87';
+    </script>
+</head>
+
+<body>
+    <labs-footer-layout>
+        <!-- Header -->
+        <labs-container full-width compact slot="header">
+            <labs-row-layout>
+                <a href="/" slot="start" class="mindcubby-logo-link" aria-label="MindCubby Home">
+                    <svg class="mindcubby-logo" viewBox="0 0 512 512" fill="none"
+                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <circle cx="256" cy="256" r="203" fill="currentColor" />
+                        <image x="143" y="0" width="226" height="512"
+                            xlink:href="/assets/logos/mindcubby--official-icecream-logo.png" />
+                    </svg>
+                </a>
+
+                <h1 slot="center" class="page-title">
+                    <a href="/" class="page-title-link">MindCubby</a>
+                    <span class="page-title-sub">/ Apps</span>
+                </h1>
+
+                <div class="header-controls" slot="end">
+                    <!-- Settings Menu -->
+                    <labs-overlay id="nav-modal" size="medium" transparent>
+                        <labs-modal-card id="nav-modal-card">
+                            <div slot="header" class="settings-header">
+                                <h2 class="settings-title">Settings</h2>
+                            </div>
+                            <div slot="content" class="settings-content">
+                                <labs-theme-button></labs-theme-button>
+                                <labs-appearance-toggle></labs-appearance-toggle>
+                            </div>
+                        </labs-modal-card>
+                    </labs-overlay>
+                    <labs-button id="nav-menu-btn" variant="icon" size="large" aria-label="Open settings">
+                        <labs-icon slot="icon-left" name="more_vert"></labs-icon>
+                    </labs-button>
+                </div>
+            </labs-row-layout>
+        </labs-container>
+
+        <!-- Main Content -->
+        <labs-container full-width slot="content">
+            <main>
+                <!-- 3D Apps Section -->
+                <section id="3d-apps" class="apps-section">
+                    <h2 class="section-title">3D Creator Tools</h2>
+
+                    <labs-grid class="app-grid">
+                        <!-- Rotater -->
+                        <labs-product-card>
+                            <img slot="image" src="/assets/logos/mindcubby--3d-apps--rotater.svg" alt="Rotater">
+                            <div slot="title">Rotater:  3D Model Visualizer &amp; Animated GIF, MP4, and PNG Exporter</div>
+                            <div slot="actions">
+                                <labs-button variant="primary" onclick="window.open('/3d/apps/rotater/', '_blank')">
+                                    <labs-icon slot="icon-left" name="open_in_new"></labs-icon>
+                                    Open App
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
+
+                        <!-- G-coder -->
+                        <labs-product-card>
+                            <img slot="image" src="/assets/logos/mindcubby--3d-apps--gcoder.svg" alt="G-coder">
+                            <div slot="title">G-coder:  Printables Specifications &amp; Estimate Generator from Sliced G-code</div>
+                            <div slot="actions">
+                                <labs-button variant="primary" onclick="window.open('/3d/apps/gcoder/', '_blank')">
+                                    <labs-icon slot="icon-left" name="open_in_new"></labs-icon>
+                                    Open App
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
+
+                        <!-- Spooler -->
+                        <labs-product-card>
+                            <img slot="image" src="/assets/logos/mindcubby--3d-apps--spooler.svg" alt="Spooler">
+                            <div slot="title">Spooler:  3D Printing Filament Inventory, Spool Tracker &amp; RFID Manager</div>
+                            <div slot="actions">
+                                <labs-button variant="primary" onclick="window.open('/3d/apps/spooler/', '_blank')">
+                                    <labs-icon slot="icon-left" name="open_in_new"></labs-icon>
+                                    Open App
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
+                    </labs-grid>
+                </section>
+
+                <!-- Labs Apps Section -->
+                <section id="labs-apps" class="apps-section page-section">
+                    <h2 class="section-title">Labs Apps</h2>
+
+                    <labs-grid class="app-grid">
+                        <!-- Focus Timer -->
+                        <labs-product-card>
+                            <img slot="image" src="/assets/logos/mindcubby--labs-apps--focus-timer.svg" alt="Focus Timer">
+                            <div slot="title">Focus Timer:  Minimal Pomodoro timer for focused work sessions with numeric countdown</div>
+                            <div slot="actions">
+                                <labs-button variant="primary" onclick="window.open('/labs/timer/', '_blank')">
+                                    <labs-icon slot="icon-left" name="open_in_new"></labs-icon>
+                                    Open App
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
+
+                        <!-- DailyNote -->
+                        <labs-product-card>
+                            <img slot="image" src="/assets/logos/mindcubby--labs-apps--daily-note.svg" alt="DailyNote">
+                            <div slot="title">DailyNote:  Daily scratchpad that clears at the end of each day for distraction-free notes</div>
+                            <div slot="actions">
+                                <labs-button variant="primary" onclick="window.open('/labs/note/', '_blank')">
+                                    <labs-icon slot="icon-left" name="open_in_new"></labs-icon>
+                                    Open App
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
+
+                        <!-- Tracker -->
+                        <labs-product-card>
+                            <img slot="image" src="/assets/logos/mindcubby--labs-apps--tracker.svg" alt="Tracker">
+                            <div slot="title">Tracker:  Activity and habit counter with instant timestamped event logging</div>
+                            <div slot="actions">
+                                <labs-button variant="primary" onclick="window.open('/labs/tracker/', '_blank')">
+                                    <labs-icon slot="icon-left" name="open_in_new"></labs-icon>
+                                    Open App
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
+
+                        <!-- Pad -->
+                        <labs-product-card>
+                            <img slot="image" src="/assets/logos/mindcubby--labs-apps--pad.svg" alt="Pad">
+                            <div slot="title">Pad:  Minimalist digital drawing canvas optimized for Apple Pencil and touch</div>
+                            <div slot="actions">
+                                <labs-button variant="primary" onclick="window.open('/labs/pad/', '_blank')">
+                                    <labs-icon slot="icon-left" name="open_in_new"></labs-icon>
+                                    Open App
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
+
+                        <!-- Today List -->
+                        <labs-product-card>
+                            <img slot="image" src="/assets/logos/mindcubby--labs-apps--today-list.svg" alt="Today List">
+                            <div slot="title">Today List:  Lightweight local-first daily task manager with simple prioritization</div>
+                            <div slot="actions">
+                                <labs-button variant="primary" onclick="window.open('/labs/today-list/', '_blank')">
+                                    <labs-icon slot="icon-left" name="open_in_new"></labs-icon>
+                                    Open App
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
+
+                        <!-- Posts for Pause -->
+                        <labs-product-card>
+                            <img slot="image" src="/assets/logos/mindcubby--labs-apps--posts-for-pause.svg" alt="Posts for Pause">
+                            <div slot="title">Posts for Pause:  Minimalist designs encouraging mindfulness, reflection, and intentional pauses</div>
+                            <div slot="actions">
+                                <labs-button variant="primary" onclick="window.open('/labs/postsforpause/', '_blank')">
+                                    <labs-icon slot="icon-left" name="open_in_new"></labs-icon>
+                                    Open App
+                                </labs-button>
+                            </div>
+                        </labs-product-card>
+                    </labs-grid>
+                </section>
+            </main>
+
+            <!-- Footer -->
+            <div class="footer-note">
+                © 2026 MindCubby. Built with the <a href="/smoothie/" class="footer-link">Smoothie Design System</a>.
+            </div>
+        </labs-container>
+    </labs-footer-layout>
+
+    <script>
+        // Wire settings modal toggle
+        const navBtn = document.getElementById('nav-menu-btn');
+        const navModal = document.getElementById('nav-modal');
+        if (navBtn && navModal) {
+            navBtn.addEventListener('click', () => navModal.toggle());
+        }
+    </script>
+</body>
+
+</html>
