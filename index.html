@@ -840,18 +840,56 @@
             const productCards = Array.from(etsyGrid.querySelectorAll('labs-product-card'));
             let isExpanded = false;
 
-            function calculateColumnsPerRow() {
-                const gridStyle = window.getComputedStyle(etsyGrid);
-                const gridTemplateColumns = gridStyle.gridTemplateColumns;
-                // Count number of columns by splitting on space
-                const columnCount = gridTemplateColumns.split(' ').length;
-                return Math.max(1, columnCount);
+            function calculateCardsInFirstRow() {
+                if (productCards.length < 1) return 3; // Default fallback
+                
+                // Get the Y position of the first card
+                const firstCardTop = productCards[0].getBoundingClientRect().top;
+                
+                // Count how many cards are in the first row (same Y position, within tolerance)
+                let cardsInRow = 0;
+                for (let card of productCards) {
+                    const cardTop = card.getBoundingClientRect().top;
+                    // Check if card is in first row (allow 10px variance for rounding)
+                    if (Math.abs(cardTop - firstCardTop) < 10) {
+                        cardsInRow++;
+                    } else {
+                        break; // We've moved to the next row
+                    }
+                }
+                
+                return Math.max(1, cardsInRow);
+            }
+
+            function calculateMaxRowsBasedOnVideo() {
+                // Find the video element in the grid
+                const videoWrapper = Array.from(etsyGrid.children).find(el => 
+                    el.style.gridColumn || el.classList.contains('video')
+                );
+                
+                if (!videoWrapper) return 2; // Fallback to 2 rows if no video found
+                
+                const videoHeight = videoWrapper.getBoundingClientRect().height;
+                if (videoHeight <= 0) return 2; // Video not laid out yet
+                
+                // Get first card height
+                const firstCardHeight = productCards[0].getBoundingClientRect().height;
+                if (firstCardHeight <= 0) return 2;
+                
+                // Add gap between rows (24px default)
+                const GAP = 24;
+                const availableHeight = videoHeight;
+                const rowsToFit = Math.max(1, Math.floor((availableHeight + GAP) / (firstCardHeight + GAP)));
+                
+                // Cap at 2 rows as a safety measure
+                return Math.min(2, rowsToFit);
             }
 
             function calculateInitialVisibleCount() {
-                const colsPerRow = calculateColumnsPerRow();
-                // Show 2 full rows maximum
-                return colsPerRow * 2;
+                const cardsPerRow = calculateCardsInFirstRow();
+                const maxRows = calculateMaxRowsBasedOnVideo();
+                // Show rows that fit the video height
+                return cardsPerRow * maxRows;
             }
 
             function renderAccordionState() {
@@ -859,6 +897,8 @@
                 productCards.forEach((card, idx) => {
                     if (idx >= visibleCount) {
                         card.style.display = isExpanded ? '' : 'none';
+                    } else {
+                        card.style.display = '';
                     }
                 });
 
@@ -873,8 +913,10 @@
                 }
             }
 
-            // Set initial collapsed state
-            renderAccordionState();
+            // Set initial collapsed state after a small delay to ensure layout is complete
+            setTimeout(() => {
+                renderAccordionState();
+            }, 100);
 
             // Recalculate on window resize for responsive behavior
             let resizeTimeout;
